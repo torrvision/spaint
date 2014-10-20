@@ -12,19 +12,19 @@ fi
 # Build Boost 1.56.0.
 LOG=../build-boost_1_56_0.log
 
-echo "[corker] Building Boost 1.56.0"
+echo "[spaint] Building Boost 1.56.0"
 
 if [ -d boost_1_56_0 ]
 then
-  echo "[corker] ...Skipping build (already built)"
+  echo "[spaint] ...Skipping build (already built)"
   exit
 fi
 
 if [ -d boost-setup ]
 then
-  echo "[corker] ...Skipping archive extraction (already extracted)"
+  echo "[spaint] ...Skipping archive extraction (already extracted)"
 else
-  echo "[corker] ...Extracting archive..."
+  echo "[spaint] ...Extracting archive..."
   /bin/rm -fR tmp
   mkdir tmp
   cd tmp
@@ -38,13 +38,13 @@ cd boost-setup
 
 if [ -e b2 ]
 then
-  echo "[corker] ...Skipping bootstrapping (b2 already exists)"
+  echo "[spaint] ...Skipping bootstrapping (b2 already exists)"
 else
-  echo "[corker] ...Bootstrapping..."
+  echo "[spaint] ...Bootstrapping..."
   ./bootstrap.sh > $LOG
 fi
 
-echo "[corker] ...Running build..."
+echo "[spaint] ...Running build..."
 ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 install >> $LOG
 
-echo "[corker] ...Finished building Boost 1.56.0."
+echo "[spaint] ...Finished building Boost 1.56.0."

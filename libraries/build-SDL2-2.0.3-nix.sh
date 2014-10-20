@@ -3,13 +3,13 @@
 LOG=../../build-SDL2-2.0.3.log
 PLATFORM=`../detect-platform.sh`
 
-echo "[corker] Building SDL 2.0.3"
+echo "[spaint] Building SDL 2.0.3"
 
 if [ -d SDL2-2.0.3 ]
 then
-  echo "[corker] ...Skipping archive extraction (already extracted)"
+  echo "[spaint] ...Skipping archive extraction (already extracted)"
 else
-  echo "[corker] ...Extracting archive..."
+  echo "[spaint] ...Extracting archive..."
   /bin/rm -fR tmp
   mkdir tmp
   cd tmp
@@ -23,16 +23,16 @@ cd SDL2-2.0.3
 
 if [ -d build ]
 then
-  echo "[corker] ...Skipping build (already built)"
+  echo "[spaint] ...Skipping build (already built)"
 else
   mkdir build
   cd build
 
-  echo "[corker] ...Configuring using CMake..."
+  echo "[spaint] ...Configuring using CMake..."
   cmake -DCMAKE_INSTALL_PREFIX=../install .. > $LOG 2>&1
 
-  echo "[corker] ...Running build..."
+  echo "[spaint] ...Running build..."
   make -j2 >> $LOG 2>&1
 
-  echo "[corker] ...Finished building SDL 2.0.3."
+  echo "[spaint] ...Finished building SDL 2.0.3."
 fi

@@ -17,29 +17,29 @@ fi
 # Build the libraries.
 cd libraries
 ./build-boost_1_56_0-nix.sh
-./build-opencv-2.4.9-nix.sh
+#./build-opencv-2.4.9-nix.sh
 ./build-SDL2-2.0.3-nix.sh
 cd ..
 
-# Build corker itself.
-echo "[corker] Building corker"
+# Build spaint itself.
+echo "[spaint] Building spaint"
 
 if [ ! -d build ]
 then
   mkdir build
   cd build
 
-  echo "[corker] ...Configuring using CMake..."
-  cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 ..
+  echo "[spaint] ...Configuring using CMake..."
+  cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 -DWITH_BOOST=ON ..
   cd ..
 fi
 
 cd build
 
-echo "[corker] ...Running build..."
+echo "[spaint] ...Running build..."
 make -j2
 
-echo "[corker] ...Installing..."
+echo "[spaint] ...Installing..."
 make install
 
-echo "[corker] ...Finished building corker."
+echo "[spaint] ...Finished building spaint."

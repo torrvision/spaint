@@ -15,7 +15,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
+SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const spaint::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
 : m_settings(settings)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));

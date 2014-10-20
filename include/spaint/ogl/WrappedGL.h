@@ -1,6 +1,6 @@
-/***
-* spaint: WrappedGL.h
-***/
+/**
+ * spaint: WrappedGL.h
+ */
 
 #ifdef _WIN32
   #ifndef NOMINMAX

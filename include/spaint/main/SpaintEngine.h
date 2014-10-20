@@ -5,11 +5,9 @@
 #ifndef H_SPAINT_SPAINTENGINE
 #define H_SPAINT_SPAINTENGINE
 
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include <Engine/ImageSourceEngine.h>
 
+#include "../util/SharedPtr.h"
 #include "../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -21,9 +19,9 @@ class SpaintEngine
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef spaint::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef spaint::shared_ptr<Scene> Scene_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -43,10 +41,10 @@ public:
    * \brief Constructs an instance of the spaint engine that uses an OpenNI device as its image source.
    *
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
-   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
+   * \param openNIDeviceURI     An optional OpenNI device URI (if NULL is passed in, the default OpenNI device will be used).
    * \param settings            TODO
    */
-  SpaintEngine(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
+  SpaintEngine(const std::string& calibrationFilename, const spaint::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
 #endif
 
   /**
@@ -69,7 +67,7 @@ public:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<SpaintEngine> SpaintEngine_Ptr;
+typedef spaint::shared_ptr<SpaintEngine> SpaintEngine_Ptr;
 
 }
 

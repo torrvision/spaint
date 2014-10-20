@@ -2,4 +2,6 @@
 # LinkBoost.cmake #
 ###################
 
-TARGET_LINK_LIBRARIES(${targetname} ${Boost_LIBRARIES})
+IF(WITH_BOOST)
+  TARGET_LINK_LIBRARIES(${targetname} ${Boost_LIBRARIES})
+ENDIF()

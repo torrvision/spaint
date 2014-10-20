@@ -35,6 +35,7 @@ SET(targetname spaint)
 INCLUDE(${PROJECT_SOURCE_DIR}/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
 
@@ -68,6 +69,7 @@ include/spaint/ogl/WrappedGL.h
 
 ##
 SET(util_headers
+include/spaint/util/SharedPtr.h
 include/spaint/util/SpaintVoxel.h
 )
 

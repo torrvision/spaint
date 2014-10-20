@@ -4,7 +4,7 @@
 
 #include "input/InputState.h"
 
-#include <exception>
+#include <stdexcept>
 
 namespace spaint {
 

@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
 
@@ -20,8 +18,8 @@ using namespace spaint;
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
-typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
+typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
+typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
 //#################### FUNCTIONS ####################
 
@@ -124,7 +122,7 @@ int main(int argc, char *argv[])
   {
 #if WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << "\n\n";
-    spaintEngine.reset(new SpaintEngine(calibrationFilename, openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI), settings));
+    spaintEngine.reset(new SpaintEngine(calibrationFilename, openNIDeviceURI == "Default" ? spaint::shared_ptr<std::string>() : spaint::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
