@@ -8,6 +8,6 @@
 #include <spaint/util/SpaintVoxel.h>
 using namespace spaint;
 
-template ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>;
-template ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>;
-template ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>;
+template class ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>;
+template class ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>;
+template class ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>;

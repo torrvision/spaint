@@ -4,6 +4,8 @@
 
 #include "main/SpaintEngine.h"
 
+#include <stdexcept>
+
 #include <Engine/ImageSourceEngine.h>
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
