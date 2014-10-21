@@ -87,8 +87,8 @@ void Application::render() const
 
 void Application::setup()
 {
-  double width = 640;
-  double height = 480;
+  int width = 640;
+  int height = 480;
   double fovY = 60.0;
   double zNear = 0.1;
   double zFar = 1000.0;
@@ -97,5 +97,5 @@ void Application::setup()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(fovY, width / height, zNear, zFar);
+  gluPerspective(fovY, static_cast<double>(width) / height, zNear, zFar);
 }
