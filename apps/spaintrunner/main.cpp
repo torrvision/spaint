@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
@@ -13,32 +12,11 @@ using namespace InfiniTAM::Engine;
 #include <SDL.h>
 
 #include <spaint/main/SpaintEngine.h>
-#include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
-//#################### TYPEDEFS ####################
-
-typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
-typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
+#include "Application.h"
 
 //#################### FUNCTIONS ####################
-
-bool process_events()
-{
-  SDL_Event event;
-  while(SDL_PollEvent(&event))
-  {
-    switch(event.type)
-    {
-      case SDL_KEYDOWN:
-        return false;
-      default:
-        break;
-    }
-  }
-
-  return true;
-}
 
 void quit(const std::string& message, int code = EXIT_FAILURE)
 {
@@ -47,55 +25,14 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
   exit(code);
 }
 
-void render(const SDL_Window_Ptr& window)
-{
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  gluLookAt(20.0, -20.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
-  glBegin(GL_LINES);
-    glColor3d(1.0, 0.0, 0.0);
-    glVertex3d(0.0, 0.0, 0.0);
-    glVertex3d(50.0, 0.0, 0.0);
-    glColor3d(0.0, 1.0, 0.0);
-    glVertex3d(0.0, 0.0, 0.0);
-    glVertex3d(0.0, 50.0, 0.0);
-    glColor3d(0.0, 0.0, 1.0);
-    glVertex3d(0.0, 0.0, 0.0);
-    glVertex3d(0.0, 0.0, 50.0);
-  glEnd();
-
-  SDL_GL_SwapWindow(window.get());
-}
-
-void run(const SDL_Window_Ptr& window)
-{
-  for(;;)
-  {
-    if(!process_events()) return;
-    render(window);
-  }
-}
-
-void setup()
-{
-  double width = 640;
-  double height = 480;
-  double fovY = 60.0;
-  double zNear = 0.1;
-  double zFar = 1000.0;
-
-  glViewport(0, 0, width, height);
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(fovY, width / height, zNear, zFar);
-}
-
 int main(int argc, char *argv[])
 {
+  // Initialise SDL.
+  if(SDL_Init(SDL_INIT_VIDEO) < 0)
+  {
+    quit("Error: Failed to initialise SDL.");
+  }
+
   // Parse the command-line arguments.
   if (argc > 4)
   {
@@ -128,34 +65,11 @@ int main(int argc, char *argv[])
 #endif
   }
 
-  if(SDL_Init(SDL_INIT_VIDEO) < 0)
-  {
-    quit("Error: Failed to initialise SDL.");
-  }
+  // Run the application.
+  Application app(spaintEngine);
+  app.run();
 
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-  SDL_Window_Ptr window(
-    SDL_CreateWindow(
-      "Semantic Paint",
-      SDL_WINDOWPOS_UNDEFINED,
-      SDL_WINDOWPOS_UNDEFINED,
-      640,
-      480,
-      SDL_WINDOW_OPENGL
-    ),
-    &SDL_DestroyWindow
-  );
-
-  SDL_GLContext_Ptr context(
-    SDL_GL_CreateContext(window.get()),
-    SDL_GL_DeleteContext
-  );
-
-  setup();
-
-  run(window);
-
+  // Shut down SDL.
   SDL_Quit();
 
   return 0;

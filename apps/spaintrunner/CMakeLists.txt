@@ -23,13 +23,15 @@ INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
 # Specify the project files #
 #############################
 
-SET(sources main.cpp)
+SET(sources main.cpp Application.cpp)
+SET(headers Application.h)
 
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(sources FILES ${sources})
+SOURCE_GROUP(headers FILES ${headers})
 
 ##########################################
 # Specify additional include directories #
