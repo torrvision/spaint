@@ -29,6 +29,9 @@ private:
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;
 
+  /** The spaint engine that the application should use. */
+  spaint::SpaintEngine_Ptr m_spaintEngine;
+
   /** The main window for the application. */
   SDL_Window_Ptr m_window;
 

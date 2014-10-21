@@ -10,6 +10,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
+: m_spaintEngine(spaintEngine)
 {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -40,6 +41,7 @@ void Application::run()
   for(;;)
   {
     if(!process_events() || m_inputState.key_down(SDLK_ESCAPE)) return;
+    m_spaintEngine->process_frame();
     render();
   }
 }

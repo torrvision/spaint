@@ -33,6 +33,55 @@ SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const std::st
   initialise();
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void SpaintEngine::process_frame()
+{
+  if(!m_imageSourceEngine->hasMoreImages()) return;
+
+  // Get the next frame.
+  m_imageSourceEngine->getImages(m_view.get());
+
+  // If we're using the GPU, transfer the relevant images in the frame across to it.
+  if(m_settings.useGPU)
+  {
+    m_view->rgb->UpdateDeviceFromHost();
+
+    switch(m_view->inputImageType)
+    {
+      case ITMView::InfiniTAM_FLOAT_DEPTH_IMAGE:
+        m_view->depth->UpdateDeviceFromHost();
+        break;
+      case ITMView::InfiniTAM_SHORT_DEPTH_IMAGE:
+      case ITMView::InfiniTAM_DISPARITY_IMAGE:
+        m_view->rawDepth->UpdateDeviceFromHost();
+        break;
+      default:
+        // This should never happen.
+        throw std::runtime_error("Error: SpaintEngine::process_frame: Unknown input image type");
+    }
+  }
+
+  // If the frame only contains a short depth image or a disparity image, make a proper floating-point depth image from what we have.
+  // Note that this will automatically run on either the GPU or the CPU behind the scenes, depending on which mode we're in.
+  switch(m_view->inputImageType)
+  {
+    case ITMView::InfiniTAM_SHORT_DEPTH_IMAGE:
+      m_lowLevelEngine->ConvertDepthMMToFloat(m_view->depth, m_view->rawDepth);
+      break;
+    case ITMView::InfiniTAM_DISPARITY_IMAGE:
+      m_lowLevelEngine->ConvertDisparityToDepth(m_view->depth, m_view->rawDepth, &m_view->calib->intrinsics_d, &m_view->calib->disparityCalib);
+      break;
+    default:
+      break;
+  }
+
+  // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
+  if(m_reconstructionStarted) m_tracker->TrackCamera(m_trackingState.get(), m_view.get());
+
+  // TODO
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void SpaintEngine::initialise()
