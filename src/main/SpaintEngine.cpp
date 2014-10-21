@@ -8,6 +8,9 @@
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
 #endif
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
 namespace spaint {
@@ -48,28 +51,28 @@ void SpaintEngine::initialise()
   m_scene.reset(new Scene(&m_settings.sceneParams, m_settings.useSwapping, m_settings.useGPU));
 
   // Set up the initial tracking state.
-  switch(m_settings.trackerType)
-  {
-    case ITMLibSettings::TRACKER_ICP:
-      m_trackingState.reset(new ITMTrackingState(depthImageSize, m_settings.useGPU));
-      break;
-    case ITMLibSettings::TRACKER_COLOR:
-      m_trackingState.reset(new ITMTrackingState(rgbImageSize, m_settings.useGPU));
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("SpaintEngine::initialise(): Unknown tracker type");
-  }
-
+  m_trackingState.reset(m_settings.trackerType == ITMLibSettings::TRACKER_ICP ? new ITMTrackingState(depthImageSize, m_settings.useGPU) : new ITMTrackingState(rgbImageSize, m_settings.useGPU));
   m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-  // TODO: Set up the initial view(?)
+  // Set up the scene view.
+  m_view.reset(new ITMView(m_imageSourceEngine->calib, rgbImageSize, depthImageSize, m_settings.useGPU));
 
+  // Set up the InfiniTAM engines and the tracker.
   if(m_settings.useGPU)
   {
 #ifdef WITH_CUDA
-    // Use the GPU-based InfiniTAM engines.
-    // TODO
+    // Use the GPU implementation of InfiniTAM.
+    m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
+    m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
+
+    if(m_settings.trackerType == ITMLibSettings::TRACKER_ICP)
+      m_tracker.reset(new ITMDepthTracker_CUDA(depthImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_settings.depthTrackerICPThreshold, m_lowLevelEngine.get()));
+    else
+      m_tracker.reset(new ITMColorTracker_CUDA(rgbImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_lowLevelEngine.get()));
+
+    if(m_settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
+
+    m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
     // This should never happen as things stand - we set useGPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -77,9 +80,22 @@ void SpaintEngine::initialise()
   }
   else
   {
-    // Use the CPU-based InfiniTAM engines.
-    // TODO
+    // Use the CPU implementation of InfiniTAM.
+    m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
+    m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
+
+    if(m_settings.trackerType == ITMLibSettings::TRACKER_ICP)
+      m_tracker.reset(new ITMDepthTracker_CPU(depthImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_settings.depthTrackerICPThreshold, m_lowLevelEngine.get()));
+    else
+      m_tracker.reset(new ITMColorTracker_CPU(rgbImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_lowLevelEngine.get()));
+
+    if(m_settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
+
+    m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
+
+  // Note: The tracker can only be run once reconstruction has started.
+  m_reconstructionStarted = false;
 }
 
 }

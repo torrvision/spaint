@@ -23,7 +23,11 @@ INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
 # Specify the project files #
 #############################
 
-SET(sources main.cpp Application.cpp)
+IF(WITH_CUDA)
+  SET(sources main.cpp Application.cpp CUDAInstantiations.cu)
+ELSE()
+  SET(sources main.cpp Application.cpp)
+ENDIF()
 SET(headers Application.h)
 
 #############################
