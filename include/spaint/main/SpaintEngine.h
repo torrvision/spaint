@@ -20,6 +20,7 @@ class SpaintEngine
   //#################### TYPEDEFS ####################
 private:
   typedef spaint::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef spaint::shared_ptr<ITMTrackingState> ITMTrackingState_Ptr;
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef spaint::shared_ptr<Scene> Scene_Ptr;
 
@@ -31,8 +32,11 @@ private:
   /** The current model of the 3D scene. */
   Scene_Ptr m_scene;
 
-  /** TODO */
+  /** The settings to use for InfiniTAM. */
   ITMLibSettings m_settings;
+
+  /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
+  ITMTrackingState_Ptr m_trackingState;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -63,6 +67,13 @@ public:
    * \brief Processes the next frame from the image source engine.
    */
   void process_frame();
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Initialises the engine.
+   */
+  void initialise();
 };
 
 //#################### TYPEDEFS ####################
