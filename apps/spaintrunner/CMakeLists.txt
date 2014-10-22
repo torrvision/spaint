@@ -53,11 +53,11 @@ INCLUDE(${PROJECT_SOURCE_DIR}/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
+TARGET_LINK_LIBRARIES(${targetname} spaint)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkSDL.cmake)
-TARGET_LINK_LIBRARIES(${targetname} spaint)
 
 #############################
 # Specify things to install #
