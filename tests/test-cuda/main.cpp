@@ -19,7 +19,7 @@ void test_simple()
   std::vector<float> h_arr(N);
   for(int i = 0; i < N; ++i)
   {
-    h_arr[i] = i;
+    h_arr[i] = static_cast<float>(i);
   }
 
   // Copy the array across to the device.
