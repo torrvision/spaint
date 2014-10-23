@@ -1,5 +1,5 @@
 /**
- * spaintrunner: Application.cpp
+ * spaintgui: Application.cpp
  */
 
 #include "Application.h"

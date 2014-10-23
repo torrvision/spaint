@@ -1,12 +1,12 @@
-########################################
-# CMakeLists.txt for apps/spaintrunner #
-########################################
+#####################################
+# CMakeLists.txt for apps/spaintgui #
+#####################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname spaintrunner)
+SET(targetname spaintgui)
 
 ################################
 # Specify the libraries to use #

@@ -1,5 +1,5 @@
 /**
- * spaintrunner: CUDAInstantiations.cu
+ * spaintgui: CUDAInstantiations.cu
  */
 
 #include <ITMLib/Engine/DeviceSpecific/CUDA/ITMSceneReconstructionEngine_CUDA.cu>

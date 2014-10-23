@@ -2,4 +2,4 @@
 # CMakeLists.txt for spaint/apps #
 ##################################
 
-ADD_SUBDIRECTORY(spaintrunner)
+ADD_SUBDIRECTORY(spaintgui)

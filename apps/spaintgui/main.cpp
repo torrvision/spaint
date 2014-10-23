@@ -1,5 +1,5 @@
 /**
- * spaintrunner: main.cpp
+ * spaintgui: main.cpp
  */
 
 #include <cstdlib>

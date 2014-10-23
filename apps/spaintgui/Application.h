@@ -1,9 +1,9 @@
 /**
- * spaintrunner: Application.h
+ * spaintgui: Application.h
  */
 
-#ifndef H_SPAINTRUNNER_APPLICATION
-#define H_SPAINTRUNNER_APPLICATION
+#ifndef H_SPAINTGUI_APPLICATION
+#define H_SPAINTGUI_APPLICATION
 
 #include <SDL.h>
 
@@ -12,7 +12,7 @@
 #include <spaint/util/SharedPtr.h>
 
 /**
- * \brief The main application class for spaintrunner.
+ * \brief The main application class for spaintgui.
  */
 class Application
 {
