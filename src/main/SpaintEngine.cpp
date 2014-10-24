@@ -10,6 +10,9 @@
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
 #endif
+#include <ITMLib/Engine/ITMRenTracker.cpp>
+#include <ITMLib/Engine/ITMTrackerFactory.h>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMRenTracker_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
@@ -79,7 +82,17 @@ void SpaintEngine::process_frame()
   }
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
-  if(m_reconstructionStarted) m_tracker->TrackCamera(m_trackingState.get(), m_view.get());
+  if(m_reconstructionStarted)
+  {
+    if(m_trackerPrimary) m_trackerPrimary->TrackCamera(m_trackingState.get(), m_view.get());
+    if(m_trackerSecondary) m_trackerSecondary->TrackCamera(m_trackingState.get(), m_view.get());
+  }
+
+  // Allocate voxel blocks as necessary.
+  m_sceneReconstructionEngine->AllocateSceneFromDepth(m_scene.get(), m_view.get(), m_trackingState->pose_d);
+
+  // Integrate (fuse) the view into the scene.
+  m_sceneReconstructionEngine->IntegrateIntoScene(m_scene.get(), m_view.get(), m_trackingState->pose_d);
 
   // TODO
 }
@@ -102,27 +115,20 @@ void SpaintEngine::initialise()
   m_scene.reset(new Scene(&m_settings.sceneParams, m_settings.useSwapping, m_settings.useGPU));
 
   // Set up the initial tracking state.
-  m_trackingState.reset(m_settings.trackerType == ITMLibSettings::TRACKER_ICP ? new ITMTrackingState(depthImageSize, m_settings.useGPU) : new ITMTrackingState(rgbImageSize, m_settings.useGPU));
+  m_trackingState.reset(ITMTrackerFactory::MakeTrackingState(m_settings, rgbImageSize, depthImageSize));
   m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
   // Set up the scene view.
   m_view.reset(new ITMView(m_imageSourceEngine->calib, rgbImageSize, depthImageSize, m_settings.useGPU));
 
-  // Set up the InfiniTAM engines and the tracker.
+  // Set up the InfiniTAM engines.
   if(m_settings.useGPU)
   {
 #ifdef WITH_CUDA
     // Use the GPU implementation of InfiniTAM.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
-
-    if(m_settings.trackerType == ITMLibSettings::TRACKER_ICP)
-      m_tracker.reset(new ITMDepthTracker_CUDA(depthImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_settings.depthTrackerICPThreshold, m_lowLevelEngine.get()));
-    else
-      m_tracker.reset(new ITMColorTracker_CUDA(rgbImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_lowLevelEngine.get()));
-
     if(m_settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
-
     m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
     // This should never happen as things stand - we set useGPU to false if CUDA support isn't available.
@@ -134,18 +140,15 @@ void SpaintEngine::initialise()
     // Use the CPU implementation of InfiniTAM.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
-
-    if(m_settings.trackerType == ITMLibSettings::TRACKER_ICP)
-      m_tracker.reset(new ITMDepthTracker_CPU(depthImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_settings.depthTrackerICPThreshold, m_lowLevelEngine.get()));
-    else
-      m_tracker.reset(new ITMColorTracker_CPU(rgbImageSize, m_settings.noHierarchyLevels, m_settings.noRotationOnlyLevels, m_lowLevelEngine.get()));
-
     if(m_settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
-
     m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
 
-  // Note: The tracker can only be run once reconstruction has started.
+  // Set up the trackers.
+  m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
+  m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_scene.get()));
+
+  // Note: The trackers can only be run once reconstruction has started.
   m_reconstructionStarted = false;
 }
 

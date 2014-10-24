@@ -54,8 +54,11 @@ private:
   /** The engine controlling the swapping of voxel blocks in/out of GPU memory. */
   SwappingEngine_Ptr m_swappingEngine;
 
-  /** The camera tracker. */
-  Tracker_Ptr m_tracker;
+  /** The primary camera tracker. */
+  Tracker_Ptr m_trackerPrimary;
+
+  /** The secondary camera tracker. */
+  Tracker_Ptr m_trackerSecondary;
 
   /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
   TrackingState_Ptr m_trackingState;
