@@ -26,6 +26,7 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 }
 
 int main(int argc, char *argv[])
+try
 {
   // Initialise SDL.
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -74,3 +75,8 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+catch(std::exception& e)
+{
+  std::cerr << e.what() << '\n';
+}
+
