@@ -21,6 +21,22 @@ private:
   typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
   typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
+  //#################### ENUMERATIONS ####################
+private:
+  /**
+   * \brief An enumeration containing the different possible targets for rendering the scene.
+   */
+  enum RenderTarget
+  {
+#ifdef WITH_OVR
+    /** Render the scene on the Oculus Rift. */
+    RENDERTARGET_RIFT,
+#endif
+
+    /** Render the scene into a window. */
+    RENDERTARGET_WINDOWED,
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The OpenGL context for the main window. */
@@ -28,6 +44,9 @@ private:
 
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;
+
+  /** The current target for rendering the scene. */
+  RenderTarget m_renderTarget;
 
   /** The spaint engine that the application should use. */
   spaint::SpaintEngine_Ptr m_spaintEngine;
@@ -94,9 +113,25 @@ private:
   void render() const;
 
   /**
-   * \brief Sets up the viewport and projection matrix.
+   * \brief Start rendering on the specified render target.
+   *
+   * \param renderTarget  The render target on which to start rendering.
    */
-  void setup();
+  void start_rendering_on(RenderTarget renderTarget);
+
+  /**
+   * \brief Stop rendering on the specified render target.
+   *
+   * \param renderTarget  The render target on which to stop rendering.
+   */
+  void stop_rendering_on(RenderTarget renderTarget);
+
+  /**
+   * \brief Switch to a new render target.
+   *
+   * \param renderTarget  The new render target.
+   */
+  void switch_render_target(RenderTarget renderTarget);
 };
 
 #endif
