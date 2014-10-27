@@ -70,6 +70,11 @@ SpaintEngine::ImageSourceEngine_Ptr SpaintEngine::get_image_source_engine() cons
   return m_imageSourceEngine;
 }
 
+const ITMPose& SpaintEngine::get_pose() const
+{
+  return *m_trackingState->pose_d;
+}
+
 void SpaintEngine::get_rgb_input(const UChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_view->rgb, output);

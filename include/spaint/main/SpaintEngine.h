@@ -131,6 +131,13 @@ public:
   ImageSourceEngine_Ptr get_image_source_engine() const;
 
   /**
+   * \brief Gets the current camera pose.
+   *
+   * \return  The current camera pose.
+   */
+  const ITMPose& get_pose() const;
+
+  /**
    * \brief Gets the RGB image from the most recently processed frame.
    *
    * \param output  The location into which to put the output image.

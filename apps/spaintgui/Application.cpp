@@ -43,6 +43,11 @@ void Application::run()
     if(!process_events() || m_inputState.key_down(SDLK_ESCAPE)) return;
     m_spaintEngine->process_frame();
     render();
+    for(int i = 0; i < 6; ++i)
+    {
+      std::cout << m_spaintEngine->get_pose().params.all[i] << ' ';
+    }
+    std::cout << '\n';
   }
 }
 
