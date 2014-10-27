@@ -20,6 +20,7 @@ class SpaintEngine
   //#################### TYPEDEFS ####################
 private:
   typedef spaint::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef spaint::shared_ptr<const InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_CPtr;
   typedef spaint::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef spaint::shared_ptr<Scene> Scene_Ptr;
@@ -122,11 +123,19 @@ public:
   void get_depth_input(const UChar4Image_Ptr& output) const;
 
   /**
+   * \brief Gets the image source engine (the engine used to provide input images to the fusion pipeline).
+   *
+   * \return  The image source engine.
+   */
+  // FIXME: Should return an ImageSourceEngine_CPtr, but ImageSourceEngine isn't itself const-correct.
+  ImageSourceEngine_Ptr get_image_source_engine() const;
+
+  /**
    * \brief Gets the RGB image from the most recently processed frame.
    *
    * \param output  The location into which to put the output image.
    */
-  void get_RGB_input(const UChar4Image_Ptr& output) const;
+  void get_rgb_input(const UChar4Image_Ptr& output) const;
 
   /**
    * \brief Processes the next frame from the image source engine.

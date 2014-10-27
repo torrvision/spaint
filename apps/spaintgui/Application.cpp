@@ -129,6 +129,18 @@ bool Application::process_events()
 
 void Application::render() const
 {
+  static spaint::shared_ptr<ITMUChar4Image> rgbImage(new ITMUChar4Image(m_spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
+  static GLuint textureID;
+  static bool done = false;
+  if(!done)
+  {
+    glGenTextures(1, &textureID);
+    done = true;
+  }
+
+  m_spaintEngine->get_default_raycast(rgbImage);
+
+#if 0
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   gluLookAt(20.0, -20.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
@@ -146,6 +158,42 @@ void Application::render() const
     glVertex3d(0.0, 0.0, 0.0);
     glVertex3d(0.0, 0.0, 50.0);
   glEnd();
+#endif
+
+#if 1
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  {
+    glLoadIdentity();
+    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    {
+      glLoadIdentity();
+
+      glEnable(GL_TEXTURE_2D);
+      {
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbImage->GetData(false));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glBegin(GL_QUADS);
+        {
+					glTexCoord2f(0, 1); glVertex2f(0, 0);
+					glTexCoord2f(1, 1); glVertex2f(1, 0);
+					glTexCoord2f(1, 0); glVertex2f(1, 1);
+					glTexCoord2f(0, 0); glVertex2f(0, 1);
+        }
+				glEnd();
+      }
+      glDisable(GL_TEXTURE_2D);
+    }
+    glPopMatrix();
+  }
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+#endif
 
   SDL_GL_SwapWindow(m_window.get());
 }

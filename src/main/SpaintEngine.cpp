@@ -65,7 +65,12 @@ void SpaintEngine::get_depth_input(const UChar4Image_Ptr& output) const
   m_visualisationEngine->DepthToUchar4(output.get(), m_view->depth);
 }
 
-void SpaintEngine::get_RGB_input(const UChar4Image_Ptr& output) const
+SpaintEngine::ImageSourceEngine_Ptr SpaintEngine::get_image_source_engine() const
+{
+  return m_imageSourceEngine;
+}
+
+void SpaintEngine::get_rgb_input(const UChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_view->rgb, output);
   output->SetFrom(m_view->rgb);
