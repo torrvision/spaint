@@ -143,8 +143,14 @@ void Application::render() const
     done = true;
   }
 
+#if 1
   m_spaintEngine->get_default_raycast(rgbImage);
-  //m_spaintEngine->generate_free_raycast(rgbImage, m_spaintEngine->get_pose());
+#else
+  ITMPose pose = m_spaintEngine->get_pose();
+  pose.params.each.tx = 0;
+  pose.SetModelViewFromParams();
+  m_spaintEngine->generate_free_raycast(rgbImage, pose);
+#endif
 
 #if 0
   glMatrixMode(GL_MODELVIEW);
