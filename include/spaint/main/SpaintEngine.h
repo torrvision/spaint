@@ -27,6 +27,7 @@ private:
   typedef spaint::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
   typedef spaint::shared_ptr<ITMTracker> Tracker_Ptr;
   typedef spaint::shared_ptr<ITMTrackingState> TrackingState_Ptr;
+  typedef spaint::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
   typedef spaint::shared_ptr<ITMView> View_Ptr;
   typedef spaint::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
   typedef spaint::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
@@ -70,7 +71,7 @@ private:
   VisualisationEngine_Ptr m_visualisationEngine;
 
   /** The current visualisation state. */
-  VisualisationState_Ptr m_visualisationState;
+  mutable VisualisationState_Ptr m_visualisationState;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -98,12 +99,56 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Generates a raycast of the scene from the specified pose.
+   *
+   * \param output      The location into which to put the output image.
+   * \param pose        The pose from which to raycast the scene.
+   * \param intrinsics  The intrinsic parameters of the camera.
+   */
+  void generate_free_raycast(const UChar4Image_Ptr& output, const ITMPose& pose, const ITMIntrinsics& intrinsics) const;
+
+  /**
+   * \brief Gets a raycast of the scene from the default pose (the current camera pose).
+   *
+   * \param output  The location into which to put the output image.
+   */
+  void get_default_raycast(const UChar4Image_Ptr& output) const;
+
+  /**
+   * \brief Gets the depth image from the most recently processed frame.
+   *
+   * \param output  The location into which to put the output image.
+   */
+  void get_depth_input(const UChar4Image_Ptr& output) const;
+
+  /**
+   * \brief Gets the RGB image from the most recently processed frame.
+   *
+   * \param output  The location into which to put the output image.
+   */
+  void get_RGB_input(const UChar4Image_Ptr& output) const;
+
+  /**
    * \brief Processes the next frame from the image source engine.
    */
   void process_frame();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Prepares to copy a visualisation image into the specified output image.
+   *
+   * \param input   The visualisation image to be copied.
+   * \param output  The output image to which it will be copied.
+   */
+  template <typename T>
+  void prepare_to_copy_visualisation(ITMImage<T> *input, const UChar4Image_Ptr& output) const
+  {
+    output->Clear();
+    if(m_settings.useGPU) input->UpdateHostFromDevice();
+    output->ChangeDims(input->noDims);
+  }
+
   /**
    * \brief Initialises the engine.
    */

@@ -12,6 +12,7 @@
 #endif
 #include <ITMLib/Engine/ITMRenTracker.cpp>
 #include <ITMLib/Engine/ITMTrackerFactory.h>
+#include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMRenTracker_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
@@ -39,6 +40,36 @@ SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const std::st
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void SpaintEngine::generate_free_raycast(const UChar4Image_Ptr& output, const ITMPose& pose, const ITMIntrinsics& intrinsics) const
+{
+  if(!m_visualisationState) m_visualisationState.reset(m_visualisationEngine->allocateInternalState(output->noDims));
+
+  m_visualisationEngine->FindVisibleBlocks(m_scene.get(), &pose, &intrinsics, m_visualisationState.get());
+  m_visualisationEngine->CreateExpectedDepths(m_scene.get(), &pose, &intrinsics, m_visualisationState->minmaxImage, m_visualisationState.get());
+  m_visualisationEngine->RenderImage(m_scene.get(), &pose, &intrinsics, m_visualisationState.get(), m_visualisationState->outputImage);
+
+  if(m_settings.useGPU) m_visualisationState->outputImage->UpdateHostFromDevice();
+  output->SetFrom(m_visualisationState->outputImage);
+}
+
+void SpaintEngine::get_default_raycast(const UChar4Image_Ptr& output) const
+{
+  prepare_to_copy_visualisation(m_trackingState->rendering, output);
+  output->SetFrom(m_trackingState->rendering);
+}
+
+void SpaintEngine::get_depth_input(const UChar4Image_Ptr& output) const
+{
+  prepare_to_copy_visualisation(m_view->depth, output);
+  m_visualisationEngine->DepthToUchar4(output.get(), m_view->depth);
+}
+
+void SpaintEngine::get_RGB_input(const UChar4Image_Ptr& output) const
+{
+  prepare_to_copy_visualisation(m_view->rgb, output);
+  output->SetFrom(m_view->rgb);
+}
 
 void SpaintEngine::process_frame()
 {
@@ -94,7 +125,41 @@ void SpaintEngine::process_frame()
   // Integrate (fuse) the view into the scene.
   m_sceneReconstructionEngine->IntegrateIntoScene(m_scene.get(), m_view.get(), m_trackingState->pose_d);
 
-  // TODO
+  // Swap voxel blocks between the GPU and CPU.
+  if(m_settings.useSwapping)
+  {
+    // CPU -> GPU
+    m_swappingEngine->IntegrateGlobalIntoLocal(m_scene.get(), m_view.get());
+
+    // GPU -> CPU
+    m_swappingEngine->SaveToGlobalMemory(m_scene.get(), m_view.get());
+  }
+
+  // Perform raycasting to visualise the scene.
+  // FIXME: It would be better to use dynamic dispatch for this.
+  switch(m_settings.trackerType)
+  {
+    case ITMLibSettings::TRACKER_ICP:
+    case ITMLibSettings::TRACKER_REN:
+    {
+      m_visualisationEngine->CreateExpectedDepths(m_scene.get(), m_trackingState->pose_d, &m_view->calib->intrinsics_d, m_trackingState->renderingRangeImage);
+      m_visualisationEngine->CreateICPMaps(m_scene.get(), m_view.get(), m_trackingState.get());
+      break;
+    }
+    case ITMLibSettings::TRACKER_COLOR:
+    {
+      ITMPose rgbPose(m_view->calib->trafo_rgb_to_depth.calib_inv * m_trackingState->pose_d->M);
+      m_visualisationEngine->CreateExpectedDepths(m_scene.get(), &rgbPose, &m_view->calib->intrinsics_rgb, m_trackingState->renderingRangeImage);
+      m_visualisationEngine->CreatePointCloud(m_scene.get(), m_view.get(), m_trackingState.get(), m_settings.skipPoints);
+      break;
+    }
+    default:
+    {
+      throw std::runtime_error("Error: SpaintEngine::process_frame: Unknown tracker type");
+    }
+  }
+
+  m_reconstructionStarted = true;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

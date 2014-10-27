@@ -78,5 +78,5 @@ try
 catch(std::exception& e)
 {
   std::cerr << e.what() << '\n';
+  return EXIT_FAILURE;
 }
-
