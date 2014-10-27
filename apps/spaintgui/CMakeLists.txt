@@ -24,12 +24,24 @@ INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
 # Specify the project files #
 #############################
 
+SET(noncuda_sources
+main.cpp
+Application.cpp
+WindowedRenderer.cpp
+)
+
 IF(WITH_CUDA)
-  SET(sources main.cpp Application.cpp CUDAInstantiations.cu)
+  SET(sources ${noncuda_sources} CUDAInstantiations.cu)
 ELSE()
-  SET(sources main.cpp Application.cpp)
+  SET(sources ${noncuda_sources})
 ENDIF()
-SET(headers Application.h)
+
+SET(headers
+Application.h
+Renderer.h
+RiftRenderer.h
+WindowedRenderer.h
+)
 
 #############################
 # Specify the source groups #

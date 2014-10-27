@@ -11,6 +11,8 @@
 #include <spaint/main/SpaintEngine.h>
 #include <spaint/util/SharedPtr.h>
 
+#include "Renderer.h"
+
 /**
  * \brief The main application class for spaintgui.
  */
@@ -18,24 +20,9 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef spaint::shared_ptr<const Renderer> Renderer_CPtr;
   typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
   typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
-
-  //#################### ENUMERATIONS ####################
-private:
-  /**
-   * \brief An enumeration containing the different possible targets for rendering the scene.
-   */
-  enum RenderTarget
-  {
-#ifdef WITH_OVR
-    /** Render the scene on the Oculus Rift. */
-    RENDERTARGET_RIFT,
-#endif
-
-    /** Render the scene into a window. */
-    RENDERTARGET_WINDOWED,
-  };
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -45,14 +32,11 @@ private:
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;
 
-  /** The current target for rendering the scene. */
-  RenderTarget m_renderTarget;
+  /** The current renderer. */
+  Renderer_CPtr m_renderer;
 
   /** The spaint engine that the application should use. */
   spaint::SpaintEngine_Ptr m_spaintEngine;
-
-  /** The main window for the application. */
-  SDL_Window_Ptr m_window;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -106,32 +90,6 @@ private:
    * \return true, if the application should continue running, or false otherwise.
    */
   bool process_events();
-
-  /**
-   * \brief Renders the scene into the main window.
-   */
-  void render() const;
-
-  /**
-   * \brief Start rendering on the specified render target.
-   *
-   * \param renderTarget  The render target on which to start rendering.
-   */
-  void start_rendering_on(RenderTarget renderTarget);
-
-  /**
-   * \brief Stop rendering on the specified render target.
-   *
-   * \param renderTarget  The render target on which to stop rendering.
-   */
-  void stop_rendering_on(RenderTarget renderTarget);
-
-  /**
-   * \brief Switch to a new render target.
-   *
-   * \param renderTarget  The new render target.
-   */
-  void switch_render_target(RenderTarget renderTarget);
 };
 
 #endif
