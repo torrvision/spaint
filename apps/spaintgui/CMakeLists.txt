@@ -24,23 +24,47 @@ INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
 # Specify the project files #
 #############################
 
-SET(noncuda_sources
+##
+SET(base_sources
 main.cpp
 Application.cpp
 WindowedRenderer.cpp
 )
 
 IF(WITH_CUDA)
-  SET(sources ${noncuda_sources} CUDAInstantiations.cu)
+  SET(cuda_sources CUDAInstantiations.cu)
 ELSE()
-  SET(sources ${noncuda_sources})
+  SET(cuda_sources)
+ENDIF()
+
+IF(WITH_OVR)
+  SET(ovr_sources RiftRenderer.cpp)
+ELSE()
+  SET(ovr_sources)
+ENDIF()
+
+SET(sources
+${base_sources}
+${cuda_sources}
+${ovr_sources}
+)
+
+##
+SET(base_headers
+Application.h
+Renderer.h
+WindowedRenderer.h
+)
+
+IF(WITH_OVR)
+  SET(ovr_headers RiftRenderer.h)
+ELSE()
+  SET(ovr_headers)
 ENDIF()
 
 SET(headers
-Application.h
-Renderer.h
-RiftRenderer.h
-WindowedRenderer.h
+${base_headers}
+${ovr_headers}
 )
 
 #############################
@@ -70,6 +94,7 @@ TARGET_LINK_LIBRARIES(${targetname} spaint)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenNI.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/LinkOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkSDL.cmake)
 
 #############################
