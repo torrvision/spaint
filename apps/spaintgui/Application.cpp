@@ -144,6 +144,7 @@ void Application::render() const
   }
 
   m_spaintEngine->get_default_raycast(rgbImage);
+  //m_spaintEngine->generate_free_raycast(rgbImage, m_spaintEngine->get_pose());
 
 #if 0
   glMatrixMode(GL_MODELVIEW);

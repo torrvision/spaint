@@ -41,13 +41,13 @@ SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const std::st
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintEngine::generate_free_raycast(const UChar4Image_Ptr& output, const ITMPose& pose, const ITMIntrinsics& intrinsics) const
+void SpaintEngine::generate_free_raycast(const UChar4Image_Ptr& output, const ITMPose& pose) const
 {
   if(!m_visualisationState) m_visualisationState.reset(m_visualisationEngine->allocateInternalState(output->noDims));
 
-  m_visualisationEngine->FindVisibleBlocks(m_scene.get(), &pose, &intrinsics, m_visualisationState.get());
-  m_visualisationEngine->CreateExpectedDepths(m_scene.get(), &pose, &intrinsics, m_visualisationState->minmaxImage, m_visualisationState.get());
-  m_visualisationEngine->RenderImage(m_scene.get(), &pose, &intrinsics, m_visualisationState.get(), m_visualisationState->outputImage);
+  m_visualisationEngine->FindVisibleBlocks(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState.get());
+  m_visualisationEngine->CreateExpectedDepths(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState->minmaxImage, m_visualisationState.get());
+  m_visualisationEngine->RenderImage(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState.get(), m_visualisationState->outputImage);
 
   if(m_settings.useGPU) m_visualisationState->outputImage->UpdateHostFromDevice();
   output->SetFrom(m_visualisationState->outputImage);

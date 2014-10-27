@@ -104,9 +104,8 @@ public:
    *
    * \param output      The location into which to put the output image.
    * \param pose        The pose from which to raycast the scene.
-   * \param intrinsics  The intrinsic parameters of the camera.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, const ITMPose& pose, const ITMIntrinsics& intrinsics) const;
+  void generate_free_raycast(const UChar4Image_Ptr& output, const ITMPose& pose) const;
 
   /**
    * \brief Gets a raycast of the scene from the default pose (the current camera pose).
