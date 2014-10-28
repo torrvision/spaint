@@ -121,13 +121,19 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     ovrEyeType eye = m_hmd->EyeRenderOrder[i];
-    eyePoses[i] = ovrHmd_GetEyePose(m_hmd, eye);
+    eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
     eyeTextures[i].OGL.Header.TextureSize = Sizei(depthImageSize.x, depthImageSize.y);
     eyeTextures[i].OGL.Header.RenderViewport = Recti(Sizei(depthImageSize.x, depthImageSize.y));
     eyeTextures[i].OGL.TexId = textureID;
   }
+
+#if 0
+  // TODO: Switch to this replacement for ovrHmd_GetHmdPosePerEye.
+  //ovrTrackingState trackingState;
+  //ovrHmd_GetEyePoses(m_hmd, 0, hmdToEyeViewOffset, eyePoses, &trackingState);
+#endif
 
   ovrHmd_EndFrame(m_hmd, eyePoses, (const ovrTexture *)eyeTextures);
 }

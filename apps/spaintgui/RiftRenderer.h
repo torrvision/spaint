@@ -9,6 +9,8 @@
 
 #include <OVR.h>
 
+#include <spaint/ogl/WrappedGL.h>
+
 #include "Renderer.h"
 
 /**
@@ -18,14 +20,11 @@ class RiftRenderer : public Renderer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The OpenGL context for the window. */
-  SDL_GLContext_Ptr m_context;
+  /** A pointer to an array of eye texture IDs. */
+  spaint::shared_ptr<GLuint> m_eyeTextureIDs;
 
   /** The Rift handle. */
   ovrHmd m_hmd;
-
-  /** The window into which to render. */
-  SDL_Window_Ptr m_window;
 
   //#################### CONSTRUCTORS ####################
 public:
