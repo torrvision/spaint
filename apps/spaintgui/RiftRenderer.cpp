@@ -107,43 +107,18 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
     done = true;
   }
 
-#if 1
-  spaintEngine->get_default_raycast(rgbImage);
-#else
-  ITMPose pose = m_spaintEngine->get_pose();
-  pose.params.each.tx = 0;
-  pose.SetModelViewFromParams();
-  spaintEngine->generate_free_raycast(rgbImage, pose);
-#endif
-
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbImage->GetData(false));
-  //glDisable(GL_TEXTURE_2D);
-
   ovrHmd_BeginFrame(m_hmd, 0);
 
-#if 0
-  // Query the HMD for the current tracking state.
-  ovrTrackingState trackingState = ovrHmd_GetTrackingState(m_hmd, ovr_GetTimeInSeconds());
+  spaintEngine->get_default_raycast(rgbImage);
 
-  if(trackingState.StatusFlags & ovrStatus_OrientationTracked)
+  glEnable(GL_TEXTURE_2D);
   {
-    // Determine the correct InfiniTAM pose from the HMD orientation.
-    Posef pose = trackingState.HeadPose.ThePose;
-    float yaw, eyePitch, eyeRoll;
-    pose.Rotation.GetEulerAngles<Axis_Y,Axis_X,Axis_Z>(&yaw, &eyePitch, &eyeRoll);
-    // TODO
-
-    // Render the scene for the Rift.
-    // TODO
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbImage->GetData(false));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   }
-  else
-  {
-    // Render an error screen.
-    // TODO
-  }
-#endif
+  glDisable(GL_TEXTURE_2D);
 
   ovrPosef eyePoses[ovrEye_Count];
   ovrGLTexture eyeTextures[ovrEye_Count];

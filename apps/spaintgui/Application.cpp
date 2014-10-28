@@ -17,7 +17,7 @@ using namespace spaint;
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
 : m_spaintEngine(spaintEngine)
 {
-#if 1
+#if 0
   m_renderer.reset(new WindowedRenderer("Semantic Paint", 640, 480));
 #elif WITH_OVR
   m_renderer.reset(new RiftRenderer("Semantic Paint"));
