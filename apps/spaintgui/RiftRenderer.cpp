@@ -11,9 +11,7 @@
 #include <../Src/Kernel/OVR_Math.h>
 using namespace OVR;
 
-#ifdef _WIN32
 #include <SDL_syswm.h>
-#endif
 
 //#################### CONSTRUCTORS ####################
 
@@ -64,8 +62,6 @@ RiftRenderer::RiftRenderer(const std::string& title)
 #ifdef _WIN32
   cfg.OGL.Window = wmInfo.info.win.window;
   cfg.OGL.DC = NULL;
-#else
-  #error "Rift rendering is not currently implemented on non-Windows platforms."
 #endif
 
   const unsigned int distortionCaps = ovrDistortionCap_Chromatic | ovrDistortionCap_Vignette | ovrDistortionCap_TimeWarp | ovrDistortionCap_Overdrive;
