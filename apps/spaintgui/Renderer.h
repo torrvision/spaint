@@ -19,6 +19,14 @@ protected:
   typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
   typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** The OpenGL context for the window. */
+  SDL_GLContext_Ptr m_context;
+
+  /** The window into which to render. */
+  SDL_Window_Ptr m_window;
+
   //#################### DESTRUCTOR ####################
 public:
   /**

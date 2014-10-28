@@ -53,13 +53,13 @@ try
   SpaintEngine_Ptr spaintEngine;
   if(argc == 4)
   {
-    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << "\n\n";
+    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
     spaintEngine.reset(new SpaintEngine(calibrationFilename, rgbImageMask, depthImageMask, settings));
   }
   else
   {
 #if WITH_OPENNI
-    std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << "\n\n";
+    std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     spaintEngine.reset(new SpaintEngine(calibrationFilename, openNIDeviceURI == "Default" ? spaint::shared_ptr<std::string>() : spaint::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");

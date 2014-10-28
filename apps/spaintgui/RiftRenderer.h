@@ -31,8 +31,10 @@ private:
 public:
   /**
    * \brief Constructs a Rift renderer.
+   *
+   * \param title The title to give the window.
    */
-  RiftRenderer();
+  explicit RiftRenderer(const std::string& title);
 
   //#################### DESTRUCTOR ####################
 public:

@@ -14,14 +14,6 @@
  */
 class WindowedRenderer : public Renderer
 {
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** The OpenGL context for the window. */
-  SDL_GLContext_Ptr m_context;
-
-  /** The window into which to render. */
-  SDL_Window_Ptr m_window;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**

@@ -7,6 +7,9 @@
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
+#ifdef WITH_OVR
+#include "RiftRenderer.h"
+#endif
 #include "WindowedRenderer.h"
 
 //#################### CONSTRUCTORS ####################
@@ -14,7 +17,13 @@ using namespace spaint;
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
 : m_spaintEngine(spaintEngine)
 {
+#if 1
   m_renderer.reset(new WindowedRenderer("Semantic Paint", 640, 480));
+#elif WITH_OVR
+  m_renderer.reset(new RiftRenderer("Semantic Paint"));
+#else
+  #error "A renderer must be used!"
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -26,11 +35,14 @@ void Application::run()
     if(!process_events() || m_inputState.key_down(SDLK_ESCAPE)) return;
     m_spaintEngine->process_frame();
     m_renderer->render(m_spaintEngine);
+
+#if 0
     for(int i = 0; i < 6; ++i)
     {
       std::cout << m_spaintEngine->get_pose().params.all[i] << ' ';
     }
     std::cout << '\n';
+#endif
   }
 }
 
