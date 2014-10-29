@@ -43,5 +43,5 @@ INCLUDE(${PROJECT_SOURCE_DIR}/SetTestTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenGL.cmake)
