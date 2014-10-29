@@ -4,6 +4,8 @@
 
 #include "Application.h"
 
+#include <stdexcept>
+
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
@@ -17,13 +19,7 @@ using namespace spaint;
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
 : m_spaintEngine(spaintEngine)
 {
-#if 0
   m_renderer.reset(new WindowedRenderer("Semantic Paint", 640, 480));
-#elif WITH_OVR
-  m_renderer.reset(new RiftRenderer("Semantic Paint"));
-#else
-  #error "A renderer must be used!"
-#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -33,6 +29,32 @@ void Application::run()
   for(;;)
   {
     if(!process_events() || m_inputState.key_down(SDLK_ESCAPE)) return;
+
+    // Switch renderers if the user requests it.
+    static int framesTillSwitchAllowed = 0;
+    const int SWITCH_DELAY = 20;
+    if(framesTillSwitchAllowed == 0)
+    {
+      if(m_inputState.key_down(SDLK_w) && !m_inputState.key_down(SDLK_r))
+      {
+        m_renderer.reset(new WindowedRenderer("Semantic Paint", 640, 480));
+        framesTillSwitchAllowed = SWITCH_DELAY;
+      }
+      else if(m_inputState.key_down(SDLK_r) && !m_inputState.key_down(SDLK_w))
+      {
+#if WITH_OVR
+        try
+        {
+          m_renderer.reset(new RiftRenderer("Semantic Paint"));
+          framesTillSwitchAllowed = SWITCH_DELAY;
+        }
+        catch(std::runtime_error&) {}
+#endif
+      }
+    }
+    else --framesTillSwitchAllowed;
+
+    // Process and render the next frame.
     m_spaintEngine->process_frame();
     m_renderer->render(m_spaintEngine);
 
