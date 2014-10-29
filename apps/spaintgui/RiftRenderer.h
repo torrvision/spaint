@@ -20,8 +20,8 @@ class RiftRenderer : public Renderer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A pointer to an array of eye texture IDs. */
-  spaint::shared_ptr<GLuint> m_eyeTextureIDs;
+  /** The eye texture IDs. */
+  GLuint m_eyeTextureIDs[ovrEye_Count];
 
   /** The Rift handle. */
   ovrHmd m_hmd;

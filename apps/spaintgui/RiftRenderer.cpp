@@ -20,7 +20,12 @@ RiftRenderer::RiftRenderer(const std::string& title, bool windowed)
   // Initialise the Rift.
   ovr_Initialize();
   m_hmd = ovrHmd_Create(0);
-  if(!m_hmd) throw std::runtime_error("[spaint] Could not find the Rift!");
+  if(!m_hmd)
+  {
+    std::cout << "[spaint] Could not find the Rift, attempting to fall back to a virtual Rift\n";
+    m_hmd = ovrHmd_CreateDebug(ovrHmd_DK2);
+    if(!m_hmd) throw std::runtime_error("[spaint] Failed to create a virtual Rift!");
+  }
 
   // Configure and start the sensor that provides the Rift's pose and motion.
   ovrHmd_ConfigureTracking(m_hmd, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0);
@@ -78,12 +83,16 @@ RiftRenderer::RiftRenderer(const std::string& title, bool windowed)
     throw std::runtime_error("[spaint] Could not attach the Rift to the window!");
   }
 #endif
+
+  // Generate IDs for the eye textures.
+  glGenTextures(ovrEye_Count, m_eyeTextureIDs);
 }
 
 //#################### DESTRUCTOR ####################
 
 RiftRenderer::~RiftRenderer()
 {
+  glDeleteTextures(ovrEye_Count, m_eyeTextureIDs);
   ovrHmd_Destroy(m_hmd);
   ovr_Shutdown();
 }
@@ -92,6 +101,9 @@ RiftRenderer::~RiftRenderer()
 
 void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
 {
+  // Keep trying to get rid of the annoying health and safety warning until it goes away.
+  ovrHmd_DismissHSWDisplay(m_hmd);
+
   ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();
 
   static spaint::shared_ptr<ITMUChar4Image> rgbImage(new ITMUChar4Image(depthImageSize, false));
