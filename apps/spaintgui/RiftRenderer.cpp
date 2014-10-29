@@ -11,6 +11,7 @@
 #include <../Src/Kernel/OVR_Math.h>
 using namespace OVR;
 
+#pragma GCC diagnostic ignored "-Wextern-c-compat"
 #include <SDL_syswm.h>
 
 //#################### CONSTRUCTORS ####################
