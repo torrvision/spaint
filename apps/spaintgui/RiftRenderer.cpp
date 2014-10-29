@@ -15,7 +15,7 @@ using namespace OVR;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, bool windowed)
+RiftRenderer::RiftRenderer(const std::string& title, bool windowed, const spaint::SpaintEngine_Ptr& spaintEngine)
 {
   // Initialise the Rift.
   ovr_Initialize();
@@ -84,7 +84,12 @@ RiftRenderer::RiftRenderer(const std::string& title, bool windowed)
   }
 #endif
 
-  // Generate IDs for the eye textures.
+  // Set up the eye images and eye textures.
+  ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();
+  for(int i = 0; i < ovrEye_Count; ++i)
+  {
+    m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, false));
+  }
   glGenTextures(ovrEye_Count, m_eyeTextureIDs);
 }
 
@@ -104,48 +109,41 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);
 
-  ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();
-
-  static spaint::shared_ptr<ITMUChar4Image> rgbImage(new ITMUChar4Image(depthImageSize, false));
-  static GLuint textureID;
-  static bool done = false;
-  if(!done)
-  {
-    glGenTextures(1, &textureID);
-    done = true;
-  }
-
+  // Start the frame.
   ovrHmd_BeginFrame(m_hmd, 0);
 
-  spaintEngine->get_default_raycast(rgbImage);
+  // Construct the left and right eye images.
+  spaintEngine->get_default_raycast(m_eyeImages[0]);
+  spaintEngine->get_default_raycast(m_eyeImages[1]);
 
-  glEnable(GL_TEXTURE_2D);
+  // Copy the eye images into OpenGL textures.
+  for(int i = 0; i < ovrEye_Count; ++i)
   {
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, m_eyeTextureIDs[i]);
 
-#if 1
-    // Invert the image (otherwise it appears upside-down on the Rift).
-    Vector4u *p = rgbImage->GetData(false);
-    Vector4u *q = new Vector4u[rgbImage->noDims.x * rgbImage->noDims.y];
-    for(int i = 0; i < rgbImage->noDims.x * rgbImage->noDims.y; ++i)
+    // Invert the image (otherwise it would appear upside-down on the Rift).
+    // FIXME: This can be made more efficient.
+    Vector4u *imageData = m_eyeImages[i]->GetData(false);
+    Vector4u *invertedImageData = new Vector4u[m_eyeImages[i]->noDims.x * m_eyeImages[i]->noDims.y];
+    for(int n = 0; n < m_eyeImages[i]->noDims.x * m_eyeImages[i]->noDims.y; ++n)
     {
-      int x = i % rgbImage->noDims.x;
-      int dy = i / rgbImage->noDims.x;
-      int sy = rgbImage->noDims.y - 1 - dy;
-      q[i] = p[sy * rgbImage->noDims.x + x];
+      int x = n % m_eyeImages[i]->noDims.x;
+      int dy = n / m_eyeImages[i]->noDims.x;
+      int sy = m_eyeImages[i]->noDims.y - 1 - dy;
+      invertedImageData[n] = imageData[sy * m_eyeImages[i]->noDims.x + x];
     }
-#endif
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, q);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, invertedImageData);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-#if 1
-    delete[] q;
-#endif
-  }
-  glDisable(GL_TEXTURE_2D);
+    delete[] invertedImageData;
 
+    glDisable(GL_TEXTURE_2D);
+  }
+
+  // Set up the eye poses and pass the eye textures to the Rift SDK.
   ovrPosef eyePoses[ovrEye_Count];
   ovrGLTexture eyeTextures[ovrEye_Count];
   for(int i = 0; i < ovrEye_Count; ++i)
@@ -154,9 +152,9 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize = Sizei(depthImageSize.x, depthImageSize.y);
-    eyeTextures[i].OGL.Header.RenderViewport = Recti(Sizei(depthImageSize.x, depthImageSize.y));
-    eyeTextures[i].OGL.TexId = textureID;
+    eyeTextures[i].OGL.Header.TextureSize = Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y);
+    eyeTextures[i].OGL.Header.RenderViewport = Recti(Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y));
+    eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
   }
 
 #if 0
@@ -165,5 +163,6 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
   //ovrHmd_GetEyePoses(m_hmd, 0, hmdToEyeViewOffset, eyePoses, &trackingState);
 #endif
 
+  // Render the frame and perform a buffer swap.
   ovrHmd_EndFrame(m_hmd, eyePoses, (const ovrTexture *)eyeTextures);
 }

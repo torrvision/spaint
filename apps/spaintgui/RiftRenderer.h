@@ -18,8 +18,15 @@
  */
 class RiftRenderer : public Renderer
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef spaint::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The images in which to store the eye textures each frame. */
+  ITMUChar4Image_Ptr m_eyeImages[ovrEye_Count];
+
   /** The eye texture IDs. */
   GLuint m_eyeTextureIDs[ovrEye_Count];
 
@@ -31,10 +38,11 @@ public:
   /**
    * \brief Constructs a Rift renderer.
    *
-   * \param title     The title to give the window.
-   * \param windowed  Whether or not to render in a window rather than on the Rift itself.
+   * \param title         The title to give the window.
+   * \param windowed      Whether or not to render in a window rather than on the Rift itself.
+   * \param spaintEngine  The spaint engine.
    */
-  RiftRenderer(const std::string& title, bool windowed);
+  RiftRenderer(const std::string& title, bool windowed, const spaint::SpaintEngine_Ptr& spaintEngine);
 
   //#################### DESTRUCTOR ####################
 public:
