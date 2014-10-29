@@ -27,12 +27,6 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintEngine_
     if(!m_hmd) throw std::runtime_error("[spaint] Failed to create a virtual Rift!");
   }
 
-  // Configure and start the sensor that provides the Rift's pose and motion.
-  ovrHmd_ConfigureTracking(m_hmd, ovrTrackingCap_Orientation | ovrTrackingCap_MagYawCorrection | ovrTrackingCap_Position, 0);
-
-  // Recentre the pose.
-  ovrHmd_RecenterPose(m_hmd);
-
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
