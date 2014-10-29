@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include <spaint/ogl/WrappedGL.h>
+
 #include "Renderer.h"
 
 /**
@@ -14,21 +16,43 @@
  */
 class WindowedRenderer : public Renderer
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The image in which to store the visualisation each frame. */
+  ITMUChar4Image_Ptr m_image;
+
+  /** The texture ID for the visualisation we're drawing. */
+  GLuint m_textureID;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a windowed renderer.
    *
-   * \param title   The title to give the window.
-   * \param width   The width to give the window.
-   * \param height  The height to give the window.
+   * \param spaintEngine  The spaint engine.
+   * \param title         The title to give the window.
+   * \param width         The width to give the window.
+   * \param height        The height to give the window.
    */
-  WindowedRenderer(const std::string& title, int width, int height);
+  WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height);
+
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys the renderer.
+   */
+  ~WindowedRenderer();
+
+  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
+private:
+  // Deliberately private and unimplemented.
+  WindowedRenderer(const WindowedRenderer&);
+  WindowedRenderer& operator=(const WindowedRenderer&);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void render(const spaint::SpaintEngine_Ptr& spaintEngine) const;
+  virtual void render() const;
 };
 
 #endif

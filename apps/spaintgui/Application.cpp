@@ -19,7 +19,7 @@ using namespace spaint;
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
 : m_spaintEngine(spaintEngine)
 {
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", 640, 480));
+  m_renderer.reset(new WindowedRenderer(spaintEngine, "Semantic Paint", 640, 480));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -37,7 +37,7 @@ void Application::run()
     {
       if(m_inputState.key_down(SDLK_w) && !m_inputState.key_down(SDLK_r))
       {
-        m_renderer.reset(new WindowedRenderer("Semantic Paint", 640, 480));
+        m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(SDLK_r) && !m_inputState.key_down(SDLK_w))
@@ -45,7 +45,7 @@ void Application::run()
 #if WITH_OVR
         try
         {
-          m_renderer.reset(new RiftRenderer("Semantic Paint", m_spaintEngine, RiftRenderer::FULLSCREEN_MODE));
+          m_renderer.reset(new RiftRenderer(m_spaintEngine, "Semantic Paint", RiftRenderer::FULLSCREEN_MODE));
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
         catch(std::runtime_error&) {}
@@ -56,7 +56,7 @@ void Application::run()
 
     // Process and render the next frame.
     m_spaintEngine->process_frame();
-    m_renderer->render(m_spaintEngine);
+    m_renderer->render();
 
 #if 0
     for(int i = 0; i < 6; ++i)

@@ -15,7 +15,8 @@ using namespace OVR;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintEngine_Ptr& spaintEngine, RiftRenderingMode renderingMode)
+RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode)
+: Renderer(spaintEngine)
 {
   // Initialise the Rift.
   ovr_Initialize();
@@ -98,7 +99,7 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
+void RiftRenderer::render() const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);
@@ -107,8 +108,8 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
   ovrHmd_BeginFrame(m_hmd, 0);
 
   // Construct the left and right eye images.
-  spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Left]);
-  spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Right]);
+  m_spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Left]);
+  m_spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Right]);
 
   // Copy the eye images into OpenGL textures.
   for(int i = 0; i < ovrEye_Count; ++i)

@@ -16,6 +16,7 @@ class Renderer
 {
   //#################### TYPEDEFS ####################
 protected:
+  typedef spaint::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
   typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
@@ -24,8 +25,22 @@ protected:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
+  /** The spaint engine. */
+  spaint::SpaintEngine_Ptr m_spaintEngine;
+
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a renderer.
+   *
+   * \param spaintEngine  The spaint engine.
+   */
+  explicit Renderer(const spaint::SpaintEngine_Ptr& spaintEngine)
+  : m_spaintEngine(spaintEngine)
+  {}
 
   //#################### DESTRUCTOR ####################
 public:
@@ -38,10 +53,8 @@ public:
 public:
   /**
    * \brief Renders the scene.
-   *
-   * \param spaintEngine  The spaint engine.
    */
-  virtual void render(const spaint::SpaintEngine_Ptr& spaintEngine) const = 0;
+  virtual void render() const = 0;
 };
 
 #endif

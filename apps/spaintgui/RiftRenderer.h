@@ -18,10 +18,6 @@
  */
 class RiftRenderer : public Renderer
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef spaint::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-
   //#################### ENUMERATIONS ####################
 public:
   /**
@@ -49,14 +45,17 @@ public:
   /**
    * \brief Constructs a Rift renderer.
    *
-   * \param title         The title to give the window.
    * \param spaintEngine  The spaint engine.
+   * \param title         The title to give the window.
    * \param renderingMode The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, const spaint::SpaintEngine_Ptr& spaintEngine, RiftRenderingMode renderingMode);
+  RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:
+  /**
+   * \brief Destroys the renderer.
+   */
   ~RiftRenderer();
 
   //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
@@ -68,7 +67,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void render(const spaint::SpaintEngine_Ptr& spaintEngine) const;
+  virtual void render() const;
 };
 
 #endif

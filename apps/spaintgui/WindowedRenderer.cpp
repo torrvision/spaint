@@ -8,7 +8,8 @@
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const std::string& title, int width, int height)
+WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
+: Renderer(spaintEngine)
 {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -30,28 +31,29 @@ WindowedRenderer::WindowedRenderer(const std::string& title, int width, int heig
   );
 
   glViewport(0, 0, width, height);
+
+  m_image.reset(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
+  glGenTextures(1, &m_textureID);
+}
+
+//#################### DESTRUCTOR ####################
+
+WindowedRenderer::~WindowedRenderer()
+{
+  glDeleteTextures(1, &m_textureID);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void WindowedRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
+void WindowedRenderer::render() const
 {
-  static spaint::shared_ptr<ITMUChar4Image> rgbImage(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
-  static GLuint textureID;
-  static bool done = false;
-  if(!done)
-  {
-    glGenTextures(1, &textureID);
-    done = true;
-  }
-
 #if 1
-  spaintEngine->get_default_raycast(rgbImage);
+  m_spaintEngine->get_default_raycast(m_image);
 #else
   ITMPose pose = m_spaintEngine->get_pose();
   pose.params.each.tx = 0;
   pose.SetModelViewFromParams();
-  spaintEngine->generate_free_raycast(rgbImage, pose);
+  m_spaintEngine->generate_free_raycast(m_image, pose);
 #endif
 
   glMatrixMode(GL_PROJECTION);
@@ -67,8 +69,8 @@ void WindowedRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) cons
 
       glEnable(GL_TEXTURE_2D);
       {
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbImage->GetData(false));
+        glBindTexture(GL_TEXTURE_2D, m_textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(false));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glBegin(GL_QUADS);
