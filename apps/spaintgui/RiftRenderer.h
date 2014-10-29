@@ -31,9 +31,10 @@ public:
   /**
    * \brief Constructs a Rift renderer.
    *
-   * \param title The title to give the window.
+   * \param title     The title to give the window.
+   * \param windowed  Whether or not to render in a window rather than on the Rift itself.
    */
-  explicit RiftRenderer(const std::string& title);
+  RiftRenderer(const std::string& title, bool windowed);
 
   //#################### DESTRUCTOR ####################
 public:

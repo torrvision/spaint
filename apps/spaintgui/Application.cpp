@@ -45,7 +45,7 @@ void Application::run()
 #if WITH_OVR
         try
         {
-          m_renderer.reset(new RiftRenderer("Semantic Paint"));
+          m_renderer.reset(new RiftRenderer("Semantic Paint", true));
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
         catch(std::runtime_error&) {}
