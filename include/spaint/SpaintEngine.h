@@ -7,8 +7,8 @@
 
 #include <Engine/ImageSourceEngine.h>
 
-#include "../util/SharedPtr.h"
-#include "../util/SpaintVoxel.h"
+#include "util/SharedPtr.h"
+#include "util/SpaintVoxel.h"
 
 namespace spaint {
 

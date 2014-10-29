@@ -7,7 +7,7 @@
 
 #include <SDL.h>
 
-#include <spaint/main/SpaintEngine.h>
+#include <spaint/SpaintEngine.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the scene constructed by the spaint engine to a given target.

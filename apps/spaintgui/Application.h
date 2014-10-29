@@ -7,8 +7,8 @@
 
 #include <SDL.h>
 
+#include <spaint/SpaintEngine.h>
 #include <spaint/input/InputState.h>
-#include <spaint/main/SpaintEngine.h>
 #include <spaint/util/SharedPtr.h>
 
 #include "Renderer.h"

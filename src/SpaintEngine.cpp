@@ -2,7 +2,7 @@
  * spaint: SpaintEngine.cpp
  */
 
-#include "main/SpaintEngine.h"
+#include "SpaintEngine.h"
 
 #include <stdexcept>
 
