@@ -22,6 +22,17 @@ class RiftRenderer : public Renderer
 private:
   typedef spaint::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
 
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief An enumeration containing the various possible Rift rendering modes.
+   */
+  enum RiftRenderingMode
+  {
+    FULLSCREEN_MODE,
+    WINDOWED_MODE
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The images in which to store the eye textures each frame. */
@@ -39,10 +50,10 @@ public:
    * \brief Constructs a Rift renderer.
    *
    * \param title         The title to give the window.
-   * \param windowed      Whether or not to render in a window rather than on the Rift itself.
    * \param spaintEngine  The spaint engine.
+   * \param renderingMode The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, bool windowed, const spaint::SpaintEngine_Ptr& spaintEngine);
+  RiftRenderer(const std::string& title, const spaint::SpaintEngine_Ptr& spaintEngine, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

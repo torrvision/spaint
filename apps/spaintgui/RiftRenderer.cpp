@@ -15,7 +15,7 @@ using namespace OVR;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, bool windowed, const spaint::SpaintEngine_Ptr& spaintEngine)
+RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintEngine_Ptr& spaintEngine, RiftRenderingMode renderingMode)
 {
   // Initialise the Rift.
   ovr_Initialize();
@@ -39,11 +39,11 @@ RiftRenderer::RiftRenderer(const std::string& title, bool windowed, const spaint
   m_window.reset(
     SDL_CreateWindow(
       title.c_str(),
-      windowed ? SDL_WINDOWPOS_UNDEFINED : SDL_WINDOWPOS_CENTERED_DISPLAY(1),
-      windowed ? SDL_WINDOWPOS_UNDEFINED : SDL_WINDOWPOS_CENTERED_DISPLAY(1),
+      renderingMode == WINDOWED_MODE ? SDL_WINDOWPOS_UNDEFINED : SDL_WINDOWPOS_CENTERED_DISPLAY(1),
+      renderingMode == WINDOWED_MODE ? SDL_WINDOWPOS_UNDEFINED : SDL_WINDOWPOS_CENTERED_DISPLAY(1),
       m_hmd->Resolution.w,
       m_hmd->Resolution.h,
-      windowed ? SDL_WINDOW_OPENGL : SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
+      renderingMode == WINDOWED_MODE ? SDL_WINDOW_OPENGL : SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
     ),
     &SDL_DestroyWindow
   );
