@@ -53,8 +53,8 @@ RiftRenderer::RiftRenderer(const std::string& title)
   SDL_VERSION(&wmInfo.version);
   SDL_GetWindowWMInfo(m_window.get(), &wmInfo);
 
-  // Configure SDK-based rendering.
-  const int backBufferMultisample = 0;
+  // Configure rendering via the Rift SDK.
+  const int backBufferMultisample = 1;
   ovrGLConfig cfg;
   cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
   cfg.OGL.Header.RTSize = Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
@@ -110,9 +110,27 @@ void RiftRenderer::render(const spaint::SpaintEngine_Ptr& spaintEngine) const
   glEnable(GL_TEXTURE_2D);
   {
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbImage->GetData(false));
+
+#if 1
+    // Invert the image (otherwise it appears upside-down on the Rift).
+    Vector4u *p = rgbImage->GetData(false);
+    Vector4u *q = new Vector4u[rgbImage->noDims.x * rgbImage->noDims.y];
+    for(int i = 0; i < rgbImage->noDims.x * rgbImage->noDims.y; ++i)
+    {
+      int x = i % rgbImage->noDims.x;
+      int dy = i / rgbImage->noDims.x;
+      int sy = rgbImage->noDims.y - 1 - dy;
+      q[i] = p[sy * rgbImage->noDims.x + x];
+    }
+#endif
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgbImage->noDims.x, rgbImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, q);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+#if 1
+    delete[] q;
+#endif
   }
   glDisable(GL_TEXTURE_2D);
 
