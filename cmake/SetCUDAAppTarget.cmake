@@ -12,7 +12,7 @@ ELSE()
   ADD_EXECUTABLE(${targetname} ${sources} ${headers} ${templates})
 ENDIF()
 
-INCLUDE(${PROJECT_SOURCE_DIR}/VCLibraryHack.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/VCLibraryHack.cmake)
 
 IF(MSVC_IDE)
   SET_TARGET_PROPERTIES(${targetname} PROPERTIES LINK_FLAGS_DEBUG "/DEBUG")

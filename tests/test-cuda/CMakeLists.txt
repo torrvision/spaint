@@ -12,7 +12,7 @@ SET(targetname test-cuda)
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 
 #############################
 # Specify the project files #
@@ -32,14 +32,13 @@ SOURCE_GROUP(headers FILES ${headers})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
 INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/SetCUDATestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDATestTarget.cmake)
 
 #################################
 # Specify the libraries to link #

@@ -12,7 +12,7 @@ SET(targetname test-sdl)
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 #############################
 # Specify the project files #
@@ -36,10 +36,10 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)

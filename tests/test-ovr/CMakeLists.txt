@@ -12,8 +12,8 @@ SET(targetname test-ovr)
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenGL.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 
 #############################
 # Specify the project files #
@@ -37,11 +37,11 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkOVR.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenGL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)

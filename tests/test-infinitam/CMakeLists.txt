@@ -12,8 +12,8 @@ SET(targetname test-infinitam)
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/UseCUDA.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -37,10 +37,10 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/SetCUDATestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDATestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
