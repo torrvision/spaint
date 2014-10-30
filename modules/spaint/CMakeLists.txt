@@ -12,13 +12,13 @@ SET(targetname spaint)
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseCUDA.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenCV.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenNI.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOVR.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 #############################
 # Specify the project files #

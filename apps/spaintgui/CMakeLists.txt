@@ -12,13 +12,13 @@ SET(targetname spaintgui)
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseCUDA.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenGL.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOpenNI.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseOVR.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/UseSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 #############################
 # Specify the project files #
@@ -84,21 +84,21 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/SetCUDAAppTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
 TARGET_LINK_LIBRARIES(${targetname} spaint)
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkInfiniTAM.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenGL.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkOpenNI.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkOVR.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/LinkSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 
 #############################
 # Specify things to install #
 #############################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/InstallApp.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
