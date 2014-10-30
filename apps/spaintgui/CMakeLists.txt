@@ -78,7 +78,7 @@ SOURCE_GROUP(headers FILES ${headers})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 
 ##########################################
 # Specify the target and where to put it #
