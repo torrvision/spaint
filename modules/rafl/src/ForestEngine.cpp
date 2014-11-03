@@ -3,7 +3,7 @@
 #include <iostream>
 
 namespace rafl {
-  
+
 ForestEngine::ForestEngine(int a)
 : m_a(a)
 {

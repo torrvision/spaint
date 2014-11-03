@@ -14,7 +14,7 @@ class ForestEngine
 {
 private:
   int m_a;
-  
+
 public:
   explicit ForestEngine(int a);
 };

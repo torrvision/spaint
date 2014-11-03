@@ -14,7 +14,6 @@ SET(targetname rafl)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 #############################
 # Specify the project files #
