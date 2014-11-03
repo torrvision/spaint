@@ -1,15 +1,15 @@
 /**
- * spaint: SharedPtr.h
+ * tvgutil: SharedPtr.h
  */
 
-#ifndef H_SPAINT_SHAREDPTR
-#define H_SPAINT_SHAREDPTR
+#ifndef H_TVGUTIL_SHAREDPTR
+#define H_TVGUTIL_SHAREDPTR
 
 #if WITH_BOOST
 
 #include <boost/shared_ptr.hpp>
 
-namespace spaint {
+namespace tvgutil {
   using boost::shared_ptr;
 }
 
@@ -18,7 +18,7 @@ namespace spaint {
 // TODO: Find a non-Boost solution that works for older compilers.
 #include <memory>
 
-namespace spaint {
+namespace tvgutil {
   using std::shared_ptr;
 }
 

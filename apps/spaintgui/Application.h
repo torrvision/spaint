@@ -9,7 +9,7 @@
 
 #include <spaint/SpaintEngine.h>
 #include <spaint/input/InputState.h>
-#include <spaint/util/SharedPtr.h>
+#include <tvgutil/SharedPtr.h>
 
 #include "Renderer.h"
 
@@ -20,9 +20,9 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef spaint::shared_ptr<const Renderer> Renderer_CPtr;
-  typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
-  typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
+  typedef tvgutil::shared_ptr<const Renderer> Renderer_CPtr;
+  typedef tvgutil::shared_ptr<void> SDL_GLContext_Ptr;
+  typedef tvgutil::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

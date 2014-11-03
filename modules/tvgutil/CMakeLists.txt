@@ -1,38 +1,30 @@
-###################################
-# CMakeLists.txt for modules/rafl #
-###################################
+######################################
+# CMakeLists.txt for modules/tvgutil #
+######################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname rafl)
+SET(targetname tvgutil)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+# None needed
 
 #############################
 # Specify the project files #
 #############################
 
 ##
-SET(base_headers
-include/rafl/base/Descriptor.h
-include/rafl/base/Example.h
-)
-
-##
 SET(toplevel_sources
-src/ForestEngine.cpp
+src/Dummy.cpp
 )
 
 SET(toplevel_headers
-include/rafl/ForestEngine.h
-include/rafl/RandomForest.h
+include/tvgutil/SharedPtr.h
 )
 
 #################################################################
@@ -44,7 +36,6 @@ ${toplevel_sources}
 )
 
 SET(headers
-${base_headers}
 ${toplevel_headers}
 )
 
@@ -53,20 +44,18 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
-SOURCE_GROUP(base FILES ${base_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(include/rafl)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
+INCLUDE_DIRECTORIES(include/tvgutil)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDALibTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetLibTarget.cmake)
 
 #############################
 # Specify things to install #

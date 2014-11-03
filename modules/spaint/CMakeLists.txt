@@ -50,7 +50,6 @@ include/spaint/SpaintEngine.h
 
 ##
 SET(util_headers
-include/spaint/util/SharedPtr.h
 include/spaint/util/SpaintVoxel.h
 )
 
@@ -84,6 +83,7 @@ SOURCE_GROUP(util FILES ${util_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/spaint)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 #INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)
 
 ##########################################
