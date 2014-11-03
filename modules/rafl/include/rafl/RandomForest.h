@@ -8,8 +8,38 @@
 #include <vector>
 
 #include <tvgutil/SharedPtr.h>
+#include "base/Example.h"
 
 namespace rafl {
+
+template <typename Label>
+class ExampleReservoir
+{
+    //#################### PRIVATE VARIABLES ####################
+private:
+  std::vector<Example> m_examples;
+  size_t m_maxSize;
+
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public: 
+  explicit ExampleReservoir(size_t maxSize)
+  : m_maxSize(maxSize)
+  {}
+
+    //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  void add_example(const Example& example)
+  {
+  }
+};
+
+
+template <typename Label>
+class Node
+{
+
+};
 
 /**
  * \brief An instance of an instantiation of this class template represents a decision tree suitable for use within a random forest.
@@ -17,6 +47,7 @@ namespace rafl {
 template <typename Label>
 class DecisionTree
 {
+private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public: 
