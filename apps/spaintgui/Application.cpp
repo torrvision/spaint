@@ -45,7 +45,7 @@ void Application::run()
 #if WITH_OVR
         try
         {
-          m_renderer.reset(new RiftRenderer(m_spaintEngine, "Semantic Paint", RiftRenderer::FULLSCREEN_MODE));
+          m_renderer.reset(new RiftRenderer(m_spaintEngine, "Semantic Paint", RiftRenderer::WINDOWED_MODE));
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
         catch(std::runtime_error&) {}
