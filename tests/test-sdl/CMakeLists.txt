@@ -5,8 +5,13 @@
 ###########################
 # Specify the target name #
 ###########################
+set(TESTS "main" )
+#set(TESTS "main" "02_getting_an_image_on_the_screen")
+foreach(t ${TESTS})
 
-SET(targetname test-sdl)
+#message(creating test: ${t})
+
+SET(targetname test-sdl-${t})
 
 ################################
 # Specify the libraries to use #
@@ -17,8 +22,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 #############################
 # Specify the project files #
 #############################
-
-SET(sources main.cpp)
+#SET(sources main.cpp)
+SET(sources ${t}.cpp)
 
 #############################
 # Specify the source groups #
@@ -43,3 +48,5 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
 #################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
+
+endforeach()

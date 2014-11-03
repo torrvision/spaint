@@ -2,6 +2,7 @@
 # CMakeLists.txt for spaint/tests #
 ###################################
 
+#ADD_SUBDIRECTORY(test-forest)
 ADD_SUBDIRECTORY(test-infinitam)
 ADD_SUBDIRECTORY(test-sdl)
 
