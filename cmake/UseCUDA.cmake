@@ -17,5 +17,10 @@ IF(WITH_CUDA)
     SET(CUDA_NVCC_FLAGS -Xcompiler -stdlib=libstdc++; -Xlinker -stdlib=libstdc++; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
+  # If on Linux, make sure that C++11 support is enabled when compiling with nvcc.
+  IF(${CMAKE_SYSTEM} MATCHES "Linux")
+    SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
+  ENDIF()
+
   ADD_DEFINITIONS(-DWITH_CUDA)
 ENDIF()

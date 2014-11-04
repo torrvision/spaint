@@ -5,6 +5,7 @@
 #include "IDAllocator.h"
 
 #include <sstream>
+#include <stdexcept>
 
 namespace tvgutil {
 
