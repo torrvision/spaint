@@ -5,6 +5,7 @@
 #include "examples/ExampleReservoir.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <iterator>
 
@@ -15,7 +16,7 @@ namespace rafl {
 ExampleReservoir::ExampleReservoir(size_t maxSize, unsigned int seed)
 : m_maxSize(maxSize), m_seenExamples(0)
 {
-  m_gen.reset(new std::default_random_engine(seed));
+  srand(seed);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -28,8 +29,7 @@ void ExampleReservoir::add_example(int exampleID)
   }
   else
   {
-    std::uniform_int_distribution<> dist(0, static_cast<int>(m_seenExamples) - 1);
-    size_t k = dist(*m_gen);
+    size_t k = rand() % m_seenExamples;
     if(k < m_maxSize) m_exampleIDs[k] = exampleID;
   }
 

@@ -6,7 +6,6 @@
 #define H_RAFL_EXAMPLERESERVOIR
 
 #include <iosfwd>
-#include <random>
 #include <vector>
 
 #include <tvgutil/SharedPtr.h>
@@ -22,9 +21,6 @@ class ExampleReservoir
 private:
   /** The IDs of the examples in the reservoir. */
   std::vector<int> m_exampleIDs;
-
-  /** The random number generator. */
-  tvgutil::shared_ptr<std::default_random_engine> m_gen;
 
   /** The maximum number of examples allowed in the reservoir at any one time. */
   size_t m_maxSize;
