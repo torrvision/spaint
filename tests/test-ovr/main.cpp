@@ -1,5 +1,10 @@
 #include <iostream>
 
+#ifdef __APPLE__
+  // Prevent a warning in OVR_Types.h.
+  #undef static_assert
+#endif
+
 #include <OVR.h>
 #include <../Src/Kernel/OVR_Math.h>
 using namespace OVR;
