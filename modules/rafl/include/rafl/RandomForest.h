@@ -15,18 +15,46 @@
 
 namespace rafl {
 
-template <typename Label>
-class Node
+class DecisionFunction
 {
-  // TODO
+  //#################### PRIVATE VARIABLES ####################
+private:
+  size_t m_featureIndex;
+  float m_threshold;
+  
+  //#################### CONSTRUCTORS ####################
+public:
+  DecisionFunction(size_t featureIndex, float threshold)
+  : m_featureIndex(featureIndex), m_threshold(threshold)
+  {}
+  
+  //#################### PUBLIC OPERATORS ####################
+public: 
+  bool operator()(const Descriptor& descriptor) const
+  {
+    return descriptor[m_featureIndex] < m_threshold;
+  }
 };
 
+typedef tvgutil::shared_ptr<DecisionFunction> DecisionFunction_Ptr;
+  
 /**
  * \brief An instance of an instantiation of this class template represents a decision tree suitable for use within a random forest.
  */
 template <typename Label>
 class DecisionTree
 {
+  //#################### NESTED TYPES ####################
+private:
+  struct Node
+  {
+    /** TODO */
+    std::vector<int> m_exampleIDs;
+
+    /** TODO */
+    DecisionFunction_Ptr m_splitter;
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   // TODO
