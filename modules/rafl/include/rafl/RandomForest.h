@@ -48,23 +48,59 @@ class DecisionTree
 private:
   struct Node
   {
-    /** TODO */
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+    /** The IDs of the examples currently stored in the node. */
     std::vector<int> m_exampleIDs;
 
-    /** TODO */
+    /** The index of the node's left child. */
+    int m_leftChildIndex;
+
+    /** The index of the node's right child. */
+    int m_rightChildIndex;
+
+    /** The split function for the node. */
     DecisionFunction_Ptr m_splitter;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+
+    /**
+     * \brief Constructs a node.
+     */
+    Node()
+    : m_leftChildIndex(-1), m_rightChildIndex(-1)
+    {}
   };
+
+  //#################### TYPEDEFS ####################
+private:
+  typedef tvgutil::shared_ptr<Node> Node_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  // TODO
+  /** The nodes in the tree. */
+  std::vector<Node_Ptr> m_nodes;
+
+  /** The index of the root node. */
+  int m_rootIndex;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs an empty decision tree.
+   */
+  DecisionTree()
+  : m_rootIndex(0)
+  {
+    m_nodes.push_back(Node_Ptr(new Node));
+  }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Adds new training examples to the decision tree.
    *
-   * \param examples  The IDs of the examples to be added.
+   * \param exampleIDs  The IDs of the examples to be added.
    */
   void add_examples(const std::vector<int>& exampleIDs)
   {
