@@ -1,6 +1,7 @@
 #! /bin/bash -e
 
 /bin/rm -fR build
+/bin/rm -fR docs
 /bin/rm -fR install
 
 cd libraries
