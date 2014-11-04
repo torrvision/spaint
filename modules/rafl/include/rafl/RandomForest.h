@@ -5,58 +5,16 @@
 #ifndef H_RAFL_RANDOMFOREST
 #define H_RAFL_RANDOMFOREST
 
+#include <map>
+#include <random>
 #include <vector>
 
+#include <tvgutil/IDAllocator.h>
 #include <tvgutil/SharedPtr.h>
 
-#include "base/Example.h"
+#include "examples/Example.h"
 
 namespace rafl {
-
-/**
- * \brief An instance of an instantiation of this class template represents a reservoir that can be used to store examples in a random forest node.
- */
-template <typename Label>
-class ExampleReservoir
-{
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** The examples in the reservoir. */
-  std::vector<Example> m_examples;
-
-  /** The maximum number of examples allowed in the reservoir at any one time. */
-  size_t m_maxSize;
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Constructs a reservoir that can store at most the specified number of examples.
-   *
-   * Adding more than the specified number of examples to the reservoir will result in some
-   * of the older examples being (randomly) discarded.
-   *
-   * \param maxSize The maximum number of examples allowed in the reservoir at any one time.
-   */
-  explicit ExampleReservoir(size_t maxSize)
-  : m_maxSize(maxSize)
-  {}
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Adds an example to the reservoir.
-   *
-   * If the reservoir is currently full, an older example will be (randomly) discarded to
-   * make space for the new example.
-   *
-   * \param example The example to be added.
-   */
-  void add_example(const Example& example)
-  {
-    // TODO
-  }
-};
-
 
 template <typename Label>
 class Node
@@ -79,9 +37,9 @@ public:
   /**
    * \brief Adds new training examples to the decision tree.
    *
-   * \param examples  The examples to be added.
+   * \param examples  The IDs of the examples to be added.
    */
-  void add_examples(const std::vector<Example>& examples)
+  void add_examples(const std::vector<int>& exampleIDs)
   {
     // TODO
   }
@@ -99,10 +57,14 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The global example buffer. */
+  tvgutil::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
+
+  /** The ID allocator that is used to generate example IDs. */
+  tvgutil::IDAllocator m_exampleIDAllocator;
+
   /** The decision trees that collectively make up the random forest. */
   std::vector<Tree_Ptr> m_trees;
-
-  // TODO
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -111,11 +73,22 @@ public:
    *
    * \param examples  The examples to be added.
    */
-  void add_examples(const std::vector<Example>& examples)
+  void add_examples(const std::vector<Example<Label> >& examples)
   {
-    for(size_t i = 0, size = m_trees.size(); i < size; ++i)
+    // Generate IDs for the new examples and add them to the global example buffer.
+    std::vector<int> exampleIDs;
+    exampleIDs.reserve(examples.size());
+    for(typename std::vector<Example<Label> >::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
     {
-      m_trees[i]->add_examples(examples);
+      int id = m_exampleIDAllocator.allocate();
+      exampleIDs.push_back(id);
+      m_exampleBuffer.insert(std::make_pair(id, *it));
+    }
+
+    // Add the new examples to the different trees.
+    for(typename std::vector<Tree_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    {
+      (*it)->add_examples(exampleIDs);
     }
   }
 };

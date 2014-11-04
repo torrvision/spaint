@@ -5,7 +5,7 @@
 #ifndef H_RAFL_EXAMPLE
 #define H_RAFL_EXAMPLE
 
-#include "Descriptor.h"
+#include "../base/Descriptor.h"
 
 namespace rafl {
 

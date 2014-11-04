@@ -22,16 +22,20 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 ##
 SET(base_headers
 include/rafl/base/Descriptor.h
-include/rafl/base/Example.h
 )
 
 ##
-SET(toplevel_sources
-src/ForestEngine.cpp
+SET(examples_sources
+src/examples/ExampleReservoir.cpp
 )
 
+SET(examples_headers
+include/rafl/examples/Example.h
+include/rafl/examples/ExampleReservoir.h
+)
+
+##
 SET(toplevel_headers
-include/rafl/ForestEngine.h
 include/rafl/RandomForest.h
 )
 
@@ -40,11 +44,12 @@ include/rafl/RandomForest.h
 #################################################################
 
 SET(sources
-${toplevel_sources}
+${examples_sources}
 )
 
 SET(headers
 ${base_headers}
+${examples_headers}
 ${toplevel_headers}
 )
 
@@ -52,8 +57,9 @@ ${toplevel_headers}
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP("" FILES ${toplevel_headers})
 SOURCE_GROUP(base FILES ${base_headers})
+SOURCE_GROUP(examples FILES ${examples_sources} ${examples_headers})
 
 ##########################################
 # Specify additional include directories #

@@ -20,10 +20,11 @@ SET(targetname tvgutil)
 
 ##
 SET(toplevel_sources
-src/Dummy.cpp
+src/IDAllocator.cpp
 )
 
 SET(toplevel_headers
+include/tvgutil/IDAllocator.h
 include/tvgutil/SharedPtr.h
 )
 

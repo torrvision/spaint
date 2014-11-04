@@ -1,10 +1,17 @@
-#include <rafl/base/Example.h>
+#include <chrono>
+#include <iostream>
+
+#include <rafl/examples/ExampleReservoir.h>
 using namespace rafl;
 
 int main()
 {
-  Descriptor_Ptr d(new Descriptor(10, 23));
-  Example<int> x1(d, 23);
-  Example<int> x2(Descriptor_Ptr(), 23);
+  unsigned int seed = static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count());
+  ExampleReservoir reservoir(10, seed);
+  for(int i = 0; i < 20; ++i)
+  {
+    reservoir.add_example(i);
+    std::cout << reservoir << '\n';
+  }
   return 0;
 }
