@@ -13,7 +13,7 @@
 namespace rafl {
 
 /**
- * \brief An instance of an instantiation of this class template represents a reservoir that can be used to store examples in a random forest node.
+ * \brief An instance of an instantiation of this class template represents a reservoir to store the examples for a node.
  */
 class ExampleReservoir
 {

@@ -17,21 +17,41 @@
 
 namespace rafl {
 
+/**
+ * \brief An instance of this class represents the decision function of a node in a random forest.
+ *
+ * Decision functions (as currently implemented) test whether an individual feature is less than a threshold.
+ */
 class DecisionFunction
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The index of the feature in a feature descriptor that should be compared to the threshold. */
   size_t m_featureIndex;
+
+  /** The threshold against which to compare it. */
   float m_threshold;
-  
+
   //#################### CONSTRUCTORS ####################
 public:
+  /**
+   * \brief Constructs a decision function.
+   *
+   * \param featureIndex  The index of the feature in the feature descriptor that should be compared to the threshold.
+   * \param threshold     The threshold against which to compare it.
+   */
   DecisionFunction(size_t featureIndex, float threshold)
   : m_featureIndex(featureIndex), m_threshold(threshold)
   {}
-  
+
   //#################### PUBLIC OPERATORS ####################
-public: 
+public:
+  /**
+   * \brief Evaluates the decision function for the specified feature descriptor.
+   *
+   * \param descriptor  The feature descriptor for which to evaluate the decision function.
+   * \return            true, if the feature being tested is less than the threshold, or false otherwise.
+   */
   bool operator()(const Descriptor& descriptor) const
   {
     return descriptor[m_featureIndex] < m_threshold;
@@ -41,13 +61,16 @@ public:
 typedef tvgutil::shared_ptr<DecisionFunction> DecisionFunction_Ptr;
   
 /**
- * \brief An instance of an instantiation of this class template represents a decision tree suitable for use within a random forest.
+ * \brief An instance of an instantiation of this class template represents a tree suitable for use within a random forest.
  */
 template <typename Label>
 class DecisionTree
 {
   //#################### NESTED TYPES ####################
 private:
+  /**
+   * \brief An instance of this class represents a node in the tree.
+   */
   struct Node
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
@@ -86,7 +109,7 @@ private:
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
 
-  /** The index of the root node. */
+  /** The root node's index in the node array. */
   int m_rootIndex;
 
   //#################### CONSTRUCTORS ####################
@@ -126,7 +149,7 @@ private:
    */
   void add_example(int exampleID)
   {
-    // Find the leaf in which to insert the new example.
+    // Find the leaf to which to add the new example.
     typename std::map<int,Example<Label> >::const_iterator it = m_exampleBuffer->find(exampleID);
     if(it == m_exampleBuffer->end()) throw std::runtime_error("DecisionTree::add_example: Example ID not found");
 

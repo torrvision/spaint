@@ -6,6 +6,7 @@
 #define H_RAFL_DESCRIPTOR
 
 #include <vector>
+
 #include <tvgutil/SharedPtr.h>
 
 namespace rafl {
