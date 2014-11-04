@@ -32,6 +32,12 @@ public:
   : m_descriptor(descriptor), m_label(label)
   {}
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  const Descriptor_CPtr& get_descriptor() const
+  {
+    return m_descriptor;
+  }
 };
 
 }

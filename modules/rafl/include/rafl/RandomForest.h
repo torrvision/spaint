@@ -6,12 +6,14 @@
 #define H_RAFL_RANDOMFOREST
 
 #include <map>
+#include <stdexcept>
 #include <vector>
 
 #include <tvgutil/IDAllocator.h>
 #include <tvgutil/SharedPtr.h>
 
 #include "examples/Example.h"
+#include "examples/ExampleReservoir.h"
 
 namespace rafl {
 
@@ -50,11 +52,11 @@ private:
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
-    /** The IDs of the examples currently stored in the node. */
-    std::vector<int> m_exampleIDs;
-
     /** The index of the node's left child. */
     int m_leftChildIndex;
+
+    /** The reservoir of examples currently stored in the node. */
+    ExampleReservoir m_reservoir;
 
     /** The index of the node's right child. */
     int m_rightChildIndex;
@@ -78,6 +80,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The global example buffer. */
+  tvgutil::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
+
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
 
@@ -88,9 +93,11 @@ private:
 public:
   /**
    * \brief Constructs an empty decision tree.
+   *
+   * \param exampleBuffer	The global example buffer.
    */
-  DecisionTree()
-  : m_rootIndex(0)
+  explicit DecisionTree(const tvgutil::shared_ptr<std::map<int,Example<Label> > >& exampleBuffer)
+  : m_exampleBuffer(exampleBuffer), m_rootIndex(0)
   {
     m_nodes.push_back(Node_Ptr(new Node));
   }
@@ -104,7 +111,45 @@ public:
    */
   void add_examples(const std::vector<int>& exampleIDs)
   {
-    // TODO
+    for(std::vector<int>::const_iterator it = exampleIDs.begin(), iend = exampleIDs.end(); it != iend; ++it)
+    {
+      add_example(*it);
+    }
+  }
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Adds a new training example to the decision tree.
+   *
+   * \param exampleID  The ID of the example to be added.
+   */
+  void add_example(int exampleID)
+  {
+    // Find the leaf in which to insert the new example.
+    typename std::map<int,Example<Label> >::const_iterator it = m_exampleBuffer->find(exampleID);
+    if(it == m_exampleBuffer->end()) throw std::runtime_error("DecisionTree::add_example: Example ID not found");
+
+    const Descriptor& descriptor = *it->second.get_descriptor();
+    int curIndex = m_rootIndex;
+    while(!is_leaf(curIndex))
+    {
+      curIndex = *m_nodes[curIndex]->m_splitter(descriptor) ? m_nodes[curIndex]->m_leftChildIndex : m_nodes[curIndex]->m_rightChildIndex;
+    }
+
+    // Add the example to the leaf's reservoir.
+    m_nodes[curIndex]->m_reservoir.add_example(exampleID);
+  }
+
+  /**
+   * \brief Returns whether or not the specified node is a leaf.
+   *
+   * \param nodeIndex  The index of the node.
+   * \return           true, if the specified node is a leaf, or false otherwise.
+   */
+  bool is_leaf(int nodeIndex) const
+  {
+    return m_nodes[nodeIndex]->m_leftChildIndex == -1;
   }
 };
 
