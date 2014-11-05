@@ -21,6 +21,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 
 ##
 SET(base_headers
+include/rafl/base/DecisionFunction.h
 include/rafl/base/Descriptor.h
 )
 
@@ -36,6 +37,7 @@ include/rafl/examples/ExampleReservoir.h
 
 ##
 SET(toplevel_headers
+include/rafl/DecisionTree.h
 include/rafl/RandomForest.h
 )
 
