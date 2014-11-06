@@ -20,3 +20,4 @@ ENDIF()
 
 ADD_SUBDIRECTORY(test-rafl)
 ADD_SUBDIRECTORY(test-sdl)
+ADD_SUBDIRECTORY(test-tvgutil)

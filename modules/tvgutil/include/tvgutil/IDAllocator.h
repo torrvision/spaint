@@ -1,6 +1,6 @@
-/***
+/**
  * tvgutil: IDAllocator.h
- ***/
+ */
 
 #ifndef H_TVGUTIL_IDALLOCATOR
 #define H_TVGUTIL_IDALLOCATOR

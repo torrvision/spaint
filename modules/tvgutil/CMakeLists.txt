@@ -12,7 +12,7 @@ SET(targetname tvgutil)
 # Specify the libraries to use #
 ################################
 
-# None needed
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 
 #############################
 # Specify the project files #
@@ -21,10 +21,12 @@ SET(targetname tvgutil)
 ##
 SET(toplevel_sources
 src/IDAllocator.cpp
+src/RandomNumberGenerator.cpp
 )
 
 SET(toplevel_headers
 include/tvgutil/IDAllocator.h
+include/tvgutil/RandomNumberGenerator.h
 include/tvgutil/SharedPtr.h
 )
 

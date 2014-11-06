@@ -1,6 +1,6 @@
-/***
+/**
  * tvgutil: IDAllocator.cpp
- ***/
+ */
 
 #include "IDAllocator.h"
 
