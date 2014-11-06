@@ -8,6 +8,7 @@
 #include <iosfwd>
 #include <vector>
 
+#include <tvgutil/RandomNumberGenerator.h>
 #include <tvgutil/SharedPtr.h>
 
 namespace rafl {
@@ -25,6 +26,9 @@ private:
   /** The maximum number of examples allowed in the reservoir at any one time. */
   size_t m_maxSize;
 
+  /** A random number generator. */
+  tvgutil::RandomNumberGenerator_Ptr m_rng;
+
   /** The number of examples that have been added to the reservoir over time. */
   size_t m_seenExamples;
 
@@ -37,9 +41,9 @@ public:
    * of the older examples being (randomly) discarded.
    *
    * \param maxSize The maximum number of examples allowed in the reservoir at any one time.
-   * \param seed    The seed to use for the reservoir's random number generator.
+   * \param rng     A random number generator.
    */
-  explicit ExampleReservoir(size_t maxSize, unsigned int seed);
+  explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& rng);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

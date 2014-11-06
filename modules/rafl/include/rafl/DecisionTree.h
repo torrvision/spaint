@@ -47,10 +47,10 @@ private:
      * \brief Constructs a node.
      *
      * \param maxReservoirSize  The maximum number of examples that can be stored in the node's reservoir.
-     * \param seed              The seed to use for the reservoir's random number generator.
+     * \param rng               A random number generator.
      */
-    Node(size_t maxReservoirSize, unsigned int seed)
-    : m_leftChildIndex(-1), m_reservoir(maxReservoirSize, seed), m_rightChildIndex(-1)
+    Node(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
+    : m_leftChildIndex(-1), m_reservoir(maxReservoirSize, rng), m_rightChildIndex(-1)
     {}
   };
 
@@ -76,13 +76,12 @@ public:
    *
    * \param exampleBuffer	    The global example buffer.
    * \param maxReservoirSize  The maximum number of examples that can be stored in a node's reservoir.
+   * \param rng               A random number generator.
    */
-  explicit DecisionTree(const tvgutil::shared_ptr<std::map<int,Example<Label> > >& exampleBuffer, size_t maxReservoirSize)
+  explicit DecisionTree(const tvgutil::shared_ptr<std::map<int,Example<Label> > >& exampleBuffer, size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
   : m_exampleBuffer(exampleBuffer), m_rootIndex(0)
   {
-    // TEMPORARY
-    unsigned int seed = 0;
-    m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, seed)));
+    m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, rng)));
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

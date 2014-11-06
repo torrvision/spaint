@@ -44,4 +44,5 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDATestTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} rafl)
+TARGET_LINK_LIBRARIES(${targetname} rafl tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)

@@ -19,18 +19,30 @@ class RandomForest
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef tvgutil::shared_ptr<DecisionTree<Label> > Tree_Ptr;
+  typedef boost::shared_ptr<DecisionTree<Label> > Tree_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The global example buffer. */
-  tvgutil::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
+  boost::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
 
   /** The ID allocator that is used to generate example IDs. */
   tvgutil::IDAllocator m_exampleIDAllocator;
 
   /** The decision trees that collectively make up the random forest. */
   std::vector<Tree_Ptr> m_trees;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a random forest.
+   *
+   * \param rng A random number generator.
+   */
+  explicit RandomForest(const tvgutil::RandomNumberGenerator_Ptr& rng)
+  {
+    // TODO
+  }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

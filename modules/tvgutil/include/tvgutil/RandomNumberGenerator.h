@@ -6,6 +6,7 @@
 #define H_TVGUTIL_RANDOMNUMBERGENERATOR
 
 #include <boost/random.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 namespace tvgutil {
@@ -35,7 +36,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Generates an integer in the specified range.
+   * \brief Generates an integer in the specified (closed) range.
+   *
+   * For example, generate_int_in_range(3,5) returns an integer in the range [3,5].
    *
    * \param lower The lower bound of the range.
    * \param upper The upper bound of the range.
@@ -43,6 +46,10 @@ public:
    */
   int generate_int_in_range(int lower, int upper);
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<RandomNumberGenerator> RandomNumberGenerator_Ptr;
 
 }
 
