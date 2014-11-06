@@ -8,7 +8,7 @@ then
 fi
 
 cd libraries
-#./build-boost_1_56_0-win.sh "msvc-$1.0"
+./build-boost_1_56_0-win.sh "msvc-$1.0"
 #./build-opencv-2.4.9-win.sh "Visual Studio $1 Win64"
 ./build-SDL2-2.0.3-win.sh "Visual Studio $1 Win64"
 cd ..
