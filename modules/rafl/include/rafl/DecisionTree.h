@@ -56,12 +56,12 @@ private:
 
   //#################### TYPEDEFS ####################
 private:
-  typedef tvgutil::shared_ptr<Node> Node_Ptr;
+  typedef boost::shared_ptr<Node> Node_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The global example buffer. */
-  tvgutil::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
+  boost::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
@@ -78,7 +78,7 @@ public:
    * \param maxReservoirSize  The maximum number of examples that can be stored in a node's reservoir.
    * \param rng               A random number generator.
    */
-  explicit DecisionTree(const tvgutil::shared_ptr<std::map<int,Example<Label> > >& exampleBuffer, size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
+  explicit DecisionTree(const boost::shared_ptr<std::map<int,Example<Label> > >& exampleBuffer, size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
   : m_exampleBuffer(exampleBuffer), m_rootIndex(0)
   {
     m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, rng)));

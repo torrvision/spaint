@@ -16,6 +16,6 @@ int main()
     reservoir.add_example(i);
     std::cout << reservoir << '\n';
   }
-  //DecisionTree<int> dt(tvgutil::shared_ptr<std::map<int,Example<int> > >(), 10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
+  //DecisionTree<int> dt(boost::shared_ptr<std::map<int,Example<int> > >(), 10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
   return 0;
 }

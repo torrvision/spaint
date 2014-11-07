@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <tvgutil/RandomNumberGenerator.h>
-#include <tvgutil/SharedPtr.h>
 
 namespace rafl {
 

@@ -7,13 +7,13 @@
 
 #include <vector>
 
-#include <tvgutil/SharedPtr.h>
+#include <boost/shared_ptr.hpp>
 
 namespace rafl {
 
 typedef std::vector<float> Descriptor;
-typedef tvgutil::shared_ptr<Descriptor> Descriptor_Ptr;
-typedef tvgutil::shared_ptr<const Descriptor> Descriptor_CPtr;
+typedef boost::shared_ptr<Descriptor> Descriptor_Ptr;
+typedef boost::shared_ptr<const Descriptor> Descriptor_CPtr;
 
 }
 

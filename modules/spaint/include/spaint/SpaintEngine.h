@@ -5,9 +5,9 @@
 #ifndef H_SPAINT_SPAINTENGINE
 #define H_SPAINT_SPAINTENGINE
 
-#include <Engine/ImageSourceEngine.h>
+#include <boost/shared_ptr.hpp>
 
-#include <tvgutil/SharedPtr.h>
+#include <Engine/ImageSourceEngine.h>
 
 #include "util/SpaintVoxel.h"
 
@@ -20,19 +20,19 @@ class SpaintEngine
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef tvgutil::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
-  typedef tvgutil::shared_ptr<const InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_CPtr;
-  typedef tvgutil::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef boost::shared_ptr<const InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_CPtr;
+  typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef tvgutil::shared_ptr<Scene> Scene_Ptr;
-  typedef tvgutil::shared_ptr<ITMSceneReconstructionEngine<SpaintVoxel,ITMVoxelIndex> > SceneReconstructionEngine_Ptr;
-  typedef tvgutil::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
-  typedef tvgutil::shared_ptr<ITMTracker> Tracker_Ptr;
-  typedef tvgutil::shared_ptr<ITMTrackingState> TrackingState_Ptr;
-  typedef tvgutil::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
-  typedef tvgutil::shared_ptr<ITMView> View_Ptr;
-  typedef tvgutil::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
-  typedef tvgutil::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<ITMSceneReconstructionEngine<SpaintVoxel,ITMVoxelIndex> > SceneReconstructionEngine_Ptr;
+  typedef boost::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
+  typedef boost::shared_ptr<ITMTracker> Tracker_Ptr;
+  typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
+  typedef boost::shared_ptr<ITMView> View_Ptr;
+  typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -85,7 +85,7 @@ public:
    * \param openNIDeviceURI     An optional OpenNI device URI (if NULL is passed in, the default OpenNI device will be used).
    * \param settings            TODO
    */
-  SpaintEngine(const std::string& calibrationFilename, const tvgutil::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
+  SpaintEngine(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
 #endif
 
   /**
@@ -173,7 +173,7 @@ private:
 
 //#################### TYPEDEFS ####################
 
-typedef tvgutil::shared_ptr<SpaintEngine> SpaintEngine_Ptr;
+typedef boost::shared_ptr<SpaintEngine> SpaintEngine_Ptr;
 
 }
 

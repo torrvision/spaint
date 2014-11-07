@@ -60,7 +60,7 @@ try
   {
 #if WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    spaintEngine.reset(new SpaintEngine(calibrationFilename, openNIDeviceURI == "Default" ? tvgutil::shared_ptr<std::string>() : tvgutil::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
+    spaintEngine.reset(new SpaintEngine(calibrationFilename, openNIDeviceURI == "Default" ? boost::shared_ptr<std::string>() : boost::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif

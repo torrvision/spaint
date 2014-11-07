@@ -52,7 +52,7 @@ public:
 
 //#################### TYPEDEFS ####################
 
-typedef tvgutil::shared_ptr<DecisionFunction> DecisionFunction_Ptr;
+typedef boost::shared_ptr<DecisionFunction> DecisionFunction_Ptr;
 
 }
 
