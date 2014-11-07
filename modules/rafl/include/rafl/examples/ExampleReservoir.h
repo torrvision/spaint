@@ -10,17 +10,24 @@
 
 #include <tvgutil/RandomNumberGenerator.h>
 
+#include "Example.h"
+
 namespace rafl {
 
 /**
  * \brief An instance of an instantiation of this class template represents a reservoir to store the examples for a node.
  */
+template <typename Label>
 class ExampleReservoir
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The IDs of the examples in the reservoir. */
-  std::vector<int> m_exampleIDs;
+  /** The examples in the reservoir. */
+  std::vector<Example_CPtr> m_examples;
 
   /** The maximum number of examples allowed in the reservoir at any one time. */
   size_t m_maxSize;
@@ -42,7 +49,9 @@ public:
    * \param maxSize The maximum number of examples allowed in the reservoir at any one time.
    * \param rng     A random number generator.
    */
-  explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& rng);
+  explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
+  : m_maxSize(maxSize), m_rng(rng), m_seenExamples(0)
+  {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -52,18 +61,35 @@ public:
    * If the reservoir is currently full, an older example may be (randomly) discarded to
    * make space for the new example.
    *
-   * \param exampleID The ID of the example to be added.
+   * \param example The example to be added.
    */
-  void add_example(int exampleID);
+  void add_example(const Example_CPtr& example)
+  {
+    if(m_seenExamples < m_maxSize)
+    {
+      m_examples.push_back(example);
+    }
+    else
+    {
+      size_t k = m_rng->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
+      if(k < m_maxSize) m_examples[k] = example;
+    }
+
+    ++m_seenExamples;
+  }
 
   //#################### FRIENDS ####################
 
-  friend std::ostream& operator<<(std::ostream& os, const ExampleReservoir& rhs);
+  friend std::ostream& operator<<(std::ostream& os, const ExampleReservoir& rhs)
+  {
+    for(typename std::vector<Example_CPtr>::const_iterator it = rhs.m_examples.begin(), iend = rhs.m_examples.end(); it != iend; ++it)
+    {
+      os << (*it)->get_label() << ' ';
+    }
+
+    return os;
+  }
 };
-
-//#################### STREAM OPERATORS ####################
-
-std::ostream& operator<<(std::ostream& os, const ExampleReservoir& rhs);
 
 }
 

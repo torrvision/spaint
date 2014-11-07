@@ -19,16 +19,11 @@ class RandomForest
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef boost::shared_ptr<DecisionTree<Label> > Tree_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The global example buffer. */
-  boost::shared_ptr<std::map<int,Example<Label> > > m_exampleBuffer;
-
-  /** The ID allocator that is used to generate example IDs. */
-  tvgutil::IDAllocator m_exampleIDAllocator;
-
   /** The decision trees that collectively make up the random forest. */
   std::vector<Tree_Ptr> m_trees;
 
@@ -51,22 +46,12 @@ public:
    *
    * \param examples  The examples to be added.
    */
-  void add_examples(const std::vector<Example<Label> >& examples)
+  void add_examples(const std::vector<Example_CPtr>& examples)
   {
-    // Generate IDs for the new examples and add them to the global example buffer.
-    std::vector<int> exampleIDs;
-    exampleIDs.reserve(examples.size());
-    for(typename std::vector<Example<Label> >::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
-    {
-      int id = m_exampleIDAllocator.allocate();
-      exampleIDs.push_back(id);
-      m_exampleBuffer.insert(std::make_pair(id, *it));
-    }
-
     // Add the new examples to the different trees.
     for(typename std::vector<Tree_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
-      (*it)->add_examples(exampleIDs);
+      (*it)->add_examples(examples);
     }
   }
 };

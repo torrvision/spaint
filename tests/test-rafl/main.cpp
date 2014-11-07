@@ -10,12 +10,13 @@ using namespace tvgutil;
 int main()
 {
   unsigned int seed = 0;
-  ExampleReservoir reservoir(10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
-  for(int i = 0; i < 20; ++i)
+  ExampleReservoir<int> reservoir(10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
+  for(int i = 0; i < 50; ++i)
   {
-    reservoir.add_example(i);
+    typedef boost::shared_ptr<Example<int> > Example_CPtr;
+    reservoir.add_example(Example_CPtr(new Example<int>(Descriptor_CPtr(), i)));
     std::cout << reservoir << '\n';
   }
-  //DecisionTree<int> dt(boost::shared_ptr<std::map<int,Example<int> > >(), 10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
+  //DecisionTree<int> dt(10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
   return 0;
 }

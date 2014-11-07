@@ -46,6 +46,16 @@ public:
   {
     return m_descriptor;
   }
+
+  /**
+   * \brief Gets the label for the example.
+   *
+   * \return  The label for the example.
+   */
+  const Label& get_label() const
+  {
+    return m_label;
+  }
 };
 
 }
