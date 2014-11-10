@@ -32,9 +32,9 @@ int main()
 {
   Histogram<int> hist;
   for(int i=0; i<5; ++i) hist.add(23);
-  for(int i=0; i<3; ++i) hist.add(9);
-  for(int i=0; i<7; ++i) hist.add(84);
-  for(int i=0; i<9; ++i) hist.add(24);
+  for(int i=0; i<5; ++i) hist.add(9);
+  for(int i=0; i<5; ++i) hist.add(84);
+  for(int i=0; i<500; ++i) hist.add(24);
   ProbabilityMassFunction<int> pmf(hist);
   const std::map<int,float>& masses = pmf.get_masses();
   /*for(std::map<int,float>::const_iterator it = masses.begin(), iend = masses.end(); it != iend; ++it)
@@ -43,5 +43,6 @@ int main()
   }*/
   //std::cout << pmf << '\n';
   std::cout << pmf << '\n';
+  std::cout << "Entropy=" << pmf.get_entropy() << '\n';
   return 0;
 }
