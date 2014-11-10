@@ -35,7 +35,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Adds a new instance of the specified label to the histogram.
+   *
+   * \param label The label for which to add an instance.
    */
   void add(const Label& label)
   {
@@ -44,7 +46,9 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the bins that record the number of instances of each label that have been seen.
+   *
+   * \return The bins that record the number of instances of each label that have been seen.
    */
   const std::map<Label,size_t>& get_bins() const
   {
@@ -52,7 +56,9 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the total number of instances that are in the histogram.
+   *
+   * \return The total number of instances that are in the histogram.
    */
   size_t get_count() const
   {

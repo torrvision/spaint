@@ -46,10 +46,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Outputs the pairs in the map from [(first_pair) (limit_pair - 1) ... (last_pair)] to a stream.
+   * \brief Outputs a limited number of pairs from the map to the specified stream. If the map contains further pairs, these are output using ... (an ellipsis).
+   *
+   * Example: With a limit of 3, (p1,p2,p3,p4,p5) would be output as [ p1 p2 ... p5 ].
    *
    * \param os  The stream to which to output the map.
    * \param rhs The map to output.
+   * \return    The stream.
    */
   friend std::ostream& operator<<(std::ostream& os, const LimitedMap& rhs)
   {
@@ -79,12 +82,12 @@ public:
 //#################### GLOBAL FUNCTIONS ####################
 
 /**
-  * \brief Constructs a LimitedMap from a std::map and limit value.
-  *
-  * \param m      The map.
-  * \param limit  The limit value.
-  * \return       The constructed LimitedMap.
-  */
+ * \brief Constructs a "limited" map from a std::map and a limit value.
+ *
+ * \param m      The map.
+ * \param limit  The limit value.
+ * \return       The "limited" map.
+ */
 template <typename K, typename V>
 LimitedMap<K,V> make_limited_map(const std::map<K,V>& m, size_t limit)
 {

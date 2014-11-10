@@ -27,7 +27,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a random number generator that is seeded with the specified value.
+   * \brief Constructs a random number generator whose generation engine is seeded with the specified value.
    *
    * \param seed  The seed with which to initialise the generation engine.
    */

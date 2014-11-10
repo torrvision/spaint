@@ -5,6 +5,7 @@
 #ifndef H_RAFL_DECISIONTREE
 #define H_RAFL_DECISIONTREE
 
+#include <functional>
 #include <map>
 #include <stdexcept>
 
@@ -25,7 +26,7 @@ class DecisionTree
   //#################### NESTED TYPES ####################
 private:
   /**
-   * \brief An instance of this class represents a node in the tree.
+   * \brief An instance of this struct represents a node in the tree.
    */
   struct Node
   {
@@ -63,7 +64,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** Nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
+  /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::vector<int> m_dirtyNodes;
 
   /** The nodes in the tree. */
@@ -73,7 +74,7 @@ private:
   int m_rootIndex;
 
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
-  tvgutil::PriorityQueue<int,float,void*> m_splittabilityQueue;
+  tvgutil::PriorityQueue<int,float,void*,std::greater<float> > m_splittabilityQueue;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -105,10 +106,10 @@ public:
       add_example(*it);
     }
 
-    // Recalculate the splittability values for any nodes whose reservoirs were changed whilst adding examples.
+    // Update the splittability values for any nodes whose reservoirs were changed whilst adding examples.
     for(std::vector<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
     {
-      recalculate_splittability(*it);
+      update_splittability(*it);
     }
 
     // Clear the list of dirty nodes once their splittability has been updated.
@@ -151,13 +152,20 @@ private:
     return m_nodes[nodeIndex]->m_leftChildIndex == -1;
   }
 
-  void recalculate_splittability(int nodeIndex)
+  /**
+   * \brief Updates the splittability of the specified node.
+   *
+   * \param nodeIndex  The index of the node.
+   */
+  void update_splittability(int nodeIndex)
   {
+    // Recalculate the node's splittability.
     const ExampleReservoir& reservoir = m_nodes[nodeIndex]->m_reservoir;
     float splittability = static_cast<float>(reservoir.current_size()) / reservoir.max_size();
+
+    // Update the splittability queue to reflect the node's new splittability.
     m_splittabilityQueue.update_key(nodeIndex, splittability);
   }
-
 };
 
 }

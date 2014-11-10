@@ -10,7 +10,7 @@
 namespace rafl {
 
 /**
- * \brief An instance of an instantiation of this class template represents a training example for the forest.
+ * \brief An instance of an instantiation of this class template represents a training example for a random forest.
  */
 template <typename Label>
 class Example

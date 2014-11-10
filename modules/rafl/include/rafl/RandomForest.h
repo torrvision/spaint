@@ -5,8 +5,6 @@
 #ifndef H_RAFL_RANDOMFOREST
 #define H_RAFL_RANDOMFOREST
 
-#include <tvgutil/IDAllocator.h>
-
 #include "DecisionTree.h"
 
 namespace rafl {

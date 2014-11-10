@@ -59,7 +59,7 @@ public:
    * \brief Adds an example to the reservoir.
    *
    * If the reservoir is currently full, an older example may be (randomly) discarded to
-   * make space for the new example.
+   * make space for the new example. If not, the new example itself is discarded.
    *
    * \param example The example to be added.
    * \return        true, if the example was actually added to the reservoir, or false otherwise.
@@ -70,11 +70,13 @@ public:
 
     if(m_seenExamples < m_maxSize)
     {
+      // If we haven't yet reached the maximum number of examples, simply add the new one.
       m_examples.push_back(example);
       changed = true;
     }
     else
     {
+      // Otherwise, randomly decide whether or not to replace one of the existing examples with the new one.
       size_t k = m_rng->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
       if(k < m_maxSize)
       {
@@ -87,11 +89,21 @@ public:
     return changed;
   }
 
+  /**
+   * \brief Gets the number of examples currently in the reservoir.
+   *
+   * \return The number of examples currently in the reservoir.
+   */
   size_t current_size() const
   {
     return m_examples.size();
   }
 
+  /**
+   * \brief Gets the maximum number of examples allowed in the reservoir at any one time.
+   *
+   * \return The maximum number of examples allowed in the reservoir at any one time.
+   */
   size_t max_size() const
   {
     return m_maxSize;
@@ -99,6 +111,13 @@ public:
 
   //#################### FRIENDS ####################
 
+  /**
+   * \brief Outputs a reservoir to a stream.
+   *
+   * \param os  The stream to which to output the reservoir.
+   * \param rhs The reservoir to output.
+   * \return    The stream.
+   */
   friend std::ostream& operator<<(std::ostream& os, const ExampleReservoir& rhs)
   {
     for(typename std::vector<Example_CPtr>::const_iterator it = rhs.m_examples.begin(), iend = rhs.m_examples.end(); it != iend; ++it)

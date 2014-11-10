@@ -28,7 +28,7 @@ public:
   /**
    * \brief Constructs a probability mass function (PMF) as a normalised version of the specified histogram.
    *
-   * \param histogram The histogram from which to construct our PMF.
+   * \param histogram The histogram from which to construct a PMF.
    */
   explicit ProbabilityMassFunction(const Histogram<Label>& histogram)
   {
@@ -52,7 +52,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Calculates the entropy of a probability mass function (PMF) as H(X) = -sum_{i} P(x_i) ln(P(x_i)).
+   * \brief Calculates the entropy of the PMF using the definition H(X) = -sum_{i} P(x_i) ln(P(x_i)).
    * 
    * \return The entropy of the PMF. When outcomes are equally likely, the entropy will be high; when the outcome is predictable, the entropy wil be low.
    */
@@ -62,15 +62,20 @@ public:
     for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
     {
       float mass = it->second;
-      //log from <cmath> == natural logarithm, log_{e}. The unit of entropy calculated with log_{e} is the "nat".
-      //if P(x_i) == 0, the value of the corresponding sum 0*ln(0) is taken to be 0. lim{p->0+} p*log(p) = 0. (source: Wikipedia!)
-      if(mass > 0) entropy += mass * log(mass);
+      if(mass > 0)
+      {
+        // Note 1: The log in cmath calculates log_{e} (i.e. ln). The unit of entropy calculated with ln is the "nat".
+        // Note 2: If P(x_i) = 0, the value of the corresponding sum 0*ln(0) is taken to be 0, since lim{p->0+} p*log(p) = 0 (see Wikipedia!).
+        entropy += mass * log(mass);
+      }
     }
     return -entropy;
   }
 
   /**
-   * \brief Returns a const reference to the probability mass function.
+   * \brief Gets the masses for the various labels.
+   *
+   * \return The masses for the various labels.
    */
   const std::map<Label,float>& get_masses() const
   {
@@ -80,6 +85,13 @@ public:
 
 //#################### STREAM OPERATORS ####################
 
+/**
+ * \brief Outputs a probability mass function (PMF) to the specified stream.
+ *
+ * \param os  The stream to which to output the PMF.
+ * \param rhs The PMF to output.
+ * \return    The stream.
+ */
 template <typename Label>
 std::ostream& operator<<(std::ostream& os, const ProbabilityMassFunction<Label>& rhs)
 {

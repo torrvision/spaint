@@ -20,6 +20,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
+SET(base_sources
+src/base/DecisionFunction.cpp
+)
+
 SET(base_headers
 include/rafl/base/DecisionFunction.h
 include/rafl/base/Descriptor.h
@@ -28,10 +32,6 @@ include/rafl/base/ProbabilityMassFunction.h
 )
 
 ##
-SET(examples_sources
-src/examples/ExampleReservoir.cpp
-)
-
 SET(examples_headers
 include/rafl/examples/Example.h
 include/rafl/examples/ExampleReservoir.h
@@ -48,7 +48,7 @@ include/rafl/RandomForest.h
 #################################################################
 
 SET(sources
-${examples_sources}
+${base_sources}
 )
 
 SET(headers
@@ -62,8 +62,8 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_headers})
-SOURCE_GROUP(base FILES ${base_headers})
-SOURCE_GROUP(examples FILES ${examples_sources} ${examples_headers})
+SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
+SOURCE_GROUP(examples FILES ${examples_headers})
 
 ##########################################
 # Specify additional include directories #
