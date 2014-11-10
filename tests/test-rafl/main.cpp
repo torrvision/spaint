@@ -43,6 +43,6 @@ int main()
   }*/
   //std::cout << pmf << '\n';
   std::cout << pmf << '\n';
-  std::cout << "Entropy=" << pmf.get_entropy() << '\n';
+  std::cout << "Entropy=" << pmf.calculate_entropy() << '\n';
   return 0;
 }

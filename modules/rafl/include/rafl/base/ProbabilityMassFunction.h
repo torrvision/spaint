@@ -5,8 +5,6 @@
 #ifndef H_RAFL_PROBABILITYMASSFUNCTION
 #define H_RAFL_PROBABILITYMASSFUNCTION
 
-#include <cassert>
-#include <ostream>
 #include <cmath>
 
 #include <tvgutil/LimitedMap.h>
@@ -54,33 +52,33 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Calculates the entropy of a probability mass function (PMF) as H(X) = -sum_{i} P(x_i) ln(P(x_i)).
+   * 
+   * \return The entropy of the PMF. When outcomes are equally likely, the entropy will be high; when the outcome is predictable, the entropy wil be low.
+   */
+  float calculate_entropy() const
+  {
+    float entropy = 0.0f;
+    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      float mass = it->second;
+      //log from <cmath> == natural logarithm, log_{e}. The unit of entropy calculated with log_{e} is the "nat".
+      //if P(x_i) == 0, the value of the corresponding sum 0*ln(0) is taken to be 0. lim{p->0+} p*log(p) = 0. (source: Wikipedia!)
+      if(mass > 0) entropy += mass * log(mass);
+    }
+    return -entropy;
+  }
+
+  /**
    * \brief Returns a const reference to the probability mass function.
    */
   const std::map<Label,float>& get_masses() const
   {
     return m_masses;
   }
-  
-  /**
-   * \brief Calcualte the entropy of a probability mass function (pmf) as: H(X) = -sum_{i} P(x_i) ln(P(x_i))
-   * 
-   * \return The entropy of the pmf. When outcomes are equally likely, the entropy will be high; and when the outcome is predictable, the entropy wil be low.
-   */
-  float get_entropy() const
-  {
-    float entropy = 0.;
-    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      float mass = it->second;
-      //log from <cmath> == natural logarithm, log_{e}. The unit of entropy calculated with log_{e} is the "nat".
-      //if P(x_i) == 0, the value of the corresponding sum 0*ln(0) is taken to be 0. lim{p->0+} p*log(p) = 0. (source: Wikipedia!)
-      if(mass > 0) 
-	entropy += mass * log( mass );
-    }
-    
-    return -entropy;
-  }
 };
+
+//#################### STREAM OPERATORS ####################
 
 template <typename Label>
 std::ostream& operator<<(std::ostream& os, const ProbabilityMassFunction<Label>& rhs)
