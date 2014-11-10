@@ -23,6 +23,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 SET(base_headers
 include/rafl/base/DecisionFunction.h
 include/rafl/base/Descriptor.h
+include/rafl/base/Histogram.h
+include/rafl/base/ProbabilityMassFunction.h
 )
 
 ##
