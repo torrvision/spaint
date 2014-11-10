@@ -1,0 +1,5 @@
+/**
+\mainpage spaint Documentation
+
+spaint is our in-house reimplementation of Semantic Paint, the interactive semantic segmentation system developed by Julien, Vibhav and others at Microsoft.
+*/
