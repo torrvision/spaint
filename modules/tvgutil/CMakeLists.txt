@@ -27,6 +27,7 @@ src/RandomNumberGenerator.cpp
 SET(toplevel_headers
 include/tvgutil/IDAllocator.h
 include/tvgutil/LimitedMap.h
+include/tvgutil/PriorityQueue.h
 include/tvgutil/RandomNumberGenerator.h
 )
 

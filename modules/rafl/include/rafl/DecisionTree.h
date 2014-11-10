@@ -8,6 +8,8 @@
 #include <map>
 #include <stdexcept>
 
+#include <tvgutil/PriorityQueue.h>
+
 #include "base/DecisionFunction.h"
 #include "examples/Example.h"
 #include "examples/ExampleReservoir.h"
@@ -61,11 +63,17 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** Nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
+  std::vector<int> m_dirtyNodes;
+
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
 
   /** The root node's index in the node array. */
   int m_rootIndex;
+
+  /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
+  tvgutil::PriorityQueue<int,float,void*> m_splittabilityQueue;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -79,6 +87,7 @@ public:
   : m_rootIndex(0)
   {
     m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, rng)));
+    m_splittabilityQueue.insert(m_rootIndex, 0.0f, NULL);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -90,10 +99,20 @@ public:
    */
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
+    // Add each example to the tree.
     for(std::vector<int>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
     {
       add_example(*it);
     }
+
+    // Recalculate the splittability values for any nodes whose reservoirs were changed whilst adding examples.
+    for(std::vector<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
+    {
+      recalculate_splittability(*it);
+    }
+
+    // Clear the list of dirty nodes once their splittability has been updated.
+    std::vector<int>().swap(m_dirtyNodes);
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -114,7 +133,11 @@ private:
     }
 
     // Add the example to the leaf's reservoir.
-    m_nodes[curIndex]->m_reservoir.add_example(example);
+    if(m_nodes[curIndex]->m_reservoir.add_example(example))
+    {
+      // If the leaf's reservoir changed as a result of adding the example, record this fact to ensure that its splittability is properly recalculated.
+      m_dirtyNodes.push_back(curIndex);
+    }
   }
 
   /**
@@ -127,6 +150,14 @@ private:
   {
     return m_nodes[nodeIndex]->m_leftChildIndex == -1;
   }
+
+  void recalculate_splittability(int nodeIndex)
+  {
+    const ExampleReservoir& reservoir = m_nodes[nodeIndex]->m_reservoir;
+    float splittability = static_cast<float>(reservoir.current_size()) / reservoir.max_size();
+    m_splittabilityQueue.update_key(nodeIndex, splittability);
+  }
+
 };
 
 }

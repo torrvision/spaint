@@ -38,7 +38,7 @@ private:
   /** The number of examples that have been added to the reservoir over time. */
   size_t m_seenExamples;
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a reservoir that can store at most the specified number of examples.
@@ -62,20 +62,39 @@ public:
    * make space for the new example.
    *
    * \param example The example to be added.
+   * \return        true, if the example was actually added to the reservoir, or false otherwise.
    */
-  void add_example(const Example_CPtr& example)
+  bool add_example(const Example_CPtr& example)
   {
+    bool changed = false;
+
     if(m_seenExamples < m_maxSize)
     {
       m_examples.push_back(example);
+      changed = true;
     }
     else
     {
       size_t k = m_rng->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
-      if(k < m_maxSize) m_examples[k] = example;
+      if(k < m_maxSize)
+      {
+        m_examples[k] = example;
+        changed = true;
+      }
     }
 
     ++m_seenExamples;
+    return changed;
+  }
+
+  size_t current_size() const
+  {
+    return m_examples.size();
+  }
+
+  size_t max_size() const
+  {
+    return m_maxSize;
   }
 
   //#################### FRIENDS ####################
