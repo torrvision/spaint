@@ -2,7 +2,7 @@
  * rafl: DecisionFunction.cpp
  */
 
-#include "base/DecisionFunction.h"
+#include "decisionfunctions/DecisionFunction.h"
 
 namespace rafl {
 

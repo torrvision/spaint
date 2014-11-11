@@ -11,7 +11,7 @@
 
 #include <tvgutil/PriorityQueue.h>
 
-#include "base/DecisionFunction.h"
+#include "decisionfunctions/DecisionFunction.h"
 #include "examples/Example.h"
 #include "examples/ExampleReservoir.h"
 

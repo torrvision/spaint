@@ -5,7 +5,7 @@
 #ifndef H_RAFL_DECISIONFUNCTION
 #define H_RAFL_DECISIONFUNCTION
 
-#include "Descriptor.h"
+#include "../base/Descriptor.h"
 
 namespace rafl {
 

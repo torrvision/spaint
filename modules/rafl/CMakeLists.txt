@@ -20,16 +20,20 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
-SET(base_sources
-src/base/DecisionFunction.cpp
-)
-
 SET(base_headers
-include/rafl/base/DecisionFunction.h
-include/rafl/base/DecisionFunctionGenerator.h
 include/rafl/base/Descriptor.h
 include/rafl/base/Histogram.h
 include/rafl/base/ProbabilityMassFunction.h
+)
+
+##
+SET(decisionfunctions_sources
+src/decisionfunctions/DecisionFunction.cpp
+)
+
+SET(decisionfunctions_headers
+include/rafl/decisionfunctions/DecisionFunction.h
+include/rafl/decisionfunctions/DecisionFunctionGenerator.h
 )
 
 ##
@@ -49,11 +53,12 @@ include/rafl/RandomForest.h
 #################################################################
 
 SET(sources
-${base_sources}
+${decisionfunctions_sources}
 )
 
 SET(headers
 ${base_headers}
+${decisionfunctions_headers}
 ${examples_headers}
 ${toplevel_headers}
 )
@@ -63,7 +68,8 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_headers})
-SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
+SOURCE_GROUP(base FILES ${base_headers})
+SOURCE_GROUP(decisionfunctions FILES ${decisionfunctions_sources} ${decisionfunctions_headers})
 SOURCE_GROUP(examples FILES ${examples_headers})
 
 ##########################################
