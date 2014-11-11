@@ -26,6 +26,7 @@ src/base/DecisionFunction.cpp
 
 SET(base_headers
 include/rafl/base/DecisionFunction.h
+include/rafl/base/DecisionFunctionGenerator.h
 include/rafl/base/Descriptor.h
 include/rafl/base/Histogram.h
 include/rafl/base/ProbabilityMassFunction.h
