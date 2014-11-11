@@ -49,9 +49,9 @@ public:
     Element() {}
     Element(const ID& id, const Key& key, const Data& data) : m_id(id), m_key(key), m_data(data) {}
 
-    Data& data()				{ return m_data; }
-    const ID& id() const		{ return m_id; }
-    const Key& key() const		{ return m_key; }
+    Data& data()            { return m_data; }
+    const ID& id() const    { return m_id; }
+    const Key& key() const  { return m_key; }
 
     friend class PriorityQueue;
   };

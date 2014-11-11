@@ -61,6 +61,7 @@ private:
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef boost::shared_ptr<Node> Node_Ptr;
+  typedef tvgutil::PriorityQueue<int,float,void*,std::greater<float> > SplittabilityQueue;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -74,7 +75,7 @@ private:
   int m_rootIndex;
 
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
-  tvgutil::PriorityQueue<int,float,void*,std::greater<float> > m_splittabilityQueue;
+  SplittabilityQueue m_splittabilityQueue;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -116,6 +117,34 @@ public:
     std::vector<int>().swap(m_dirtyNodes);
   }
 
+  /**
+   * \brief Trains the tree by splitting a number of suitable nodes (e.g. those that have a fairly full reservoir).
+   *
+   * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
+   *
+   * \param splitBudget             The maximum number of nodes that may be split in this training step.
+   * \param splittabilityThreshold  A threshold splittability below which nodes should not be split.
+   */
+  void train(size_t splitBudget, size_t splittabilityThreshold = 0.5f)
+  {
+    size_t nodesSplit = 0;
+
+    // Keep splitting nodes until we either run out of nodes to split or exceed the split budget.
+    // (In practice, we will also stop splitting if the best node's splittability falls below a threshold.)
+    while(!m_splittabilityQueue.empty() && nodesSplit < splitBudget)
+    {
+      typename SplittabilityQueue::Element e = m_splittabilityQueue.top();
+      float splittability = e.key();
+      if(e.key() >= splittabilityThreshold)
+      {
+        m_splittabilityQueue.pop();
+        split_node(e.id());
+        ++nodesSplit;
+      }
+      else break;
+    }
+  }
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -150,6 +179,16 @@ private:
   bool is_leaf(int nodeIndex) const
   {
     return m_nodes[nodeIndex]->m_leftChildIndex == -1;
+  }
+
+  /**
+   * \brief Splits the node with the specified index.
+   *
+   * \param nodeIndex The index of the node to split.
+   */
+  void split_node(int nodeIndex)
+  {
+    // TODO
   }
 
   /**
