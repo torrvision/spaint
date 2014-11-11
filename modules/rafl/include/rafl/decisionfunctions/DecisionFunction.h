@@ -10,39 +10,38 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class represents the decision function of a node in a random forest.
- *
- * Decision functions (as currently implemented) test whether an individual feature is less than a threshold.
+ * \brief An instance of a class derived from this one represents a decision function for a random forest node
+ *        that can be used to classify descriptors into either the left or right subtree of the node.
  */
 class DecisionFunction
 {
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** The index of the feature in a feature descriptor that should be compared to the threshold. */
-  size_t m_featureIndex;
-
-  /** The threshold against which to compare it. */
-  float m_threshold;
-
-  //#################### CONSTRUCTORS ####################
+  //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief Constructs a decision function.
-   *
-   * \param featureIndex  The index of the feature in a feature descriptor that should be compared to the threshold.
-   * \param threshold     The threshold against which to compare it.
+   * \brief An enumeration containing the possible classifications that the decision function can output.
    */
-  DecisionFunction(size_t featureIndex, float threshold);
+  enum DescriptorClassification
+  {
+    DC_LEFT,
+    DC_RIGHT
+  };
 
-  //#################### PUBLIC OPERATORS ####################
+  //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Evaluates the decision function on the specified feature descriptor.
-   *
-   * \param descriptor  The feature descriptor on which to evaluate the decision function.
-   * \return            true, if the feature being tested is less than the threshold, or false otherwise.
+   * \brief Destroys the decision function.
    */
-  bool operator()(const Descriptor& descriptor) const;
+  virtual ~DecisionFunction() {}
+
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Classifies the specified descriptor using the decision function.
+   *
+   * \param descriptor  The descriptor to classify.
+   * \return            DC_LEFT, if the descriptor should be sent down the left subtree of the node, or DC_RIGHT otherwise.
+   */
+  virtual DescriptorClassification classify_descriptor(const Descriptor& descriptor) const = 0;
 };
 
 //#################### TYPEDEFS ####################
