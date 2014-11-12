@@ -19,9 +19,32 @@ namespace rafl {
 template <typename Label>
 class DecisionFunctionGenerator
 {
-  //#################### TYPEDEFS ####################
+  //#################### PROTECTED TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
+  //#################### NESTED TYPES ####################
+public:
+  /**
+   * \brief An instance of this struct represents a split of a set of examples into two subsets,
+   *        based on their classification against a decision function.
+   */
+  struct Split
+  {
+    /** The decision function that induced the split. */
+    DecisionFunction_Ptr m_decisionFunction;
+
+    /** The examples that were sent left by the decision function. */
+    std::vector<Example_CPtr> m_leftExamples;
+
+    /** The examples that were sent right by the decision function. */
+    std::vector<Example_CPtr> m_rightExamples;
+  };
+
+  //#################### PUBLIC TYPEDEFS ####################
+public:
+  typedef boost::shared_ptr<Split> Split_Ptr;
+  typedef boost::shared_ptr<const Split> Split_CPtr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -38,49 +61,50 @@ private:
    * \param examples  The examples to split.
    * \return          The candidate decision function.
    */
-  virtual DecisionFunction_Ptr generate_candidate(const std::vector<Example_CPtr>& examples) const = 0;
+  virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Picks an appropriate decision function to split the specified set of examples.
+   * \brief Picks an appropriate way in which to split the specified set of examples.
    *
    * \param examples        The examples to split.
    * \param candidateCount  The number of candidates to evaluate.
-   * \return                The chosen decision function.
+   * \return                The chosen split.
    */
-  DecisionFunction_Ptr pick_decision_function(const std::vector<Example_CPtr>& examples, int candidateCount = 5) const
+  Split_CPtr split_examples(const std::vector<Example_CPtr>& examples, int candidateCount = 5) const
   {
     float initialEntropy = calculate_entropy(examples);
-    std::multimap<float,DecisionFunction_Ptr,std::greater<float> > gainToCandidateMap;
+    std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
     for(int i = 0; i < candidateCount; ++i)
     {
-      // Generate a candidate decision function.
-      DecisionFunction_Ptr candidate = generate_candidate(examples);
+      Split_Ptr splitCandidate(new Split);
 
-      // Partition the examples using the candidate.
-      std::pair<std::vector<Example_CPtr>,std::vector<Example_CPtr> > examplesPartition;
+      // Generate a decision function for the split candidate.
+      splitCandidate->m_decisionFunction = generate_candidate_decision_function(examples);
+
+      // Partition the examples using the decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
-        if(candidate->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
+        if(splitCandidate->m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
         {
-          examplesPartition.first.push_back(examples[j]);
+          splitCandidate->m_leftExamples.push_back(examples[j]);
         }
         else
         {
-          examplesPartition.second.push_back(examples[j]);
+          splitCandidate->m_rightExamples.push_back(examples[j]);
         }
       }
 
-      // Calculate the information gain we would obtain by splitting using this candidate.
-      float gain = calculate_information_gain(examples, initialEntropy, examplesPartition.first, examplesPartition.second);
+      // Calculate the information gain we would obtain from this split.
+      float gain = calculate_information_gain(examples, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
 
-      // Add the result to the gain -> candidate map so as to allow us to find a candidate with maximum gain.
-      gainToCandidateMap.insert(std::make_pair(gain, candidate));
+      // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
+      gainToCandidateMap.insert(std::make_pair(gain, splitCandidate));
     }
 
-    // Return a decision function that had maximum gain.
+    // Return a split candidate that had maximum gain.
     return gainToCandidateMap.begin()->second;
   }
 

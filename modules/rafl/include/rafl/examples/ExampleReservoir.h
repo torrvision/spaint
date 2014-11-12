@@ -90,6 +90,15 @@ public:
   }
 
   /**
+   * \brief Clears the reservoir.
+   */
+  void clear()
+  {
+    std::vector<Example_CPtr>().swap(m_examples);
+    m_randomNumberGenerator.reset();
+  }
+
+  /**
    * \brief Gets the number of examples currently in the reservoir.
    *
    * \return The number of examples currently in the reservoir.
@@ -117,6 +126,16 @@ public:
   size_t max_size() const
   {
     return m_maxSize;
+  }
+
+  /**
+   * \brief Gets the number of examples that have been added to the reservoir over time.
+   *
+   * \return The number of examples that have been added to the reservoir over time.
+   */
+  size_t seen_examples() const
+  {
+    return m_seenExamples;
   }
 
   //#################### FRIENDS ####################

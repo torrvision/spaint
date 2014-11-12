@@ -33,7 +33,7 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual DecisionFunction_Ptr generate_candidate(const std::vector<Example_CPtr>& examples) const
+  virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples) const
   {
     assert(!examples.empty());
 

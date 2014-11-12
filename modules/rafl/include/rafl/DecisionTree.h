@@ -76,8 +76,14 @@ private:
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
 
+  /** The maximum number of examples that can be stored in a node's reservoir. */
+  size_t m_maxReservoirSize;
+
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
+
+  /** A random number generator. */
+  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
 
   /** The root node's index in the node array. */
   int m_rootIndex;
@@ -95,10 +101,9 @@ public:
    * \param decisionFunctionGenerator A generator that can be used to pick appropriate decision functions for nodes.
    */
   explicit DecisionTree(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
-  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_rootIndex(0)
+  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_maxReservoirSize(maxReservoirSize), m_randomNumberGenerator(randomNumberGenerator)
   {
-    m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, randomNumberGenerator)));
-    m_splittabilityQueue.insert(m_rootIndex, 0.0f, NULL);
+    m_rootIndex = add_node();
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -180,6 +185,36 @@ private:
   }
 
   /**
+   * \brief Adds a node to the decision tree.
+   *
+   * \return The ID of the newly-added node.
+   */
+  int add_node()
+  {
+    m_nodes.push_back(Node_Ptr(new Node(m_maxReservoirSize, m_randomNumberGenerator)));
+    int id = static_cast<int>(m_nodes.size()) - 1;
+    m_splittabilityQueue.insert(id, 0.0f, NULL);
+    return id;
+  }
+
+  /**
+   * \brief Fills the specified reservoir with examples sampled from an input set of examples. 
+   *
+   * \param inputExamples The set of examples from which to sample.
+   * \param multiplier    The ratio (>= 1) between the size of the input example set and the number of samples to add to the reservoir.
+   * \param reservoir     The reservoir to fill.
+   */
+  void fill_reservoir(const std::vector<Example_CPtr>& inputExamples, float multiplier, ExampleReservoir<Label>& reservoir)
+  {
+    size_t sampleCount = static_cast<size_t>(examples.size() * multiplier + 0.5f);
+    std::vector<Example_CPtr> sampledExamples = sample_examples(inputExamples, sampleCount);
+    for(size_t i = 0; i < sampleCount; ++i)
+    {
+      reservoir.add_example(sampledExamples[i]);
+    }
+  }
+
+  /**
    * \brief Returns whether or not the specified node is a leaf.
    *
    * \param nodeIndex  The index of the node.
@@ -191,6 +226,24 @@ private:
   }
 
   /**
+   * \brief Randomly samples sampleCount examples (with replacement) from the specified set of input examples.
+   *
+   * \param inputExamples The set of examples from which to sample.
+   * \param sampleCount   The number of samples to choose.
+   * \return              The chosen set of examples.
+   */
+  std::vector<Example_CPtr> sample_examples(const std::vector<Example_CPtr>& inputExamples, size_t sampleCount)
+  {
+    std::vector<Example_CPtr> outputExamples;
+    for(size_t i = 0; i < sampleCount; ++i)
+    {
+      int exampleIndex = m_randomNumberGenerator->generate_int_in_range(0, inputExamples.size() - 1);
+      outputExamples.push_back(inputExamples[exampleIndex]);
+    }
+    return outputExamples;
+  }
+
+  /**
    * \brief Splits the node with the specified index.
    *
    * \param nodeIndex The index of the node to split.
@@ -198,8 +251,24 @@ private:
   void split_node(int nodeIndex)
   {
     const std::vector<Example_CPtr>& examples = m_nodes[nodeIndex]->m_reservoir.get_examples();
-    DecisionFunction_Ptr decisionFunction = m_decisionFunctionGenerator->pick_decision_function(examples);
-    // TODO
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(examples);
+
+    // Set the decision function of the node to be split and remove it from the splittability queue.
+    Node& n = *m_nodes[nodeIndex];
+    n.m_splitter = split->m_decisionFunction;
+    m_splittabilityQueue.erase(nodeIndex);
+
+    // Add left and right child nodes and populate their example reservoirs based on the chosen split.
+    n.m_leftChildIndex = add_node();
+    n.m_rightChildIndex = add_node();
+
+    float multiplier = std::max(1.0f, static_cast<float>(n.m_reservoir.seen_examples()) / n.m_reservoir.max_size());
+
+
+
+
+    // Clear the example reservoir in the node that was split.
+    n.m_reservoir.clear();
   }
 
   /**
