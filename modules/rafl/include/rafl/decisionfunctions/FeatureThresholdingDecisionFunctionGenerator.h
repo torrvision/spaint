@@ -5,6 +5,10 @@
 #ifndef H_RAFL_FEATURETHRESHOLDINGDECISIONFUNCTIONGENERATOR
 #define H_RAFL_FEATURETHRESHOLDINGDECISIONFUNCTIONGENERATOR
 
+#include <cassert>
+
+#include <tvgutil/RandomNumberGenerator.h>
+
 #include "DecisionFunctionGenerator.h"
 #include "FeatureThresholdingDecisionFunction.h"
 
@@ -16,13 +20,34 @@ namespace rafl {
 template <typename Label>
 class FeatureThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  tvgutil::RandomNumberGenerator_Ptr m_rng;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  explicit FeatureThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& rng)
+  : m_rng(rng)
+  {}
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
   virtual DecisionFunction_Ptr generate_candidate(const std::vector<Example_CPtr>& examples) const
   {
-    // TODO
-    return DecisionFunction_Ptr();
+    assert(!examples.empty());
+
+    int descriptorSize = static_cast<int>(examples[0]->get_descriptor()->size());
+
+    // Pick a random feature in the descriptor to threshold.
+    int featureIndex = m_rng->generate_int_in_range(0, descriptorSize - 1);
+
+    // Select an appropriate threshold by picking a random example and using
+    // the value of the chosen feature from that example as the threshold.
+    int exampleIndex = m_rng->generate_int_in_range(0, static_cast<int>(examples.size()) - 1);
+    float threshold = examples[exampleIndex]->get_descriptor()[featureIndex];
+
+    return DecisionFunction_Ptr(new FeatureThresholdingDecisionFunction(featureIndex, threshold));
   }
 };
 
