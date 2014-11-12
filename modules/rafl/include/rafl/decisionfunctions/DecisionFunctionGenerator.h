@@ -63,7 +63,7 @@ public:
       std::pair<std::vector<Example_CPtr>,std::vector<Example_CPtr> > examplesPartition;
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
-        if(candidate->classify_descriptor(examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
+        if(candidate->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
         {
           examplesPartition.first.push_back(examples[j]);
         }
@@ -113,7 +113,7 @@ private:
    */
   static float calculate_information_gain(const std::vector<Example_CPtr>& examples, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
   {
-    float exampleCount = examples.size();
+    float exampleCount = static_cast<float>(examples.size());
     float leftEntropy = calculate_entropy(leftExamples);
     float rightEntropy = calculate_entropy(rightExamples);
     float leftWeight = leftExamples.size() / exampleCount;

@@ -33,7 +33,7 @@ private:
   size_t m_maxSize;
 
   /** A random number generator. */
-  tvgutil::RandomNumberGenerator_Ptr m_rng;
+  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
 
   /** The number of examples that have been added to the reservoir over time. */
   size_t m_seenExamples;
@@ -46,11 +46,11 @@ public:
    * Adding more than the specified number of examples to the reservoir may result in some
    * of the older examples being (randomly) discarded.
    *
-   * \param maxSize The maximum number of examples allowed in the reservoir at any one time.
-   * \param rng     A random number generator.
+   * \param maxSize               The maximum number of examples allowed in the reservoir at any one time.
+   * \param randomNumberGenerator A random number generator.
    */
-  explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
-  : m_maxSize(maxSize), m_rng(rng), m_seenExamples(0)
+  explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  : m_maxSize(maxSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -77,7 +77,7 @@ public:
     else
     {
       // Otherwise, randomly decide whether or not to replace one of the existing examples with the new one.
-      size_t k = m_rng->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
+      size_t k = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
       if(k < m_maxSize)
       {
         m_examples[k] = example;
@@ -97,6 +97,16 @@ public:
   size_t current_size() const
   {
     return m_examples.size();
+  }
+
+  /**
+   * \brief Gets the examples currently in the reservoir.
+   *
+   * \return  The examples currently in the reservoir.
+   */
+  const std::vector<Example_CPtr>& get_examples() const
+  {
+    return m_examples;
   }
 
   /**

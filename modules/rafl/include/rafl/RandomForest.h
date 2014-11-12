@@ -30,9 +30,9 @@ public:
   /**
    * \brief Constructs a random forest.
    *
-   * \param rng A random number generator.
+   * \param randomNumberGenerator A random number generator.
    */
-  explicit RandomForest(const tvgutil::RandomNumberGenerator_Ptr& rng)
+  explicit RandomForest(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
   {
     // TODO
   }

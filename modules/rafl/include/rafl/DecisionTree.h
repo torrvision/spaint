@@ -7,11 +7,12 @@
 
 #include <functional>
 #include <map>
+#include <set>
 #include <stdexcept>
 
 #include <tvgutil/PriorityQueue.h>
 
-#include "decisionfunctions/DecisionFunction.h"
+#include "decisionfunctions/DecisionFunctionGenerator.h"
 #include "examples/Example.h"
 #include "examples/ExampleReservoir.h"
 
@@ -49,15 +50,19 @@ private:
     /**
      * \brief Constructs a node.
      *
-     * \param maxReservoirSize  The maximum number of examples that can be stored in the node's reservoir.
-     * \param rng               A random number generator.
+     * \param maxReservoirSize      The maximum number of examples that can be stored in the node's reservoir.
+     * \param randomNumberGenerator A random number generator.
      */
-    Node(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
-    : m_leftChildIndex(-1), m_reservoir(maxReservoirSize, rng), m_rightChildIndex(-1)
+    Node(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+    : m_leftChildIndex(-1), m_reservoir(maxReservoirSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
   };
 
-  //#################### TYPEDEFS ####################
+  //#################### PUBLIC TYPEDEFS ####################
+public:
+  typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
+
+  //#################### PRIVATE TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef boost::shared_ptr<Node> Node_Ptr;
@@ -65,8 +70,11 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** A generator that can be used to pick appropriate decision functions for nodes. */
+  DecisionFunctionGenerator_CPtr m_decisionFunctionGenerator;
+
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
-  std::vector<int> m_dirtyNodes;
+  std::set<int> m_dirtyNodes;
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
@@ -82,13 +90,14 @@ public:
   /**
    * \brief Constructs an empty decision tree.
    *
-   * \param maxReservoirSize  The maximum number of examples that can be stored in a node's reservoir.
-   * \param rng               A random number generator.
+   * \param maxReservoirSize          The maximum number of examples that can be stored in a node's reservoir.
+   * \param randomNumberGenerator     A random number generator.
+   * \param decisionFunctionGenerator A generator that can be used to pick appropriate decision functions for nodes.
    */
-  explicit DecisionTree(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& rng)
-  : m_rootIndex(0)
+  explicit DecisionTree(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
+  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_rootIndex(0)
   {
-    m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, rng)));
+    m_nodes.push_back(Node_Ptr(new Node(maxReservoirSize, randomNumberGenerator)));
     m_splittabilityQueue.insert(m_rootIndex, 0.0f, NULL);
   }
 
@@ -102,19 +111,19 @@ public:
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
     // Add each example to the tree.
-    for(std::vector<int>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
+    for(typename std::vector<Example_CPtr>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
     {
       add_example(*it);
     }
 
     // Update the splittability values for any nodes whose reservoirs were changed whilst adding examples.
-    for(std::vector<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
+    for(std::set<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
     {
       update_splittability(*it);
     }
 
     // Clear the list of dirty nodes once their splittability has been updated.
-    std::vector<int>().swap(m_dirtyNodes);
+    m_dirtyNodes.clear();
   }
 
   /**
@@ -125,7 +134,7 @@ public:
    * \param splitBudget             The maximum number of nodes that may be split in this training step.
    * \param splittabilityThreshold  A threshold splittability below which nodes should not be split.
    */
-  void train(size_t splitBudget, size_t splittabilityThreshold = 0.5f)
+  void train(size_t splitBudget, float splittabilityThreshold = 0.5f)
   {
     size_t nodesSplit = 0;
 
@@ -155,18 +164,18 @@ private:
   void add_example(const Example_CPtr& example)
   {
     // Find the leaf to which to add the new example.
-    const Descriptor& descriptor = example->get_descriptor();
+    const Descriptor& descriptor = *example->get_descriptor();
     int curIndex = m_rootIndex;
     while(!is_leaf(curIndex))
     {
-      curIndex = *m_nodes[curIndex]->m_splitter(descriptor) ? m_nodes[curIndex]->m_leftChildIndex : m_nodes[curIndex]->m_rightChildIndex;
+      curIndex = m_nodes[curIndex]->m_splitter->classify_descriptor(descriptor) == DecisionFunction::DC_LEFT ? m_nodes[curIndex]->m_leftChildIndex : m_nodes[curIndex]->m_rightChildIndex;
     }
 
     // Add the example to the leaf's reservoir.
     if(m_nodes[curIndex]->m_reservoir.add_example(example))
     {
       // If the leaf's reservoir changed as a result of adding the example, record this fact to ensure that its splittability is properly recalculated.
-      m_dirtyNodes.push_back(curIndex);
+      m_dirtyNodes.insert(curIndex);
     }
   }
 
@@ -188,6 +197,8 @@ private:
    */
   void split_node(int nodeIndex)
   {
+    const std::vector<Example_CPtr>& examples = m_nodes[nodeIndex]->m_reservoir.get_examples();
+    DecisionFunction_Ptr decisionFunction = m_decisionFunctionGenerator->pick_decision_function(examples);
     // TODO
   }
 
@@ -199,7 +210,7 @@ private:
   void update_splittability(int nodeIndex)
   {
     // Recalculate the node's splittability.
-    const ExampleReservoir& reservoir = m_nodes[nodeIndex]->m_reservoir;
+    const ExampleReservoir<Label>& reservoir = m_nodes[nodeIndex]->m_reservoir;
     float splittability = static_cast<float>(reservoir.current_size()) / reservoir.max_size();
 
     // Update the splittability queue to reflect the node's new splittability.

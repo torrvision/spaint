@@ -22,12 +22,12 @@ class FeatureThresholdingDecisionFunctionGenerator : public DecisionFunctionGene
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  tvgutil::RandomNumberGenerator_Ptr m_rng;
+  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
 
   //#################### CONSTRUCTORS ####################
 public:
-  explicit FeatureThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& rng)
-  : m_rng(rng)
+  explicit FeatureThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  : m_randomNumberGenerator(randomNumberGenerator)
   {}
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -40,12 +40,12 @@ private:
     int descriptorSize = static_cast<int>(examples[0]->get_descriptor()->size());
 
     // Pick a random feature in the descriptor to threshold.
-    int featureIndex = m_rng->generate_int_in_range(0, descriptorSize - 1);
+    int featureIndex = m_randomNumberGenerator->generate_int_in_range(0, descriptorSize - 1);
 
     // Select an appropriate threshold by picking a random example and using
     // the value of the chosen feature from that example as the threshold.
-    int exampleIndex = m_rng->generate_int_in_range(0, static_cast<int>(examples.size()) - 1);
-    float threshold = examples[exampleIndex]->get_descriptor()[featureIndex];
+    int exampleIndex = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(examples.size()) - 1);
+    float threshold = (*examples[exampleIndex]->get_descriptor())[featureIndex];
 
     return DecisionFunction_Ptr(new FeatureThresholdingDecisionFunction(featureIndex, threshold));
   }

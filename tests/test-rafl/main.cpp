@@ -23,6 +23,7 @@ int main()
 }
 #endif
 
+#if 0
 #include <iostream>
 
 #include <rafl/base/ProbabilityMassFunction.h>
@@ -46,3 +47,50 @@ int main()
   std::cout << "Entropy=" << pmf.calculate_entropy() << '\n';
   return 0;
 }
+#endif
+
+#if 1
+
+#include <rafl/DecisionTree.h>
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
+using namespace rafl;
+
+enum Label
+{
+  RED,
+  BLUE
+};
+
+typedef DecisionTree<Label> DT;
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
+Example_CPtr make_example(float x, float y, Label l)
+{
+  Descriptor_Ptr d(new Descriptor(2));
+  (*d)[0] = x;
+  (*d)[1] = y;
+  return Example_CPtr(new Example<Label>(d, l));
+}
+
+int main()
+{
+  unsigned int seed = 12345;
+  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
+  DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+  DT dt(10, randomNumberGenerator, decisionFunctionGenerator);
+
+  std::vector<Example_CPtr> examples;
+  examples.push_back(make_example(0, 4, RED));
+  examples.push_back(make_example(0, 5, RED));
+  examples.push_back(make_example(1, 5, RED));
+  examples.push_back(make_example(4, 0, BLUE));
+  examples.push_back(make_example(5, 0, BLUE));
+  examples.push_back(make_example(5, 1, BLUE));
+
+  dt.add_examples(examples);
+  dt.train(4);
+
+  return 0;
+}
+
+#endif
