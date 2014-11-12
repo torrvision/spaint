@@ -206,7 +206,7 @@ private:
    */
   void fill_reservoir(const std::vector<Example_CPtr>& inputExamples, float multiplier, ExampleReservoir<Label>& reservoir)
   {
-    size_t sampleCount = static_cast<size_t>(examples.size() * multiplier + 0.5f);
+    size_t sampleCount = static_cast<size_t>(inputExamples.size() * multiplier + 0.5f);
     std::vector<Example_CPtr> sampledExamples = sample_examples(inputExamples, sampleCount);
     for(size_t i = 0; i < sampleCount; ++i)
     {
@@ -237,7 +237,7 @@ private:
     std::vector<Example_CPtr> outputExamples;
     for(size_t i = 0; i < sampleCount; ++i)
     {
-      int exampleIndex = m_randomNumberGenerator->generate_int_in_range(0, inputExamples.size() - 1);
+      int exampleIndex = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(inputExamples.size()) - 1);
       outputExamples.push_back(inputExamples[exampleIndex]);
     }
     return outputExamples;
@@ -253,19 +253,20 @@ private:
     const std::vector<Example_CPtr>& examples = m_nodes[nodeIndex]->m_reservoir.get_examples();
     typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(examples);
 
-    // Set the decision function of the node to be split and remove it from the splittability queue.
+    // Set the decision function of the node to be split.
     Node& n = *m_nodes[nodeIndex];
     n.m_splitter = split->m_decisionFunction;
-    m_splittabilityQueue.erase(nodeIndex);
 
     // Add left and right child nodes and populate their example reservoirs based on the chosen split.
     n.m_leftChildIndex = add_node();
     n.m_rightChildIndex = add_node();
-
     float multiplier = std::max(1.0f, static_cast<float>(n.m_reservoir.seen_examples()) / n.m_reservoir.max_size());
+    fill_reservoir(split->m_leftExamples, multiplier, m_nodes[n.m_leftChildIndex]->m_reservoir);
+    fill_reservoir(split->m_rightExamples, multiplier, m_nodes[n.m_rightChildIndex]->m_reservoir);
 
-
-
+    // Update the splittability for the child nodes.
+    update_splittability(n.m_leftChildIndex);
+    update_splittability(n.m_rightChildIndex);
 
     // Clear the example reservoir in the node that was split.
     n.m_reservoir.clear();
@@ -278,6 +279,8 @@ private:
    */
   void update_splittability(int nodeIndex)
   {
+    // TODO: Implement a proper splittability measure (this one is a temporary hack to allow us to try things out).
+
     // Recalculate the node's splittability.
     const ExampleReservoir<Label>& reservoir = m_nodes[nodeIndex]->m_reservoir;
     float splittability = static_cast<float>(reservoir.current_size()) / reservoir.max_size();
