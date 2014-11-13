@@ -30,6 +30,18 @@ public:
   }
 
   /**
+   * \brief Calculates the entropy of a label distribution represented by the specified histogram.
+   *
+   * \param histogram The histogram.
+   * \return          The entropy of the label distribution represented by the histogram.
+   */
+  template <typename Label>
+  static float calculate_entropy(const Histogram<Label>& histogram)
+  {
+    return ProbabilityMassFunction<Label>(histogram).calculate_entropy();
+  }
+
+  /**
    * \brief Makes a histogram from the label distribution of a set of examples.
    *
    * \param examples  The examples from whose label distribution we want to make a histogram.

@@ -250,11 +250,10 @@ private:
    */
   void split_node(int nodeIndex)
   {
-    const std::vector<Example_CPtr>& examples = m_nodes[nodeIndex]->m_reservoir.get_examples();
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(examples);
+    Node& n = *m_nodes[nodeIndex];
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir);
 
     // Set the decision function of the node to be split.
-    Node& n = *m_nodes[nodeIndex];
     n.m_splitter = split->m_decisionFunction;
 
     // Add left and right child nodes and populate their example reservoirs based on the chosen split.

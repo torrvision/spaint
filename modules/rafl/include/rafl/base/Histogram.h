@@ -6,6 +6,7 @@
 #define H_RAFL_HISTOGRAM
 
 #include <map>
+#include <stdexcept>
 
 namespace rafl {
 
@@ -35,7 +36,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Adds a new instance of the specified label to the histogram.
+   * \brief Adds an instance of the specified label to the histogram.
    *
    * \param label The label for which to add an instance.
    */
@@ -63,6 +64,19 @@ public:
   size_t get_count() const
   {
     return m_count;
+  }
+
+  /**
+   * \brief Removes an instance of the specified label from the histogram.
+   *
+   * \param label The label for which to remove an instance.
+   */
+  void remove(const Label& label)
+  {
+    typename std::map<Label,size_t>::iterator it = m_bins.find(label);
+    if(it == m_bins.end()) throw std::runtime_error("Trying to remove a label from an empty histogram bin");
+    --it->second;
+    --m_count;
   }
 };
 

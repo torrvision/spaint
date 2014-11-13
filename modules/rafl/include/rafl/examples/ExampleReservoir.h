@@ -10,6 +10,7 @@
 
 #include <tvgutil/RandomNumberGenerator.h>
 
+#include "../base/Histogram.h"
 #include "Example.h"
 
 namespace rafl {
@@ -23,11 +24,16 @@ class ExampleReservoir
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+  typedef boost::shared_ptr<Histogram<Label> > Histogram_Ptr;
+  typedef boost::shared_ptr<const Histogram<Label> > Histogram_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The examples in the reservoir. */
   std::vector<Example_CPtr> m_examples;
+
+  /** The histogram of the label distribution of the current set of examples. */
+  Histogram_Ptr m_histogram;
 
   /** The maximum number of examples allowed in the reservoir at any one time. */
   size_t m_maxSize;
@@ -50,7 +56,7 @@ public:
    * \param randomNumberGenerator A random number generator.
    */
   explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-  : m_maxSize(maxSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
+  : m_histogram(new Histogram<Label>), m_maxSize(maxSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -72,6 +78,7 @@ public:
     {
       // If we haven't yet reached the maximum number of examples, simply add the new one.
       m_examples.push_back(example);
+      m_histogram->add(example->get_label());
       changed = true;
     }
     else
@@ -80,7 +87,9 @@ public:
       size_t k = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
       if(k < m_maxSize)
       {
+        m_histogram->remove(m_examples[k]->get_label());
         m_examples[k] = example;
+        m_histogram->add(example->get_label());
         changed = true;
       }
     }
@@ -95,6 +104,7 @@ public:
   void clear()
   {
     std::vector<Example_CPtr>().swap(m_examples);
+    m_histogram.reset();
     m_randomNumberGenerator.reset();
   }
 
@@ -116,6 +126,16 @@ public:
   const std::vector<Example_CPtr>& get_examples() const
   {
     return m_examples;
+  }
+
+  /**
+   * \brief Gets the histogram of the label distribution of the current set of examples in the reservoir.
+   *
+   * \return  The histogram of the label distribution of the current set of examples in the reservoir.
+   */
+  Histogram_CPtr get_histogram() const
+  {
+    return m_histogram;
   }
 
   /**

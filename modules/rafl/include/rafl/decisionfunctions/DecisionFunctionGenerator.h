@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "../base/ProbabilityMassFunction.h"
+#include "../examples/ExampleReservoir.h"
 #include "../examples/ExampleUtil.h"
 #include "DecisionFunction.h"
 
@@ -66,17 +67,18 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Picks an appropriate way in which to split the specified set of examples.
+   * \brief Picks an appropriate way in which to split the specified reservoir of examples.
    *
-   * \param examples        The examples to split.
+   * \param reservoir       The reservoir of examples to split.
    * \param candidateCount  The number of candidates to evaluate.
    * \return                The chosen split.
    */
-  Split_CPtr split_examples(const std::vector<Example_CPtr>& examples, int candidateCount = 5) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount = 5) const
   {
-    float initialEntropy = ExampleUtil::calculate_entropy(examples);
+    float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
+    const std::vector<Example_CPtr>& examples = reservoir.get_examples();
     for(int i = 0; i < candidateCount; ++i)
     {
       Split_Ptr splitCandidate(new Split);
