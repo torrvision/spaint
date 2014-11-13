@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "../base/ProbabilityMassFunction.h"
-#include "../examples/Example.h"
+#include "../examples/ExampleUtil.h"
 #include "DecisionFunction.h"
 
 namespace rafl {
@@ -74,7 +74,7 @@ public:
    */
   Split_CPtr split_examples(const std::vector<Example_CPtr>& examples, int candidateCount = 5) const
   {
-    float initialEntropy = calculate_entropy(examples);
+    float initialEntropy = ExampleUtil::calculate_entropy(examples);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
     for(int i = 0; i < candidateCount; ++i)
@@ -111,22 +111,6 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Calculates the entropy of the label distribution of a set of examples.
-   *
-   * \param examples  The examples for whose label distribution we want to calculate the entropy.
-   * \return          The entropy of the examples' label distribution.
-   */
-  static float calculate_entropy(const std::vector<Example_CPtr>& examples)
-  {
-    Histogram<Label> histogram;
-    for(typename std::vector<Example_CPtr>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
-    {
-      histogram.add((*it)->get_label());
-    }
-    return ProbabilityMassFunction<Label>(histogram).calculate_entropy();
-  }
-
-  /**
    * \brief Calculates the information gain that results from splitting an example set in a particular way.
    *
    * \param examples        The example set.
@@ -138,8 +122,8 @@ private:
   static float calculate_information_gain(const std::vector<Example_CPtr>& examples, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
   {
     float exampleCount = static_cast<float>(examples.size());
-    float leftEntropy = calculate_entropy(leftExamples);
-    float rightEntropy = calculate_entropy(rightExamples);
+    float leftEntropy = ExampleUtil::calculate_entropy(leftExamples);
+    float rightEntropy = ExampleUtil::calculate_entropy(rightExamples);
     float leftWeight = leftExamples.size() / exampleCount;
     float rightWeight = rightExamples.size() / exampleCount;
     return initialEntropy - (leftWeight * leftEntropy + rightWeight * rightEntropy);
