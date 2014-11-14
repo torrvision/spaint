@@ -20,6 +20,10 @@ namespace rafl {
 template <typename Label>
 class FeatureThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
 {
+  //#################### USINGS ####################
+
+  using typename DecisionFunctionGenerator<Label>::Example_CPtr;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
