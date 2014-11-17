@@ -64,12 +64,17 @@ enum Label
 typedef DecisionTree<Label> DT;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
-Example_CPtr make_example(float x, float y, Label l)
+Descriptor_CPtr make_descriptor(float x, float y)
 {
   Descriptor_Ptr d(new Descriptor(2));
   (*d)[0] = x;
   (*d)[1] = y;
-  return Example_CPtr(new Example<Label>(d, l));
+  return d;
+}
+
+Example_CPtr make_example(float x, float y, Label l)
+{
+  return Example_CPtr(new Example<Label>(make_descriptor(x, y), l));
 }
 
 int main()
@@ -90,6 +95,8 @@ int main()
   dt.add_examples(examples);
   dt.train(4);
 
+  ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
+  std::cout << pmf << '\n';
   return 0;
 }
 

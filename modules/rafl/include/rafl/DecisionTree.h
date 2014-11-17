@@ -132,6 +132,18 @@ public:
   }
 
   /**
+   * \brief Looks up the probability mass function for the leaf to which an example with the specified descriptor would be added.
+   *
+   * \param descriptor  The descriptor.
+   * \return            The probability mass function for the leaf to which an example with that descriptor would be added.
+   */
+  ProbabilityMassFunction<Label> lookup_pmf(const Descriptor_CPtr& descriptor) const
+  {
+    int leafIndex = find_leaf(*descriptor);
+    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
+  }
+
+  /**
    * \brief Trains the tree by splitting a number of suitable nodes (e.g. those that have a fairly full reservoir).
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
@@ -169,18 +181,13 @@ private:
   void add_example(const Example_CPtr& example)
   {
     // Find the leaf to which to add the new example.
-    const Descriptor& descriptor = *example->get_descriptor();
-    int curIndex = m_rootIndex;
-    while(!is_leaf(curIndex))
-    {
-      curIndex = m_nodes[curIndex]->m_splitter->classify_descriptor(descriptor) == DecisionFunction::DC_LEFT ? m_nodes[curIndex]->m_leftChildIndex : m_nodes[curIndex]->m_rightChildIndex;
-    }
+    int leafIndex = find_leaf(*example->get_descriptor());
 
     // Add the example to the leaf's reservoir.
-    if(m_nodes[curIndex]->m_reservoir.add_example(example))
+    if(m_nodes[leafIndex]->m_reservoir.add_example(example))
     {
       // If the leaf's reservoir changed as a result of adding the example, record this fact to ensure that its splittability is properly recalculated.
-      m_dirtyNodes.insert(curIndex);
+      m_dirtyNodes.insert(leafIndex);
     }
   }
 
@@ -212,6 +219,22 @@ private:
     {
       reservoir.add_example(sampledExamples[i]);
     }
+  }
+
+  /**
+   * \brief Finds the index of the leaf to which an example with the specified descriptor would currently be added.
+   *
+   * \param descriptor  The descriptor.
+   * \return            The index of the leaf to which an example with the descriptor would currently be added.
+   */
+  int find_leaf(const Descriptor& descriptor) const
+  {
+    int curIndex = m_rootIndex;
+    while(!is_leaf(curIndex))
+    {
+      curIndex = m_nodes[curIndex]->m_splitter->classify_descriptor(descriptor) == DecisionFunction::DC_LEFT ? m_nodes[curIndex]->m_leftChildIndex : m_nodes[curIndex]->m_rightChildIndex;
+    }
+    return curIndex;
   }
 
   /**
