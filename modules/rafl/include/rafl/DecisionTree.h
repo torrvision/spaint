@@ -160,7 +160,6 @@ public:
     while(!m_splittabilityQueue.empty() && nodesSplit < splitBudget)
     {
       typename SplittabilityQueue::Element e = m_splittabilityQueue.top();
-      float splittability = e.key();
       if(e.key() >= splittabilityThreshold)
       {
         m_splittabilityQueue.pop();
