@@ -158,7 +158,7 @@ public:
     return m_seenExamples;
   }
 
-  //#################### FRIENDS ####################
+  //#################### STREAM OPERATORS ####################
 
   /**
    * \brief Outputs a reservoir to a stream.

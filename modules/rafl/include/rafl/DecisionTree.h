@@ -6,14 +6,12 @@
 #define H_RAFL_DECISIONTREE
 
 #include <functional>
-#include <map>
 #include <set>
 #include <stdexcept>
 
 #include <tvgutil/PriorityQueue.h>
 
 #include "decisionfunctions/DecisionFunctionGenerator.h"
-#include "examples/Example.h"
 #include "examples/ExampleReservoir.h"
 
 namespace rafl {
@@ -33,13 +31,13 @@ private:
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
-    /** The index of the node's left child. */
+    /** The index of the node's left child in the tree's node array. */
     int m_leftChildIndex;
 
     /** The reservoir of examples currently stored in the node. */
     ExampleReservoir<Label> m_reservoir;
 
-    /** The index of the node's right child. */
+    /** The index of the node's right child in the tree's node array. */
     int m_rightChildIndex;
 
     /** The split function for the node. */
@@ -185,7 +183,7 @@ private:
     // Add the example to the leaf's reservoir.
     if(m_nodes[leafIndex]->m_reservoir.add_example(example))
     {
-      // If the leaf's reservoir changed as a result of adding the example, record this fact to ensure that its splittability is properly recalculated.
+      // If the leaf's reservoir changed as a result of adding the example, record this fact to ensure that the leaf's splittability is properly recalculated.
       m_dirtyNodes.insert(leafIndex);
     }
   }
@@ -272,8 +270,10 @@ private:
    */
   void split_node(int nodeIndex)
   {
+    const int CANDIDATE_COUNT = 5;
+
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir, CANDIDATE_COUNT);
 
     // Set the decision function of the node to be split.
     n.m_splitter = split->m_decisionFunction;

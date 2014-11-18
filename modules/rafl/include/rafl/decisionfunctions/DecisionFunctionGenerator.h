@@ -15,7 +15,7 @@
 namespace rafl {
 
 /**
- * \brief An instance of an instantiation of this class template can be used to pick an appropriate decision function to split a set of examples.
+ * \brief An instance of an instantiation of a class template deriving from this one can be used to pick an appropriate decision function to split a set of examples.
  */
 template <typename Label>
 class DecisionFunctionGenerator
@@ -73,7 +73,7 @@ public:
    * \param candidateCount  The number of candidates to evaluate.
    * \return                The chosen split.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount = 5) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
