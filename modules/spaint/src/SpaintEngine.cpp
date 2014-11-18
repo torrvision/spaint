@@ -24,7 +24,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const spaint::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
+SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
 : m_settings(settings)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
@@ -47,7 +47,7 @@ void SpaintEngine::generate_free_raycast(const UChar4Image_Ptr& output, const IT
 
   m_visualisationEngine->FindVisibleBlocks(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState.get());
   m_visualisationEngine->CreateExpectedDepths(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState->minmaxImage, m_visualisationState.get());
-  m_visualisationEngine->RenderImage(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState.get(), m_visualisationState->outputImage);
+  m_visualisationEngine->RenderImage(m_scene.get(), &pose, &m_view->calib->intrinsics_d, m_visualisationState.get(), m_visualisationState->outputImage, false);
 
   if(m_settings.useGPU) m_visualisationState->outputImage->UpdateHostFromDevice();
   output->SetFrom(m_visualisationState->outputImage);

@@ -9,7 +9,6 @@
 
 #include <spaint/SpaintEngine.h>
 #include <spaint/input/InputState.h>
-#include <spaint/util/SharedPtr.h>
 
 #include "Renderer.h"
 
@@ -20,9 +19,9 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef spaint::shared_ptr<const Renderer> Renderer_CPtr;
-  typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
-  typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
+  typedef boost::shared_ptr<const Renderer> Renderer_CPtr;
+  typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
+  typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

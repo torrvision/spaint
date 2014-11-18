@@ -16,9 +16,9 @@ class Renderer
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef spaint::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef spaint::shared_ptr<void> SDL_GLContext_Ptr;
-  typedef spaint::shared_ptr<SDL_Window> SDL_Window_Ptr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
+  typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
   //#################### PROTECTED VARIABLES ####################
 protected:
