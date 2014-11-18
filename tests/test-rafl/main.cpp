@@ -97,6 +97,14 @@ int main()
 
   ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
   std::cout << pmf << '\n';
+  
+  
+  std::set<Label> labelSet;
+  labelSet.insert(RED);
+  labelSet.insert(BLUE);
+  const size_t numberOfExamplesPerClass = 5;
+  std::vector<Example_CPtr> examplesOnUnitCircle = ExampleUtil::unit_circle_example_generator(labelSet, numberOfExamplesPerClass);
+  
   return 0;
 }
 

@@ -17,6 +17,15 @@ class ExampleUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  
+  static Descriptor_CPtr make_descriptor(float x, float y)
+  {
+    Descriptor_Ptr d(new Descriptor(2));
+    (*d)[0] = x;
+    (*d)[1] = y;
+    return d;
+  }
+  
   /**
    * \brief Calculates the entropy of the label distribution of a set of examples.
    *
@@ -71,6 +80,44 @@ public:
   static ProbabilityMassFunction<Label> make_pmf(const std::vector<boost::shared_ptr<const Example<Label> > >& examples)
   {
     return ProbabilityMassFunction<Label>(make_histogram(examples));
+  }
+  
+  template <typename Label>
+  static std::vector<boost::shared_ptr<const Example<Label> > > unit_circle_example_generator(const std::set<Label>& labelSet, size_t numberOfSamplesPerClass)
+  {
+    
+    typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+    const double pi = 3.14f;
+    const float rotation_per_class = 2.f*pi/numberOfSamplesPerClass;
+    std::vector<Example_CPtr> exampleSet;
+    typename std::set<Label>::const_iterator set_iterator = labelSet.begin();
+     //Descriptor startPosition(2); startPosition[0] = 0; startPosition[1] = 1;
+     const float d1 = 0.f;
+     const float d2 = 1.f;
+     
+     for(size_t i = 0; i < numberOfSamplesPerClass; ++i)
+     {
+       for(int j = 0; j < labelSet.size(); ++j)
+       {
+	 float angle = j*rotation_per_class;
+	 float r11 = cos(angle);
+	 float r12 = -sin(angle);
+	 float r21 = sin(angle);
+	 float r22 = cos(angle);
+	 	 
+ 	//Rotation matrix (j*(2*pi/numberOfSamplesPerClass)); R = [cos(x) -sin(x); sin(x) cos(x)];
+	float a = r11*d1 + r12*d2;
+	float b = r21*d1 + r22*d2;
+	
+	//BUG!!
+	std::advance(set_iterator, j);
+	
+ 	Example_CPtr e(new Example<Label>(make_descriptor(a,b),*set_iterator));
+	exampleSet.push_back( e );
+       }
+     }
+    
+    return exampleSet;
   }
 };
 
