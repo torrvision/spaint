@@ -1,6 +1,6 @@
-######################################
-# CMakeLists.txt for tests/test-rafl #
-######################################
+################################
+# CMakeLists.txt for test-rafl #
+################################
 
 ###########################
 # Specify the target name #
@@ -38,7 +38,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDATestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #

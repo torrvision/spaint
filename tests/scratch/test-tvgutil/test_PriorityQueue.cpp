@@ -7,7 +7,7 @@
 #include <tvgutil/PriorityQueue.h>
 using namespace tvgutil;
 
-typedef	PriorityQueue<std::string, double, int> PQ;//, std::greater<double> > PQ;
+typedef	PriorityQueue<std::string, double, int, std::greater<double> > PQ;
 
 BOOST_AUTO_TEST_SUITE(test_PriorityQueue)
 

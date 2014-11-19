@@ -1,6 +1,6 @@
-##########################################
-# CMakeLists.txt for spaint/scratchtests #
-##########################################
+##############################
+# CMakeLists.txt for scratch #
+##############################
 
 ADD_SUBDIRECTORY(test-boost)
 
