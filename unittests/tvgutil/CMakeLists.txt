@@ -1,12 +1,25 @@
-#########################################
-# CMakeLists.txt for tests/test-tvgutil #
-#########################################
+########################################
+# CMakeLists.txt for unittests/tvgutil #
+########################################
 
-###########################
-# Specify the target name #
-###########################
+###############################
+# Specify the test suite name #
+###############################
 
-SET(targetname test-tvgutil)
+SET(suitename tvgutil)
+
+##########################
+# Specify the test names #
+##########################
+
+SET(testnames
+PriorityQueue
+RandomNumberGenerator
+)
+
+FOREACH(testname ${testnames})
+
+SET(targetname "unittest_${suitename}_${testname}")
 
 ################################
 # Specify the libraries to use #
@@ -19,9 +32,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 #############################
 
 SET(sources
-main.cpp
-test_PriorityQueue.cpp
-test_RandomNumberGenerator.cpp
+test_${testname}.cpp
 )
 
 #############################
@@ -40,7 +51,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetUnitTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
@@ -48,3 +59,5 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
 
 TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+
+ENDFOREACH()
