@@ -18,7 +18,21 @@ class ExampleUtil
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   
-  static Descriptor_CPtr make_descriptor(float x, float y)
+  /**
+   * \brief Create a constant 2d desccriptor
+   * 
+   * \param x   The x component of the descriptor
+   * \param y   The y component of the descriptor
+   * \return    The const dessriptor
+   */
+  static Descriptor_CPtr make_const_2d_descriptor(float x, float y)
+  {
+    Descriptor_Ptr d(new Descriptor(2));
+    (*d)[0] = x;
+    (*d)[1] = y;
+    return d;
+  }
+  static Descriptor_Ptr make_2d_descritor(float x, float y)
   {
     Descriptor_Ptr d(new Descriptor(2));
     (*d)[0] = x;
@@ -82,6 +96,13 @@ public:
     return ProbabilityMassFunction<Label>(make_histogram(examples));
   }
   
+  /**
+   * \brief Creates a vector of examples with the same number of examples per class
+   * 
+   * \param labelSet                  The set of labels from which to draw the samples
+   * \param numberOfSamplesPerClass   The number of samples to create per class
+   * \return                          The set of generated examples
+   */
   template <typename Label>
   static std::vector<boost::shared_ptr<const Example<Label> > > unit_circle_example_generator(const std::set<Label>& labelSet, size_t numberOfSamplesPerClass)
   {
@@ -91,7 +112,6 @@ public:
     const float rotation_per_class = 2.f*pi/numberOfSamplesPerClass;
     std::vector<Example_CPtr> exampleSet;
     typename std::set<Label>::const_iterator set_iterator = labelSet.begin();
-     //Descriptor startPosition(2); startPosition[0] = 0; startPosition[1] = 1;
      const float d1 = 0.f;
      const float d2 = 1.f;
      
@@ -99,21 +119,21 @@ public:
      {
        for(int j = 0; j < labelSet.size(); ++j)
        {
-	 float angle = j*rotation_per_class;
-	 float r11 = cos(angle);
-	 float r12 = -sin(angle);
-	 float r21 = sin(angle);
-	 float r22 = cos(angle);
-	 	 
- 	//Rotation matrix (j*(2*pi/numberOfSamplesPerClass)); R = [cos(x) -sin(x); sin(x) cos(x)];
-	float a = r11*d1 + r12*d2;
-	float b = r21*d1 + r22*d2;
-	
-	//BUG!!
-	std::advance(set_iterator, j);
-	
- 	Example_CPtr e(new Example<Label>(make_descriptor(a,b),*set_iterator));
-	exampleSet.push_back( e );
+         float angle = j*rotation_per_class;
+         float r11 = cos(angle);
+         float r12 = -sin(angle);
+         float r21 = sin(angle);
+         float r22 = cos(angle);
+           
+         //Rotation matrix (j*(2*pi/numberOfSamplesPerClass)); R = [cos(x) -sin(x); sin(x) cos(x)];
+         float a = r11*d1 + r12*d2;
+         float b = r21*d1 + r22*d2;
+         
+         //BUG!!
+         std::advance(set_iterator, j);
+         
+         Example_CPtr e(new Example<Label>(make_descriptor(a,b),*set_iterator));
+         exampleSet.push_back( e );
        }
      }
     
