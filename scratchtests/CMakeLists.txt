@@ -1,6 +1,6 @@
-###################################
-# CMakeLists.txt for spaint/tests #
-###################################
+##########################################
+# CMakeLists.txt for spaint/scratchtests #
+##########################################
 
 ADD_SUBDIRECTORY(test-boost)
 
