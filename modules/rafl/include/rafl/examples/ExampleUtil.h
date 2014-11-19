@@ -108,34 +108,37 @@ public:
   {
     
     typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-    const double pi = 3.14f;
-    const float rotation_per_class = 2.f*pi/numberOfSamplesPerClass;
     std::vector<Example_CPtr> exampleSet;
-    typename std::set<Label>::const_iterator set_iterator = labelSet.begin();
-     const float d1 = 0.f;
-     const float d2 = 1.f;
+
+    const double pi = 3.14f;
+
+    std::vector<Label> labelSetVector(labelSet.begin(), labelSet.end());
+
+    //Defines the angle with which to rotate the unit vector [d1 d2]' 
+    const float rotation_per_class = 2.f*pi/numberOfSamplesPerClass;
+    
+    //typename std::set<Label>::const_iterator set_iterator = labelSet.begin();
+    const float d1 = 0.f;
+    const float d2 = 1.f;
      
-     for(size_t i = 0; i < numberOfSamplesPerClass; ++i)
-     {
-       for(int j = 0; j < labelSet.size(); ++j)
-       {
-         float angle = j*rotation_per_class;
-         float r11 = cos(angle);
-         float r12 = -sin(angle);
-         float r21 = sin(angle);
-         float r22 = cos(angle);
-           
-         //Rotation matrix (j*(2*pi/numberOfSamplesPerClass)); R = [cos(x) -sin(x); sin(x) cos(x)];
-         float a = r11*d1 + r12*d2;
-         float b = r21*d1 + r22*d2;
-         
-         //BUG!!
-         std::advance(set_iterator, j);
-         
-         Example_CPtr e(new Example<Label>(make_descriptor(a,b),*set_iterator));
-         exampleSet.push_back( e );
-       }
-     }
+    for(size_t i = 0; i < numberOfSamplesPerClass; ++i)
+    {
+      for(int j = 0; j < labelSetVector.size(); ++j)
+      {
+        float angle = j*rotation_per_class;
+        float r11 = cos(angle);
+        float r12 = -sin(angle);
+        float r21 = sin(angle);
+        float r22 = cos(angle);
+          
+        //Rotation matrix (j*(2*pi/numberOfSamplesPerClass)); R = [cos(x) -sin(x); sin(x) cos(x)];
+        float a = r11*d1 + r12*d2;
+        float b = r21*d1 + r22*d2;
+        
+        Example_CPtr e(new Example<Label>(make_const_2d_descriptor(a,b), labelSetVector[j]));
+        exampleSet.push_back( e );
+      }
+    }
     
     return exampleSet;
   }
