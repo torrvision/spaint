@@ -153,18 +153,27 @@ public:
   {
     size_t nodesSplit = 0;
 
-    // Keep splitting nodes until we either run out of nodes to split or exceed the split budget.
-    // (In practice, we will also stop splitting if the best node's splittability falls below a threshold.)
+    // Keep splitting nodes until we either run out of nodes to split or exceed the split budget. In practice,
+    // we will also stop splitting if the best node's splittability falls below a threshold. If the best node
+    // cannot be split at present, we remove it from the queue to give the other nodes a chance and re-add it
+    // at the end of the training step.
+    std::vector<typename SplittabilityQueue::Element> elementsToReAdd;
     while(!m_splittabilityQueue.empty() && nodesSplit < splitBudget)
     {
       typename SplittabilityQueue::Element e = m_splittabilityQueue.top();
       if(e.key() >= splittabilityThreshold)
       {
         m_splittabilityQueue.pop();
-        split_node(e.id());
-        ++nodesSplit;
+        if(split_node(e.id())) ++nodesSplit;
+        else elementsToReAdd.push_back(e);
       }
       else break;
+    }
+
+    // Re-add any elements corresponding to nodes that could not be successfully split in this training step.
+    for(typename std::vector<typename SplittabilityQueue::Element>::iterator it = elementsToReAdd.begin(), iend = elementsToReAdd.end(); it != iend; ++it)
+    {
+      m_splittabilityQueue.insert(it->id(), it->key(), it->data());
     }
   }
 
@@ -264,16 +273,19 @@ private:
   }
 
   /**
-   * \brief Splits the node with the specified index.
+   * \brief Attempts to split the node with the specified index.
    *
-   * \param nodeIndex The index of the node to split.
+   * \param nodeIndex The index of the node to try and split.
+   * \return          true, if the node was successfully split, or false otherwise.
    */
-  void split_node(int nodeIndex)
+  bool split_node(int nodeIndex)
   {
     const int CANDIDATE_COUNT = 5;
+    const float GAIN_THRESHOLD = 0.0f;
 
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir, CANDIDATE_COUNT);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir, CANDIDATE_COUNT, GAIN_THRESHOLD);
+    if(!split) return false;
 
     // Set the decision function of the node to be split.
     n.m_splitter = split->m_decisionFunction;
@@ -291,6 +303,8 @@ private:
 
     // Clear the example reservoir in the node that was split.
     n.m_reservoir.clear();
+
+    return true;
   }
 
   /**

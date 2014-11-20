@@ -67,13 +67,14 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Picks an appropriate way in which to split the specified reservoir of examples.
+   * \brief Tries to pick an appropriate way in which to split the specified reservoir of examples.
    *
    * \param reservoir       The reservoir of examples to split.
    * \param candidateCount  The number of candidates to evaluate.
-   * \return                The chosen split.
+   * \param gainThreshold   The minimum information gain that must be obtained from a split to make it worthwhile.
+   * \return                The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
@@ -101,12 +102,13 @@ public:
 
       // Calculate the information gain we would obtain from this split.
       float gain = calculate_information_gain(examples, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
+      if(gain < gainThreshold) splitCandidate.reset();
 
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
       gainToCandidateMap.insert(std::make_pair(gain, splitCandidate));
     }
 
-    // Return a split candidate that had maximum gain.
+    // Return a split candidate that had maximum gain (note that this may be NULL if no split had a high enough gain).
     return gainToCandidateMap.begin()->second;
   }
 
