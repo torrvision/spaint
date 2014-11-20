@@ -32,7 +32,7 @@ private:
   /** The examples in the reservoir. */
   std::vector<Example_CPtr> m_examples;
 
-  /** The histogram of the label distribution of the current set of examples. */
+  /** The histogram of the label distribution of all of the examples that have ever been added to the reservoir. */
   Histogram_Ptr m_histogram;
 
   /** The maximum number of examples allowed in the reservoir at any one time. */
@@ -87,7 +87,6 @@ public:
       size_t k = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
       if(k < m_maxSize)
       {
-        m_histogram->remove(m_examples[k]->get_label());
         m_examples[k] = example;
         m_histogram->add(example->get_label());
         changed = true;
@@ -129,9 +128,9 @@ public:
   }
 
   /**
-   * \brief Gets the histogram of the label distribution of the current set of examples in the reservoir.
+   * \brief Gets the histogram of the label distribution of all of the examples that have ever been added to the reservoir.
    *
-   * \return  The histogram of the label distribution of the current set of examples in the reservoir.
+   * \return  The histogram of the label distribution of all of the examples that have ever been added to the reservoir.
    */
   Histogram_CPtr get_histogram() const
   {
