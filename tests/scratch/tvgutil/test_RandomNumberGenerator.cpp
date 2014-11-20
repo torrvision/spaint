@@ -1,7 +1,3 @@
-/**
- * test-tvgutil: test_RandomNumberGenerator.cpp
- */
-
 #include <boost/test/unit_test.hpp>
 
 #include <tvgutil/RandomNumberGenerator.h>

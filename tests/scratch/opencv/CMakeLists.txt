@@ -1,12 +1,12 @@
-##################################
-# CMakeLists.txt for test-opencv #
-##################################
+#####################################
+# CMakeLists.txt for scratch/opencv #
+#####################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-opencv)
+SET(targetname scratchtest_opencv)
 
 ################################
 # Specify the libraries to use #

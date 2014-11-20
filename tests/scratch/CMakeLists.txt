@@ -2,22 +2,22 @@
 # CMakeLists.txt for scratch #
 ##############################
 
-ADD_SUBDIRECTORY(test-boost)
+ADD_SUBDIRECTORY(boost)
 
 IF(WITH_CUDA)
-  ADD_SUBDIRECTORY(test-cuda)
+  ADD_SUBDIRECTORY(cuda)
 ENDIF()
 
-ADD_SUBDIRECTORY(test-infinitam)
+ADD_SUBDIRECTORY(infinitam)
 
 IF(WITH_OPENCV)
-  ADD_SUBDIRECTORY(test-opencv)
+  ADD_SUBDIRECTORY(opencv)
 ENDIF()
 
 IF(WITH_OVR)
-  ADD_SUBDIRECTORY(test-ovr)
+  ADD_SUBDIRECTORY(ovr)
 ENDIF()
 
-ADD_SUBDIRECTORY(test-rafl)
-ADD_SUBDIRECTORY(test-sdl)
-ADD_SUBDIRECTORY(test-tvgutil)
+ADD_SUBDIRECTORY(rafl)
+ADD_SUBDIRECTORY(sdl)
+ADD_SUBDIRECTORY(tvgutil)

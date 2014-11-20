@@ -1,12 +1,12 @@
-#####################################
-# CMakeLists.txt for test-infinitam #
-#####################################
+########################################
+# CMakeLists.txt for scratch/infinitam #
+########################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-infinitam)
+SET(targetname scratchtest_infinitam)
 
 ################################
 # Specify the libraries to use #

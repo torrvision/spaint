@@ -1,7 +1,3 @@
-/**
- * test-tvgutil: test_PriorityQueue.cpp
- */
-
 #include <boost/test/unit_test.hpp>
 
 #include <tvgutil/PriorityQueue.h>

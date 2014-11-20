@@ -1,18 +1,18 @@
-#################################
-# CMakeLists.txt for test-boost #
-#################################
+##################################
+# CMakeLists.txt for scratch/sdl #
+##################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-boost)
+SET(targetname scratchtest_sdl)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 #############################
 # Specify the project files #
@@ -42,4 +42,4 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
