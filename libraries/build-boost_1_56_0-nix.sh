@@ -47,9 +47,9 @@ fi
 echo "[spaint] ...Running build..."
 if [ $PLATFORM == "mac" ]
 then
-  ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 cxxflags="-stdlib=libstdc++" linkflags="-stdlib=libstdc++" install >> $LOG
+  ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-test --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 cxxflags="-stdlib=libstdc++" linkflags="-stdlib=libstdc++" install >> $LOG
 else
-  ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 install >> $LOG
+  ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-test --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 install >> $LOG
 fi
 
 echo "[spaint] ...Finished building Boost 1.56.0."

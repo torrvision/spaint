@@ -1,18 +1,18 @@
 #####################################
-# CMakeLists.txt for tests/test-sdl #
+# CMakeLists.txt for scratch/opencv #
 #####################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-sdl)
+SET(targetname scratchtest_opencv)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 
 #############################
 # Specify the project files #
@@ -36,10 +36,10 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)

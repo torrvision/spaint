@@ -2,22 +2,20 @@
 # CMakeLists.txt for spaint/tests #
 ###################################
 
-ADD_SUBDIRECTORY(test-boost)
+OPTION(BUILD_MIKETESTS "Build Michael's tests?" OFF)
 
-IF(WITH_CUDA)
-  ADD_SUBDIRECTORY(test-cuda)
+IF(BUILD_MIKETESTS)
+  ADD_SUBDIRECTORY(mike)
 ENDIF()
 
-ADD_SUBDIRECTORY(test-infinitam)
+OPTION(BUILD_SCRATCHTESTS "Build the scratch tests?" ON)
 
-IF(WITH_OPENCV)
-  ADD_SUBDIRECTORY(test-opencv)
+IF(BUILD_SCRATCHTESTS)
+  ADD_SUBDIRECTORY(scratch)
 ENDIF()
 
-IF(WITH_OVR)
-  ADD_SUBDIRECTORY(test-ovr)
-ENDIF()
+OPTION(BUILD_UNITTESTS "Build the unit tests?" ON)
 
-ADD_SUBDIRECTORY(test-rafl)
-ADD_SUBDIRECTORY(test-sdl)
-ADD_SUBDIRECTORY(test-tvgutil)
+IF(BUILD_UNITTESTS)
+  ADD_SUBDIRECTORY(unit)
+ENDIF()

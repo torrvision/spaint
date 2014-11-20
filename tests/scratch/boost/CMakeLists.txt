@@ -1,19 +1,18 @@
-###########################################
-# CMakeLists.txt for tests/test-infinitam #
-###########################################
+####################################
+# CMakeLists.txt for scratch/boost #
+####################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-infinitam)
+SET(targetname scratchtest_boost)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 
 #############################
 # Specify the project files #
@@ -37,10 +36,10 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDATestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)

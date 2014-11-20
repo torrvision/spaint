@@ -1,19 +1,19 @@
-#####################################
-# CMakeLists.txt for tests/test-ovr #
-#####################################
+###################################
+# CMakeLists.txt for scratch/rafl #
+###################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-ovr)
+SET(targetname scratchtest_rafl)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 
 #############################
 # Specify the project files #
@@ -31,17 +31,18 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-# None needed
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
+TARGET_LINK_LIBRARIES(${targetname} rafl tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)

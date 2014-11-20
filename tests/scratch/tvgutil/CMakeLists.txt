@@ -1,18 +1,18 @@
-########################################
-# CMakeLists.txt for tests/test-opencv #
-########################################
+######################################
+# CMakeLists.txt for scratch/tvgutil #
+######################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-opencv)
+SET(targetname scratchtest_tvgutil)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 
 #############################
 # Specify the project files #
@@ -30,16 +30,17 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-# None needed
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
+TARGET_LINK_LIBRARIES(${targetname} tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)

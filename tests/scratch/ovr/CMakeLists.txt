@@ -1,18 +1,19 @@
-#######################################
-# CMakeLists.txt for tests/test-boost #
-#######################################
+##################################
+# CMakeLists.txt for scratch/ovr #
+##################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-boost)
+SET(targetname scratchtest_ovr)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 
 #############################
 # Specify the project files #
@@ -36,10 +37,11 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)

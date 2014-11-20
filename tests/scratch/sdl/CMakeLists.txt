@@ -1,47 +1,45 @@
-######################################
-# CMakeLists.txt for tests/test-cuda #
-######################################
+##################################
+# CMakeLists.txt for scratch/sdl #
+##################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname test-cuda)
+SET(targetname scratchtest_sdl)
 
 ################################
 # Specify the libraries to use #
 ################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 #############################
 # Specify the project files #
 #############################
 
-SET(sources main.cpp multiply.cu test.cu)
-SET(headers multiply.cuh test.h)
+SET(sources main.cpp)
 
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(sources FILES ${sources})
-SOURCE_GROUP(headers FILES ${headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)
+# None needed
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDATestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-# None needed
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
