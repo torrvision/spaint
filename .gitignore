@@ -6,4 +6,5 @@ libraries/boost-setup/
 libraries/opencv-2.4.9/
 libraries/SDL2-2.0.3/
 libraries/*.log
+tests/mike/
 *.swp

@@ -1,6 +1,6 @@
-##############################
-# CMakeLists.txt for scratch #
-##############################
+####################################
+# CMakeLists.txt for tests/scratch #
+####################################
 
 ADD_SUBDIRECTORY(boost)
 

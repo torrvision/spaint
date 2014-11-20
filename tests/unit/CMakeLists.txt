@@ -1,5 +1,5 @@
-###########################
-# CMakeLists.txt for unit #
-###########################
+#################################
+# CMakeLists.txt for tests/unit #
+#################################
 
 ADD_SUBDIRECTORY(tvgutil)
