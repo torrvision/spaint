@@ -18,11 +18,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 # Specify the project files #
 #############################
 
-SET(sources
-main.cpp
-test_PriorityQueue.cpp
-test_RandomNumberGenerator.cpp
-)
+SET(sources main.cpp)
 
 #############################
 # Specify the source groups #
