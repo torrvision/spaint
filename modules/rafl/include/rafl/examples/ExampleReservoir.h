@@ -6,6 +6,7 @@
 #define H_RAFL_EXAMPLERESERVOIR
 
 #include <algorithm>
+#include <cassert>
 #include <iosfwd>
 #include <iterator>
 #include <map>
@@ -126,6 +127,27 @@ public:
   }
 
   /**
+   * \brief Gets the per-class ratios between the total number of examples seen for a class and the number of examples currently in the reservoir.
+   *
+   * \return  The per-class ratios between the total number of examples seen for a class and the number of examples currently in the reservoir.
+   */
+  std::map<Label,float> get_class_multipliers() const
+  {
+    std::map<Label,float> result;
+
+    const std::map<Label,size_t>& bins = m_histogram->get_bins();
+    typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = m_examples.begin(), iend = m_examples.end();
+    typename std::map<Label,size_t>::const_iterator jt = bins.begin();
+    for(; it != iend; ++it, ++jt)
+    {
+      assert(it->first == jt->first);
+      result.insert(std::make_pair(it->first, static_cast<float>(jt->second) / it->second.size()));
+    }
+
+    return result;
+  }
+
+  /**
    * \brief Gets the examples currently in the reservoir.
    *
    * \return  The examples currently in the reservoir.
@@ -150,16 +172,6 @@ public:
   {
     return m_histogram;
   }
-
-  /**
-   * \brief Gets the maximum number of examples allowed in the reservoir at any one time.
-   *
-   * \return The maximum number of examples allowed in the reservoir at any one time.
-   */
-  /*size_t max_size() const
-  {
-    return m_maxSize;
-  }*/
 
   /**
    * \brief Gets the total number of examples that have been added to the reservoir over time.

@@ -219,16 +219,28 @@ private:
    * \brief Fills the specified reservoir with examples sampled from an input set of examples. 
    *
    * \param inputExamples The set of examples from which to sample.
-   * \param multiplier    The ratio (>= 1) between the size of the input example set and the number of samples to add to the reservoir.
+   * \param multipliers   The per-class ratios between the total number of examples seen for a class and the number of examples currently in the source reservoir.
    * \param reservoir     The reservoir to fill.
    */
-  void fill_reservoir(const std::vector<Example_CPtr>& inputExamples, float multiplier, ExampleReservoir<Label>& reservoir)
+  void fill_reservoir(const std::vector<Example_CPtr>& inputExamples, const std::map<Label,float>& multipliers, ExampleReservoir<Label>& reservoir)
   {
-    size_t sampleCount = static_cast<size_t>(inputExamples.size() * multiplier + 0.5f);
-    std::vector<Example_CPtr> sampledExamples = sample_examples(inputExamples, sampleCount);
-    for(size_t i = 0; i < sampleCount; ++i)
+    // Group the input examples by label.
+    std::map<Label,std::vector<Example_CPtr> > inputExamplesByLabel;
+    for(typename std::vector<Example_CPtr>::const_iterator it = inputExamples.begin(), iend = inputExamples.end(); it != iend; ++it)
     {
-      reservoir.add_example(sampledExamples[i]);
+      inputExamplesByLabel[(*it)->get_label()].push_back(*it);
+    }
+
+    // For each group, sample the appropriate number of examples (based on the multiplier for that group) and add them to the target reservoir.
+    for(typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = inputExamplesByLabel.begin(), iend = inputExamplesByLabel.end(); it != iend; ++it)
+    {
+      float multiplier = multipliers.find(it->first)->second;
+      size_t sampleCount = static_cast<size_t>(it->second.size() * multiplier + 0.5f);
+      std::vector<Example_CPtr> sampledExamples = sample_examples(it->second, sampleCount);
+      for(size_t j = 0; j < sampleCount; ++j)
+      {
+        reservoir.add_example(sampledExamples[j]);
+      }
     }
   }
 
@@ -298,11 +310,9 @@ private:
     // Add left and right child nodes and populate their example reservoirs based on the chosen split.
     n.m_leftChildIndex = add_node();
     n.m_rightChildIndex = add_node();
-#if 0
-    float multiplier = std::max(1.0f, static_cast<float>(n.m_reservoir.seen_examples()) / n.m_reservoir.max_size());
-    fill_reservoir(split->m_leftExamples, multiplier, m_nodes[n.m_leftChildIndex]->m_reservoir);
-    fill_reservoir(split->m_rightExamples, multiplier, m_nodes[n.m_rightChildIndex]->m_reservoir);
-#endif
+    std::map<Label,float> multipliers = n.m_reservoir.get_class_multipliers();
+    fill_reservoir(split->m_leftExamples, multipliers, m_nodes[n.m_leftChildIndex]->m_reservoir);
+    fill_reservoir(split->m_rightExamples, multipliers, m_nodes[n.m_rightChildIndex]->m_reservoir);
 
     // Update the splittability for the child nodes.
     update_splittability(n.m_leftChildIndex);
