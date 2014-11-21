@@ -94,6 +94,7 @@ int main()
 
   dt.add_examples(examples);
   dt.train(4);
+  dt.output(std::cout);
 
   ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
   std::cout << pmf << '\n';

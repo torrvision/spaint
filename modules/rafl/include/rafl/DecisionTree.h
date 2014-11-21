@@ -143,7 +143,17 @@ public:
   ProbabilityMassFunction<Label> lookup_pmf(const Descriptor_CPtr& descriptor) const
   {
     int leafIndex = find_leaf(*descriptor);
-    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
+    return make_pmf(leafIndex);
+  }
+
+  /**
+   * \brief Outputs the decision tree to a stream.
+   *
+   * \param os  The stream to which to output the tree.
+   */
+  void output(std::ostream& os) const
+  {
+    output_subtree(os, m_rootIndex, "");
   }
 
   /**
@@ -231,9 +241,11 @@ private:
       inputExamplesByLabel[(*it)->get_label()].push_back(*it);
     }
 
-    // For each group, sample the appropriate number of examples (based on the multiplier for that group) and add them to the target reservoir.
+    // For each group:
     for(typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = inputExamplesByLabel.begin(), iend = inputExamplesByLabel.end(); it != iend; ++it)
     {
+#if 1
+      // Sample the appropriate number of examples (based on the multiplier for that group) and add them to the target reservoir.
       float multiplier = multipliers.find(it->first)->second;
       size_t sampleCount = static_cast<size_t>(it->second.size() * multiplier + 0.5f);
       std::vector<Example_CPtr> sampledExamples = sample_examples(it->second, sampleCount);
@@ -241,6 +253,13 @@ private:
       {
         reservoir.add_example(sampledExamples[j]);
       }
+#else
+      // Simply add all of the examples for the group to the target reservoir (useful for debugging purposes).
+      for(size_t j = 0, size = it->second.size(); j < size; ++j)
+      {
+        reservoir.add_example(it->second[j]);
+      }
+#endif
     }
   }
 
@@ -269,6 +288,41 @@ private:
   bool is_leaf(int nodeIndex) const
   {
     return m_nodes[nodeIndex]->m_leftChildIndex == -1;
+  }
+
+  /**
+   * \brief Makes a probability mass function for the specified leaf.
+   *
+   * \param leafIndex The leaf for which to make the probability mass function.
+   * \return          The probability mass function.
+   */
+  ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
+  {
+    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
+  }
+
+  /**
+   * \brief Outputs a subtree of the decision tree to a stream.
+   *
+   * \param os                The stream to which to output the subtree.
+   * \param subtreeRootIndex  The index of the node at the root of the subtree.
+   * \param indent            An indentation string to use in order to offset the output of the subtree.
+   */
+  void output_subtree(std::ostream& os, int subtreeRootIndex, const std::string& indent) const
+  {
+    int leftChildIndex = m_nodes[subtreeRootIndex]->m_leftChildIndex;
+    int rightChildIndex = m_nodes[subtreeRootIndex]->m_rightChildIndex;
+    DecisionFunction_Ptr splitter = m_nodes[subtreeRootIndex]->m_splitter;
+
+    // Output the current node.
+    os << indent << subtreeRootIndex << ": ";
+    if(splitter) os << *splitter;
+    else os << m_nodes[subtreeRootIndex]->m_reservoir.seen_examples() << ' ' << make_pmf(subtreeRootIndex);
+    os << '\n';
+
+    // Recursively output any children of the current node.
+    if(leftChildIndex != -1) output_subtree(os, leftChildIndex, indent + "  ");
+    if(rightChildIndex != -1) output_subtree(os, rightChildIndex, indent + "  ");
   }
 
   /**

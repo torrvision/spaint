@@ -5,6 +5,8 @@
 #ifndef H_RAFL_DECISIONFUNCTION
 #define H_RAFL_DECISIONFUNCTION
 
+#include <iosfwd>
+
 #include "../base/Descriptor.h"
 
 namespace rafl {
@@ -42,7 +44,29 @@ public:
    * \return            DC_LEFT, if the descriptor should be sent down the left subtree of the node, or DC_RIGHT otherwise.
    */
   virtual DescriptorClassification classify_descriptor(const Descriptor& descriptor) const = 0;
+
+  /**
+   * \brief Outputs a string representation of the decision function to the specified stream.
+   *
+   * \param os  The stream.
+   */
+  virtual void output(std::ostream& os) const = 0;
 };
+
+//#################### STREAM OPERATORS ####################
+
+/**
+ * \brief Outputs a string representation of the specified decision function to a stream.
+ *
+ * \param os  The stream.
+ * \param rhs The decision function.
+ * \return    The stream.
+ */
+inline std::ostream& operator<<(std::ostream& os, const DecisionFunction& rhs)
+{
+  rhs.output(os);
+  return os;
+}
 
 //#################### TYPEDEFS ####################
 
