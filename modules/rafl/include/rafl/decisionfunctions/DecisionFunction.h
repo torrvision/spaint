@@ -46,7 +46,7 @@ public:
   virtual DescriptorClassification classify_descriptor(const Descriptor& descriptor) const = 0;
 
   /**
-   * \brief Outputs a string representation of the decision function to the specified stream.
+   * \brief Outputs the decision function to the specified stream.
    *
    * \param os  The stream.
    */
@@ -56,7 +56,7 @@ public:
 //#################### STREAM OPERATORS ####################
 
 /**
- * \brief Outputs a string representation of the specified decision function to a stream.
+ * \brief Outputs the specified decision function to a stream.
  *
  * \param os  The stream.
  * \param rhs The decision function.

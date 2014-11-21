@@ -245,7 +245,7 @@ private:
     for(typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = inputExamplesByLabel.begin(), iend = inputExamplesByLabel.end(); it != iend; ++it)
     {
 #if 1
-      // Sample the appropriate number of examples (based on the multiplier for that group) and add them to the target reservoir.
+      // Sample the appropriate number of examples (based on the multiplier for the group) and add them to the target reservoir.
       float multiplier = multipliers.find(it->first)->second;
       size_t sampleCount = static_cast<size_t>(it->second.size() * multiplier + 0.5f);
       std::vector<Example_CPtr> sampledExamples = sample_examples(it->second, sampleCount);
