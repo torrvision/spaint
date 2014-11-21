@@ -5,13 +5,19 @@
 #ifndef H_RAFL_EXAMPLEUTIL
 #define H_RAFL_EXAMPLEUTIL
 
+#include <fstream>
+#include <string>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
+
 #include "../base/ProbabilityMassFunction.h"
 #include "Example.h"
 
 namespace rafl {
 
 /**
- * \brief This class contains utility functions that work on examples.
+ * \brief This class contains utility functions for examples.
  */
 class ExampleUtil
 {
@@ -39,6 +45,42 @@ public:
   static float calculate_entropy(const Histogram<Label>& histogram)
   {
     return ProbabilityMassFunction<Label>(histogram).calculate_entropy();
+  }
+
+  /**
+   * \brief Loads a set of examples from the specified file.
+   *
+   * \param filename  The name of the file from which to load the examples.
+   * \return          The loaded examples.
+   */
+  template <typename Label>
+  static std::vector<boost::shared_ptr<const Example<Label> > > load_examples(const std::string& filename)
+  {
+    // TODO: Think about how to handle bad data.
+
+    typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+    std::vector<Example_CPtr> result;
+
+    std::ifstream fs(filename.c_str());
+    std::string line;
+    while(std::getline(fs, line))
+    {
+      typedef boost::char_separator<char> sep;
+      typedef boost::tokenizer<sep> tokenizer;
+      tokenizer tok(line.begin(), line.end(), sep(",\r"));
+      std::vector<std::string> tokens(tok.begin(), tok.end());
+
+      Descriptor_Ptr descriptor(new Descriptor);
+      for(int i = 0; i < tokens.size() - 1; ++i)
+      {
+        descriptor->push_back(boost::lexical_cast<float>(tokens[i]));
+      }
+
+      Label label = boost::lexical_cast<Label>(tokens.back());
+      result.push_back(Example_CPtr(new Example<Label>(descriptor, label)));
+    }
+
+    return result;
   }
 
   /**

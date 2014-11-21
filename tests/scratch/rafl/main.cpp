@@ -1,4 +1,6 @@
+//###
 #if 0
+
 #include <iostream>
 
 #include <rafl/examples/ExampleReservoir.h>
@@ -21,9 +23,12 @@ int main()
   //DecisionTree<int> dt(10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
   return 0;
 }
+
 #endif
 
+//###
 #if 0
+
 #include <iostream>
 
 #include <rafl/base/ProbabilityMassFunction.h>
@@ -47,9 +52,11 @@ int main()
   std::cout << "Entropy=" << pmf.calculate_entropy() << '\n';
   return 0;
 }
+
 #endif
 
-#if 1
+//###
+#if 0
 
 #include <rafl/DecisionTree.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
@@ -98,6 +105,44 @@ int main()
 
   ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
   std::cout << pmf << '\n';
+  return 0;
+}
+
+#endif
+
+//###
+#if 1
+
+#include <rafl/DecisionTree.h>
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
+using namespace rafl;
+
+typedef int Label;
+typedef DecisionTree<Label> DT;
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
+Descriptor_CPtr make_descriptor(float *arr)
+{
+  Descriptor_Ptr d(new Descriptor(10));
+  for(int i = 0; i < 10; ++i)
+  {
+    (*d)[i] = arr[i];
+  }
+  return d;
+}
+
+int main()
+{
+  unsigned int seed = 12345;
+  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
+  DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+  DT dt(1000, 2, randomNumberGenerator, decisionFunctionGenerator);
+
+  std::vector<Example_CPtr> examples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
+  dt.add_examples(examples);
+  dt.train(4);
+  dt.output(std::cout);
+
   return 0;
 }
 
