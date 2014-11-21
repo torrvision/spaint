@@ -82,7 +82,7 @@ int main()
   unsigned int seed = 12345;
   tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
   DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
-  DT dt(10, randomNumberGenerator, decisionFunctionGenerator);
+  DT dt(10, 5, randomNumberGenerator, decisionFunctionGenerator);
 
   std::vector<Example_CPtr> examples;
   examples.push_back(make_example(0, 4, RED));

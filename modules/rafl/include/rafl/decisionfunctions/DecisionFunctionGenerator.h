@@ -79,7 +79,7 @@ public:
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
-    const std::vector<Example_CPtr>& examples = reservoir.get_examples();
+    std::vector<Example_CPtr> examples = reservoir.get_examples();
     for(int i = 0; i < candidateCount; ++i)
     {
       Split_Ptr splitCandidate(new Split);

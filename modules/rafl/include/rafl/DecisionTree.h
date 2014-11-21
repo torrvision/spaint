@@ -13,6 +13,7 @@
 
 #include "decisionfunctions/DecisionFunctionGenerator.h"
 #include "examples/ExampleReservoir.h"
+#include "examples/ExampleUtil.h"
 
 namespace rafl {
 
@@ -86,6 +87,9 @@ private:
   /** The root node's index in the node array. */
   int m_rootIndex;
 
+  /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
+  size_t m_seenExamplesThreshold;
+
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
 
@@ -95,10 +99,11 @@ public:
    * \brief Constructs an empty decision tree.
    *
    * \param maxReservoirSize          The maximum number of examples that can be stored in a node's reservoir.
+   * \param seenExamplesThreshold     The minimum number of examples that must have been added to an example reservoir before its containing node can be split.
    * \param randomNumberGenerator     A random number generator.
    * \param decisionFunctionGenerator A generator that can be used to pick appropriate decision functions for nodes.
    */
-  explicit DecisionTree(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
+  explicit DecisionTree(size_t maxReservoirSize, size_t seenExamplesThreshold, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
   : m_decisionFunctionGenerator(decisionFunctionGenerator), m_maxReservoirSize(maxReservoirSize), m_randomNumberGenerator(randomNumberGenerator)
   {
     m_rootIndex = add_node();
@@ -293,9 +298,11 @@ private:
     // Add left and right child nodes and populate their example reservoirs based on the chosen split.
     n.m_leftChildIndex = add_node();
     n.m_rightChildIndex = add_node();
+#if 0
     float multiplier = std::max(1.0f, static_cast<float>(n.m_reservoir.seen_examples()) / n.m_reservoir.max_size());
     fill_reservoir(split->m_leftExamples, multiplier, m_nodes[n.m_leftChildIndex]->m_reservoir);
     fill_reservoir(split->m_rightExamples, multiplier, m_nodes[n.m_rightChildIndex]->m_reservoir);
+#endif
 
     // Update the splittability for the child nodes.
     update_splittability(n.m_leftChildIndex);
@@ -314,11 +321,9 @@ private:
    */
   void update_splittability(int nodeIndex)
   {
-    // TODO: Implement a proper splittability measure (this one is a temporary hack to allow us to try things out).
-
     // Recalculate the node's splittability.
     const ExampleReservoir<Label>& reservoir = m_nodes[nodeIndex]->m_reservoir;
-    float splittability = static_cast<float>(reservoir.current_size()) / reservoir.max_size();
+    float splittability = reservoir.seen_examples() >= m_seenExamplesThreshold ? ExampleUtil::calculate_entropy(*reservoir.get_histogram()) : 0.0f;
 
     // Update the splittability queue to reflect the node's new splittability.
     m_splittabilityQueue.update_key(nodeIndex, splittability);
