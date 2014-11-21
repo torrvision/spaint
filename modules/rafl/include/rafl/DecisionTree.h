@@ -104,7 +104,7 @@ public:
    * \param decisionFunctionGenerator A generator that can be used to pick appropriate decision functions for nodes.
    */
   explicit DecisionTree(size_t maxReservoirSize, size_t seenExamplesThreshold, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
-  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_maxReservoirSize(maxReservoirSize), m_randomNumberGenerator(randomNumberGenerator)
+  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_maxReservoirSize(maxReservoirSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamplesThreshold(seenExamplesThreshold)
   {
     m_rootIndex = add_node();
   }
