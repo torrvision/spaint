@@ -8,6 +8,8 @@
 #include <map>
 #include <stdexcept>
 
+#include <tvgutil/LimitedMap.h>
+
 namespace rafl {
 
 /**
@@ -66,6 +68,23 @@ public:
     return m_count;
   }
 };
+
+//#################### STREAM OPERATORS ####################
+
+/**
+ * \brief Outputs a histogram to the specified stream.
+ *
+ * \param os  The stream to which to output the histogram.
+ * \param rhs The histogram to output.
+ * \return    The stream.
+ */
+template <typename Label>
+std::ostream& operator<<(std::ostream& os, const Histogram<Label>& rhs)
+{
+  const size_t ELEMENT_DISPLAY_LIMIT = 10;
+  os << tvgutil::make_limited_map(rhs.get_bins(), ELEMENT_DISPLAY_LIMIT);
+  return os;
+}
 
 }
 

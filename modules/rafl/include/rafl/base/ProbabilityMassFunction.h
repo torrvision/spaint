@@ -52,7 +52,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Calculates the entropy of the PMF using the definition H(X) = -sum_{i} P(x_i) ln(P(x_i)).
+   * \brief Calculates the entropy of the PMF using the definition H(X) = -sum_{i} P(x_i) log2(P(x_i)).
    * 
    * \return The entropy of the PMF. When outcomes are equally likely, the entropy will be high; when the outcome is predictable, the entropy wil be low.
    */
@@ -64,9 +64,8 @@ public:
       float mass = it->second;
       if(mass > 0)
       {
-        // Note 1: The log in cmath calculates log_{e} (i.e. ln). The unit of entropy calculated with ln is the "nat".
-        // Note 2: If P(x_i) = 0, the value of the corresponding sum 0*ln(0) is taken to be 0, since lim{p->0+} p*log(p) = 0 (see Wikipedia!).
-        entropy += mass * log(mass);
+        // Note: If P(x_i) = 0, the value of the corresponding sum 0*log2(0) is taken to be 0, since lim{p->0+} p*log2(p) = 0 (see Wikipedia!).
+        entropy += mass * log2(mass);
       }
     }
     return -entropy;
