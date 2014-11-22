@@ -7,6 +7,8 @@
 
 #include <cmath>
 
+#include <boost/optional.hpp>
+
 #include <tvgutil/LimitedMap.h>
 #include "Histogram.h"
 
@@ -28,9 +30,10 @@ public:
   /**
    * \brief Constructs a probability mass function (PMF) as a normalised version of the specified histogram.
    *
-   * \param histogram The histogram from which to construct a PMF.
+   * \param histogram   The histogram from which to construct a PMF.
+   * \param multipliers Optional per-class ratios that can be used to scale the probabilities for the different labels.
    */
-  explicit ProbabilityMassFunction(const Histogram<Label>& histogram)
+  explicit ProbabilityMassFunction(const Histogram<Label>& histogram, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
   {
     const float SMALL_EPSILON = 1e-9f;
 
@@ -40,6 +43,13 @@ public:
     for(typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end(); it != iend; ++it)
     {
       float mass = static_cast<float>(it->second) / count;
+
+      // Scale the mass by the relevant multiplier for the corresponding class (if supplied).
+      if(multipliers)
+      {
+        typename std::map<Label,float>::const_iterator jt = multipliers->find(it->first);
+        if(jt != multipliers->end()) mass *= jt->second;
+      }
 
       // Our implementation is dependent on the masses never becoming too small. If this assumption turns out not to be ok,
       // we may need to change the implementation.

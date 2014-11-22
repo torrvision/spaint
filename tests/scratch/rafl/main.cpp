@@ -136,11 +136,11 @@ int main()
   unsigned int seed = 12345;
   tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
   DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
-  DT dt(10000, 2, randomNumberGenerator, decisionFunctionGenerator);
+  DT dt(10000, 1000, randomNumberGenerator, decisionFunctionGenerator);
 
   std::vector<Example_CPtr> examples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
   dt.add_examples(examples);
-  dt.train(4);
+  dt.train(100);
   dt.output(std::cout);
 
   return 0;

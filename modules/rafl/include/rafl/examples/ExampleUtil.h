@@ -9,6 +9,7 @@
 #include <string>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 #include <boost/tokenizer.hpp>
 
 #include "../base/ProbabilityMassFunction.h"
@@ -26,13 +27,14 @@ public:
   /**
    * \brief Calculates the entropy of the label distribution of a set of examples.
    *
-   * \param examples  The examples for whose label distribution we want to calculate the entropy.
-   * \return          The entropy of the examples' label distribution.
+   * \param examples    The examples for whose label distribution we want to calculate the entropy.
+   * \param multipliers Optional per-class ratios that can be used to scale the probabilities for the different labels.
+   * \return            The entropy of the examples' label distribution.
    */
   template <typename Label>
-  static float calculate_entropy(const std::vector<boost::shared_ptr<const Example<Label> > >& examples)
+  static float calculate_entropy(const std::vector<boost::shared_ptr<const Example<Label> > >& examples, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
   {
-    return make_pmf(examples).calculate_entropy();
+    return make_pmf(examples, multipliers).calculate_entropy();
   }
 
   /**
@@ -106,13 +108,14 @@ public:
   /**
    * \brief Makes a probability mass function (PMF) from the label distribution of a set of examples.
    *
-   * \param examples  The examples from whose label distribution we want to make a PMF.
-   * \return          The PMF.
+   * \param examples    The examples from whose label distribution we want to make a PMF.
+   * \param multipliers Optional per-class ratios that can be used to scale the probabilities for the different labels.
+   * \return            The PMF.
    */
   template <typename Label>
-  static ProbabilityMassFunction<Label> make_pmf(const std::vector<boost::shared_ptr<const Example<Label> > >& examples)
+  static ProbabilityMassFunction<Label> make_pmf(const std::vector<boost::shared_ptr<const Example<Label> > >& examples, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
   {
-    return ProbabilityMassFunction<Label>(make_histogram(examples));
+    return ProbabilityMassFunction<Label>(make_histogram(examples), multipliers);
   }
 };
 
