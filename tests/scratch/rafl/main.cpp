@@ -133,6 +133,7 @@ Descriptor_CPtr make_descriptor(float *arr)
 
 int main()
 {
+  // Construct the decision tree.
   unsigned int seed = 12345;
   tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
   DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
@@ -147,10 +148,27 @@ int main()
 
   DT dt(settings);
 
-  std::vector<Example_CPtr> examples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
-  dt.add_examples(examples);
+  // Train the decision tree.
+  std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
+  dt.add_examples(trainingExamples);
   dt.train(20);
   dt.output(std::cout);
+
+  // Test the decision tree and output the results.
+  std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("poker-hand-testing.data");
+  float totalTests = testingExamples.size();
+  size_t correctTests = 0, wrongTests = 0;
+  for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
+  {
+    const Descriptor_CPtr& descriptor = (*it)->get_descriptor();
+    const Label& expectedLabel = (*it)->get_label();
+    Label predictedLabel = dt.predict(descriptor);
+    if(predictedLabel == expectedLabel) ++correctTests;
+    else ++wrongTests;
+  }
+
+  std::cout << "Correct %: " << correctTests / totalTests << '\n';
+  std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
 
   return 0;
 }
