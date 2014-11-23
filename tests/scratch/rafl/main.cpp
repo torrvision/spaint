@@ -145,6 +145,7 @@ int main()
   settings.maxClassSize = 10000;
   settings.randomNumberGenerator = randomNumberGenerator;
   settings.seenExamplesThreshold = 1000;
+  settings.splittabilityThreshold = 0.5f;
 
   DT dt(settings);
 

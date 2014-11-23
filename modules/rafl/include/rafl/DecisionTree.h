@@ -86,6 +86,9 @@ public:
 
     /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
     size_t seenExamplesThreshold;
+
+    /** A threshold splittability below which nodes should not be split. */
+    float splittabilityThreshold;
   };
 
   //#################### PUBLIC TYPEDEFS ####################
@@ -203,10 +206,9 @@ public:
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *
-   * \param splitBudget             The maximum number of nodes that may be split in this training step.
-   * \param splittabilityThreshold  A threshold splittability below which nodes should not be split.
+   * \param splitBudget The maximum number of nodes that may be split in this training step.
    */
-  void train(size_t splitBudget, float splittabilityThreshold = 0.5f)
+  void train(size_t splitBudget)
   {
     size_t nodesSplit = 0;
 
@@ -218,7 +220,7 @@ public:
     while(!m_splittabilityQueue.empty() && nodesSplit < splitBudget)
     {
       typename SplittabilityQueue::Element e = m_splittabilityQueue.top();
-      if(e.key() >= splittabilityThreshold)
+      if(e.key() >= m_settings.splittabilityThreshold)
       {
         m_splittabilityQueue.pop();
         if(split_node(e.id())) ++nodesSplit;
