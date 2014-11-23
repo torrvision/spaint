@@ -49,12 +49,43 @@ private:
     /**
      * \brief Constructs a node.
      *
-     * \param maxReservoirSize      The maximum number of examples that can be stored in the node's reservoir.
+     * \param maxClassSize          The maximum number of examples of each class allowed in the node's reservoir at any one time.
      * \param randomNumberGenerator A random number generator.
      */
-    Node(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-    : m_leftChildIndex(-1), m_reservoir(maxReservoirSize, randomNumberGenerator), m_rightChildIndex(-1)
+    Node(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+    : m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
+  };
+
+public:
+  /**
+   * \brief An instance of this struct can be used to provide the settings needed to configure a decision tree.
+   */
+  struct Settings
+  {
+    //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
+  private:
+    typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
+
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+  public:
+    /** The number of different decision functions to consider when splitting a node. */
+    int candidateCount;
+
+    /** A generator that can be used to pick appropriate decision functions for nodes. */
+    DecisionFunctionGenerator_CPtr decisionFunctionGenerator;
+
+    /** The minimum information gain required for a node split to be acceptable. */
+    float gainThreshold;
+
+    /** The maximum number of examples of each class allowed in a node's reservoir at any one time. */
+    size_t maxClassSize;
+
+    /** A random number generator. */
+    tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
+
+    /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
+    size_t seenExamplesThreshold;
   };
 
   //#################### PUBLIC TYPEDEFS ####################
@@ -69,26 +100,17 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A generator that can be used to pick appropriate decision functions for nodes. */
-  DecisionFunctionGenerator_CPtr m_decisionFunctionGenerator;
-
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
-
-  /** The maximum number of examples that can be stored in a node's reservoir. */
-  size_t m_maxReservoirSize;
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
 
-  /** A random number generator. */
-  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
-
   /** The root node's index in the node array. */
   int m_rootIndex;
 
-  /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
-  size_t m_seenExamplesThreshold;
+  /** The settings needed to configure the decision tree. */
+  Settings m_settings;
 
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
@@ -98,13 +120,10 @@ public:
   /**
    * \brief Constructs an empty decision tree.
    *
-   * \param maxReservoirSize          The maximum number of examples that can be stored in a node's reservoir.
-   * \param seenExamplesThreshold     The minimum number of examples that must have been added to an example reservoir before its containing node can be split.
-   * \param randomNumberGenerator     A random number generator.
-   * \param decisionFunctionGenerator A generator that can be used to pick appropriate decision functions for nodes.
+   * \param settings  The settings needed to configure the decision tree.
    */
-  explicit DecisionTree(size_t maxReservoirSize, size_t seenExamplesThreshold, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
-  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_maxReservoirSize(maxReservoirSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamplesThreshold(seenExamplesThreshold)
+  explicit DecisionTree(const Settings& settings)
+  : m_settings(settings)
   {
     m_rootIndex = add_node();
   }
@@ -219,7 +238,7 @@ private:
    */
   int add_node()
   {
-    m_nodes.push_back(Node_Ptr(new Node(m_maxReservoirSize, m_randomNumberGenerator)));
+    m_nodes.push_back(Node_Ptr(new Node(m_settings.maxClassSize, m_settings.randomNumberGenerator)));
     int id = static_cast<int>(m_nodes.size()) - 1;
     m_splittabilityQueue.insert(id, 0.0f, NULL);
     return id;
@@ -337,7 +356,7 @@ private:
     std::vector<Example_CPtr> outputExamples;
     for(size_t i = 0; i < sampleCount; ++i)
     {
-      int exampleIndex = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(inputExamples.size()) - 1);
+      int exampleIndex = m_settings.randomNumberGenerator->generate_int_in_range(0, static_cast<int>(inputExamples.size()) - 1);
       outputExamples.push_back(inputExamples[exampleIndex]);
     }
     return outputExamples;
@@ -351,11 +370,8 @@ private:
    */
   bool split_node(int nodeIndex)
   {
-    const int CANDIDATE_COUNT = 5;
-    const float GAIN_THRESHOLD = 0.0f;
-
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir, CANDIDATE_COUNT, GAIN_THRESHOLD);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold);
     if(!split) return false;
 
     // Set the decision function of the node to be split.
@@ -387,7 +403,7 @@ private:
   {
     // Recalculate the node's splittability.
     const ExampleReservoir<Label>& reservoir = m_nodes[nodeIndex]->m_reservoir;
-    float splittability = reservoir.seen_examples() >= m_seenExamplesThreshold ? ExampleUtil::calculate_entropy(*reservoir.get_histogram()) : 0.0f;
+    float splittability = reservoir.seen_examples() >= m_settings.seenExamplesThreshold ? ExampleUtil::calculate_entropy(*reservoir.get_histogram()) : 0.0f;
 
     // Update the splittability queue to reflect the node's new splittability.
     m_splittabilityQueue.update_key(nodeIndex, splittability);
