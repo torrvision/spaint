@@ -49,6 +49,16 @@ public:
   }
 
   /**
+   * \brief Gets whether or not this is an empty histogram.
+   *
+   * \return  true, if the histogram is empty, or false otherwise.
+   */
+  bool empty() const
+  {
+    return get_count() == 0;
+  }
+
+  /**
    * \brief Gets the bins that record the number of instances of each label that have been seen.
    *
    * \return The bins that record the number of instances of each label that have been seen.

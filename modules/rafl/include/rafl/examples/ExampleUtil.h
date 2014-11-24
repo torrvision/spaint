@@ -34,7 +34,7 @@ public:
   template <typename Label>
   static float calculate_entropy(const std::vector<boost::shared_ptr<const Example<Label> > >& examples, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
   {
-    return make_pmf(examples, multipliers).calculate_entropy();
+    return examples.empty() ? 0.0f : make_pmf(examples, multipliers).calculate_entropy();
   }
 
   /**
@@ -46,7 +46,7 @@ public:
   template <typename Label>
   static float calculate_entropy(const Histogram<Label>& histogram)
   {
-    return ProbabilityMassFunction<Label>(histogram).calculate_entropy();
+    return histogram.empty() ? 0.0f : ProbabilityMassFunction<Label>(histogram).calculate_entropy();
   }
 
   /**

@@ -5,7 +5,9 @@
 #ifndef H_RAFL_PROBABILITYMASSFUNCTION
 #define H_RAFL_PROBABILITYMASSFUNCTION
 
+#include <cassert>
 #include <cmath>
+#include <stdexcept>
 
 #include <boost/optional.hpp>
 
@@ -13,6 +15,10 @@
 #include "Histogram.h"
 
 namespace rafl {
+
+//#################### GLOBAL CONSTANTS ####################
+
+const float SMALL_EPSILON = 1e-9f;
 
 /**
  * \brief An instance of an instantiation of this class template represents a probability mass function (PMF).
@@ -28,6 +34,38 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
+   * \brief Constructs a probability mass function (PMF) by normalising a map from labels -> masses.
+   *
+   * \pre
+   *   - !masses.empty()
+   *   - Each mass >= 0
+   *   - At least one mass > 0
+   *
+   * \param masses  The label -> masses map to normalise.
+   */
+  explicit ProbabilityMassFunction(const std::map<Label,float>& masses)
+  : m_masses(masses)
+  {
+    assert(!masses.empty());
+
+    // Calculate the sum of all the masses (we will divide by this to normalise the PMF).
+    float sum = 0.0f;
+    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      assert(it->second >= 0.0f);
+      sum += it->second;
+    }
+
+    if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
+
+    // Normalise the PMF by dividing each mass by the sum.
+    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      it->second /= sum;
+    }
+  }
+
+  /**
    * \brief Constructs a probability mass function (PMF) as a normalised version of the specified histogram.
    *
    * \param histogram   The histogram from which to construct a PMF.
@@ -35,11 +73,10 @@ public:
    */
   explicit ProbabilityMassFunction(const Histogram<Label>& histogram, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
   {
-    const float SMALL_EPSILON = 1e-9f;
-
     // Determine the masses for the labels in the histogram by dividing the number of instances in each bin by the histogram count.
     const std::map<Label,size_t>& bins = histogram.get_bins();
     size_t count = histogram.get_count();
+    if(count == 0) throw std::runtime_error("Cannot make a probability mass function from an empty histogram");
     for(typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end(); it != iend; ++it)
     {
       float mass = static_cast<float>(it->second) / count;
@@ -61,6 +98,30 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Returns a label in the PMF that has the highest mass.
+   *
+   * Note that there can be more than one label with the highest mass - this function returns one of them,
+   * and the one returned will be the same each time the function is called (i.e. it's deterministic).
+   *
+   * \return  The calculated label.
+   */
+  Label calculate_best_label() const
+  {
+    Label bestLabel;
+    float bestMass = 0.0f;
+    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      if(it->second > bestMass)
+      {
+        bestLabel = it->first;
+        bestMass = it->second;
+      }
+    }
+    assert(bestMass > 0.0f);  // note: there must be at least one label that has a non-zero mass
+    return bestLabel;
+  }
+
   /**
    * \brief Calculates the entropy of the PMF using the definition H(X) = -sum_{i} P(x_i) log2(P(x_i)).
    * 

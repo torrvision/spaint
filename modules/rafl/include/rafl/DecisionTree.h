@@ -186,23 +186,11 @@ public:
    */
   Label predict(const Descriptor_CPtr& descriptor) const
   {
-    ProbabilityMassFunction<Label> pmf = lookup_pmf(descriptor);
-    const std::map<Label,float>& masses = pmf.get_masses();
-    Label bestLabel;
-    float bestMass = 0.0f;
-    for(typename std::map<Label,float>::const_iterator it = masses.begin(), iend = masses.end(); it != iend; ++it)
-    {
-      if(it->second > bestMass)
-      {
-        bestLabel = it->first;
-        bestMass = it->second;
-      }
-    }
-    return bestLabel;
+    return lookup_pmf(descriptor).calculate_best_label();
   }
 
   /**
-   * \brief Trains the tree by splitting a number of suitable nodes (e.g. those that have a fairly full reservoir).
+   * \brief Trains the tree by splitting a number of suitable nodes.
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *

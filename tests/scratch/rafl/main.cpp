@@ -113,12 +113,13 @@ int main()
 //###
 #if 1
 
-#include <rafl/DecisionTree.h>
+#include <rafl/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 using namespace rafl;
 
 typedef int Label;
 typedef DecisionTree<Label> DT;
+typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 Descriptor_CPtr make_descriptor(float *arr)
@@ -147,13 +148,13 @@ int main()
   settings.seenExamplesThreshold = 1000;
   settings.splittabilityThreshold = 0.5f;
 
-  DT dt(settings);
+  RF rf(1, settings);
 
   // Train the decision tree.
   std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
-  dt.add_examples(trainingExamples);
-  dt.train(20);
-  dt.output(std::cout);
+  rf.add_examples(trainingExamples);
+  rf.train(20);
+  rf.output(std::cout);
 
   // Test the decision tree and output the results.
   std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("poker-hand-testing.data");
@@ -163,7 +164,7 @@ int main()
   {
     const Descriptor_CPtr& descriptor = (*it)->get_descriptor();
     const Label& expectedLabel = (*it)->get_label();
-    Label predictedLabel = dt.predict(descriptor);
+    Label predictedLabel = rf.predict(descriptor);
     if(predictedLabel == expectedLabel) ++correctTests;
     else ++wrongTests;
   }
