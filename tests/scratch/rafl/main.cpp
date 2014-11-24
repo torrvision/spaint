@@ -157,7 +157,7 @@ int main()
 
   // Test the decision tree and output the results.
   std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("poker-hand-testing.data");
-  float totalTests = testingExamples.size();
+  float totalTests = static_cast<float>(testingExamples.size());
   size_t correctTests = 0, wrongTests = 0;
   for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
   {
