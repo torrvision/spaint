@@ -5,7 +5,11 @@
 #ifndef H_RAFL_EXAMPLERESERVOIR
 #define H_RAFL_EXAMPLERESERVOIR
 
+#include <algorithm>
+#include <cassert>
 #include <iosfwd>
+#include <iterator>
+#include <map>
 #include <vector>
 
 #include <tvgutil/RandomNumberGenerator.h>
@@ -29,34 +33,37 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The total number of examples currently in the reservoir. */
+  size_t m_curSize;
+
   /** The examples in the reservoir. */
-  std::vector<Example_CPtr> m_examples;
+  std::map<Label,std::vector<Example_CPtr> > m_examples;
 
   /** The histogram of the label distribution of all of the examples that have ever been added to the reservoir. */
   Histogram_Ptr m_histogram;
 
-  /** The maximum number of examples allowed in the reservoir at any one time. */
-  size_t m_maxSize;
+  /** The maximum number of examples of each class allowed in the reservoir at any one time. */
+  size_t m_maxClassSize;
 
   /** A random number generator. */
   tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
 
-  /** The number of examples that have been added to the reservoir over time. */
+  /** The total number of examples that have been added to the reservoir over time. */
   size_t m_seenExamples;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a reservoir that can store at most the specified number of examples.
+   * \brief Constructs a reservoir that can store at most the specified number of examples of each class.
    *
-   * Adding more than the specified number of examples to the reservoir may result in some
-   * of the older examples being (randomly) discarded.
+   * Adding more than the specified number of examples of a particular class to the reservoir may result
+   * in some of the older examples for that class being (randomly) discarded.
    *
-   * \param maxSize               The maximum number of examples allowed in the reservoir at any one time.
+   * \param maxClassSize          The maximum number of examples of each class allowed in the reservoir at any one time.
    * \param randomNumberGenerator A random number generator.
    */
-  explicit ExampleReservoir(size_t maxSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-  : m_histogram(new Histogram<Label>), m_maxSize(maxSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
+  ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -64,8 +71,9 @@ public:
   /**
    * \brief Adds an example to the reservoir.
    *
-   * If the reservoir is currently full, an older example may be (randomly) discarded to
-   * make space for the new example. If not, the new example itself is discarded.
+   * If there is already a full complement of examples for the class corresponding to the new example's label in the reservoir,
+   * an older example of that class may be (randomly) discarded to make space for the new one. If not, the new example itself
+   * is discarded.
    *
    * \param example The example to be added.
    * \return        true, if the example was actually added to the reservoir, or false otherwise.
@@ -74,25 +82,26 @@ public:
   {
     bool changed = false;
 
-    if(m_seenExamples < m_maxSize)
+    std::vector<Example_CPtr>& examplesForClass = m_examples[example->get_label()];
+    if(examplesForClass.size() < m_maxClassSize)
     {
-      // If we haven't yet reached the maximum number of examples, simply add the new one.
-      m_examples.push_back(example);
-      m_histogram->add(example->get_label());
+      // If we haven't yet reached the maximum number of examples for this class, simply add the new one.
+      examplesForClass.push_back(example);
+      ++m_curSize;
       changed = true;
     }
     else
     {
-      // Otherwise, randomly decide whether or not to replace one of the existing examples with the new one.
-      size_t k = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(m_seenExamples) - 1);
-      if(k < m_maxSize)
+      // Otherwise, randomly decide whether or not to replace one of the existing examples for this class with the new one.
+      size_t k = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(examplesForClass.size()) - 1);
+      if(k < examplesForClass.size())
       {
-        m_examples[k] = example;
-        m_histogram->add(example->get_label());
+        examplesForClass[k] = example;
         changed = true;
       }
     }
 
+    m_histogram->add(example->get_label());
     ++m_seenExamples;
     return changed;
   }
@@ -102,19 +111,40 @@ public:
    */
   void clear()
   {
-    std::vector<Example_CPtr>().swap(m_examples);
+    m_examples.clear();
     m_histogram.reset();
     m_randomNumberGenerator.reset();
   }
 
   /**
-   * \brief Gets the number of examples currently in the reservoir.
+   * \brief Gets the total number of examples currently in the reservoir.
    *
-   * \return The number of examples currently in the reservoir.
+   * \return The total number of examples currently in the reservoir.
    */
   size_t current_size() const
   {
-    return m_examples.size();
+    return m_curSize;
+  }
+
+  /**
+   * \brief Gets the per-class ratios between the total number of examples seen for a class and the number of examples currently in the reservoir.
+   *
+   * \return  The per-class ratios between the total number of examples seen for a class and the number of examples currently in the reservoir.
+   */
+  std::map<Label,float> get_class_multipliers() const
+  {
+    std::map<Label,float> result;
+
+    const std::map<Label,size_t>& bins = m_histogram->get_bins();
+    typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = m_examples.begin(), iend = m_examples.end();
+    typename std::map<Label,size_t>::const_iterator jt = bins.begin();
+    for(; it != iend; ++it, ++jt)
+    {
+      assert(it->first == jt->first);
+      result.insert(std::make_pair(it->first, static_cast<float>(jt->second) / it->second.size()));
+    }
+
+    return result;
   }
 
   /**
@@ -122,9 +152,15 @@ public:
    *
    * \return  The examples currently in the reservoir.
    */
-  const std::vector<Example_CPtr>& get_examples() const
+  std::vector<Example_CPtr> get_examples() const
   {
-    return m_examples;
+    std::vector<Example_CPtr> examples;
+    examples.reserve(m_curSize);
+    for(typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = m_examples.begin(), iend = m_examples.end(); it != iend; ++it)
+    {
+      std::copy(it->second.begin(), it->second.end(), std::back_inserter(examples));
+    }
+    return examples;
   }
 
   /**
@@ -138,19 +174,9 @@ public:
   }
 
   /**
-   * \brief Gets the maximum number of examples allowed in the reservoir at any one time.
+   * \brief Gets the total number of examples that have been added to the reservoir over time.
    *
-   * \return The maximum number of examples allowed in the reservoir at any one time.
-   */
-  size_t max_size() const
-  {
-    return m_maxSize;
-  }
-
-  /**
-   * \brief Gets the number of examples that have been added to the reservoir over time.
-   *
-   * \return The number of examples that have been added to the reservoir over time.
+   * \return The total number of examples that have been added to the reservoir over time.
    */
   size_t seen_examples() const
   {

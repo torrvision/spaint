@@ -8,6 +8,8 @@
 #include <map>
 #include <stdexcept>
 
+#include <tvgutil/LimitedMap.h>
+
 namespace rafl {
 
 /**
@@ -47,6 +49,16 @@ public:
   }
 
   /**
+   * \brief Gets whether or not this is an empty histogram.
+   *
+   * \return  true, if the histogram is empty, or false otherwise.
+   */
+  bool empty() const
+  {
+    return get_count() == 0;
+  }
+
+  /**
    * \brief Gets the bins that record the number of instances of each label that have been seen.
    *
    * \return The bins that record the number of instances of each label that have been seen.
@@ -66,6 +78,23 @@ public:
     return m_count;
   }
 };
+
+//#################### STREAM OPERATORS ####################
+
+/**
+ * \brief Outputs a histogram to the specified stream.
+ *
+ * \param os  The stream to which to output the histogram.
+ * \param rhs The histogram to output.
+ * \return    The stream.
+ */
+template <typename Label>
+std::ostream& operator<<(std::ostream& os, const Histogram<Label>& rhs)
+{
+  const size_t ELEMENT_DISPLAY_LIMIT = 10;
+  os << tvgutil::make_limited_map(rhs.get_bins(), ELEMENT_DISPLAY_LIMIT);
+  return os;
+}
 
 }
 

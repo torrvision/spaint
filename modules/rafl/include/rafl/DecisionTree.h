@@ -13,6 +13,7 @@
 
 #include "decisionfunctions/DecisionFunctionGenerator.h"
 #include "examples/ExampleReservoir.h"
+#include "examples/ExampleUtil.h"
 
 namespace rafl {
 
@@ -48,12 +49,46 @@ private:
     /**
      * \brief Constructs a node.
      *
-     * \param maxReservoirSize      The maximum number of examples that can be stored in the node's reservoir.
+     * \param maxClassSize          The maximum number of examples of each class allowed in the node's reservoir at any one time.
      * \param randomNumberGenerator A random number generator.
      */
-    Node(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-    : m_leftChildIndex(-1), m_reservoir(maxReservoirSize, randomNumberGenerator), m_rightChildIndex(-1)
+    Node(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+    : m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
+  };
+
+public:
+  /**
+   * \brief An instance of this struct can be used to provide the settings needed to configure a decision tree.
+   */
+  struct Settings
+  {
+    //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
+  private:
+    typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
+
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+  public:
+    /** The number of different decision functions to consider when splitting a node. */
+    int candidateCount;
+
+    /** A generator that can be used to pick appropriate decision functions for nodes. */
+    DecisionFunctionGenerator_CPtr decisionFunctionGenerator;
+
+    /** The minimum information gain required for a node split to be acceptable. */
+    float gainThreshold;
+
+    /** The maximum number of examples of each class allowed in a node's reservoir at any one time. */
+    size_t maxClassSize;
+
+    /** A random number generator. */
+    tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
+
+    /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
+    size_t seenExamplesThreshold;
+
+    /** A threshold splittability below which nodes should not be split (must be > 0). */
+    float splittabilityThreshold;
   };
 
   //#################### PUBLIC TYPEDEFS ####################
@@ -68,23 +103,17 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A generator that can be used to pick appropriate decision functions for nodes. */
-  DecisionFunctionGenerator_CPtr m_decisionFunctionGenerator;
-
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
-
-  /** The maximum number of examples that can be stored in a node's reservoir. */
-  size_t m_maxReservoirSize;
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
 
-  /** A random number generator. */
-  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
-
   /** The root node's index in the node array. */
   int m_rootIndex;
+
+  /** The settings needed to configure the decision tree. */
+  Settings m_settings;
 
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
@@ -94,12 +123,10 @@ public:
   /**
    * \brief Constructs an empty decision tree.
    *
-   * \param maxReservoirSize          The maximum number of examples that can be stored in a node's reservoir.
-   * \param randomNumberGenerator     A random number generator.
-   * \param decisionFunctionGenerator A generator that can be used to pick appropriate decision functions for nodes.
+   * \param settings  The settings needed to configure the decision tree.
    */
-  explicit DecisionTree(size_t maxReservoirSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, const DecisionFunctionGenerator_CPtr& decisionFunctionGenerator)
-  : m_decisionFunctionGenerator(decisionFunctionGenerator), m_maxReservoirSize(maxReservoirSize), m_randomNumberGenerator(randomNumberGenerator)
+  explicit DecisionTree(const Settings& settings)
+  : m_settings(settings)
   {
     m_rootIndex = add_node();
   }
@@ -138,18 +165,38 @@ public:
   ProbabilityMassFunction<Label> lookup_pmf(const Descriptor_CPtr& descriptor) const
   {
     int leafIndex = find_leaf(*descriptor);
-    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
+    return make_pmf(leafIndex);
   }
 
   /**
-   * \brief Trains the tree by splitting a number of suitable nodes (e.g. those that have a fairly full reservoir).
+   * \brief Outputs the decision tree to a stream.
+   *
+   * \param os  The stream to which to output the tree.
+   */
+  void output(std::ostream& os) const
+  {
+    output_subtree(os, m_rootIndex, "");
+  }
+
+  /**
+   * \brief Predicts a label for the specified descriptor.
+   *
+   * \param descriptor  The descriptor.
+   * \return            The predicted label.
+   */
+  Label predict(const Descriptor_CPtr& descriptor) const
+  {
+    return lookup_pmf(descriptor).calculate_best_label();
+  }
+
+  /**
+   * \brief Trains the tree by splitting a number of suitable nodes.
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *
-   * \param splitBudget             The maximum number of nodes that may be split in this training step.
-   * \param splittabilityThreshold  A threshold splittability below which nodes should not be split.
+   * \param splitBudget The maximum number of nodes that may be split in this training step.
    */
-  void train(size_t splitBudget, float splittabilityThreshold = 0.5f)
+  void train(size_t splitBudget)
   {
     size_t nodesSplit = 0;
 
@@ -161,7 +208,7 @@ public:
     while(!m_splittabilityQueue.empty() && nodesSplit < splitBudget)
     {
       typename SplittabilityQueue::Element e = m_splittabilityQueue.top();
-      if(e.key() >= splittabilityThreshold)
+      if(e.key() >= m_settings.splittabilityThreshold)
       {
         m_splittabilityQueue.pop();
         if(split_node(e.id())) ++nodesSplit;
@@ -204,7 +251,7 @@ private:
    */
   int add_node()
   {
-    m_nodes.push_back(Node_Ptr(new Node(m_maxReservoirSize, m_randomNumberGenerator)));
+    m_nodes.push_back(Node_Ptr(new Node(m_settings.maxClassSize, m_settings.randomNumberGenerator)));
     int id = static_cast<int>(m_nodes.size()) - 1;
     m_splittabilityQueue.insert(id, 0.0f, NULL);
     return id;
@@ -214,16 +261,40 @@ private:
    * \brief Fills the specified reservoir with examples sampled from an input set of examples. 
    *
    * \param inputExamples The set of examples from which to sample.
-   * \param multiplier    The ratio (>= 1) between the size of the input example set and the number of samples to add to the reservoir.
+   * \param multipliers   The per-class ratios between the total number of examples seen for a class and the number of examples currently in the source reservoir.
    * \param reservoir     The reservoir to fill.
    */
-  void fill_reservoir(const std::vector<Example_CPtr>& inputExamples, float multiplier, ExampleReservoir<Label>& reservoir)
+  void fill_reservoir(const std::vector<Example_CPtr>& inputExamples, const std::map<Label,float>& multipliers, ExampleReservoir<Label>& reservoir)
   {
-    size_t sampleCount = static_cast<size_t>(inputExamples.size() * multiplier + 0.5f);
-    std::vector<Example_CPtr> sampledExamples = sample_examples(inputExamples, sampleCount);
-    for(size_t i = 0; i < sampleCount; ++i)
+    // Group the input examples by label.
+    std::map<Label,std::vector<Example_CPtr> > inputExamplesByLabel;
+    for(typename std::vector<Example_CPtr>::const_iterator it = inputExamples.begin(), iend = inputExamples.end(); it != iend; ++it)
     {
-      reservoir.add_example(sampledExamples[i]);
+      inputExamplesByLabel[(*it)->get_label()].push_back(*it);
+    }
+
+    // For each group:
+    for(typename std::map<Label,std::vector<Example_CPtr> >::const_iterator it = inputExamplesByLabel.begin(), iend = inputExamplesByLabel.end(); it != iend; ++it)
+    {
+#if 1
+      // Sample the appropriate number of examples (based on the multiplier for the group) and add them to the target reservoir.
+      typename std::map<Label,float>::const_iterator jt = multipliers.find(it->first);
+      if(jt == multipliers.end()) throw std::runtime_error("The input examples appear to be from a different reservoir than the multipliers");
+
+      float multiplier = jt->second;
+      size_t sampleCount = static_cast<size_t>(it->second.size() * multiplier + 0.5f);
+      std::vector<Example_CPtr> sampledExamples = sample_examples(it->second, sampleCount);
+      for(size_t j = 0; j < sampleCount; ++j)
+      {
+        reservoir.add_example(sampledExamples[j]);
+      }
+#else
+      // Simply add all of the examples for the group to the target reservoir (useful for debugging purposes).
+      for(size_t j = 0, size = it->second.size(); j < size; ++j)
+      {
+        reservoir.add_example(it->second[j]);
+      }
+#endif
     }
   }
 
@@ -255,6 +326,41 @@ private:
   }
 
   /**
+   * \brief Makes a probability mass function for the specified leaf.
+   *
+   * \param leafIndex The leaf for which to make the probability mass function.
+   * \return          The probability mass function.
+   */
+  ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
+  {
+    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
+  }
+
+  /**
+   * \brief Outputs a subtree of the decision tree to a stream.
+   *
+   * \param os                The stream to which to output the subtree.
+   * \param subtreeRootIndex  The index of the node at the root of the subtree.
+   * \param indent            An indentation string to use in order to offset the output of the subtree.
+   */
+  void output_subtree(std::ostream& os, int subtreeRootIndex, const std::string& indent) const
+  {
+    int leftChildIndex = m_nodes[subtreeRootIndex]->m_leftChildIndex;
+    int rightChildIndex = m_nodes[subtreeRootIndex]->m_rightChildIndex;
+    DecisionFunction_Ptr splitter = m_nodes[subtreeRootIndex]->m_splitter;
+
+    // Output the current node.
+    os << indent << subtreeRootIndex << ": ";
+    if(splitter) os << *splitter;
+    else os << m_nodes[subtreeRootIndex]->m_reservoir.seen_examples() << ' ' << make_pmf(subtreeRootIndex);
+    os << '\n';
+
+    // Recursively output any children of the current node.
+    if(leftChildIndex != -1) output_subtree(os, leftChildIndex, indent + "  ");
+    if(rightChildIndex != -1) output_subtree(os, rightChildIndex, indent + "  ");
+  }
+
+  /**
    * \brief Randomly samples sampleCount examples (with replacement) from the specified set of input examples.
    *
    * \param inputExamples The set of examples from which to sample.
@@ -266,7 +372,7 @@ private:
     std::vector<Example_CPtr> outputExamples;
     for(size_t i = 0; i < sampleCount; ++i)
     {
-      int exampleIndex = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(inputExamples.size()) - 1);
+      int exampleIndex = m_settings.randomNumberGenerator->generate_int_in_range(0, static_cast<int>(inputExamples.size()) - 1);
       outputExamples.push_back(inputExamples[exampleIndex]);
     }
     return outputExamples;
@@ -280,11 +386,8 @@ private:
    */
   bool split_node(int nodeIndex)
   {
-    const int CANDIDATE_COUNT = 5;
-    const float GAIN_THRESHOLD = 0.0f;
-
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_decisionFunctionGenerator->split_examples(n.m_reservoir, CANDIDATE_COUNT, GAIN_THRESHOLD);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold);
     if(!split) return false;
 
     // Set the decision function of the node to be split.
@@ -293,9 +396,9 @@ private:
     // Add left and right child nodes and populate their example reservoirs based on the chosen split.
     n.m_leftChildIndex = add_node();
     n.m_rightChildIndex = add_node();
-    float multiplier = std::max(1.0f, static_cast<float>(n.m_reservoir.seen_examples()) / n.m_reservoir.max_size());
-    fill_reservoir(split->m_leftExamples, multiplier, m_nodes[n.m_leftChildIndex]->m_reservoir);
-    fill_reservoir(split->m_rightExamples, multiplier, m_nodes[n.m_rightChildIndex]->m_reservoir);
+    std::map<Label,float> multipliers = n.m_reservoir.get_class_multipliers();
+    fill_reservoir(split->m_leftExamples, multipliers, m_nodes[n.m_leftChildIndex]->m_reservoir);
+    fill_reservoir(split->m_rightExamples, multipliers, m_nodes[n.m_rightChildIndex]->m_reservoir);
 
     // Update the splittability for the child nodes.
     update_splittability(n.m_leftChildIndex);
@@ -314,11 +417,9 @@ private:
    */
   void update_splittability(int nodeIndex)
   {
-    // TODO: Implement a proper splittability measure (this one is a temporary hack to allow us to try things out).
-
     // Recalculate the node's splittability.
     const ExampleReservoir<Label>& reservoir = m_nodes[nodeIndex]->m_reservoir;
-    float splittability = static_cast<float>(reservoir.current_size()) / reservoir.max_size();
+    float splittability = reservoir.seen_examples() >= m_settings.seenExamplesThreshold ? ExampleUtil::calculate_entropy(*reservoir.get_histogram()) : 0.0f;
 
     // Update the splittability queue to reflect the node's new splittability.
     m_splittabilityQueue.update_key(nodeIndex, splittability);

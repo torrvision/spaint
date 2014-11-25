@@ -36,6 +36,9 @@ public:
 public:
   /** Override */
   virtual DescriptorClassification classify_descriptor(const Descriptor& descriptor) const;
+
+  /** Override */
+  virtual void output(std::ostream& os) const;
 };
 
 }

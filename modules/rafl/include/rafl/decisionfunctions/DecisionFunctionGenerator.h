@@ -79,13 +79,21 @@ public:
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
-    const std::vector<Example_CPtr>& examples = reservoir.get_examples();
+#if 0
+    std::cout << "\nP: " << *reservoir.get_histogram() << ' ' << initialEntropy << '\n';
+#endif
+
+    std::vector<Example_CPtr> examples = reservoir.get_examples();
     for(int i = 0; i < candidateCount; ++i)
     {
       Split_Ptr splitCandidate(new Split);
 
       // Generate a decision function for the split candidate.
       splitCandidate->m_decisionFunction = generate_candidate_decision_function(examples);
+
+#if 0
+      std::cout << *splitCandidate->m_decisionFunction << '\n';
+#endif
 
       // Partition the examples using the decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
@@ -101,8 +109,8 @@ public:
       }
 
       // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(examples, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
-      if(gain < gainThreshold) splitCandidate.reset();
+      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
+      if(gain < FLT_MIN || gain < gainThreshold) splitCandidate.reset();
 
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
       gainToCandidateMap.insert(std::make_pair(gain, splitCandidate));
@@ -115,22 +123,34 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Calculates the information gain that results from splitting an example set in a particular way.
+   * \brief Calculates the information gain that results from splitting an example reservoir in a particular way.
    *
-   * \param examples        The example set.
+   * \param reservoir       The reservoir.
    * \param initialEntropy  The entropy of the example set before the split.
    * \param leftExamples    The examples that end up in the left half of the split.
    * \param rightExamples   The examples that end up in the right half of the split.
    * \return                The information gain resulting from the split.
    */
-  static float calculate_information_gain(const std::vector<Example_CPtr>& examples, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
+  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
   {
-    float exampleCount = static_cast<float>(examples.size());
-    float leftEntropy = ExampleUtil::calculate_entropy(leftExamples);
-    float rightEntropy = ExampleUtil::calculate_entropy(rightExamples);
+    float exampleCount = static_cast<float>(reservoir.current_size());
+    float leftEntropy = ExampleUtil::calculate_entropy<Label>(leftExamples, reservoir.get_class_multipliers());
+    float rightEntropy = ExampleUtil::calculate_entropy<Label>(rightExamples, reservoir.get_class_multipliers());
     float leftWeight = leftExamples.size() / exampleCount;
     float rightWeight = rightExamples.size() / exampleCount;
-    return initialEntropy - (leftWeight * leftEntropy + rightWeight * rightEntropy);
+
+#if 0
+    std::cout << "L: " << ExampleUtil::make_histogram(leftExamples) << ' ' << leftEntropy << '\n';
+    std::cout << "R: " << ExampleUtil::make_histogram(rightExamples) << ' ' << rightEntropy << '\n';
+#endif
+
+    float gain = initialEntropy - (leftWeight * leftEntropy + rightWeight * rightEntropy);
+
+#if 0
+    std::cout << "Gain: " << gain << '\n';
+#endif
+
+    return gain;
   }
 };
 

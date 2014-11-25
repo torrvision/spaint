@@ -4,6 +4,8 @@
 
 #include "decisionfunctions/FeatureThresholdingDecisionFunction.h"
 
+#include <iostream>
+
 namespace rafl {
 
 //#################### CONSTRUCTORS ####################
@@ -17,6 +19,11 @@ FeatureThresholdingDecisionFunction::FeatureThresholdingDecisionFunction(size_t 
 DecisionFunction::DescriptorClassification FeatureThresholdingDecisionFunction::classify_descriptor(const Descriptor& descriptor) const
 {
   return descriptor[m_featureIndex] < m_threshold ? DC_LEFT : DC_RIGHT;
+}
+
+void FeatureThresholdingDecisionFunction::output(std::ostream& os) const
+{
+  os << "Feature " << m_featureIndex << " < " << m_threshold;
 }
 
 }
