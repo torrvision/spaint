@@ -1,4 +1,6 @@
+//###
 #if 0
+
 #include <iostream>
 
 #include <rafl/examples/ExampleReservoir.h>
@@ -21,9 +23,12 @@ int main()
   //DecisionTree<int> dt(10, RandomNumberGenerator_Ptr(new RandomNumberGenerator(seed)));
   return 0;
 }
+
 #endif
 
+//###
 #if 0
+
 #include <iostream>
 
 #include <rafl/base/ProbabilityMassFunction.h>
@@ -47,9 +52,11 @@ int main()
   std::cout << "Entropy=" << pmf.calculate_entropy() << '\n';
   return 0;
 }
+
 #endif
 
-#if 1
+//###
+#if 0
 
 #include <rafl/DecisionTree.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
@@ -98,6 +105,73 @@ int main()
 
   ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
   std::cout << pmf << '\n';
+  return 0;
+}
+
+#endif
+
+//###
+#if 1
+
+#include <rafl/RandomForest.h>
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
+using namespace rafl;
+
+typedef int Label;
+typedef DecisionTree<Label> DT;
+typedef RandomForest<Label> RF;
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
+Descriptor_CPtr make_descriptor(float *arr)
+{
+  Descriptor_Ptr d(new Descriptor(10));
+  for(int i = 0; i < 10; ++i)
+  {
+    (*d)[i] = arr[i];
+  }
+  return d;
+}
+
+int main()
+{
+  // Construct the decision tree.
+  unsigned int seed = 12345;
+  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
+  DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+
+  DT::Settings settings;
+  settings.candidateCount = 20;
+  settings.decisionFunctionGenerator = decisionFunctionGenerator;
+  settings.gainThreshold = 0.0f;
+  settings.maxClassSize = 10000;
+  settings.randomNumberGenerator = randomNumberGenerator;
+  settings.seenExamplesThreshold = 1000;
+  settings.splittabilityThreshold = 0.5f;
+
+  RF rf(1, settings);
+
+  // Train the decision tree.
+  std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
+  rf.add_examples(trainingExamples);
+  rf.train(20);
+  rf.output(std::cout);
+
+  // Test the decision tree and output the results.
+  std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("poker-hand-testing.data");
+  float totalTests = static_cast<float>(testingExamples.size());
+  size_t correctTests = 0, wrongTests = 0;
+  for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
+  {
+    const Descriptor_CPtr& descriptor = (*it)->get_descriptor();
+    const Label& expectedLabel = (*it)->get_label();
+    Label predictedLabel = rf.predict(descriptor);
+    if(predictedLabel == expectedLabel) ++correctTests;
+    else ++wrongTests;
+  }
+
+  std::cout << "Correct %: " << correctTests / totalTests << '\n';
+  std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
+
   return 0;
 }
 

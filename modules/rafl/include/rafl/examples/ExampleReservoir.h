@@ -62,7 +62,7 @@ public:
    * \param maxClassSize          The maximum number of examples of each class allowed in the reservoir at any one time.
    * \param randomNumberGenerator A random number generator.
    */
-  explicit ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
   : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 

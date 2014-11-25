@@ -117,7 +117,7 @@ void test_copy_2d_texture()
   {
     for(size_t x = 0; x < width; ++x)
     {
-      h_buffer[y * width + x] = k++;
+      h_buffer[y * width + x] = static_cast<unsigned char>(k++);
     }
   }
 
