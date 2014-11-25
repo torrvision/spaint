@@ -87,7 +87,7 @@ public:
     /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
     size_t seenExamplesThreshold;
 
-    /** A threshold splittability below which nodes should not be split. */
+    /** A threshold splittability below which nodes should not be split (must be > 0). */
     float splittabilityThreshold;
   };
 
@@ -278,7 +278,10 @@ private:
     {
 #if 1
       // Sample the appropriate number of examples (based on the multiplier for the group) and add them to the target reservoir.
-      float multiplier = multipliers.find(it->first)->second;
+      typename std::map<Label,float>::const_iterator jt = multipliers.find(it->first);
+      if(jt == multipliers.end()) throw std::runtime_error("The input examples appear to be from a different reservoir than the multipliers");
+
+      float multiplier = jt->second;
       size_t sampleCount = static_cast<size_t>(it->second.size() * multiplier + 0.5f);
       std::vector<Example_CPtr> sampledExamples = sample_examples(it->second, sampleCount);
       for(size_t j = 0; j < sampleCount; ++j)
