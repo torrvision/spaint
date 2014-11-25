@@ -34,7 +34,7 @@ public:
    * \param treeCount The number of decision trees to use in the random forest.
    * \param settings  The settings needed to configure the decision trees.
    */
-  explicit RandomForest(size_t treeCount, const typename Tree::Settings& settings)
+  RandomForest(size_t treeCount, const typename Tree::Settings& settings)
   {
     for(size_t i = 0; i < treeCount; ++i)
     {

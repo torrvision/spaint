@@ -58,7 +58,7 @@ public:
   template <typename Label>
   static std::vector<boost::shared_ptr<const Example<Label> > > load_examples(const std::string& filename)
   {
-    // TODO: Think about how to handle bad data.
+    // FIXME: Make this robust to bad data.
 
     typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
     std::vector<Example_CPtr> result;
