@@ -9,9 +9,7 @@
 #include <set>
 
 #include <Eigen/Dense>
-using Eigen::ArrayXf;
 using Eigen::Vector2f;
-using Eigen::VectorXf;
 using Eigen::Matrix2f;
 
 #include "ExampleUtil.h"
