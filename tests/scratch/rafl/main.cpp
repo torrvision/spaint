@@ -82,7 +82,7 @@ int main()
   unsigned int seed = 12345;
   tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
   DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
-  DT dt(10, randomNumberGenerator, decisionFunctionGenerator);
+  DT dt(10, 2, randomNumberGenerator, decisionFunctionGenerator);
 
   std::vector<Example_CPtr> examples;
   examples.push_back(make_example(0, 4, RED));
@@ -94,6 +94,7 @@ int main()
 
   dt.add_examples(examples);
   dt.train(4);
+  dt.output(std::cout);
 
   ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
   std::cout << pmf << '\n';
