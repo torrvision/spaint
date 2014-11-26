@@ -19,13 +19,15 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#include "trackers/ViconTracker.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
-: m_settings(settings)
+SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings, bool useVicon)
+: m_settings(settings), m_useVicon(useVicon)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise();
@@ -33,7 +35,7 @@ SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const boost::
 #endif
 
 SpaintEngine::SpaintEngine(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const ITMLibSettings& settings)
-: m_settings(settings)
+: m_settings(settings), m_useVicon(false)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
   initialise();
@@ -225,8 +227,16 @@ void SpaintEngine::initialise()
   }
 
   // Set up the trackers.
-  m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
-  m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_scene.get()));
+  if(m_useVicon)
+  {
+    // Note: Need to enable port forwarding to make this work.
+    m_trackerPrimary.reset(new ViconTracker("127.0.0.1"));
+  }
+  else
+  {
+    m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
+    m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_scene.get()));
+  }
 
   // Note: The trackers can only be run once reconstruction has started.
   m_reconstructionStarted = false;

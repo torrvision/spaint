@@ -66,6 +66,9 @@ private:
   /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
   TrackingState_Ptr m_trackingState;
 
+  /** Whether or not to use the Vicon tracker. */
+  bool m_useVicon;
+
   /** The current view of the scene. */
   View_Ptr m_view;
 
@@ -84,8 +87,9 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if NULL is passed in, the default OpenNI device will be used).
    * \param settings            TODO
+   * \param useVicon            Whether or not to use the Vicon tracker.
    */
-  SpaintEngine(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
+  SpaintEngine(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings, bool useVicon);
 #endif
 
   /**
