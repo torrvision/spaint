@@ -14,12 +14,13 @@ then
   PLATFORM=mac
 fi
 
-# Build the libraries.
+# Build/extract the libraries.
 cd libraries
 ./build-boost_1_56_0-nix.sh
 #./build-opencv-2.4.9-nix.sh
 ./build-SDL2-2.0.3-nix.sh
 ./extract-Eigen-3.2.2.sh
+./extract-vicon-nix.sh
 cd ..
 
 # Build spaint itself.

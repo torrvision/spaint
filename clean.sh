@@ -10,4 +10,5 @@ cd libraries
 /bin/rm -fR Eigen-3.2.2
 /bin/rm -fR opencv-2.4.9
 /bin/rm -fR SDL2-2.0.3
+/bin/rm -fR vicon
 /bin/rm -fR *.log
