@@ -3,6 +3,7 @@ docs/
 install/
 libraries/boost_1_56_0/
 libraries/boost-setup/
+libraries/Eigen-3.2.2/
 libraries/opencv-2.4.9/
 libraries/SDL2-2.0.3/
 libraries/*.log
