@@ -51,6 +51,15 @@ include/spaint/SpaintEngine.h
 )
 
 ##
+IF(WITH_VICON)
+  SET(trackers_sources src/trackers/ViconTracker.cpp)
+  SET(trackers_headers include/spaint/trackers/ViconTracker.h)
+ELSE()
+  SET(trackers_sources)
+  SET(trackers_headers)
+ENDIF()
+
+##
 SET(util_sources
 src/util/CameraPoseConverter.cpp
 )
@@ -67,6 +76,7 @@ include/spaint/util/SpaintVoxel.h
 SET(sources
 ${input_sources}
 ${toplevel_sources}
+${trackers_sources}
 ${util_sources}
 )
 
@@ -74,6 +84,7 @@ SET(headers
 ${input_headers}
 ${ogl_headers}
 ${toplevel_headers}
+${trackers_headers}
 ${util_headers}
 )
 
@@ -84,6 +95,7 @@ ${util_headers}
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
+SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 
 ##########################################
