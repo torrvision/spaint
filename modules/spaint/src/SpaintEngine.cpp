@@ -230,7 +230,7 @@ void SpaintEngine::initialise()
   if(m_useVicon)
   {
     // Note: Need to enable port forwarding to make this work.
-    m_trackerPrimary.reset(new ViconTracker("127.0.0.1"));
+    m_trackerPrimary.reset(new ViconTracker("192.168.0.107", "kinect"));
   }
   else
   {

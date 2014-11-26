@@ -11,11 +11,12 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-ViconTracker::ViconTracker(const std::string& host)
+ViconTracker::ViconTracker(const std::string& host, const std::string& subjectName)
+: m_subjectName(subjectName)
 {
   // TODO: Validate the IP address.
 
-  if(m_vicon.Connect(host + ":801").Result != Result::Success)
+  if(m_vicon.Connect(host + ":801").Result != Result::Success || !m_vicon.IsConnected().Connected)
   {
     throw std::runtime_error("Could not connect to the Vicon system");
   }
@@ -24,7 +25,12 @@ ViconTracker::ViconTracker(const std::string& host)
   m_vicon.EnableSegmentData();
   m_vicon.EnableUnlabeledMarkerData();
   m_vicon.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
-  m_vicon.SetAxisMapping(Direction::Forward, Direction::Left, Direction::Up);
+  //m_vicon.SetAxisMapping(Direction::Up, Direction::Right, Direction::Forward);
+  //m_vicon.SetAxisMapping(Direction::Up, Direction::Forward, Direction::Right);
+  //m_vicon.SetAxisMapping(Direction::Right, Direction::Up, Direction::Forward);
+  m_vicon.SetAxisMapping(Direction::Right, Direction::Forward, Direction::Up);
+  //m_vicon.SetAxisMapping(Direction::Forward, Direction::Right, Direction::Up);
+  //m_vicon.SetAxisMapping(Direction::Forward, Direction::Up, Direction::Right);
 }
 
 //#################### DESTRUCTOR ####################
@@ -41,7 +47,70 @@ ViconTracker::~ViconTracker()
 
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
-  // TODO
+  if(m_vicon.GetFrame().Result != Result::Success) return;
+
+  int subjectIndex = find_subject_index(m_subjectName);
+  if(subjectIndex == -1) return;
+
+#if 1
+  std::cout << "\n#####\n";
+  std::cout << "Frame " << m_vicon.GetFrameNumber().FrameNumber << '\n';
+#endif
+
+  int segmentCount = m_vicon.GetSegmentCount(m_subjectName).SegmentCount;
+  if(segmentCount == 0) return;
+
+  const int SEGMENT_INDEX = 0;
+  std::string segmentName = m_vicon.GetSegmentName(m_subjectName, SEGMENT_INDEX).SegmentName;
+  Output_GetSegmentGlobalTranslation tr = m_vicon.GetSegmentGlobalTranslation(m_subjectName, segmentName);
+#if 1
+  std::cout << "Translation: " << tr.Translation[0] << ' ' << tr.Translation[1] << ' ' << tr.Translation[2] << '\n';
+#endif
+
+  Output_GetSegmentGlobalRotationEulerXYZ rr = m_vicon.GetSegmentGlobalRotationEulerXYZ(m_subjectName, segmentName);
+#if 1
+  std::cout << "Rotation: " << rr.Rotation[0] << ' ' << rr.Rotation[1] << ' ' << rr.Rotation[2] << '\n';
+#endif
+
+  /*Matrix4f invM;
+  invM.setIdentity();
+
+  for(int i = 0; i < 3; ++i) invM(i,3) = tr.Translation[i];
+
+  int k = 0;
+  for(int y = 0; y < 3; ++y)
+    for(int x = 0; x < 3; ++x)
+    {
+      invM(x,y) = rr.Rotation[k++];
+    }
+
+  invM.inv(trackingState->pose_d->M);
+  trackingState->pose_d->SetRTInvM_FromM();
+  trackingState->pose_d->SetParamsFromModelView();
+  trackingState->pose_d->SetModelViewFromParams();*/
+  trackingState->pose_d->params.each.tx = tr.Translation[0];
+  trackingState->pose_d->params.each.ty = tr.Translation[1];
+  trackingState->pose_d->params.each.tz = tr.Translation[2];
+  trackingState->pose_d->params.each.rx = rr.Rotation[0];
+  trackingState->pose_d->params.each.ry = -rr.Rotation[1];
+  trackingState->pose_d->params.each.rz = rr.Rotation[2];
+  trackingState->pose_d->SetModelViewFromParams();
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+int ViconTracker::find_subject_index(const std::string& name) const
+{
+  int subjectCount = m_vicon.GetSubjectCount().SubjectCount;
+  for(int i = 0; i < subjectCount; ++i)
+  {
+    std::string subjectName = m_vicon.GetSubjectName(i).SubjectName;
+    if(subjectName == name)
+    {
+      return i;
+    }
+  }
+  return -1;
 }
 
 }

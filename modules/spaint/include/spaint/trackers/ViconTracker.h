@@ -20,6 +20,9 @@ class ViconTracker : public ITMLib::Engine::ITMTracker
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  std::string m_subjectName;
+
   /** The Vicon client. */
   ViconDataStreamSDK::CPP::Client m_vicon;
 
@@ -28,7 +31,7 @@ public:
   /**
    * \brief TODO
    */
-  explicit ViconTracker(const std::string& host);
+  ViconTracker(const std::string& host, const std::string& subjectName);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -47,6 +50,13 @@ private:
 public:
   /** Override */
   virtual void TrackCamera(ITMTrackingState *trackingState, const ITMView *view);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  int find_subject_index(const std::string& name) const;
 };
 
 }
