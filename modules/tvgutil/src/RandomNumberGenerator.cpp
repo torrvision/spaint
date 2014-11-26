@@ -23,4 +23,12 @@ int RandomNumberGenerator::generate_int_in_range(int lower, int upper)
   return dist(m_gen) + lower;
 }
 
+float RandomNumberGenerator::generate_float_gaussian1d(float mean, float sigma)
+{
+  boost::lock_guard<boost::mutex> lock(m_mutex);
+
+  boost::random::normal_distribution<> dist(mean, sigma);
+  return dist(m_gen);
+}
+
 }

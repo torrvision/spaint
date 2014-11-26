@@ -45,6 +45,15 @@ public:
    * \return      The generated integer.
    */
   int generate_int_in_range(int lower, int upper);
+
+  /**
+   * \brief Generates a float from a Gaussian distribution.
+   *
+   * \param mean  The mean of the Gaussian distribution.
+   * \param sigma The standard-deviation of the Gaussian distribution.
+   * \return      The generated float.
+   */
+  float generate_float_gaussian1d(float mean, float sigma);
 };
 
 //#################### TYPEDEFS ####################
