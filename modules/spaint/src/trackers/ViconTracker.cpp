@@ -67,10 +67,44 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   std::cout << "Translation: " << tr.Translation[0] << ' ' << tr.Translation[1] << ' ' << tr.Translation[2] << '\n';
 #endif
 
-  Output_GetSegmentGlobalRotationEulerXYZ rr = m_vicon.GetSegmentGlobalRotationEulerXYZ(m_subjectName, segmentName);
+  Output_GetSegmentGlobalRotationMatrix rr = m_vicon.GetSegmentGlobalRotationMatrix(m_subjectName, segmentName);
 #if 1
-  std::cout << "Rotation: " << rr.Rotation[0] << ' ' << rr.Rotation[1] << ' ' << rr.Rotation[2] << '\n';
+  std::cout << "Rotation:\n";
+  for(int i = 0; i < 9; ++i)
+  {
+    std::cout << rr.Rotation[i] << ' ';
+    if(i % 3 == 2) std::cout << '\n';
+  }
 #endif
+
+  static Matrix4f oldInvV;
+  static bool done = false;
+  if(!done)
+  {
+    oldInvV.setIdentity();
+    done = true;
+  }
+
+  Matrix4f V;
+  V.setIdentity();
+
+  for(int i = 0; i < 3; ++i) V(i,3) = tr.Translation[i];
+
+  int k = 0;
+  for(int y = 0; y < 3; ++y)
+    for(int x = 0; x < 3; ++x)
+    {
+      V(x,y) = rr.Rotation[k++];
+    }
+
+  Matrix4f invV;
+  V.inv(invV);
+
+  Matrix4f deltaInvV;
+  oldInvV.inv(deltaInvV);
+  deltaInvV = deltaInvV * invV;
+
+  //invM = invM * 
 
   /*Matrix4f invM;
   invM.setIdentity();
