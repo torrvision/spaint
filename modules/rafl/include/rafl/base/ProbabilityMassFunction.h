@@ -11,7 +11,6 @@
 
 #include <boost/optional.hpp>
 
-#include <tvgutil/LimitedMap.h>
 #include "Histogram.h"
 
 namespace rafl {
@@ -166,7 +165,7 @@ template <typename Label>
 std::ostream& operator<<(std::ostream& os, const ProbabilityMassFunction<Label>& rhs)
 {
   const size_t ELEMENT_DISPLAY_LIMIT = 3;
-  os << tvgutil::make_limited_map(rhs.get_masses(), ELEMENT_DISPLAY_LIMIT);
+  os << tvgutil::make_limited_container(rhs.get_masses(), ELEMENT_DISPLAY_LIMIT);
   return os;
 }
 

@@ -8,7 +8,7 @@
 #include <map>
 #include <stdexcept>
 
-#include <tvgutil/LimitedMap.h>
+#include <tvgutil/LimitedContainer.h>
 
 namespace rafl {
 
@@ -92,7 +92,7 @@ template <typename Label>
 std::ostream& operator<<(std::ostream& os, const Histogram<Label>& rhs)
 {
   const size_t ELEMENT_DISPLAY_LIMIT = 10;
-  os << tvgutil::make_limited_map(rhs.get_bins(), ELEMENT_DISPLAY_LIMIT);
+  os << tvgutil::make_limited_container(rhs.get_bins(), ELEMENT_DISPLAY_LIMIT);
   return os;
 }
 
