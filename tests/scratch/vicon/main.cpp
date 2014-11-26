@@ -63,8 +63,17 @@ public:
     for(int i = 0; i < segmentCount; ++i)
     {
       std::string segmentName = m_vicon.GetSegmentName(subjectName, i).SegmentName;
-      Output_GetSegmentGlobalTranslation result = m_vicon.GetSegmentGlobalTranslation(subjectName, segmentName);
-      std::cout << segmentName << ' ' << result.Translation[0] << ' ' << result.Translation[1] << ' ' << result.Translation[2] << '\n';
+
+      Output_GetSegmentGlobalTranslation tr = m_vicon.GetSegmentGlobalTranslation(subjectName, segmentName);
+      std::cout << "Translation: " << tr.Translation[0] << ' ' << tr.Translation[1] << ' ' << tr.Translation[2] << '\n';
+
+      Output_GetSegmentGlobalRotationMatrix rr = m_vicon.GetSegmentGlobalRotationMatrix(subjectName, segmentName);
+      std::cout << "Rotation:\n";
+      for(int j = 0; j < 9; ++j)
+      {
+        std::cout << rr.Rotation[j] << ' ';
+        if(j % 3 == 2) std::cout << '\n';
+      }
     }
   }
 
