@@ -24,22 +24,6 @@ class ExampleUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
-  
-  /**
-   * \brief Create a constant 2d descriptor
-   * 
-   * \param x   The x component of the descriptor
-   * \param y   The y component of the descriptor
-   * \return    The const descriptor
-   */
-  static Descriptor_CPtr make_const_2d_descriptor(float x, float y)
-  {
-    Descriptor_Ptr d(new Descriptor(2));
-    (*d)[0] = x;
-    (*d)[1] = y;
-    return d;
-  }
-  
   /**
    * \brief Calculates the entropy of the label distribution of a set of examples.
    *
@@ -133,8 +117,7 @@ public:
   {
     return ProbabilityMassFunction<Label>(make_histogram(examples), multipliers);
   }
-  
-  };
+};
 
 }
 

@@ -28,7 +28,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The `seed' unit vector which is rotated to create seed points for multiple classes around the unit circle. */
+  /** The 'seed' unit vector which is rotated to create seed points for multiple classes around the unit circle. */
   Vector2f m_referencePoint;
 
   /** A matrix used to rotate the seed reference vector. */
@@ -49,11 +49,11 @@ private:
   * integer value it maps to.
   */
 public:
-  explicit UnitCircleExampleGenerator(std::map<Label,int> uniqueClassLabels)
-  : m_uniqueClassLabels(uniqueClassLabels)
+  explicit UnitCircleExampleGenerator(const std::map<Label,int>& uniqueClassLabels)
+  : m_referencePoint(0.0f, 1.0f), m_uniqueClassLabels(uniqueClassLabels)
   {
-    m_referencePoint(0) = 0.0f;
-    m_referencePoint(1) = 1.0f;
+    //m_referencePoint(0) = 0.0f;
+    //m_referencePoint(1) = 1.0f;
 
     m_rotationPerClass = 2.0f*M_PI/m_uniqueClassLabels.size();
   }
@@ -87,12 +87,29 @@ public:
         std::cout << "(" << a << "," << b << ")\n";
         #endif
 
-        Example_CPtr e(new Example<Label>(ExampleUtil::make_const_2d_descriptor(a,b), *it));
+        Example_CPtr e(new Example<Label>(ExampleUtil::make_descriptor(a,b), *it));
         exampleSet.push_back( e );
       }
     }
     
     return exampleSet;
+  }
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Create a constant 2d descriptor
+   *
+   * \param x   The x component of the descriptor
+   * \param y   The y component of the descriptor
+   * \return    The const descriptor
+   */
+  static Descriptor_CPtr make_descriptor(float x, float y)
+  {
+    Descriptor_Ptr d(new Descriptor(2));
+    (*d)[0] = x;
+    (*d)[1] = y;
+    return d;
   }
 };
 

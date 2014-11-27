@@ -111,7 +111,7 @@ int main()
 #endif
 
 //###
-#if 1
+#if 0
 
 #include <rafl/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
@@ -172,6 +172,21 @@ int main()
   std::cout << "Correct %: " << correctTests / totalTests << '\n';
   std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
 
+  return 0;
+}
+
+#endif
+
+//###
+#if 1
+
+#include <rafl/examples/UnitCircleExampleGenerator.h>
+using namespace rafl;
+
+int main()
+{
+  UnitCircleExampleGenerator<int> gen;
+  // TODO
   return 0;
 }
 
