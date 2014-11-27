@@ -372,7 +372,7 @@ private:
     std::vector<Example_CPtr> outputExamples;
     for(size_t i = 0; i < sampleCount; ++i)
     {
-      int exampleIndex = m_settings.randomNumberGenerator->generate_int_in_range(0, static_cast<int>(inputExamples.size()) - 1);
+      int exampleIndex = m_settings.randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(inputExamples.size()) - 1);
       outputExamples.push_back(inputExamples[exampleIndex]);
     }
     return outputExamples;

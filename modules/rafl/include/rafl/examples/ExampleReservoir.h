@@ -93,7 +93,7 @@ public:
     else
     {
       // Otherwise, randomly decide whether or not to replace one of the existing examples for this class with the new one.
-      size_t k = m_randomNumberGenerator->generate_int_in_range(0, static_cast<int>(examplesForClass.size()) - 1);
+      size_t k = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(examplesForClass.size()) - 1);
       if(k < examplesForClass.size())
       {
         examplesForClass[k] = example;
