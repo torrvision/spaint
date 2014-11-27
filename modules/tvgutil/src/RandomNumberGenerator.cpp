@@ -14,7 +14,7 @@ RandomNumberGenerator::RandomNumberGenerator(unsigned int seed)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-int RandomNumberGenerator::generate_int_in_range(int lower, int upper)
+int RandomNumberGenerator::generate_int_from_uniform(int lower, int upper)
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
