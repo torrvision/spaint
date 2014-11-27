@@ -36,24 +36,24 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Generates an integer in the specified (closed) range.
+   * \brief Generates a float from a 1D Gaussian distribution with the specified parameters.
    *
-   * For example, generate_int_in_range(3,5) returns an integer in the range [3,5].
+   * \param mean  The mean of the Gaussian distribution.
+   * \param sigma The standard deviation of the Gaussian distribution.
+   * \return      The generated float.
+   */
+  float generate_float_from_gaussian(float mean, float sigma);
+
+  /**
+   * \brief Generates an integer from a uniform distribution over the specified (closed) range.
+   *
+   * For example, generate_int_from_uniform(3,5) returns an integer in the range [3,5].
    *
    * \param lower The lower bound of the range.
    * \param upper The upper bound of the range.
    * \return      The generated integer.
    */
-  int generate_int_in_range(int lower, int upper);
-
-  /**
-   * \brief Generates a float from a Gaussian distribution.
-   *
-   * \param mean  The mean of the Gaussian distribution.
-   * \param sigma The standard-deviation of the Gaussian distribution.
-   * \return      The generated float.
-   */
-  float generate_float_gaussian1d(float mean, float sigma);
+  int generate_int_from_uniform(int lower, int upper);
 };
 
 //#################### TYPEDEFS ####################

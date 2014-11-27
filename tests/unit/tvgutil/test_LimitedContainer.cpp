@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(set_test)
   std::set<float> s;
   for(int i = 0; i < 5; ++i)
   {
-    s.insert(4 - i);
+    s.insert(4.0f - i);
   }
 
   BOOST_CHECK_THROW(make_limited_container(s, 1), std::runtime_error);

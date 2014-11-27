@@ -14,21 +14,20 @@ RandomNumberGenerator::RandomNumberGenerator(unsigned int seed)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-int RandomNumberGenerator::generate_int_in_range(int lower, int upper)
+float RandomNumberGenerator::generate_float_from_gaussian(float mean, float sigma)
+{
+  boost::lock_guard<boost::mutex> lock(m_mutex);
+  boost::random::normal_distribution<float> dist(mean, sigma);
+  return dist(m_gen);
+}
+
+int RandomNumberGenerator::generate_int_from_uniform(int lower, int upper)
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
 
   // Note: The Mersenne Twister generation engine can only generate random numbers >= 0.
   boost::random::uniform_int_distribution<> dist(0, upper - lower);
   return dist(m_gen) + lower;
-}
-
-float RandomNumberGenerator::generate_float_gaussian1d(float mean, float sigma)
-{
-  boost::lock_guard<boost::mutex> lock(m_mutex);
-
-  boost::random::normal_distribution<> dist(mean, sigma);
-  return dist(m_gen);
 }
 
 }
