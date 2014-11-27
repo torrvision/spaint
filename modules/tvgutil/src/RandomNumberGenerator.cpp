@@ -14,13 +14,6 @@ RandomNumberGenerator::RandomNumberGenerator(unsigned int seed)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-float RandomNumberGenerator::generate_float_from_gaussian(float mean, float sigma)
-{
-  boost::lock_guard<boost::mutex> lock(m_mutex);
-  boost::random::normal_distribution<float> dist(mean, sigma);
-  return dist(m_gen);
-}
-
 int RandomNumberGenerator::generate_int_from_uniform(int lower, int upper)
 {
   boost::lock_guard<boost::mutex> lock(m_mutex);
