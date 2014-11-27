@@ -105,7 +105,6 @@ int main()
 
   ProbabilityMassFunction<Label> pmf = dt.lookup_pmf(make_descriptor(0, 8));
   std::cout << pmf << '\n';
-  
   return 0;
 }
 
