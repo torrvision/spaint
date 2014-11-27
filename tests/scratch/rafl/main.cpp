@@ -149,25 +149,26 @@ int main()
     DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
 
     settings.reset(new DT::Settings);
-    settings->candidateCount = 20;
+    settings->candidateCount = 256;
     settings->decisionFunctionGenerator = decisionFunctionGenerator;
     settings->gainThreshold = 0.0f;
     settings->maxClassSize = 10000;
+    settings->maxTreeHeight = 15;
     settings->randomNumberGenerator = randomNumberGenerator;
-    settings->seenExamplesThreshold = 1000;
+    settings->seenExamplesThreshold = 30;
     settings->splittabilityThreshold = 0.5f;
   }
 
-  RF rf(1, *settings);
+  RF rf(8, *settings);
 
   // Train the random forest.
-  std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
+  std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("pendigits.tra");
   rf.add_examples(trainingExamples);
-  rf.train(20);
+  rf.train(32768);
   rf.output(std::cout);
 
   // Test the random forest and output the results.
-  std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("poker-hand-testing.data");
+  std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("pendigits.tes");
   float totalTests = static_cast<float>(testingExamples.size());
   size_t correctTests = 0, wrongTests = 0;
   for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
