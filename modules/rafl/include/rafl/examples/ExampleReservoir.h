@@ -93,7 +93,8 @@ public:
     else
     {
       // Otherwise, randomly decide whether or not to replace one of the existing examples for this class with the new one.
-      size_t k = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(examplesForClass.size()) - 1);
+      size_t binSize = m_histogram->get_bins().find(example->get_label())->second;
+      size_t k = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(binSize) - 1);
       if(k < examplesForClass.size())
       {
         examplesForClass[k] = example;
