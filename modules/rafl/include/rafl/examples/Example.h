@@ -5,6 +5,10 @@
 #ifndef H_RAFL_EXAMPLE
 #define H_RAFL_EXAMPLE
 
+#include <ostream>
+
+#include <tvgutil/LimitedContainer.h>
+
 #include "../base/Descriptor.h"
 
 namespace rafl {
@@ -57,6 +61,15 @@ public:
     return m_label;
   }
 };
+
+//#################### STREAM OPERATORS ####################
+
+template <typename Label>
+std::ostream& operator<<(std::ostream& os, const Example<Label>& rhs)
+{
+  os << tvgutil::make_limited_container(*rhs.get_descriptor(), 3) << ' ' << rhs.get_label();
+  return os;
+}
 
 }
 

@@ -7,17 +7,16 @@
 
 #include <cmath>
 #include <set>
+#include <stdexcept>
 
-#include <Eigen/Dense>
-using Eigen::Vector2f;
-using Eigen::Matrix2f;
+#include <tvgutil/RandomNumberGenerator.h>
 
-#include "ExampleUtil.h"
+#include "Example.h"
 
 namespace rafl {
 
 /**
- * \brief This class generates examples drawn from points equally spaced around the unit circle.
+ * \brief An instance of an instantiation of this class template can be used to generate examples from class distributions that are equally spaced around the unit circle.
  */
 template <typename Label>
 class UnitCircleExampleGenerator
@@ -26,89 +25,106 @@ class UnitCircleExampleGenerator
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief An instance of this struct can be used to specify the parameters for one of the class distributions.
+   *
+   * As currently implemented, the distributions are 2D Gaussians with diagonal covariance (ask Michael/Wikipedia if you don't know what this means!).
+   * For each class, we have a reference point that is located at a particular angle on the unit circle. The distribution is then centred around this
+   * reference point, with differing standard deviations in the x and y directions.
+   */
+  struct ClassParameters
+  {
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+    /** The angle at which this class is centered on the unit circle. */
+    float m_angle;
+
+    /** The standard deviation of the distribution in the x direction. */
+    float m_xSTD;
+
+    /** The standard deviation of the distribution in the y direction. */
+    float m_ySTD;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+
+    ClassParameters(float angle, float xSTD, float ySTD)
+    : m_angle(angle), m_xSTD(xSTD), m_ySTD(ySTD)
+    {}
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The 'seed' unit vector which is rotated to create seed points for multiple classes around the unit circle. */
-  Vector2f m_referencePoint;
+  /** The parameters for the various class distributions. */
+  std::map<Label,ClassParameters> m_classParameters;
 
-  /** A matrix used to rotate the seed reference vector. */
-  Matrix2f m_2dRotationMatrix;
-
-  /** Defines the angular separation between seed points of distinct classes. */ 
-  float m_rotationPerClass;
- 
-  /** A mapping from the entire set of unique labels to integers which may be compared and handeled more easily than
-   * general class labels */
-  std::map<Label,int> m_uniqueClassLabels;
+  /** A random number generator. */
+  tvgutil::RandomNumberGenerator m_gen;
 
   //#################### CONSTRUCTORS ####################
   /**
-  * \brief Constructs a UnitCircleExampleGenerator 
+  * \brief Constructs a unit circle example generator.
   *
-  * \param uniqueClassLabels  Defines the entire unique set of labels and an ordering between the labels implicit in the
-  * integer value it maps to.
+  * \param classLabels  The labels of the classes for which we want to generate distributions.
+  * \param seed         The seed for the random number generator we will be using.
   */
 public:
-  explicit UnitCircleExampleGenerator(const std::map<Label,int>& uniqueClassLabels)
-  : m_referencePoint(0.0f, 1.0f), m_uniqueClassLabels(uniqueClassLabels)
+  UnitCircleExampleGenerator(const std::set<Label>& classLabels, unsigned int seed)
+  : m_gen(seed)
   {
-    //m_referencePoint(0) = 0.0f;
-    //m_referencePoint(1) = 1.0f;
-
-    m_rotationPerClass = 2.0f*M_PI/m_uniqueClassLabels.size();
+    // Construct the distributions for the various classes.
+    const float ROTATION_PER_CLASS = static_cast<float>(2.0 * M_PI / classLabels.size());
+    const float STD_LOWER_BOUND = 0.1f;
+    const float STD_UPPER_BOUND = 3.0f;
+    int i = 0; 
+    for(std::set<Label>::const_iterator it = classLabels.begin(), iend = classLabels.end(); it != iend; ++it)
+    {
+      float angle = i * ROTATION_PER_CLASS;
+      float xSTD = 0.0f;//m_gen.generate_real_from_uniform<>(STD_LOWER_BOUND, STD_UPPER_BOUND);
+      float ySTD = 0.0f;//m_gen.generate_real_from_uniform<>(STD_LOWER_BOUND, STD_UPPER_BOUND);
+      m_classParameters.insert(std::make_pair(*it, ClassParameters(angle, xSTD, ySTD)));
+      ++i;
+    }
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /*
-   * \brief Generates examples from the entire label set or a subset of labels
+   * \brief Generates examples from a subset of the classes for which the example generator is configured.
    *
-   * \param labelSet                  The set of labels from which to draw the samples
-   * \param numberOfSamplesPerClass   The number of samples to create per class
-   * \return                          The set of generated examples
+   * \param sampleClassLabels       The labels of the classes from which to generate examples.
+   * \param numberOfSamplesPerClass The number of examples to generate per class.
+   * \return                        The generated examples.
    */
-  std::vector<Example_CPtr> generate_examples_in_set(const std::set<Label>& labelSet, size_t numberOfSamplesPerClass)
+  std::vector<Example_CPtr> generate_examples(const std::set<Label>& sampleClassLabels, size_t numberOfSamplesPerClass)
   {
-    std::vector<Example_CPtr> exampleSet;
-     
+    std::vector<Example_CPtr> result;
     for(size_t i = 0; i < numberOfSamplesPerClass; ++i)
     {
-      for(typename std::set<Label>::const_iterator it = labelSet.begin(), iend = labelSet.end(); it != iend; ++it)
+      for(typename std::set<Label>::const_iterator it = sampleClassLabels.begin(), iend = sampleClassLabels.end(); it != iend; ++it)
       {
-        float angle = m_uniqueClassLabels[*it]*m_rotationPerClass;
-        m_2dRotationMatrix = Eigen::Rotation2Df(angle);
-        
-        Vector2f rotatedPoint = (m_referencePoint.transpose()*m_2dRotationMatrix).transpose();
-  
-        float a = rotatedPoint(0); // + Gaussian Noise
-        float b = rotatedPoint(1); // + Gaussian Noise
-
-        #if 0
-        std::cout << "(" << a << "," << b << ")\n";
-        #endif
-
-        Example_CPtr e(new Example<Label>(ExampleUtil::make_descriptor(a,b), *it));
-        exampleSet.push_back( e );
+        std::map<Label,ClassParameters>::const_iterator jt = m_classParameters.find(*it);
+        if(jt == m_classParameters.end()) throw std::runtime_error("The example generator is not configured to generate examples for the specified class");
+        result.push_back(Example_CPtr(new Example<Label>(make_sample_descriptor(jt->second), *it)));
       }
     }
-    
-    return exampleSet;
+    return result;
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Create a constant 2d descriptor
+   * \brief Makes a 2D descriptor corresponding to a sample from the class with the specified parameters.
    *
-   * \param x   The x component of the descriptor
-   * \param y   The y component of the descriptor
-   * \return    The const descriptor
+   * \param classParameters The parameters of the class from which to sample.
+   * \return                The descriptor for the sample.
    */
-  static Descriptor_CPtr make_descriptor(float x, float y)
+  Descriptor_CPtr make_sample_descriptor(const ClassParameters& classParameters)
   {
     Descriptor_Ptr d(new Descriptor(2));
-    (*d)[0] = x;
-    (*d)[1] = y;
+    (*d)[0] = m_gen.generate_from_gaussian(cos(classParameters.m_angle), classParameters.m_xSTD);
+    (*d)[1] = m_gen.generate_from_gaussian(sin(classParameters.m_angle), classParameters.m_ySTD);
     return d;
   }
 };
