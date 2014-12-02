@@ -237,11 +237,10 @@ private:
     int leafIndex = find_leaf(*example->get_descriptor());
 
     // Add the example to the leaf's reservoir.
-    if(m_nodes[leafIndex]->m_reservoir.add_example(example))
-    {
-      // If the leaf's reservoir changed as a result of adding the example, record this fact to ensure that the leaf's splittability is properly recalculated.
-      m_dirtyNodes.insert(leafIndex);
-    }
+    m_nodes[leafIndex]->m_reservoir.add_example(example);
+
+    // Mark the leaf as dirty to ensure that its splittability is properly recalculated once all of the examples have been added.
+    m_dirtyNodes.insert(leafIndex);
   }
 
   /**
