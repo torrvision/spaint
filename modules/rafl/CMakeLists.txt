@@ -43,6 +43,7 @@ SET(examples_headers
 include/rafl/examples/Example.h
 include/rafl/examples/ExampleReservoir.h
 include/rafl/examples/ExampleUtil.h
+include/rafl/examples/UnitCircleExampleGenerator.h
 )
 
 ##

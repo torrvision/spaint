@@ -60,6 +60,21 @@ public:
    * \return      The generated integer.
    */
   int generate_int_from_uniform(int lower, int upper);
+
+  /**
+   * \brief Generates a random real number from a uniform distribution over the specified (closed) range.
+   *
+   * \param lower The lower bound of the range.
+   * \param upper The upper bound of the range.
+   * \return      The generated real number.
+   */
+  template <typename T = float>
+  T generate_real_from_uniform(T lower, T upper)
+  {
+    boost::lock_guard<boost::mutex> lock(m_mutex);
+    boost::random::uniform_real_distribution<T> dist(lower, upper);
+    return dist(m_gen);
+  }
 };
 
 //#################### TYPEDEFS ####################
