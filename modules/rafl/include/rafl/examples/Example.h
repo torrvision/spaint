@@ -64,10 +64,18 @@ public:
 
 //#################### STREAM OPERATORS ####################
 
+/**
+ * \brief Outputs an example to a stream.
+ *
+ * \param os  The stream to which to output the example.
+ * \param rhs The example to output.
+ * \return    The stream.
+ */
 template <typename Label>
 std::ostream& operator<<(std::ostream& os, const Example<Label>& rhs)
 {
-  os << tvgutil::make_limited_container(*rhs.get_descriptor(), 3) << ' ' << rhs.get_label();
+  const size_t ELEMENT_DISPLAY_LIMIT = 5;
+  os << tvgutil::make_limited_container(*rhs.get_descriptor(), ELEMENT_DISPLAY_LIMIT) << ' ' << rhs.get_label();
   return os;
 }
 

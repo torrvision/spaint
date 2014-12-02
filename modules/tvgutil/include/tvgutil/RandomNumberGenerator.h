@@ -62,7 +62,7 @@ public:
   int generate_int_from_uniform(int lower, int upper);
 
   /**
-   * \brief Generates a real number from a uniform distribution over the specified (closed) range.
+   * \brief Generates a random real number from a uniform distribution over the specified (closed) range.
    *
    * \param lower The lower bound of the range.
    * \param upper The upper bound of the range.
