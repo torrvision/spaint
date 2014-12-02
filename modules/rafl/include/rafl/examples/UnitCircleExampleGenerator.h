@@ -78,7 +78,7 @@ public:
     // Construct the distributions for the various classes.
     const float ROTATION_PER_CLASS = static_cast<float>(2.0 * M_PI / classLabels.size());
     int i = 0; 
-    for(std::set<Label>::const_iterator it = classLabels.begin(), iend = classLabels.end(); it != iend; ++it)
+    for(typename std::set<Label>::const_iterator it = classLabels.begin(), iend = classLabels.end(); it != iend; ++it)
     {
       float angle = i * ROTATION_PER_CLASS;
       float xSTD, ySTD;
@@ -113,7 +113,7 @@ public:
     {
       for(typename std::set<Label>::const_iterator it = sampleClassLabels.begin(), iend = sampleClassLabels.end(); it != iend; ++it)
       {
-        std::map<Label,ClassParameters>::const_iterator jt = m_classParameters.find(*it);
+        typename std::map<Label,ClassParameters>::const_iterator jt = m_classParameters.find(*it);
         if(jt == m_classParameters.end()) throw std::runtime_error("The example generator is not configured to generate examples for the specified class");
         result.push_back(Example_CPtr(new Example<Label>(make_sample_descriptor(jt->second), *it)));
       }
@@ -132,8 +132,8 @@ private:
   Descriptor_CPtr make_sample_descriptor(const ClassParameters& classParameters)
   {
     Descriptor_Ptr d(new Descriptor(2));
-    (*d)[0] = m_gen.generate_from_gaussian(cos(classParameters.m_angle), classParameters.m_xSTD);
-    (*d)[1] = m_gen.generate_from_gaussian(sin(classParameters.m_angle), classParameters.m_ySTD);
+    (*d)[0] = m_gen.generate_from_gaussian(cosf(classParameters.m_angle), classParameters.m_xSTD);
+    (*d)[1] = m_gen.generate_from_gaussian(sinf(classParameters.m_angle), classParameters.m_ySTD);
     return d;
   }
 };
