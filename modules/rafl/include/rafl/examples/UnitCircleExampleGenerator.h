@@ -66,23 +66,32 @@ private:
   /**
   * \brief Constructs a unit circle example generator.
   *
-  * \param classLabels  The labels of the classes for which we want to generate distributions.
-  * \param seed         The seed for the random number generator we will be using.
+  * \param classLabels    The labels of the classes for which we want to generate distributions.
+  * \param seed           The seed for the random number generator we will be using.
+  * \param lowerStdBound  The lower bound for the standard deviations of the various class distributions.
+  * \param upperStdBound  The upper bound for the standard deviations of the various class distributions.
   */
 public:
-  UnitCircleExampleGenerator(const std::set<Label>& classLabels, unsigned int seed)
+  UnitCircleExampleGenerator(const std::set<Label>& classLabels, unsigned int seed, float lowerStdBound = 0.1f, float upperStdBound = 0.5f)
   : m_gen(seed)
   {
     // Construct the distributions for the various classes.
     const float ROTATION_PER_CLASS = static_cast<float>(2.0 * M_PI / classLabels.size());
-    const float STD_LOWER_BOUND = 0.1f;
-    const float STD_UPPER_BOUND = 0.5f;
     int i = 0; 
     for(std::set<Label>::const_iterator it = classLabels.begin(), iend = classLabels.end(); it != iend; ++it)
     {
       float angle = i * ROTATION_PER_CLASS;
-      float xSTD = m_gen.generate_real_from_uniform<>(STD_LOWER_BOUND, STD_UPPER_BOUND);
-      float ySTD = m_gen.generate_real_from_uniform<>(STD_LOWER_BOUND, STD_UPPER_BOUND);
+      float xSTD, ySTD;
+      if(upperStdBound > lowerStdBound)
+      {
+        xSTD = m_gen.generate_real_from_uniform<>(lowerStdBound, upperStdBound);
+        ySTD = m_gen.generate_real_from_uniform<>(lowerStdBound, upperStdBound);
+      }
+      else
+      {
+        xSTD = 0.0f;
+        ySTD = 0.0f;
+      }
       m_classParameters.insert(std::make_pair(*it, ClassParameters(angle, xSTD, ySTD)));
       ++i;
     }
