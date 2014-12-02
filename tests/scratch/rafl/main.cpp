@@ -111,7 +111,7 @@ int main()
 #endif
 
 //###
-#if 0
+#if 1
 
 #include <rafl/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
@@ -172,39 +172,6 @@ int main()
   std::cout << "Correct %: " << correctTests / totalTests << '\n';
   std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
 
-  return 0;
-}
-
-#endif
-
-//###
-#if 1
-
-#include <iostream>
-#include <vector>
-
-#include <rafl/examples/UnitCircleExampleGenerator.h>
-using namespace rafl;
-
-typedef int Label;
-typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-
-int main()
-{
-  std::set<Label> classLabels;
-  classLabels.insert(23);
-  classLabels.insert(9);
-  classLabels.insert(84);
-  classLabels.insert(17);
-  UnitCircleExampleGenerator<int> generator(classLabels, 1234);
-  std::set<Label> sampleClassLabels;
-  sampleClassLabels.insert(23);
-  sampleClassLabels.insert(84);
-  std::vector<Example_CPtr> examples = generator.generate_examples(sampleClassLabels, 5);
-  for(size_t i = 0, size = examples.size(); i < size; ++i)
-  {
-    std::cout << *examples[i] << '\n';
-  }
   return 0;
 }
 
