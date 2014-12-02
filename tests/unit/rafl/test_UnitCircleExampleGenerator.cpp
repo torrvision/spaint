@@ -19,7 +19,7 @@ typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
  */
 void check_descriptor_value(const Example_CPtr& example, int featureIndex, float value)
 {
-  BOOST_CHECK_SMALL(fabs((*example->get_descriptor())[featureIndex] - value), 1e-6);
+  BOOST_CHECK_SMALL(fabsf((*example->get_descriptor())[featureIndex] - value), 1e-6f);
 }
 
 BOOST_AUTO_TEST_SUITE(test_UnitCircleExampleGenerator)
