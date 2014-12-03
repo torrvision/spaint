@@ -33,6 +33,11 @@ public:
     {
       m_unaries = unaries;
     }
+    
+    void initialise_marginals(const std::map<Label,float>& marginals)
+    {
+      m_marginals = marginals;
+    }
   };
 
   //#################### TYPEDEFS ####################
@@ -106,10 +111,12 @@ private:
 
   size_t m_width;
 
+  size_t m_time;
+
   //#################### CONSTRUCTORS ####################
 public:
   CRF2D(size_t width, size_t height)
-  : m_width(width)
+  : m_width(width), m_time(0)
   {
     size_t size = width * height;
     m_curGrid.reset(new Grid(size));
@@ -127,6 +134,12 @@ public:
   {
     return iterator(m_curGrid, m_width, m_curGrid->size());
   }
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  
+
+
 };
 
 }
