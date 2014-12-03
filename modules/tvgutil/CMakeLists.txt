@@ -21,6 +21,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 ##
 SET(toplevel_sources
 src/IDAllocator.cpp
+src/PropertyUtil.cpp
 src/RandomNumberGenerator.cpp
 )
 
@@ -28,6 +29,7 @@ SET(toplevel_headers
 include/tvgutil/IDAllocator.h
 include/tvgutil/LimitedContainer.h
 include/tvgutil/PriorityQueue.h
+include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
 )
 

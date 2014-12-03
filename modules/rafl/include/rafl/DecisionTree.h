@@ -10,8 +10,9 @@
 #include <stdexcept>
 
 #include <tvgutil/PriorityQueue.h>
+#include <tvgutil/PropertyUtil.h>
 
-#include "decisionfunctions/DecisionFunctionGenerator.h"
+#include "decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h"
 #include "examples/ExampleReservoir.h"
 #include "examples/ExampleUtil.h"
 
@@ -89,6 +90,46 @@ public:
 
     /** A threshold splittability below which nodes should not be split (must be > 0). */
     float splittabilityThreshold;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+  public:
+    /**
+     * \brief Default constructor.
+     */
+    Settings()
+    {}
+
+    /**
+     * \brief Attempts to load settings from the specified XML file.
+     *
+     * This will throw if the properties cannot be successfully loaded.
+     *
+     * \param filename The name of the file.
+     */
+    explicit Settings(const std::string& filename)
+    {
+      using tvgutil::PropertyUtil;
+
+      boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
+
+      std::string decisionFunctionGeneratorName = "FeatureThresholding";
+      unsigned int randomSeed = 0;
+
+      #define GET_SETTING(setting) PropertyUtil::get_required_property(tree, #setting, setting);
+        GET_SETTING(candidateCount);
+        GET_SETTING(decisionFunctionGeneratorName);
+        GET_SETTING(gainThreshold);
+        GET_SETTING(maxClassSize);
+        GET_SETTING(randomSeed);
+        GET_SETTING(seenExamplesThreshold);
+        GET_SETTING(splittabilityThreshold);
+      #undef GET_SETTING
+
+      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
+
+      // FIXME: Construct a decision function generator based on the name specified (use a generator factory).
+      decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+    }
   };
 
   //#################### PUBLIC TYPEDEFS ####################
