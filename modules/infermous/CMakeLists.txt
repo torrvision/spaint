@@ -25,6 +25,7 @@ src/Dummy.cpp
 )
 
 SET(toplevel_headers
+include/infermous/CRF2D.h
 )
 
 #################################################################
