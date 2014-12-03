@@ -28,6 +28,7 @@ SET(toplevel_headers
 include/tvgutil/IDAllocator.h
 include/tvgutil/LimitedContainer.h
 include/tvgutil/PriorityQueue.h
+include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
 )
 

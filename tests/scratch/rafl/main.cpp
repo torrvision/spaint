@@ -148,6 +148,8 @@ int main()
   settings.seenExamplesThreshold = 1000;
   settings.splittabilityThreshold = 0.5f;
 
+  DT::Settings foo("C:/foo/foo.txt");
+
   RF rf(1, settings);
 
   // Train the decision tree.
