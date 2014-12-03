@@ -102,8 +102,9 @@ public:
     /**
      * \brief Attempts to load settings from the specified XML file.
      *
-     * \param filename                                The name of the file.
-     * \throws boost::property_tree::xml_parser_error If loading fails.
+     * This will throw if the properties cannot be successfully loaded.
+     *
+     * \param filename The name of the file.
      */
     explicit Settings(const std::string& filename)
     {
