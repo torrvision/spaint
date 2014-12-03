@@ -118,9 +118,10 @@ int main()
 using namespace rafl;
 
 typedef int Label;
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 typedef DecisionTree<Label> DT;
 typedef RandomForest<Label> RF;
-typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+typedef boost::shared_ptr<DT::Settings> Settings_Ptr;
 
 Descriptor_CPtr make_descriptor(float *arr)
 {
@@ -134,29 +135,38 @@ Descriptor_CPtr make_descriptor(float *arr)
 
 int main()
 {
-  // Construct the decision tree.
-  unsigned int seed = 12345;
-  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
-  DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+  // Construct the random forest.
+  Settings_Ptr settings;
+  try
+  {
+    settings.reset(new DT::Settings("settings.txt"));
+  }
+  catch(std::exception&)
+  {
+    // If the settings file can't be found or is invalid, use default settings.
+    unsigned int seed = 12345;
+    tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
+    DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
 
-  DT::Settings settings;
-  settings.candidateCount = 20;
-  settings.decisionFunctionGenerator = decisionFunctionGenerator;
-  settings.gainThreshold = 0.0f;
-  settings.maxClassSize = 10000;
-  settings.randomNumberGenerator = randomNumberGenerator;
-  settings.seenExamplesThreshold = 1000;
-  settings.splittabilityThreshold = 0.5f;
+    settings.reset(new DT::Settings);
+    settings->candidateCount = 20;
+    settings->decisionFunctionGenerator = decisionFunctionGenerator;
+    settings->gainThreshold = 0.0f;
+    settings->maxClassSize = 10000;
+    settings->randomNumberGenerator = randomNumberGenerator;
+    settings->seenExamplesThreshold = 1000;
+    settings->splittabilityThreshold = 0.5f;
+  }
 
-  RF rf(1, settings);
+  RF rf(1, *settings);
 
-  // Train the decision tree.
+  // Train the random forest.
   std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("poker-hand-training-true.data");
   rf.add_examples(trainingExamples);
   rf.train(20);
   rf.output(std::cout);
 
-  // Test the decision tree and output the results.
+  // Test the random forest and output the results.
   std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("poker-hand-testing.data");
   float totalTests = static_cast<float>(testingExamples.size());
   size_t correctTests = 0, wrongTests = 0;
