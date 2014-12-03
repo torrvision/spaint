@@ -53,12 +53,7 @@ struct PropertyUtil
    * \return                                        The tree of properties.
    * \throws boost::property_tree::xml_parser_error If the load fails.
    */
-  static boost::property_tree::ptree load_properties_from_xml(const std::string& filename)
-  {
-    boost::property_tree::ptree tree;
-    read_xml(filename, tree);
-    return tree;
-  }
+  static boost::property_tree::ptree load_properties_from_xml(const std::string& filename);
 };
 
 }

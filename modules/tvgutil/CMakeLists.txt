@@ -21,6 +21,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 ##
 SET(toplevel_sources
 src/IDAllocator.cpp
+src/PropertyUtil.cpp
 src/RandomNumberGenerator.cpp
 )
 
