@@ -109,6 +109,7 @@ private:
         }
 
         (*m_newMarginals)(row, col)[l] = (1/Z_i)*exp( - M_i.find(l)->second );
+        print_grid(*m_newMarginals,"newMarginals");
       }
   }
   
@@ -123,6 +124,8 @@ private:
       std::map<Label,float> unary = (*m_unaries)(0,0);
       for(lPrimeIt = unary.begin(), lPrimeItend = unary.end(); lPrimeIt != lPrimeItend; ++lPrimeIt)
       {
+        std::cout << "get_patch_row: " << get_patch_row(row,i) << "\n";
+        std::cout << "get_patch_col: " << get_patch_col(col,i) << "\n";
         M_pairwise += (*m_marginals)(get_patch_row(row, i), get_patch_col(col, i)).find(lPrimeIt->first)->second *
         get_pairwise(l, lPrimeIt->first);
       }
@@ -134,35 +137,30 @@ private:
 
   int get_patch_row(int globalRow, int OffsetIndex)
   {
-    int row = globalRow + m_neighbourOffsets[OffsetIndex].x();
+    int row = globalRow + m_neighbourOffsets[OffsetIndex].y();
     if(row < 0)
     {
-      return 0;
+      row = 0;
     }
-    else if(row > m_height)
+    else if(row > (m_height - 1))
     {
-      return m_height;
+      row = m_height - 1;
     }
-    else
-    {
-      return row;
-    }
+    return row;
   }
 
   int get_patch_col(int globalCol, int OffsetIndex)
   {
-    int col = globalCol + m_neighbourOffsets[OffsetIndex].y();
+    int col = globalCol + m_neighbourOffsets[OffsetIndex].x();
     if(col < 0)
     {
-      return 0;
+      col = 0;
     }
-    else if(col > m_width)
+    else if(col > (m_width - 1))
     {
-      return m_width;
+      col = m_width - 1;
     }
-    else{
-      return col;
-    }
+    return col;
   }
 
   float calculate_pairwise()
