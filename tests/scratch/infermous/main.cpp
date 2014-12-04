@@ -26,6 +26,8 @@ int main()
       (*unariesGrid)(i,j) = unaries;
     }
 
+  CRF2D<int>::print_grid(*unariesGrid);
+
   CRF2D<int> crf(unariesGrid, 3);
 
   crf.update();

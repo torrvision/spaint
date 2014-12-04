@@ -7,10 +7,15 @@
 
 #include <map>
 #include <vector>
+#include <iostream>
 #include <cmath>
 #include <boost/shared_ptr.hpp>
 
 #include <Eigen/Dense>
+
+#include <tvgutil/LimitedContainer.h>
+
+#define PRT(X) std::cout << "#X: " << X << std::endl;
 
 namespace infermous {
 
@@ -21,6 +26,19 @@ class CRF2D
 public:
   typedef Eigen::Matrix<std::map<Label,float>,-1,-1> ProbabilitiesGrid;
   typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
+
+  static void print_grid(const ProbabilitiesGrid& grid, const std::string& variableName = "")
+  {
+    std::cout << variableName << "\n";
+    for(size_t i = 0; i < grid.rows(); ++i)
+    {
+      for(size_t j = 0; j < grid.cols(); ++j)
+      {
+        std::cout << "(" << i << "," << j << ")" << tvgutil::make_limited_container(grid(i,j),5) << "\n";
+      }
+    }
+    std::cout << std::endl;
+  }
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -38,6 +56,10 @@ public:
   {
     m_marginals.reset(new ProbabilitiesGrid(*unaries));
     m_newMarginals.reset(new ProbabilitiesGrid(unaries->rows(), unaries->cols()));
+
+    print_grid(*m_unaries,"unaries");
+    print_grid(*m_marginals,"marginals");
+    print_grid(*m_newMarginals,"newMarginals");
 
     float neighbourRadiusSquared = static_cast<float>(neighbourRadius * neighbourRadius);
     for(int y = -neighbourRadius; y <= neighbourRadius; ++y)
@@ -61,6 +83,7 @@ public:
   {
     typename std::map<Label,float>::const_iterator lIt, lItend;
     std::map<Label,float> unary = (*m_unaries)(0,0);
+    std::cout << tvgutil::make_limited_container(unary,5);
     for(lIt = unary.begin(), lItend = unary.end(); lIt != lItend; ++lIt)
     {
       update_per_label(lIt->first);
