@@ -13,8 +13,10 @@ int main()
     std::cout << it.x() << ' ' << it.y() << '\n';
     CRF2D<int>::Node& n = *it;
   }*/
-  CRF2D<int>::ProbabilitiesGrid_Ptr unariesGrid(new CRF2D<int>::ProbabilitiesGrid(2, 3));
-  CRF2D<int> crf(unariesGrid, 5);
+  CRF2D<int>::ProbabilitiesGrid_Ptr unariesGrid(new CRF2D<int>::ProbabilitiesGrid(5, 5));
+  CRF2D<int> crf(unariesGrid, 3);
+
+  crf.update();
 
   // TODO
   return 0;
