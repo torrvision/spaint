@@ -5,141 +5,75 @@
 #ifndef H_INFERMOUS_CRF2D
 #define H_INFERMOUS_CRF2D
 
-#include <cassert>
-#include <iterator>
 #include <map>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
+
+#include <Eigen/Dense>
 
 namespace infermous {
 
 template <typename Label>
 class CRF2D
 {
-  //#################### NESTED TYPES ####################
-
-public:
-  class Node
-  {
-    //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
-  private:
-    std::map<Label,float> m_marginals;
-    std::map<Label,float> m_unaries;
-
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
-  public:
-    void set_unaries(const std::map<Label,float>& unaries)
-    {
-      m_unaries = unaries;
-    }
-    
-    void initialise_marginals(const std::map<Label,float>& marginals)
-    {
-      m_marginals = marginals;
-    }
-  };
-
   //#################### TYPEDEFS ####################
-private:
-  typedef std::vector<Node> Grid;
-  typedef boost::shared_ptr<Grid> Grid_Ptr;
-
-  //#################### ITERATORS ####################
 public:
-  class iterator : public std::iterator<std::forward_iterator_tag,Node>
-  {
-  private:
-    Grid_Ptr m_grid;
-    size_t m_index;
-    size_t m_width;
-  private:
-    iterator(const Grid_Ptr& grid, size_t width, size_t index)
-    : m_grid(grid), m_index(index), m_width(width)
-    {}
-  public:
-    Node& operator*()
-    {
-      assert(m_index < m_grid->size());
-      return (*m_grid)[m_index];
-    }
-
-    Node *operator->()
-    {
-      return &operator*();
-    }
-
-    iterator& operator++()
-    {
-      assert(m_index < m_grid->size());
-      ++m_index;
-      return *this;
-    }
-
-    bool operator==(const iterator& rhs) const
-    {
-      return m_grid == rhs.m_grid && m_index == rhs.m_index;
-    }
-
-    bool operator!=(const iterator& rhs) const
-    {
-      return !(*this == rhs);
-    }
-  public:
-    size_t index() const
-    {
-      return m_index;
-    }
-
-    size_t x() const
-    {
-      return m_index % m_width;
-    }
-
-    size_t y() const
-    {
-      return m_index / m_width;
-    }
-
-    friend CRF2D<Label>;
-  };
+  typedef Eigen::Matrix<std::map<Label,float>,-1,-1> ProbabilitiesGrid;
+  typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  Grid_Ptr m_curGrid;
-  Grid_Ptr m_prevGrid;
-
-  size_t m_width;
-
+  ProbabilitiesGrid_Ptr m_marginals;
+  std::vector<Eigen::Vector2i> m_neighbourOffsets;
+  ProbabilitiesGrid_Ptr m_newMarginals;
   size_t m_time;
+  ProbabilitiesGrid_Ptr m_unaries;
 
   //#################### CONSTRUCTORS ####################
 public:
-  CRF2D(size_t width, size_t height)
-  : m_width(width), m_time(0)
+  CRF2D(const ProbabilitiesGrid_Ptr& unaries, int neighbourRadius)
+  : m_time(0), m_unaries(unaries)
   {
-    size_t size = width * height;
-    m_curGrid.reset(new Grid(size));
-    m_prevGrid.reset(new Grid(size));
+    m_marginals.reset(new ProbabilitiesGrid(*unaries));
+    m_newMarginals.reset(new ProbabilitiesGrid(unaries->rows(), unaries->cols()));
+
+    float neighbourRadiusSquared = static_cast<float>(neighbourRadius * neighbourRadius);
+    for(int y = -neighbourRadius; y <= neighbourRadius; ++y)
+    {
+      for(int x = -neighbourRadius; x <= neighbourRadius; ++x)
+      {
+        if(x == 0 && y == 0) continue;
+
+        float distanceSquared = static_cast<float>(x*x + y*y);
+        if(distanceSquared <= neighbourRadiusSquared)
+        {
+          m_neighbourOffsets.push_back(Eigen::Vector2i(x,y));
+        }
+      }
+    }
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  iterator nodes_begin()
+  void update()
   {
-    return iterator(m_curGrid, m_width, 0);
-  }
+    for(int row = 0, rows = m_marginals->rows(); row < rows; ++row)
+      for(int col = 0, cols = m_marginals->cols(); col < cols; ++col)
+      {
+        float Z_i = 0.0f;
 
-  iterator nodes_end()
-  {
-    return iterator(m_curGrid, m_width, m_curGrid->size());
+        // TODO
+        for(size_t i = 0, size = m_neighbourOffsets.size(); i < size; ++i)
+        {
+          
+        }
+      }
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  
-
-
+  // TODO
 };
 
 }
