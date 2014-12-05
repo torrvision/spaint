@@ -21,6 +21,17 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 #############################
 
 ##
+SET(base_headers
+include/infermous/base/CRF2D.h
+include/infermous/base/PairwisePotentialCalculator.h
+)
+
+##
+SET(engines_headers
+include/infermous/engines/MeanFieldInferenceEngine.h
+)
+
+##
 SET(toplevel_sources
 src/Dummy.cpp
 )
@@ -38,6 +49,8 @@ ${toplevel_sources}
 )
 
 SET(headers
+${base_headers}
+${engines_headers}
 ${toplevel_headers}
 )
 
@@ -46,6 +59,8 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(base FILES ${base_headers})
+SOURCE_GROUP(engines FILES ${engines_headers})
 
 ##########################################
 # Specify additional include directories #
