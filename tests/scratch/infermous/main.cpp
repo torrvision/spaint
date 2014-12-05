@@ -18,7 +18,7 @@ int main()
 
   std::map<Label,float> unaries;
   for(size_t i = 0; i < 5; ++i)
-    unaries.insert(std::make_pair(i,0.5));
+    unaries.insert(std::make_pair(i, 0.5f));
   
   for(size_t i = 0; i < 5; ++i)
     for(size_t j = 0; j < 5; ++j)

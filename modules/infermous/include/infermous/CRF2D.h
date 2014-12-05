@@ -5,10 +5,11 @@
 #ifndef H_INFERMOUS_CRF2D
 #define H_INFERMOUS_CRF2D
 
+#include <cmath>
+#include <iostream>
 #include <map>
 #include <vector>
-#include <iostream>
-#include <cmath>
+
 #include <boost/shared_ptr.hpp>
 
 #include <Eigen/Dense>
@@ -27,19 +28,6 @@ public:
   typedef Eigen::Matrix<std::map<Label,float>,-1,-1> ProbabilitiesGrid;
   typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
 
-  static void print_grid(const ProbabilitiesGrid& grid, const std::string& variableName = "")
-  {
-    std::cout << variableName << "\n";
-    for(size_t i = 0; i < grid.rows(); ++i)
-    {
-      for(size_t j = 0; j < grid.cols(); ++j)
-      {
-        std::cout << "(" << i << "," << j << ")" << tvgutil::make_limited_container(grid(i,j),5) << "\n";
-      }
-    }
-    std::cout << std::endl;
-  }
-
   //#################### PRIVATE VARIABLES ####################
 private:
   ProbabilitiesGrid_Ptr m_marginals;
@@ -57,9 +45,11 @@ public:
     m_marginals.reset(new ProbabilitiesGrid(*unaries));
     m_newMarginals.reset(new ProbabilitiesGrid(unaries->rows(), unaries->cols()));
 
+#if 1
     print_grid(*m_unaries,"unaries");
     print_grid(*m_marginals,"marginals");
     print_grid(*m_newMarginals,"newMarginals");
+#endif
 
     float neighbourRadiusSquared = static_cast<float>(neighbourRadius * neighbourRadius);
     for(int y = -neighbourRadius; y <= neighbourRadius; ++y)
@@ -79,40 +69,120 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  static void print_grid(const ProbabilitiesGrid& grid, const std::string& variableName = "")
+  {
+    std::cout << variableName << "\n";
+    for(int i = 0; i < grid.rows(); ++i)
+    {
+      for(int j = 0; j < grid.cols(); ++j)
+      {
+        std::cout << "(" << i << "," << j << ")" << tvgutil::make_limited_container(grid(i,j),5) << "\n";
+      }
+    }
+    std::cout << std::endl;
+  }
+
+  /**
+   * \brief Runs a single mean-field update step on the CRF.
+   */
   void update()
   {
-    typename std::map<Label,float>::const_iterator lIt, lItend;
-    std::map<Label,float> unary = (*m_unaries)(0,0);
-    std::cout << tvgutil::make_limited_container(unary,5);
-    for(lIt = unary.begin(), lItend = unary.end(); lIt != lItend; ++lIt)
+    for(size_t row = 0, rows = m_marginals->rows(); row < rows; ++row)
     {
-      update_per_label(lIt->first);
+      for(size_t col = 0, cols = m_marginals->cols(); col < cols; ++col)
+      {
+        const std::map<Label,float>& phi_i = (*m_unaries)(row, col);
+        std::map<Label,float> M_i;
+        float Z_i = 0.0f;
+
+        for(typename std::map<Label,float>::const_iterator it = phi_i.begin(), iend = phi_i.end(); it != iend; ++it)
+        {
+          const Label& L = it->first;
+          float phi_i_L = it->second;
+          float M_i_L = compute_M_i_L(row, col, L, phi_i_L);
+          M_i[L] = M_i_L;
+          Z_i += expf(-M_i_L);
+        }
+
+        float oneOverZ_i = 1.0f / Z_i;
+        std::map<Label,float>& Q_i = (*m_newMarginals)(row, col);
+        for(typename std::map<Label,float>::const_iterator it = M_i.begin(), iend = M_i.end(); it != iend; ++it)
+        {
+          const Label& L = it->first;
+          float M_i_L = it->second;
+          Q_i[L] = oneOverZ_i * exp(-M_i_L);
+        }
+      }
     }
+
+    ++m_time;
+    std::swap(m_marginals, m_newMarginals);
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  void update_per_label(Label l)
+  float compute_M_i_L(size_t row, size_t col, const Label& L, float phi_i_L) const
   {
-    for(int row = 0, rows = m_marginals->rows(); row < rows; ++row)
-      for(int col = 0, cols = m_marginals->cols(); col < cols; ++col)
+    float result = phi_i_L;
+
+    const std::map<Label,float>& phi_i = (*m_unaries)(row, col);
+    for(typename std::map<Label,float>::const_iterator it = phi_i.begin(), iend = phi_i.end(); it != iend; ++it)
+    {
+      const Label& LDash = it->first;
+      for(std::vector<Eigen::Vector2i>::const_iterator jt = m_neighbourOffsets.begin(), jend = m_neighbourOffsets.end(); jt != jend; ++jt)
       {
-        std::map<Label,float> M_i;
-        float Z_i = 0.0f;
-
-        typename std::map<Label,float>::const_iterator lIt, lItend;
-        std::map<Label,float> unary = (*m_unaries)(0,0);
-        for(lIt = unary.begin(), lItend = unary.end(); lIt != lItend; ++lIt)
-        {
-          M_i.insert(std::make_pair(lIt->first, M_per_node_label(row, col, lIt->first)));
-          Z_i += exp( M_i.find(lIt->first)->second );
-        }
-
-        (*m_newMarginals)(row, col)[l] = (1/Z_i)*exp( - M_i.find(l)->second );
-        print_grid(*m_newMarginals,"newMarginals");
+        // TODO: Check the ranges.
+        const std::map<Label,float>& Q_j = (*m_marginals)(row + jt->y(), col + jt->x());
+        float Q_j_LDash = Q_j.find(LDash)->second;
+        float phi_i_j_L_LDash = compute_pairwise(L, LDash);
+        result += Q_j_LDash * phi_i_j_L_LDash;
       }
+    }
+
+    return result;
   }
-  
+
+  float compute_pairwise(const Label& L, const Label& LDash) const
+  {
+    if(L == LDash)
+    {
+      return 0.0f;
+    }
+    else
+    {
+      // TODO
+      return 0.0f;
+    }
+  }
+
+  int get_patch_col(int globalCol, int OffsetIndex)
+  {
+    int col = globalCol + m_neighbourOffsets[OffsetIndex].x();
+    if(col < 0)
+    {
+      col = 0;
+    }
+    else if(col > (m_width - 1))
+    {
+      col = m_width - 1;
+    }
+    return col;
+  }
+
+  int get_patch_row(int globalRow, int OffsetIndex)
+  {
+    int row = globalRow + m_neighbourOffsets[OffsetIndex].y();
+    if(row < 0)
+    {
+      row = 0;
+    }
+    else if(row > (m_height - 1))
+    {
+      row = m_height - 1;
+    }
+    return row;
+  }
+
   float M_per_node_label(int row, int col, Label l)
   {
     float M_unary = (*m_unaries)(row, col).find(l)->second;
@@ -134,47 +204,7 @@ private:
 
     return M_unary + M_pairwise;
   }
-
-  int get_patch_row(int globalRow, int OffsetIndex)
-  {
-    int row = globalRow + m_neighbourOffsets[OffsetIndex].y();
-    if(row < 0)
-    {
-      row = 0;
-    }
-    else if(row > (m_height - 1))
-    {
-      row = m_height - 1;
-    }
-    return row;
-  }
-
-  int get_patch_col(int globalCol, int OffsetIndex)
-  {
-    int col = globalCol + m_neighbourOffsets[OffsetIndex].x();
-    if(col < 0)
-    {
-      col = 0;
-    }
-    else if(col > (m_width - 1))
-    {
-      col = m_width - 1;
-    }
-    return col;
-  }
-
-  float calculate_pairwise()
-  {
-    //TODO;
-    return 0;
-  }
-
-  float get_pairwise(Label l, Label l_prime)
-  {
-    return l == l_prime ? 0 : calculate_pairwise();
-  }
-
-  };
+};
 
 }
 
