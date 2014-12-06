@@ -1,3 +1,6 @@
+//###
+#if 0
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -35,3 +38,38 @@ int main()
   // TODO
   return 0;
 }
+
+#endif
+
+//###
+#if 1
+
+#include <infermous/engines/MeanFieldInferenceEngine.h>
+using namespace infermous;
+
+typedef int Label;
+typedef CRF2D<Label> CRF;
+typedef boost::shared_ptr<CRF> CRF_Ptr;
+
+struct PPC : PairwisePotentialCalculator<Label>
+{
+  float calculate_potential(const Label& l1, const Label& l2) const
+  {
+    return l1 == l2 ? 0.0f : 1.0f;
+  }
+};
+
+int main()
+{
+  CRF::ProbabilitiesGrid_Ptr unaries(new CRF::ProbabilitiesGrid(5, 5));
+  // TODO: Fill in the initial unaries.
+
+  CRF_Ptr crf(new CRF(unaries, boost::shared_ptr<PPC>(new PPC)));
+
+  MeanFieldInferenceEngine<Label> mfie(crf, 3.0f);
+  mfie.update_crf();
+
+  return 0;
+}
+
+#endif

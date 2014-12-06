@@ -15,7 +15,10 @@ class PairwisePotentialCalculator
 {
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~PairwisePotentialCalculator() = 0;
+  /**
+   * \brief Destroys the pairwise potential calculator.
+   */
+  virtual ~PairwisePotentialCalculator() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

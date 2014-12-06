@@ -5,6 +5,8 @@
 #ifndef H_INFERMOUS_MEANFIELDINFERENCEENGINE
 #define H_INFERMOUS_MEANFIELDINFERENCEENGINE
 
+#include <vector>
+
 #include "../base/CRF2D.h"
 
 namespace infermous {
@@ -18,6 +20,7 @@ class MeanFieldInferenceEngine
   //#################### TYPEDEFS ####################
 public:
   typedef boost::shared_ptr<CRF2D<Label> > CRF2D_Ptr;
+  typedef boost::shared_ptr<const CRF2D<Label> > CRF2D_CPtr;
   typedef typename CRF2D<Label>::ProbabilitiesGrid ProbabilitiesGrid;
   typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
 
