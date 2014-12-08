@@ -12,6 +12,51 @@
 namespace infermous {
 
 /**
+ * \brief This class contains helper functions for mean-field inference.
+ */
+struct MeanFieldUtil
+{
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   *
+   * \param radius  TODO
+   * \return        TODO
+   */
+  static std::vector<Eigen::Vector2i> make_circular_neighbour_offsets(int radius)
+  {
+    std::vector<Eigen::Vector2i> result;
+
+    float radiusSquared = static_cast<float>(radius * radius);
+    for(int y = -radius; y <= radius; ++y)
+    {
+      for(int x = -radius; x <= radius; ++x)
+      {
+        if(x == 0 && y == 0) continue;
+
+        float distanceSquared = static_cast<float>(x*x + y*y);
+        if(distanceSquared <= radiusSquared) result.push_back(Eigen::Vector2i(x, y));
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * \brief TODO
+   *
+   * \param radius  TODO
+   * \return        TODO
+   */
+  static std::vector<Eigen::Vector2i> make_square_neighbour_offsets(int radius)
+  {
+    // TODO
+    throw 23;
+  }
+};
+
+/**
  * \brief An instance of an instantiation of this class template can be used to run mean-field inference on a 2D CRF.
  */
 template <typename Label>
@@ -40,28 +85,12 @@ public:
   /**
    * \brief Constructs a mean-field inference engine.
    *
-   * \param crf             The CRF on which the mean-field inference engine works.
-   * \param neighbourRadius TODO
+   * \param crf               The CRF on which the mean-field inference engine works.
+   * \param neighbourOffsets  TODO
    */
-  MeanFieldInferenceEngine(const CRF2D_Ptr& crf, int neighbourRadius)
-  : m_crf(crf), m_newMarginals(new ProbabilitiesGrid(crf->get_height(), crf->get_width()))
-  {
-    // TODO: Write a comment.
-    float neighbourRadiusSquared = static_cast<float>(neighbourRadius * neighbourRadius);
-    for(int y = -neighbourRadius; y <= neighbourRadius; ++y)
-    {
-      for(int x = -neighbourRadius; x <= neighbourRadius; ++x)
-      {
-        if(x == 0 && y == 0) continue;
-
-        float distanceSquared = static_cast<float>(x*x + y*y);
-        if(distanceSquared <= neighbourRadiusSquared)
-        {
-          m_neighbourOffsets.push_back(Eigen::Vector2i(x,y));
-        }
-      }
-    }
-  }
+  MeanFieldInferenceEngine(const CRF2D_Ptr& crf, const std::vector<Eigen::Vector2i>& neighbourOffsets)
+  : m_crf(crf), m_neighbourOffsets(neighbourOffsets), m_newMarginals(new ProbabilitiesGrid(crf->get_height(), crf->get_width()))
+  {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

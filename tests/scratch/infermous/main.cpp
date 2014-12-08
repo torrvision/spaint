@@ -78,7 +78,7 @@ int main()
   CRF_Ptr crf(new CRF(unaries, boost::shared_ptr<PPC>(new PPC)));
   crf->output(std::cout);
 
-  MeanFieldInferenceEngine<Label> mfie(crf, 3);
+  MeanFieldInferenceEngine<Label> mfie(crf, MeanFieldUtil::make_circular_neighbour_offsets(3));
 
   mfie.update_crf();
   crf->output(std::cout);
