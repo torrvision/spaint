@@ -62,12 +62,29 @@ struct PPC : PairwisePotentialCalculator<Label>
 int main()
 {
   CRF::ProbabilitiesGrid_Ptr unaries(new CRF::ProbabilitiesGrid(5, 5));
-  // TODO: Fill in the initial unaries.
+
+  std::map<Label,float> pixelUnaries;
+  for(int i = 0; i < 5; ++i)
+  {
+    pixelUnaries.insert(std::make_pair(i, 0.5f));
+  }
+
+  for(size_t i = 0; i < 5; ++i)
+    for(size_t j = 0; j < 5; ++j)
+    {
+      (*unaries)(i,j) = pixelUnaries;
+    }
 
   CRF_Ptr crf(new CRF(unaries, boost::shared_ptr<PPC>(new PPC)));
+  crf->output(std::cout);
 
-  MeanFieldInferenceEngine<Label> mfie(crf, 3.0f);
+  MeanFieldInferenceEngine<Label> mfie(crf, 3);
+
   mfie.update_crf();
+  crf->output(std::cout);
+
+  mfie.update_crf();
+  crf->output(std::cout);
 
   return 0;
 }

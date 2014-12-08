@@ -5,11 +5,14 @@
 #ifndef H_INFERMOUS_CRF2D
 #define H_INFERMOUS_CRF2D
 
+#include <iostream>
 #include <map>
 
 #include <boost/shared_ptr.hpp>
 
 #include <Eigen/Dense>
+
+#include <tvgutil/LimitedContainer.h>
 
 #include "PairwisePotentialCalculator.h"
 
@@ -56,9 +59,36 @@ public:
    * \param pairwisePotentialCalculator The pairwise potential calculator.
    */
   CRF2D(const ProbabilitiesGrid_Ptr& unaries, const PairwisePotentialCalculator_CPtr& pairwisePotentialCalculator)
-  : m_height(unaries->rows()), m_pairwisePotentialCalculator(pairwisePotentialCalculator), m_timeStep(0), m_unaries(unaries), m_width(unaries->cols())
+  : m_height(static_cast<int>(unaries->rows())),
+    m_pairwisePotentialCalculator(pairwisePotentialCalculator),
+    m_timeStep(0),
+    m_unaries(unaries),
+    m_width(static_cast<int>(unaries->cols()))
   {
     m_marginals.reset(new ProbabilitiesGrid(*unaries));
+  }
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  static void print_grid(std::ostream& os, const ProbabilitiesGrid& grid, const std::string& variableName = "")
+  {
+    os << variableName << "\n";
+    for(int i = 0; i < grid.rows(); ++i)
+    {
+      for(int j = 0; j < grid.cols(); ++j)
+      {
+        os << "(" << i << "," << j << ") " << tvgutil::make_limited_container(grid(i,j),5) << "\n";
+      }
+    }
+    os << std::endl;
+  }
+
+  void output(std::ostream& os) const
+  {
+    print_grid(os, *m_marginals);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -76,13 +106,12 @@ public:
   /**
    * \brief TODO
    *
-   * \param row TODO
-   * \param col TODO
+   * \param loc TODO
    * \return    TODO
    */
-  const std::map<Label,float>& get_marginals(int row, int col) const
+  const std::map<Label,float>& get_marginals(const Eigen::Vector2i& loc) const
   {
-    return (*m_marginals)(row, col);
+    return (*m_marginals)(loc.y(), loc.x());
   }
 
   /**
@@ -108,13 +137,12 @@ public:
   /**
    * \brief TODO
    *
-   * \param row TODO
-   * \param col TODO
+   * \param loc TODO
    * \return    TODO
    */
-  const std::map<Label,float>& get_unaries(int row, int col) const
+  const std::map<Label,float>& get_unaries(const Eigen::Vector2i& loc) const
   {
-    return (*m_unaries)(row, col);
+    return (*m_unaries)(loc.y(), loc.x());
   }
 
   /**
@@ -140,22 +168,20 @@ public:
    *
    * \param marginals TODO
    */
-  void set_marginals(const ProbabilitiesGrid_Ptr& marginals)
+  void swap_marginals(ProbabilitiesGrid_Ptr& marginals)
   {
-    m_marginals = marginals;
+    std::swap(m_marginals, marginals);
   }
 
   /**
-   * \brief Determines whether or not the specified (row,col) location is within the bounds of the CRF.
+   * \brief Determines whether or not the specified location is within the bounds of the CRF.
    *
-   * \param row The row.
-   * \param col The column.
+   * \param loc The location.
    * \return    true, if the specified location is within the bounds of the CRF, or false otherwise.
    */
-  bool within_bounds(int row, int col) const
+  bool within_bounds(const Eigen::Vector2i& loc) const
   {
-    // TODO
-    throw 23;
+    return 0 <= loc.x() && loc.x() < m_width && 0 <= loc.y() && loc.y() < m_height;
   }
 };
 

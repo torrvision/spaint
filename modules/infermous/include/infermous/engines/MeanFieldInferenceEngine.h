@@ -80,16 +80,16 @@ public:
    */
   void update_crf()
   {
-    for(int row = 0, height = m_crf->get_height(); row < height; ++row)
+    for(int y = 0, height = m_crf->get_height(); y < height; ++y)
     {
-      for(int col = 0, width = m_crf->get_width(); col < width; ++col)
+      for(int x = 0, width = m_crf->get_width(); x < width; ++x)
       {
-        update_pixel(row, col);
+        update_pixel(Eigen::Vector2i(x, y));
       }
     }
 
     // Replace the marginals with the new marginals and update the time step of the CRF.
-    m_crf->set_marginals(m_newMarginals);
+    m_crf->swap_marginals(m_newMarginals);
     m_crf->increment_time_step();
   }
 
@@ -98,21 +98,19 @@ private:
   /**
    * \brief TODO
    */
-  float compute_M_i_L(int row, int col, const Label& L, float phi_i_L) const
+  float compute_M_i_L(const Eigen::Vector2i& i, const Label& L, float phi_i_L) const
   {
     float result = phi_i_L;
 
-    const std::map<Label,float>& phi_i = m_crf->get_unaries(row, col);
-    for(typename std::map<Label,float>::const_iterator it = phi_i.begin(), iend = phi_i.end(); it != iend; ++it)
+    for(std::vector<Eigen::Vector2i>::const_iterator nt = m_neighbourOffsets.begin(), nend = m_neighbourOffsets.end(); nt != nend; ++nt)
     {
-      const Label& LDash = it->first;
-      for(std::vector<Eigen::Vector2i>::const_iterator jt = m_neighbourOffsets.begin(), jend = m_neighbourOffsets.end(); jt != jend; ++jt)
+      Eigen::Vector2i j = i + *nt;
+      if(!m_crf->within_bounds(j)) continue;
+      const std::map<Label,float>& Q_j = m_crf->get_marginals(j);
+      for(typename std::map<Label,float>::const_iterator kt = Q_j.begin(), kend = Q_j.end(); kt != kend; ++kt)
       {
-        int x = col + jt->x(), y = row + jt->y();
-        if(!m_crf->within_bounds(row, col)) continue;
-
-        const std::map<Label,float>& Q_j = m_crf->get_marginals(y, x);
-        float Q_j_LDash = Q_j.find(LDash)->second;
+        const Label& LDash = kt->first;
+        float Q_j_LDash = kt->second;
         float phi_i_j_L_LDash = m_crf->get_pairwise_potential_calculator()->calculate_potential(L, LDash);
         result += Q_j_LDash * phi_i_j_L_LDash;
       }
@@ -124,34 +122,33 @@ private:
   /**
    * \brief Updates the specified pixel in the CRF.
    *
-   * \param row The row of the pixel to update.
-   * \param col The column of the pixel to update.
+   * \param i The location of the pixel to update.
    */
-  void update_pixel(int row, int col)
+  void update_pixel(const Eigen::Vector2i& i)
   {
     // Get the unary potentials for the pixel.
-    const std::map<Label,float>& phi_i = m_crf->get_unaries(row, col);
+    const std::map<Label,float>& phi_i = m_crf->get_unaries(i);
 
     // TODO: Add a comment.
-    std::map<Label,float> M_i;
+    std::map<Label,float> oneOverE_M_i;
     float Z_i = 0.0f;
-    for(typename std::map<Label,float>::const_iterator it = phi_i.begin(), iend = phi_i.end(); it != iend; ++it)
+    for(typename std::map<Label,float>::const_iterator kt = phi_i.begin(), kend = phi_i.end(); kt != kend; ++kt)
     {
-      const Label& L = it->first;
-      float phi_i_L = it->second;
-      float M_i_L = compute_M_i_L(row, col, L, phi_i_L);
-      M_i[L] = M_i_L;
-      Z_i += expf(-M_i_L);
+      const Label& L = kt->first;
+      float phi_i_L = kt->second;
+      float oneOverE_M_i_L = expf(-compute_M_i_L(i, L, phi_i_L));
+      oneOverE_M_i[L] = oneOverE_M_i_L;
+      Z_i += oneOverE_M_i_L;
     }
 
     // TODO: Add a comment.
     float oneOverZ_i = 1.0f / Z_i;
-    std::map<Label,float>& Q_i = (*m_newMarginals)(row, col);
-    for(typename std::map<Label,float>::const_iterator it = M_i.begin(), iend = M_i.end(); it != iend; ++it)
+    std::map<Label,float>& Q_i = (*m_newMarginals)(i.y(), i.x());
+    for(typename std::map<Label,float>::const_iterator kt = oneOverE_M_i.begin(), kend = oneOverE_M_i.end(); kt != kend; ++kt)
     {
-      const Label& L = it->first;
-      float M_i_L = it->second;
-      Q_i[L] = oneOverZ_i * exp(-M_i_L);
+      const Label& L = kt->first;
+      float oneOverE_M_i_L = kt->second;
+      Q_i[L] = oneOverZ_i * oneOverE_M_i_L;
     }
   }
 };
