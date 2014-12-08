@@ -70,21 +70,6 @@ public:
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief TODO
-   */
-  static void print_grid(std::ostream& os, const ProbabilitiesGrid& grid, const std::string& variableName = "")
-  {
-    os << variableName << "\n";
-    for(int i = 0; i < grid.rows(); ++i)
-    {
-      for(int j = 0; j < grid.cols(); ++j)
-      {
-        os << "(" << i << "," << j << ") " << tvgutil::make_limited_container(grid(i,j),5) << "\n";
-      }
-    }
-    os << std::endl;
-  }
 
   void output(std::ostream& os) const
   {

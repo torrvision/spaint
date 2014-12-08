@@ -23,6 +23,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 ##
 SET(base_headers
 include/infermous/base/CRF2D.h
+include/infermous/base/CRFUtil.h
 include/infermous/base/PairwisePotentialCalculator.h
 )
 
@@ -37,7 +38,6 @@ src/Dummy.cpp
 )
 
 SET(toplevel_headers
-include/infermous/CRF2D.h
 )
 
 #################################################################

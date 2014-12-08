@@ -33,6 +33,7 @@ src/RandomNumberGenerator.cpp
 )
 
 SET(toplevel_headers
+include/tvgutil/ArgUtil.h
 include/tvgutil/IDAllocator.h
 include/tvgutil/LimitedContainer.h
 include/tvgutil/PriorityQueue.h

@@ -42,7 +42,7 @@ int main()
 #endif
 
 //###
-#if 1
+#if 0
 
 #include <infermous/engines/MeanFieldInferenceEngine.h>
 using namespace infermous;
@@ -85,6 +85,71 @@ int main()
 
   mfie.update_crf();
   crf->output(std::cout);
+
+  return 0;
+}
+
+#endif
+
+//###
+#if 1
+
+#include <algorithm>
+#include <functional>
+#include <map>
+#include <string>
+
+#include <tvgutil/ArgUtil.h>
+using tvgutil::ArgUtil;
+
+template <typename K, typename V, typename Pred>
+struct SndPred
+{
+  Pred basePred;
+
+  explicit SndPred(const Pred& basePred_)
+  : basePred(basePred_)
+  {}
+
+  bool operator()(const std::pair<K,V>& lhs, const std::pair<K,V>& rhs) const
+  {
+    return basePred(lhs.second, rhs.second);
+  }
+};
+
+template <typename K, typename V, typename Pred>
+const K& argonaut(const std::map<K,V>& m, Pred pred)
+{
+  return std::min_element(m.begin(), m.end(), SndPred<K,V,Pred>(pred))->first;
+}
+
+template <typename K, typename V>
+const K& argmax(const std::map<K,V>& m)
+{
+  return argonaut(m, std::greater<V>());
+}
+
+template <typename K, typename V>
+const K& argmin(const std::map<K,V>& m)
+{
+  return argonaut(m, std::less<V>());
+}
+
+int main()
+{
+  std::map<std::string,int> m;
+  m["Foo"] = 23;
+  m["Bar"] = 9;
+  m["Wibble"] = 84;
+  m["Wobble"] = 17;
+
+  //std::string lo = std::min_element(m.begin(), m.end(), &snd_pred<std::string,int,std::less<int> >)->first;
+  //std::string hi = std::min_element(m.begin(), m.end(), &snd_pred<std::string,int,std::greater<int> >)->first;
+  std::string lo = argmin(m);
+  std::string hi = argmax(m);
+
+  std::string l = ArgUtil::argmin(m);
+  std::string h = ArgUtil::argmax(m);
 
   return 0;
 }
