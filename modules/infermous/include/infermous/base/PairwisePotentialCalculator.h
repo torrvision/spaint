@@ -5,6 +5,8 @@
 #ifndef H_INFERMOUS_PAIRWISEPOTENTIALCALCULATOR
 #define H_INFERMOUS_PAIRWISEPOTENTIALCALCULATOR
 
+#include <boost/shared_ptr.hpp>
+
 namespace infermous {
 
 /**
@@ -27,6 +29,11 @@ public:
    */
   virtual float calculate_potential(const Label& l1, const Label& l2) const = 0;
 };
+
+//#################### TYPEDEFS ####################
+
+template <typename Label> using PairwisePotentialCalculator_Ptr = boost::shared_ptr<PairwisePotentialCalculator<Label> >;
+template <typename Label> using PairwisePotentialCalculator_CPtr = boost::shared_ptr<const PairwisePotentialCalculator<Label> >;
 
 }
 

@@ -27,7 +27,7 @@ class CRF2D
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef boost::shared_ptr<const PairwisePotentialCalculator<Label> > PairwisePotentialCalculator_CPtr;
+  typedef PairwisePotentialCalculator_CPtr<Label> PairwisePotentialCalculator_CPtr;
   typedef PotentialsGrid<Label> PotentialsGrid;
   typedef PotentialsGrid_Ptr<Label> PotentialsGrid_Ptr;
   typedef PotentialsGrid_CPtr<Label> PotentialsGrid_CPtr;
