@@ -2,5 +2,6 @@
 # CMakeLists.txt for tests/unit #
 #################################
 
+ADD_SUBDIRECTORY(infermous)
 ADD_SUBDIRECTORY(rafl)
 ADD_SUBDIRECTORY(tvgutil)
