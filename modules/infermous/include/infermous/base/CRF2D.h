@@ -5,14 +5,8 @@
 #ifndef H_INFERMOUS_CRF2D
 #define H_INFERMOUS_CRF2D
 
-#include <iostream>
 #include <map>
-
-#include <boost/shared_ptr.hpp>
-
-#include <Eigen/Dense>
-
-#include <tvgutil/LimitedContainer.h>
+#include <ostream>
 
 #include "CRFUtil.h"
 #include "PairwisePotentialCalculator.h"

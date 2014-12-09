@@ -29,11 +29,14 @@ private:
   /** The CRF on which the mean-field inference engine works. */
   CRF2D_Ptr m_crf;
 
-  /** TODO */
+  /** A list of offsets used to specify the neighbours of each pixel. */
   std::vector<Eigen::Vector2i> m_neighbourOffsets;
 
-  /** TODO */
+  /** A grid of updated marginal potentials that will be swapped with the grid in the CRF at the end of each time step. */
   PotentialsGrid_Ptr m_newMarginals;
+
+  /** The pairwise potential calculator. */
+  PairwisePotentialCalculator_CPtr<Label> m_pairwisePotentialCalculator;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -41,10 +44,13 @@ public:
    * \brief Constructs a mean-field inference engine.
    *
    * \param crf               The CRF on which the mean-field inference engine works.
-   * \param neighbourOffsets  TODO
+   * \param neighbourOffsets  A list of offsets used to specify the neighbours of each pixel.
    */
   MeanFieldInferenceEngine(const CRF2D_Ptr& crf, const std::vector<Eigen::Vector2i>& neighbourOffsets)
-  : m_crf(crf), m_neighbourOffsets(neighbourOffsets), m_newMarginals(new PotentialsGrid(crf->get_height(), crf->get_width()))
+  : m_crf(crf),
+    m_neighbourOffsets(neighbourOffsets),
+    m_newMarginals(new PotentialsGrid(crf->get_height(), crf->get_width())),
+    m_pairwisePotentialCalculator(crf->get_pairwise_potential_calculator())
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -68,11 +74,11 @@ public:
     {
       for(int x = 0, width = m_crf->get_width(); x < width; ++x)
       {
-        update_pixel(Eigen::Vector2i(x, y));
+        compute_updated_pixel(Eigen::Vector2i(x, y));
       }
     }
 
-    // Replace the marginals with the new marginals and update the time step of the CRF.
+    // Swap the new marginals into the CRF and update its time step.
     m_crf->swap_marginals(m_newMarginals);
     m_crf->increment_time_step();
   }
@@ -80,22 +86,34 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Computes the value of M_i(L), for pixel i and label L.
+   *
+   * See p.6 of the original SemanticPaint paper for details - essentially, this is the negative log of the unnormalised new potential for the pixel.
+   *
+   * \param i       The location of the pixel.
+   * \param L       The label.
+   * \param phi_i_L The unary potential, phi_i(L), for the specified pixel and label (we pass this in to avoid having to recalculate it).
+   * \return        The value of M_i(L) for the specified pixel and label.
    */
   float compute_M_i_L(const Eigen::Vector2i& i, const Label& L, float phi_i_L) const
   {
     float result = phi_i_L;
 
+    // Note that we have reordered the sums presented in the paper so as to iterate over the neighbours first.
+    // This makes no difference to the result, but allows us to avoid lookups of Q_j^{t-1}(L').
     for(std::vector<Eigen::Vector2i>::const_iterator nt = m_neighbourOffsets.begin(), nend = m_neighbourOffsets.end(); nt != nend; ++nt)
     {
+      // Calculate the location of the potential neighbour and check whether or not it is within the CRF. If not, skip it.
       Eigen::Vector2i j = i + *nt;
       if(!m_crf->within_bounds(j)) continue;
+
+      // Calculate \sum_{L'} (Q_j^{t-1}(L') * phi_ij(L,L')).
       const std::map<Label,float>& Q_j = m_crf->get_marginals_at(j);
       for(typename std::map<Label,float>::const_iterator kt = Q_j.begin(), kend = Q_j.end(); kt != kend; ++kt)
       {
         const Label& LDash = kt->first;
         float Q_j_LDash = kt->second;
-        float phi_i_j_L_LDash = m_crf->get_pairwise_potential_calculator()->calculate_potential(L, LDash);
+        float phi_i_j_L_LDash = m_pairwisePotentialCalculator->calculate_potential(L, LDash);
         result += Q_j_LDash * phi_i_j_L_LDash;
       }
     }
@@ -104,16 +122,17 @@ private:
   }
 
   /**
-   * \brief Updates the specified pixel in the CRF.
+   * \brief Computes the updated version of the specified pixel in the CRF.
    *
-   * \param i The location of the pixel to update.
+   * \param i The location of the pixel whose updated version we want to compute.
    */
-  void update_pixel(const Eigen::Vector2i& i)
+  void compute_updated_pixel(const Eigen::Vector2i& i)
   {
     // Get the unary potentials for the pixel.
     const std::map<Label,float>& phi_i = m_crf->get_unaries_at(i);
 
-    // TODO: Add a comment.
+    // Calculate the unnormalised new potentials for the pixel, together with the normalisation constant.
+    // (In other words, compute e^-M_i(L) for every L, and Z_i, as per the original SemanticPaint paper.)
     std::map<Label,float> oneOverE_M_i;
     float Z_i = 0.0f;
     for(typename std::map<Label,float>::const_iterator kt = phi_i.begin(), kend = phi_i.end(); kt != kend; ++kt)
@@ -125,7 +144,8 @@ private:
       Z_i += oneOverE_M_i_L;
     }
 
-    // TODO: Add a comment.
+    // Calculate the normalised new potentials for the pixel by dividing through by the normalisation constant.
+    // (In other words, compute Q_i^t(L) = 1/Z_i * e^-M_i(L), as per the paper.)
     float oneOverZ_i = 1.0f / Z_i;
     std::map<Label,float>& Q_i = (*m_newMarginals)(i.y(), i.x());
     for(typename std::map<Label,float>::const_iterator kt = oneOverE_M_i.begin(), kend = oneOverE_M_i.end(); kt != kend; ++kt)

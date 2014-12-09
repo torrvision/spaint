@@ -1,6 +1,8 @@
 //###
 #if 1
 
+#include <iostream>
+
 #include <infermous/engines/MeanFieldInferenceEngine.h>
 using namespace infermous;
 
