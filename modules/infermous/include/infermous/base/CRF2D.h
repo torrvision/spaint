@@ -77,16 +77,6 @@ public:
   }
 
   /**
-   * \brief Gets the grid of marginal potentials.
-   *
-   * \return  The grid of marginal potentials.
-   */
-  PotentialsGrid_CPtr get_marginals() const
-  {
-    return m_marginals;
-  }
-
-  /**
    * \brief Gets the marginal potentials for the specified location.
    *
    * \param loc The location whose marginal potentials we want to get.
@@ -178,23 +168,23 @@ public:
   {
     return 0 <= loc.x() && loc.x() < m_width && 0 <= loc.y() && loc.y() < m_height;
   }
+
+  //#################### STREAM OPERATORS ####################
+
+  /**
+   * \brief Outputs a 2D CRF to the specified stream.
+   *
+   * \param os  The stream.
+   * \param rhs The 2D CRF.
+   * \return    The stream.
+   */
+  template <typename Label>
+  friend std::ostream& operator<<(std::ostream& os, const CRF2D<Label>& rhs)
+  {
+    os << *rhs.m_marginals;
+    return os;
+  }
 };
-
-//#################### STREAM OPERATORS ####################
-
-/**
- * \brief Outputs a 2D CRF to the specified stream.
- *
- * \param os  The stream.
- * \param rhs The 2D CRF.
- * \return    The stream.
- */
-template <typename Label>
-std::ostream& operator<<(std::ostream& os, const CRF2D<Label>& rhs)
-{
-  os << *rhs.get_marginals();
-  return os;
-}
 
 //#################### TYPEDEFS ####################
 
