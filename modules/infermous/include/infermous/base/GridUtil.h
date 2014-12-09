@@ -38,7 +38,7 @@ struct GridUtil
    * \brief Predicts the labels for each pixel in a potentials grid by choosing a label with the highest potential for each pixel.
    *
    * \param grid  The grid of potentials for whose pixels we want to predict labels.
-   * return       A grid of predicted labels.
+   * return       The grid of predicted labels.
    */
   template <typename Label>
   static Grid<Label> predict_labels(const PotentialsGrid<Label>& potentials)

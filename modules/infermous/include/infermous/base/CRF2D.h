@@ -153,6 +153,16 @@ public:
   }
 
   /**
+   * \brief Predicts the labels for each pixel in the CRF.
+   *
+   * return The grid of predicted labels.
+   */
+  Grid<Label> predict_labels() const
+  {
+    return GridUtil::predict_labels(*m_marginals);
+  }
+
+  /**
    * \brief Swaps the current grid of marginal potentials with a new grid.
    *
    * This is useful for implementing a "double-buffering" update approach in which we update a new grid and then swap it with the old one at each time step.
