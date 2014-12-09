@@ -14,6 +14,7 @@
 
 #include <tvgutil/LimitedContainer.h>
 
+#include "CRFUtil.h"
 #include "PairwisePotentialCalculator.h"
 
 namespace infermous {
@@ -70,10 +71,9 @@ public:
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
-
   void output(std::ostream& os) const
   {
-    print_grid(os, *m_marginals);
+    CRFUtil::print_grid(os, *m_marginals);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
