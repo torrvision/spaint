@@ -6,9 +6,6 @@
 #define H_INFERMOUS_CRFUTIL
 
 #include <iostream>
-#include <map>
-
-#include <boost/shared_ptr.hpp>
 
 #include <Eigen/Dense>
 
@@ -48,22 +45,6 @@ struct CRFUtil
     }
     return result;
   }
-
-  /**
-   * \brief TODO
-   */
-  template <typename Label>
-  static void print_grid(std::ostream& os, const ProbabilitiesGrid<Label>& grid)
-  {
-    for(int i = 0; i < grid.rows(); ++i)
-    {
-      for(int j = 0; j < grid.cols(); ++j)
-      {
-        os << "(" << i << "," << j << ") " << tvgutil::make_limited_container(grid(i,j),5) << "\n";
-      }
-    }
-    os << std::endl;
-  }
 };
 
 //#################### STREAM OPERATORS ####################
@@ -85,6 +66,26 @@ std::ostream& operator<<(std::ostream& os, const Grid<T>& rhs)
       os << rhs(x, y) << ' ';
     }
     os << '\n';
+  }
+  return os;
+}
+
+/**
+ * \brief Outputs a probabilities grid to the specified stream.
+ *
+ * \param os  The stream.
+ * \param rhs The grid.
+ * \return    The stream.
+ */
+template <typename Label>
+std::ostream& operator<<(std::ostream& os, const ProbabilitiesGrid<Label>& rhs)
+{
+  for(size_t y = 0, height = rhs.rows(); y < height; ++y)
+  {
+    for(size_t x = 0, width = rhs.cols(); x < width; ++x)
+    {
+      os << '(' << x << ',' << y << ") " << tvgutil::make_limited_container(rhs(x, y), 5) << '\n';
+    }
   }
   return os;
 }

@@ -76,18 +76,20 @@ int main()
     }
 
   CRF_Ptr crf(new CRF(unaries, boost::shared_ptr<PPC>(new PPC)));
-  crf->output(std::cout);
+  std::cout << *crf << '\n';
 
   MeanFieldInferenceEngine<Label> mfie(crf, MeanFieldUtil::make_circular_neighbour_offsets(3));
 
   mfie.update_crf();
-  crf->output(std::cout);
+  std::cout << *crf << '\n';
 
   mfie.update_crf();
-  crf->output(std::cout);
+  std::cout << *crf << '\n';
 
   Grid<Label> labels = CRFUtil::predict_labels(*crf->get_marginals());
   std::cout << labels << '\n';
+
+  std::cout << *crf->get_marginals() << '\n';
 
   return 0;
 }
