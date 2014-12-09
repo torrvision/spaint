@@ -14,7 +14,7 @@
 
 #include <tvgutil/LimitedContainer.h>
 
-#include "CRFUtil.h"
+#include "GridUtil.h"
 #include "PairwisePotentialCalculator.h"
 
 namespace infermous {
@@ -28,17 +28,17 @@ class CRF2D
   //#################### TYPEDEFS ####################
 public:
   typedef boost::shared_ptr<const PairwisePotentialCalculator<Label> > PairwisePotentialCalculator_CPtr;
-  typedef Eigen::Matrix<std::map<Label,float>,-1,-1> ProbabilitiesGrid;
-  typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
-  typedef boost::shared_ptr<const ProbabilitiesGrid> ProbabilitiesGrid_CPtr;
+  typedef PotentialsGrid<Label> PotentialsGrid;
+  typedef PotentialsGrid_Ptr<Label> PotentialsGrid_Ptr;
+  typedef PotentialsGrid_CPtr<Label> PotentialsGrid_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The height of the CRF. */
   int m_height;
 
-  /** TODO */
-  ProbabilitiesGrid_Ptr m_marginals;
+  /** The grid of marginal potentials that will be updated at each time step. */
+  PotentialsGrid_Ptr m_marginals;
 
   /** The pairwise potential calculator. */
   PairwisePotentialCalculator_CPtr m_pairwisePotentialCalculator;
@@ -46,8 +46,8 @@ private:
   /** The current time step. */
   size_t m_timeStep;
 
-  /** TODO */
-  ProbabilitiesGrid_Ptr m_unaries;
+  /** The grid of unary potentials. */
+  PotentialsGrid_Ptr m_unaries;
 
   /** The width of the CRF. */
   int m_width;
@@ -57,17 +57,17 @@ public:
   /**
    * \brief Constructs a 2D CRF.
    *
-   * \param unaries                     TODO
+   * \param unaries                     The grid of unary potentials.
    * \param pairwisePotentialCalculator The pairwise potential calculator.
    */
-  CRF2D(const ProbabilitiesGrid_Ptr& unaries, const PairwisePotentialCalculator_CPtr& pairwisePotentialCalculator)
+  CRF2D(const PotentialsGrid_Ptr& unaries, const PairwisePotentialCalculator_CPtr& pairwisePotentialCalculator)
   : m_height(static_cast<int>(unaries->rows())),
     m_pairwisePotentialCalculator(pairwisePotentialCalculator),
     m_timeStep(0),
     m_unaries(unaries),
     m_width(static_cast<int>(unaries->cols()))
   {
-    m_marginals.reset(new ProbabilitiesGrid(*unaries));
+    m_marginals.reset(new PotentialsGrid(*unaries));
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -83,20 +83,20 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the grid of marginal potentials.
    *
-   * \return  TODO
+   * \return  The grid of marginal potentials.
    */
-  ProbabilitiesGrid_CPtr get_marginals() const
+  PotentialsGrid_CPtr get_marginals() const
   {
     return m_marginals;
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the marginal potentials for the specified location.
    *
-   * \param loc TODO
-   * \return    TODO
+   * \param loc The location whose marginal potentials we want to get.
+   * \return    The marginal potentials for the specified location.
    */
   const std::map<Label,float>& get_marginals_at(const Eigen::Vector2i& loc) const
   {
@@ -124,10 +124,10 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the unary potentials for the specified location.
    *
-   * \param loc TODO
-   * \return    TODO
+   * \param loc The location whose unary potentials we want to get.
+   * \return    The unary potentials for the specified location.
    */
   const std::map<Label,float>& get_unaries_at(const Eigen::Vector2i& loc) const
   {
@@ -153,11 +153,13 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Swaps the current grid of marginal potentials with a new grid.
    *
-   * \param marginals TODO
+   * This is useful for implementing a "double-buffering" update approach in which we update a new grid and then swap it with the old one at each time step.
+   *
+   * \param marginals The new grid of marginal potentials.
    */
-  void swap_marginals(ProbabilitiesGrid_Ptr& marginals)
+  void swap_marginals(PotentialsGrid_Ptr& marginals)
   {
     std::swap(m_marginals, marginals);
   }
@@ -189,6 +191,11 @@ std::ostream& operator<<(std::ostream& os, const CRF2D<Label>& rhs)
   os << *rhs.get_marginals();
   return os;
 }
+
+//#################### TYPEDEFS ####################
+
+template <typename Label> using CRF2D_Ptr = boost::shared_ptr<CRF2D<Label> >;
+template <typename Label> using CRF2D_CPtr = boost::shared_ptr<const CRF2D<Label> >;
 
 }
 

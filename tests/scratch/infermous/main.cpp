@@ -1,55 +1,10 @@
 //###
-#if 0
-
-#include <algorithm>
-#include <iostream>
-#include <iterator>
-
-#include <infermous/CRF2D.h>
-using namespace infermous;
-
-int main()
-{
-  /*CRF2D<int> crf(10, 10);
-  for(CRF2D<int>::iterator it = crf.nodes_begin(), iend = crf.nodes_end(); it != iend; ++it)
-  {
-    std::cout << it.x() << ' ' << it.y() << '\n';
-    CRF2D<int>::Node& n = *it;
-  }*/
-  typedef int Label;
-  CRF2D<int>::ProbabilitiesGrid_Ptr unariesGrid(new CRF2D<int>::ProbabilitiesGrid(5, 5));
-
-  std::map<Label,float> unaries;
-  for(size_t i = 0; i < 5; ++i)
-    unaries.insert(std::make_pair(i, 0.5f));
-  
-  for(size_t i = 0; i < 5; ++i)
-    for(size_t j = 0; j < 5; ++j)
-    {
-      (*unariesGrid)(i,j) = unaries;
-    }
-
-  CRF2D<int>::print_grid(*unariesGrid);
-
-  CRF2D<int> crf(unariesGrid, 3);
-
-  crf.update();
-
-  // TODO
-  return 0;
-}
-
-#endif
-
-//###
 #if 1
 
 #include <infermous/engines/MeanFieldInferenceEngine.h>
 using namespace infermous;
 
 typedef int Label;
-typedef CRF2D<Label> CRF;
-typedef boost::shared_ptr<CRF> CRF_Ptr;
 
 struct PPC : PairwisePotentialCalculator<Label>
 {
@@ -61,7 +16,7 @@ struct PPC : PairwisePotentialCalculator<Label>
 
 int main()
 {
-  CRF::ProbabilitiesGrid_Ptr unaries(new CRF::ProbabilitiesGrid(5, 5));
+  PotentialsGrid_Ptr<Label> unaries(new PotentialsGrid<Label>(5, 5));
 
   std::map<Label,float> pixelUnaries;
   for(int i = 0; i < 5; ++i)
@@ -75,7 +30,7 @@ int main()
       (*unaries)(i,j) = pixelUnaries;
     }
 
-  CRF_Ptr crf(new CRF(unaries, boost::shared_ptr<PPC>(new PPC)));
+  CRF2D_Ptr<Label> crf(new CRF2D<Label>(unaries, boost::shared_ptr<PPC>(new PPC)));
   std::cout << *crf << '\n';
 
   MeanFieldInferenceEngine<Label> mfie(crf, MeanFieldUtil::make_circular_neighbour_offsets(3));
@@ -86,7 +41,7 @@ int main()
   mfie.update_crf();
   std::cout << *crf << '\n';
 
-  Grid<Label> labels = CRFUtil::predict_labels(*crf->get_marginals());
+  Grid<Label> labels = GridUtil::predict_labels(*crf->get_marginals());
   std::cout << labels << '\n';
 
   std::cout << *crf->get_marginals() << '\n';

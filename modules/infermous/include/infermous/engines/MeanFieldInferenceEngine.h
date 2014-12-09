@@ -64,10 +64,10 @@ class MeanFieldInferenceEngine
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef boost::shared_ptr<CRF2D<Label> > CRF2D_Ptr;
-  typedef boost::shared_ptr<const CRF2D<Label> > CRF2D_CPtr;
-  typedef typename CRF2D<Label>::ProbabilitiesGrid ProbabilitiesGrid;
-  typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
+  typedef CRF2D_Ptr<Label> CRF2D_Ptr;
+  typedef CRF2D_CPtr<Label> CRF2D_CPtr;
+  typedef PotentialsGrid<Label> PotentialsGrid;
+  typedef PotentialsGrid_Ptr<Label> PotentialsGrid_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -78,7 +78,7 @@ private:
   std::vector<Eigen::Vector2i> m_neighbourOffsets;
 
   /** TODO */
-  ProbabilitiesGrid_Ptr m_newMarginals;
+  PotentialsGrid_Ptr m_newMarginals;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -89,7 +89,7 @@ public:
    * \param neighbourOffsets  TODO
    */
   MeanFieldInferenceEngine(const CRF2D_Ptr& crf, const std::vector<Eigen::Vector2i>& neighbourOffsets)
-  : m_crf(crf), m_neighbourOffsets(neighbourOffsets), m_newMarginals(new ProbabilitiesGrid(crf->get_height(), crf->get_width()))
+  : m_crf(crf), m_neighbourOffsets(neighbourOffsets), m_newMarginals(new PotentialsGrid(crf->get_height(), crf->get_width()))
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
