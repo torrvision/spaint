@@ -67,20 +67,25 @@ public:
 
   /**
    * \brief Updates the CRF on which the mean-field inference engine works.
+   *
+   * \param iterations  The number of update iterations to run.
    */
-  void update_crf()
+  void update_crf(size_t iterations)
   {
-    for(int y = 0, height = m_crf->get_height(); y < height; ++y)
+    for(size_t i = 0; i < iterations; ++i)
     {
-      for(int x = 0, width = m_crf->get_width(); x < width; ++x)
+      for(int y = 0, height = m_crf->get_height(); y < height; ++y)
       {
-        compute_updated_pixel(Eigen::Vector2i(x, y));
+        for(int x = 0, width = m_crf->get_width(); x < width; ++x)
+        {
+          compute_updated_pixel(Eigen::Vector2i(x, y));
+        }
       }
-    }
 
-    // Swap the new marginals into the CRF and update its time step.
-    m_crf->swap_marginals(m_newMarginals);
-    m_crf->increment_time_step();
+      // Swap the new marginals into the CRF and update its time step.
+      m_crf->swap_marginals(m_newMarginals);
+      m_crf->increment_time_step();
+    }
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
