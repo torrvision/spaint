@@ -156,8 +156,7 @@ public:
    * \param rhs The 2D CRF.
    * \return    The stream.
    */
-  template <typename Label>
-  friend std::ostream& operator<<(std::ostream& os, const CRF2D<Label>& rhs)
+  friend std::ostream& operator<<(std::ostream& os, const CRF2D& rhs)
   {
     os << *rhs.m_marginals;
     return os;
