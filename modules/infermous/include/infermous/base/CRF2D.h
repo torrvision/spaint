@@ -14,7 +14,7 @@
 
 #include <tvgutil/LimitedContainer.h>
 
-#include "GridUtil.h"
+#include "CRFUtil.h"
 #include "PairwisePotentialCalculator.h"
 
 namespace infermous {
@@ -159,7 +159,7 @@ public:
    */
   Grid<Label> predict_labels() const
   {
-    return GridUtil::predict_labels(*m_marginals);
+    return CRFUtil::predict_labels(*m_marginals);
   }
 
   /**

@@ -33,7 +33,7 @@ int main()
   CRF2D_Ptr<Label> crf(new CRF2D<Label>(unaries, boost::shared_ptr<PPC>(new PPC)));
   std::cout << *crf << '\n';
 
-  MeanFieldInferenceEngine<Label> mfie(crf, MeanFieldUtil::make_circular_neighbour_offsets(3));
+  MeanFieldInferenceEngine<Label> mfie(crf, CRFUtil::make_circular_neighbour_offsets(3));
 
   mfie.update_crf();
   std::cout << *crf << '\n';

@@ -23,7 +23,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 ##
 SET(base_headers
 include/infermous/base/CRF2D.h
-include/infermous/base/GridUtil.h
+include/infermous/base/CRFUtil.h
+include/infermous/base/Grids.h
 include/infermous/base/PairwisePotentialCalculator.h
 )
 
