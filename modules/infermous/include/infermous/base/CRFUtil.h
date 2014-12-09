@@ -19,10 +19,13 @@ struct CRFUtil
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief TODO
+   * \brief Calculates the pixels that fall within a circle of the specified radius, centred at the origin (excluding the origin itself).
    *
-   * \param radius  TODO
-   * \return        TODO
+   * The intention is to define a set of offsets that can be used to specify the neighbours of an arbitrary pixel.
+   * The origin itself is excluded from this set, because a point cannot be its own neighbour.
+   *
+   * \param radius  The radius of the circle.
+   * \return        The calculated set of offsets.
    */
   static std::vector<Eigen::Vector2i> make_circular_neighbour_offsets(int radius)
   {
@@ -44,15 +47,27 @@ struct CRFUtil
   }
 
   /**
-   * \brief TODO
+   * \brief Calculates the pixels that fall within a square of the specified axial radius, centred at the origin (excluding the origin itself).
    *
-   * \param radius  TODO
-   * \return        TODO
+   * The intention is to define a set of offsets that can be used to specify the neighbours of an arbitrary pixel.
+   * The origin itself is excluded from this set, because a point cannot be its own neighbour.
+   *
+   * \param radius  The axial radius of the square.
+   * \return        The calculated set of offsets.
    */
   static std::vector<Eigen::Vector2i> make_square_neighbour_offsets(int radius)
   {
-    // TODO
-    throw 23;
+    std::vector<Eigen::Vector2i> result;
+
+    for(int y = -radius; y <= radius; ++y)
+    {
+      for(int x = -radius; x <= radius; ++x)
+      {
+        if(x != 0 || y != 0) result.push_back(Eigen::Vector2i(x, y));
+      }
+    }
+
+    return result;
   }
 
   /**
