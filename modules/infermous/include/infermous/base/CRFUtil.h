@@ -71,20 +71,20 @@ struct CRFUtil
   }
 
   /**
-   * \brief Predicts the labels for each pixel in a potentials grid by choosing a label with the highest potential for each pixel.
+   * \brief Predicts the labels for each pixel in a probabilities grid by choosing a label with the highest probability for each pixel.
    *
-   * \param grid  The grid of potentials for whose pixels we want to predict labels.
-   * return       The grid of predicted labels.
+   * \param probabilities The grid of probabilities for whose pixels we want to predict labels.
+   * return               The grid of predicted labels.
    */
   template <typename Label>
-  static Grid<Label> predict_labels(const PotentialsGrid<Label>& potentials)
+  static Grid<Label> predict_labels(const ProbabilitiesGrid<Label>& probabilities)
   {
-    Grid<Label> result(potentials.cols(), potentials.rows());
-    for(size_t y = 0, height = potentials.rows(); y < height; ++y)
+    Grid<Label> result(probabilities.cols(), probabilities.rows());
+    for(size_t y = 0, height = probabilities.rows(); y < height; ++y)
     {
-      for(size_t x = 0, width = potentials.cols(); x < width; ++x)
+      for(size_t x = 0, width = probabilities.cols(); x < width; ++x)
       {
-        result(x, y) = tvgutil::ArgUtil::argmax(potentials(x, y));
+        result(x, y) = tvgutil::ArgUtil::argmax(probabilities(x, y));
       }
     }
     return result;

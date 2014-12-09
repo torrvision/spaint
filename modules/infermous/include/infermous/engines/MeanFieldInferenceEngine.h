@@ -21,8 +21,8 @@ class MeanFieldInferenceEngine
 public:
   typedef CRF2D_Ptr<Label> CRF2D_Ptr;
   typedef CRF2D_CPtr<Label> CRF2D_CPtr;
-  typedef PotentialsGrid<Label> PotentialsGrid;
-  typedef PotentialsGrid_Ptr<Label> PotentialsGrid_Ptr;
+  typedef ProbabilitiesGrid<Label> ProbabilitiesGrid;
+  typedef ProbabilitiesGrid_Ptr<Label> ProbabilitiesGrid_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -32,8 +32,8 @@ private:
   /** A list of offsets used to specify the neighbours of each pixel. */
   std::vector<Eigen::Vector2i> m_neighbourOffsets;
 
-  /** A grid of updated marginal potentials that will be swapped with the grid in the CRF at the end of each time step. */
-  PotentialsGrid_Ptr m_newMarginals;
+  /** A grid of updated marginal probabilities that will be swapped with the grid in the CRF at the end of each time step. */
+  ProbabilitiesGrid_Ptr m_newMarginals;
 
   /** The pairwise potential calculator. */
   PairwisePotentialCalculator_CPtr<Label> m_pairwisePotentialCalculator;
@@ -49,7 +49,7 @@ public:
   MeanFieldInferenceEngine(const CRF2D_Ptr& crf, const std::vector<Eigen::Vector2i>& neighbourOffsets)
   : m_crf(crf),
     m_neighbourOffsets(neighbourOffsets),
-    m_newMarginals(new PotentialsGrid(crf->get_height(), crf->get_width())),
+    m_newMarginals(new ProbabilitiesGrid(crf->get_height(), crf->get_width())),
     m_pairwisePotentialCalculator(crf->get_pairwise_potential_calculator())
   {}
 
@@ -82,9 +82,8 @@ public:
         }
       }
 
-      // Swap the new marginals into the CRF and update its time step.
+      // Swap the new marginals into the CRF.
       m_crf->swap_marginals(m_newMarginals);
-      m_crf->increment_time_step();
     }
   }
 
@@ -93,7 +92,7 @@ private:
   /**
    * \brief Computes the value of M_i(L), for pixel i and label L.
    *
-   * See p.6 of the original SemanticPaint paper for details - essentially, this is the negative log of the unnormalised new potential for the pixel.
+   * See p.6 of the original SemanticPaint paper for details - essentially, this is the new marginal potential (not the probability!) for the pixel.
    *
    * \param i       The location of the pixel.
    * \param L       The label.
@@ -108,7 +107,7 @@ private:
     // This makes no difference to the result, but allows us to avoid lookups of Q_j^{t-1}(L').
     for(std::vector<Eigen::Vector2i>::const_iterator nt = m_neighbourOffsets.begin(), nend = m_neighbourOffsets.end(); nt != nend; ++nt)
     {
-      // Calculate the location of the potential neighbour and check whether or not it is within the CRF. If not, skip it.
+      // Calculate the location of the possible neighbour and check whether or not it is within the CRF. If not, skip it.
       Eigen::Vector2i j = i + *nt;
       if(!m_crf->within_bounds(j)) continue;
 
@@ -133,23 +132,24 @@ private:
    */
   void compute_updated_pixel(const Eigen::Vector2i& i)
   {
-    // Get the unary potentials for the pixel.
-    const std::map<Label,float>& phi_i = m_crf->get_unaries_at(i);
+    // Get the unary probabilities for the pixel.
+    const std::map<Label,float>& psi_i = m_crf->get_unaries_at(i);
 
-    // Calculate the unnormalised new potentials for the pixel, together with the normalisation constant.
+    // Calculate the unnormalised new probabilities for the pixel, together with the normalisation constant.
     // (In other words, compute e^-M_i(L) for every L, and Z_i, as per the original SemanticPaint paper.)
     std::map<Label,float> oneOverE_M_i;
     float Z_i = 0.0f;
-    for(typename std::map<Label,float>::const_iterator kt = phi_i.begin(), kend = phi_i.end(); kt != kend; ++kt)
+    for(typename std::map<Label,float>::const_iterator kt = psi_i.begin(), kend = psi_i.end(); kt != kend; ++kt)
     {
       const Label& L = kt->first;
-      float phi_i_L = kt->second;
+      float psi_i_L = kt->second;
+      float phi_i_L = -logf(psi_i_L);
       float oneOverE_M_i_L = expf(-compute_M_i_L(i, L, phi_i_L));
       oneOverE_M_i[L] = oneOverE_M_i_L;
       Z_i += oneOverE_M_i_L;
     }
 
-    // Calculate the normalised new potentials for the pixel by dividing through by the normalisation constant.
+    // Calculate the normalised new probabilities for the pixel by dividing through by the normalisation constant.
     // (In other words, compute Q_i^t(L) = 1/Z_i * e^-M_i(L), as per the paper.)
     float oneOverZ_i = 1.0f / Z_i;
     std::map<Label,float>& Q_i = (*m_newMarginals)(i.y(), i.x());

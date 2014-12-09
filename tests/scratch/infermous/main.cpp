@@ -18,7 +18,7 @@ struct PPC : PairwisePotentialCalculator<Label>
 
 int main()
 {
-  PotentialsGrid_Ptr<Label> unaries(new PotentialsGrid<Label>(5, 5));
+  ProbabilitiesGrid_Ptr<Label> unaries(new ProbabilitiesGrid<Label>(5, 5));
 
   std::map<Label,float> pixelUnaries;
   for(int i = 0; i < 5; ++i)
@@ -76,18 +76,18 @@ struct PPC : PairwisePotentialCalculator<Label>
 int main()
 {
 
-  PotentialsGrid_Ptr<Label> unaries(new PotentialsGrid<Label>(10, 10));
+  ProbabilitiesGrid_Ptr<Label> unaries(new ProbabilitiesGrid<Label>(10, 10));
 
   for(size_t i = 0; i < 10; ++i)
     for(size_t j = 0; j < 10; ++j)
     {
       if( i >= 3 && i < 7 && j >= 3 && j < 7)
       {
-        (*unaries)(i,j)[FG] = 1.0f;
+        (*unaries)(i,j)[FG] = 0.9f;
       }
       else
       {
-        (*unaries)(i,j)[FG] = 0.0f;
+        (*unaries)(i,j)[FG] = 0.1f;
       }
 
       (*unaries)(i,j)[BG] = 1.0f - (*unaries)(i,j)[FG];

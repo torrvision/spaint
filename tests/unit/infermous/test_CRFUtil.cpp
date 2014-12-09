@@ -108,21 +108,21 @@ BOOST_AUTO_TEST_CASE(make_square_neighbour_offsets_test)
 
 BOOST_AUTO_TEST_CASE(predict_labels_test)
 {
-  PotentialsGrid<Colour> potentials(2,2);
-  potentials(0,0)[RED] = 0.6f;
-  potentials(1,0)[RED] = 0.3f;
-  potentials(0,1)[RED] = 0.2f;
-  potentials(1,1)[RED] = 0.8f;
+  ProbabilitiesGrid<Colour> probabilities(2,2);
+  probabilities(0,0)[RED] = 0.6f;
+  probabilities(1,0)[RED] = 0.3f;
+  probabilities(0,1)[RED] = 0.2f;
+  probabilities(1,1)[RED] = 0.8f;
 
   for(size_t y = 0; y < 2; ++y)
   {
     for(size_t x = 0; x < 2; ++x)
     {
-      potentials(x,y)[BLUE] = 1.0f - potentials(x,y)[RED];
+      probabilities(x,y)[BLUE] = 1.0f - probabilities(x,y)[RED];
     }
   }
 
-  Grid<Colour> labels = CRFUtil::predict_labels(potentials);
+  Grid<Colour> labels = CRFUtil::predict_labels(probabilities);
 
   Grid<Colour> expectedLabels(2,2);
   expectedLabels(0,0) = expectedLabels(1,1) = RED;

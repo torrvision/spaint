@@ -23,11 +23,11 @@ template <typename T> using Grid = Eigen::Matrix<T,-1,-1>;
 template <typename T> using Grid_Ptr = boost::shared_ptr<Grid<T> >;
 template <typename T> using Grid_CPtr = boost::shared_ptr<const Grid<T> >;
 
-/** \brief An instance of an instantiation of this type can be used to represent a 2D grid of label -> potential maps. */
-template <typename Label> using PotentialsGrid = Grid<std::map<Label,float> >;
+/** \brief An instance of an instantiation of this type can be used to represent a 2D grid of label -> probability maps. */
+template <typename Label> using ProbabilitiesGrid = Grid<std::map<Label,float> >;
 
-template <typename Label> using PotentialsGrid_Ptr = boost::shared_ptr<PotentialsGrid<Label> >;
-template <typename Label> using PotentialsGrid_CPtr = boost::shared_ptr<const PotentialsGrid<Label> >;
+template <typename Label> using ProbabilitiesGrid_Ptr = boost::shared_ptr<ProbabilitiesGrid<Label> >;
+template <typename Label> using ProbabilitiesGrid_CPtr = boost::shared_ptr<const ProbabilitiesGrid<Label> >;
 
 //#################### STREAM OPERATORS ####################
 
@@ -53,14 +53,14 @@ std::ostream& operator<<(std::ostream& os, const Grid<T>& rhs)
 }
 
 /**
- * \brief Outputs a potentials grid to the specified stream.
+ * \brief Outputs a probabilities grid to the specified stream.
  *
  * \param os  The stream.
  * \param rhs The grid.
  * \return    The stream.
  */
 template <typename Label>
-std::ostream& operator<<(std::ostream& os, const PotentialsGrid<Label>& rhs)
+std::ostream& operator<<(std::ostream& os, const ProbabilitiesGrid<Label>& rhs)
 {
   for(size_t y = 0, height = rhs.rows(); y < height; ++y)
   {

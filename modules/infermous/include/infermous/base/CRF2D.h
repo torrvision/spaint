@@ -22,26 +22,23 @@ class CRF2D
   //#################### TYPEDEFS ####################
 public:
   typedef PairwisePotentialCalculator_CPtr<Label> PairwisePotentialCalculator_CPtr;
-  typedef PotentialsGrid<Label> PotentialsGrid;
-  typedef PotentialsGrid_Ptr<Label> PotentialsGrid_Ptr;
-  typedef PotentialsGrid_CPtr<Label> PotentialsGrid_CPtr;
+  typedef ProbabilitiesGrid<Label> ProbabilitiesGrid;
+  typedef ProbabilitiesGrid_Ptr<Label> ProbabilitiesGrid_Ptr;
+  typedef ProbabilitiesGrid_CPtr<Label> ProbabilitiesGrid_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The height of the CRF. */
   int m_height;
 
-  /** The grid of marginal potentials that will be updated at each time step. */
-  PotentialsGrid_Ptr m_marginals;
+  /** The grid of marginal probabilities that will be updated at each time step. */
+  ProbabilitiesGrid_Ptr m_marginals;
 
   /** The pairwise potential calculator. */
   PairwisePotentialCalculator_CPtr m_pairwisePotentialCalculator;
 
-  /** The current time step. */
-  size_t m_timeStep;
-
-  /** The grid of unary potentials. */
-  PotentialsGrid_Ptr m_unaries;
+  /** The grid of unary probabilities. */
+  ProbabilitiesGrid_Ptr m_unaries;
 
   /** The width of the CRF. */
   int m_width;
@@ -51,17 +48,16 @@ public:
   /**
    * \brief Constructs a 2D CRF.
    *
-   * \param unaries                     The grid of unary potentials.
+   * \param unaries                     The grid of unary probabilities.
    * \param pairwisePotentialCalculator The pairwise potential calculator.
    */
-  CRF2D(const PotentialsGrid_Ptr& unaries, const PairwisePotentialCalculator_CPtr& pairwisePotentialCalculator)
+  CRF2D(const ProbabilitiesGrid_Ptr& unaries, const PairwisePotentialCalculator_CPtr& pairwisePotentialCalculator)
   : m_height(static_cast<int>(unaries->rows())),
     m_pairwisePotentialCalculator(pairwisePotentialCalculator),
-    m_timeStep(0),
     m_unaries(unaries),
     m_width(static_cast<int>(unaries->cols()))
   {
-    m_marginals.reset(new PotentialsGrid(*unaries));
+    m_marginals.reset(new ProbabilitiesGrid(*unaries));
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -77,10 +73,10 @@ public:
   }
 
   /**
-   * \brief Gets the marginal potentials for the specified location.
+   * \brief Gets the marginal probabilities for the specified location.
    *
-   * \param loc The location whose marginal potentials we want to get.
-   * \return    The marginal potentials for the specified location.
+   * \param loc The location whose marginal probabilities we want to get.
+   * \return    The marginal probabilities for the specified location.
    */
   const std::map<Label,float>& get_marginals_at(const Eigen::Vector2i& loc) const
   {
@@ -98,20 +94,10 @@ public:
   }
 
   /**
-   * \brief Gets the time step of the CRF.
+   * \brief Gets the unary probabilities for the specified location.
    *
-   * \return  The time step of the CRF.
-   */
-  size_t get_time_step() const
-  {
-    return m_timeStep;
-  }
-
-  /**
-   * \brief Gets the unary potentials for the specified location.
-   *
-   * \param loc The location whose unary potentials we want to get.
-   * \return    The unary potentials for the specified location.
+   * \param loc The location whose unary probabilities we want to get.
+   * \return    The unary probabilities for the specified location.
    */
   const std::map<Label,float>& get_unaries_at(const Eigen::Vector2i& loc) const
   {
@@ -129,14 +115,6 @@ public:
   }
 
   /**
-   * \brief Increments the time step of the CRF.
-   */
-  void increment_time_step()
-  {
-    ++m_timeStep;
-  }
-
-  /**
    * \brief Predicts the labels for each pixel in the CRF.
    *
    * return The grid of predicted labels.
@@ -147,13 +125,13 @@ public:
   }
 
   /**
-   * \brief Swaps the current grid of marginal potentials with a new grid.
+   * \brief Swaps the current grid of marginal probabilities with a new grid.
    *
    * This is useful for implementing a "double-buffering" update approach in which we update a new grid and then swap it with the old one at each time step.
    *
-   * \param marginals The new grid of marginal potentials.
+   * \param marginals The new grid of marginal probabilities.
    */
-  void swap_marginals(PotentialsGrid_Ptr& marginals)
+  void swap_marginals(ProbabilitiesGrid_Ptr& marginals)
   {
     std::swap(m_marginals, marginals);
   }
