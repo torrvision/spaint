@@ -12,21 +12,48 @@
 
 #include <Eigen/Dense>
 
+#include <tvgutil/ArgUtil.h>
 #include <tvgutil/LimitedContainer.h>
 
 namespace infermous {
 
+//#################### TYPEDEFS ####################
+
+template <typename T> using Grid = Eigen::Matrix<T,-1,-1>;
+template <typename Label> using ProbabilitiesGrid = Grid<std::map<Label,float> >;
+
+/**
+ * \brief This class contains various CRF utility functions.
+ */
 struct CRFUtil
 {
-  //#################### TYPEDEFS ####################
-  //typedef Eigen::Matrix<std::map<Label,float>,-1,-1> ProbabilitiesGrid;
-
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief Predicts the labels for each pixel in a grid of potentials by choosing a label with the highest potential for each pixel.
+   *
+   * \param potentials  The grid of potentials for whose pixels we want to predict labels.
+   * return             A grid of predicted labels.
+   */
+  template <typename Label>
+  static Grid<Label> predict_labels(const ProbabilitiesGrid<Label>& potentials)
+  {
+    Grid<Label> result(potentials.cols(), potentials.rows());
+    for(size_t y = 0, height = potentials.rows(); y < height; ++y)
+    {
+      for(size_t x = 0, width = potentials.cols(); x < width; ++x)
+      {
+        result(x, y) = tvgutil::ArgUtil::argmax(potentials(x, y));
+      }
+    }
+    return result;
+  }
+
   /**
    * \brief TODO
    */
   template <typename Label>
-  static void print_grid(std::ostream& os, const Eigen::Matrix<std::map<Label,float>,-1,-1>& grid)
+  static void print_grid(std::ostream& os, const ProbabilitiesGrid<Label>& grid)
   {
     for(int i = 0; i < grid.rows(); ++i)
     {
@@ -37,27 +64,30 @@ struct CRFUtil
     }
     os << std::endl;
   }
-
-  /**
-   * \brief TODO
-   */
-  template <typename Label>
-  static Eigen::Matrix<Label,-1,-1> predict_labels(const Eigen::Matrix<std::map<Label,float>,-1,-1>& potentials)
-  {
-    Eigen::Matrix<Label,-1,-1> result(potentials.size());
-
-    for(size_t y = 0, height = potentials.rows(); y < height; ++y)
-    {
-      for(size_t x = 0, width = potentials.cols(); x < width; ++x)
-      {
-        Label bestLabel;
-
-      }
-    }
-
-    return result;
-  }
 };
+
+//#################### STREAM OPERATORS ####################
+
+/**
+ * \brief Outputs a grid to the specified stream.
+ *
+ * \param os  The stream.
+ * \param rhs The grid.
+ * \return    The stream.
+ */
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Grid<T>& rhs)
+{
+  for(size_t y = 0, height = rhs.rows(); y < height; ++y)
+  {
+    for(size_t x = 0, width = rhs.cols(); x < width; ++x)
+    {
+      os << rhs(x, y) << ' ';
+    }
+    os << '\n';
+  }
+  return os;
+}
 
 }
 

@@ -135,7 +135,7 @@ private:
     {
       Eigen::Vector2i j = i + *nt;
       if(!m_crf->within_bounds(j)) continue;
-      const std::map<Label,float>& Q_j = m_crf->get_marginals(j);
+      const std::map<Label,float>& Q_j = m_crf->get_marginals_at(j);
       for(typename std::map<Label,float>::const_iterator kt = Q_j.begin(), kend = Q_j.end(); kt != kend; ++kt)
       {
         const Label& LDash = kt->first;
@@ -156,7 +156,7 @@ private:
   void update_pixel(const Eigen::Vector2i& i)
   {
     // Get the unary potentials for the pixel.
-    const std::map<Label,float>& phi_i = m_crf->get_unaries(i);
+    const std::map<Label,float>& phi_i = m_crf->get_unaries_at(i);
 
     // TODO: Add a comment.
     std::map<Label,float> oneOverE_M_i;

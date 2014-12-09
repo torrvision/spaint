@@ -86,6 +86,9 @@ int main()
   mfie.update_crf();
   crf->output(std::cout);
 
+  Grid<Label> labels = CRFUtil::predict_labels(*crf->get_marginals());
+  std::cout << labels << '\n';
+
   return 0;
 }
 

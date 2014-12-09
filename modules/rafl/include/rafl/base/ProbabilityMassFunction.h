@@ -107,6 +107,7 @@ public:
    */
   Label calculate_best_label() const
   {
+    // TODO: Refactor this to use tvgutil::ArgUtil::argmax.
     Label bestLabel;
     float bestMass = 0.0f;
     for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)

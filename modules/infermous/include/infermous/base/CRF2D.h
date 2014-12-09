@@ -30,6 +30,7 @@ public:
   typedef boost::shared_ptr<const PairwisePotentialCalculator<Label> > PairwisePotentialCalculator_CPtr;
   typedef Eigen::Matrix<std::map<Label,float>,-1,-1> ProbabilitiesGrid;
   typedef boost::shared_ptr<ProbabilitiesGrid> ProbabilitiesGrid_Ptr;
+  typedef boost::shared_ptr<const ProbabilitiesGrid> ProbabilitiesGrid_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -91,10 +92,20 @@ public:
   /**
    * \brief TODO
    *
+   * \return  TODO
+   */
+  ProbabilitiesGrid_CPtr get_marginals() const
+  {
+    return m_marginals;
+  }
+
+  /**
+   * \brief TODO
+   *
    * \param loc TODO
    * \return    TODO
    */
-  const std::map<Label,float>& get_marginals(const Eigen::Vector2i& loc) const
+  const std::map<Label,float>& get_marginals_at(const Eigen::Vector2i& loc) const
   {
     return (*m_marginals)(loc.y(), loc.x());
   }
@@ -125,7 +136,7 @@ public:
    * \param loc TODO
    * \return    TODO
    */
-  const std::map<Label,float>& get_unaries(const Eigen::Vector2i& loc) const
+  const std::map<Label,float>& get_unaries_at(const Eigen::Vector2i& loc) const
   {
     return (*m_unaries)(loc.y(), loc.x());
   }
