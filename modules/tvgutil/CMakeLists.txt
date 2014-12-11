@@ -13,6 +13,7 @@ SET(targetname tvgutil)
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 
 #############################
 # Specify the project files #
@@ -31,6 +32,7 @@ include/tvgutil/LimitedContainer.h
 include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
+include/tvgutil/Timing.h
 )
 
 #################################################################
@@ -61,7 +63,7 @@ INCLUDE_DIRECTORIES(include/tvgutil)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetLibTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDALibTarget.cmake)
 
 #############################
 # Specify things to install #
