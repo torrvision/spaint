@@ -33,6 +33,9 @@ private:
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
+    /** The depth of the node in the tree. */
+    size_t m_depth;
+
     /** The index of the node's left child in the tree's node array. */
     int m_leftChildIndex;
 
@@ -50,11 +53,12 @@ private:
     /**
      * \brief Constructs a node.
      *
+     * \param depth                 The depth of the node in the tree.
      * \param maxClassSize          The maximum number of examples of each class allowed in the node's reservoir at any one time.
      * \param randomNumberGenerator A random number generator.
      */
-    Node(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-    : m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
+    Node(size_t depth, size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+    : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
   };
 
@@ -81,6 +85,9 @@ public:
 
     /** The maximum number of examples of each class allowed in a node's reservoir at any one time. */
     size_t maxClassSize;
+
+    /** The maximum height allowed for a tree. */
+    size_t maxTreeHeight;
 
     /** A random number generator. */
     tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
@@ -120,6 +127,7 @@ public:
         GET_SETTING(decisionFunctionGeneratorName);
         GET_SETTING(gainThreshold);
         GET_SETTING(maxClassSize);
+        GET_SETTING(maxTreeHeight);
         GET_SETTING(randomSeed);
         GET_SETTING(seenExamplesThreshold);
         GET_SETTING(splittabilityThreshold);
@@ -169,7 +177,7 @@ public:
   explicit DecisionTree(const Settings& settings)
   : m_settings(settings)
   {
-    m_rootIndex = add_node();
+    m_rootIndex = add_node(0);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -287,11 +295,13 @@ private:
   /**
    * \brief Adds a node to the decision tree.
    *
+   * \param depth The depth of the node in the tree.
+   *
    * \return The ID of the newly-added node.
    */
-  int add_node()
+  int add_node(size_t depth)
   {
-    m_nodes.push_back(Node_Ptr(new Node(m_settings.maxClassSize, m_settings.randomNumberGenerator)));
+    m_nodes.push_back(Node_Ptr(new Node(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
     int id = static_cast<int>(m_nodes.size()) - 1;
     m_splittabilityQueue.insert(id, 0.0f, NULL);
     return id;
@@ -434,8 +444,9 @@ private:
     n.m_splitter = split->m_decisionFunction;
 
     // Add left and right child nodes and populate their example reservoirs based on the chosen split.
-    n.m_leftChildIndex = add_node();
-    n.m_rightChildIndex = add_node();
+    size_t childDepth = n.m_depth + 1;
+    n.m_leftChildIndex = add_node(childDepth);
+    n.m_rightChildIndex = add_node(childDepth);
     std::map<Label,float> multipliers = n.m_reservoir.get_class_multipliers();
     fill_reservoir(split->m_leftExamples, multipliers, m_nodes[n.m_leftChildIndex]->m_reservoir);
     fill_reservoir(split->m_rightExamples, multipliers, m_nodes[n.m_rightChildIndex]->m_reservoir);
@@ -459,7 +470,15 @@ private:
   {
     // Recalculate the node's splittability.
     const ExampleReservoir<Label>& reservoir = m_nodes[nodeIndex]->m_reservoir;
-    float splittability = reservoir.seen_examples() >= m_settings.seenExamplesThreshold ? ExampleUtil::calculate_entropy(*reservoir.get_histogram()) : 0.0f;
+    float splittability;
+    if(m_nodes[nodeIndex]->m_depth + 1 < m_settings.maxTreeHeight && reservoir.seen_examples() >= m_settings.seenExamplesThreshold)
+    {
+      splittability = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
+    }
+    else
+    {
+      splittability = 0.0f;
+    }
 
     // Update the splittability queue to reflect the node's new splittability.
     m_splittabilityQueue.update_key(nodeIndex, splittability);

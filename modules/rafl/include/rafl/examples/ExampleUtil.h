@@ -69,7 +69,7 @@ public:
     {
       typedef boost::char_separator<char> sep;
       typedef boost::tokenizer<sep> tokenizer;
-      tokenizer tok(line.begin(), line.end(), sep(",\r"));
+      tokenizer tok(line.begin(), line.end(), sep(", \r"));
       std::vector<std::string> tokens(tok.begin(), tok.end());
 
       Descriptor_Ptr descriptor(new Descriptor);
