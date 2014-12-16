@@ -13,6 +13,7 @@ SET(targetname scratchtest_tvgutil)
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 
 #############################
 # Specify the project files #
@@ -36,7 +37,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
