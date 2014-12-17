@@ -14,6 +14,7 @@ SET(targetname spaint)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
@@ -32,6 +33,15 @@ src/input/InputState.cpp
 SET(input_headers
 include/spaint/input/InputState.h
 include/spaint/input/MouseButton.h
+)
+
+##
+SET(maths_sources
+src/maths/MathUtil.cpp
+)
+
+SET(maths_headers
+include/spaint/maths/MathUtil.h
 )
 
 ##
@@ -59,11 +69,13 @@ include/spaint/util/SpaintVoxel.h
 
 SET(sources
 ${input_sources}
+${maths_sources}
 ${toplevel_sources}
 )
 
 SET(headers
 ${input_headers}
+${maths_headers}
 ${ogl_headers}
 ${toplevel_headers}
 ${util_headers}
@@ -75,6 +87,7 @@ ${util_headers}
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
+SOURCE_GROUP(maths FILES ${maths_sources} ${maths_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(util FILES ${util_headers})
 
