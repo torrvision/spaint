@@ -22,6 +22,26 @@ Camera::Camera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, con
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+const Eigen::Vector3f& Camera::get_n() const
+{
+  return m_n;
+}
+
+const Eigen::Vector3f& Camera::get_position() const
+{
+  return m_position;
+}
+
+const Eigen::Vector3f& Camera::get_u() const
+{
+  return m_u;
+}
+
+const Eigen::Vector3f& Camera::get_v() const
+{
+  return m_v;
+}
+
 Camera& Camera::move_n(float delta)
 {
   m_position += delta * m_n;
