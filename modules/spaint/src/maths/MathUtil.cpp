@@ -11,7 +11,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-Eigen::Vector3f rotate_about_axis(const Eigen::Vector3f& v, float angle, const Eigen::Vector3f& axis)
+Eigen::Vector3f MathUtil::rotate_about_axis(const Eigen::Vector3f& v, float angle, const Eigen::Vector3f& axis)
 {
   // Enforce the precondition.
   if(fabs(axis.size() - 1) < 1e-3f)

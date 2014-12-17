@@ -22,26 +22,6 @@ Camera::Camera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, con
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-const Eigen::Vector3f& Camera::get_n() const
-{
-  return m_n;
-}
-
-const Eigen::Vector3f& Camera::get_position() const
-{
-  return m_position;
-}
-
-const Eigen::Vector3f& Camera::get_u() const
-{
-  return m_u;
-}
-
-const Eigen::Vector3f& Camera::get_v() const
-{
-  return m_v;
-}
-
 Camera& Camera::move_n(float delta)
 {
   m_position += delta * m_n;
@@ -60,12 +40,32 @@ Camera& Camera::move_v(float delta)
   return *this;
 }
 
+const Eigen::Vector3f& Camera::n() const
+{
+  return m_n;
+}
+
+const Eigen::Vector3f& Camera::p() const
+{
+  return m_position;
+}
+
 Camera& Camera::rotate(const Eigen::Vector3f& axis, float angle)
 {
   m_n = MathUtil::rotate_about_axis(m_n, angle, axis);
   m_u = MathUtil::rotate_about_axis(m_u, angle, axis);
   m_v = MathUtil::rotate_about_axis(m_v, angle, axis);
   return *this;
+}
+
+const Eigen::Vector3f& Camera::u() const
+{
+  return m_u;
+}
+
+const Eigen::Vector3f& Camera::v() const
+{
+  return m_v;
 }
 
 }

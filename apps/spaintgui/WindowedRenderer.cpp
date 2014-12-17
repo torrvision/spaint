@@ -4,6 +4,7 @@
 
 #include "WindowedRenderer.h"
 
+#include <spaint/cameras/Camera.h>
 #include <spaint/ogl/WrappedGL.h>
 
 //#################### CONSTRUCTORS ####################
@@ -49,14 +50,15 @@ WindowedRenderer::~WindowedRenderer()
 void WindowedRenderer::render() const
 {
 #if 1
-  static float tx = 0.0f, ty = 0.0f, tz = 0.0f;
+  static spaint::Camera camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f));
   const float SPEED = 0.1f;
-  if(m_inputState->key_down(SDLK_w)) tz -= SPEED; // move forward = move scene backward (-z)
-  if(m_inputState->key_down(SDLK_s)) tz += SPEED; // move backward = move scene forward (+z)
-  if(m_inputState->key_down(SDLK_d)) tx -= SPEED; // strafe right = move scene left (-x)
-  if(m_inputState->key_down(SDLK_a)) tx += SPEED; // strafe left = move scene right (+x)
-  if(m_inputState->key_down(SDLK_q)) ty += SPEED; // move up = move scene down (+y)
-  if(m_inputState->key_down(SDLK_e)) ty -= SPEED; // move down = move scene up (-y)
+  if(m_inputState->key_down(SDLK_w)) camera.move_n(SPEED);
+  if(m_inputState->key_down(SDLK_s)) camera.move_n(-SPEED);
+  if(m_inputState->key_down(SDLK_d)) camera.move_u(-SPEED);
+  if(m_inputState->key_down(SDLK_a)) camera.move_u(SPEED);
+  if(m_inputState->key_down(SDLK_q)) camera.move_v(SPEED);
+  if(m_inputState->key_down(SDLK_e)) camera.move_v(-SPEED);
+  if(m_inputState->key_down(SDLK_RIGHT)) camera.rotate(camera.v(), 0.01f);
 #endif
 
 #if 0
@@ -68,9 +70,13 @@ void WindowedRenderer::render() const
   //pose.params.each.tz = tz;
   //pose.SetModelViewFromParams();
   //std::cout << pose.M << '\n';
-  pose.T.x = tx;
-  pose.T.y = ty;
-  pose.T.z = tz;
+  Eigen::Vector3f n = camera.n(), p = camera.p(), u = camera.u(), v = camera.v();
+  pose.R(0,0) = u.x();  pose.R(1,0) = u.y();  pose.R(2,0) = u.z();
+  pose.R(0,1) = v.x();  pose.R(1,1) = v.y();  pose.R(2,1) = v.z();
+  pose.R(0,2) = n.x();  pose.R(1,2) = n.y();  pose.R(2,2) = n.z();
+  pose.T.x = p.dot(u);
+  pose.T.y = p.dot(v);
+  pose.T.z = -p.dot(n);
   pose.SetParamsFromModelView();
   pose.SetModelViewFromParams();
   m_spaintEngine->generate_free_raycast(m_image, pose);

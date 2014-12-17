@@ -46,34 +46,6 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets a vector pointing in the direction faced by the camera.
-   *
-   * \return  A vector pointing in the direction faced by the camera.
-   */
-  const Eigen::Vector3f& get_n() const;
-
-  /**
-   * \brief Gets the position of the camera.
-   *
-   * \return  The position of the camera.
-   */
-  const Eigen::Vector3f& get_position() const;
-
-  /**
-   * \brief Gets a vector pointing to the left of the camera.
-   *
-   * \return  A vector pointing to the left of the camera.
-   */
-  const Eigen::Vector3f& get_u() const;
-
-  /**
-   * \brief Gets a vector pointing to the top of the camera.
-   *
-   * \return  A vector pointing to the top of the camera.
-   */
-  const Eigen::Vector3f& get_v() const;
-
-  /**
    * \brief Moves the camera by the specified displacement in the n direction.
    *
    * \param delta The displacement by which to move.
@@ -95,12 +67,40 @@ public:
   Camera& move_v(float delta);
 
   /**
+   * \brief Gets a vector pointing in the direction faced by the camera.
+   *
+   * \return  A vector pointing in the direction faced by the camera.
+   */
+  const Eigen::Vector3f& n() const;
+
+  /**
+   * \brief Gets the position of the camera.
+   *
+   * \return  The position of the camera.
+   */
+  const Eigen::Vector3f& p() const;
+
+  /**
    * \brief Rotates the camera anticlockwise by the specified angle about the specified axis.
    *
    * \param axis  The axis about which to rotate.
    * \param angle The angle by which to rotate (in radians).
    */
   Camera& rotate(const Eigen::Vector3f& axis, float angle);
+
+  /**
+   * \brief Gets a vector pointing to the left of the camera.
+   *
+   * \return  A vector pointing to the left of the camera.
+   */
+  const Eigen::Vector3f& u() const;
+
+  /**
+   * \brief Gets a vector pointing to the top of the camera.
+   *
+   * \return  A vector pointing to the top of the camera.
+   */
+  const Eigen::Vector3f& v() const;
 };
 
 }
