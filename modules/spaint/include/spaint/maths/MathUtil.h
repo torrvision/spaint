@@ -24,7 +24,7 @@ struct MathUtil
    * \param axis  The axis about which to rotate it (must have a length >= 1e-3).
    * \return      A new vector containing the result of the rotation.
    */
-  Eigen::Vector3f rotate_about_axis(const Eigen::Vector3f& v, float angle, const Eigen::Vector3f& axis);
+  static Eigen::Vector3f rotate_about_axis(const Eigen::Vector3f& v, float angle, const Eigen::Vector3f& axis);
 };
 
 }

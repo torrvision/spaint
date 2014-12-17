@@ -42,7 +42,9 @@ Camera& Camera::move_v(float delta)
 
 Camera& Camera::rotate(const Eigen::Vector3f& axis, float angle)
 {
-  // TODO
+  m_n = MathUtil::rotate_about_axis(m_n, angle, axis);
+  m_u = MathUtil::rotate_about_axis(m_u, angle, axis);
+  m_v = MathUtil::rotate_about_axis(m_v, angle, axis);
   return *this;
 }
 
