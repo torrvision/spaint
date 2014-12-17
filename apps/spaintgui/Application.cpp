@@ -35,12 +35,12 @@ void Application::run()
     const int SWITCH_DELAY = 20;
     if(framesTillSwitchAllowed == 0)
     {
-      if(m_inputState->key_down(SDLK_w) && !m_inputState->key_down(SDLK_r))
+      if(m_inputState->key_down(SDLK_n) && !m_inputState->key_down(SDLK_r))
       {
         m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480, m_inputState));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
-      else if(m_inputState->key_down(SDLK_r) && !m_inputState->key_down(SDLK_w))
+      else if(m_inputState->key_down(SDLK_r) && !m_inputState->key_down(SDLK_n))
       {
 #if WITH_OVR
         try

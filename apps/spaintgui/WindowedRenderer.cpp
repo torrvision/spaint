@@ -63,10 +63,15 @@ void WindowedRenderer::render() const
   m_spaintEngine->get_default_raycast(m_image);
 #else
   ITMPose pose = m_spaintEngine->get_pose();
-  //pose.params.each.tx = 0;
-  pose.params.each.tx = tx;
-  pose.params.each.ty = ty;
-  pose.params.each.tz = tz;
+  //pose.params.each.tx = tx;
+  //pose.params.each.ty = ty;
+  //pose.params.each.tz = tz;
+  //pose.SetModelViewFromParams();
+  //std::cout << pose.M << '\n';
+  pose.T.x = tx;
+  pose.T.y = ty;
+  pose.T.z = tz;
+  pose.SetParamsFromModelView();
   pose.SetModelViewFromParams();
   m_spaintEngine->generate_free_raycast(m_image, pose);
 #endif
