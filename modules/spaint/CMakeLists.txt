@@ -26,6 +26,15 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 #############################
 
 ##
+SET(cameras_sources
+src/cameras/Camera.cpp
+)
+
+SET(cameras_headers
+include/spaint/cameras/Camera.h
+)
+
+##
 SET(input_sources
 src/input/InputState.cpp
 )
@@ -68,12 +77,14 @@ include/spaint/util/SpaintVoxel.h
 #################################################################
 
 SET(sources
+${cameras_sources}
 ${input_sources}
 ${maths_sources}
 ${toplevel_sources}
 )
 
 SET(headers
+${cameras_headers}
 ${input_headers}
 ${maths_headers}
 ${ogl_headers}
@@ -86,6 +97,7 @@ ${util_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(cameras FILES ${cameras_sources} ${cameras_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(maths FILES ${maths_sources} ${maths_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
