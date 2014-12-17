@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include <spaint/input/InputState.h>
 #include <spaint/ogl/WrappedGL.h>
 
 #include "Renderer.h"
@@ -21,6 +22,9 @@ private:
   /** The image in which to store the visualisation each frame. */
   ITMUChar4Image_Ptr m_image;
 
+  /** The current state of the keyboard and mouse. */
+  spaint::InputState_CPtr m_inputState;
+
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
 
@@ -34,7 +38,7 @@ public:
    * \param width         The width to give the window.
    * \param height        The height to give the window.
    */
-  WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height);
+  WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height, const spaint::InputState_CPtr& inputState);
 
   //#################### DESTRUCTOR ####################
 public:

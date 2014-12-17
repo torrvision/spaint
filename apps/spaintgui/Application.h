@@ -29,7 +29,7 @@ private:
   SDL_GLContext_Ptr m_context;
 
   /** The current state of the keyboard and mouse. */
-  spaint::InputState m_inputState;
+  spaint::InputState_Ptr m_inputState;
 
   /** The current renderer. */
   Renderer_CPtr m_renderer;

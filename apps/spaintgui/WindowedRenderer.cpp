@@ -8,8 +8,9 @@
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
-: Renderer(spaintEngine)
+WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height,
+                                   const spaint::InputState_CPtr& inputState)
+: Renderer(spaintEngine), m_inputState(inputState)
 {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -48,10 +49,24 @@ WindowedRenderer::~WindowedRenderer()
 void WindowedRenderer::render() const
 {
 #if 1
+  static float tx = 0.0f, ty = 0.0f, tz = 0.0f;
+  const float SPEED = 0.1f;
+  if(m_inputState->key_down(SDLK_w)) tz -= SPEED; // move forward = move scene backward (-z)
+  if(m_inputState->key_down(SDLK_s)) tz += SPEED; // move backward = move scene forward (+z)
+  if(m_inputState->key_down(SDLK_d)) tx -= SPEED; // strafe right = move scene left (-x)
+  if(m_inputState->key_down(SDLK_a)) tx += SPEED; // strafe left = move scene right (+x)
+  if(m_inputState->key_down(SDLK_q)) ty += SPEED; // move up = move scene down (+y)
+  if(m_inputState->key_down(SDLK_e)) ty -= SPEED; // move down = move scene up (-y)
+#endif
+
+#if 0
   m_spaintEngine->get_default_raycast(m_image);
 #else
   ITMPose pose = m_spaintEngine->get_pose();
-  pose.params.each.tx = 0;
+  //pose.params.each.tx = 0;
+  pose.params.each.tx = tx;
+  pose.params.each.ty = ty;
+  pose.params.each.tz = tz;
   pose.SetModelViewFromParams();
   m_spaintEngine->generate_free_raycast(m_image, pose);
 #endif

@@ -8,6 +8,8 @@
 #include <map>
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include <SDL_keyboard.h>
 
 #include "MouseButton.h"
@@ -55,6 +57,11 @@ public:
 	void set_mouse_motion(int x, int y);
 	void set_mouse_position(int x, int y);
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<InputState> InputState_Ptr;
+typedef boost::shared_ptr<const InputState> InputState_CPtr;
 
 }
 
