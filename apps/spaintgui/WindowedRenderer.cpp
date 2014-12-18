@@ -52,13 +52,19 @@ void WindowedRenderer::render() const
 #if 1
   static spaint::Camera camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f));
   const float SPEED = 0.1f;
+  const float ANGULAR_SPEED = 0.05f;
   if(m_inputState->key_down(SDLK_w)) camera.move_n(SPEED);
   if(m_inputState->key_down(SDLK_s)) camera.move_n(-SPEED);
   if(m_inputState->key_down(SDLK_d)) camera.move_u(-SPEED);
   if(m_inputState->key_down(SDLK_a)) camera.move_u(SPEED);
   if(m_inputState->key_down(SDLK_q)) camera.move_v(SPEED);
   if(m_inputState->key_down(SDLK_e)) camera.move_v(-SPEED);
-  if(m_inputState->key_down(SDLK_RIGHT)) camera.rotate(camera.v(), 0.01f);
+
+  Eigen::Vector3f up(0.0f, -1.0f, 0.0f);
+  if(m_inputState->key_down(SDLK_RIGHT)) camera.rotate(up, -ANGULAR_SPEED);
+  if(m_inputState->key_down(SDLK_LEFT)) camera.rotate(up, ANGULAR_SPEED);
+  if(m_inputState->key_down(SDLK_UP)) camera.rotate(camera.u(), ANGULAR_SPEED);
+  if(m_inputState->key_down(SDLK_DOWN)) camera.rotate(camera.u(), -ANGULAR_SPEED);
 #endif
 
 #if 0
@@ -71,8 +77,8 @@ void WindowedRenderer::render() const
   //pose.SetModelViewFromParams();
   //std::cout << pose.M << '\n';
   Eigen::Vector3f n = camera.n(), p = camera.p(), u = camera.u(), v = camera.v();
-  pose.R(0,0) = u.x();  pose.R(1,0) = u.y();  pose.R(2,0) = u.z();
-  pose.R(0,1) = v.x();  pose.R(1,1) = v.y();  pose.R(2,1) = v.z();
+  pose.R(0,0) = -u.x();  pose.R(1,0) = -u.y();  pose.R(2,0) = -u.z();
+  pose.R(0,1) = -v.x();  pose.R(1,1) = -v.y();  pose.R(2,1) = -v.z();
   pose.R(0,2) = n.x();  pose.R(1,2) = n.y();  pose.R(2,2) = n.z();
   pose.T.x = p.dot(u);
   pose.T.y = p.dot(v);
