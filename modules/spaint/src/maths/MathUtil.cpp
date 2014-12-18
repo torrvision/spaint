@@ -14,7 +14,7 @@ namespace spaint {
 Eigen::Vector3f MathUtil::rotate_about_axis(const Eigen::Vector3f& v, float angle, const Eigen::Vector3f& axis)
 {
   // Enforce the precondition.
-  if(fabs(axis.size() - 1) < 1e-3f)
+  if(fabs(axis.size() - 1.0f) < 1e-3f)
   {
     throw std::runtime_error("Vector too small to be used as a rotation axis");
   }
