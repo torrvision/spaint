@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include <spaint/cameras/Camera.h>
 #include <spaint/input/InputState.h>
 #include <spaint/ogl/WrappedGL.h>
 
@@ -57,6 +58,30 @@ private:
 public:
   /** Override */
   virtual void render() const;
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Calculates the InfiniTAM pose of the specified camera.
+   *
+   * \param camera  The camera.
+   * \return        The InfiniTAM pose of the camera.
+   */
+  static ITMPose calculate_pose(const spaint::Camera& camera);
+
+  /**
+   * \brief Sets the OpenGL model-view matrix corresponding to the specified InfiniTAM pose.
+   *
+   * \param pose  The InfiniTAM pose.
+   */
+  static void set_modelview_matrix(const ITMPose& pose);
+
+  /**
+   * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
+   *
+   * \param intrinsics  The intrinsic camera parameters.
+   */
+  static void set_projection_matrix(const ITMIntrinsics& intrinsics);
 };
 
 #endif

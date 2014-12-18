@@ -75,21 +75,7 @@ void WindowedRenderer::render() const
 #if 0
   m_spaintEngine->get_default_raycast(m_image);
 #else
-  ITMPose pose = m_spaintEngine->get_pose();
-  //pose.params.each.tx = tx;
-  //pose.params.each.ty = ty;
-  //pose.params.each.tz = tz;
-  //pose.SetModelViewFromParams();
-  //std::cout << pose.M << '\n';
-  Eigen::Vector3f n = camera.n(), p = camera.p(), u = camera.u(), v = camera.v();
-  pose.R(0,0) = -u.x();  pose.R(1,0) = -u.y();  pose.R(2,0) = -u.z();
-  pose.R(0,1) = -v.x();  pose.R(1,1) = -v.y();  pose.R(2,1) = -v.z();
-  pose.R(0,2) = n.x();  pose.R(1,2) = n.y();  pose.R(2,2) = n.z();
-  pose.T.x = p.dot(u);
-  pose.T.y = p.dot(v);
-  pose.T.z = -p.dot(n);
-  pose.SetParamsFromModelView();
-  pose.SetModelViewFromParams();
+  ITMPose pose = calculate_pose(camera);
   m_spaintEngine->generate_free_raycast(m_image, pose);
 #endif
 
@@ -127,68 +113,15 @@ void WindowedRenderer::render() const
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
 
-  const ITMIntrinsics& intrinsics = m_spaintEngine->get_intrinsics();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    glLoadIdentity();
-    double fx = intrinsics.projectionParamsSimple.fx / (640.0 / 2.0);
-    double fy = intrinsics.projectionParamsSimple.fy / (480.0 / 2.0);
-    double cx = -(intrinsics.projectionParamsSimple.px - 640.0 / 2.0) / (640.0 / 2.0);
-    double cy = -(intrinsics.projectionParamsSimple.py - 480.0 / 2.0) / (480.0 / 2.0);
-    double nearVal = 0.1;
-    double farVal = 1000.0;
-    double leftVal = nearVal / fx * (cx - 1.0);
-    //double leftVal = (-1.0 /*- intrinsics.projectionParamsSimple.px*/) * nearVal / intrinsics.projectionParamsSimple.fx;
-    double rightVal = nearVal / fx * (cx + 1.0);
-    //double rightVal = (1.0 /*- intrinsics.projectionParamsSimple.px*/) * nearVal / intrinsics.projectionParamsSimple.fx;
-    double bottomVal = nearVal / fy * (cy - 1.0);
-    double topVal = nearVal / fy * (cy + 1.0);
-    //double bottomVal = (-1.0/* - intrinsics.projectionParamsSimple.py*/) * nearVal / intrinsics.projectionParamsSimple.fy;
-    //double topVal = (1.0/* - intrinsics.projectionParamsSimple.py*/) * nearVal / intrinsics.projectionParamsSimple.fy;
-    //glFrustum(2.0f * leftVal * 640.0f, 2.0f * rightVal * 640.0f, bottomVal * 480.0f, topVal * 480.f, nearVal, farVal);
-    glFrustum(leftVal, rightVal, bottomVal, topVal, nearVal, farVal);
-    //gluPerspective(45.0, 640.0/480.0, 0.1, 1000.0);
+    set_projection_matrix(m_spaintEngine->get_intrinsics());
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     {
-      glLoadIdentity();
-      const Matrix3f& R = pose.R;
-      const Vector3f& T = pose.T;
-      float m[] = {
-        R(0,0),
-        R(0,1),
-        R(0,2),
-        0.0,
-        R(1,0),
-        R(1,1),
-        R(1,2),
-        0.0,
-        R(2,0),
-        R(2,1),
-        R(2,2),
-        0.0,
-        T.x,
-        T.y,
-        T.z,
-        1.0
-      };
-
-      //std::cout << pose.M << '\n';
-      gluLookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0);
-      glMultMatrixf(m);
-
-      glGetFloatv(GL_PROJECTION_MATRIX, m);
-      for(int i = 0; i < 16; ++i)
-      {
-        int x = i % 4;
-        int y = i / 4;
-        std::cout << m[x * 4 + y] << ' ';
-        if(i % 4 == 3) std::cout << '\n';
-      }
-      std::cout << '\n';
-      //gluLookAt(10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+      set_modelview_matrix(pose);
 
       glBegin(GL_LINES);
         glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
@@ -202,4 +135,64 @@ void WindowedRenderer::render() const
   glPopMatrix();
 
   SDL_GL_SwapWindow(m_window.get());
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+ITMPose WindowedRenderer::calculate_pose(const spaint::Camera& camera)
+{
+  ITMPose pose;
+
+  const Eigen::Vector3f& n = camera.n();
+  const Eigen::Vector3f& p = camera.p();
+  const Eigen::Vector3f& u = camera.u();
+  const Eigen::Vector3f& v = camera.v();
+
+  // Calculate the model-view matrix corresponding to the camera.
+  pose.R(0,0) = -u.x(); pose.R(1,0) = -u.y(); pose.R(2,0) = -u.z(); pose.T.x = p.dot(u);
+  pose.R(0,1) = -v.x(); pose.R(1,1) = -v.y(); pose.R(2,1) = -v.z(); pose.T.y = p.dot(v);
+  pose.R(0,2) = n.x();  pose.R(1,2) = n.y();  pose.R(2,2) = n.z();  pose.T.z = -p.dot(n);
+
+  // Determine the InfiniTAM pose from the model-view matrix.
+  pose.SetParamsFromModelView();
+  pose.SetModelViewFromParams();
+
+  return pose;
+}
+
+void WindowedRenderer::set_modelview_matrix(const ITMPose& pose)
+{
+  glLoadIdentity();
+
+  // Note: InfiniTAM uses a right-handed coordinate system with z pointing into the screen.
+  gluLookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0);
+
+  // Post-multiply the current model-view matrix with the pose matrix.
+  float m[16];
+  int i = 0;
+  for(int x = 0; x < 4; ++x)
+  {
+    for(int y = 0; y < 4; ++y)
+    {
+      m[i++] = pose.M(x,y);
+    }
+  }
+  glMultMatrixf(m);
+}
+
+void WindowedRenderer::set_projection_matrix(const ITMIntrinsics& intrinsics)
+{
+  // FIXME: Get rid of the hard-coded values.
+  glLoadIdentity();
+  double fx = intrinsics.projectionParamsSimple.fx / (640.0 / 2.0);
+  double fy = intrinsics.projectionParamsSimple.fy / (480.0 / 2.0);
+  double cx = -(intrinsics.projectionParamsSimple.px - 640.0 / 2.0) / (640.0 / 2.0);
+  double cy = -(intrinsics.projectionParamsSimple.py - 480.0 / 2.0) / (480.0 / 2.0);
+  double nearVal = 0.1;
+  double farVal = 1000.0;
+  double leftVal = nearVal / fx * (cx - 1.0);
+  double rightVal = nearVal / fx * (cx + 1.0);
+  double bottomVal = nearVal / fy * (cy - 1.0);
+  double topVal = nearVal / fy * (cy + 1.0);
+  glFrustum(leftVal, rightVal, bottomVal, topVal, nearVal, farVal);
 }
