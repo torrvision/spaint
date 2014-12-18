@@ -70,6 +70,11 @@ SpaintEngine::ImageSourceEngine_Ptr SpaintEngine::get_image_source_engine() cons
   return m_imageSourceEngine;
 }
 
+const ITMIntrinsics& SpaintEngine::get_intrinsics() const
+{
+  return m_view->calib->intrinsics_d;
+}
+
 const ITMPose& SpaintEngine::get_pose() const
 {
   return *m_trackingState->pose_d;

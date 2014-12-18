@@ -7,6 +7,8 @@
 #include <spaint/cameras/Camera.h>
 #include <spaint/ogl/WrappedGL.h>
 
+#include <ITMLib/Utils/ITMMath.h>
+
 //#################### CONSTRUCTORS ####################
 
 WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height,
@@ -49,6 +51,9 @@ WindowedRenderer::~WindowedRenderer()
 
 void WindowedRenderer::render() const
 {
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 #if 1
   static spaint::Camera camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f));
   const float SPEED = 0.1f;
@@ -105,6 +110,7 @@ void WindowedRenderer::render() const
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(false));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glColor3f(1.0f, 1.0f, 1.0f);
 				glBegin(GL_QUADS);
         {
 					glTexCoord2f(0, 1); glVertex2f(0, 0);
@@ -115,6 +121,80 @@ void WindowedRenderer::render() const
 				glEnd();
       }
       glDisable(GL_TEXTURE_2D);
+    }
+    glPopMatrix();
+  }
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  const ITMIntrinsics& intrinsics = m_spaintEngine->get_intrinsics();
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  {
+    glLoadIdentity();
+    double fx = intrinsics.projectionParamsSimple.fx / (640.0 / 2.0);
+    double fy = intrinsics.projectionParamsSimple.fy / (480.0 / 2.0);
+    double cx = -(intrinsics.projectionParamsSimple.px - 640.0 / 2.0) / (640.0 / 2.0);
+    double cy = -(intrinsics.projectionParamsSimple.py - 480.0 / 2.0) / (480.0 / 2.0);
+    double nearVal = 0.1;
+    double farVal = 1000.0;
+    double leftVal = nearVal / fx * (cx - 1.0);
+    //double leftVal = (-1.0 /*- intrinsics.projectionParamsSimple.px*/) * nearVal / intrinsics.projectionParamsSimple.fx;
+    double rightVal = nearVal / fx * (cx + 1.0);
+    //double rightVal = (1.0 /*- intrinsics.projectionParamsSimple.px*/) * nearVal / intrinsics.projectionParamsSimple.fx;
+    double bottomVal = nearVal / fy * (cy - 1.0);
+    double topVal = nearVal / fy * (cy + 1.0);
+    //double bottomVal = (-1.0/* - intrinsics.projectionParamsSimple.py*/) * nearVal / intrinsics.projectionParamsSimple.fy;
+    //double topVal = (1.0/* - intrinsics.projectionParamsSimple.py*/) * nearVal / intrinsics.projectionParamsSimple.fy;
+    //glFrustum(2.0f * leftVal * 640.0f, 2.0f * rightVal * 640.0f, bottomVal * 480.0f, topVal * 480.f, nearVal, farVal);
+    glFrustum(leftVal, rightVal, bottomVal, topVal, nearVal, farVal);
+    //gluPerspective(45.0, 640.0/480.0, 0.1, 1000.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    {
+      glLoadIdentity();
+      const Matrix3f& R = pose.R;
+      const Vector3f& T = pose.T;
+      float m[] = {
+        R(0,0),
+        R(0,1),
+        R(0,2),
+        0.0,
+        R(1,0),
+        R(1,1),
+        R(1,2),
+        0.0,
+        R(2,0),
+        R(2,1),
+        R(2,2),
+        0.0,
+        T.x,
+        T.y,
+        T.z,
+        1.0
+      };
+
+      //std::cout << pose.M << '\n';
+      gluLookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0);
+      glMultMatrixf(m);
+
+      glGetFloatv(GL_PROJECTION_MATRIX, m);
+      for(int i = 0; i < 16; ++i)
+      {
+        int x = i % 4;
+        int y = i / 4;
+        std::cout << m[x * 4 + y] << ' ';
+        if(i % 4 == 3) std::cout << '\n';
+      }
+      std::cout << '\n';
+      //gluLookAt(10.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+
+      glBegin(GL_LINES);
+        glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
+        glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
+        glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
+      glEnd();
     }
     glPopMatrix();
   }
