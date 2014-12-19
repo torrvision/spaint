@@ -19,6 +19,9 @@ class WindowedRenderer : public Renderer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The height of the window. */
+  int m_height;
+
   /** The image in which to store the visualisation each frame. */
   ITMUChar4Image_Ptr m_image;
 
@@ -28,15 +31,18 @@ private:
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
 
+  /** The width of the window. */
+  int m_width;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a windowed renderer.
    *
    * \param spaintEngine  The spaint engine.
-   * \param title         The title to give the window.
-   * \param width         The width to give the window.
-   * \param height        The height to give the window.
+   * \param title         The title of the window.
+   * \param width         The width of the window.
+   * \param height        The height of the window.
    */
   WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height, const spaint::InputState_CPtr& inputState);
 
@@ -79,8 +85,10 @@ private:
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
    *
    * \param intrinsics  The intrinsic camera parameters.
+   * \param width       The width of the viewport.
+   * \param height      The height of the viewport.
    */
-  static void set_projection_matrix(const ITMIntrinsics& intrinsics);
+  static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
 };
 
 #endif

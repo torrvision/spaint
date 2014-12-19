@@ -13,7 +13,7 @@
 
 WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height,
                                    const spaint::InputState_CPtr& inputState)
-: Renderer(spaintEngine), m_inputState(inputState)
+: Renderer(spaintEngine), m_height(height), m_inputState(inputState), m_width(width)
 {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -104,7 +104,7 @@ void WindowedRenderer::render(const spaint::Camera_CPtr& camera) const
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    set_projection_matrix(m_spaintEngine->get_intrinsics());
+    set_projection_matrix(m_spaintEngine->get_intrinsics(), m_width, m_height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -168,19 +168,22 @@ void WindowedRenderer::set_modelview_matrix(const ITMPose& pose)
   glMultMatrixf(m);
 }
 
-void WindowedRenderer::set_projection_matrix(const ITMIntrinsics& intrinsics)
+void WindowedRenderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
 {
-  // FIXME: Get rid of the hard-coded values.
-  glLoadIdentity();
-  double fx = intrinsics.projectionParamsSimple.fx / (640.0 / 2.0);
-  double fy = intrinsics.projectionParamsSimple.fy / (480.0 / 2.0);
-  double cx = -(intrinsics.projectionParamsSimple.px - 640.0 / 2.0) / (640.0 / 2.0);
-  double cy = -(intrinsics.projectionParamsSimple.py - 480.0 / 2.0) / (480.0 / 2.0);
+  double halfWidth = width / 2.0;
+  double halfHeight = height / 2.0;
+  double fx = intrinsics.projectionParamsSimple.fx / halfWidth;
+  double fy = intrinsics.projectionParamsSimple.fy / halfHeight;
+  double cx = -(intrinsics.projectionParamsSimple.px - halfWidth) / halfWidth;
+  double cy = -(intrinsics.projectionParamsSimple.py - halfHeight) / halfHeight;
+
   double nearVal = 0.1;
   double farVal = 1000.0;
-  double leftVal = nearVal / fx * (cx - 1.0);
-  double rightVal = nearVal / fx * (cx + 1.0);
-  double bottomVal = nearVal / fy * (cy - 1.0);
-  double topVal = nearVal / fy * (cy + 1.0);
+  double leftVal = (cx - 1.0) * nearVal / fx;
+  double rightVal = (cx + 1.0) * nearVal / fx;
+  double bottomVal = (cy - 1.0) * nearVal / fy;
+  double topVal = (cy + 1.0) * nearVal / fy;
+
+  glLoadIdentity();
   glFrustum(leftVal, rightVal, bottomVal, topVal, nearVal, farVal);
 }
