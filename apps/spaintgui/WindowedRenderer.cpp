@@ -49,35 +49,23 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void WindowedRenderer::render() const
+void WindowedRenderer::render(const spaint::Camera_CPtr& camera) const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-#if 1
-  static spaint::Camera camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f));
-  const float SPEED = 0.1f;
-  const float ANGULAR_SPEED = 0.05f;
-  if(m_inputState->key_down(SDLK_w)) camera.move_n(SPEED);
-  if(m_inputState->key_down(SDLK_s)) camera.move_n(-SPEED);
-  if(m_inputState->key_down(SDLK_d)) camera.move_u(-SPEED);
-  if(m_inputState->key_down(SDLK_a)) camera.move_u(SPEED);
-  if(m_inputState->key_down(SDLK_q)) camera.move_v(SPEED);
-  if(m_inputState->key_down(SDLK_e)) camera.move_v(-SPEED);
-
-  Eigen::Vector3f up(0.0f, -1.0f, 0.0f);
-  if(m_inputState->key_down(SDLK_RIGHT)) camera.rotate(up, -ANGULAR_SPEED);
-  if(m_inputState->key_down(SDLK_LEFT)) camera.rotate(up, ANGULAR_SPEED);
-  if(m_inputState->key_down(SDLK_UP)) camera.rotate(camera.u(), ANGULAR_SPEED);
-  if(m_inputState->key_down(SDLK_DOWN)) camera.rotate(camera.u(), -ANGULAR_SPEED);
-#endif
-
-#if 0
-  m_spaintEngine->get_default_raycast(m_image);
-#else
-  ITMPose pose = calculate_pose(camera);
-  m_spaintEngine->generate_free_raycast(m_image, pose);
-#endif
+  // Determine the camera pose and raycast the scene.
+  ITMPose pose;
+  if(camera)
+  {
+    pose = calculate_pose(*camera);
+    m_spaintEngine->generate_free_raycast(m_image, pose);
+  }
+  else
+  {
+    pose = m_spaintEngine->get_pose();
+    m_spaintEngine->get_default_raycast(m_image);
+  }
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();

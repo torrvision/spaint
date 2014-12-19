@@ -7,7 +7,6 @@
 
 #include <string>
 
-#include <spaint/cameras/Camera.h>
 #include <spaint/input/InputState.h>
 #include <spaint/ogl/WrappedGL.h>
 
@@ -57,7 +56,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void render() const;
+  virtual void render(const spaint::Camera_CPtr& camera) const;
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:

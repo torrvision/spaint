@@ -17,7 +17,9 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
-: m_inputState(new spaint::InputState), m_spaintEngine(spaintEngine)
+: m_camera(new spaint::Camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
+  m_inputState(new spaint::InputState),
+  m_spaintEngine(spaintEngine)
 {
   m_renderer.reset(new WindowedRenderer(spaintEngine, "Semantic Paint", 640, 480, m_inputState));
 }
@@ -30,45 +32,12 @@ void Application::run()
   {
     if(!process_events() || m_inputState->key_down(SDLK_ESCAPE)) return;
 
-    // Switch renderers if the user requests it.
-    static int framesTillSwitchAllowed = 0;
-    const int SWITCH_DELAY = 20;
-    if(framesTillSwitchAllowed == 0)
-    {
-      if(m_inputState->key_down(SDLK_n) && !m_inputState->key_down(SDLK_r))
-      {
-        m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480, m_inputState));
-        framesTillSwitchAllowed = SWITCH_DELAY;
-      }
-      else if(m_inputState->key_down(SDLK_r) && !m_inputState->key_down(SDLK_n))
-      {
-#if WITH_OVR
-        try
-        {
-          m_renderer.reset(new RiftRenderer(
-            m_spaintEngine,
-            "Semantic Paint",
-            m_inputState->key_down(SDLK_LSHIFT) ? RiftRenderer::FULLSCREEN_MODE : RiftRenderer::WINDOWED_MODE
-          ));
-          framesTillSwitchAllowed = SWITCH_DELAY;
-        }
-        catch(std::runtime_error&) {}
-#endif
-      }
-    }
-    else --framesTillSwitchAllowed;
+    // Take action as relevant based on the current input state.
+    process_input();
 
     // Process and render the next frame.
     m_spaintEngine->process_frame();
-    m_renderer->render();
-
-#if 0
-    for(int i = 0; i < 6; ++i)
-    {
-      std::cout << m_spaintEngine->get_pose().params.all[i] << ' ';
-    }
-    std::cout << '\n';
-#endif
+    m_renderer->render(m_camera);
   }
 }
 
@@ -151,4 +120,52 @@ bool Application::process_events()
   }
 
   return true;
+}
+
+void Application::process_input()
+{
+  // Switch renderers if the user requests it.
+  static int framesTillSwitchAllowed = 0;
+  const int SWITCH_DELAY = 20;
+  if(framesTillSwitchAllowed == 0)
+  {
+    if(m_inputState->key_down(SDLK_n) && !m_inputState->key_down(SDLK_r))
+    {
+      m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480, m_inputState));
+      framesTillSwitchAllowed = SWITCH_DELAY;
+    }
+    else if(m_inputState->key_down(SDLK_r) && !m_inputState->key_down(SDLK_n))
+    {
+#if WITH_OVR
+      try
+      {
+        m_renderer.reset(new RiftRenderer(
+          m_spaintEngine,
+          "Semantic Paint",
+          m_inputState->key_down(SDLK_LSHIFT) ? RiftRenderer::FULLSCREEN_MODE : RiftRenderer::WINDOWED_MODE
+        ));
+        framesTillSwitchAllowed = SWITCH_DELAY;
+      }
+      catch(std::runtime_error&) {}
+#endif
+    }
+  }
+  else --framesTillSwitchAllowed;
+
+  // Allow the user to move the camera around.
+  const float SPEED = 0.1f;
+  const float ANGULAR_SPEED = 0.05f;
+  static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
+
+  if(m_inputState->key_down(SDLK_w)) m_camera->move_n(SPEED);
+  if(m_inputState->key_down(SDLK_s)) m_camera->move_n(-SPEED);
+  if(m_inputState->key_down(SDLK_d)) m_camera->move_u(-SPEED);
+  if(m_inputState->key_down(SDLK_a)) m_camera->move_u(SPEED);
+  if(m_inputState->key_down(SDLK_q)) m_camera->move_v(SPEED);
+  if(m_inputState->key_down(SDLK_e)) m_camera->move_v(-SPEED);
+
+  if(m_inputState->key_down(SDLK_RIGHT)) m_camera->rotate(UP, -ANGULAR_SPEED);
+  if(m_inputState->key_down(SDLK_LEFT)) m_camera->rotate(UP, ANGULAR_SPEED);
+  if(m_inputState->key_down(SDLK_UP)) m_camera->rotate(m_camera->u(), ANGULAR_SPEED);
+  if(m_inputState->key_down(SDLK_DOWN)) m_camera->rotate(m_camera->u(), -ANGULAR_SPEED);
 }

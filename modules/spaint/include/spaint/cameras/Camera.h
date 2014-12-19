@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_CAMERA
 #define H_SPAINT_CAMERA
 
+#include <boost/shared_ptr.hpp>
+
 #include <Eigen/Dense>
 
 namespace spaint {
@@ -102,6 +104,11 @@ public:
    */
   const Eigen::Vector3f& v() const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<Camera> Camera_Ptr;
+typedef boost::shared_ptr<const Camera> Camera_CPtr;
 
 }
 

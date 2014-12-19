@@ -8,6 +8,7 @@
 #include <SDL.h>
 
 #include <spaint/SpaintEngine.h>
+#include <spaint/cameras/Camera.h>
 #include <spaint/input/InputState.h>
 
 #include "Renderer.h"
@@ -20,13 +21,11 @@ class Application
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Renderer> Renderer_CPtr;
-  typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
-  typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The OpenGL context for the main window. */
-  SDL_GLContext_Ptr m_context;
+  /** The camera from which to render the scene. */
+  spaint::Camera_Ptr m_camera;
 
   /** The current state of the keyboard and mouse. */
   spaint::InputState_Ptr m_inputState;
@@ -89,6 +88,11 @@ private:
    * \return true, if the application should continue running, or false otherwise.
    */
   bool process_events();
+
+  /**
+   * \brief Takes action as relevant based on the current input state.
+   */
+  void process_input();
 };
 
 #endif
