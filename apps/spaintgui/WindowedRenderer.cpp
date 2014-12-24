@@ -4,7 +4,7 @@
 
 #include "WindowedRenderer.h"
 
-#include <spaint/cameras/Camera.h>
+#include <spaint/cameras/SimpleCamera.h>
 #include <spaint/ogl/WrappedGL.h>
 
 #include <ITMLib/Utils/ITMMath.h>
@@ -35,6 +35,8 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine,
 
   glViewport(0, 0, width, height);
 
+  m_camera.reset(new spaint::SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+
   m_image.reset(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
   glGenTextures(1, &m_textureID);
 }
@@ -48,16 +50,16 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void WindowedRenderer::render(const spaint::Camera_CPtr& camera) const
+void WindowedRenderer::render() const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Determine the camera pose and raycast the scene.
   ITMPose pose;
-  if(camera)
+  if(m_camera)
   {
-    pose = calculate_pose(*camera);
+    pose = calculate_pose(*m_camera);
     m_spaintEngine->generate_free_raycast(m_image, pose);
   }
   else

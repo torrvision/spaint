@@ -8,7 +8,7 @@
 #include <SDL.h>
 
 #include <spaint/SpaintEngine.h>
-#include <spaint/cameras/Camera.h>
+#include <spaint/cameras/MoveableCamera.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the scene constructed by the spaint engine to a given target.
@@ -23,6 +23,9 @@ protected:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** The camera from which to render the scene. */
+  spaint::MoveableCamera_Ptr m_camera;
+
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
@@ -50,14 +53,24 @@ public:
    */
   virtual ~Renderer() {}
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Renders the scene.
-   *
-   * \param camera  The camera from which to render the scene (if null, we simply follow the reconstruction around).
    */
-  virtual void render(const spaint::Camera_CPtr& camera) const = 0;
+  virtual void render() const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the camera from which to render the scene.
+   *
+   * \return  The camera from which to render the scene.
+   */
+  spaint::MoveableCamera_Ptr get_camera()
+  {
+    return m_camera;
+  }
 };
 
 #endif

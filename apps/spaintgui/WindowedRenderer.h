@@ -58,7 +58,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void render(const spaint::Camera_CPtr& camera) const;
+  virtual void render() const;
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:

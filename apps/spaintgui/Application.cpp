@@ -18,8 +18,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
-: m_camera(new spaint::SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
-  m_spaintEngine(spaintEngine)
+: m_spaintEngine(spaintEngine)
 {
   m_renderer.reset(new WindowedRenderer(spaintEngine, "Semantic Paint", 640, 480));
 }
@@ -37,7 +36,7 @@ void Application::run()
 
     // Process and render the next frame.
     m_spaintEngine->process_frame();
-    m_renderer->render(m_camera);
+    m_renderer->render();
   }
 }
 
@@ -152,20 +151,24 @@ void Application::process_input()
   }
   else --framesTillSwitchAllowed;
 
-  // Allow the user to move the camera around.
-  const float SPEED = 0.1f;
-  const float ANGULAR_SPEED = 0.05f;
-  static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
+  // If there is a camera, allow the user to move it around.
+  MoveableCamera_Ptr camera = m_renderer->get_camera();
+  if(camera)
+  {
+    const float SPEED = 0.1f;
+    const float ANGULAR_SPEED = 0.05f;
+    static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
-  if(m_inputState.key_down(SDLK_w)) m_camera->move_n(SPEED);
-  if(m_inputState.key_down(SDLK_s)) m_camera->move_n(-SPEED);
-  if(m_inputState.key_down(SDLK_d)) m_camera->move_u(-SPEED);
-  if(m_inputState.key_down(SDLK_a)) m_camera->move_u(SPEED);
-  if(m_inputState.key_down(SDLK_q)) m_camera->move_v(SPEED);
-  if(m_inputState.key_down(SDLK_e)) m_camera->move_v(-SPEED);
+    if(m_inputState.key_down(SDLK_w)) camera->move_n(SPEED);
+    if(m_inputState.key_down(SDLK_s)) camera->move_n(-SPEED);
+    if(m_inputState.key_down(SDLK_d)) camera->move_u(-SPEED);
+    if(m_inputState.key_down(SDLK_a)) camera->move_u(SPEED);
+    if(m_inputState.key_down(SDLK_q)) camera->move_v(SPEED);
+    if(m_inputState.key_down(SDLK_e)) camera->move_v(-SPEED);
 
-  if(m_inputState.key_down(SDLK_RIGHT)) m_camera->rotate(UP, -ANGULAR_SPEED);
-  if(m_inputState.key_down(SDLK_LEFT)) m_camera->rotate(UP, ANGULAR_SPEED);
-  if(m_inputState.key_down(SDLK_UP)) m_camera->rotate(m_camera->u(), ANGULAR_SPEED);
-  if(m_inputState.key_down(SDLK_DOWN)) m_camera->rotate(m_camera->u(), -ANGULAR_SPEED);
+    if(m_inputState.key_down(SDLK_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
+    if(m_inputState.key_down(SDLK_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
+    if(m_inputState.key_down(SDLK_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
+    if(m_inputState.key_down(SDLK_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
+  }
 }

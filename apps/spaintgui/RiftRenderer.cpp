@@ -103,7 +103,7 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void RiftRenderer::render(const spaint::Camera_CPtr& camera) const
+void RiftRenderer::render() const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);
