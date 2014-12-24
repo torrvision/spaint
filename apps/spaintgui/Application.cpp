@@ -152,7 +152,7 @@ void Application::process_input()
   else --framesTillSwitchAllowed;
 
   // If there is a camera, allow the user to move it around.
-  MoveableCamera_Ptr camera = m_renderer->get_camera();
+  Camera_Ptr camera = m_renderer->get_camera();
   if(camera)
   {
     const float SPEED = 0.1f;

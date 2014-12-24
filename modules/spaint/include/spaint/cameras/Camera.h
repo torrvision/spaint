@@ -30,6 +30,27 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Moves the camera by the specified displacement in the n direction.
+   *
+   * \param delta The displacement by which to move.
+   */
+  virtual Camera& move_n(float delta) = 0;
+
+  /**
+   * \brief Moves the camera by the specified displacement in the u direction.
+   *
+   * \param delta The displacement by which to move.
+   */
+  virtual Camera& move_u(float delta) = 0;
+
+  /**
+   * \brief Moves the camera by the specified displacement in the v direction.
+   *
+   * \param delta The displacement by which to move.
+   */
+  virtual Camera& move_v(float delta) = 0;
+
+  /**
    * \brief Gets a vector pointing in the direction faced by the camera.
    *
    * \return  A vector pointing in the direction faced by the camera.
@@ -42,6 +63,14 @@ public:
    * \return  The position of the camera.
    */
   virtual Eigen::Vector3f p() const = 0;
+
+  /**
+   * \brief Rotates the camera anticlockwise by the specified angle about the specified axis.
+   *
+   * \param axis  The axis about which to rotate.
+   * \param angle The angle by which to rotate (in radians).
+   */
+  virtual Camera& rotate(const Eigen::Vector3f& axis, float angle) = 0;
 
   /**
    * \brief Gets a vector pointing to the left of the camera.

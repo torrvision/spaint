@@ -5,14 +5,14 @@
 #ifndef H_SPAINT_SIMPLECAMERA
 #define H_SPAINT_SIMPLECAMERA
 
-#include "MoveableCamera.h"
+#include "Camera.h"
 
 namespace spaint {
 
 /**
- * \brief An instance of this class represents a simple, moveable camera in 3D space.
+ * \brief An instance of this class represents a simple camera in 3D space.
  */
-class SimpleCamera : public MoveableCamera
+class SimpleCamera : public Camera
 {
   //#################### PRIVATE VARIABLES ####################
 private:
