@@ -24,18 +24,22 @@ private:
   /** The camera on which this derived camera is based. */
   Camera_CPtr m_baseCamera;
 
-  /** The transformation mapping points in this camera's coordinate frame into that of the base camera. */
-  Eigen::Matrix4f m_transformation;
+  /** The rotation from the base camera's axes to those of the derived camera. */
+  Eigen::Matrix3f m_rot;
+
+  /** The translation from the base camera's axes to those of the derived camera (expressed in the base camera's u-v-n coordinates). */
+  Eigen::Vector3f m_trans;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a derived camera.
    *
-   * \param baseCamera      The camera on which this derived camera is based.
-   * \param transformation  The transformation mapping points in this camera's coordinate frame into that of the base camera.
+   * \param baseCamera  The camera on which this derived camera is based.
+   * \param rot         The rotation from the base camera's axes to those of the derived camera.
+   * \param trans       The translation from the base camera's axes to those of the derived camera (expressed in the base camera's u-v-n coordinates).
    */
-  DerivedCamera(const Camera_CPtr& baseCamera, const Eigen::Matrix4f& transformation);
+  DerivedCamera(const Camera_CPtr& baseCamera, const Eigen::Matrix3f& rot, const Eigen::Vector3f& trans);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
