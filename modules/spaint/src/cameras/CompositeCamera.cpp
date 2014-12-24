@@ -4,6 +4,8 @@
 
 #include "cameras/CompositeCamera.h"
 
+#include <stdexcept>
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -16,14 +18,15 @@ CompositeCamera::CompositeCamera(const MoveableCamera_Ptr& primaryCamera)
 
 void CompositeCamera::add_secondary_camera(const std::string& name, const Camera_CPtr& camera)
 {
-  // TODO
-  throw 23;
+  bool result = m_secondaryCameras.insert(std::make_pair(name, camera)).second;
+  if(!result) throw std::runtime_error("The composite already contains a camera named '" + name + "'");
 }
 
 const Camera_CPtr& CompositeCamera::get_secondary_camera(const std::string& name) const
 {
-  // TODO
-  throw 23;
+  std::map<std::string,Camera_CPtr>::const_iterator it = m_secondaryCameras.find(name);
+  if(it == m_secondaryCameras.end()) throw std::runtime_error("The composite does not contain a camera named '" +  name + "'");
+  return it->second;
 }
 
 CompositeCamera& CompositeCamera::move_n(float delta)
@@ -56,8 +59,9 @@ Eigen::Vector3f CompositeCamera::p() const
 
 void CompositeCamera::remove_secondary_camera(const std::string& name)
 {
-  // TODO
-  throw 23;
+  std::map<std::string,Camera_CPtr>::iterator it = m_secondaryCameras.find(name);
+  if(it == m_secondaryCameras.end()) throw std::runtime_error("The composite does not contain a camera named '" +  name + "'");
+  m_secondaryCameras.erase(it);
 }
 
 CompositeCamera& CompositeCamera::rotate(const Eigen::Vector3f& axis, float angle)
