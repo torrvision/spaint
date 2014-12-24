@@ -4,8 +4,6 @@
 
 #include "cameras/Camera.h"
 
-#include <tvgutil/maths/MathUtil.h>
-
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -52,9 +50,10 @@ const Eigen::Vector3f& Camera::p() const
 
 Camera& Camera::rotate(const Eigen::Vector3f& axis, float angle)
 {
-  m_n = tvgutil::MathUtil::rotate_about_axis(m_n, angle, axis);
-  m_u = tvgutil::MathUtil::rotate_about_axis(m_u, angle, axis);
-  m_v = tvgutil::MathUtil::rotate_about_axis(m_v, angle, axis);
+  Eigen::AngleAxisf rot(angle, axis);
+  m_n = rot * m_n;
+  m_u = rot * m_u;
+  m_v = rot * m_v;
   return *this;
 }
 
