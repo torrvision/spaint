@@ -7,8 +7,9 @@
 
 #include <SDL.h>
 
+#include <rigging/MoveableCamera.h>
+
 #include <spaint/SpaintEngine.h>
-#include <spaint/cameras/MoveableCamera.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the scene constructed by the spaint engine to a given target.
@@ -57,7 +58,7 @@ public:
    *
    * \return  The camera from which to render the scene.
    */
-  virtual spaint::MoveableCamera_Ptr get_camera() = 0;
+  virtual rigging::MoveableCamera_Ptr get_camera() = 0;
 
   /**
    * \brief Renders the scene.

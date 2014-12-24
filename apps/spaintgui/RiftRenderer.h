@@ -9,7 +9,8 @@
 
 #include <OVR.h>
 
-#include <spaint/cameras/CompositeCamera.h>
+#include <rigging/CompositeCamera.h>
+
 #include <spaint/ogl/WrappedGL.h>
 
 #include "Renderer.h"
@@ -33,7 +34,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The camera from which to render the scene. */
-  spaint::CompositeCamera_Ptr m_camera;
+  rigging::CompositeCamera_Ptr m_camera;
 
   /** The images in which to store the eye textures each frame. */
   ITMUChar4Image_Ptr m_eyeImages[ovrEye_Count];
@@ -71,7 +72,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual spaint::MoveableCamera_Ptr get_camera();
+  virtual rigging::MoveableCamera_Ptr get_camera();
 
   /** Override */
   virtual void render() const;

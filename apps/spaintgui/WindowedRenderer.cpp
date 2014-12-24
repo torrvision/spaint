@@ -4,7 +4,9 @@
 
 #include "WindowedRenderer.h"
 
-#include <spaint/cameras/SimpleCamera.h>
+#include <rigging/SimpleCamera.h>
+using namespace rigging;
+
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
@@ -51,7 +53,7 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-spaint::MoveableCamera_Ptr WindowedRenderer::get_camera()
+rigging::MoveableCamera_Ptr WindowedRenderer::get_camera()
 {
   return m_camera;
 }
@@ -134,7 +136,7 @@ void WindowedRenderer::render() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-ITMPose WindowedRenderer::calculate_pose(const spaint::Camera& camera)
+ITMPose WindowedRenderer::calculate_pose(const Camera& camera)
 {
   ITMPose pose;
 

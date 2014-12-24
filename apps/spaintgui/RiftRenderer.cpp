@@ -17,10 +17,10 @@ using namespace OVR;
 
 #include <SDL_syswm.h>
 
-#include <spaint/cameras/CompositeCamera.h>
-#include <spaint/cameras/DerivedCamera.h>
-#include <spaint/cameras/SimpleCamera.h>
-using namespace spaint;
+#include <rigging/CompositeCamera.h>
+#include <rigging/DerivedCamera.h>
+#include <rigging/SimpleCamera.h>
+using namespace rigging;
 
 //#################### CONSTRUCTORS ####################
 
@@ -114,7 +114,7 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-spaint::MoveableCamera_Ptr RiftRenderer::get_camera()
+MoveableCamera_Ptr RiftRenderer::get_camera()
 {
   return m_camera;
 }

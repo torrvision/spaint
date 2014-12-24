@@ -1,12 +1,12 @@
-#####################################
-# CMakeLists.txt for scratch/spaint #
-#####################################
+######################################
+# CMakeLists.txt for scratch/rigging #
+######################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname scratchtest_spaint)
+SET(targetname scratchtest_rigging)
 
 ################################
 # Specify the libraries to use #
@@ -31,17 +31,17 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAScratchTestTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #################################
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} spaint tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} rigging)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)

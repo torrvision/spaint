@@ -1,13 +1,13 @@
 /**
- * spaint: MoveableCamera.h
+ * rigging: MoveableCamera.h
  */
 
-#ifndef H_SPAINT_MOVEABLECAMERA
-#define H_SPAINT_MOVEABLECAMERA
+#ifndef H_RIGGING_MOVEABLECAMERA
+#define H_RIGGING_MOVEABLECAMERA
 
 #include "Camera.h"
 
-namespace spaint {
+namespace rigging {
 
 /**
  * \brief An instance of a class deriving from this one represents a moveable camera in 3D space.

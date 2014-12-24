@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include <spaint/cameras/CompositeCamera.h>
-#include <spaint/cameras/DerivedCamera.h>
-#include <spaint/cameras/SimpleCamera.h>
-using namespace spaint;
+#include <rigging/CompositeCamera.h>
+#include <rigging/DerivedCamera.h>
+#include <rigging/SimpleCamera.h>
+using namespace rigging;
 
 int main()
 {

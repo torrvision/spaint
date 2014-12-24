@@ -1,10 +1,10 @@
 /**
- * spaint: SimpleCamera.cpp
+ * rigging: SimpleCamera.cpp
  */
 
-#include "cameras/SimpleCamera.h"
+#include "SimpleCamera.h"
 
-namespace spaint {
+namespace rigging {
 
 //#################### CONSTRUCTORS ####################
 

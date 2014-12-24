@@ -6,7 +6,9 @@
 
 #include <stdexcept>
 
-#include <spaint/cameras/SimpleCamera.h>
+#include <rigging/SimpleCamera.h>
+using namespace rigging;
+
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 

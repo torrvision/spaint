@@ -1,15 +1,15 @@
 /**
- * spaint: DerivedCamera.h
+ * rigging: DerivedCamera.h
  */
 
-#ifndef H_SPAINT_DERIVEDCAMERA
-#define H_SPAINT_DERIVEDCAMERA
+#ifndef H_RIGGING_DERIVEDCAMERA
+#define H_RIGGING_DERIVEDCAMERA
 
 #include <Eigen/Dense>
 
 #include "Camera.h"
 
-namespace spaint {
+namespace rigging {
 
 /**
  * \brief An instance of this class can be used to represent a camera whose position and orientation are based on those of another camera.

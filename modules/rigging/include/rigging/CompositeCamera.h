@@ -1,16 +1,16 @@
 /**
- * spaint: CompositeCamera.h
+ * rigging: CompositeCamera.h
  */
 
-#ifndef H_SPAINT_COMPOSITECAMERA
-#define H_SPAINT_COMPOSITECAMERA
+#ifndef H_RIGGING_COMPOSITECAMERA
+#define H_RIGGING_COMPOSITECAMERA
 
 #include <map>
 #include <string>
 
 #include "MoveableCamera.h"
 
-namespace spaint {
+namespace rigging {
 
 /**
  * \brief An instance of this class can be used to represent a "composite" camera (i.e. a camera rig) consisting of several other cameras.

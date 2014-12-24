@@ -1,10 +1,10 @@
 /**
- * spaint: DerivedCamera.cpp
+ * rigging: DerivedCamera.cpp
  */
 
-#include "cameras/DerivedCamera.h"
+#include "DerivedCamera.h"
 
-namespace spaint {
+namespace rigging {
 
 //#################### CONSTRUCTORS ####################
 

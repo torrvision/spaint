@@ -1,15 +1,15 @@
 /**
- * spaint: Camera.h
+ * rigging: Camera.h
  */
 
-#ifndef H_SPAINT_CAMERA
-#define H_SPAINT_CAMERA
+#ifndef H_RIGGING_CAMERA
+#define H_RIGGING_CAMERA
 
 #include <boost/shared_ptr.hpp>
 
 #include <Eigen/Dense>
 
-namespace spaint {
+namespace rigging {
 
 /**
  * \brief An instance of a class deriving from this one represents a camera in 3D space.

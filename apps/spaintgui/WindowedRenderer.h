@@ -19,7 +19,7 @@ class WindowedRenderer : public Renderer
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The camera from which to render the scene. */
-  spaint::MoveableCamera_Ptr m_camera;
+  rigging::MoveableCamera_Ptr m_camera;
 
   /** The height of the window. */
   int m_height;
@@ -61,7 +61,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual spaint::MoveableCamera_Ptr get_camera();
+  virtual rigging::MoveableCamera_Ptr get_camera();
 
   /** Override */
   virtual void render() const;
@@ -74,7 +74,7 @@ private:
    * \param camera  The camera.
    * \return        The InfiniTAM pose of the camera.
    */
-  static ITMPose calculate_pose(const spaint::Camera& camera);
+  static ITMPose calculate_pose(const rigging::Camera& camera);
 
   /**
    * \brief Sets the OpenGL model-view matrix corresponding to the specified InfiniTAM pose.

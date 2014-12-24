@@ -1,12 +1,12 @@
 /**
- * spaint: CompositeCamera.cpp
+ * rigging: CompositeCamera.cpp
  */
 
-#include "cameras/CompositeCamera.h"
+#include "CompositeCamera.h"
 
 #include <stdexcept>
 
-namespace spaint {
+namespace rigging {
 
 //#################### CONSTRUCTORS ####################
 
