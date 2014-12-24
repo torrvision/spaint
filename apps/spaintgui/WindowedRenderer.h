@@ -18,6 +18,9 @@ class WindowedRenderer : public Renderer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The camera from which to render the scene. */
+  spaint::MoveableCamera_Ptr m_camera;
+
   /** The height of the window. */
   int m_height;
 
@@ -57,6 +60,9 @@ private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /** Override */
+  virtual spaint::MoveableCamera_Ptr get_camera();
+
   /** Override */
   virtual void render() const;
 

@@ -6,12 +6,13 @@
 
 #include <spaint/cameras/SimpleCamera.h>
 #include <spaint/ogl/WrappedGL.h>
+using namespace spaint;
 
 #include <ITMLib/Utils/ITMMath.h>
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
+WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
 : Renderer(spaintEngine), m_height(height), m_width(width)
 {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -35,7 +36,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine,
 
   glViewport(0, 0, width, height);
 
-  m_camera.reset(new spaint::SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+  m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
   m_image.reset(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
   glGenTextures(1, &m_textureID);
@@ -49,6 +50,11 @@ WindowedRenderer::~WindowedRenderer()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+spaint::MoveableCamera_Ptr WindowedRenderer::get_camera()
+{
+  return m_camera;
+}
 
 void WindowedRenderer::render() const
 {

@@ -17,6 +17,11 @@ using namespace OVR;
 
 #include <SDL_syswm.h>
 
+#include <spaint/cameras/CompositeCamera.h>
+#include <spaint/cameras/DerivedCamera.h>
+#include <spaint/cameras/SimpleCamera.h>
+using namespace spaint;
+
 //#################### CONSTRUCTORS ####################
 
 RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode)
@@ -83,6 +88,12 @@ RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const s
   }
 #endif
 
+  // Set up the camera.
+  MoveableCamera_Ptr primaryCamera(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+  m_camera.reset(new CompositeCamera(primaryCamera));
+  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(primaryCamera, Eigen::Matrix4f::Identity())));
+  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(primaryCamera, Eigen::Matrix4f::Identity())));
+
   // Set up the eye images and eye textures.
   ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();
   for(int i = 0; i < ovrEye_Count; ++i)
@@ -102,6 +113,11 @@ RiftRenderer::~RiftRenderer()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+spaint::MoveableCamera_Ptr RiftRenderer::get_camera()
+{
+  return m_camera;
+}
 
 void RiftRenderer::render() const
 {
