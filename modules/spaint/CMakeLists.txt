@@ -27,11 +27,15 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 ##
 SET(cameras_sources
-src/cameras/Camera.cpp
+src/cameras/SimpleCamera.cpp
 )
 
 SET(cameras_headers
 include/spaint/cameras/Camera.h
+include/spaint/cameras/CompositeCamera.h
+include/spaint/cameras/DerivedCamera.h
+include/spaint/cameras/MoveableCamera.h
+include/spaint/cameras/SimpleCamera.h
 )
 
 ##

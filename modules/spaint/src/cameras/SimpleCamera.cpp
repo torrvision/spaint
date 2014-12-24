@@ -1,14 +1,14 @@
 /**
- * spaint: Camera.cpp
+ * spaint: SimpleCamera.cpp
  */
 
-#include "cameras/Camera.h"
+#include "cameras/SimpleCamera.h"
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-Camera::Camera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, const Eigen::Vector3f& up)
+SimpleCamera::SimpleCamera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, const Eigen::Vector3f& up)
 : m_n(look), m_position(position), m_v(up)
 {
   m_n.normalize();
@@ -20,35 +20,35 @@ Camera::Camera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, con
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Camera& Camera::move_n(float delta)
+SimpleCamera& SimpleCamera::move_n(float delta)
 {
   m_position += delta * m_n;
   return *this;
 }
 
-Camera& Camera::move_u(float delta)
+SimpleCamera& SimpleCamera::move_u(float delta)
 {
   m_position += delta * m_u;
   return *this;
 }
 
-Camera& Camera::move_v(float delta)
+SimpleCamera& SimpleCamera::move_v(float delta)
 {
   m_position += delta * m_v;
   return *this;
 }
 
-const Eigen::Vector3f& Camera::n() const
+const Eigen::Vector3f& SimpleCamera::n() const
 {
   return m_n;
 }
 
-const Eigen::Vector3f& Camera::p() const
+const Eigen::Vector3f& SimpleCamera::p() const
 {
   return m_position;
 }
 
-Camera& Camera::rotate(const Eigen::Vector3f& axis, float angle)
+SimpleCamera& SimpleCamera::rotate(const Eigen::Vector3f& axis, float angle)
 {
   Eigen::AngleAxisf rot(angle, axis);
   m_n = rot * m_n;
@@ -57,12 +57,12 @@ Camera& Camera::rotate(const Eigen::Vector3f& axis, float angle)
   return *this;
 }
 
-const Eigen::Vector3f& Camera::u() const
+const Eigen::Vector3f& SimpleCamera::u() const
 {
   return m_u;
 }
 
-const Eigen::Vector3f& Camera::v() const
+const Eigen::Vector3f& SimpleCamera::v() const
 {
   return m_v;
 }

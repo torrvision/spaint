@@ -8,7 +8,7 @@
 #include <SDL.h>
 
 #include <spaint/SpaintEngine.h>
-#include <spaint/cameras/Camera.h>
+#include <spaint/cameras/MoveableCamera.h>
 #include <spaint/input/InputState.h>
 
 #include "Renderer.h"
@@ -25,7 +25,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The camera from which to render the scene. */
-  spaint::Camera_Ptr m_camera;
+  spaint::MoveableCamera_Ptr m_camera;
 
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;

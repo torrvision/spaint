@@ -6,6 +6,7 @@
 
 #include <stdexcept>
 
+#include <spaint/cameras/SimpleCamera.h>
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
@@ -17,7 +18,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
-: m_camera(new spaint::Camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
+: m_camera(new spaint::SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
   m_spaintEngine(spaintEngine)
 {
   m_renderer.reset(new WindowedRenderer(spaintEngine, "Semantic Paint", 640, 480));
