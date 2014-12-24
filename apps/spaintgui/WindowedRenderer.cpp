@@ -82,7 +82,7 @@ void WindowedRenderer::render(const spaint::Camera_CPtr& camera) const
         glBindTexture(GL_TEXTURE_2D, m_textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(false));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glColor3f(1.0f, 1.0f, 1.0f);
 				glBegin(GL_QUADS);
         {

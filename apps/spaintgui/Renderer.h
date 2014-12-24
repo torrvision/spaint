@@ -55,7 +55,7 @@ public:
   /**
    * \brief Renders the scene.
    *
-   * \param camera  The camera from which to render the scene (if null, the position of the camera being used for reconstruction is used).
+   * \param camera  The camera from which to render the scene (if null, we simply follow the reconstruction around).
    */
   virtual void render(const spaint::Camera_CPtr& camera) const = 0;
 };
