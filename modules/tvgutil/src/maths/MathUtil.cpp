@@ -1,5 +1,5 @@
 /**
- * spaint: MathUtil.cpp
+ * tvgutil: MathUtil.cpp
  */
 
 #include "maths/MathUtil.h"
@@ -7,7 +7,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace spaint {
+namespace tvgutil {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

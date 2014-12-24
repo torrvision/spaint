@@ -1,13 +1,13 @@
 /**
- * spaint: MathUtil.h
+ * tvgutil: MathUtil.h
  */
 
-#ifndef H_SPAINT_MATHUTIL
-#define H_SPAINT_MATHUTIL
+#ifndef H_TVGUTIL_MATHUTIL
+#define H_TVGUTIL_MATHUTIL
 
 #include <Eigen/Dense>
 
-namespace spaint {
+namespace tvgutil {
 
 /**
  * \brief This class contains mathematical utility functions.

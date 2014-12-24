@@ -14,10 +14,20 @@ SET(targetname tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 #############################
 # Specify the project files #
 #############################
+
+##
+SET(maths_sources
+src/maths/MathUtil.cpp
+)
+
+SET(maths_headers
+include/tvgutil/maths/MathUtil.h
+)
 
 ##
 SET(timers_headers
@@ -46,10 +56,12 @@ include/tvgutil/RandomNumberGenerator.h
 #################################################################
 
 SET(sources
+${maths_sources}
 ${toplevel_sources}
 )
 
 SET(headers
+${maths_headers}
 ${timers_headers}
 ${toplevel_headers}
 )
@@ -59,6 +71,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(maths FILES ${maths_sources} ${maths_headers})
 SOURCE_GROUP(timers FILES ${timers_headers})
 
 ##########################################

@@ -45,15 +45,6 @@ include/spaint/input/MouseButton.h
 )
 
 ##
-SET(maths_sources
-src/maths/MathUtil.cpp
-)
-
-SET(maths_headers
-include/spaint/maths/MathUtil.h
-)
-
-##
 SET(ogl_headers
 include/spaint/ogl/WrappedGL.h
 )
@@ -79,14 +70,12 @@ include/spaint/util/SpaintVoxel.h
 SET(sources
 ${cameras_sources}
 ${input_sources}
-${maths_sources}
 ${toplevel_sources}
 )
 
 SET(headers
 ${cameras_headers}
 ${input_headers}
-${maths_headers}
 ${ogl_headers}
 ${toplevel_headers}
 ${util_headers}
@@ -99,7 +88,6 @@ ${util_headers}
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(cameras FILES ${cameras_sources} ${cameras_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
-SOURCE_GROUP(maths FILES ${maths_sources} ${maths_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(util FILES ${util_headers})
 
