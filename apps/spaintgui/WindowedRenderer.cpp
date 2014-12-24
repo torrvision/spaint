@@ -11,9 +11,8 @@
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height,
-                                   const spaint::InputState_CPtr& inputState)
-: Renderer(spaintEngine), m_height(height), m_inputState(inputState), m_width(width)
+WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
+: Renderer(spaintEngine), m_height(height), m_width(width)
 {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 

@@ -28,7 +28,7 @@ private:
   spaint::Camera_Ptr m_camera;
 
   /** The current state of the keyboard and mouse. */
-  spaint::InputState_Ptr m_inputState;
+  spaint::InputState m_inputState;
 
   /** The current renderer. */
   Renderer_CPtr m_renderer;

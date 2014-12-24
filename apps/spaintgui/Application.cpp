@@ -18,10 +18,9 @@ using namespace spaint;
 
 Application::Application(const spaint::SpaintEngine_Ptr& spaintEngine)
 : m_camera(new spaint::Camera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
-  m_inputState(new spaint::InputState),
   m_spaintEngine(spaintEngine)
 {
-  m_renderer.reset(new WindowedRenderer(spaintEngine, "Semantic Paint", 640, 480, m_inputState));
+  m_renderer.reset(new WindowedRenderer(spaintEngine, "Semantic Paint", 640, 480));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -30,7 +29,7 @@ void Application::run()
 {
   for(;;)
   {
-    if(!process_events() || m_inputState->key_down(SDLK_ESCAPE)) return;
+    if(!process_events() || m_inputState.key_down(SDLK_ESCAPE)) return;
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -45,12 +44,12 @@ void Application::run()
 
 void Application::handle_key_down(const SDL_Keysym& keysym)
 {
-  m_inputState->press_key(keysym.sym);
+  m_inputState.press_key(keysym.sym);
 }
 
 void Application::handle_key_up(const SDL_Keysym& keysym)
 {
-  m_inputState->release_key(keysym.sym);
+  m_inputState.release_key(keysym.sym);
 }
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
@@ -58,13 +57,13 @@ void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
   switch(e.button)
   {
     case SDL_BUTTON_LEFT:
-      m_inputState->press_mouse_button(MOUSE_BUTTON_LEFT, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, e.x, e.y);
       break;
     case SDL_BUTTON_MIDDLE:
-      m_inputState->press_mouse_button(MOUSE_BUTTON_MIDDLE, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, e.x, e.y);
       break;
     case SDL_BUTTON_RIGHT:
-      m_inputState->press_mouse_button(MOUSE_BUTTON_RIGHT, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, e.x, e.y);
       break;
     default:
       break;
@@ -76,13 +75,13 @@ void Application::handle_mousebutton_up(const SDL_MouseButtonEvent& e)
   switch(e.button)
   {
     case SDL_BUTTON_LEFT:
-      m_inputState->release_mouse_button(MOUSE_BUTTON_LEFT);
+      m_inputState.release_mouse_button(MOUSE_BUTTON_LEFT);
       break;
     case SDL_BUTTON_MIDDLE:
-      m_inputState->release_mouse_button(MOUSE_BUTTON_MIDDLE);
+      m_inputState.release_mouse_button(MOUSE_BUTTON_MIDDLE);
       break;
     case SDL_BUTTON_RIGHT:
-      m_inputState->release_mouse_button(MOUSE_BUTTON_RIGHT);
+      m_inputState.release_mouse_button(MOUSE_BUTTON_RIGHT);
       break;
     default:
       break;
@@ -109,8 +108,8 @@ bool Application::process_events()
         handle_mousebutton_up(event.button);
         break;
       case SDL_MOUSEMOTION:
-        m_inputState->set_mouse_position(event.motion.x, event.motion.y);
-        m_inputState->set_mouse_motion(event.motion.xrel, event.motion.yrel);
+        m_inputState.set_mouse_position(event.motion.x, event.motion.y);
+        m_inputState.set_mouse_motion(event.motion.xrel, event.motion.yrel);
         break;
       case SDL_QUIT:
         return false;
@@ -129,12 +128,12 @@ void Application::process_input()
   const int SWITCH_DELAY = 20;
   if(framesTillSwitchAllowed == 0)
   {
-    if(m_inputState->key_down(SDLK_n) && !m_inputState->key_down(SDLK_r))
+    if(m_inputState.key_down(SDLK_n) && !m_inputState.key_down(SDLK_r))
     {
-      m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480, m_inputState));
+      m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480));
       framesTillSwitchAllowed = SWITCH_DELAY;
     }
-    else if(m_inputState->key_down(SDLK_r) && !m_inputState->key_down(SDLK_n))
+    else if(m_inputState.key_down(SDLK_r) && !m_inputState.key_down(SDLK_n))
     {
 #if WITH_OVR
       try
@@ -142,7 +141,7 @@ void Application::process_input()
         m_renderer.reset(new RiftRenderer(
           m_spaintEngine,
           "Semantic Paint",
-          m_inputState->key_down(SDLK_LSHIFT) ? RiftRenderer::FULLSCREEN_MODE : RiftRenderer::WINDOWED_MODE
+          m_inputState.key_down(SDLK_LSHIFT) ? RiftRenderer::FULLSCREEN_MODE : RiftRenderer::WINDOWED_MODE
         ));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
@@ -157,15 +156,15 @@ void Application::process_input()
   const float ANGULAR_SPEED = 0.05f;
   static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
-  if(m_inputState->key_down(SDLK_w)) m_camera->move_n(SPEED);
-  if(m_inputState->key_down(SDLK_s)) m_camera->move_n(-SPEED);
-  if(m_inputState->key_down(SDLK_d)) m_camera->move_u(-SPEED);
-  if(m_inputState->key_down(SDLK_a)) m_camera->move_u(SPEED);
-  if(m_inputState->key_down(SDLK_q)) m_camera->move_v(SPEED);
-  if(m_inputState->key_down(SDLK_e)) m_camera->move_v(-SPEED);
+  if(m_inputState.key_down(SDLK_w)) m_camera->move_n(SPEED);
+  if(m_inputState.key_down(SDLK_s)) m_camera->move_n(-SPEED);
+  if(m_inputState.key_down(SDLK_d)) m_camera->move_u(-SPEED);
+  if(m_inputState.key_down(SDLK_a)) m_camera->move_u(SPEED);
+  if(m_inputState.key_down(SDLK_q)) m_camera->move_v(SPEED);
+  if(m_inputState.key_down(SDLK_e)) m_camera->move_v(-SPEED);
 
-  if(m_inputState->key_down(SDLK_RIGHT)) m_camera->rotate(UP, -ANGULAR_SPEED);
-  if(m_inputState->key_down(SDLK_LEFT)) m_camera->rotate(UP, ANGULAR_SPEED);
-  if(m_inputState->key_down(SDLK_UP)) m_camera->rotate(m_camera->u(), ANGULAR_SPEED);
-  if(m_inputState->key_down(SDLK_DOWN)) m_camera->rotate(m_camera->u(), -ANGULAR_SPEED);
+  if(m_inputState.key_down(SDLK_RIGHT)) m_camera->rotate(UP, -ANGULAR_SPEED);
+  if(m_inputState.key_down(SDLK_LEFT)) m_camera->rotate(UP, ANGULAR_SPEED);
+  if(m_inputState.key_down(SDLK_UP)) m_camera->rotate(m_camera->u(), ANGULAR_SPEED);
+  if(m_inputState.key_down(SDLK_DOWN)) m_camera->rotate(m_camera->u(), -ANGULAR_SPEED);
 }
