@@ -69,14 +69,6 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Calculates the InfiniTAM pose of the specified camera.
-   *
-   * \param camera  The camera.
-   * \return        The InfiniTAM pose of the camera.
-   */
-  static ITMPose calculate_pose(const rigging::Camera& camera);
-
-  /**
    * \brief Sets the OpenGL model-view matrix corresponding to the specified InfiniTAM pose.
    *
    * \param pose  The InfiniTAM pose.
