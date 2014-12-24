@@ -34,28 +34,28 @@ public:
    *
    * \return  A vector pointing in the direction faced by the camera.
    */
-  virtual const Eigen::Vector3f& n() const = 0;
+  virtual Eigen::Vector3f n() const = 0;
 
   /**
    * \brief Gets the position of the camera.
    *
    * \return  The position of the camera.
    */
-  virtual const Eigen::Vector3f& p() const = 0;
+  virtual Eigen::Vector3f p() const = 0;
 
   /**
    * \brief Gets a vector pointing to the left of the camera.
    *
    * \return  A vector pointing to the left of the camera.
    */
-  virtual const Eigen::Vector3f& u() const = 0;
+  virtual Eigen::Vector3f u() const = 0;
 
   /**
    * \brief Gets a vector pointing to the top of the camera.
    *
    * \return  A vector pointing to the top of the camera.
    */
-  virtual const Eigen::Vector3f& v() const = 0;
+  virtual Eigen::Vector3f v() const = 0;
 };
 
 //#################### TYPEDEFS ####################

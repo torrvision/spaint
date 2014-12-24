@@ -31,7 +31,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a new camera.
+   * \brief Constructs a simple camera.
    *
    * \param position  The position of the camera.
    * \param look      A vector pointing in the direction faced by the camera.
@@ -51,19 +51,19 @@ public:
   SimpleCamera& move_v(float delta);
 
   /** Override */
-  const Eigen::Vector3f& n() const;
+  Eigen::Vector3f n() const;
 
   /** Override */
-  const Eigen::Vector3f& p() const;
+  Eigen::Vector3f p() const;
 
   /** Override */
   SimpleCamera& rotate(const Eigen::Vector3f& axis, float angle);
 
   /** Override */
-  const Eigen::Vector3f& u() const;
+  Eigen::Vector3f u() const;
 
   /** Override */
-  const Eigen::Vector3f& v() const;
+  Eigen::Vector3f v() const;
 };
 
 }

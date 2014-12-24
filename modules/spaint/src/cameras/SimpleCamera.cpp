@@ -38,12 +38,12 @@ SimpleCamera& SimpleCamera::move_v(float delta)
   return *this;
 }
 
-const Eigen::Vector3f& SimpleCamera::n() const
+Eigen::Vector3f SimpleCamera::n() const
 {
   return m_n;
 }
 
-const Eigen::Vector3f& SimpleCamera::p() const
+Eigen::Vector3f SimpleCamera::p() const
 {
   return m_position;
 }
@@ -57,12 +57,12 @@ SimpleCamera& SimpleCamera::rotate(const Eigen::Vector3f& axis, float angle)
   return *this;
 }
 
-const Eigen::Vector3f& SimpleCamera::u() const
+Eigen::Vector3f SimpleCamera::u() const
 {
   return m_u;
 }
 
-const Eigen::Vector3f& SimpleCamera::v() const
+Eigen::Vector3f SimpleCamera::v() const
 {
   return m_v;
 }

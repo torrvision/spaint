@@ -27,6 +27,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 
 ##
 SET(cameras_sources
+src/cameras/DerivedCamera.cpp
 src/cameras/SimpleCamera.cpp
 )
 
