@@ -16,7 +16,7 @@ DerivedCamera::DerivedCamera(const Camera_CPtr& baseCamera, const Eigen::Matrix3
 
 Eigen::Vector3f DerivedCamera::n() const
 {
-  return m_rot * m_baseCamera->n();
+  return make_world_space_rotation() * m_baseCamera->n();
 }
 
 Eigen::Vector3f DerivedCamera::p() const
@@ -26,12 +26,28 @@ Eigen::Vector3f DerivedCamera::p() const
 
 Eigen::Vector3f DerivedCamera::u() const
 {
-  return m_rot * m_baseCamera->u();
+  return make_world_space_rotation() * m_baseCamera->u();
 }
 
 Eigen::Vector3f DerivedCamera::v() const
 {
-  return m_rot * m_baseCamera->v();
+  return make_world_space_rotation() * m_baseCamera->v();
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+Eigen::Matrix3f DerivedCamera::make_world_space_rotation() const
+{
+  Eigen::Vector3f n = m_baseCamera->n(), u = m_baseCamera->u(), v = m_baseCamera->v();
+
+  // Construct a matrix that transforms points from camera space to world space. For example, m * (1,0,0)^T = u.
+  Eigen::Matrix3f m;
+  m(0,0) = u.x(); m(1,0) = v.x(); m(2,0) = n.x();
+  m(0,1) = u.y(); m(1,1) = v.y(); m(2,1) = n.y();
+  m(0,2) = u.z(); m(1,2) = v.z(); m(2,2) = n.z();
+
+  // Use it to turn our camera-space rotation matrix into a world-space one.
+  return m * m_rot * m.inverse();
 }
 
 }

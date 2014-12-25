@@ -11,17 +11,18 @@ int main()
   CompositeCamera compositeCamera(primaryCamera);
   Camera_CPtr leftCamera(new DerivedCamera(
     primaryCamera,
-    Eigen::AngleAxisf(-M_PI/4.0f, primaryCamera->v()).toRotationMatrix(),
-    Eigen::Vector3f(1.0f, 0.0f, 0.0f)
+    Eigen::AngleAxisf(-M_PI/2.0f, Eigen::Vector3f(0.0f, 1.0f, 0.0f)).toRotationMatrix(),  // the rotation is in *camera space*, i.e. about v
+    Eigen::Vector3f(1.0f, 0.0f, 0.0f)                                                     // the translation is in *camera space*, i.e. along u
   ));
   Camera_CPtr rightCamera(new DerivedCamera(
     primaryCamera,
-    Eigen::AngleAxisf(M_PI/4.0f, primaryCamera->v()).toRotationMatrix(),
-    Eigen::Vector3f(-1.0f, 0.0f, 0.0f)
+    Eigen::AngleAxisf(M_PI/2.0f, Eigen::Vector3f(0.0f, 1.0f, 0.0f)).toRotationMatrix(),   // the rotation is in *camera space*, i.e. about v
+    Eigen::Vector3f(-1.0f, 0.0f, 0.0f)                                                    // the translation is in *camera space*, i.e. along -u
   ));
   compositeCamera.add_secondary_camera("left", leftCamera);
   compositeCamera.add_secondary_camera("right", rightCamera);
-  compositeCamera.rotate(primaryCamera->v(), M_PI/2.0f);
+  compositeCamera.rotate(primaryCamera->u(), M_PI/2.0f);
+  std::cout << "CN:\n" << compositeCamera.n() << '\n';
   std::cout << "LP:\n" << compositeCamera.get_secondary_camera("left")->p() << '\n';
   std::cout << "LU:\n" << compositeCamera.get_secondary_camera("left")->u() << '\n';
   std::cout << "LV:\n" << compositeCamera.get_secondary_camera("left")->v() << '\n';
