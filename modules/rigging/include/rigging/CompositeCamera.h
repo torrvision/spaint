@@ -8,7 +8,7 @@
 #include <map>
 #include <string>
 
-#include "MoveableCamera.h"
+#include "SimpleCamera.h"
 
 namespace rigging {
 
@@ -23,7 +23,7 @@ class CompositeCamera : public MoveableCamera
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The primary camera, which controls the position and orientation of the composite. */
-  MoveableCamera_Ptr m_primaryCamera;
+  SimpleCamera m_primaryCamera;
 
   /** The secondary cameras. */
   std::map<std::string,Camera_CPtr> m_secondaryCameras;
@@ -33,9 +33,11 @@ public:
   /**
    * \brief Constructs a composite camera.
    *
-   * \param primaryCamera The primary camera, which controls the position and orientation of the composite.
+   * \param position  The position of the camera.
+   * \param look      A vector pointing in the direction faced by the camera.
+   * \param up        The "up" direction for the camera.
    */
-  explicit CompositeCamera(const MoveableCamera_Ptr& primaryCamera);
+  CompositeCamera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, const Eigen::Vector3f& up);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

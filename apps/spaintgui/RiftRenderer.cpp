@@ -89,10 +89,9 @@ RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const s
 #endif
 
   // Set up the camera.
-  MoveableCamera_Ptr primaryCamera(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-  m_camera.reset(new CompositeCamera(primaryCamera));
-  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(primaryCamera, Eigen::Matrix3f::Identity(), Eigen::Vector3f::Zero())));
-  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(primaryCamera, Eigen::Matrix3f::Identity(), Eigen::Vector3f::Zero())));
+  m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f::Zero())));
+  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f::Zero())));
 
   // Set up the eye images and eye textures.
   ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();

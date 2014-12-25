@@ -10,8 +10,8 @@ namespace rigging {
 
 //#################### CONSTRUCTORS ####################
 
-CompositeCamera::CompositeCamera(const MoveableCamera_Ptr& primaryCamera)
-: m_primaryCamera(primaryCamera)
+CompositeCamera::CompositeCamera(const Eigen::Vector3f& position, const Eigen::Vector3f& look, const Eigen::Vector3f& up)
+: m_primaryCamera(position, look, up)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -31,30 +31,30 @@ const Camera_CPtr& CompositeCamera::get_secondary_camera(const std::string& name
 
 CompositeCamera& CompositeCamera::move_n(float delta)
 {
-  m_primaryCamera->move_n(delta);
+  m_primaryCamera.move_n(delta);
   return *this;
 }
 
 CompositeCamera& CompositeCamera::move_u(float delta)
 {
-  m_primaryCamera->move_u(delta);
+  m_primaryCamera.move_u(delta);
   return *this;
 }
 
 CompositeCamera& CompositeCamera::move_v(float delta)
 {
-  m_primaryCamera->move_v(delta);
+  m_primaryCamera.move_v(delta);
   return *this;
 }
 
 Eigen::Vector3f CompositeCamera::n() const
 {
-  return m_primaryCamera->n();
+  return m_primaryCamera.n();
 }
 
 Eigen::Vector3f CompositeCamera::p() const
 {
-  return m_primaryCamera->p();
+  return m_primaryCamera.p();
 }
 
 void CompositeCamera::remove_secondary_camera(const std::string& name)
@@ -66,18 +66,18 @@ void CompositeCamera::remove_secondary_camera(const std::string& name)
 
 CompositeCamera& CompositeCamera::rotate(const Eigen::Vector3f& axis, float angle)
 {
-  m_primaryCamera->rotate(axis, angle);
+  m_primaryCamera.rotate(axis, angle);
   return *this;
 }
 
 Eigen::Vector3f CompositeCamera::u() const
 {
-  return m_primaryCamera->u();
+  return m_primaryCamera.u();
 }
 
 Eigen::Vector3f CompositeCamera::v() const
 {
-  return m_primaryCamera->v();
+  return m_primaryCamera.v();
 }
 
 }
