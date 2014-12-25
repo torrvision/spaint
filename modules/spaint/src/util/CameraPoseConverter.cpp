@@ -31,4 +31,13 @@ ITMPose CameraPoseConverter::camera_to_pose(const Camera& camera)
   return pose;
 }
 
+SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::Objects::ITMPose& pose)
+{
+  // Note: This can be derived by looking at the matrix in camera_to_pose.
+  Eigen::Vector3f p(pose.invT.x, pose.invT.y, pose.invT.z);
+  Eigen::Vector3f n(pose.R(0,2), pose.R(1,2), pose.R(2,2));
+  Eigen::Vector3f v(-pose.R(0,1), -pose.R(1,1), -pose.R(2,1));
+  return SimpleCamera(p, n, v);
+}
+
 }
