@@ -95,14 +95,14 @@ void WindowedRenderer::render() const
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glColor3f(1.0f, 1.0f, 1.0f);
-				glBegin(GL_QUADS);
+        glBegin(GL_QUADS);
         {
-					glTexCoord2f(0, 1); glVertex2f(0, 0);
-					glTexCoord2f(1, 1); glVertex2f(1, 0);
-					glTexCoord2f(1, 0); glVertex2f(1, 1);
-					glTexCoord2f(0, 0); glVertex2f(0, 1);
+          glTexCoord2f(0, 1); glVertex2f(0, 0);
+          glTexCoord2f(1, 1); glVertex2f(1, 0);
+          glTexCoord2f(1, 0); glVertex2f(1, 1);
+          glTexCoord2f(0, 0); glVertex2f(0, 1);
         }
-				glEnd();
+        glEnd();
       }
       glDisable(GL_TEXTURE_2D);
     }

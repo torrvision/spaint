@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-#include <rigging/SimpleCamera.h>
+#include <rigging/MoveableCamera.h>
 using namespace rigging;
 
 #include <spaint/ogl/WrappedGL.h>
