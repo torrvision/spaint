@@ -16,6 +16,20 @@
  */
 class Renderer
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  enum CameraMode
+  {
+    /** TODO */
+    CM_FOLLOW,
+
+    /** TODO */
+    CM_FREE
+  };
+
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
@@ -24,6 +38,9 @@ protected:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** TODO */
+  CameraMode m_cameraMode;
+
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
@@ -41,7 +58,8 @@ public:
    * \param spaintEngine  The spaint engine.
    */
   explicit Renderer(const spaint::SpaintEngine_Ptr& spaintEngine)
-  : m_spaintEngine(spaintEngine)
+  : m_cameraMode(CM_FOLLOW),
+    m_spaintEngine(spaintEngine)
   {}
 
   //#################### DESTRUCTOR ####################
@@ -64,6 +82,24 @@ public:
    * \brief Renders the scene.
    */
   virtual void render() const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  CameraMode get_camera_mode() const
+  {
+    return m_cameraMode;
+  }
+
+  /**
+   * \brief TODO
+   */
+  void set_camera_mode(CameraMode cameraMode)
+  {
+    m_cameraMode = cameraMode;
+  }
 };
 
 #endif

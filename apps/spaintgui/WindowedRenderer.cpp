@@ -4,6 +4,8 @@
 
 #include "WindowedRenderer.h"
 
+#include <stdexcept>
+
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
 
@@ -66,15 +68,25 @@ void WindowedRenderer::render() const
 
   // Determine the camera pose and raycast the scene.
   ITMPose pose;
-  if(m_camera)
+  switch(m_cameraMode)
   {
-    pose = CameraPoseConverter::camera_to_pose(*m_camera);
-    m_spaintEngine->generate_free_raycast(m_image, pose);
-  }
-  else
-  {
-    pose = m_spaintEngine->get_pose();
-    m_spaintEngine->get_default_raycast(m_image);
+    case CM_FOLLOW:
+    {
+      pose = m_spaintEngine->get_pose();
+      m_spaintEngine->get_default_raycast(m_image);
+      break;
+    }
+    case CM_FREE:
+    {
+      pose = CameraPoseConverter::camera_to_pose(*m_camera);
+      m_spaintEngine->generate_free_raycast(m_image, pose);
+      break;
+    }
+    default:
+    {
+      // This should never happen.
+      throw std::runtime_error("Error: Unknown camera mode");
+    }
   }
 
   glMatrixMode(GL_PROJECTION);

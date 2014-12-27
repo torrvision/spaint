@@ -125,7 +125,7 @@ bool Application::process_events()
 
 void Application::process_input()
 {
-  // Switch renderers if the user requests it.
+  // Allow the user to switch renderers.
   static int framesTillSwitchAllowed = 0;
   const int SWITCH_DELAY = 20;
   if(framesTillSwitchAllowed == 0)
@@ -153,13 +153,21 @@ void Application::process_input()
   }
   else --framesTillSwitchAllowed;
 
-  // If there is a camera, allow the user to move it around.
-  MoveableCamera_Ptr camera = m_renderer->get_camera();
-  if(camera)
+  // Allow the user to switch camera modes.
+  if(m_inputState.key_down(SDLK_v))
+  {
+    if(m_inputState.key_down(SDLK_1)) m_renderer->set_camera_mode(Renderer::CM_FOLLOW);
+    if(m_inputState.key_down(SDLK_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
+  }
+
+  // If we're in free camera mode, allow the user to move the camera around.
+  if(m_renderer->get_camera_mode() == Renderer::CM_FREE)
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
     static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
+
+    MoveableCamera_Ptr camera = m_renderer->get_camera();
 
     if(m_inputState.key_down(SDLK_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(SDLK_s)) camera->move_n(-SPEED);
