@@ -22,6 +22,9 @@ using namespace OVR;
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
 
+#include <spaint/util/CameraPoseConverter.h>
+using namespace spaint;
+
 //#################### CONSTRUCTORS ####################
 
 RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode)
@@ -126,9 +129,17 @@ void RiftRenderer::render() const
   // Start the frame.
   ovrHmd_BeginFrame(m_hmd, 0);
 
+  // If we're following the reconstruction, update the position and orientation of the camera.
+  if(m_cameraMode == CM_FOLLOW)
+  {
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(m_spaintEngine->get_pose()));
+  }
+
   // Construct the left and right eye images.
-  m_spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Left]);
-  m_spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Right]);
+  ITMPose leftPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left"));
+  ITMPose rightPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"));
+  m_spaintEngine->generate_free_raycast(m_eyeImages[ovrEye_Left], leftPose);
+  m_spaintEngine->generate_free_raycast(m_eyeImages[ovrEye_Right], rightPose);
 
   // Copy the eye images into OpenGL textures.
   for(int i = 0; i < ovrEye_Count; ++i)
