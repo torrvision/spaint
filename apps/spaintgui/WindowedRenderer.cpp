@@ -13,8 +13,6 @@ using namespace rigging;
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
-#include <ITMLib/Utils/ITMMath.h>
-
 //#################### CONSTRUCTORS ####################
 
 WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
@@ -69,19 +67,48 @@ void WindowedRenderer::render() const
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // Determine the camera pose and raycast the scene.
+  // Determine the camera pose.
   ITMPose pose;
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
     {
       pose = m_spaintEngine->get_pose();
-      m_spaintEngine->get_default_raycast(m_image);
       break;
     }
     case CM_FREE:
     {
       pose = CameraPoseConverter::camera_to_pose(*m_camera);
+      break;
+    }
+    default:
+    {
+      // This should never happen.
+      throw std::runtime_error("Error: Unknown camera mode");
+    }
+  }
+
+  // Render the reconstructed scene, then render the synthetic scene over the top of it.
+  render_reconstructed_scene(pose);
+  render_synthetic_scene(pose);
+
+  SDL_GL_SwapWindow(m_window.get());
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
+{
+  // Raycast the scene.
+  switch(m_cameraMode)
+  {
+    case CM_FOLLOW:
+    {
+      m_spaintEngine->get_default_raycast(m_image);
+      break;
+    }
+    case CM_FREE:
+    {
       m_spaintEngine->generate_free_raycast(m_image, pose);
       break;
     }
@@ -92,17 +119,7 @@ void WindowedRenderer::render() const
     }
   }
 
-  // Render the reconstructed scene first, then render the synthetic scene over the top of it.
-  render_reconstructed_scene();
-  render_synthetic_scene(pose);
-
-  SDL_GL_SwapWindow(m_window.get());
-}
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-
-void WindowedRenderer::render_reconstructed_scene() const
-{
+  // Draw a quad textured with the raycasted scene.
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
@@ -150,6 +167,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
     {
       set_modelview_matrix(pose);
 
+      // Render the axes.
       glBegin(GL_LINES);
         glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
         glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
@@ -184,12 +202,13 @@ void WindowedRenderer::set_modelview_matrix(const ITMPose& pose)
 
 void WindowedRenderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
 {
+  // TODO: Comment this.
   double halfWidth = width / 2.0;
   double halfHeight = height / 2.0;
   double fx = intrinsics.projectionParamsSimple.fx / halfWidth;
   double fy = intrinsics.projectionParamsSimple.fy / halfHeight;
-  double cx = -(intrinsics.projectionParamsSimple.px - halfWidth) / halfWidth;
-  double cy = -(intrinsics.projectionParamsSimple.py - halfHeight) / halfHeight;
+  double cx = (halfWidth - intrinsics.projectionParamsSimple.px) / halfWidth;
+  double cy = (halfHeight - intrinsics.projectionParamsSimple.py) / halfHeight;
 
   double nearVal = 0.1;
   double farVal = 1000.0;

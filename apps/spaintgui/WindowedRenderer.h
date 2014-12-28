@@ -69,12 +69,18 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Renders the reconstructed scene.
+   *
+   * \param pose  The camera pose.
    */
-  void render_reconstructed_scene() const;
+  void render_reconstructed_scene(const ITMPose& pose) const;
 
   /**
-   * \brief TODO
+   * \brief Renders a synthetic scene to augment what actually exists in the real world.
+   *
+   * (This is currently experimental and only renders a set of axes.)
+   *
+   * \param pose  The camera pose.
    */
   void render_synthetic_scene(const ITMPose& pose) const;
 

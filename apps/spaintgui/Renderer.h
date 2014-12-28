@@ -19,14 +19,14 @@ class Renderer
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief An enumeration containing the possible camera modes we can use.
    */
   enum CameraMode
   {
-    /** TODO */
+    /** A mode that follows the camera that is reconstructing the scene. */
     CM_FOLLOW,
 
-    /** TODO */
+    /** A mode that allows the user to freely move the camera around to view the scene from different angles. */
     CM_FREE
   };
 
@@ -38,7 +38,7 @@ protected:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** TODO */
+  /** The current camera mode. */
   CameraMode m_cameraMode;
 
   /** The OpenGL context for the window. */
@@ -86,7 +86,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the current camera mode.
+   *
+   * \return  The current camera mode.
    */
   CameraMode get_camera_mode() const
   {
@@ -94,7 +96,9 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Sets the current camera mode.
+   *
+   * \param cameraMode  The new camera mode.
    */
   void set_camera_mode(CameraMode cameraMode)
   {
