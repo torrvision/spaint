@@ -130,25 +130,28 @@ void Application::process_input()
   const int SWITCH_DELAY = 20;
   if(framesTillSwitchAllowed == 0)
   {
-    if(m_inputState.key_down(SDLK_n) && !m_inputState.key_down(SDLK_r))
+    if(m_inputState.key_down(SDLK_r))
     {
-      m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480));
-      framesTillSwitchAllowed = SWITCH_DELAY;
-    }
-    else if(m_inputState.key_down(SDLK_r) && !m_inputState.key_down(SDLK_n))
-    {
-#if WITH_OVR
-      try
+      if(m_inputState.key_down(SDLK_1))
       {
-        m_renderer.reset(new RiftRenderer(
-          m_spaintEngine,
-          "Semantic Paint",
-          m_inputState.key_down(SDLK_LSHIFT) ? RiftRenderer::FULLSCREEN_MODE : RiftRenderer::WINDOWED_MODE
-        ));
+        m_renderer.reset(new WindowedRenderer(m_spaintEngine, "Semantic Paint", 640, 480));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
-      catch(std::runtime_error&) {}
+      else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
+      {
+#if WITH_OVR
+        try
+        {
+          m_renderer.reset(new RiftRenderer(
+            m_spaintEngine,
+            "Semantic Paint",
+            m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
+          ));
+          framesTillSwitchAllowed = SWITCH_DELAY;
+        }
+        catch(std::runtime_error&) {}
 #endif
+      }
     }
   }
   else --framesTillSwitchAllowed;
@@ -157,7 +160,7 @@ void Application::process_input()
   if(m_inputState.key_down(SDLK_v))
   {
     if(m_inputState.key_down(SDLK_1)) m_renderer->set_camera_mode(Renderer::CM_FOLLOW);
-    if(m_inputState.key_down(SDLK_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
+    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
   }
 
   // If we're in free camera mode, allow the user to move the camera around.
