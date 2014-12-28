@@ -60,6 +60,9 @@ public:
   SimpleCamera& rotate(const Eigen::Vector3f& axis, float angle);
 
   /** Override */
+  SimpleCamera& set_from(const Camera& rhs);
+
+  /** Override */
   Eigen::Vector3f u() const;
 
   /** Override */

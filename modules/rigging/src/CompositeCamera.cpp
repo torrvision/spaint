@@ -70,6 +70,12 @@ CompositeCamera& CompositeCamera::rotate(const Eigen::Vector3f& axis, float angl
   return *this;
 }
 
+CompositeCamera& CompositeCamera::set_from(const Camera& rhs)
+{
+  m_primaryCamera.set_from(rhs);
+  return *this;
+}
+
 Eigen::Vector3f CompositeCamera::u() const
 {
   return m_primaryCamera.u();

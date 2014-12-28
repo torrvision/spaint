@@ -78,6 +78,9 @@ public:
   CompositeCamera& rotate(const Eigen::Vector3f& axis, float angle);
 
   /** Override */
+  CompositeCamera& set_from(const Camera& rhs);
+
+  /** Override */
   Eigen::Vector3f u() const;
 
   /** Override */

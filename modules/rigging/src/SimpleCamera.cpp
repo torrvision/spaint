@@ -57,6 +57,15 @@ SimpleCamera& SimpleCamera::rotate(const Eigen::Vector3f& axis, float angle)
   return *this;
 }
 
+SimpleCamera& SimpleCamera::set_from(const Camera& rhs)
+{
+  m_position = rhs.p();
+  m_n = rhs.n();
+  m_u = rhs.u();
+  m_v = rhs.v();
+  return *this;
+}
+
 Eigen::Vector3f SimpleCamera::u() const
 {
   return m_u;

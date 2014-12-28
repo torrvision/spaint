@@ -44,6 +44,14 @@ public:
    * \param angle The angle by which to rotate (in radians).
    */
   virtual MoveableCamera& rotate(const Eigen::Vector3f& axis, float angle) = 0;
+
+  /**
+   * \brief Sets the position and orientation of this camera to match those of another camera.
+   *
+   * \param rhs The other camera.
+   * \return    This camera, after it has been moved.
+   */
+  virtual MoveableCamera& set_from(const Camera& rhs) = 0;
 };
 
 //#################### TYPEDEFS ####################
