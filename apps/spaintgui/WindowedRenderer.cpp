@@ -20,6 +20,7 @@ using namespace spaint;
 WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
 : Renderer(spaintEngine), m_height(height), m_width(width)
 {
+  // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   m_window.reset(
@@ -41,8 +42,10 @@ WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const s
 
   glViewport(0, 0, width, height);
 
+  // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
+  // Set up the image and texture needed to render the reconstructed scene.
   m_image.reset(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
   glGenTextures(1, &m_textureID);
 }
@@ -89,6 +92,17 @@ void WindowedRenderer::render() const
     }
   }
 
+  // Render the reconstructed scene first, then render the synthetic scene over the top of it.
+  render_reconstructed_scene();
+  render_synthetic_scene(pose);
+
+  SDL_GL_SwapWindow(m_window.get());
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void WindowedRenderer::render_reconstructed_scene() const
+{
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
@@ -122,7 +136,10 @@ void WindowedRenderer::render() const
   }
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
+}
 
+void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
+{
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
@@ -143,11 +160,7 @@ void WindowedRenderer::render() const
   }
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
-
-  SDL_GL_SwapWindow(m_window.get());
 }
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
 void WindowedRenderer::set_modelview_matrix(const ITMPose& pose)
 {

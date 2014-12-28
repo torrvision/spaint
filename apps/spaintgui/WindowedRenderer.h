@@ -69,6 +69,16 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief TODO
+   */
+  void render_reconstructed_scene() const;
+
+  /**
+   * \brief TODO
+   */
+  void render_synthetic_scene(const ITMPose& pose) const;
+
+  /**
    * \brief Sets the OpenGL model-view matrix corresponding to the specified InfiniTAM pose.
    *
    * \param pose  The InfiniTAM pose.
