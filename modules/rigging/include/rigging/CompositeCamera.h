@@ -44,13 +44,18 @@ public:
   /**
    * \brief Adds a secondary camera to the composite.
    *
-   * \param name    The name to give the secondary camera.
-   * \param camera  The secondary camera.
+   * \param name                The name to give the secondary camera.
+   * \param camera              The secondary camera.
+   * \throws std::runtime_error If the composite already contains a camera with the specified name.
    */
   void add_secondary_camera(const std::string& name, const Camera_CPtr& camera);
 
   /**
-   * \brief TODO
+   * \brief Gets the secondary camera with the specified name.
+   *
+   * \param name                The name of the secondary camera to get.
+   * \return                    The secondary camera with the specified name, if it exists.
+   * \throws std::runtime_error If the composite does not contain a camera with the specified name.
    */
   const Camera_CPtr& get_secondary_camera(const std::string& name) const;
 
@@ -70,7 +75,10 @@ public:
   Eigen::Vector3f p() const;
 
   /**
-   * \brief TODO
+   * \brief Removes the secondary camera with the specified name from the composite.
+   *
+   * \param name                The name of the camera to remove.
+   * \throws std::runtime_error If the composite does not contain a camera with the specified name.
    */
   void remove_secondary_camera(const std::string& name);
 

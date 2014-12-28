@@ -17,7 +17,6 @@ using namespace OVR;
 
 #include <SDL_syswm.h>
 
-#include <rigging/CompositeCamera.h>
 #include <rigging/DerivedCamera.h>
 #include <rigging/SimpleCamera.h>
 using namespace rigging;

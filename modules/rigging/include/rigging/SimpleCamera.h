@@ -16,16 +16,16 @@ class SimpleCamera : public MoveableCamera
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A vector pointing in the direction faced by the camera. */
+  /** A (normalised) vector pointing in the direction faced by the camera. */
   Eigen::Vector3f m_n;
 
   /** The position of the camera. */
   Eigen::Vector3f m_position;
 
-  /** A vector pointing to the left of the camera. */
+  /** A (normalised) vector pointing to the left of the camera. */
   Eigen::Vector3f m_u;
 
-  /** A vector pointing to the top of the camera. */
+  /** A (normalised) vector pointing to the top of the camera. */
   Eigen::Vector3f m_v;
 
   //#################### CONSTRUCTORS ####################

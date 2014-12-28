@@ -66,7 +66,7 @@ public:
   /** Override */
   virtual void render() const;
 
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
    * \brief Renders the reconstructed scene.

@@ -20,6 +20,7 @@ public:
    * \brief Moves the camera by the specified displacement in the n direction.
    *
    * \param delta The displacement by which to move.
+   * \return      This camera, after it has been moved.
    */
   virtual MoveableCamera& move_n(float delta) = 0;
 
@@ -27,6 +28,7 @@ public:
    * \brief Moves the camera by the specified displacement in the u direction.
    *
    * \param delta The displacement by which to move.
+   * \return      This camera, after it has been moved.
    */
   virtual MoveableCamera& move_u(float delta) = 0;
 
@@ -34,6 +36,7 @@ public:
    * \brief Moves the camera by the specified displacement in the v direction.
    *
    * \param delta The displacement by which to move.
+   * \return      This camera, after it has been moved.
    */
   virtual MoveableCamera& move_v(float delta) = 0;
 
@@ -42,6 +45,7 @@ public:
    *
    * \param axis  The axis about which to rotate.
    * \param angle The angle by which to rotate (in radians).
+   * \return      This camera, after it has been rotated.
    */
   virtual MoveableCamera& rotate(const Eigen::Vector3f& axis, float angle) = 0;
 

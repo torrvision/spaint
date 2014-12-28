@@ -5,8 +5,6 @@
 #ifndef H_RIGGING_DERIVEDCAMERA
 #define H_RIGGING_DERIVEDCAMERA
 
-#include <Eigen/Dense>
-
 #include "Camera.h"
 
 namespace rigging {
@@ -24,10 +22,10 @@ private:
   /** The camera on which this derived camera is based. */
   Camera_CPtr m_baseCamera;
 
-  /** The *camera-space* rotation from the base camera's axes to those of the derived camera. */
+  /** The *camera-space* (u-v-n) rotation from the base camera's axes to those of the derived camera. */
   Eigen::Matrix3f m_rot;
 
-  /** The *camera-space* translation from the base camera's axes to those of the derived camera. */
+  /** The *camera-space* (u-v-n) translation from the base camera's axes to those of the derived camera. */
   Eigen::Vector3f m_trans;
 
   //#################### CONSTRUCTORS ####################

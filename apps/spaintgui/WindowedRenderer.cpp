@@ -72,23 +72,17 @@ void WindowedRenderer::render() const
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
-    {
       pose = m_spaintEngine->get_pose();
       break;
-    }
     case CM_FREE:
-    {
       pose = CameraPoseConverter::camera_to_pose(*m_camera);
       break;
-    }
     default:
-    {
       // This should never happen.
       throw std::runtime_error("Error: Unknown camera mode");
-    }
   }
 
-  // Render the reconstructed scene, then render the synthetic scene over the top of it.
+  // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose);
   render_synthetic_scene(pose);
 
@@ -103,20 +97,14 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
-    {
       m_spaintEngine->get_default_raycast(m_image);
       break;
-    }
     case CM_FREE:
-    {
       m_spaintEngine->generate_free_raycast(m_image, pose);
       break;
-    }
     default:
-    {
       // This should never happen.
       throw std::runtime_error("Error: Unknown camera mode");
-    }
   }
 
   // Draw a quad textured with the raycasted scene.

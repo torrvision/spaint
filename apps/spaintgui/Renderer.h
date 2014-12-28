@@ -58,8 +58,7 @@ public:
    * \param spaintEngine  The spaint engine.
    */
   explicit Renderer(const spaint::SpaintEngine_Ptr& spaintEngine)
-  : m_cameraMode(CM_FOLLOW),
-    m_spaintEngine(spaintEngine)
+  : m_cameraMode(CM_FOLLOW), m_spaintEngine(spaintEngine)
   {}
 
   //#################### DESTRUCTOR ####################

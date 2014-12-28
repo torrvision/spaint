@@ -14,6 +14,7 @@ SimpleCamera::SimpleCamera(const Eigen::Vector3f& position, const Eigen::Vector3
   m_n.normalize();
   m_v.normalize();
 
+  // Compute the camera's u axis from its v and n axes.
   m_u = m_v.cross(m_n);
   m_u.normalize();
 }

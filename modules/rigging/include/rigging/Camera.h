@@ -30,9 +30,9 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets a vector pointing in the direction faced by the camera.
+   * \brief Gets a (normalised) vector pointing in the direction faced by the camera.
    *
-   * \return  A vector pointing in the direction faced by the camera.
+   * \return  A (normalised) vector pointing in the direction faced by the camera.
    */
   virtual Eigen::Vector3f n() const = 0;
 
@@ -44,16 +44,16 @@ public:
   virtual Eigen::Vector3f p() const = 0;
 
   /**
-   * \brief Gets a vector pointing to the left of the camera.
+   * \brief Gets a (normalised) vector pointing to the left of the camera.
    *
-   * \return  A vector pointing to the left of the camera.
+   * \return  A (normalised) vector pointing to the left of the camera.
    */
   virtual Eigen::Vector3f u() const = 0;
 
   /**
-   * \brief Gets a vector pointing to the top of the camera.
+   * \brief Gets a (normalised) vector pointing to the top of the camera.
    *
-   * \return  A vector pointing to the top of the camera.
+   * \return  A (normalised) vector pointing to the top of the camera.
    */
   virtual Eigen::Vector3f v() const = 0;
 };
