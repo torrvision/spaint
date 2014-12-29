@@ -17,9 +17,10 @@
 namespace tvgutil {
 
 /**
- * \brief TODO
+ * \brief An instance of an instantiation of this class template represents a timer that can be
+ *        used to time an event over multiple runs and compute the average time taken per run.
  */
-template <typename T>
+template <typename Scale>
 class AverageTimer
 {
   //#################### PRIVATE VARIABLES ####################
@@ -27,22 +28,24 @@ private:
   /** The number of times the event being timed has been executed. */
   size_t m_count;
 
-  /** TODO */
-  T m_lastDuration;
+  /** The time taken by the event on its most recent run. */
+  Scale m_lastDuration;
 
   /** The name of the timer. */
   std::string m_name;
 
-  /** TODO */
+  /** The starting time for the event's most recent run. */
   boost::chrono::high_resolution_clock::time_point m_t0;
 
-  /** TODO */
-  T m_totalDuration;
+  /** The time taken by the event over all runs up to this point. */
+  Scale m_totalDuration;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a timer with the specified name.
+   *
+   * \param name  The name of the timer.
    */
   explicit AverageTimer(const std::string& name)
   : m_count(0), m_name(name)
@@ -51,16 +54,21 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Computes the average time taken by the event on each run.
+   *
+   * \return                    The average time taken by the event on each run.
+   * \throws std::runtime_error If the event has not previously been executed at least once.
    */
-  T average_duration() const
+  Scale average_duration() const
   {
     if(m_count == 0) throw std::runtime_error("Error: Cannot calculate the average duration of an event until it has been executed at least once");
     return m_totalDuration / m_count;
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the number of times the event being timed has been executed.
+   *
+   * return The number of times the event being timed has been executed.
    */
   size_t count() const
   {
@@ -68,17 +76,21 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the time taken by the event on its most recent run.
+   *
+   * \return  The time taken by the event on its most recent run.
    */
-  const T& last_duration() const
+  const Scale& last_duration() const
   {
     return m_lastDuration;
   }
 
   /**
-   * \brief TODO
+   * \brief Gets the time taken by the event over all runs up to this point.
+   *
+   * \return  The time taken by the event over all runs up to this point.
    */
-  const T& total_duration() const
+  const Scale& total_duration() const
   {
     return m_totalDuration;
   }
@@ -94,7 +106,7 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Starts the timer (this should be called prior before each run of the event).
    */
   void start()
   {
@@ -102,12 +114,12 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Stops the timer (this should be called after each run of the event).
    */
   void stop()
   {
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
-    m_lastDuration = boost::chrono::duration_cast<T>(t1 - m_t0);
+    m_lastDuration = boost::chrono::duration_cast<Scale>(t1 - m_t0);
     m_totalDuration += m_lastDuration;
     ++m_count;
   }
@@ -119,7 +131,7 @@ public:
   static tvgutil::AverageTimer<boost::chrono::scale> tag(#tag); \
   tag.start(); \
   target; \
-  tag.stop();
+  tag.stop()
 
 #ifdef WITH_CUDA
 #define CUDA_AVG_TIME(target, scale, tag) \
@@ -127,7 +139,7 @@ public:
   tag.start(); \
   target; \
   cudaDeviceSynchronize(); \
-  tag.stop();
+  tag.stop()
 #endif
 
 }

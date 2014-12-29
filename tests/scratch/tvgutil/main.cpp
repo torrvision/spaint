@@ -26,10 +26,10 @@ int main()
 {
   std::cout << "Testing the timing features!\n";
 
-  TIME(Dummy d1(2), milliseconds, dummyConstructor)
+  TIME(Dummy d1(2), milliseconds, dummyConstructor);
   std::cout << dummyConstructor << '\n';
 
-  TIME(d1.snooze(3), milliseconds, dummySnooze)
+  TIME(d1.snooze(3), milliseconds, dummySnooze);
   std::cout << dummySnooze << '\n';
 
   for(int i = 1; i <= 5; ++i)
