@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-#include <tvgutil/Timing.h>
+#include <tvgutil/timers/AverageTimer.h>
+#include <tvgutil/timers/Timer.h>
 
 class Dummy
 {

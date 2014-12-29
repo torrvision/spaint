@@ -20,6 +20,12 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
+SET(timers_headers
+include/tvgutil/timers/AverageTimer.h
+include/tvgutil/timers/Timer.h
+)
+
+##
 SET(toplevel_sources
 src/IDAllocator.cpp
 src/PropertyUtil.cpp
@@ -32,7 +38,6 @@ include/tvgutil/LimitedContainer.h
 include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
-include/tvgutil/Timing.h
 )
 
 #################################################################
@@ -44,6 +49,7 @@ ${toplevel_sources}
 )
 
 SET(headers
+${timers_headers}
 ${toplevel_headers}
 )
 
@@ -52,6 +58,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(timers FILES ${timers_headers})
 
 ##########################################
 # Specify additional include directories #

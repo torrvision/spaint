@@ -1,11 +1,10 @@
 /**
- * tvgutil: Timing.h
+ * tvgutil: AverageTimer.h
  */
 
-#ifndef H_TVGUTIL_TIMING
-#define H_TVGUTIL_TIMING
+#ifndef H_TVGUTIL_AVERAGETIMER
+#define H_TVGUTIL_AVERAGETIMER
 
-#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -16,62 +15,6 @@
 #endif
 
 namespace tvgutil {
-
-/**
- * \brief TODO
- */
-template <typename T>
-class Timer
-{
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** TODO */
-  T m_duration;
-
-  /** The name of the timer. */
-  std::string m_name;
-
-  /** TODO */
-  boost::chrono::high_resolution_clock::time_point m_t0;
-
-  //#################### CONSTRUCTORS ####################
-public:
-  /**
-   * \brief TODO
-   */
-  explicit Timer(const std::string& name)
-  : m_name(name), m_t0(boost::chrono::high_resolution_clock::now())
-  {}
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief TODO
-   */
-  const T& duration() const
-  {
-    return m_duration;
-  }
-
-  /**
-   * \brief Gets the name of the timer.
-   *
-   * \return  The name of the timer.
-   */
-  const std::string& name() const
-  {
-    return m_name;
-  }
-
-  /**
-   * \brief Stops the timer.
-   */
-  void stop()
-  {
-    boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
-    m_duration = boost::chrono::duration_cast<T>(t1 - m_t0);
-  }
-};
 
 /**
  * \brief TODO
@@ -170,24 +113,7 @@ public:
   }
 };
 
-//#################### STREAM OPERATORS ####################
-
-/**
- * \brief TODO
- */
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const Timer<T>& rhs)
-{
-  os << rhs.name() << ": " << rhs.duration();
-  return os;
-}
-
 //#################### MACROS ####################
-
-#define TIME(target, scale, tag) \
-  tvgutil::Timer<boost::chrono::scale> tag(#tag); \
-  target; \
-  tag.stop();
 
 #define AVG_TIME(target, scale, tag) \
   static tvgutil::AverageTimer<boost::chrono::scale> tag(#tag); \
@@ -196,20 +122,12 @@ std::ostream& operator<<(std::ostream& os, const Timer<T>& rhs)
   tag.stop();
 
 #ifdef WITH_CUDA
-
-#define CUDA_TIME(target, scale, tag) \
-  tvgutil::Timer<boost::chrono::scale> tag(#tag); \
-  target; \
-  cudaDeviceSynchronize(); \
-  tag.stop();
-
 #define CUDA_AVG_TIME(target, scale, tag) \
   static tvgutil::AverageTimer<boost::chrono::scale> tag(#tag); \
   tag.start(); \
   target; \
   cudaDeviceSynchronize(); \
   tag.stop();
-
 #endif
 
 }
