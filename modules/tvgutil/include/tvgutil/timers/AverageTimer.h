@@ -5,6 +5,7 @@
 #ifndef H_TVGUTIL_AVERAGETIMER
 #define H_TVGUTIL_AVERAGETIMER
 
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -124,6 +125,22 @@ public:
     ++m_count;
   }
 };
+
+//#################### STREAM OPERATORS ####################
+
+/**
+ * \brief Outputs the specified timer to a stream.
+ *
+ * \param os  The stream.
+ * \param rhs The timer.
+ * \return    The stream.
+ */
+template <typename Scale>
+std::ostream& operator<<(std::ostream& os, const AverageTimer<Scale>& rhs)
+{
+  os << rhs.name() << ": " << rhs.last_duration() << ' ' << rhs.average_duration();
+  return os;
+}
 
 //#################### MACROS ####################
 
