@@ -1,15 +1,7 @@
-#if 0
-int main()
-{
-  // TODO
-  return 0;
-}
-#endif
-
+//###
 #if 1
 
 #include <iostream>
-#include <string>
 
 #include <tvgutil/Timing.h>
 
@@ -18,12 +10,12 @@ class Dummy
 public:
   Dummy(size_t time)
   {
-    std::cout << "I'm very tired.. going for a nap of " << std::to_string(time) << " seconds..\n";
+    std::cout << "I'm very tired.. going for a nap of " << time << " seconds..\n";
     sleep(time);
   }
   void snooze(size_t time)
   {
-    std::cout << "I'm very tired.. going for a snooze of " << std::to_string(time) << " seconds..\n";
+    std::cout << "I'm very tired.. going for a snooze of " << time << " seconds..\n";
     sleep(time);
   }
 };
@@ -33,12 +25,19 @@ int main()
 {
   std::cout << "Testing the timing features!\n";
 
-  TIMEX(Dummy d1(2), milliseconds, dummyConstructor)
-  dummyConstructor.print();
+  TIME(Dummy d1(2), milliseconds, dummyConstructor)
+  std::cout << dummyConstructor << '\n';
 
-  TIMEX(d1.snooze(3), milliseconds, dummySnooze)
-  dummySnooze.print();
+  TIME(d1.snooze(3), milliseconds, dummySnooze)
+  std::cout << dummySnooze << '\n';
+
+  for(int i = 1; i <= 5; ++i)
+  {
+    AVG_TIME(d1.snooze(i), microseconds, avgSnooze);
+    std::cout << avgSnooze.last_duration() << ' ' << avgSnooze.total_duration() << ' ' << avgSnooze.count() << ' ' << avgSnooze.average_duration() << '\n';
+  }
 
   return 0;
 }
+
 #endif
