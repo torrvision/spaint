@@ -13,10 +13,17 @@ SET(targetname tvgutil)
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 
 #############################
 # Specify the project files #
 #############################
+
+##
+SET(timers_headers
+include/tvgutil/timers/AverageTimer.h
+include/tvgutil/timers/Timer.h
+)
 
 ##
 SET(toplevel_sources
@@ -42,6 +49,7 @@ ${toplevel_sources}
 )
 
 SET(headers
+${timers_headers}
 ${toplevel_headers}
 )
 
@@ -50,6 +58,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(timers FILES ${timers_headers})
 
 ##########################################
 # Specify additional include directories #
@@ -61,7 +70,7 @@ INCLUDE_DIRECTORIES(include/tvgutil)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetLibTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDALibTarget.cmake)
 
 #############################
 # Specify things to install #
