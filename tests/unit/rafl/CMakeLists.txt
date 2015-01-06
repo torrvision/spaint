@@ -14,6 +14,7 @@ SET(suitename rafl)
 
 SET(testnames
 UnitCircleExampleGenerator
+PerformanceEvaluation
 )
 
 FOREACH(testname ${testnames})
@@ -25,6 +26,7 @@ SET(targetname "unittest_${suitename}_${testname}")
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 #############################
 # Specify the project files #

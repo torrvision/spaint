@@ -113,6 +113,7 @@ int main()
 //###
 #if 1
 
+#include <rafl/evaluation/PerformanceEvaluation.h>
 #include <rafl/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 using namespace rafl;
@@ -133,56 +134,72 @@ Descriptor_CPtr make_descriptor(float *arr)
   return d;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-  // Construct the random forest.
-  Settings_Ptr settings;
-  try
+  if(argc != 3)
   {
-    settings.reset(new DT::Settings("settings.txt"));
+    std::cout << "Silly boy - enter the path of the training set, followed by the path of the test set!\n";
   }
-  catch(std::exception&)
+  else
   {
-    // If the settings file can't be found or is invalid, use default settings.
-    unsigned int seed = 12345;
-    tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
-    DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+    std::string trainingSetPath = argv[1];
+    std::string testingSetPath = argv[2];
 
-    settings.reset(new DT::Settings);
-    settings->candidateCount = 256;
-    settings->decisionFunctionGenerator = decisionFunctionGenerator;
-    settings->gainThreshold = 0.0f;
-    settings->maxClassSize = 10000;
-    settings->maxTreeHeight = 15;
-    settings->randomNumberGenerator = randomNumberGenerator;
-    settings->seenExamplesThreshold = 30;
-    settings->splittabilityThreshold = 0.5f;
+    std::cout << "Training set: " << trainingSetPath << "\n";
+    std::cout << "Testing set: " << testingSetPath << "\n";
+
+    // Construct the random forest.
+    Settings_Ptr settings;
+    try
+    {
+      settings.reset(new DT::Settings("settings.txt"));
+    }
+    catch(std::exception&)
+    {
+      // If the settings file can't be found or is invalid, use default settings.
+      unsigned int seed = 12345;
+      tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
+      DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+
+      settings.reset(new DT::Settings);
+      settings->candidateCount = 256;
+      settings->decisionFunctionGenerator = decisionFunctionGenerator;
+      settings->gainThreshold = 0.0f;
+      settings->maxClassSize = 10000;
+      settings->maxTreeHeight = 15;
+      settings->randomNumberGenerator = randomNumberGenerator;
+      settings->seenExamplesThreshold = 30;
+      settings->splittabilityThreshold = 0.5f;
+    }
+
+    const size_t treeCount = 8;
+    RF rf(treeCount, *settings);
+
+    // Train the random forest.
+    std::cout << "Training the random forest..\n";
+    std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>(trainingSetPath);
+    rf.add_examples(trainingExamples);
+    const size_t splitBudget = 32768;
+    rf.train(splitBudget);
+    rf.output(std::cout);
+
+    // Test the random forest and output the results.
+    std::cout << "Testing the random forest..\n";
+    std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>(testingSetPath);
+    float totalTests = static_cast<float>(testingExamples.size());
+    size_t correctTests = 0, wrongTests = 0;
+    for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
+    {
+      const Descriptor_CPtr& descriptor = (*it)->get_descriptor();
+      const Label& expectedLabel = (*it)->get_label();
+      Label predictedLabel = rf.predict(descriptor);
+      if(predictedLabel == expectedLabel) ++correctTests;
+      else ++wrongTests;
+    }
+
+    std::cout << "Correct %: " << correctTests / totalTests << '\n';
+    std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
   }
-
-  RF rf(8, *settings);
-
-  // Train the random forest.
-  std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>("pendigits.tra");
-  rf.add_examples(trainingExamples);
-  rf.train(32768);
-  rf.output(std::cout);
-
-  // Test the random forest and output the results.
-  std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>("pendigits.tes");
-  float totalTests = static_cast<float>(testingExamples.size());
-  size_t correctTests = 0, wrongTests = 0;
-  for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
-  {
-    const Descriptor_CPtr& descriptor = (*it)->get_descriptor();
-    const Label& expectedLabel = (*it)->get_label();
-    Label predictedLabel = rf.predict(descriptor);
-    if(predictedLabel == expectedLabel) ++correctTests;
-    else ++wrongTests;
-  }
-
-  std::cout << "Correct %: " << correctTests / totalTests << '\n';
-  std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
-
   return 0;
 }
 
