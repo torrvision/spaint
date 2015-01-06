@@ -113,6 +113,8 @@ int main()
 //###
 #if 1
 
+#include <Eigen/Dense>
+
 #include <rafl/evaluation/PerformanceEvaluation.h>
 #include <rafl/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
@@ -178,6 +180,12 @@ int main(int argc, char *argv[])
     // Train the random forest.
     std::cout << "Training the random forest..\n";
     std::vector<Example_CPtr> trainingExamples = ExampleUtil::load_examples<Label>(trainingSetPath);
+    std::set<Label> classLabels;
+    for(size_t i = 0, iend = trainingExamples.size(); i < iend; ++i)
+    {
+      classLabels.insert( trainingExamples.at(i)->get_label() );
+    }
+
     rf.add_examples(trainingExamples);
     const size_t splitBudget = 32768;
     rf.train(splitBudget);
@@ -186,6 +194,8 @@ int main(int argc, char *argv[])
     // Test the random forest and output the results.
     std::cout << "Testing the random forest..\n";
     std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>(testingSetPath);
+    std::vector<Label> expectedLabels, predictedLabels;
+
     float totalTests = static_cast<float>(testingExamples.size());
     size_t correctTests = 0, wrongTests = 0;
     for(std::vector<Example_CPtr>::const_iterator it = testingExamples.begin(), iend = testingExamples.end(); it != iend; ++it)
@@ -193,12 +203,21 @@ int main(int argc, char *argv[])
       const Descriptor_CPtr& descriptor = (*it)->get_descriptor();
       const Label& expectedLabel = (*it)->get_label();
       Label predictedLabel = rf.predict(descriptor);
+      expectedLabels.push_back(expectedLabel);
+      predictedLabels.push_back(predictedLabel);
       if(predictedLabel == expectedLabel) ++correctTests;
       else ++wrongTests;
     }
 
     std::cout << "Correct %: " << correctTests / totalTests << '\n';
     std::cout << "Wrong %: " << wrongTests / totalTests << '\n';
+
+    Eigen::MatrixXf confMtx = PerfEval::get_conf_mtx(classLabels, expectedLabels, predictedLabels);
+    std::cout << "confMtx: \n" << confMtx << "\n";
+    std::cout << "Accuracy: \n" << PerfEval::get_accuracy(confMtx) << "\n";
+
+    std::cout << "confMtxNormL1: \n" << PerfEval::L1norm_mtx_rows(confMtx) << "\n";
+    std::cout << "AccuracyNormL1: \n" << PerfEval::get_accuracy(PerfEval::L1norm_mtx_rows(confMtx)) << "\n";
   }
   return 0;
 }

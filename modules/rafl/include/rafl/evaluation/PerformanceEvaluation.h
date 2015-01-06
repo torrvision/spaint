@@ -76,13 +76,24 @@ public:
       ++confusionMatrix(label2int[ groundTruth.at(i) ], label2int[ predicted.at(i) ]);
     }
 
-    for(size_t i = 0; i < sizeLabels; ++i)
+    return confusionMatrix;
+  }
+
+  static Eigen::MatrixXf L1norm_mtx_rows(const Eigen::MatrixXf mtx)
+  {
+    Eigen::MatrixXf mtx_L1normalised_rows = Eigen::MatrixXf::Zero(mtx.rows(),mtx.cols());
+    for(size_t i = 0, iend = mtx.rows(); i < iend; ++i)
     {
-      float rowL1Norm = confusionMatrix.row(i).lpNorm<1>();
-      if(rowL1Norm > 0) confusionMatrix.row(i) /= rowL1Norm;
+      float rowL1Norm = mtx.row(i).lpNorm<1>();
+      if(rowL1Norm > 0) mtx_L1normalised_rows.row(i) = mtx.row(i) / rowL1Norm;
     }
 
-    return confusionMatrix;
+    return mtx_L1normalised_rows;
+  }
+
+  static float get_accuracy(const Eigen::MatrixXf confusion_matrix)
+  {
+    return confusion_matrix.trace()/confusion_matrix.sum();
   }
 
 };
