@@ -119,7 +119,7 @@ private:
       Split splitSet;
       for(size_t index = 0; index < size; ++index)
       {
-        if(splitLabel[index] == testFold)
+        if(splitLabel[index] != testFold)
         {
           splitSet.first.push_back(index);
         }
