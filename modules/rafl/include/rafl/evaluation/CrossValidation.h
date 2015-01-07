@@ -20,7 +20,8 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class provides the functionality of n-fold cross-validation
+ * \brief An instance of this class finds the Result of running an Algorithm on a set of Examples via n-fold
+ * cross-validation.
  */
 template <typename Algorithm, typename Result, typename Label>
 class CrossValidation
@@ -47,9 +48,10 @@ private:
   //#################### CONSTRUCTOR ####################
 public:
   /**
-   * \brief TODO
+   * \brief Creates a general cross-validation object.
    *
-   * \param TODO
+   * \param num_folds  The number of folds with which to split the dataset of examples.
+   * \param seed       The seed of the random number generator.
    */
   CrossValidation(size_t num_folds, unsigned int seed)
   : m_num_folds(num_folds), m_rng(seed)
@@ -59,6 +61,14 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Runs the cross-validation with a particular Algorithm and set of examples.
+   *
+   * \param algorithm  A general object whose output is of type Result.
+   * \param examples   The vector of examples making up the data on which to evaluate the Algorithm.
+   *
+   * \return The Result quantifying the average performance of the algorithm over the folds. 
+   */
   Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
   {
     initialise_splits(examples.size());
@@ -73,7 +83,9 @@ public:
   }
 
   /**
-   * \brief TODO
+   * \brief Access the number of folds.
+   * 
+   * \return The number of folds.
    */
   size_t num_folds() const
   {
@@ -82,9 +94,14 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 private:
-    void initialise_splits(size_t size)
+  /**
+   * \brief Initialise the splits of the examples by randomly assigning each example to a particular fold.
+   *
+   * \param size  The number of examples.
+   */
+  void initialise_splits(size_t size)
   {
-        assert(m_num_folds <= size);
+    assert(m_num_folds <= size);
 
     std::vector<unsigned int> splitLabel(size);
     for(size_t i = 0; i < size; ++i)
@@ -118,17 +135,15 @@ private:
       std::random_shuffle(splitSet.second.begin(), splitSet.second.end());
 
 #if 1
-        std::cout << "Fold: " << fold << "\n";
-        std::cout << "First: \n" << tvgutil::make_limited_container(splitSet.first, 20) << "\n";
-        std::cout << "Second: \n" << tvgutil::make_limited_container(splitSet.second, 20) << "\n\n";
+      std::cout << "Fold: " << fold << "\n";
+      std::cout << "First: \n" << tvgutil::make_limited_container(splitSet.first, 20) << "\n";
+      std::cout << "Second: \n" << tvgutil::make_limited_container(splitSet.second, 20) << "\n\n";
 #endif
 
       m_splits.push_back(splitSet);
       ++testFold;
     }
   }
-
-
 };
 
 }
