@@ -3,7 +3,8 @@
 #####################################
 
 ADD_SUBDIRECTORY(tvgutil)
+ADD_SUBDIRECTORY(infermous)
 ADD_SUBDIRECTORY(rafl)
 ADD_SUBDIRECTORY(spaint)
 
-# NOTE: ordering is important on Linux!
+# Note: Ordering is important on Linux!

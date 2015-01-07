@@ -1,12 +1,12 @@
-######################################
-# CMakeLists.txt for modules/tvgutil #
-######################################
+########################################
+# CMakeLists.txt for modules/infermous #
+########################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname tvgutil)
+SET(targetname infermous)
 
 ################################
 # Specify the libraries to use #
@@ -14,31 +14,31 @@ SET(targetname tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 #############################
 # Specify the project files #
 #############################
 
 ##
-SET(timers_headers
-include/tvgutil/timers/AverageTimer.h
-include/tvgutil/timers/Timer.h
+SET(base_headers
+include/infermous/base/CRF2D.h
+include/infermous/base/CRFUtil.h
+include/infermous/base/Grids.h
+include/infermous/base/PairwisePotentialCalculator.h
+)
+
+##
+SET(engines_headers
+include/infermous/engines/MeanFieldInferenceEngine.h
 )
 
 ##
 SET(toplevel_sources
-src/IDAllocator.cpp
-src/PropertyUtil.cpp
-src/RandomNumberGenerator.cpp
+src/Dummy.cpp
 )
 
 SET(toplevel_headers
-include/tvgutil/ArgUtil.h
-include/tvgutil/IDAllocator.h
-include/tvgutil/LimitedContainer.h
-include/tvgutil/PriorityQueue.h
-include/tvgutil/PropertyUtil.h
-include/tvgutil/RandomNumberGenerator.h
 )
 
 #################################################################
@@ -50,7 +50,8 @@ ${toplevel_sources}
 )
 
 SET(headers
-${timers_headers}
+${base_headers}
+${engines_headers}
 ${toplevel_headers}
 )
 
@@ -59,13 +60,15 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
-SOURCE_GROUP(timers FILES ${timers_headers})
+SOURCE_GROUP(base FILES ${base_headers})
+SOURCE_GROUP(engines FILES ${engines_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(include/tvgutil)
+INCLUDE_DIRECTORIES(include/infermous)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #
