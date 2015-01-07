@@ -19,10 +19,10 @@ class MeanFieldInferenceEngine
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef CRF2D_Ptr<Label> CRF2D_Ptr;
-  typedef CRF2D_CPtr<Label> CRF2D_CPtr;
-  typedef ProbabilitiesGrid<Label> ProbabilitiesGrid;
-  typedef ProbabilitiesGrid_Ptr<Label> ProbabilitiesGrid_Ptr;
+  typedef infermous::CRF2D_Ptr<Label> CRF2D_Ptr;
+  typedef infermous::CRF2D_CPtr<Label> CRF2D_CPtr;
+  typedef infermous::ProbabilitiesGrid<Label> ProbabilitiesGrid;
+  typedef infermous::ProbabilitiesGrid_Ptr<Label> ProbabilitiesGrid_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

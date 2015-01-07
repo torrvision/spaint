@@ -21,10 +21,10 @@ class CRF2D
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef PairwisePotentialCalculator_CPtr<Label> PairwisePotentialCalculator_CPtr;
-  typedef ProbabilitiesGrid<Label> ProbabilitiesGrid;
-  typedef ProbabilitiesGrid_Ptr<Label> ProbabilitiesGrid_Ptr;
-  typedef ProbabilitiesGrid_CPtr<Label> ProbabilitiesGrid_CPtr;
+  typedef infermous::PairwisePotentialCalculator_CPtr<Label> PairwisePotentialCalculator_CPtr;
+  typedef infermous::ProbabilitiesGrid<Label> ProbabilitiesGrid;
+  typedef infermous::ProbabilitiesGrid_Ptr<Label> ProbabilitiesGrid_Ptr;
+  typedef infermous::ProbabilitiesGrid_CPtr<Label> ProbabilitiesGrid_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

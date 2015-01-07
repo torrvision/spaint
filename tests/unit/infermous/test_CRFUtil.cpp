@@ -20,7 +20,9 @@ enum Colour
   BLUE
 };
 
-template <> struct Eigen::NumTraits<Colour> : NumTraits<int> {};
+namespace Eigen {
+template <> struct NumTraits<Colour> : NumTraits<int> {};
+}
 
 std::string to_string(const std::vector<Eigen::Vector2i>& v)
 {
