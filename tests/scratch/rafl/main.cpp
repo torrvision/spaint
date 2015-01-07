@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
     std::cout << "confMtx: \n" << confMtx << "\n";
     std::cout << "Accuracy: \n" << PerfEval::get_accuracy(confMtx) << "\n";
 
-    std::cout << "confMtxNormL1: \n" << PerfEval::L1norm_mtx_rows(confMtx) << "\n";
+    std::cout << "confMtxNormL1: \n" << PerfEval::normalise_rows_L1(confMtx) << "\n";
     std::cout << "AccuracyNormL1: \n" << PerfEval::get_accuracy(PerfEval::L1norm_mtx_rows(confMtx)) << "\n";
 
   }
@@ -272,7 +272,9 @@ int main()
   std::vector<Example_CPtr> examples = uceg.generate_examples(classLabels, 10);
 
   boost::shared_ptr<Dummy> randomAlgorithm( new Dummy(1234));
-  CrossValidation<Dummy,float,int> cv(5, 1234);
+  const size_t num_folds = 5;
+  const unsigned int seed = 1234;
+  CrossValidation<Dummy,float,int> cv(num_folds, seed);
 
   std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cv.run(randomAlgorithm, examples) << std::endl;
 

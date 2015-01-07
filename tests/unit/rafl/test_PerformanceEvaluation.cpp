@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
 
   BOOST_CHECK_EQUAL(testConfMtx, trueConfMtx);
 
-  Eigen::MatrixXf testConfMtxNormL1 = PerfEval::L1norm_mtx_rows(trueConfMtx);
+  Eigen::MatrixXf testConfMtxNormL1 = PerfEval::normalise_rows_L1(trueConfMtx);
   Eigen::MatrixXf trueConfMtxNormL1 = Eigen::MatrixXf::Zero(4,4);
   trueConfMtxNormL1(0,0) = 1.0f;
   trueConfMtxNormL1(2,1) = 1.0f;

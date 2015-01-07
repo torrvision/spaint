@@ -21,13 +21,60 @@ class PerfEval
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief A funciton which calculates a confusion matrix from a set of ground-truth and predicted example vectors.
+   * \brief Calculates the accuracy from a confusion matrix.
+   *
+   * \param confusionMtx The confusion matrix.
+   * 
+   * \return The trace divided by the sum of its elements. 
+   */
+  static float get_accuracy(const Eigen::MatrixXf confusion_matrix)
+  {
+    return confusion_matrix.trace()/confusion_matrix.sum();
+  }
+
+  /**
+   * \brief A function which calculates a confusion matrix from a set of ground-truth and predicted label vectors.
+   *
+   * \param classLabels    Contains the entire set of currently known class labels.
+   * \param groundTruth    A vector of labels which are assumed to be correct.
+   * \param predicted      A vector of labels predicted by a machine.
+   *
+   * \return               The generated confusion matrix.
+   */
+  template <typename Label>
+  static Eigen::MatrixXf get_conf_mtx(const std::set<Label>& classLabels, const std::vector<Label>& groundTruth, const std::vector<Label>& predicted)
+  {
+    assert(groundTruth.size() == predicted.size());
+
+    size_t sizeLabels = classLabels.size();
+    Eigen::MatrixXf confusionMatrix = Eigen::MatrixXf::Zero(sizeLabels, sizeLabels);
+
+    //This mapping is required to generate consecutive indices into the confusion matrix from an arbitrary set of
+    //labels.
+    std::map<Label,int> label2int;
+    int i = 0;
+    for(typename std::set<Label>::const_iterator it = classLabels.begin(), iend = classLabels.end(); it != iend; ++it)
+    {
+      label2int.insert(std::make_pair(*it, i));
+      ++i;
+    }
+
+    for(size_t i = 0, iend = groundTruth.size(); i < iend; ++i)
+    {
+      ++confusionMatrix(label2int[ groundTruth.at(i) ], label2int[ predicted.at(i) ]);
+    }
+
+    return confusionMatrix;
+  }
+
+  /**
+   * \brief A convenience function which calculates a confusion matrix from a set of ground-truth and predicted example vectors.
    *
    * \param classLabels    Contains the entire set of currently known class labels.
    * \param groundTruth    A vector of examples with assumed correct labels.
-   * \param predicted      A vector of the same examples with labels predcited by a machine.
+   * \param predicted      A vector of the same examples with labels predicted by a machine.
    *
-   * \return               The confusion matrix.
+   * \return               The generated confusion matrix.
    */
   template <typename Label>
   static Eigen::MatrixXf get_conf_mtx(const std::set<Label>& classLabels, const std::vector<boost::shared_ptr<const Example<Label> > > groundTruth, const std::vector<boost::shared_ptr<const Example<Label> > > predicted)
@@ -47,53 +94,22 @@ public:
   }
 
   /**
-   * \brief A funciton which calculates a confusion matrix from a set of ground-truth and predicted label vectors.
+   * \brief This function generates a matrix whose rows sum to one by dividing each row by its L1-norm.
    *
-   * \param classLabels    Contains the entire set of currently known class labels.
-   * \param groundTruth    A vector of labels with assumed correct labels.
-   * \param predicted      A vector of the same labels with labels predcited by a machine.
+   * \param mtx   The matrix.
    *
-   * \return               The confusion matrix.
+   * \return      The row-L1-normalised matrix.
    */
-  template <typename Label>
-  static Eigen::MatrixXf get_conf_mtx(const std::set<Label>& classLabels, const std::vector<Label>& groundTruth, const std::vector<Label>& predicted)
+  static Eigen::MatrixXf normalise_rows_L1(const Eigen::MatrixXf mtx)
   {
-    assert(groundTruth.size() == predicted.size());
-
-    size_t sizeLabels = classLabels.size();
-    Eigen::MatrixXf confusionMatrix = Eigen::MatrixXf::Zero(sizeLabels, sizeLabels);
-
-    std::map<Label,int> label2int;
-    int i = 0;
-    for(typename std::set<Label>::const_iterator it = classLabels.begin(), iend = classLabels.end(); it != iend; ++it)
-    {
-      label2int.insert(std::make_pair(*it, i));
-      ++i;
-    }
-
-    for(size_t i = 0, iend = groundTruth.size(); i < iend; ++i)
-    {
-      ++confusionMatrix(label2int[ groundTruth.at(i) ], label2int[ predicted.at(i) ]);
-    }
-
-    return confusionMatrix;
-  }
-
-  static Eigen::MatrixXf L1norm_mtx_rows(const Eigen::MatrixXf mtx)
-  {
-    Eigen::MatrixXf mtx_L1normalised_rows = Eigen::MatrixXf::Zero(mtx.rows(),mtx.cols());
+    Eigen::MatrixXf mtxNormL1 = Eigen::MatrixXf::Zero(mtx.rows(),mtx.cols());
     for(size_t i = 0, iend = mtx.rows(); i < iend; ++i)
     {
       float rowL1Norm = mtx.row(i).lpNorm<1>();
-      if(rowL1Norm > 0) mtx_L1normalised_rows.row(i) = mtx.row(i) / rowL1Norm;
+      if(rowL1Norm > 0) mtxNormL1.row(i) = mtx.row(i) / rowL1Norm;
     }
 
-    return mtx_L1normalised_rows;
-  }
-
-  static float get_accuracy(const Eigen::MatrixXf confusion_matrix)
-  {
-    return confusion_matrix.trace()/confusion_matrix.sum();
+    return mtxNormL1;
   }
 
 };
