@@ -111,11 +111,12 @@ int main()
 #endif
 
 //###
-#if 1
+#if 0
 
 #include <Eigen/Dense>
 
 #include <rafl/evaluation/PerformanceEvaluation.h>
+#include <rafl/evaluation/CrossValidation.h>
 #include <rafl/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 using namespace rafl;
@@ -218,7 +219,63 @@ int main(int argc, char *argv[])
 
     std::cout << "confMtxNormL1: \n" << PerfEval::L1norm_mtx_rows(confMtx) << "\n";
     std::cout << "AccuracyNormL1: \n" << PerfEval::get_accuracy(PerfEval::L1norm_mtx_rows(confMtx)) << "\n";
+
   }
+  return 0;
+}
+
+#endif
+
+
+#if 1
+
+#include <Eigen/Dense>
+
+#include <rafl/evaluation/PerformanceEvaluation.h>
+#include <rafl/evaluation/CrossValidation.h>
+using namespace rafl;
+
+#include <tvgutil/RandomNumberGenerator.h>
+#include <rafl/examples/UnitCircleExampleGenerator.h>
+
+typedef int Label;
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
+typedef std::vector<size_t> Indices;
+typedef std::pair<Indices,Indices> Split;
+
+class Dummy
+{
+private:
+  tvgutil::RandomNumberGenerator m_randomNumberGenerator;
+
+public:
+  explicit Dummy(unsigned int seed)
+  : m_randomNumberGenerator(seed)
+  {}
+
+  float output(const std::vector<Example_CPtr>& examples, const Split& split)
+  {
+    return m_randomNumberGenerator.generate_real_from_uniform<float>(0.0f,100.0f);
+  }
+};
+
+int main()
+{
+  std::set<Label> classLabels;
+  classLabels.insert(1);
+  classLabels.insert(3);
+  classLabels.insert(5);
+  classLabels.insert(7);
+
+  UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
+  std::vector<Example_CPtr> examples = uceg.generate_examples(classLabels, 10);
+
+  boost::shared_ptr<Dummy> randomAlgorithm( new Dummy(1234));
+  CrossValidation<Dummy,float,int> cv(5, 1234);
+
+  std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cv.run(randomAlgorithm, examples) << std::endl;
+
   return 0;
 }
 
