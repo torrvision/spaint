@@ -40,7 +40,7 @@ Eigen::Matrix3f DerivedCamera::make_world_space_rotation() const
 {
   Eigen::Vector3f n = m_baseCamera->n(), u = m_baseCamera->u(), v = m_baseCamera->v();
 
-  // Construct a matrix that transforms points from camera space to world space. For example, m * (1,0,0)^T = u.
+  // Construct a matrix that can transform (free) vectors from camera space into world space. For example, m * (1,0,0)^T = u.
   Eigen::Matrix3f m;
   m(0,0) = u.x(); m(1,0) = v.x(); m(2,0) = n.x();
   m(0,1) = u.y(); m(1,1) = v.y(); m(2,1) = n.y();
