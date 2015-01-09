@@ -67,10 +67,12 @@ ITMPose CameraPoseConverter::camera_to_pose(const Camera& camera)
   pose.R(0,1) = -v.x(); pose.R(1,1) = -v.y(); pose.R(2,1) = -v.z(); pose.T.y = p.dot(v);
   pose.R(0,2) = n.x();  pose.R(1,2) = n.y();  pose.R(2,2) = n.z();  pose.T.z = -p.dot(n);
 
-  // Correctly set the rest of the InfiniTAM pose structure from the calculated pose matrix.
-  // Note that the use of "ModelView" in the names of the ITMPose member functions refers
-  // to the InfiniTAM pose matrix, and NOT the OpenGL model-view matrix. This is a crucial
-  // distinction that can cause much confusion!
+  /*
+  Correctly set the rest of the InfiniTAM pose structure from the calculated pose matrix.
+  Note that the use of "ModelView" in the names of the ITMPose member functions refers
+  to the InfiniTAM pose matrix, and NOT the OpenGL model-view matrix. This is a crucial
+  distinction that can cause a lot of confusion!
+  */
   pose.SetParamsFromModelView();
   pose.SetModelViewFromParams();
 
