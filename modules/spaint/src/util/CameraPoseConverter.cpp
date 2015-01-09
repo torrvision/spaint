@@ -88,4 +88,33 @@ SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::Objects::ITMPose&
   return SimpleCamera(p, n, v);
 }
 
+Eigen::Matrix4f CameraPoseConverter::pose_to_modelview(const ITMLib::Objects::ITMPose& pose)
+{
+  /*
+  Calculate the model-view matrix corresponding to the specified InfiniTAM pose. The pose matrix transforms
+  points in InfiniTAM's initial coordinate system (xI = (1,0,0)^T, yI = (0,-1,0)^T, zI = (0,0,-1)^T) into
+  points in eye space. Alternatively, it can be seen as transforming the eye space axes into the axes of
+  the initial coordinate system. The model-view matrix m is a matrix that transforms points in world space
+  into points in eye space, and as such can be calculated as m = eTi . iTw, in which:
+
+  iTw = (1  0  0 0)
+        (0 -1  0 0)
+        (0  0 -1 0)
+        (0  0  0 1)
+
+  eTi = pose.M
+
+  Note that the I here is NOT the same as the one in camera_to_pose above - don't get confused! Here, I
+  refers to InfiniTAM's initial coordinate system; above, it refers to the initial coordinate system of
+  the camera.
+  */
+  Eigen::Matrix4f m;
+  m(0,0) =  pose.R(0,0); m(0,1) =  pose.R(1,0); m(0,2) =  pose.R(2,0); m(0,3) =  pose.T.x;
+  m(1,0) = -pose.R(0,1); m(1,1) = -pose.R(1,1); m(1,2) = -pose.R(2,1); m(1,3) = -pose.T.y;
+  m(2,0) = -pose.R(0,2); m(2,1) = -pose.R(1,2); m(2,2) = -pose.R(2,2); m(2,3) = -pose.T.z;
+  m(3,0) = m(3,1) = m(3,2) = 0.0f;
+  m(3,3) = 1.0f;
+  return m;
+}
+
 }

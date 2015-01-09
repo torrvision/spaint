@@ -85,13 +85,6 @@ private:
   void render_synthetic_scene(const ITMPose& pose) const;
 
   /**
-   * \brief Sets the OpenGL model-view matrix corresponding to the specified InfiniTAM pose.
-   *
-   * \param pose  The InfiniTAM pose.
-   */
-  static void set_modelview_matrix(const ITMPose& pose);
-
-  /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
    *
    * \param intrinsics  The intrinsic camera parameters.

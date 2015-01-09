@@ -11,6 +11,9 @@
 
 namespace spaint {
 
+/**
+ * \brief This class contains helper functions to allow us to convert between cameras, InfiniTAM poses and model-view matrices.
+ */
 struct CameraPoseConverter
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -30,6 +33,14 @@ struct CameraPoseConverter
    * \return      A camera with the specified pose.
    */
   static rigging::SimpleCamera pose_to_camera(const ITMLib::Objects::ITMPose& pose);
+
+  /**
+   * \brief Converts an InfiniTAM pose to a model-view matrix.
+   *
+   * \param pose  The pose.
+   * \return      The model-view matrix.
+   */
+  static Eigen::Matrix4f pose_to_modelview(const ITMLib::Objects::ITMPose& pose);
 };
 
 }

@@ -153,7 +153,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     {
-      set_modelview_matrix(pose);
+      glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data()); // note: conveniently, data() returns the elements in column-major order (the order required by OpenGL)
 
       // Render the axes.
       glBegin(GL_LINES);
@@ -166,26 +166,6 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
   }
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
-}
-
-void WindowedRenderer::set_modelview_matrix(const ITMPose& pose)
-{
-  glLoadIdentity();
-
-  // Note: InfiniTAM uses a right-handed coordinate system with z pointing into the screen.
-  gluLookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0);
-
-  // Post-multiply the current model-view matrix with the pose matrix.
-  float m[16];
-  int i = 0;
-  for(int x = 0; x < 4; ++x)
-  {
-    for(int y = 0; y < 4; ++y)
-    {
-      m[i++] = pose.M(x,y);
-    }
-  }
-  glMultMatrixf(m);
 }
 
 void WindowedRenderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
