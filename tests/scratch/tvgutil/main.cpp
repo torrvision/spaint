@@ -3,21 +3,23 @@
 
 #include <iostream>
 
+#include <boost/thread.hpp>
+
 #include <tvgutil/timers/AverageTimer.h>
 #include <tvgutil/timers/Timer.h>
 
 class Dummy
 {
 public:
-  Dummy(size_t time)
+  Dummy(long time)
   {
     std::cout << "I'm very tired.. going for a nap of " << time << " seconds..\n";
-    sleep(time);
+    boost::this_thread::sleep(boost::posix_time::seconds(time));
   }
-  void snooze(size_t time)
+  void snooze(long time)
   {
     std::cout << "I'm very tired.. going for a snooze of " << time << " seconds..\n";
-    sleep(time);
+    boost::this_thread::sleep(boost::posix_time::seconds(time));
   }
 };
 
