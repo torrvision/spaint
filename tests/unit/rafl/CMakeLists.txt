@@ -15,6 +15,7 @@ SET(suitename rafl)
 SET(testnames
 UnitCircleExampleGenerator
 PerformanceEvaluation
+ParameterStringGenerator
 )
 
 FOREACH(testname ${testnames})
