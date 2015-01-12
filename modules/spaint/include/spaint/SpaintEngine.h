@@ -131,6 +131,13 @@ public:
   ImageSourceEngine_Ptr get_image_source_engine() const;
 
   /**
+   * \brief Gets the intrinsic parameters for the camera.
+   *
+   * \return  The intrinsic parameters for the camera.
+   */
+  const ITMIntrinsics& get_intrinsics() const;
+
+  /**
    * \brief Gets the current camera pose.
    *
    * \return  The current camera pose.

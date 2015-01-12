@@ -19,20 +19,15 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<const Renderer> Renderer_CPtr;
-  typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
-  typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
+  typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The OpenGL context for the main window. */
-  SDL_GLContext_Ptr m_context;
-
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;
 
   /** The current renderer. */
-  Renderer_CPtr m_renderer;
+  Renderer_Ptr m_renderer;
 
   /** The spaint engine that the application should use. */
   spaint::SpaintEngine_Ptr m_spaintEngine;
@@ -89,6 +84,11 @@ private:
    * \return true, if the application should continue running, or false otherwise.
    */
   bool process_events();
+
+  /**
+   * \brief Takes action as relevant based on the current input state.
+   */
+  void process_input();
 };
 
 #endif

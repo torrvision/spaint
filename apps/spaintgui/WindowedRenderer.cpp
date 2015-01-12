@@ -4,13 +4,21 @@
 
 #include "WindowedRenderer.h"
 
+#include <stdexcept>
+
+#include <rigging/SimpleCamera.h>
+using namespace rigging;
+
 #include <spaint/ogl/WrappedGL.h>
+#include <spaint/util/CameraPoseConverter.h>
+using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
-: Renderer(spaintEngine)
+WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
+: Renderer(spaintEngine), m_height(height), m_width(width)
 {
+  // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   m_window.reset(
@@ -32,6 +40,10 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine,
 
   glViewport(0, 0, width, height);
 
+  // Set up the camera.
+  m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+
+  // Set up the image and texture needed to render the reconstructed scene.
   m_image.reset(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
   glGenTextures(1, &m_textureID);
 }
@@ -45,17 +57,57 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+rigging::MoveableCamera_Ptr WindowedRenderer::get_camera()
+{
+  return m_camera;
+}
+
 void WindowedRenderer::render() const
 {
-#if 1
-  m_spaintEngine->get_default_raycast(m_image);
-#else
-  ITMPose pose = m_spaintEngine->get_pose();
-  pose.params.each.tx = 0;
-  pose.SetModelViewFromParams();
-  m_spaintEngine->generate_free_raycast(m_image, pose);
-#endif
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  // Determine the camera pose.
+  ITMPose pose;
+  switch(m_cameraMode)
+  {
+    case CM_FOLLOW:
+      pose = m_spaintEngine->get_pose();
+      break;
+    case CM_FREE:
+      pose = CameraPoseConverter::camera_to_pose(*m_camera);
+      break;
+    default:
+      // This should never happen.
+      throw std::runtime_error("Error: Unknown camera mode");
+  }
+
+  // Render the reconstructed scene, then render a synthetic scene over the top of it.
+  render_reconstructed_scene(pose);
+  render_synthetic_scene(pose);
+
+  SDL_GL_SwapWindow(m_window.get());
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
+{
+  // Raycast the scene.
+  switch(m_cameraMode)
+  {
+    case CM_FOLLOW:
+      m_spaintEngine->get_default_raycast(m_image);
+      break;
+    case CM_FREE:
+      m_spaintEngine->generate_free_raycast(m_image, pose);
+      break;
+    default:
+      // This should never happen.
+      throw std::runtime_error("Error: Unknown camera mode");
+  }
+
+  // Draw a quad textured with the raycasted scene.
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
@@ -72,15 +124,16 @@ void WindowedRenderer::render() const
         glBindTexture(GL_TEXTURE_2D, m_textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(false));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glBegin(GL_QUADS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glBegin(GL_QUADS);
         {
-					glTexCoord2f(0, 1); glVertex2f(0, 0);
-					glTexCoord2f(1, 1); glVertex2f(1, 0);
-					glTexCoord2f(1, 0); glVertex2f(1, 1);
-					glTexCoord2f(0, 0); glVertex2f(0, 1);
+          glTexCoord2f(0, 1); glVertex2f(0, 0);
+          glTexCoord2f(1, 1); glVertex2f(1, 0);
+          glTexCoord2f(1, 0); glVertex2f(1, 1);
+          glTexCoord2f(0, 0); glVertex2f(0, 1);
         }
-				glEnd();
+        glEnd();
       }
       glDisable(GL_TEXTURE_2D);
     }
@@ -88,6 +141,45 @@ void WindowedRenderer::render() const
   }
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
+}
 
-  SDL_GL_SwapWindow(m_window.get());
+void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
+{
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  {
+    set_projection_matrix(m_spaintEngine->get_intrinsics(), m_width, m_height);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    {
+      glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data()); // note: conveniently, data() returns the elements in column-major order (the order required by OpenGL)
+
+      // Render the axes.
+      glBegin(GL_LINES);
+        glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
+        glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
+        glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
+      glEnd();
+    }
+    glPopMatrix();
+  }
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+}
+
+void WindowedRenderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
+{
+  double nearVal = 0.1;
+  double farVal = 1000.0;
+
+  // To rederive these equations, use similar triangles. Note that fx = f / sx and fy = f / sy,
+  // where sx and sy are the dimensions of a pixel on the image plane.
+  double leftVal = -intrinsics.projectionParamsSimple.px * nearVal / intrinsics.projectionParamsSimple.fx;
+  double rightVal = (width - intrinsics.projectionParamsSimple.px) * nearVal / intrinsics.projectionParamsSimple.fx;
+  double bottomVal = -intrinsics.projectionParamsSimple.py * nearVal / intrinsics.projectionParamsSimple.fy;
+  double topVal = (height - intrinsics.projectionParamsSimple.py) * nearVal / intrinsics.projectionParamsSimple.fy;
+
+  glLoadIdentity();
+  glFrustum(leftVal, rightVal, bottomVal, topVal, nearVal, farVal);
 }

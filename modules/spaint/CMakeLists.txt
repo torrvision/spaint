@@ -14,6 +14,7 @@ SET(targetname spaint)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
@@ -49,7 +50,12 @@ include/spaint/SpaintEngine.h
 )
 
 ##
+SET(util_sources
+src/util/CameraPoseConverter.cpp
+)
+
 SET(util_headers
+include/spaint/util/CameraPoseConverter.h
 include/spaint/util/SpaintVoxel.h
 )
 
@@ -60,6 +66,7 @@ include/spaint/util/SpaintVoxel.h
 SET(sources
 ${input_sources}
 ${toplevel_sources}
+${util_sources}
 )
 
 SET(headers
@@ -76,13 +83,14 @@ ${util_headers}
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
-SOURCE_GROUP(util FILES ${util_headers})
+SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
 INCLUDE_DIRECTORIES(include/spaint)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 #INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)
 

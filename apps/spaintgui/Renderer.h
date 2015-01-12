@@ -7,6 +7,8 @@
 
 #include <SDL.h>
 
+#include <rigging/MoveableCamera.h>
+
 #include <spaint/SpaintEngine.h>
 
 /**
@@ -14,6 +16,20 @@
  */
 class Renderer
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief An enumeration containing the possible camera modes we can use.
+   */
+  enum CameraMode
+  {
+    /** A mode that follows the camera that is reconstructing the scene. */
+    CM_FOLLOW,
+
+    /** A mode that allows the user to freely move the camera around to view the scene from different angles. */
+    CM_FREE
+  };
+
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
@@ -22,6 +38,9 @@ protected:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** The current camera mode. */
+  CameraMode m_cameraMode;
+
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
@@ -39,7 +58,7 @@ public:
    * \param spaintEngine  The spaint engine.
    */
   explicit Renderer(const spaint::SpaintEngine_Ptr& spaintEngine)
-  : m_spaintEngine(spaintEngine)
+  : m_cameraMode(CM_FOLLOW), m_spaintEngine(spaintEngine)
   {}
 
   //#################### DESTRUCTOR ####################
@@ -49,12 +68,41 @@ public:
    */
   virtual ~Renderer() {}
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Gets the camera from which to render the scene.
+   *
+   * \return  The camera from which to render the scene.
+   */
+  virtual rigging::MoveableCamera_Ptr get_camera() = 0;
+
   /**
    * \brief Renders the scene.
    */
   virtual void render() const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the current camera mode.
+   *
+   * \return  The current camera mode.
+   */
+  CameraMode get_camera_mode() const
+  {
+    return m_cameraMode;
+  }
+
+  /**
+   * \brief Sets the current camera mode.
+   *
+   * \param cameraMode  The new camera mode.
+   */
+  void set_camera_mode(CameraMode cameraMode)
+  {
+    m_cameraMode = cameraMode;
+  }
 };
 
 #endif

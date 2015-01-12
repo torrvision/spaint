@@ -17,6 +17,13 @@ using namespace OVR;
 
 #include <SDL_syswm.h>
 
+#include <rigging/DerivedCamera.h>
+#include <rigging/SimpleCamera.h>
+using namespace rigging;
+
+#include <spaint/util/CameraPoseConverter.h>
+using namespace spaint;
+
 //#################### CONSTRUCTORS ####################
 
 RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode)
@@ -83,6 +90,12 @@ RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const s
   }
 #endif
 
+  // Set up the stereo camera.
+  const float HALF_IPD = 0.032f; // the average (male) interpupillary distance (IPD) is about 6.4cm
+  m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, 0.0f))));
+  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
+
   // Set up the eye images and eye textures.
   ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();
   for(int i = 0; i < ovrEye_Count; ++i)
@@ -103,6 +116,11 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+MoveableCamera_Ptr RiftRenderer::get_camera()
+{
+  return m_camera;
+}
+
 void RiftRenderer::render() const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
@@ -111,9 +129,17 @@ void RiftRenderer::render() const
   // Start the frame.
   ovrHmd_BeginFrame(m_hmd, 0);
 
+  // If we're following the reconstruction, update the position and orientation of the camera.
+  if(m_cameraMode == CM_FOLLOW)
+  {
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(m_spaintEngine->get_pose()));
+  }
+
   // Construct the left and right eye images.
-  m_spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Left]);
-  m_spaintEngine->get_default_raycast(m_eyeImages[ovrEye_Right]);
+  ITMPose leftPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left"));
+  ITMPose rightPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"));
+  m_spaintEngine->generate_free_raycast(m_eyeImages[ovrEye_Left], leftPose);
+  m_spaintEngine->generate_free_raycast(m_eyeImages[ovrEye_Right], rightPose);
 
   // Copy the eye images into OpenGL textures.
   for(int i = 0; i < ovrEye_Count; ++i)
