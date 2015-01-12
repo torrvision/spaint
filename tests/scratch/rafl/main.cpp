@@ -229,6 +229,9 @@ int main(int argc, char *argv[])
 
 #if 1
 
+#include <boost/assign/list_of.hpp>
+using boost::assign::list_of;
+
 #include <Eigen/Dense>
 
 #include <rafl/evaluation/PerformanceEvaluation.h>
@@ -239,6 +242,7 @@ using namespace rafl;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 
 typedef int Label;
+typedef float Result;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef std::vector<size_t> Indices;
@@ -250,7 +254,7 @@ private:
   tvgutil::RandomNumberGenerator m_randomNumberGenerator;
 
 public:
-  explicit Dummy(unsigned int seed)
+  explicit Dummy(std::string settings, unsigned int seed)
   : m_randomNumberGenerator(seed)
   {}
 
@@ -271,13 +275,25 @@ int main()
   UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
   std::vector<Example_CPtr> examples = uceg.generate_examples(classLabels, 10);
 
-  boost::shared_ptr<Dummy> randomAlgorithm( new Dummy(1234));
+  std::vector<std::string> paramStrings = ParameterStringGenerator()
+    .add_param("-q", list_of(1)(2)(3))
+    .add_param("-t", list_of(9.0f)(8.0f))
+    .add_param("-w", list_of<std::string>("Yum")("Dum"))
+    .generate()
+
   const size_t num_folds = 5;
   const unsigned int seed = 1234;
-  CrossValidation<Dummy,float,int> cv(num_folds, seed);
+  boost::shared_ptr<Dummy> randomAlgorithm;
 
-  std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cv.run(randomAlgorithm, examples) << std::endl;
-
+  std::map<std::string,Result> Results;
+  for(size_t n = 0, nend = paramStrings.size(); n < nend; ++n)
+  {
+    randomAlgorithm.reset( new Dummy(paramStrings[n], 1234) );
+    CrossValidation<Dummy,float,int> cv(num_folds, seed);
+    Result cvResult = cv.run(randomAlgorithm, examples); 
+    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;
+    Results.insert(std::make_pair(paramStrings[n], cvResult));
+  }
   return 0;
 }
 
