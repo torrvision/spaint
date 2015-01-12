@@ -236,10 +236,12 @@ using boost::assign::list_of;
 
 #include <rafl/evaluation/PerformanceEvaluation.h>
 #include <rafl/evaluation/CrossValidation.h>
+#include <rafl/evaluation/ParameterStringGenerator.h>
+#include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
 #include <tvgutil/RandomNumberGenerator.h>
-#include <rafl/examples/UnitCircleExampleGenerator.h>
+#include <tvgutil/LimitedContainer.h>
 
 typedef int Label;
 typedef float Result;
@@ -279,7 +281,7 @@ int main()
     .add_param("-q", list_of(1)(2)(3))
     .add_param("-t", list_of(9.0f)(8.0f))
     .add_param("-w", list_of<std::string>("Yum")("Dum"))
-    .generate()
+    .generate();
 
   const size_t num_folds = 5;
   const unsigned int seed = 1234;
@@ -288,12 +290,14 @@ int main()
   std::map<std::string,Result> Results;
   for(size_t n = 0, nend = paramStrings.size(); n < nend; ++n)
   {
-    randomAlgorithm.reset( new Dummy(paramStrings[n], 1234) );
+    randomAlgorithm.reset( new Dummy(paramStrings[n], 1234 + n) );
     CrossValidation<Dummy,float,int> cv(num_folds, seed);
     Result cvResult = cv.run(randomAlgorithm, examples); 
     std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;
     Results.insert(std::make_pair(paramStrings[n], cvResult));
   }
+  std::cout << tvgutil::make_limited_container(Results, 5) << "\n";
+
   return 0;
 }
 
