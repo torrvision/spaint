@@ -12,6 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 using boost::assign::list_of;
+using boost::assign::map_list_of;
 using boost::spirit::hold_any;
 
 namespace rafl {
@@ -31,6 +32,16 @@ public:
   std::vector<std::string> generate() const
   {
     return generate_strings_for_params(0);
+  }
+
+  std::vector<std::string> generate_strings() const
+  {
+    return generate_strings_for_params(0);
+  }
+
+  std::vector<std::map<std::string,hold_any> > generate_maps() const
+  {
+    return generate_maps_for_params(0);
   }
 
 private:
@@ -65,19 +76,46 @@ private:
       return result;
     }
   }
+
+
+  typedef std::map<std::string,hold_any> ParamSet;
+  static std::vector<ParamSet> generate_maps_for_param(const std::string& param, const std::vector<hold_any>& options)
+  {
+    std::vector<ParamSet> result;
+    for(std::vector<hold_any>::const_iterator it = options.begin(), iend = options.end(); it != iend; ++it)
+    {
+      result.push_back(map_list_of(param, *it));
+    }
+    return result;
+  }
+
+  std::vector<ParamSet> generate_maps_for_params(size_t from) const
+  {
+    if(from == m_paramOptions.size())
+    {
+      return list_of(ParamSet());
+    }
+    else
+    {
+      std::vector<ParamSet> lhs = generate_maps_for_param(m_paramOptions[from].first, m_paramOptions[from].second);
+      std::vector<ParamSet> rhs = generate_maps_for_params(from + 1);
+      std::vector<ParamSet> result;
+      for(size_t i = 0, isize = lhs.size(); i < isize; ++i)
+      {
+        for(size_t j = 0, jsize = rhs.size(); j < jsize; ++j)
+        {
+          ParamSet combinedParameters = lhs[i];
+          std::copy(rhs[j].begin(), rhs[j].end(), std::inserter(combinedParameters, combinedParameters.begin()));
+          result.push_back(combinedParameters);
+        }
+      }
+      return result;
+    }
+  }
+
 };
 
 }
 
 #endif
 
-/*int main()
-{
-  std::vector<std::string> paramStrings = ParameterStringGenerator()
-    .add_param("-n", list_of(3)(4)(5))
-    .add_param("-t", list_of<std::string>("Foo")("Bar"))
-    .add_param("-x", list_of(23.0f)(9.0f))
-    .generate();
-  std::copy(paramStrings.begin(), paramStrings.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
-  return 0;
-}*/
