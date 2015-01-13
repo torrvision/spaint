@@ -230,7 +230,9 @@ int main(int argc, char *argv[])
 #if 1
 
 #include <boost/assign/list_of.hpp>
+#include <boost/spirit/home/support/detail/hold_any.hpp>
 using boost::assign::list_of;
+using boost::spirit::hold_any;
 
 #include <Eigen/Dense>
 
@@ -250,17 +252,19 @@ typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 typedef std::vector<size_t> Indices;
 typedef std::pair<Indices,Indices> Split;
 
+typedef std::map<std::string,hold_any> ParamSet;
+
 class Dummy
 {
 private:
   tvgutil::RandomNumberGenerator m_randomNumberGenerator;
 
 public:
-  explicit Dummy(std::string settings, unsigned int seed)
+  explicit Dummy(ParamSet settings, unsigned int seed)
   : m_randomNumberGenerator(seed)
   {}
 
-  float output(const std::vector<Example_CPtr>& examples, const Split& split)
+  Result output(const std::vector<Example_CPtr>& examples, const Split& split)
   {
     return m_randomNumberGenerator.generate_real_from_uniform<float>(0.0f,100.0f);
   }
@@ -277,24 +281,24 @@ int main()
   UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
   std::vector<Example_CPtr> examples = uceg.generate_examples(classLabels, 10);
 
-  std::vector<std::string> paramStrings = ParameterStringGenerator()
-    .add_param("-q", list_of(1)(2)(3))
-    .add_param("-t", list_of(9.0f)(8.0f))
-    .add_param("-w", list_of<std::string>("Yum")("Dum"))
-    .generate();
+  std::vector<ParamSet> params = ParameterStringGenerator()
+    .add_param("CandidateCount", list_of(1)(2)(3))
+    .add_param("gainThreshold", list_of(9.0f)(8.0f))
+    .add_param("decisionFunctionGeneratorName", list_of<std::string>("Yum")("Dum"))
+    .generate_maps();
 
-  const size_t num_folds = 5;
+  const size_t numFolds = 5;
   const unsigned int seed = 1234;
   boost::shared_ptr<Dummy> randomAlgorithm;
 
   std::map<std::string,Result> Results;
-  for(size_t n = 0, nend = paramStrings.size(); n < nend; ++n)
+  for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
-    randomAlgorithm.reset( new Dummy(paramStrings[n], 1234 + n) );
-    CrossValidation<Dummy,float,int> cv(num_folds, seed);
+    randomAlgorithm.reset( new Dummy(params[n], 1234 + n) );
+    CrossValidation<Dummy,Result,Label> cv(numFolds, seed);
     Result cvResult = cv.run(randomAlgorithm, examples); 
     std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;
-    Results.insert(std::make_pair(paramStrings[n], cvResult));
+    Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), cvResult));
   }
   std::cout << tvgutil::make_limited_container(Results, 5) << "\n";
 

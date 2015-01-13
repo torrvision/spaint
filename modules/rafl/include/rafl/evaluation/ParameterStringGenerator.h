@@ -19,6 +19,7 @@ namespace rafl {
 
 class ParameterStringGenerator
 {
+  typedef std::map<std::string,hold_any> ParamSet;
 private:
 std::vector<std::pair<std::string,std::vector<hold_any> > > m_paramOptions;
 
@@ -29,10 +30,10 @@ public:
     return *this;
   }
 
-  std::vector<std::string> generate() const
+/*  std::vector<std::string> generate() const
   {
     return generate_strings_for_params(0);
-  }
+  }*/
 
   std::vector<std::string> generate_strings() const
   {
@@ -42,6 +43,20 @@ public:
   std::vector<std::map<std::string,hold_any> > generate_maps() const
   {
     return generate_maps_for_params(0);
+  }
+
+  static std::string to_string(const ParamSet& params)
+  {
+    std::string paramString;
+    size_t mapSize = params.size();
+    size_t sizeCount = 0;
+    for(std::map<std::string,hold_any>::const_iterator it = params.begin(), iend = params.end(); it != iend; ++it)
+    {
+      paramString += it->first + "-" + boost::lexical_cast<std::string>(it->second);
+      if(++sizeCount != mapSize) paramString += "_";
+    }
+
+    return paramString;
   }
 
 private:
@@ -78,7 +93,6 @@ private:
   }
 
 
-  typedef std::map<std::string,hold_any> ParamSet;
   static std::vector<ParamSet> generate_maps_for_param(const std::string& param, const std::vector<hold_any>& options)
   {
     std::vector<ParamSet> result;
