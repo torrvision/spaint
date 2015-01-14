@@ -10,6 +10,7 @@
 #include <Engine/ImageSourceEngine.h>
 
 #include "util/SpaintVoxel.h"
+#include "SpaintModel.h"
 
 namespace spaint {
 
@@ -26,6 +27,12 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The spaint model. */
+  SpaintModel_CPtr m_model;
+
+  /** The settings to use for InfiniTAM. */
+  ITMLibSettings m_settings;
+
     /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_Ptr m_visualisationEngine;
 
@@ -33,8 +40,11 @@ private:
 public:
   /**
    * \brief Constructs a raycaster.
+   *
+   * \param model     The spaint model.
+   * \param settings  The settings to use for InfiniTAM.
    */
-  SpaintRaycaster();
+  SpaintRaycaster(const SpaintModel_CPtr& model, const ITMLibSettings& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

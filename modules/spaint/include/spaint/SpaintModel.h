@@ -27,11 +27,15 @@ private:
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<const ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
+public:
+  typedef boost::shared_ptr<const Scene> Scene_CPtr;
+  typedef boost::shared_ptr<const ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The current model of the 3D scene. */
+  /** The current reconstructed scene. */
   Scene_Ptr m_scene;
 
   /** The settings to use for InfiniTAM. */
@@ -68,7 +72,33 @@ public:
    * \return  The current camera pose.
    */
   const ITMPose& get_pose() const;
+
+  /**
+   * \brief Gets the current reconstructed scene.
+   *
+   * \return  The current reconstructed scene.
+   */
+  Scene_CPtr get_scene() const;
+
+  /**
+   * \brief Gets the current tracking state.
+   *
+   * \return  The current tracking state.
+   */
+  TrackingState_CPtr get_tracking_state() const;
+
+  /**
+   * \brief Gets the current view of the scene.
+   *
+   * \return  The current view of the scene.
+   */
+  View_CPtr get_view() const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SpaintModel> SpaintModel_Ptr;
+typedef boost::shared_ptr<const SpaintModel> SpaintModel_CPtr;
 
 }
 

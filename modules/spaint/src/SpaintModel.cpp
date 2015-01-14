@@ -46,4 +46,19 @@ const ITMPose& SpaintModel::get_pose() const
   return *m_trackingState->pose_d;
 }
 
+SpaintModel::Scene_CPtr SpaintModel::get_scene() const
+{
+  return m_scene;
+}
+
+SpaintModel::TrackingState_CPtr SpaintModel::get_tracking_state() const
+{
+  return m_trackingState;
+}
+
+SpaintModel::View_CPtr SpaintModel::get_view() const
+{
+  return m_view;
+}
+
 }
