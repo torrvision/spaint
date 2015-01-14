@@ -9,10 +9,10 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/SpaintEngine.h>
+#include <spaint/SpaintPipeline.h>
 
 /**
- * \brief An instance of a class deriving from this one can be used to render the scene constructed by the spaint engine to a given target.
+ * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
  */
 class Renderer
 {
@@ -44,8 +44,8 @@ protected:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
-  /** The spaint engine. */
-  spaint::SpaintEngine_Ptr m_spaintEngine;
+  /** The spaint pipeline. */
+  spaint::SpaintPipeline_Ptr m_spaintPipeline;
 
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
@@ -55,10 +55,10 @@ public:
   /**
    * \brief Constructs a renderer.
    *
-   * \param spaintEngine  The spaint engine.
+   * \param spaintPipeline  The spaint pipeline.
    */
-  explicit Renderer(const spaint::SpaintEngine_Ptr& spaintEngine)
-  : m_cameraMode(CM_FOLLOW), m_spaintEngine(spaintEngine)
+  explicit Renderer(const spaint::SpaintPipeline_Ptr& spaintPipeline)
+  : m_cameraMode(CM_FOLLOW), m_spaintPipeline(spaintPipeline)
   {}
 
   //#################### DESTRUCTOR ####################

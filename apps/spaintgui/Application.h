@@ -7,7 +7,7 @@
 
 #include <SDL.h>
 
-#include <spaint/SpaintEngine.h>
+#include <spaint/SpaintPipeline.h>
 #include <spaint/input/InputState.h>
 
 #include "Renderer.h"
@@ -29,17 +29,17 @@ private:
   /** The current renderer. */
   Renderer_Ptr m_renderer;
 
-  /** The spaint engine that the application should use. */
-  spaint::SpaintEngine_Ptr m_spaintEngine;
+  /** The spaint pipeline that the application should use. */
+  spaint::SpaintPipeline_Ptr m_spaintPipeline;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs the application.
    *
-   * \param spaintEngine The spaint engine that the application should use.
+   * \param spaintPipeline  The spaint pipeline that the application should use.
    */
-  explicit Application(const spaint::SpaintEngine_Ptr& spaintEngine);
+  explicit Application(const spaint::SpaintPipeline_Ptr& spaintPipeline);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

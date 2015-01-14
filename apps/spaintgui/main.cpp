@@ -11,7 +11,7 @@ using namespace InfiniTAM::Engine;
 
 #include <SDL.h>
 
-#include <spaint/SpaintEngine.h>
+#include <spaint/SpaintPipeline.h>
 using namespace spaint;
 
 #include "Application.h"
@@ -49,25 +49,25 @@ try
   // Specify the InfiniTAM settings.
   ITMLibSettings settings;
 
-  // Construct the spaint engine.
-  SpaintEngine_Ptr spaintEngine;
+  // Construct the spaint pipeline.
+  SpaintPipeline_Ptr spaintPipeline;
   if(argc == 4)
   {
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    spaintEngine.reset(new SpaintEngine(calibrationFilename, rgbImageMask, depthImageMask, settings));
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, rgbImageMask, depthImageMask, settings));
   }
   else
   {
 #if WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    spaintEngine.reset(new SpaintEngine(calibrationFilename, openNIDeviceURI == "Default" ? boost::shared_ptr<std::string>() : boost::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::shared_ptr<std::string>() : boost::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
   }
 
   // Run the application.
-  Application app(spaintEngine);
+  Application app(spaintPipeline);
   app.run();
 
   // Shut down SDL.

@@ -22,9 +22,9 @@ class SpaintRaycaster
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
-  typedef boost::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
 public:
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

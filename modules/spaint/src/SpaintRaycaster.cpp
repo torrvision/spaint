@@ -4,6 +4,9 @@
 
 #include "SpaintRaycaster.h"
 
+#include <ITMLib/Engine/ITMVisualisationEngine.cpp>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################

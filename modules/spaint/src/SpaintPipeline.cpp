@@ -7,7 +7,11 @@
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
 #endif
+#include <ITMLib/Engine/ITMRenTracker.cpp>
 #include <ITMLib/Engine/ITMTrackerFactory.h>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMRenTracker_CPU.cpp>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
+#include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
 namespace spaint {
@@ -31,6 +35,16 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+SpaintModel_CPtr SpaintPipeline::get_model() const
+{
+  return m_model;
+}
+
+SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
+{
+  return m_raycaster;
+}
 
 void SpaintPipeline::process_frame()
 {
@@ -59,7 +73,7 @@ void SpaintPipeline::process_frame()
         break;
       default:
         // This should never happen.
-        throw std::runtime_error("Error: SpaintEngine::process_frame: Unknown input image type");
+        throw std::runtime_error("Error: SpaintPipeline::process_frame: Unknown input image type");
     }
   }
 
@@ -121,7 +135,7 @@ void SpaintPipeline::process_frame()
     }
     default:
     {
-      throw std::runtime_error("Error: SpaintEngine::process_frame: Unknown tracker type");
+      throw std::runtime_error("Error: SpaintPipeline::process_frame: Unknown tracker type");
     }
   }
 

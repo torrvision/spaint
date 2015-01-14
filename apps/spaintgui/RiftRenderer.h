@@ -16,7 +16,7 @@
 #include "Renderer.h"
 
 /**
- * \brief An instance of this class can be used to render the scene constructed by the spaint engine to the Oculus Rift.
+ * \brief An instance of this class can be used to render the spaint scene to the Oculus Rift.
  */
 class RiftRenderer : public Renderer
 {
@@ -45,16 +45,19 @@ private:
   /** The Rift handle. */
   ovrHmd m_hmd;
 
+  /** The visualisation states for the free camera views. */
+  mutable spaint::SpaintRaycaster::VisualisationState_Ptr m_visualisationStates[ovrEye_Count];
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Rift renderer.
    *
-   * \param spaintEngine  The spaint engine.
-   * \param title         The title to give the window.
-   * \param renderingMode The rendering mode to use.
+   * \param spaintPipeline  The spaint pipeline.
+   * \param title           The title to give the window.
+   * \param renderingMode   The rendering mode to use.
    */
-  RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode);
+  RiftRenderer(const spaint::SpaintPipeline_Ptr& spaintPipeline, const std::string& title, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

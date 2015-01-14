@@ -34,7 +34,7 @@ private:
   /** The spaint model. */
   SpaintModel_Ptr m_model;
 
-  /** A raycaster that can be used to cast rays into the InfiniTAM scene. */
+  /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   SpaintRaycaster_Ptr m_raycaster;
 
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
@@ -81,6 +81,20 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the spaint model.
+   *
+   * \return  The spaint model.
+   */
+  SpaintModel_CPtr get_model() const;
+
+  /**
+   * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
+   *
+   * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
+   */
+  SpaintRaycaster_CPtr get_raycaster() const;
+
+  /**
    * \brief Processes the next frame from the image source engine.
    */
   void process_frame();
@@ -92,6 +106,11 @@ private:
    */
   void initialise();
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SpaintPipeline> SpaintPipeline_Ptr;
+typedef boost::shared_ptr<const SpaintPipeline> SpaintPipeline_CPtr;
 
 }
 
