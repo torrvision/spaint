@@ -239,6 +239,7 @@ using boost::spirit::hold_any;
 #include <rafl/evaluation/PerformanceEvaluation.h>
 #include <rafl/evaluation/CrossValidation.h>
 #include <rafl/evaluation/ParameterStringGenerator.h>
+#include <rafl/evaluation/RFOnlineLearner.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
@@ -249,38 +250,22 @@ typedef int Label;
 typedef float Result;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
-typedef std::vector<size_t> Indices;
-typedef std::pair<Indices,Indices> Split;
-
 typedef std::map<std::string,hold_any> ParamSet;
-
-class Dummy
-{
-private:
-  tvgutil::RandomNumberGenerator m_randomNumberGenerator;
-
-public:
-  explicit Dummy(ParamSet settings, unsigned int seed)
-  : m_randomNumberGenerator(seed)
-  {}
-
-  Result output(const std::vector<Example_CPtr>& examples, const Split& split)
-  {
-    return m_randomNumberGenerator.generate_real_from_uniform<float>(0.0f,100.0f);
-  }
-};
 
 int main()
 {
+  //Fenerate a set of labels.
   std::set<Label> classLabels;
   classLabels.insert(1);
   classLabels.insert(3);
   classLabels.insert(5);
   classLabels.insert(7);
 
+  //Generate examples around the unit circle.
   UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
   std::vector<Example_CPtr> examples = uceg.generate_examples(classLabels, 10);
 
+  //Generate parameters of your algorithm.
   std::vector<ParamSet> params = ParameterStringGenerator()
     .add_param("CandidateCount", list_of(1)(2)(3))
     .add_param("gainThreshold", list_of(9.0f)(8.0f))
@@ -289,13 +274,13 @@ int main()
 
   const size_t numFolds = 5;
   const unsigned int seed = 1234;
-  boost::shared_ptr<Dummy> randomAlgorithm;
-
+  boost::shared_ptr<RFOnlineLearner<Result,Label> > randomAlgorithm;
   std::map<std::string,Result> Results;
+
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
-    randomAlgorithm.reset( new Dummy(params[n], 1234 + n) );
-    CrossValidation<Dummy,Result,Label> cv(numFolds, seed);
+    randomAlgorithm.reset( new RFOnlineLearner<Result,Label>(params[n], 1234 + n) );
+    CrossValidation<RFOnlineLearner<Result,Label>,Result,Label> cv(numFolds, seed);
     Result cvResult = cv.run(randomAlgorithm, examples); 
     std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;
     Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), cvResult));
