@@ -43,10 +43,14 @@ include/spaint/ogl/WrappedGL.h
 ##
 SET(toplevel_sources
 src/SpaintEngine.cpp
+src/SpaintModel.cpp
+src/SpaintRaycaster.cpp
 )
 
 SET(toplevel_headers
 include/spaint/SpaintEngine.h
+include/spaint/SpaintModel.h
+include/spaint/SpaintRaycaster.h
 )
 
 ##
