@@ -22,8 +22,9 @@ class SpaintRaycaster
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
-  typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
   typedef boost::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
+public:
+  typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -78,6 +79,13 @@ public:
    */
   void get_rgb_input(const UChar4Image_Ptr& output) const;
 
+  /**
+   * \brief Gets the InfiniTAM engine used for raycasting the scene.
+   *
+   * \return  The InfiniTAM engine used for raycasting the scene.
+   */
+  const VisualisationEngine_Ptr& get_visualisation_engine();
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -94,6 +102,11 @@ private:
     output->ChangeDims(input->noDims);
   }
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SpaintRaycaster> SpaintRaycaster_Ptr;
+typedef boost::shared_ptr<const SpaintRaycaster> SpaintRaycaster_CPtr;
 
 }
 

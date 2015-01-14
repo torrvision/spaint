@@ -63,4 +63,9 @@ void SpaintRaycaster::get_rgb_input(const UChar4Image_Ptr& output) const
   output->SetFrom(m_model->get_view()->rgb);
 }
 
+const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisation_engine()
+{
+  return m_visualisationEngine;
+}
+
 }

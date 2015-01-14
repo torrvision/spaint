@@ -25,16 +25,22 @@ class SpaintModel
 private:
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
+public:
   typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
-public:
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The dimensions of the depth images from which the scene is being reconstructed. */
+  Vector2i m_depthImageSize;
+
+  /** The dimensions of the RGB images from which the scene is being reconstructed. */
+  Vector2i m_rgbImageSize;
+
   /** The current reconstructed scene. */
   Scene_Ptr m_scene;
 
@@ -60,6 +66,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the dimensions of the depth images from which the scene is being reconstructed.
+   *
+   * \return  The dimensions of the depth images from which the scene is being reconstructed.
+   */
+  const Vector2i& get_depth_image_size() const;
+
+  /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the scene.
    *
    * \return  The intrinsic parameters for the camera.
@@ -74,6 +87,20 @@ public:
   const ITMPose& get_pose() const;
 
   /**
+   * \brief Gets the dimensions of the RGB images from which the scene is being reconstructed.
+   *
+   * \return  The dimensions of the RGB images from which the scene is being reconstructed.
+   */
+  const Vector2i& get_rgb_image_size() const;
+
+  /**
+   * \brief Gets the current reconstructed scene.
+   *
+   * \return  The current reconstructed scene.
+   */
+  const Scene_Ptr& get_scene();
+
+  /**
    * \brief Gets the current reconstructed scene.
    *
    * \return  The current reconstructed scene.
@@ -85,7 +112,21 @@ public:
    *
    * \return  The current tracking state.
    */
+  const TrackingState_Ptr& get_tracking_state();
+
+  /**
+   * \brief Gets the current tracking state.
+   *
+   * \return  The current tracking state.
+   */
   TrackingState_CPtr get_tracking_state() const;
+
+  /**
+   * \brief Gets the current view of the scene.
+   *
+   * \return  The current view of the scene.
+   */
+  const View_Ptr& get_view();
 
   /**
    * \brief Gets the current view of the scene.

@@ -13,28 +13,28 @@ namespace spaint {
 SpaintModel::SpaintModel(const ITMLibSettings& settings, const ImageSourceEngine_Ptr& imageSourceEngine)
 : m_settings(settings)
 {
-  // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
-#ifndef WITH_CUDA
-  std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
-  m_settings.useGPU = false;
-#endif
-
   // Determine the RGB and depth image sizes.
-  Vector2i rgbImageSize = imageSourceEngine->getRGBImageSize(), depthImageSize = imageSourceEngine->getDepthImageSize();
-  if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
+  m_rgbImageSize = imageSourceEngine->getRGBImageSize();
+  m_depthImageSize = imageSourceEngine->getDepthImageSize();
+  if(m_depthImageSize.x == -1 || m_depthImageSize.y == -1) m_depthImageSize = m_rgbImageSize;
 
   // Set up the scene.
   m_scene.reset(new Scene(&m_settings.sceneParams, m_settings.useSwapping, m_settings.useGPU));
 
   // Set up the initial tracking state.
-  m_trackingState.reset(ITMTrackerFactory::MakeTrackingState(m_settings, rgbImageSize, depthImageSize));
+  m_trackingState.reset(ITMTrackerFactory::MakeTrackingState(m_settings, m_rgbImageSize, m_depthImageSize));
   m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
   // Set up the scene view.
-  m_view.reset(new ITMView(imageSourceEngine->calib, rgbImageSize, depthImageSize, m_settings.useGPU));
+  m_view.reset(new ITMView(imageSourceEngine->calib, m_rgbImageSize, m_depthImageSize, m_settings.useGPU));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+const Vector2i& SpaintModel::get_depth_image_size() const
+{
+  return m_depthImageSize;
+}
 
 const ITMIntrinsics& SpaintModel::get_intrinsics() const
 {
@@ -46,14 +46,34 @@ const ITMPose& SpaintModel::get_pose() const
   return *m_trackingState->pose_d;
 }
 
+const Vector2i& SpaintModel::get_rgb_image_size() const
+{
+  return m_rgbImageSize;
+}
+
+const SpaintModel::Scene_Ptr& SpaintModel::get_scene()
+{
+  return m_scene;
+}
+
 SpaintModel::Scene_CPtr SpaintModel::get_scene() const
 {
   return m_scene;
 }
 
+const SpaintModel::TrackingState_Ptr& SpaintModel::get_tracking_state()
+{
+  return m_trackingState;
+}
+
 SpaintModel::TrackingState_CPtr SpaintModel::get_tracking_state() const
 {
   return m_trackingState;
+}
+
+const SpaintModel::View_Ptr& SpaintModel::get_view()
+{
+  return m_view;
 }
 
 SpaintModel::View_CPtr SpaintModel::get_view() const
