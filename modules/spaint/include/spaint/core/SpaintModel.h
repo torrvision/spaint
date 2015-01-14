@@ -23,7 +23,6 @@ class SpaintModel
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
 public:
   typedef boost::shared_ptr<Scene> Scene_Ptr;
@@ -58,10 +57,12 @@ public:
   /**
    * \brief Constructs a model.
    *
-   * \param settings          The settings to use for InfiniTAM.
-   * \param imageSourceEngine The InfiniTAM engine used to provide input images to the fusion pipeline.
+   * \param settings        The settings to use for InfiniTAM.
+   * \param rgbImageSize    The dimensions of the RGB images from which the scene is being reconstructed.
+   * \param depthImageSize  The dimensions of the depth images from which the scene is being reconstructed.
+   * \param calib           The calibration parameters for the RGB-D camera from which the scene is being reconstructed.
    */
-  SpaintModel(const ITMLibSettings& settings, const ImageSourceEngine_Ptr& imageSourceEngine);
+  SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -10,14 +10,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintModel::SpaintModel(const ITMLibSettings& settings, const ImageSourceEngine_Ptr& imageSourceEngine)
-: m_settings(settings)
+SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib)
+: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings)
 {
-  // Determine the RGB and depth image sizes.
-  m_rgbImageSize = imageSourceEngine->getRGBImageSize();
-  m_depthImageSize = imageSourceEngine->getDepthImageSize();
-  if(m_depthImageSize.x == -1 || m_depthImageSize.y == -1) m_depthImageSize = m_rgbImageSize;
-
   // Set up the scene.
   m_scene.reset(new Scene(&m_settings.sceneParams, m_settings.useSwapping, m_settings.useGPU));
 
@@ -26,7 +21,7 @@ SpaintModel::SpaintModel(const ITMLibSettings& settings, const ImageSourceEngine
   m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
   // Set up the scene view.
-  m_view.reset(new ITMView(imageSourceEngine->calib, m_rgbImageSize, m_depthImageSize, m_settings.useGPU));
+  m_view.reset(new ITMView(calib, m_rgbImageSize, m_depthImageSize, m_settings.useGPU));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

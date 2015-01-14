@@ -152,8 +152,13 @@ void SpaintPipeline::initialise()
   m_settings.useGPU = false;
 #endif
 
+  // Determine the RGB and depth image sizes.
+  Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
+  Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
+  if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
+
   // Set up the spaint model.
-  m_model.reset(new SpaintModel(m_settings, m_imageSourceEngine));
+  m_model.reset(new SpaintModel(m_settings, rgbImageSize, depthImageSize, m_imageSourceEngine->calib));
 
   // Set up the InfiniTAM engines.
   if(m_settings.useGPU)
@@ -180,8 +185,6 @@ void SpaintPipeline::initialise()
   m_raycaster.reset(new SpaintRaycaster(m_model, m_settings));
 
   // Set up the trackers.
-  const Vector2i& rgbImageSize = m_model->get_rgb_image_size();
-  const Vector2i& depthImageSize = m_model->get_depth_image_size();
   m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
   m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_model->get_scene().get()));
 
