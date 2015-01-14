@@ -22,7 +22,7 @@ using namespace spaint;
 Application::Application(const spaint::SpaintPipeline_Ptr& spaintPipeline)
 : m_spaintPipeline(spaintPipeline)
 {
-  m_renderer.reset(new WindowedRenderer(spaintPipeline, "Semantic Paint", 640, 480));
+  m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -134,7 +134,7 @@ void Application::process_input()
     {
       if(m_inputState.key_down(SDLK_1))
       {
-        m_renderer.reset(new WindowedRenderer(m_spaintPipeline, "Semantic Paint", 640, 480));
+        m_renderer.reset(new WindowedRenderer(m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
@@ -143,7 +143,8 @@ void Application::process_input()
         try
         {
           m_renderer.reset(new RiftRenderer(
-            m_spaintPipeline,
+            m_spaintPipeline->get_model(),
+            m_spaintPipeline->get_raycaster(),
             "Semantic Paint",
             m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
           ));

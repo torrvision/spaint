@@ -15,8 +15,8 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const SpaintPipeline_Ptr& spaintPipeline, const std::string& title, int width, int height)
-: Renderer(spaintPipeline), m_height(height), m_width(width)
+WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, int width, int height)
+: Renderer(model, raycaster), m_height(height), m_width(width)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -44,7 +44,7 @@ WindowedRenderer::WindowedRenderer(const SpaintPipeline_Ptr& spaintPipeline, con
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
   // Set up the image and texture needed to render the reconstructed scene.
-  m_image.reset(new ITMUChar4Image(spaintPipeline->get_model()->get_depth_image_size(), false));
+  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), false));
   glGenTextures(1, &m_textureID);
 }
 
@@ -72,7 +72,7 @@ void WindowedRenderer::render() const
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
-      pose = m_spaintPipeline->get_model()->get_pose();
+      pose = m_model->get_pose();
       break;
     case CM_FREE:
       pose = CameraPoseConverter::camera_to_pose(*m_camera);
@@ -97,10 +97,10 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
-      m_spaintPipeline->get_raycaster()->get_default_raycast(m_image);
+      m_raycaster->get_default_raycast(m_image);
       break;
     case CM_FREE:
-      m_spaintPipeline->get_raycaster()->generate_free_raycast(m_image, m_visualisationState, pose);
+      m_raycaster->generate_free_raycast(m_image, m_visualisationState, pose);
       break;
     default:
       // This should never happen.
@@ -148,7 +148,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    set_projection_matrix(m_spaintPipeline->get_model()->get_intrinsics(), m_width, m_height);
+    set_projection_matrix(m_model->get_intrinsics(), m_width, m_height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

@@ -9,7 +9,8 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/SpaintPipeline.h>
+#include <spaint/SpaintModel.h>
+#include <spaint/SpaintRaycaster.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -44,8 +45,11 @@ protected:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
-  /** The spaint pipeline. */
-  spaint::SpaintPipeline_Ptr m_spaintPipeline;
+  /** The spaint model. */
+  spaint::SpaintModel_CPtr m_model;
+
+  /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
+  spaint::SpaintRaycaster_CPtr m_raycaster;
 
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
@@ -55,10 +59,11 @@ public:
   /**
    * \brief Constructs a renderer.
    *
-   * \param spaintPipeline  The spaint pipeline.
+   * \param model     The spaint model.
+   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  explicit Renderer(const spaint::SpaintPipeline_Ptr& spaintPipeline)
-  : m_cameraMode(CM_FOLLOW), m_spaintPipeline(spaintPipeline)
+  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
+  : m_cameraMode(CM_FOLLOW), m_model(model), m_raycaster(raycaster)
   {}
 
   //#################### DESTRUCTOR ####################
