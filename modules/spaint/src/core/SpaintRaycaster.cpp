@@ -2,7 +2,7 @@
  * spaint: SpaintRaycaster.cpp
  */
 
-#include "SpaintRaycaster.h"
+#include "core/SpaintRaycaster.h"
 
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>

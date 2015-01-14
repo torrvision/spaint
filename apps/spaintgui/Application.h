@@ -7,7 +7,7 @@
 
 #include <SDL.h>
 
-#include <spaint/SpaintPipeline.h>
+#include <spaint/core/SpaintPipeline.h>
 #include <spaint/input/InputState.h>
 
 #include "Renderer.h"

@@ -2,7 +2,7 @@
  * spaint: SpaintModel.cpp
  */
 
-#include "SpaintModel.h"
+#include "core/SpaintModel.h"
 
 #include <ITMLib/Engine/ITMTrackerFactory.h>
 

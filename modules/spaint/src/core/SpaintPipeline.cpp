@@ -2,7 +2,7 @@
  * spaint: SpaintPipeline.cpp
  */
 
-#include "SpaintPipeline.h"
+#include "core/SpaintPipeline.h"
 
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>

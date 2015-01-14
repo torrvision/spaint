@@ -9,7 +9,7 @@
 
 #include <Engine/ImageSourceEngine.h>
 
-#include "util/SpaintVoxel.h"
+#include "../util/SpaintVoxel.h"
 #include "SpaintModel.h"
 
 namespace spaint {

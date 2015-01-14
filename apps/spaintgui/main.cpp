@@ -11,7 +11,7 @@ using namespace InfiniTAM::Engine;
 
 #include <SDL.h>
 
-#include <spaint/SpaintPipeline.h>
+#include <spaint/core/SpaintPipeline.h>
 using namespace spaint;
 
 #include "Application.h"
