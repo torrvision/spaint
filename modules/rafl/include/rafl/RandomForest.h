@@ -5,6 +5,11 @@
 #ifndef H_RAFL_RANDOMFOREST
 #define H_RAFL_RANDOMFOREST
 
+#include <map>
+#include <string>
+
+#include <boost/spirit/home/support/detail/hold_any.hpp>
+
 #include "DecisionTree.h"
 
 namespace rafl {
@@ -18,13 +23,14 @@ class RandomForest
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-  typedef DecisionTree<Label> Tree;
-  typedef boost::shared_ptr<Tree> Tree_Ptr;
+  typedef DecisionTree<Label> DT;
+  typedef boost::shared_ptr<DT> DT_Ptr;
+  typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The decision trees that collectively make up the random forest. */
-  std::vector<Tree_Ptr> m_trees;
+  std::vector<DT_Ptr> m_trees;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -34,11 +40,31 @@ public:
    * \param treeCount The number of decision trees to use in the random forest.
    * \param settings  The settings needed to configure the decision trees.
    */
-  RandomForest(size_t treeCount, const typename Tree::Settings& settings)
+  RandomForest(size_t treeCount, const typename DT::Settings& settings)
   {
     for(size_t i = 0; i < treeCount; ++i)
     {
-      m_trees.push_back(Tree_Ptr(new Tree(settings)));
+      m_trees.push_back(DT_Ptr(new DT(settings)));
+    }
+  }
+
+  /**
+   * \brief Constructs a random forest.
+   *
+   * \param settings The settings needed to configure the random forest and the decision trees.
+   */
+  RandomForest(const ParamSet& settings)
+  {
+    size_t treeCount = 0;
+    #define GET_SETTING(param) DT::Settings::get_from_param_set(settings, param, #param);
+      GET_SETTING(treeCount);
+    #undef SET_SETTING
+    
+    typename DT::Settings dtSettings( settings );
+
+    for(size_t i = 0; i < treeCount; ++i)
+    {
+      m_trees.push_back(DT_Ptr(new DT(dtSettings)));
     }
   }
 
@@ -52,9 +78,23 @@ public:
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
     // Add the new examples to the different trees.
-    for(typename std::vector<Tree_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
       (*it)->add_examples(examples);
+    }
+  }
+
+  /**
+   * \brief Adds new training examples to the forest.
+   *
+   * \param examples  The examples to be added.
+   */
+  void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
+  {
+    // Add the new examples to the different trees.
+    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    {
+      (*it)->add_examples(examples, indices);
     }
   }
 
@@ -70,7 +110,7 @@ public:
   {
     // Sum the masses from the individual tree PMFs for the descriptor.
     std::map<Label,float> masses;
-    for(typename std::vector<Tree_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
       ProbabilityMassFunction<Label> individualPMF = (*it)->lookup_pmf(descriptor);
       const std::map<Label,float>& individualMasses = individualPMF.get_masses();
@@ -119,7 +159,7 @@ public:
    */
   void train(size_t splitBudget)
   {
-    for(typename std::vector<Tree_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
       (*it)->train(splitBudget);
     }

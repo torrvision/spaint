@@ -73,13 +73,15 @@ public:
   {
     initialise_splits(examples.size());
 
-    std::vector<Result> results;
+    std::vector<Result> performance;
     for(size_t i = 0; i < m_num_folds; ++i)
     {
-      results.push_back(algorithm->output(examples, m_splits[i]));
+      performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
     }
 
-    return std::accumulate(results.begin(), results.end(), 0.0)/results.size();
+    Result averageResults(performance);
+
+    return averageResults;
   }
 
   /**

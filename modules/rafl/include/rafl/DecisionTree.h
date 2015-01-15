@@ -9,6 +9,9 @@
 #include <set>
 #include <stdexcept>
 
+#include <boost/spirit/home/support/detail/hold_any.hpp>
+#include <boost/any.hpp>
+
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
@@ -138,6 +141,70 @@ public:
       // FIXME: Construct a decision function generator based on the name specified (use a generator factory).
       decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
     }
+
+    typedef std::map<std::string,hold_any> ParamSet;
+    explicit Settings(const ParamSet& settings)
+    {
+
+      std::string decisionFunctionGeneratorName = "FeatureThresholding";
+      unsigned int randomSeed = 0;
+
+      #define GET_SETTING(param) get_from_param_set(settings, param, #param);
+        GET_SETTING(candidateCount);
+      /*typename ParamSet::const_iterator it;
+      typename ParamSet::const_iterator iend;
+
+      #define GET_SETTING(setting) \
+      it = settings.find(#setting); \
+      iend = settings.end(); \
+      if(it != iend){ \
+        set_from_any(setting, it->second); \
+      } \
+      else \
+      { \
+        throw std::runtime_error("Random forest treeCount parameter not found.. this is very bad..\n"); \
+      }*/
+        GET_SETTING(decisionFunctionGeneratorName);
+        GET_SETTING(gainThreshold);
+        GET_SETTING(maxClassSize);
+        GET_SETTING(maxTreeHeight);
+        GET_SETTING(randomSeed);
+        GET_SETTING(seenExamplesThreshold);
+        GET_SETTING(splittabilityThreshold);
+      #undef GET_SETTING
+
+      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
+
+      // FIXME: Construct a decision function generator based on the name specified (use a generator factory).
+      decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+
+    }
+
+    template <typename T>
+    static void get_from_param_set(const ParamSet& settings, T& param, const std::string& paramName)
+    {
+
+      std::cout << "setting param: " << paramName << "\n";
+      typename ParamSet::const_iterator it = settings.find(paramName);
+      typename ParamSet::const_iterator iend = settings.end();
+      if(it != iend){
+        set_from_any(param, it->second);
+      }
+      else
+      {
+        throw std::runtime_error("Random forest " + paramName + " parameter not found.. this is very bad..\n");
+      }
+
+    }
+
+    template <typename T>
+    static void set_from_any(T& setTo, const boost::spirit::hold_any& setFrom)
+    {
+      std::cout << setFrom << "\n";
+      boost::spirit::hold_any tmp = setFrom;
+      setTo = boost::spirit::any_cast<T>(tmp);
+    }
+
   };
 
   //#################### PUBLIC TYPEDEFS ####################
@@ -195,14 +262,24 @@ public:
       add_example(*it);
     }
 
-    // Update the splittability values for any nodes whose reservoirs were changed whilst adding examples.
-    for(std::set<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
+    update_dirty_nodes();
+  }
+
+  /**
+   * \brief Adds new training examples to the decision tree.
+   *
+   * \param examples  The examples to be added.
+   * \param indices   The indices of examples to be added.
+   */
+  void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
+  {
+    // Add each example to the tree.
+    for(size_t i = 0, iend = indices.size(); i < iend; ++i)
     {
-      update_splittability(*it);
+      add_example(examples.at(indices[i]));
     }
 
-    // Clear the list of dirty nodes once their splittability has been updated.
-    m_dirtyNodes.clear();
+    update_dirty_nodes();
   }
 
   /**
@@ -459,6 +536,20 @@ private:
     n.m_reservoir.clear();
 
     return true;
+  }
+
+  /**
+   * \brief Updates the splittability values for any nodes whose reservoirs were changed whilst adding exmaples.
+   */
+  void update_dirty_nodes()
+  {
+    for(std::set<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
+    {
+      update_splittability(*it);
+    }
+
+    // Clear the list of dirty nodes once their splittability has been updated.
+    m_dirtyNodes.clear();
   }
 
   /**

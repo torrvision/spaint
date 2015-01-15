@@ -226,6 +226,41 @@ int main(int argc, char *argv[])
 
 #endif
 
+#if 0
+
+#include <boost/any.hpp>
+#include <boost/assign/list_of.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/spirit/home/support/detail/hold_any.hpp>
+using boost::assign::list_of;
+using boost::spirit::hold_any;
+
+#include <iostream>
+
+int main()
+{
+  /*hold_any treeCount(1212);
+
+  int treeCountNew = 0;
+
+  treeCountNew = boost::any_cast<int>(treeCount);*/
+
+  hold_any a1;
+  a1 = std::string("Foo");
+  std::cout << a1 << "\n";
+
+  std::string v1 = boost::spirit::any_cast<std::string>(a1);
+  std::cout << v1 << "\n";
+
+  hold_any a2;
+  a2 = 5;
+  std::cout << a2 << "\n";
+
+  int v2 = boost::spirit::any_cast<int>(a2);
+
+  return 0;
+}
+#endif
 
 #if 1
 
@@ -247,44 +282,78 @@ using namespace rafl;
 #include <tvgutil/LimitedContainer.h>
 
 typedef int Label;
-typedef float Result;
+typedef RFOnlineLearner<Label> RFO;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef std::map<std::string,hold_any> ParamSet;
 
-int main()
+int main(int argc, char *argv[])
 {
-  //Fenerate a set of labels.
-  std::set<Label> classLabels;
-  classLabels.insert(1);
-  classLabels.insert(3);
-  classLabels.insert(5);
-  classLabels.insert(7);
+  if((argc != 1) && (argc != 3))
+  {
+    throw std::runtime_error("Silly boy - enter the path of the training set, followed by the path of the test set!");
+  }
+  
+  std::vector<Example_CPtr> examples;
 
-  //Generate examples around the unit circle.
-  UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
-  std::vector<Example_CPtr> examples = uceg.generate_examples(classLabels, 10);
+  if(argc == 1)
+  {
+    //Generate a set of labels.
+    std::set<Label> classLabels;
+    classLabels.insert(1);
+    classLabels.insert(3);
+    classLabels.insert(5);
+    classLabels.insert(7);
 
+    //Generate examples around the unit circle.
+    UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
+    examples = uceg.generate_examples(classLabels, 100);
+  }
+
+  if(argc == 3)
+  {
+    std::string trainingSetPath = argv[1];
+    std::string testingSetPath = argv[2];
+
+    std::cout << "Training set: " << trainingSetPath << "\n";
+    std::cout << "Testing set: " << testingSetPath << "\n";
+
+    examples = ExampleUtil::load_examples<Label>(trainingSetPath);
+    std::vector<Example_CPtr> testingExamples = ExampleUtil::load_examples<Label>(testingSetPath);
+
+    examples.insert(examples.end(), testingExamples.begin(), testingExamples.end() );
+    std::cout << "number of examples= " << examples.size() << "\n";
+  }
+  
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = ParameterStringGenerator()
-    .add_param("CandidateCount", list_of(1)(2)(3))
-    .add_param("gainThreshold", list_of(9.0f)(8.0f))
-    .add_param("decisionFunctionGeneratorName", list_of<std::string>("Yum")("Dum"))
+    .add_param("treeCount", list_of<size_t>(1)(2)(3))
+    .add_param("splitBudget", list_of<size_t>(32768))
+    .add_param("candidateCount", list_of<int>(256))
+    .add_param("decisionFunctionGeneratorName", list_of<std::string>("FeatureThresholding"))
+    .add_param("gainThreshold", list_of<float>(0.0f))
+    .add_param("maxClassSize", list_of<size_t>(10000))
+    .add_param("maxTreeHeight", list_of<size_t>(15))
+    .add_param("randomSeed", list_of<unsigned int>(1234))
+    .add_param("seenExamplesThreshold", list_of<size_t>(30))
+    .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_maps();
 
   const size_t numFolds = 5;
   const unsigned int seed = 1234;
-  boost::shared_ptr<RFOnlineLearner<Result,Label> > randomAlgorithm;
+  boost::shared_ptr<RFO> randomAlgorithm;
   std::map<std::string,Result> Results;
 
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
-    randomAlgorithm.reset( new RFOnlineLearner<Result,Label>(params[n], 1234 + n) );
-    CrossValidation<RFOnlineLearner<Result,Label>,Result,Label> cv(numFolds, seed);
+    randomAlgorithm.reset( new RFO(params[n]) );
+    CrossValidation<RFO,Result,Label> cv(numFolds, seed);
     Result cvResult = cv.run(randomAlgorithm, examples); 
     std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;
     Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), cvResult));
+    
   }
+
   std::cout << tvgutil::make_limited_container(Results, 5) << "\n";
 
   return 0;
