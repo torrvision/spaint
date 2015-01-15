@@ -31,14 +31,8 @@ ViconTracker::ViconTracker(const std::string& host, const std::string& subjectNa
   m_vicon.EnableSegmentData();
   m_vicon.EnableUnlabeledMarkerData();
   m_vicon.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
-  //m_vicon.SetAxisMapping(Direction::Up, Direction::Right, Direction::Forward);
-  //m_vicon.SetAxisMapping(Direction::Up, Direction::Forward, Direction::Right);
-  //m_vicon.SetAxisMapping(Direction::Right, Direction::Up, Direction::Forward);
-  //m_vicon.SetAxisMapping(Direction::Right, Direction::Forward, Direction::Up);
-  //m_vicon.SetAxisMapping(Direction::Forward, Direction::Right, Direction::Up);
-  //m_vicon.SetAxisMapping(Direction::Forward, Direction::Up, Direction::Right);
-  //m_vicon.SetAxisMapping(Direction::Right, Direction::Up, Direction::Forward);
-  //m_vicon.SetAxisMapping(Direction::Right, Direction::Down, Direction::Forward);
+
+  m_vicon.SetAxisMapping(Direction::Right, Direction::Down, Direction::Forward);
 }
 
 //#################### DESTRUCTOR ####################
@@ -85,6 +79,42 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << '\n';
 #endif
 
+  static bool firstPass = true;
+  static Matrix4f initialPose, invInitialPose;
+  Matrix4f globalPose;
+  if(true)//firstPass)
+  {
+    //firstPass = false;
+
+    std::map<std::string,Eigen::Vector3f> markerPositions = get_marker_positions(m_subjectName);
+    for(std::map<std::string,Eigen::Vector3f>::const_iterator it = markerPositions.begin(), iend = markerPositions.end(); it != iend; ++it)
+    {
+      fs << it->first << ' ' << it->second.transpose() << '\n';
+    }
+
+    const Eigen::Vector3f& c = markerPositions["centre"];
+    const Eigen::Vector3f& l = markerPositions["left"];
+    const Eigen::Vector3f& r = markerPositions["right"];
+    Eigen::Vector3f v = (r - c).cross(l - c).normalized();
+    fs << v.transpose() << '\n';
+
+    const Eigen::Vector3f& f = markerPositions["front"];
+    Eigen::Vector3f n = f - r;
+    n = (n - ((n.dot(v)) * v)).normalized();
+    fs << n.transpose() << '\n';
+
+    rigging::SimpleCamera cam(c, n, v);
+    globalPose = CameraPoseConverter::camera_to_pose(cam).M;
+    if(firstPass)
+    {
+      initialPose = globalPose;
+      initialPose.inv(invInitialPose);
+      firstPass = false;
+    }
+
+    //fs << initialPose << '\n';
+  }
+
   int segmentCount = m_vicon.GetSegmentCount(m_subjectName).SegmentCount;
   if(segmentCount == 0) return;
 
@@ -105,18 +135,8 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   }
 #endif
 
-  static Matrix4f initialPose;
-  static Matrix4f invInitialPose;
-  static bool done = false;
-  if(!done)
-  {
-    initialPose = to_matrix(rr, tr);
-    initialPose.inv(invInitialPose);
-    done = true;
-  }
-  Matrix4f globalPose = to_matrix(rr, tr);
-  //Matrix4f M = invInitialPose * globalPose;
   Matrix4f M = globalPose * invInitialPose;
+  //fs << std::fixed << std::setprecision(1) << M << '\n';
   for(int y = 0; y < 3; ++y)
   {
     for(int x = 0; x < 3; ++x)
@@ -129,66 +149,11 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   trackingState->pose_d->SetParamsFromModelView();
   trackingState->pose_d->SetModelViewFromParams();
 
-  fs << std::fixed << std::setprecision(1) << trackingState->pose_d->M << "\n\n";
+  //fs << std::fixed << std::setprecision(1) << trackingState->pose_d->M << "\n\n";
 
-  rigging::SimpleCamera cam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
-  fs << cam.n() << "\n\n";
+  //rigging::SimpleCamera cam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
+  //fs << cam.n() << "\n\n";
   fs.flush();
-
-#if 0
-  static Matrix4f oldInvV;
-  static bool done = false;
-  if(!done)
-  {
-    oldInvV.setIdentity();
-    done = true;
-  }
-
-  Matrix4f V;
-  V.setIdentity();
-
-  for(int i = 0; i < 3; ++i) V(i,3) = tr.Translation[i];
-
-  int k = 0;
-  for(int y = 0; y < 3; ++y)
-    for(int x = 0; x < 3; ++x)
-    {
-      V(x,y) = rr.Rotation[k++];
-    }
-
-  Matrix4f invV;
-  V.inv(invV);
-
-  Matrix4f deltaInvV;
-  oldInvV.inv(deltaInvV);
-  deltaInvV = deltaInvV * invV;
-
-  //invM = invM * 
-
-  /*Matrix4f invM;
-  invM.setIdentity();
-
-  for(int i = 0; i < 3; ++i) invM(i,3) = tr.Translation[i];
-
-  int k = 0;
-  for(int y = 0; y < 3; ++y)
-    for(int x = 0; x < 3; ++x)
-    {
-      invM(x,y) = rr.Rotation[k++];
-    }
-
-  invM.inv(trackingState->pose_d->M);
-  trackingState->pose_d->SetRTInvM_FromM();
-  trackingState->pose_d->SetParamsFromModelView();
-  trackingState->pose_d->SetModelViewFromParams();*/
-  trackingState->pose_d->params.each.tx = tr.Translation[0];
-  trackingState->pose_d->params.each.ty = tr.Translation[1];
-  trackingState->pose_d->params.each.tz = tr.Translation[2];
-  trackingState->pose_d->params.each.rx = rr.Rotation[0];
-  trackingState->pose_d->params.each.ry = -rr.Rotation[1];
-  trackingState->pose_d->params.each.rz = rr.Rotation[2];
-  trackingState->pose_d->SetModelViewFromParams();
-#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -205,6 +170,21 @@ int ViconTracker::find_subject_index(const std::string& name) const
     }
   }
   return -1;
+}
+
+std::map<std::string,Eigen::Vector3f> ViconTracker::get_marker_positions(const std::string& subjectName) const
+{
+  std::map<std::string,Eigen::Vector3f> result;
+  unsigned int markerCount = m_vicon.GetMarkerCount(subjectName).MarkerCount;
+  for(unsigned int i = 0; i < markerCount; ++i)
+  {
+    std::string markerName = m_vicon.GetMarkerName(subjectName, i).MarkerName;
+    Output_GetMarkerGlobalTranslation tr = m_vicon.GetMarkerGlobalTranslation(subjectName, markerName);
+    //result.insert(std::make_pair(markerName, Eigen::Vector3d(tr.Translation).cast<float>()));
+    Eigen::Vector3f p(tr.Translation[0] / 1000, tr.Translation[1] / 1000, tr.Translation[2] / 1000);
+    result.insert(std::make_pair(markerName, p));
+  }
+  return result;
 }
 
 }

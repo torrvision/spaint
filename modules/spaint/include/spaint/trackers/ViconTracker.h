@@ -5,8 +5,11 @@
 #ifndef H_SPAINT_VICONTRACKER
 #define H_SPAINT_VICONTRACKER
 
+#include <map>
 #include <string>
  
+#include <Eigen/Dense>
+
 #include <ITMLib/Engine/ITMTracker.h>
 
 #include <vicon/Client.h>
@@ -57,6 +60,13 @@ private:
    * \brief TODO
    */
   int find_subject_index(const std::string& name) const;
+
+  /**
+   * \brief Gets the positions of the markers for the subject with the specified name.
+   *
+   * TODO
+   */
+  std::map<std::string,Eigen::Vector3f> get_marker_positions(const std::string& subjectName) const;
 };
 
 }

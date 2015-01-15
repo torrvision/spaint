@@ -134,6 +134,7 @@ void SpaintEngine::process_frame()
   {
     if(m_trackerPrimary) m_trackerPrimary->TrackCamera(m_trackingState.get(), m_view.get());
     if(m_trackerSecondary) m_trackerSecondary->TrackCamera(m_trackingState.get(), m_view.get());
+    std::cout << m_trackingState->pose_d->M << '\n';
   }
 
   // Allocate voxel blocks as necessary.
@@ -230,9 +231,9 @@ void SpaintEngine::initialise()
   if(m_useVicon)
   {
     // Note: Need to enable port forwarding to make this work.
-    m_trackerPrimary.reset(new ViconTracker("192.168.0.111", "kinect"));
-    //m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
-    //m_trackerSecondary.reset(new ViconTracker("192.168.0.111", "kinect"));
+    //m_trackerPrimary.reset(new ViconTracker("192.168.0.111", "kinect"));
+    m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
+    m_trackerSecondary.reset(new ViconTracker("192.168.0.111", "kinect"));
   }
   else
   {
