@@ -45,6 +45,23 @@ ViconTracker::~ViconTracker()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+Matrix4f to_matrix(const Output_GetSegmentGlobalRotationMatrix& r, const Output_GetSegmentGlobalTranslation& t)
+{
+  Matrix4f m;
+  int k = 0;
+  for(int y = 0; y < 3; ++y)
+  {
+    for(int x = 0; x < 3; ++x)
+    {
+      m(x,y) = r.Rotation[k++];
+    }
+    m(3,y) = t.Translation[y];
+  }
+  m(0,3) = m(1,3) = m(2,3) = 0;
+  m(3,3) = 1;
+  return m;
+}
+
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   if(m_vicon.GetFrame().Result != Result::Success) return;
@@ -77,6 +94,32 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   }
 #endif
 
+  static Matrix4f initialPose;
+  static Matrix4f invInitialPose;
+  static bool done = false;
+  if(!done)
+  {
+    initialPose = to_matrix(rr, tr);
+    initialPose.inv(invInitialPose);
+    done = true;
+  }
+  Matrix4f globalPose = to_matrix(rr, tr);
+  Matrix4f M = invInitialPose * globalPose;
+  for(int y = 0; y < 3; ++y)
+  {
+    for(int x = 0; x < 3; ++x)
+    {
+      trackingState->pose_d->R(x,y) = M(x,y);
+    }
+    trackingState->pose_d->T[y] = M(3,y);
+  }
+
+  trackingState->pose_d->SetParamsFromModelView();
+  trackingState->pose_d->SetModelViewFromParams();
+
+  std::cout << trackingState->pose_d->M << "\n\n";
+
+#if 0
   static Matrix4f oldInvV;
   static bool done = false;
   if(!done)
@@ -129,6 +172,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   trackingState->pose_d->params.each.ry = -rr.Rotation[1];
   trackingState->pose_d->params.each.rz = rr.Rotation[2];
   trackingState->pose_d->SetModelViewFromParams();
+#endif
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
