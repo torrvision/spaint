@@ -5,7 +5,13 @@
 #include "trackers/ViconTracker.h"
 using namespace ViconDataStreamSDK::CPP;
 
+#include <fstream>
+#include <iomanip>
 #include <stdexcept>
+
+#include <rigging/SimpleCamera.h>
+
+#include "util/CameraPoseConverter.h"
 
 namespace spaint {
 
@@ -28,9 +34,11 @@ ViconTracker::ViconTracker(const std::string& host, const std::string& subjectNa
   //m_vicon.SetAxisMapping(Direction::Up, Direction::Right, Direction::Forward);
   //m_vicon.SetAxisMapping(Direction::Up, Direction::Forward, Direction::Right);
   //m_vicon.SetAxisMapping(Direction::Right, Direction::Up, Direction::Forward);
-  m_vicon.SetAxisMapping(Direction::Right, Direction::Forward, Direction::Up);
+  //m_vicon.SetAxisMapping(Direction::Right, Direction::Forward, Direction::Up);
   //m_vicon.SetAxisMapping(Direction::Forward, Direction::Right, Direction::Up);
   //m_vicon.SetAxisMapping(Direction::Forward, Direction::Up, Direction::Right);
+  //m_vicon.SetAxisMapping(Direction::Right, Direction::Up, Direction::Forward);
+  //m_vicon.SetAxisMapping(Direction::Right, Direction::Down, Direction::Forward);
 }
 
 //#################### DESTRUCTOR ####################
@@ -69,9 +77,12 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   int subjectIndex = find_subject_index(m_subjectName);
   if(subjectIndex == -1) return;
 
+  //static std::ofstream fs("/Users/stuart/programs/spaint/foo.txt");
+  std::ostream& fs = std::cout;
+
 #if 1
-  std::cout << "\n#####\n";
-  std::cout << "Frame " << m_vicon.GetFrameNumber().FrameNumber << '\n';
+  fs << "\n#####\n";
+  fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << '\n';
 #endif
 
   int segmentCount = m_vicon.GetSegmentCount(m_subjectName).SegmentCount;
@@ -80,16 +91,16 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   const int SEGMENT_INDEX = 0;
   std::string segmentName = m_vicon.GetSegmentName(m_subjectName, SEGMENT_INDEX).SegmentName;
   Output_GetSegmentGlobalTranslation tr = m_vicon.GetSegmentGlobalTranslation(m_subjectName, segmentName);
-#if 1
-  std::cout << "Translation: " << tr.Translation[0] << ' ' << tr.Translation[1] << ' ' << tr.Translation[2] << '\n';
+#if 0
+  fs << "Translation: " << tr.Translation[0] << ' ' << tr.Translation[1] << ' ' << tr.Translation[2] << '\n';
 #endif
 
   Output_GetSegmentGlobalRotationMatrix rr = m_vicon.GetSegmentGlobalRotationMatrix(m_subjectName, segmentName);
-#if 1
+#if 0
   std::cout << "Rotation:\n";
   for(int i = 0; i < 9; ++i)
   {
-    std::cout << rr.Rotation[i] << ' ';
+    fs << std::fixed << std::setprecision(3) << rr.Rotation[i] << ' ';
     if(i % 3 == 2) std::cout << '\n';
   }
 #endif
@@ -104,7 +115,8 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
     done = true;
   }
   Matrix4f globalPose = to_matrix(rr, tr);
-  Matrix4f M = invInitialPose * globalPose;
+  //Matrix4f M = invInitialPose * globalPose;
+  Matrix4f M = globalPose * invInitialPose;
   for(int y = 0; y < 3; ++y)
   {
     for(int x = 0; x < 3; ++x)
@@ -117,7 +129,11 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   trackingState->pose_d->SetParamsFromModelView();
   trackingState->pose_d->SetModelViewFromParams();
 
-  std::cout << trackingState->pose_d->M << "\n\n";
+  fs << std::fixed << std::setprecision(1) << trackingState->pose_d->M << "\n\n";
+
+  rigging::SimpleCamera cam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
+  fs << cam.n() << "\n\n";
+  fs.flush();
 
 #if 0
   static Matrix4f oldInvV;
