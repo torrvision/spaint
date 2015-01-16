@@ -5,11 +5,6 @@
 #ifndef H_SPAINT_SPAINTRAYCASTER
 #define H_SPAINT_SPAINTRAYCASTER
 
-#include <boost/shared_ptr.hpp>
-
-#include <Engine/ImageSourceEngine.h>
-
-#include "../util/SpaintVoxel.h"
 #include "SpaintModel.h"
 
 namespace spaint {
@@ -31,10 +26,7 @@ private:
   /** The spaint model. */
   SpaintModel_CPtr m_model;
 
-  /** The settings to use for InfiniTAM. */
-  ITMLibSettings m_settings;
-
-    /** The InfiniTAM engine used for raycasting the scene. */
+  /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_Ptr m_visualisationEngine;
 
   //#################### CONSTRUCTORS ####################
@@ -42,10 +34,9 @@ public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model     The spaint model.
-   * \param settings  The settings to use for InfiniTAM.
+   * \param model The spaint model.
    */
-  SpaintRaycaster(const SpaintModel_CPtr& model, const ITMLibSettings& settings);
+  explicit SpaintRaycaster(const SpaintModel_CPtr& model);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -98,7 +89,7 @@ private:
   void prepare_to_copy_visualisation(ITMImage<T> *input, const UChar4Image_Ptr& output) const
   {
     output->Clear();
-    if(m_settings.useGPU) input->UpdateHostFromDevice();
+    if(m_model->get_settings().useGPU) input->UpdateHostFromDevice();
     output->ChangeDims(input->noDims);
   }
 };

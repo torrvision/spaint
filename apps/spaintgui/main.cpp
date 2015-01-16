@@ -58,7 +58,7 @@ try
   }
   else
   {
-#if WITH_OPENNI
+#ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::shared_ptr<std::string>() : boost::shared_ptr<std::string>(new std::string(openNIDeviceURI)), settings));
 #else

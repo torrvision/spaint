@@ -56,6 +56,11 @@ SpaintModel::Scene_CPtr SpaintModel::get_scene() const
   return m_scene;
 }
 
+const ITMLibSettings& SpaintModel::get_settings() const
+{
+  return m_settings;
+}
+
 const SpaintModel::TrackingState_Ptr& SpaintModel::get_tracking_state()
 {
   return m_trackingState;

@@ -43,9 +43,6 @@ private:
   /** The engine used to perform fusion. */
   SceneReconstructionEngine_Ptr m_sceneReconstructionEngine;
 
-  /** The settings to use for InfiniTAM. */
-  ITMLibSettings m_settings;
-
   /** The engine controlling the swapping of voxel blocks in/out of GPU memory. */
   SwappingEngine_Ptr m_swappingEngine;
 
@@ -57,7 +54,7 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-#if WITH_OPENNI
+#ifdef WITH_OPENNI
   /**
    * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source.
    *
@@ -72,8 +69,8 @@ public:
    * \brief Constructs an instance of the spaint pipeline that uses images on disk as its image source.
    *
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
-   * \param rgbImageMask        TODO
-   * \param depthImageMask      TODO
+   * \param rgbImageMask        The mask for the RGB image filenames (e.g. "Teddy/Frames/%04i.ppm").
+   * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
    * \param settings            The settings to use for InfiniTAM.
    */
   SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const ITMLibSettings& settings);
@@ -103,8 +100,10 @@ public:
 private:
   /**
    * \brief Initialises the pipeline.
+   *
+   * \param settings  The settings to use for InfiniTAM.
    */
-  void initialise();
+  void initialise(const ITMLibSettings& settings);
 };
 
 //#################### TYPEDEFS ####################

@@ -18,20 +18,18 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-#if WITH_OPENNI
+#ifdef WITH_OPENNI
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
-: m_settings(settings)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
-  initialise();
+  initialise(settings);
 }
 #endif
 
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const ITMLibSettings& settings)
-: m_settings(settings)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
-  initialise();
+  initialise(settings);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -58,7 +56,7 @@ void SpaintPipeline::process_frame()
   m_imageSourceEngine->getImages(view.get());
 
   // If we're using the GPU, transfer the relevant images in the frame across to it.
-  if(m_settings.useGPU)
+  if(m_model->get_settings().useGPU)
   {
     view->rgb->UpdateDeviceFromHost();
 
@@ -105,7 +103,7 @@ void SpaintPipeline::process_frame()
   m_sceneReconstructionEngine->IntegrateIntoScene(scene.get(), view.get(), trackingState->pose_d);
 
   // Swap voxel blocks between the GPU and CPU.
-  if(m_settings.useSwapping)
+  if(m_model->get_settings().useSwapping)
   {
     // CPU -> GPU
     m_swappingEngine->IntegrateGlobalIntoLocal(scene.get(), view.get());
@@ -117,7 +115,7 @@ void SpaintPipeline::process_frame()
   // Perform raycasting to visualise the scene.
   // FIXME: It would be better to use dynamic dispatch for this.
   const SpaintRaycaster::VisualisationEngine_Ptr& visualisationEngine = m_raycaster->get_visualisation_engine();
-  switch(m_settings.trackerType)
+  switch(m_model->get_settings().trackerType)
   {
     case ITMLibSettings::TRACKER_ICP:
     case ITMLibSettings::TRACKER_REN:
@@ -130,7 +128,7 @@ void SpaintPipeline::process_frame()
     {
       ITMPose rgbPose(view->calib->trafo_rgb_to_depth.calib_inv * trackingState->pose_d->M);
       visualisationEngine->CreateExpectedDepths(scene.get(), &rgbPose, &view->calib->intrinsics_rgb, trackingState->renderingRangeImage);
-      visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), m_settings.skipPoints);
+      visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), m_model->get_settings().skipPoints);
       break;
     }
     default:
@@ -144,7 +142,7 @@ void SpaintPipeline::process_frame()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintPipeline::initialise()
+void SpaintPipeline::initialise(const ITMLibSettings& settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -158,16 +156,16 @@ void SpaintPipeline::initialise()
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
   // Set up the spaint model.
-  m_model.reset(new SpaintModel(m_settings, rgbImageSize, depthImageSize, m_imageSourceEngine->calib));
+  m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize, m_imageSourceEngine->calib));
 
   // Set up the InfiniTAM engines.
-  if(m_settings.useGPU)
+  if(settings.useGPU)
   {
 #ifdef WITH_CUDA
     // Use the GPU implementation of InfiniTAM.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
-    if(m_settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
+    if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
     // This should never happen as things stand - we set useGPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -178,15 +176,15 @@ void SpaintPipeline::initialise()
     // Use the CPU implementation of InfiniTAM.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
-    if(m_settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
+    if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
 
   // Set up the raycaster.
-  m_raycaster.reset(new SpaintRaycaster(m_model, m_settings));
+  m_raycaster.reset(new SpaintRaycaster(m_model));
 
   // Set up the trackers.
-  m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
-  m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(m_settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_model->get_scene().get()));
+  m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
+  m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_model->get_scene().get()));
 
   // Note: The trackers can only be run once reconstruction has started.
   m_reconstructionStarted = false;

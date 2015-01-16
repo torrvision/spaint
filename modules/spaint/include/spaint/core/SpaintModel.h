@@ -109,6 +109,13 @@ public:
   Scene_CPtr get_scene() const;
 
   /**
+   * \brief Gets the settings to use for InfiniTAM.
+   *
+   * \return  The settings to use for InfiniTAM.
+   */
+  const ITMLibSettings& get_settings() const;
+
+  /**
    * \brief Gets the current tracking state.
    *
    * \return  The current tracking state.

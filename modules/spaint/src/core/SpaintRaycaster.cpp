@@ -11,11 +11,11 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const ITMLibSettings& settings)
-: m_model(model), m_settings(settings)
+SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
+: m_model(model)
 {
   // Set up the InfiniTAM visualisation engine.
-  if(settings.useGPU)
+  if(model->get_settings().useGPU)
   {
 #ifdef WITH_CUDA
     // Use the GPU implementation of the visualisation engine.
@@ -44,7 +44,7 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Visua
   m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &view->calib->intrinsics_d, visualisationState->minmaxImage, visualisationState.get());
   m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, visualisationState.get(), visualisationState->outputImage, false);
 
-  if(m_settings.useGPU) visualisationState->outputImage->UpdateHostFromDevice();
+  if(m_model->get_settings().useGPU) visualisationState->outputImage->UpdateHostFromDevice();
   output->SetFrom(visualisationState->outputImage);
 }
 

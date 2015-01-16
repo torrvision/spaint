@@ -139,7 +139,7 @@ void Application::process_input()
       }
       else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
       {
-#if WITH_OVR
+#ifdef WITH_OVR
         try
         {
           m_renderer.reset(new RiftRenderer(
