@@ -91,7 +91,7 @@ public:
     size_t splitBudget = 0; //this is the initial slit budget as it may change over time.
     #define GET_SETTING(param) DT::Settings::get_from_param_set(settings, param, #param);
       GET_SETTING(splitBudget);
-    #undef SET_SETTING
+    #undef GET_SETTING
     m_splitBudget = splitBudget;
   }
 
