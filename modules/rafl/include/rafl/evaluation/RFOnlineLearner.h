@@ -56,6 +56,7 @@ public:
   friend std::ostream& operator<<(std::ostream& out, const Result& result)
   {
     out << "accuracy: " << result.m_accuracy.first << " +/- " << result.m_accuracy.second << ", samples: " << result.m_samples << "\n";
+    return out;
   }
 };
 

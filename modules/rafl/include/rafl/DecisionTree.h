@@ -11,6 +11,7 @@
 
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 #include <boost/any.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
@@ -202,7 +203,7 @@ public:
     {
       std::cout << setFrom << "\n";
       boost::spirit::hold_any tmp = setFrom;
-      setTo = boost::spirit::any_cast<T>(tmp);
+      setTo = boost::lexical_cast<T>(tmp);
     }
 
   };
