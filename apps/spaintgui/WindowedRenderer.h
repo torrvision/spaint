@@ -12,7 +12,7 @@
 #include "Renderer.h"
 
 /**
- * \brief An instance of this class can be used to render the scene constructed by the spaint engine to a window.
+ * \brief An instance of this class can be used to render the spaint scene to a window.
  */
 class WindowedRenderer : public Renderer
 {
@@ -30,6 +30,9 @@ private:
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
 
+  /** The visualisation state for the free camera view. */
+  mutable spaint::SpaintRaycaster::VisualisationState_Ptr m_visualisationState;
+
   /** The width of the window. */
   int m_width;
 
@@ -38,12 +41,13 @@ public:
   /**
    * \brief Constructs a windowed renderer.
    *
-   * \param spaintEngine  The spaint engine.
-   * \param title         The title of the window.
-   * \param width         The width of the window.
-   * \param height        The height of the window.
+   * \param model     The spaint model.
+   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param title     The title of the window.
+   * \param width     The width of the window.
+   * \param height    The height of the window.
    */
-  WindowedRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height);
+  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, int width, int height);
 
   //#################### DESTRUCTOR ####################
 public:

@@ -26,6 +26,19 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 #############################
 
 ##
+SET(core_sources
+src/core/SpaintModel.cpp
+src/core/SpaintPipeline.cpp
+src/core/SpaintRaycaster.cpp
+)
+
+SET(core_headers
+include/spaint/core/SpaintModel.h
+include/spaint/core/SpaintPipeline.h
+include/spaint/core/SpaintRaycaster.h
+)
+
+##
 SET(input_sources
 src/input/InputState.cpp
 )
@@ -38,15 +51,6 @@ include/spaint/input/MouseButton.h
 ##
 SET(ogl_headers
 include/spaint/ogl/WrappedGL.h
-)
-
-##
-SET(toplevel_sources
-src/SpaintEngine.cpp
-)
-
-SET(toplevel_headers
-include/spaint/SpaintEngine.h
 )
 
 ##
@@ -64,15 +68,15 @@ include/spaint/util/SpaintVoxel.h
 #################################################################
 
 SET(sources
+${core_sources}
 ${input_sources}
-${toplevel_sources}
 ${util_sources}
 )
 
 SET(headers
+${core_headers}
 ${input_headers}
 ${ogl_headers}
-${toplevel_headers}
 ${util_headers}
 )
 
@@ -80,7 +84,7 @@ ${util_headers}
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})

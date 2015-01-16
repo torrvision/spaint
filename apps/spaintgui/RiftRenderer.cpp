@@ -26,8 +26,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode)
-: Renderer(spaintEngine)
+RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
+                           const std::string& title, RiftRenderingMode renderingMode)
+: Renderer(model, raycaster)
 {
   // Initialise the Rift.
   ovr_Initialize();
@@ -97,7 +98,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const s
   m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
 
   // Set up the eye images and eye textures.
-  ITMLib::Vector2<int> depthImageSize = spaintEngine->get_image_source_engine()->getDepthImageSize();
+  ITMLib::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, false));
@@ -132,14 +133,14 @@ void RiftRenderer::render() const
   // If we're following the reconstruction, update the position and orientation of the camera.
   if(m_cameraMode == CM_FOLLOW)
   {
-    m_camera->set_from(CameraPoseConverter::pose_to_camera(m_spaintEngine->get_pose()));
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(m_model->get_pose()));
   }
 
   // Construct the left and right eye images.
   ITMPose leftPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left"));
   ITMPose rightPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"));
-  m_spaintEngine->generate_free_raycast(m_eyeImages[ovrEye_Left], leftPose);
-  m_spaintEngine->generate_free_raycast(m_eyeImages[ovrEye_Right], rightPose);
+  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Left], m_visualisationStates[ovrEye_Left], leftPose);
+  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Right], m_visualisationStates[ovrEye_Right], rightPose);
 
   // Copy the eye images into OpenGL textures.
   for(int i = 0; i < ovrEye_Count; ++i)
