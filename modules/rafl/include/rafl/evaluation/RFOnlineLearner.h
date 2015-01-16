@@ -45,7 +45,7 @@ public:
     {
       sumVariance += pow(mean - results[i].mean_accuracy(), 2);
     }
-    m_accuracy.second = sumVariance/m_samples;
+    m_accuracy.second = sqrt(sumVariance/m_samples);
   }
 
   float mean_accuracy() const

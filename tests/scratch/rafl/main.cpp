@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_maps();
 
-  const size_t numFolds = 5;
+  const size_t numFolds = 2;
   const unsigned int seed = 1234;
   boost::shared_ptr<RFO> randomAlgorithm;
   std::map<std::string,Result> Results;
