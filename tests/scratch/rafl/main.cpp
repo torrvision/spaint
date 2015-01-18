@@ -264,6 +264,7 @@ int main()
 
 #if 1
 
+#include <cmath>
 #include <boost/assign/list_of.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 using boost::assign::list_of;
@@ -327,15 +328,15 @@ int main(int argc, char *argv[])
   
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = ParameterStringGenerator()
-    .add_param("treeCount", list_of<size_t>(1)(2)(3))
-    .add_param("splitBudget", list_of<size_t>(32768))
-    .add_param("candidateCount", list_of<int>(256))
+    .add_param("treeCount", list_of<size_t>(1)(3)(5))
+    .add_param("splitBudget", list_of<size_t>(pow(2,15))(pow(2,20)))
+    .add_param("candidateCount", list_of<int>(256)(512))
     .add_param("decisionFunctionGeneratorName", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
     .add_param("maxClassSize", list_of<size_t>(10000))
-    .add_param("maxTreeHeight", list_of<size_t>(15))
+    .add_param("maxTreeHeight", list_of<size_t>(20))
     .add_param("randomSeed", list_of<unsigned int>(1234))
-    .add_param("seenExamplesThreshold", list_of<size_t>(30))
+    .add_param("seenExamplesThreshold", list_of<size_t>(50))
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_maps();
 
