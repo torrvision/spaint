@@ -274,6 +274,7 @@ using boost::spirit::hold_any;
 
 #include <rafl/evaluation/PerformanceEvaluation.h>
 #include <rafl/evaluation/CrossValidation.h>
+#include <rafl/evaluation/RandomlyPermuteAndDivideValidation.h>
 #include <rafl/evaluation/ParameterStringGenerator.h>
 #include <rafl/evaluation/RFOnlineLearner.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
@@ -348,9 +349,12 @@ int main(int argc, char *argv[])
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
     randomAlgorithm.reset( new RFO(params[n]) );
-    CrossValidation<RFO,Result,Label> cv(numFolds, seed);
+    RandomlyPermuteAndDivideValidation<RFO,Result,Label> rpadv(0.5f, 5, seed);
+    Result cvResult = rpadv.run(randomAlgorithm, examples);
+    std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << cvResult << std::endl;
+    /*CrossValidation<RFO,Result,Label> cv(numFolds, seed);
     Result cvResult = cv.run(randomAlgorithm, examples); 
-    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;
+    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;*/
     Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), cvResult));
     
   }
