@@ -66,7 +66,11 @@ public:
    */
   void get_depth_input(const UChar4Image_Ptr& output) const;
 
-  /** TODO */
+  /**
+   * \brief Gets the render state corresponding to the live camera pose.
+   *
+   * \return  The render state corresponding to the live camera pose.
+   */
   const RenderState_Ptr& get_live_render_state();
 
   /**
