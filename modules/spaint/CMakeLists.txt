@@ -40,6 +40,29 @@ include/spaint/core/SpaintVoxel.h
 )
 
 ##
+SET(core_cpu_sources
+src/core/cpu/SemanticRaycaster_CPU.cpp
+)
+
+SET(core_cpu_headers
+include/spaint/core/cpu/SemanticRaycaster_CPU.h
+)
+
+##
+SET(core_cuda_sources
+src/core/cuda/SemanticRaycaster_CUDA.cu
+)
+
+SET(core_cuda_headers
+include/spaint/core/cuda/SemanticRaycaster_CUDA.h
+)
+
+##
+SET(core_shared_headers
+include/spaint/core/shared/SemanticRaycaster.h
+)
+
+##
 SET(input_sources
 src/input/InputState.cpp
 )
@@ -69,22 +92,33 @@ include/spaint/util/CameraPoseConverter.h
 
 SET(sources
 ${core_sources}
+${core_cpu_sources}
 ${input_sources}
 ${util_sources}
 )
 
 SET(headers
 ${core_headers}
+${core_cpu_headers}
+${core_shared_headers}
 ${input_headers}
 ${ogl_headers}
 ${util_headers}
 )
+
+IF(WITH_CUDA)
+  SET(sources ${sources} ${core_cuda_sources})
+  SET(headers ${headers} ${core_cuda_headers})
+ENDIF()
 
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(core\\cpu FILES ${core_cpu_sources} ${core_cpu_headers})
+SOURCE_GROUP(core\\cuda FILES ${core_cuda_sources} ${core_cuda_headers})
+SOURCE_GROUP(core\\shared FILES ${core_shared_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
