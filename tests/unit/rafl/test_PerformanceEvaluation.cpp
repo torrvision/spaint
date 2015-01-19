@@ -5,7 +5,7 @@
 using boost::assign::list_of;
 
 #include <rafl/examples/UnitCircleExampleGenerator.h>
-#include <rafl/evaluation/PerformanceEvaluation.h>
+#include <rafl/evaluation/PerfUtil.h>
 using namespace rafl;
 
 typedef int Label;
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
   std::vector<Example_CPtr> predictedExamples = generator.generate_examples(list_of(5)(2)(1), 5);
 
   // Generate a confusion matrix.
-  Eigen::MatrixXf testConfMtx = PerfEval::get_conf_mtx(classLabels, groundTruthExamples, predictedExamples);
+  Eigen::MatrixXf testConfMtx = PerfUtil::get_conf_mtx(classLabels, groundTruthExamples, predictedExamples);
 
   // The std::set orders the integers from smallest to largest.
   // The ground truth examples will be [1 5 9 1 5 9 ... 1 5 9]
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
 
   BOOST_CHECK_EQUAL(testConfMtx, trueConfMtx);
 
-  Eigen::MatrixXf testConfMtxNormL1 = PerfEval::normalise_rows_L1(trueConfMtx);
+  Eigen::MatrixXf testConfMtxNormL1 = PerfUtil::normalise_rows_L1(trueConfMtx);
   Eigen::MatrixXf trueConfMtxNormL1 = Eigen::MatrixXf::Zero(4,4);
   trueConfMtxNormL1(0,0) = 1.0f;
   trueConfMtxNormL1(2,1) = 1.0f;

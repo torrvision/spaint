@@ -272,7 +272,9 @@ using boost::spirit::hold_any;
 
 #include <Eigen/Dense>
 
-#include <rafl/evaluation/PerformanceEvaluation.h>
+#include <rafl/evaluation/PerfUtil.h>
+#include <rafl/evaluation/Results.h>
+#include <rafl/evaluation/QuantitativePerformance.h>
 #include <rafl/evaluation/CrossValidation.h>
 #include <rafl/evaluation/RandomlyPermuteAndDivideValidation.h>
 #include <rafl/evaluation/ParameterStringGenerator.h>
@@ -291,12 +293,13 @@ typedef std::map<std::string,hold_any> ParamSet;
 
 int main(int argc, char *argv[])
 {
-  if((argc != 1) && (argc != 3))
+  if((argc != 1) && (argc != 4))
   {
-    throw std::runtime_error("Silly boy - enter the path of the training set, followed by the path of the test set!");
+    throw std::runtime_error("Silly boy - enter the path of the training set, followed by the path of the test set, and the path to save the results!");
   }
   
   std::vector<Example_CPtr> examples;
+  std::string outputResultPath;
 
   if(argc == 1)
   {
@@ -310,12 +313,14 @@ int main(int argc, char *argv[])
     //Generate examples around the unit circle.
     UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
     examples = uceg.generate_examples(classLabels, 100);
+    outputResultPath = "MyDummyResultPath.txt";
   }
 
-  if(argc == 3)
+  if(argc == 4)
   {
     std::string trainingSetPath = argv[1];
     std::string testingSetPath = argv[2];
+    outputResultPath = argv[3];
 
     std::cout << "Training set: " << trainingSetPath << "\n";
     std::cout << "Testing set: " << testingSetPath << "\n";
@@ -344,22 +349,24 @@ int main(int argc, char *argv[])
   const size_t numFolds = 2;
   const unsigned int seed = 1234;
   boost::shared_ptr<RFO> randomAlgorithm;
-  std::map<std::string,Result> Results;
+  Results results;
+  //std::map<std::string,QuantitativePerformance> Results;
 
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
     randomAlgorithm.reset( new RFO(params[n]) );
-    RandomlyPermuteAndDivideValidation<RFO,Result,Label> rpadv(0.5f, 5, seed);
-    Result cvResult = rpadv.run(randomAlgorithm, examples);
-    std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << cvResult << std::endl;
-    /*CrossValidation<RFO,Result,Label> cv(numFolds, seed);
-    Result cvResult = cv.run(randomAlgorithm, examples); 
-    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << cvResult << std::endl;*/
-    Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), cvResult));
-    
+    RandomlyPermuteAndDivideValidation<RFO,QuantitativePerformance,Label> rpadv(0.5f, 5, seed);
+    QuantitativePerformance performance = rpadv.run(randomAlgorithm, examples);
+    std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << performance << std::endl;
+    /*CrossValidation<RFO,QuantitativePerformance,Label> cv(numFolds, seed);
+    QuantitativePerformance performance = cv.run(randomAlgorithm, examples); 
+    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << performance << std::endl;*/
+    results.push_back(params[n], performance);
+    //Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), performance));
   }
+  results.print_tab_delimited(outputResultPath);
 
-  std::cout << tvgutil::make_limited_container(Results, 5) << "\n";
+  //std::cout << tvgutil::make_limited_container(Results, 5) << "\n";
 
   return 0;
 }

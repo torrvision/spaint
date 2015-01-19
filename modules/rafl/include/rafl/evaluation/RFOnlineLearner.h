@@ -13,54 +13,11 @@
 
 #include <rafl/RandomForest.h>
 
-#include "PerformanceEvaluation.h"
+#include "PerfUtil.h"
+#include "QuantitativePerformance.h"
 
 namespace rafl {
   
-class Result
-{
-private:
-  std::pair<float,float> m_accuracy;
-  size_t m_samples;
-
-public:
-  explicit Result(float accuracy)
-  : m_accuracy(std::make_pair(accuracy, 0.0f)), m_samples(1)
-  {
-  }
-  explicit Result(const std::vector<Result> results)
-  : m_samples(results.size())
-  {
-    //return std::accumulate(results.begin(), results.end(), 0.0)/results.size();
-    float sumMean = 0;
-    for(size_t i = 0; i < m_samples; ++i)
-    {
-      sumMean += results[i].mean_accuracy();
-    }
-    float mean = sumMean/m_samples;
-    m_accuracy.first = mean;
-
-    float sumVariance = 0;
-    for(size_t i = 0; i < m_samples; ++i)
-    {
-      sumVariance += pow(mean - results[i].mean_accuracy(), 2);
-    }
-    m_accuracy.second = sqrt(sumVariance/m_samples);
-  }
-
-  float mean_accuracy() const
-  {
-    return m_accuracy.first;
-  }
-
-  friend std::ostream& operator<<(std::ostream& out, const Result& result)
-  {
-    out << "accuracy: " << result.m_accuracy.first << " +/- " << result.m_accuracy.second << ", samples: " << result.m_samples << "\n";
-    return out;
-  }
-};
-
-
 template <typename Label>
 class RFOnlineLearner
 {
@@ -95,7 +52,7 @@ public:
     m_splitBudget = splitBudget;
   }
 
-  Result cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
+  QuantitativePerformance cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
   {
     //Add training examples to forest.
     m_randomForest.add_examples(examples, split.first);
@@ -111,7 +68,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
   //#################### PRIVATE MEMBER FUNCTIONS #################### 
 private:
-  Result evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
+  QuantitativePerformance evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
     size_t indicesSize = indices.size();
     std::set<Label> classLabels;
@@ -125,7 +82,7 @@ private:
       predictedLabels[i] = m_randomForest.predict(descriptor);
     }
     
-    Result accuracy(PerfEval::get_accuracy(PerfEval::get_conf_mtx(classLabels, expectedLabels, predictedLabels)));
+    QuantitativePerformance accuracy(PerfUtil::get_accuracy(PerfUtil::get_conf_mtx(classLabels, expectedLabels, predictedLabels)));
     return accuracy;
   }
 };

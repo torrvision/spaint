@@ -64,7 +64,7 @@ public:
   {
     assert(m_num_folds > 1);
     assert((m_ratio > 0.0f) && (m_ratio < 1.0f));
-    if((m_ratio > 0.1f)||(m_ratio > 0.9f)) std::cout << "Warning: the ratio value being used: " << m_ratio << " seems unwise.\n";
+    if((m_ratio < 0.1f)||(m_ratio > 0.9f)) std::cout << "Warning: the ratio value being used: " << m_ratio << " seems unwise.\n";
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

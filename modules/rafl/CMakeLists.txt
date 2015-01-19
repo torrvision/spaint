@@ -44,9 +44,10 @@ include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
 SET(evaluation_headers
 include/rafl/evaluation/CrossValidation.h
 include/rafl/evaluation/ParameterStringGenerator.h
-include/rafl/evaluation/PerformanceEvaluation.h
+include/rafl/evaluation/PerfUtil.h
 include/rafl/evaluation/RandomlyPermuteAndDivideValidation.h
 include/rafl/evaluation/RFOnlineLearner.h
+include/rafl/evaluation/QuantitativePerformance.h
 )
 
 ##

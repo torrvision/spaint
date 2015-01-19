@@ -16,7 +16,7 @@
 
 namespace rafl {
 
-class PerfEval
+class PerfUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
