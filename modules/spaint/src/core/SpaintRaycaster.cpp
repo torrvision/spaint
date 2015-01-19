@@ -41,7 +41,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose) const
+void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType) const
 {
   SpaintModel::Scene_CPtr scene = m_model->get_scene();
   SpaintModel::View_CPtr view = m_model->get_view();
@@ -51,7 +51,30 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
 
   m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
   m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
-  m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, false);
+
+  switch(raycastType)
+  {
+    case RT_COLOUR:
+    {
+      m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, true);
+      break;
+    }
+    case RT_LAMBERTIAN:
+    {
+      m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, false);
+      break;
+    }
+    case RT_SEMANTIC:
+    {
+      // TODO
+      break;
+    }
+    default:
+    {
+      // This should never happen.
+      throw std::runtime_error("Unknown raycast type");
+    }
+  }
 
   prepare_to_copy_visualisation(renderState->raycastImage->noDims, output);
   output->SetFrom(
