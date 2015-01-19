@@ -45,8 +45,8 @@ private:
   /** The Rift handle. */
   ovrHmd m_hmd;
 
-  /** The visualisation states for the two eye views. */
-  mutable spaint::SpaintRaycaster::VisualisationState_Ptr m_visualisationStates[ovrEye_Count];
+  /** The render states for the two eye views. */
+  mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderStates[ovrEye_Count];
 
   //#################### CONSTRUCTORS ####################
 public:

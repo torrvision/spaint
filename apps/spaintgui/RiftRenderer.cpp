@@ -98,7 +98,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
 
   // Set up the eye images and eye textures.
-  ITMLib::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, false));
@@ -139,8 +139,8 @@ void RiftRenderer::render() const
   // Construct the left and right eye images.
   ITMPose leftPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left"));
   ITMPose rightPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"));
-  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Left], m_visualisationStates[ovrEye_Left], leftPose);
-  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Right], m_visualisationStates[ovrEye_Right], rightPose);
+  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Left], m_renderStates[ovrEye_Left], leftPose);
+  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Right], m_renderStates[ovrEye_Right], rightPose);
 
   // Copy the eye images into OpenGL textures.
   for(int i = 0; i < ovrEye_Count; ++i)
@@ -150,7 +150,7 @@ void RiftRenderer::render() const
 
     // Invert the image (otherwise it would appear upside-down on the Rift).
     // FIXME: This can be made more efficient.
-    Vector4u *imageData = m_eyeImages[i]->GetData(false);
+    Vector4u *imageData = m_eyeImages[i]->GetData(MEMORYDEVICE_CPU);
     Vector4u *invertedImageData = new Vector4u[m_eyeImages[i]->noDims.x * m_eyeImages[i]->noDims.y];
     for(int n = 0; n < m_eyeImages[i]->noDims.x * m_eyeImages[i]->noDims.y; ++n)
     {

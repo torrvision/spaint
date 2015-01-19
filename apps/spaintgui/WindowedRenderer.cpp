@@ -101,7 +101,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
       m_raycaster->get_default_raycast(m_image);
       break;
     case CM_FREE:
-      m_raycaster->generate_free_raycast(m_image, m_visualisationState, pose);
+      m_raycaster->generate_free_raycast(m_image, m_renderState, pose);
       break;
     default:
       // This should never happen.
@@ -123,7 +123,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
       glEnable(GL_TEXTURE_2D);
       {
         glBindTexture(GL_TEXTURE_2D, m_textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(false));
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glColor3f(1.0f, 1.0f, 1.0f);

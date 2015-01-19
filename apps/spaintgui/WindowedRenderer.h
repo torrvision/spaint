@@ -27,11 +27,11 @@ private:
   /** The image in which to store the visualisation each frame. */
   ITMUChar4Image_Ptr m_image;
 
+  /** The render state for the free camera view. */
+  mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderState;
+
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
-
-  /** The visualisation state for the free camera view. */
-  mutable spaint::SpaintRaycaster::VisualisationState_Ptr m_visualisationState;
 
   /** The width of the window. */
   int m_width;
