@@ -19,6 +19,7 @@ class SpaintPipeline
 private:
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<ITMSceneReconstructionEngine<SpaintVoxel,ITMVoxelIndex> > SceneReconstructionEngine_Ptr;
   typedef boost::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
   typedef boost::shared_ptr<ITMTracker> Tracker_Ptr;

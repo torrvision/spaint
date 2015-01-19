@@ -23,6 +23,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The render state corresponding to the live camera pose. */
+  RenderState_Ptr m_liveRenderState;
+
   /** The spaint model. */
   SpaintModel_CPtr m_model;
 
@@ -62,6 +65,9 @@ public:
    * \param output  The location into which to put the output image.
    */
   void get_depth_input(const UChar4Image_Ptr& output) const;
+
+  /** TODO */
+  const RenderState_Ptr& get_live_render_state();
 
   /**
    * \brief Gets the RGB image from the most recently processed frame.

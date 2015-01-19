@@ -56,7 +56,7 @@ void SpaintPipeline::process_frame()
   m_imageSourceEngine->getImages(view.get());
 
   // If we're using the GPU, transfer the relevant images in the frame across to it.
-  if(m_model->get_settings().useGPU)
+  if(m_model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA)
   {
     view->rgb->UpdateDeviceFromHost();
 
@@ -97,19 +97,20 @@ void SpaintPipeline::process_frame()
   }
 
   // Allocate voxel blocks as necessary.
-  m_sceneReconstructionEngine->AllocateSceneFromDepth(scene.get(), view.get(), trackingState->pose_d);
+  RenderState_Ptr liveRenderState = m_raycaster->get_live_render_state();
+  m_sceneReconstructionEngine->AllocateSceneFromDepth(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
 
   // Integrate (fuse) the view into the scene.
-  m_sceneReconstructionEngine->IntegrateIntoScene(scene.get(), view.get(), trackingState->pose_d);
+  m_sceneReconstructionEngine->IntegrateIntoScene(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
 
   // Swap voxel blocks between the GPU and CPU.
   if(m_model->get_settings().useSwapping)
   {
     // CPU -> GPU
-    m_swappingEngine->IntegrateGlobalIntoLocal(scene.get(), view.get());
+    m_swappingEngine->IntegrateGlobalIntoLocal(scene.get(), liveRenderState.get());
 
     // GPU -> CPU
-    m_swappingEngine->SaveToGlobalMemory(scene.get(), view.get());
+    m_swappingEngine->SaveToGlobalMemory(scene.get(), liveRenderState.get());
   }
 
   // Perform raycasting to visualise the scene.
@@ -120,15 +121,15 @@ void SpaintPipeline::process_frame()
     case ITMLibSettings::TRACKER_ICP:
     case ITMLibSettings::TRACKER_REN:
     {
-      visualisationEngine->CreateExpectedDepths(scene.get(), trackingState->pose_d, &view->calib->intrinsics_d, trackingState->renderingRangeImage);
-      visualisationEngine->CreateICPMaps(scene.get(), view.get(), trackingState.get());
+      visualisationEngine->CreateExpectedDepths(scene.get(), trackingState->pose_d, &view->calib->intrinsics_d, liveRenderState.get());
+      visualisationEngine->CreateICPMaps(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
       break;
     }
     case ITMLibSettings::TRACKER_COLOR:
     {
       ITMPose rgbPose(view->calib->trafo_rgb_to_depth.calib_inv * trackingState->pose_d->M);
-      visualisationEngine->CreateExpectedDepths(scene.get(), &rgbPose, &view->calib->intrinsics_rgb, trackingState->renderingRangeImage);
-      visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), m_model->get_settings().skipPoints);
+      visualisationEngine->CreateExpectedDepths(scene.get(), &rgbPose, &view->calib->intrinsics_rgb, liveRenderState.get());
+      visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), liveRenderState.get(), m_model->get_settings().skipPoints);
       break;
     }
     default:

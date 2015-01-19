@@ -6,6 +6,7 @@
 
 #include <stdexcept>
 
+#include <ITMLib/Engine/ITMTrackerFactory.h>
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
@@ -17,7 +18,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
 : m_model(model)
 {
   // Set up the InfiniTAM visualisation engine.
-  if(model->get_settings().useGPU)
+  if(model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     // Use the GPU implementation of the visualisation engine.
@@ -32,6 +33,12 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
     // Use the CPU implementation of the visualisation engine.
     m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
+
+  // Set up the live render state.
+  m_liveRenderState.reset(m_visualisationEngine->CreateRenderState(
+    model->get_scene().get(),
+    ITMTrackerFactory::GetTrackedImageSize(model->get_settings(), model->get_rgb_image_size(), model->get_depth_image_size())
+  ));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -54,8 +61,8 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
 
 void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output) const
 {
-  prepare_to_copy_visualisation(m_model->get_tracking_state()->rendering, output);
-  output->SetFrom(m_model->get_tracking_state()->rendering);
+  prepare_to_copy_visualisation(m_liveRenderState->raycastImage, output);
+  output->SetFrom(m_liveRenderState->raycastImage, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
 void SpaintRaycaster::get_depth_input(const UChar4Image_Ptr& output) const
@@ -64,10 +71,15 @@ void SpaintRaycaster::get_depth_input(const UChar4Image_Ptr& output) const
   m_visualisationEngine->DepthToUchar4(output.get(), m_model->get_view()->depth);
 }
 
+const SpaintRaycaster::RenderState_Ptr& SpaintRaycaster::get_live_render_state()
+{
+  return m_liveRenderState;
+}
+
 void SpaintRaycaster::get_rgb_input(const UChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_model->get_view()->rgb, output);
-  output->SetFrom(m_model->get_view()->rgb);
+  output->SetFrom(m_model->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
 const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisation_engine()
