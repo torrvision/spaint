@@ -36,6 +36,7 @@ SET(core_headers
 include/spaint/core/SpaintModel.h
 include/spaint/core/SpaintPipeline.h
 include/spaint/core/SpaintRaycaster.h
+include/spaint/core/SpaintVoxel.h
 )
 
 ##
@@ -60,7 +61,6 @@ src/util/CameraPoseConverter.cpp
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
-include/spaint/util/SpaintVoxel.h
 )
 
 #################################################################
