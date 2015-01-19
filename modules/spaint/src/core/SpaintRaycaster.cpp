@@ -49,13 +49,13 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
   SpaintModel::View_CPtr view = m_model->get_view();
   ITMLibSettings settings = m_model->get_settings();
 
-  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), output->noDims));
+  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), m_model->get_depth_image_size()));
 
   m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
   m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
   m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, false);
 
-  if(settings.deviceType == ITMLibSettings::DEVICE_CUDA) renderState->raycastImage->UpdateHostFromDevice();
+  prepare_to_copy_visualisation(renderState->raycastImage, output);
   output->SetFrom(renderState->raycastImage, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
