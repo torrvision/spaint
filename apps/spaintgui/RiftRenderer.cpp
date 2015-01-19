@@ -121,6 +121,12 @@ MoveableCamera_Ptr RiftRenderer::get_camera()
   return m_camera;
 }
 
+RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state() const
+{
+  // The Rift is a stereo display - it doesn't have a monocular render state.
+  return RenderState_CPtr();
+}
+
 void RiftRenderer::render() const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.

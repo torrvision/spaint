@@ -185,4 +185,34 @@ void Application::process_input()
     if(m_inputState.key_down(SDLK_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
     if(m_inputState.key_down(SDLK_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
   }
+
+  // Allow the user to pick voxels.
+  if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
+  {
+    boost::optional<Vector3f> loc;
+    int x = m_inputState.mouse_position_x();
+    int y = m_inputState.mouse_position_y();
+
+    switch(m_renderer->get_camera_mode())
+    {
+      case Renderer::CM_FOLLOW:
+      {
+        loc = m_spaintPipeline->get_raycaster()->pick(x, y);
+        break;
+      }
+      case Renderer::CM_FREE:
+      {
+        loc = m_spaintPipeline->get_raycaster()->pick(x, y, m_renderer->get_monocular_render_state());
+        break;
+      }
+      default:
+      {
+        // This should never happen.
+        throw std::runtime_error("Unknown camera mode");
+      }
+    }
+
+    if(loc) std::cout << *loc << '\n';
+    else std::cout << "No hit\n";
+  }
 }

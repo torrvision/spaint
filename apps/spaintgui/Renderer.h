@@ -34,6 +34,7 @@ public:
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 
@@ -81,6 +82,13 @@ public:
    * \return  The camera from which to render the scene.
    */
   virtual rigging::MoveableCamera_Ptr get_camera() = 0;
+
+  /**
+   * \brief Gets the render state for the camera, if it's monocular, or null otherwise.
+   *
+   * \return  The render state for the camera, if it's monocular, or null otherwise.
+   */
+  virtual RenderState_CPtr get_monocular_render_state() const = 0;
 
   /**
    * \brief Renders the scene.

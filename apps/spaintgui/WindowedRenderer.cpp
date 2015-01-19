@@ -63,6 +63,11 @@ rigging::MoveableCamera_Ptr WindowedRenderer::get_camera()
   return m_camera;
 }
 
+WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state() const
+{
+  return m_renderState;
+}
+
 void WindowedRenderer::render() const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
