@@ -18,8 +18,8 @@ class SpaintRaycaster
 private:
   typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
 public:
+  typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
-  typedef boost::shared_ptr<ITMVisualisationState> VisualisationState_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -43,11 +43,11 @@ public:
   /**
    * \brief Generates a raycast of the scene from the specified pose.
    *
-   * \param output              The location into which to put the output image.
-   * \param visualisationState  The visualisation state to use for intermediate storage.
-   * \param pose                The pose from which to raycast the scene.
+   * \param output      The location into which to put the output image.
+   * \param renderState The render state to use for intermediate storage.
+   * \param pose        The pose from which to raycast the scene.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, VisualisationState_Ptr& visualisationState, const ITMPose& pose) const;
+  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose) const;
 
   /**
    * \brief Gets a raycast of the scene from the default pose (the current camera pose).
@@ -86,10 +86,10 @@ private:
    * \param output  The output image to which it will be copied.
    */
   template <typename T>
-  void prepare_to_copy_visualisation(ITMImage<T> *input, const UChar4Image_Ptr& output) const
+  void prepare_to_copy_visualisation(ORUtils::Image<T> *input, const UChar4Image_Ptr& output) const
   {
     output->Clear();
-    if(m_model->get_settings().useGPU) input->UpdateHostFromDevice();
+    if(m_model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA) input->UpdateHostFromDevice();
     output->ChangeDims(input->noDims);
   }
 };

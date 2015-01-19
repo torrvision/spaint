@@ -36,18 +36,20 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, VisualisationState_Ptr& visualisationState, const ITMPose& pose) const
+void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose) const
 {
-  if(!visualisationState) visualisationState.reset(m_visualisationEngine->allocateInternalState(output->noDims));
-
   SpaintModel::Scene_CPtr scene = m_model->get_scene();
   SpaintModel::View_CPtr view = m_model->get_view();
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &view->calib->intrinsics_d, visualisationState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &view->calib->intrinsics_d, visualisationState->minmaxImage, visualisationState.get());
-  m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, visualisationState.get(), visualisationState->outputImage, false);
+  ITMLibSettings settings = m_model->get_settings();
 
-  if(m_model->get_settings().useGPU) visualisationState->outputImage->UpdateHostFromDevice();
-  output->SetFrom(visualisationState->outputImage);
+  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), output->noDims));
+
+  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
+  m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, false);
+
+  if(settings.deviceType == ITMLibSettings::DEVICE_CUDA) renderState->raycastImage->UpdateHostFromDevice();
+  output->SetFrom(renderState->raycastImage, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
 void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output) const

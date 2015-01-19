@@ -162,7 +162,7 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
   m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize, m_imageSourceEngine->calib));
 
   // Set up the InfiniTAM engines.
-  if(settings.useGPU)
+  if(settings.deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     // Use the GPU implementation of InfiniTAM.

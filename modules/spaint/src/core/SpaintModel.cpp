@@ -14,14 +14,15 @@ SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImag
 : m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings)
 {
   // Set up the scene.
-  m_scene.reset(new Scene(&m_settings.sceneParams, m_settings.useSwapping, m_settings.useGPU));
+  MemoryDeviceType memoryType = settings.deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  m_scene.reset(new Scene(&settings.sceneParams, settings.useSwapping, memoryType));
 
   // Set up the initial tracking state.
   m_trackingState.reset(ITMTrackerFactory::MakeTrackingState(m_settings, m_rgbImageSize, m_depthImageSize));
   m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
   // Set up the scene view.
-  m_view.reset(new ITMView(calib, m_rgbImageSize, m_depthImageSize, m_settings.useGPU));
+  m_view.reset(new ITMView(calib, m_rgbImageSize, m_depthImageSize, settings.deviceType == ITMLibSettings::DEVICE_CUDA));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
