@@ -13,29 +13,30 @@ namespace spaint {
 
 _CPU_AND_GPU_CODE_
 inline void drawPixelSemantic(DEVICEPTR(Vector4u)& dest, const CONSTANT(Vector3f)& point, const DEVICEPTR(SpaintVoxel) *voxelData, const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex,
-                              const CONSTANT(float)& angle)
+                              const CONSTANT(float)& angle, const DEVICEPTR(Vector3u) *labelColours)
 {
   bool isFound;
   SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, Vector3i((int)ROUND(point.x), (int)ROUND(point.y), (int)ROUND(point.z)), isFound);
 
-  float outRes = (0.8f * angle + 0.2f) * 255.0f;
-  //dest = Vector4u((uchar)outRes);
-  dest.x = (uchar)outRes;
-  dest.y = 0;
-  dest.z = 0;
+  float scale = 0.8f * angle + 0.2f;
+
+  Vector3u colour = labelColours[2];
+  dest.x = (uchar)(scale * colour.r);
+  dest.y = (uchar)(scale * colour.g);
+  dest.z = (uchar)(scale * colour.b);
   dest.w = 255;
 }
 
 _CPU_AND_GPU_CODE_
 inline void processPixelSemantic(DEVICEPTR(Vector4u)& outRendering, const DEVICEPTR(Vector3f)& point, bool foundPoint, const DEVICEPTR(SpaintVoxel) *voxelData,
-                                 const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource)
+                                 const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource, const DEVICEPTR(Vector3u) *labelColours)
 {
   Vector3f outNormal;
   float angle;
 
   computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, angle);
 
-  if (foundPoint) drawPixelSemantic(outRendering, point, voxelData, voxelIndex, angle);
+  if (foundPoint) drawPixelSemantic(outRendering, point, voxelData, voxelIndex, angle, labelColours);
   else outRendering = Vector4u((uchar)0);
 }
 
@@ -57,14 +58,15 @@ __global__ void genericRaycast_device(Vector4f *out_ptsRay, const TVoxel *voxelD
 }
 // END
 
-__global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *ptsRay, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex, Vector2i imgSize, Vector3f lightSource)
+__global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *ptsRay, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex, Vector2i imgSize, Vector3f lightSource,
+                                      Vector3u *labelColours)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if (x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
   Vector4f ptRay = ptsRay[locId];
-  processPixelSemantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, lightSource);
+  processPixelSemantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, lightSource, labelColours);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -102,7 +104,24 @@ void SemanticRaycastImpl_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxe
     mu
   );
 
-  renderSemantic_device<<<gridSize, cudaBlockSize>>>(outRendering, pointsRay, scene->localVBA.GetVoxelBlocks(), scene->index.getIndexData(), imgSize, lightSource);
+  // Set up the label colours (quick hack).
+  ORUtils::MemoryBlock<Vector3u> labelColours(4 * sizeof(Vector3u), true, true);
+  Vector3u *labelColoursData = labelColours.GetData(MEMORYDEVICE_CPU);
+  labelColoursData[0] = Vector3u(255, 255, 255);
+  labelColoursData[1] = Vector3u(255, 0, 0);
+  labelColoursData[2] = Vector3u(0, 255, 0);
+  labelColoursData[3] = Vector3u(0, 0, 255);
+  labelColours.UpdateDeviceFromHost();
+
+  renderSemantic_device<<<gridSize, cudaBlockSize>>>(
+    outRendering,
+    pointsRay,
+    scene->localVBA.GetVoxelBlocks(),
+    scene->index.getIndexData(),
+    imgSize,
+    lightSource,
+    labelColours.GetData(MEMORYDEVICE_CUDA)
+  );
 }
 
 }
