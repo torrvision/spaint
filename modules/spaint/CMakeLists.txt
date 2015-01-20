@@ -62,6 +62,11 @@ include/spaint/core/multiplatform/interface/SemanticRaycastImpl.h
 )
 
 ##
+SET(core_multiplatform_shared_headers
+include/spaint/core/multiplatform/shared/SemanticRaycastImpl_Shared.h
+)
+
+##
 SET(core_voxels_headers
 include/spaint/core/voxels/SpaintVoxel.h
 )
@@ -105,6 +110,7 @@ SET(headers
 ${core_headers}
 ${core_multiplatform_cpu_headers}
 ${core_multiplatform_interface_headers}
+${core_multiplatform_shared_headers}
 ${core_voxels_headers}
 ${input_headers}
 ${ogl_headers}
@@ -124,6 +130,7 @@ SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(core\\multiplatform\\cpu FILES ${core_multiplatform_cpu_sources} ${core_multiplatform_cpu_headers})
 SOURCE_GROUP(core\\multiplatform\\cuda FILES ${core_multiplatform_cuda_sources} ${core_multiplatform_cuda_headers})
 SOURCE_GROUP(core\\multiplatform\\interface FILES ${core_multiplatform_interface_headers})
+SOURCE_GROUP(core\\multiplatform\\shared FILES ${core_multiplatform_shared_headers})
 SOURCE_GROUP(core\\voxels FILES ${core_voxels_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})

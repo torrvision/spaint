@@ -4,33 +4,9 @@
 
 #include "core/multiplatform/cuda/SemanticRaycastImpl_CUDA.h"
 
-#include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
-#include <ITMLib/Engine/DeviceAgnostic/ITMVisualisationEngine.h>
+#include "core/multiplatform/shared/SemanticRaycastImpl_Shared.h"
 
 namespace spaint {
-
-//#################### HELPER FUNCTIONS ####################
-
-_CPU_AND_GPU_CODE_
-inline void processPixelSemantic(DEVICEPTR(Vector4u)& dest, const DEVICEPTR(Vector3f)& point, bool foundPoint, const DEVICEPTR(SpaintVoxel) *voxelData,
-                                 const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource, const DEVICEPTR(Vector3u) *labelColours)
-{
-  dest = Vector4u((uchar)0);
-  if(foundPoint)
-  {
-    Vector3f outNormal;
-    float angle;
-    computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, angle);
-
-    float scale = 0.8f * angle + 0.2f;
-    SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, Vector3i((int)ROUND(point.x), (int)ROUND(point.y), (int)ROUND(point.z)), foundPoint);
-    Vector3u colour = labelColours[voxel.w_depth / 32 > 3 ? 3 : voxel.w_depth / 32];
-    dest.x = (uchar)(scale * colour.r);
-    dest.y = (uchar)(scale * colour.g);
-    dest.z = (uchar)(scale * colour.b);
-    dest.w = 255;
-  }
-}
 
 //#################### CUDA KERNELS ####################
 
@@ -50,8 +26,8 @@ __global__ void genericRaycast_device(Vector4f *out_ptsRay, const TVoxel *voxelD
 }
 // END
 
-__global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *ptsRay, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex, Vector2i imgSize, Vector3f lightSource,
-                                      Vector3u *labelColours)
+__global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *ptsRay, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex,
+                                      Vector2i imgSize, Vector3f lightSource, Vector3u *labelColours)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if (x >= imgSize.x || y >= imgSize.y) return;
@@ -63,8 +39,9 @@ __global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *pt
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SemanticRaycastImpl_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose, const ITMLib::Objects::ITMIntrinsics *intrinsics,
-                                      const ITMLib::Objects::ITMRenderState *renderState, ITMUChar4Image *outputImage) const
+void SemanticRaycastImpl_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                                      ITMUChar4Image *outputImage) const
 {
   Vector2i imgSize = outputImage->noDims;
   float oneOverVoxelSize = 1.0f / scene->sceneParams->voxelSize;

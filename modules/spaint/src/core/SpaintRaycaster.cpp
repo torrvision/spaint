@@ -37,7 +37,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   else
   {
     // Use the CPU implementations.
-    // TODO: m_semanticRaycastImpl.reset(new SemanticRaycastImpl_CPU);
+    m_semanticRaycastImpl.reset(new SemanticRaycastImpl_CPU);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
 
