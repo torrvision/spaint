@@ -12,32 +12,24 @@ namespace spaint {
 //#################### HELPER FUNCTIONS ####################
 
 _CPU_AND_GPU_CODE_
-inline void drawPixelSemantic(DEVICEPTR(Vector4u)& dest, const CONSTANT(Vector3f)& point, const DEVICEPTR(SpaintVoxel) *voxelData, const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex,
-                              const CONSTANT(float)& angle, const DEVICEPTR(Vector3u) *labelColours)
-{
-  bool isFound;
-  SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, Vector3i((int)ROUND(point.x), (int)ROUND(point.y), (int)ROUND(point.z)), isFound);
-
-  float scale = 0.8f * angle + 0.2f;
-
-  Vector3u colour = labelColours[2];
-  dest.x = (uchar)(scale * colour.r);
-  dest.y = (uchar)(scale * colour.g);
-  dest.z = (uchar)(scale * colour.b);
-  dest.w = 255;
-}
-
-_CPU_AND_GPU_CODE_
-inline void processPixelSemantic(DEVICEPTR(Vector4u)& outRendering, const DEVICEPTR(Vector3f)& point, bool foundPoint, const DEVICEPTR(SpaintVoxel) *voxelData,
+inline void processPixelSemantic(DEVICEPTR(Vector4u)& dest, const DEVICEPTR(Vector3f)& point, bool foundPoint, const DEVICEPTR(SpaintVoxel) *voxelData,
                                  const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource, const DEVICEPTR(Vector3u) *labelColours)
 {
-  Vector3f outNormal;
-  float angle;
+  dest = Vector4u((uchar)0);
+  if(foundPoint)
+  {
+    Vector3f outNormal;
+    float angle;
+    computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, angle);
 
-  computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, angle);
-
-  if (foundPoint) drawPixelSemantic(outRendering, point, voxelData, voxelIndex, angle, labelColours);
-  else outRendering = Vector4u((uchar)0);
+    float scale = 0.8f * angle + 0.2f;
+    SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, Vector3i((int)ROUND(point.x), (int)ROUND(point.y), (int)ROUND(point.z)), foundPoint);
+    Vector3u colour = labelColours[voxel.w_depth / 32 > 3 ? 3 : voxel.w_depth / 32];
+    dest.x = (uchar)(scale * colour.r);
+    dest.y = (uchar)(scale * colour.g);
+    dest.z = (uchar)(scale * colour.b);
+    dest.w = 255;
+  }
 }
 
 //#################### CUDA KERNELS ####################

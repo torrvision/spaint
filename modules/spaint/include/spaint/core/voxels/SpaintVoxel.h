@@ -32,7 +32,7 @@ struct SpaintVoxel
   {
     sdf = SDF_initialValue();
     w_depth = 0;
-    label = 0;
+    label = 2;
   }
 };
 #else
