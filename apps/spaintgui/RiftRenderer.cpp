@@ -9,7 +9,6 @@
 #include <OVR.h>
 #include <../Src/OVR_CAPI_GL.h>
 #include <../Src/Kernel/OVR_Math.h>
-using namespace OVR;
 
 #ifdef __APPLE__
 #pragma GCC diagnostic ignored "-Wextern-c-compat"
@@ -69,7 +68,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   const int backBufferMultisample = 1;
   ovrGLConfig cfg;
   cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
-  cfg.OGL.Header.RTSize = Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
+  cfg.OGL.Header.RTSize = OVR::Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
   cfg.OGL.Header.Multisample = backBufferMultisample;
 #ifdef _WIN32
   cfg.OGL.Window = wmInfo.info.win.window;
@@ -101,7 +100,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   for(int i = 0; i < ovrEye_Count; ++i)
   {
-    m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, false));
+    m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, MEMORYDEVICE_CPU));
   }
   glGenTextures(ovrEye_Count, m_eyeTextureIDs);
 }
@@ -178,8 +177,8 @@ void RiftRenderer::render() const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize = Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y);
-    eyeTextures[i].OGL.Header.RenderViewport = Recti(Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y));
+    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y);
+    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y));
     eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
   }
 
