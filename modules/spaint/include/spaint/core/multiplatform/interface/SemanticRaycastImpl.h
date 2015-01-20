@@ -1,12 +1,11 @@
 /**
- * spaint: SemanticRaycaster.h
+ * spaint: SemanticRaycastImpl.h
  */
 
 #ifndef H_SPAINT_SEMANTICRAYCASTER
 #define H_SPAINT_SEMANTICRAYCASTER
 
-// FIXME: Move SpaintVoxel into the shared directory.
-#include "../SpaintVoxel.h"
+#include "../../voxels/SpaintVoxel.h"
 
 namespace spaint {
 
