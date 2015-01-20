@@ -103,7 +103,7 @@ private:
    *
    * \param settings  The settings to use for InfiniTAM.
    */
-  void initialise(const ITMLibSettings& settings);
+  void initialise(ITMLibSettings settings);
 };
 
 //#################### TYPEDEFS ####################

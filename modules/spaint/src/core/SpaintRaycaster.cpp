@@ -4,6 +4,8 @@
 
 #include "core/SpaintRaycaster.h"
 
+#include <stdexcept>
+
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
