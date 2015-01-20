@@ -106,7 +106,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
       m_raycaster->get_default_raycast(m_image);
       break;
     case CM_FREE:
-      m_raycaster->generate_free_raycast(m_image, m_renderState, pose);
+      m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
       break;
     default:
       // This should never happen.

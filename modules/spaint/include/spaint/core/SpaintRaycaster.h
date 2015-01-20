@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 
 #include "SpaintModel.h"
+#include "multiplatform/interface/SemanticRaycastImpl.h"
 
 namespace spaint {
 
@@ -47,6 +48,9 @@ private:
 
   /** An image into which the raycast result may be copied when performing picking. */
   mutable Float4Image_Ptr m_raycastResult;
+
+  /** The platform-specific implementation of semantic raycasting. */
+  boost::shared_ptr<const SemanticRaycastImpl> m_semanticRaycastImpl;
 
   /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_Ptr m_visualisationEngine;

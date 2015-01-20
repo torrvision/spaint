@@ -10,6 +10,11 @@
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
+#include "core/multiplatform/cpu/SemanticRaycastImpl_CPU.h"
+#ifdef WITH_CUDA
+#include "core/multiplatform/cuda/SemanticRaycastImpl_CUDA.h"
+#endif
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -21,7 +26,8 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   if(model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    // Use the GPU implementation of the visualisation engine.
+    // Use the GPU implementations.
+    m_semanticRaycastImpl.reset(new SemanticRaycastImpl_CUDA);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
@@ -30,7 +36,8 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   }
   else
   {
-    // Use the CPU implementation of the visualisation engine.
+    // Use the CPU implementations.
+    // TODO: m_semanticRaycastImpl.reset(new SemanticRaycastImpl_CPU);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
 
@@ -43,30 +50,31 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
 
 void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType) const
 {
+  const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
   SpaintModel::Scene_CPtr scene = m_model->get_scene();
-  SpaintModel::View_CPtr view = m_model->get_view();
   const ITMLibSettings& settings = m_model->get_settings();
+  SpaintModel::View_CPtr view = m_model->get_view();
 
   if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), m_model->get_depth_image_size()));
 
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get());
+  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 
   switch(raycastType)
   {
     case RT_COLOUR:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, true);
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage, true);
       break;
     }
     case RT_LAMBERTIAN:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, &view->calib->intrinsics_d, renderState.get(), renderState->raycastImage, false);
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage, false);
       break;
     }
     case RT_SEMANTIC:
     {
-      // TODO
+      m_semanticRaycastImpl->render(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage);
       break;
     }
     default:
