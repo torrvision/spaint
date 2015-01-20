@@ -147,10 +147,10 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
-  if(settings.useGPU)
+  if(settings.deviceType == ITMLibSettings::DEVICE_CUDA)
   {
     std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
-    settings.useGPU = false;
+    settings.deviceType = ITMLibSettings::DEVICE_CPU;
   }
 #endif
 
