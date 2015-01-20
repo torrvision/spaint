@@ -142,12 +142,15 @@ void SpaintPipeline::process_frame()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintPipeline::initialise(const ITMLibSettings& settings)
+void SpaintPipeline::initialise(ITMLibSettings settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
-  std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
-  m_settings.useGPU = false;
+  if(settings.useGPU)
+  {
+    std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
+    settings.useGPU = false;
+  }
 #endif
 
   // Determine the RGB and depth image sizes.
