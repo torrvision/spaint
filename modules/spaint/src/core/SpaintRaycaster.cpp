@@ -74,6 +74,7 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     }
     case RT_SEMANTIC:
     {
+      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticRaycastImpl->render(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage);
       break;
     }
