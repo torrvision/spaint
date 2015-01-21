@@ -37,20 +37,15 @@ void SemanticRaycastImpl_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxe
   labelColours.UpdateDeviceFromHost();
 
   Vector2i imgSize = outputImage->noDims;
-  Vector3f lightSource = -Vector3f(pose->invM.getColumn(2));
-  Vector4u *outRendering = outputImage->GetData(MEMORYDEVICE_CUDA);
-  Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CUDA);
-
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
-
   renderSemantic_device<<<gridSize, cudaBlockSize>>>(
-    outRendering,
-    pointsRay,
+    outputImage->GetData(MEMORYDEVICE_CUDA),
+    renderState->raycastResult->GetData(MEMORYDEVICE_CUDA),
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     imgSize,
-    lightSource,
+    ComputeLightSource(pose->invM),
     labelColours.GetData(MEMORYDEVICE_CUDA)
   );
 }
