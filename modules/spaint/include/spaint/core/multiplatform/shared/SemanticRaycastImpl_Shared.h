@@ -19,7 +19,7 @@ namespace spaint {
  */
 _CPU_AND_GPU_CODE_
 inline void processPixelSemantic(DEVICEPTR(Vector4u)& dest, const DEVICEPTR(Vector3f)& point, bool foundPoint, const DEVICEPTR(SpaintVoxel) *voxelData,
-                                 const DEVICEPTR(typename ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource, const DEVICEPTR(Vector3u) *labelColours)
+                                 const DEVICEPTR(ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource, const DEVICEPTR(Vector3u) *labelColours)
 {
   dest = Vector4u((uchar)0);
   if(foundPoint)
