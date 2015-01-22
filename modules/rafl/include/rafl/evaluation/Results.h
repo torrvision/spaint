@@ -6,7 +6,7 @@
 #define H_RAFL_RESULTS
 
 #include <utility>
-#include <fstream>
+#include <ostream>
 
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 
@@ -17,22 +17,22 @@ namespace rafl {
 
 class Results
 {
-  //#################### PUBLIC TYPEDEFS #################### 
+  //#################### PUBLIC TYPEDEFS ####################
 public:
-  typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
+  typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
-  //#################### PRIVATE VARIABLES #################### 
+  //#################### PRIVATE VARIABLES ####################
 private:
   std::vector<std::pair<ParamSet,QuantitativePerformance> > m_results;
 
-  //#################### CONSTRUCTORS #################### 
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs an empty Result.
    */
   Results();
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Adds a pair of parameters and quantitative performances to the results.

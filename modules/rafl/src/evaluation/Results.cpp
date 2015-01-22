@@ -6,7 +6,7 @@
 
 namespace rafl {
 
-//#################### CONSTRUCTORS #################### 
+//#################### CONSTRUCTORS ####################
 Results::Results(){}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -17,7 +17,7 @@ void Results::push_back(const ParamSet& paramSet, const QuantitativePerformance&
 
 void Results::print_tab_delimited(std::ostream& out) const
 {
-  //Get the first set of results, and print the names of the parameters in the set. 
+  //Get the first set of results, and print the names of the parameters in the set.
   ParamSet firstSet = m_results[0].first;
   ParamSet::iterator it, iend;
   for(it = firstSet.begin(), iend = firstSet.end(); it != iend; ++it)

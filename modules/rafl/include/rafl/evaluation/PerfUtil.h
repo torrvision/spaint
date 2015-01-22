@@ -24,12 +24,9 @@ public:
    * \brief Calculates the accuracy from a confusion matrix.
    *
    * \param confusionMtx   The confusion matrix.
-   * \return               The trace of the confusion matrix divided by the sum of its elements. 
+   * \return               The trace of the confusion matrix divided by the sum of its elements.
    */
-  static float get_accuracy(const Eigen::MatrixXf confusion_matrix)
-  {
-    return confusion_matrix.trace()/confusion_matrix.sum();
-  }
+  static float get_accuracy(const Eigen::MatrixXf confusion_matrix);
 
   /**
    * \brief A function which calculates a confusion matrix from a set of ground-truth and predicted label vectors.
@@ -95,18 +92,7 @@ public:
    * \param matrix   The matrix.
    * \return      The row-L1-normalised matrix.
    */
-  static Eigen::MatrixXf normalise_rows_L1(const Eigen::MatrixXf matrix)
-  {
-    Eigen::MatrixXf matrixNormL1 = Eigen::MatrixXf::Zero(matrix.rows(), matrix.cols());
-    for(size_t i = 0, iend = matrix.rows(); i < iend; ++i)
-    {
-      float rowL1Norm = matrix.row(i).lpNorm<1>();
-      if(rowL1Norm > 0) matrixNormL1.row(i) = matrix.row(i) / rowL1Norm;
-    }
-
-    return matrixNormL1;
-  }
-
+  static Eigen::MatrixXf normalise_rows_L1(const Eigen::MatrixXf matrix);
 };
 
 }

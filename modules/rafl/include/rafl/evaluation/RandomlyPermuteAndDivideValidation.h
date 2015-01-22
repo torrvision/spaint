@@ -21,9 +21,9 @@ namespace rafl {
 
 /**
  * \brief An instance of this class finds the quantitative performance of running an Algorithm on a set of Examples via the following procedure:
- * Repeat the following procedure n times: 
- * First randomly permute the example indices, 
- * then divide them into two sets where the first set has a percentage of the examples, 
+ * Repeat the following procedure n times:
+ * First randomly permute the example indices,
+ * then divide them into two sets where the first set has a percentage of the examples,
  * and the second set the remaining examples.
  */
 template <typename Algorithm, typename QuantitativePerformance, typename Label>

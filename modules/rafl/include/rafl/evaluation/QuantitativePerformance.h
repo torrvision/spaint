@@ -12,14 +12,14 @@ namespace rafl {
  */
 class QuantitativePerformance
 {
-  //#################### NESTED TYPES #################### 
+  //#################### NESTED TYPES ####################
 private:
   /**
    * \brief An instance of this struct represents a performance measure.
    */
   struct Measure
   {
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VAIRABLES ~~~~~~~~~~~~~~~~~~~~ 
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VAIRABLES ~~~~~~~~~~~~~~~~~~~~
 
     /** The mean of the measure. */
     float mean;
@@ -34,7 +34,7 @@ private:
   /** The number of samples used to generate the performance measures. */
   size_t m_samples;
 
-  //#################### CONSTRUCTORS ####################  
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a quantitative performance measure from a single sample.
@@ -44,14 +44,14 @@ public:
   explicit QuantitativePerformance(float accuracy)
   : m_samples(1)
   {
-    m_accuracy.mean = accuracy; 
+    m_accuracy.mean = accuracy;
     m_accuracy.stdDev = 0.0f;
   }
 
   /**
    * \brief Constructs a single quantitative perofrmance measure form a vector of them.
    *
-   * \param qpv    A vector of quantitative performance measures. 
+   * \param qpv    A vector of quantitative performance measures.
    */
   explicit QuantitativePerformance(const std::vector<QuantitativePerformance> qpv)
   : m_samples(qpv.size())
@@ -72,16 +72,16 @@ public:
   }
 
   /**
-   * \brief Getter function for mean accuracy. 
+   * \brief Getter function for mean accuracy.
    *
-   * \return The mean accuracy measure. 
+   * \return The mean accuracy measure.
    */
   float mean_accuracy() const
   {
     return m_accuracy.mean;
   }
 
-  /** 
+  /**
    * \brief Prints a tab delineated header to a stream.
    *
    * \param out  The stream.

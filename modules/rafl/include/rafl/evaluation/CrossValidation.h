@@ -67,7 +67,7 @@ public:
    * \param algorithm  A general object whose output is of type Result.
    * \param examples   The vector of examples making up the data on which to evaluate the Algorithm.
    *
-   * \return           The Result quantifying the average performance of the algorithm over the folds. 
+   * \return           The Result quantifying the average performance of the algorithm over the folds.
    */
   Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
   {
@@ -86,7 +86,7 @@ public:
 
   /**
    * \brief Access the number of folds.
-   * 
+   *
    * \return The number of folds.
    */
   size_t num_folds() const

@@ -42,6 +42,8 @@ include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
 
 ##
 SET(evaluation_sources
+src/evaluation/ParameterSetProductGenerator.cpp
+src/evaluation/PerfUtil.cpp
 src/evaluation/Results.cpp
 )
 
@@ -51,9 +53,9 @@ include/rafl/evaluation/CrossValidation.h
 include/rafl/evaluation/ParameterSetProductGenerator.h
 include/rafl/evaluation/PerfUtil.h
 include/rafl/evaluation/QuantitativePerformance.h
-include/rafl/evaluation/RFOnlineLearner.h
 include/rafl/evaluation/RandomlyPermuteAndDivideValidation.h
 include/rafl/evaluation/Results.h
+include/rafl/evaluation/RFOnlineLearner.h
 )
 
 ##
@@ -76,6 +78,7 @@ include/rafl/RandomForest.h
 
 SET(sources
 ${decisionfunctions_sources}
+${evaluation_sources}
 )
 
 SET(headers

@@ -289,7 +289,7 @@ typedef int Label;
 typedef RFOnlineLearner<Label> RFO;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
-typedef std::map<std::string,hold_any> ParamSet;
+typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
 int main(int argc, char *argv[])
 {
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
   {
     throw std::runtime_error("Silly boy - enter the path of the training set, followed by the path of the test set, and the path to save the results!");
   }
-  
+
   std::vector<Example_CPtr> examples;
   std::string outputResultPath;
 
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     examples.insert(examples.end(), testingExamples.begin(), testingExamples.end() );
     std::cout << "number of examples= " << examples.size() << "\n";
   }
-  
+
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = ParameterSetProductGenerator()
     .add_param("treeCount", list_of<size_t>(1)(3)(5))
@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
     std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << performance << std::endl;
 #if 0
     CrossValidation<RFO,QuantitativePerformance,Label> cv(numFolds, seed);
-    QuantitativePerformance performance = cv.run(randomAlgorithm, examples); 
+    QuantitativePerformance performance = cv.run(randomAlgorithm, examples);
     std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << performance << std::endl;
 #endif
     results.push_back(params[n], performance);

@@ -173,12 +173,12 @@ public:
      *        FIXME: (use a generator factory).
      *
      * \param decisionFunctionGeneratorName The name of the decision funciton generator.
-     * \param randomSeed                    The seed of the random number generator. 
+     * \param randomSeed                    The seed of the random number generator.
      */
     void generate_decision_function(const std::string& decisionFunctionGeneratorName, unsigned int randomSeed)
     {
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-      
+
       if(decisionFunctionGeneratorName == "FeatureThresholding")
       {
           decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
@@ -192,8 +192,8 @@ public:
     /**
      * \brief Sets a parameter based on the settings map provided.
      *
-     * \param settings   The settings map. 
-     * \param param      The parameter to be set. 
+     * \param settings   The settings map.
+     * \param param      The parameter to be set.
      * \param paramName  The name of the parameter to be set.
      */
     template <typename T>
@@ -394,7 +394,7 @@ private:
   }
 
   /**
-   * \brief Fills the specified reservoir with examples sampled from an input set of examples. 
+   * \brief Fills the specified reservoir with examples sampled from an input set of examples.
    *
    * \param inputExamples The set of examples from which to sample.
    * \param multipliers   The per-class ratios between the total number of examples seen for a class and the number of examples currently in the source reservoir.

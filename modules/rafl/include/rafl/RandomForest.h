@@ -13,7 +13,7 @@
 #include "DecisionTree.h"
 
 namespace rafl {
-  
+
 /**
  * \brief An instance of an instantiation of this class template represents a random forest.
  */
@@ -59,7 +59,7 @@ public:
     #define GET_SETTING(param) DT::Settings::set_from_paramset(settings, param, #param);
       GET_SETTING(treeCount);
     #undef SET_SETTING
-    
+
     typename DT::Settings dtSettings( settings );
 
     for(size_t i = 0; i < treeCount; ++i)

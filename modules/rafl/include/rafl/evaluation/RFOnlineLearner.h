@@ -17,14 +17,14 @@
 #include "QuantitativePerformance.h"
 
 namespace rafl {
-  
+
 /**
- * \brief This class is a wrapper around a random forest and provides tools for online learning and evaluation. 
+ * \brief This class is a wrapper around a random forest and provides tools for online learning and evaluation.
  */
 template <typename Label>
 class RFOnlineLearner
 {
-  //#################### PUBLIC TYPEDEFS #################### 
+  //#################### PUBLIC TYPEDEFS ####################
 public:
   typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
@@ -32,7 +32,7 @@ public:
   typedef std::pair<Indices,Indices> Split;
   typedef DecisionTree<Label> DT; typedef RandomForest<Label> RF;
 
-  //#################### PRIVATE MEMBER VARIABLES #################### 
+  //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** An instance of a random forest. */
   RF m_randomForest;
@@ -40,7 +40,7 @@ private:
   /** The split budget of the random forest which may change over time. */
   size_t m_splitBudget;
 
-  //#################### CONSTRUCTOR #################### 
+  //#################### CONSTRUCTOR ####################
 public:
   /**
    * \brief Constructs a random forest with particular parameter settings.
@@ -58,8 +58,8 @@ public:
   }
 
   /**
-   * \brief Given an offline training set, 
-   * this function trains the random forest on the examples selected by the first split, 
+   * \brief Given an offline training set,
+   * this function trains the random forest on the examples selected by the first split,
    * and evaluates the random forest on the examples selected by the second split.
    */
   QuantitativePerformance cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
@@ -74,14 +74,14 @@ public:
     return evaluate(examples, split.second);
   }
 
-  //#################### PRIVATE MEMBER FUNCTIONS #################### 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief This function evaluates the random forest on a set of examples. 
+   * \brief This function evaluates the random forest on a set of examples.
    *
    * \param examples  The set of examples to evaluate.
    * \param incides   The indices of the examples to use in the evaluation.
-   * \return          The quantitative performance. 
+   * \return          The quantitative performance.
    */
   QuantitativePerformance evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
@@ -96,7 +96,7 @@ private:
       classLabels.insert(expectedLabels[i]);
       predictedLabels[i] = m_randomForest.predict(descriptor);
     }
-    
+
     //Calculates the quantitative performance measures.
     QuantitativePerformance accuracy(PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
     return accuracy;
