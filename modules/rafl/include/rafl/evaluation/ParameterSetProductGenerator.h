@@ -1,5 +1,5 @@
-#ifndef H_RAFL_PARAMETERSTRINGGENERATOR
-#define H_RAFL_PARAMETERSTRINGGENERATOR
+#ifndef H_RAFL_PARAMETERSETPRODUCTGENERATOR
+#define H_RAFL_PARAMETERSETPRODUCTGENERATOR
 
 #include <algorithm>
 #include <iostream>
@@ -17,14 +17,14 @@ using boost::spirit::hold_any;
 
 namespace rafl {
 
-class ParameterStringGenerator
+class ParameterSetProductGenerator
 {
   typedef std::map<std::string,hold_any> ParamSet;
 private:
 std::vector<std::pair<std::string,std::vector<hold_any> > > m_paramOptions;
 
 public:
-  ParameterStringGenerator& add_param(const std::string& param, const std::vector<hold_any>& options)
+  ParameterSetProductGenerator& add_param(const std::string& param, const std::vector<hold_any>& options)
   {
     m_paramOptions.push_back(std::make_pair(param, options));
     return *this;

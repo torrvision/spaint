@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
   std::vector<Example_CPtr> predictedExamples = generator.generate_examples(list_of(5)(2)(1), 5);
 
   // Generate a confusion matrix.
-  Eigen::MatrixXf testConfMtx = PerfUtil::get_conf_mtx(classLabels, groundTruthExamples, predictedExamples);
+  Eigen::MatrixXf testConfMtx = PerfUtil::get_confusion_matrix(classLabels, groundTruthExamples, predictedExamples);
 
   // The std::set orders the integers from smallest to largest.
   // The ground truth examples will be [1 5 9 1 5 9 ... 1 5 9]

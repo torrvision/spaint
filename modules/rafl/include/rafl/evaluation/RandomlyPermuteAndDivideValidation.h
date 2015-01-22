@@ -20,13 +20,13 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class finds the Result of running an Algorithm on a set of Examples via the following procedure:
+ * \brief An instance of this class finds the quantitative performance of running an Algorithm on a set of Examples via the following procedure:
  * Repeat the following procedure n times: 
  * First randomly permute the example indices, 
  * then divide them into two sets where the first set has a percentage of the examples, 
  * and the second set the remaining examples.
  */
-template <typename Algorithm, typename Result, typename Label>
+template <typename Algorithm, typename QuantitativePerformance, typename Label>
 class RandomlyPermuteAndDivideValidation
 {
   //#################### PRIVATE TYPEDEFS ####################
@@ -72,24 +72,24 @@ public:
   /**
    * \brief Runs the randomly-permute-and-divide-validation with a particular Algorithm and set of examples.
    *
-   * \param algorithm  A general object whose output is of type Result.
+   * \param algorithm  A general object whose output is of type QuantitativePerformance.
    * \param examples   The vector of examples making up the data on which to evaluate the Algorithm.
    *
-   * \return The Result quantifying the average performance of the algorithm over the folds.
+   * \return The average quantitative performance of the algorithm over the folds.
    */
-  Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
+  QuantitativePerformance run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
   {
     initialise_splits(examples.size());
 
-    std::vector<Result> performance;
+    std::vector<QuantitativePerformance> performance;
     for(size_t i = 0; i < m_num_folds; ++i)
     {
       performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
     }
 
-    Result averageResults(performance);
+    QuantitativePerformance average(performance);
 
-    return averageResults;
+    return average;
   }
 
   /**
@@ -143,7 +143,7 @@ private:
   }
 };
 
-}
+} //end namespace rafl
 
 #endif
 

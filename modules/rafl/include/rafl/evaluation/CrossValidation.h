@@ -67,7 +67,7 @@ public:
    * \param algorithm  A general object whose output is of type Result.
    * \param examples   The vector of examples making up the data on which to evaluate the Algorithm.
    *
-   * \return The Result quantifying the average performance of the algorithm over the folds. 
+   * \return           The Result quantifying the average performance of the algorithm over the folds. 
    */
   Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
   {
@@ -94,7 +94,7 @@ public:
     return m_num_folds;
   }
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
    * \brief Initialise the splits of the examples by randomly assigning each example to a particular fold.
@@ -105,6 +105,7 @@ private:
   {
     assert(m_num_folds <= size);
 
+    //Generate a vector which will be used to assign an example to a random fold.
     std::vector<unsigned int> splitLabel(size);
     for(size_t i = 0; i < size; ++i)
     {
@@ -115,13 +116,14 @@ private:
     std::cout << "splitLabel: \n" << tvgutil::make_limited_container(splitLabel, 20) << "\n";
 #endif
 
-    int testFold = 0;
+    //For each fold, split the data in two, the first set contains all examples except those indicated by validationFold.
+    int validationFold = 0;
     for(size_t fold = 0; fold < m_num_folds; ++fold)
     {
       Split splitSet;
       for(size_t index = 0; index < size; ++index)
       {
-        if(splitLabel[index] != testFold)
+        if(splitLabel[index] != validationFold)
         {
           splitSet.first.push_back(index);
         }
@@ -132,7 +134,7 @@ private:
       }
 
       //Make sure the indices are randomly shuffled!
-      //TODO pass custom generator?
+      //FIXME pass custom generator?
       std::random_shuffle(splitSet.first.begin(), splitSet.first.end());
       std::random_shuffle(splitSet.second.begin(), splitSet.second.end());
 
@@ -143,7 +145,7 @@ private:
 #endif
 
       m_splits.push_back(splitSet);
-      ++testFold;
+      ++validationFold;
     }
   }
 };

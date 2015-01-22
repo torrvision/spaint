@@ -51,12 +51,12 @@ public:
   /**
    * \brief Constructs a random forest.
    *
-   * \param settings The settings needed to configure the random forest and the decision trees.
+   * \param settings The settings map needed to configure the random forest and decision trees.
    */
   RandomForest(const ParamSet& settings)
   {
     size_t treeCount = 0;
-    #define GET_SETTING(param) DT::Settings::get_from_param_set(settings, param, #param);
+    #define GET_SETTING(param) DT::Settings::set_from_paramset(settings, param, #param);
       GET_SETTING(treeCount);
     #undef SET_SETTING
     

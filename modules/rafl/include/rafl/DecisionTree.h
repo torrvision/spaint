@@ -75,6 +75,7 @@ public:
     //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
   private:
     typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
+    typedef std::map<std::string,hold_any> ParamSet;
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
   public:
@@ -123,7 +124,7 @@ public:
 
       boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
 
-      std::string decisionFunctionGeneratorName = "FeatureThresholding";
+      std::string decisionFunctionGeneratorName = "";
       unsigned int randomSeed = 0;
 
       #define GET_SETTING(setting) PropertyUtil::get_required_property(tree, #setting, setting);
@@ -137,34 +138,24 @@ public:
         GET_SETTING(splittabilityThreshold);
       #undef GET_SETTING
 
-      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-
-      // FIXME: Construct a decision function generator based on the name specified (use a generator factory).
-      decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+      generate_decision_function(decisionFunctionGeneratorName, randomSeed);
     }
 
-    typedef std::map<std::string,hold_any> ParamSet;
+    /**
+     * \brief Attempts to load settings from a parameter settings map.
+     *
+     * This will throw if the properties cannot be successfully loaded.
+     *
+     * \param settings The map from string names to parameter values.
+     */
     explicit Settings(const ParamSet& settings)
     {
 
-      std::string decisionFunctionGeneratorName = "FeatureThresholding";
+      std::string decisionFunctionGeneratorName = "";
       unsigned int randomSeed = 0;
 
-      #define GET_SETTING(param) get_from_param_set(settings, param, #param);
+      #define GET_SETTING(param) set_from_paramset(settings, param, #param);
         GET_SETTING(candidateCount);
-      /*typename ParamSet::const_iterator it;
-      typename ParamSet::const_iterator iend;
-
-      #define GET_SETTING(setting) \
-      it = settings.find(#setting); \
-      iend = settings.end(); \
-      if(it != iend){ \
-        set_from_any(setting, it->second); \
-      } \
-      else \
-      { \
-        throw std::runtime_error("Random forest treeCount parameter not found.. this is very bad..\n"); \
-      }*/
         GET_SETTING(decisionFunctionGeneratorName);
         GET_SETTING(gainThreshold);
         GET_SETTING(maxClassSize);
@@ -174,22 +165,48 @@ public:
         GET_SETTING(splittabilityThreshold);
       #undef GET_SETTING
 
-      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-
-      // FIXME: Construct a decision function generator based on the name specified (use a generator factory).
-      decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
-
+      generate_decision_function(decisionFunctionGeneratorName, randomSeed);
     }
 
-    template <typename T>
-    static void get_from_param_set(const ParamSet& settings, T& param, const std::string& paramName)
+    /**
+     * \brief Constructs a decision function generator based on the name specified.
+     *        FIXME: (use a generator factory).
+     *
+     * \param decisionFunctionGeneratorName The name of the decision funciton generator.
+     * \param randomSeed                    The seed of the random number generator. 
+     */
+    void generate_decision_function(const std::string& decisionFunctionGeneratorName, unsigned int randomSeed)
     {
+      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
+      
+      if(decisionFunctionGeneratorName == "FeatureThresholding")
+      {
+          decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+      }
+      else
+      {
+          throw std::runtime_error("The decision function you have selected was not found!\n");
+      }
+    }
 
+    /**
+     * \brief Sets a parameter based on the settings map provided.
+     *
+     * \param settings   The settings map. 
+     * \param param      The parameter to be set. 
+     * \param paramName  The name of the parameter to be set.
+     */
+    template <typename T>
+    static void set_from_paramset(const ParamSet& settings, T& param, const std::string& paramName)
+    {
+#if 1
       std::cout << "setting param: " << paramName << "\n";
+#endif
       typename ParamSet::const_iterator it = settings.find(paramName);
       typename ParamSet::const_iterator iend = settings.end();
+
       if(it != iend){
-        set_from_any(param, it->second);
+        param = boost::lexical_cast<T>(it->second);
       }
       else
       {
@@ -197,15 +214,6 @@ public:
       }
 
     }
-
-    template <typename T>
-    static void set_from_any(T& setTo, const boost::spirit::hold_any& setFrom)
-    {
-      std::cout << setFrom << "\n";
-      boost::spirit::hold_any tmp = setFrom;
-      setTo = boost::lexical_cast<T>(tmp);
-    }
-
   };
 
   //#################### PUBLIC TYPEDEFS ####################

@@ -277,7 +277,7 @@ using boost::spirit::hold_any;
 #include <rafl/evaluation/QuantitativePerformance.h>
 #include <rafl/evaluation/CrossValidation.h>
 #include <rafl/evaluation/RandomlyPermuteAndDivideValidation.h>
-#include <rafl/evaluation/ParameterStringGenerator.h>
+#include <rafl/evaluation/ParameterSetProductGenerator.h>
 #include <rafl/evaluation/RFOnlineLearner.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
   }
   
   //Generate parameters of your algorithm.
-  std::vector<ParamSet> params = ParameterStringGenerator()
+  std::vector<ParamSet> params = ParameterSetProductGenerator()
     .add_param("treeCount", list_of<size_t>(1)(3)(5))
     .add_param("splitBudget", list_of<size_t>(pow(2,15))(pow(2,20)))
     .add_param("candidateCount", list_of<int>(256)(512))
@@ -350,7 +350,6 @@ int main(int argc, char *argv[])
   const unsigned int seed = 1234;
   boost::shared_ptr<RFO> randomAlgorithm;
   Results results;
-  //std::map<std::string,QuantitativePerformance> Results;
 
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
@@ -358,15 +357,27 @@ int main(int argc, char *argv[])
     RandomlyPermuteAndDivideValidation<RFO,QuantitativePerformance,Label> rpadv(0.5f, 5, seed);
     QuantitativePerformance performance = rpadv.run(randomAlgorithm, examples);
     std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << performance << std::endl;
-    /*CrossValidation<RFO,QuantitativePerformance,Label> cv(numFolds, seed);
+#if 0
+    CrossValidation<RFO,QuantitativePerformance,Label> cv(numFolds, seed);
     QuantitativePerformance performance = cv.run(randomAlgorithm, examples); 
-    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << performance << std::endl;*/
+    std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << performance << std::endl;
+#endif
     results.push_back(params[n], performance);
-    //Results.insert(std::make_pair(ParameterStringGenerator::to_string(params[n]), performance));
   }
-  results.print_tab_delimited(outputResultPath);
 
-  //std::cout << tvgutil::make_limited_container(Results, 5) << "\n";
+  //Output results to the screen.
+  results.print_tab_delimited(std::cout);
+
+  //Output results to a file.
+  std::ofstream resultsFile(outputResultPath);
+  if(!resultsFile)
+  {
+    std::cout << "Warning could not open file for writing..\n";
+  }
+  else
+  {
+    results.print_tab_delimited(resultsFile);
+  }
 
   return 0;
 }

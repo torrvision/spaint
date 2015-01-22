@@ -18,19 +18,19 @@
 
 namespace rafl {
   
+/**
+ * \brief This class is a wrapper around a random forest and provides tools for online learning and evaluation. 
+ */
 template <typename Label>
 class RFOnlineLearner
 {
-
-    //#################### PUBLIC TYPEDEFS #################### 
+  //#################### PUBLIC TYPEDEFS #################### 
 public:
   typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef std::vector<size_t> Indices;
   typedef std::pair<Indices,Indices> Split;
   typedef DecisionTree<Label> DT; typedef RandomForest<Label> RF;
-
-  //#################### PUBLIC MEMBER VARIABLES #################### 
 
   //#################### PRIVATE MEMBER VARIABLES #################### 
 private:
@@ -42,16 +42,26 @@ private:
 
   //#################### CONSTRUCTOR #################### 
 public:
+  /**
+   * \brief Constructs a random forest with particular parameter settings.
+   *
+   * \param The settings of the random forest.
+   */
   explicit RFOnlineLearner(const ParamSet& settings)
   : m_randomForest(settings)
   {
-    size_t splitBudget = 0; //this is the initial slit budget as it may change over time.
-    #define GET_SETTING(param) DT::Settings::get_from_param_set(settings, param, #param);
+    size_t splitBudget = 0; //this is the initial split budget as it may change over time.
+    #define GET_SETTING(param) DT::Settings::set_from_paramset(settings, param, #param);
       GET_SETTING(splitBudget);
     #undef GET_SETTING
     m_splitBudget = splitBudget;
   }
 
+  /**
+   * \brief Given an offline training set, 
+   * this function trains the random forest on the examples selected by the first split, 
+   * and evaluates the random forest on the examples selected by the second split.
+   */
   QuantitativePerformance cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
   {
     //Add training examples to forest.
@@ -62,12 +72,17 @@ public:
 
     //Predict on the validation set.
     return evaluate(examples, split.second);
-    //return m_rng.generate_real_from_uniform<float>(0.0f, 100.0f);
   }
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
   //#################### PRIVATE MEMBER FUNCTIONS #################### 
 private:
+  /**
+   * \brief This function evaluates the random forest on a set of examples. 
+   *
+   * \param examples  The set of examples to evaluate.
+   * \param incides   The indices of the examples to use in the evaluation.
+   * \return          The quantitative performance. 
+   */
   QuantitativePerformance evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
     size_t indicesSize = indices.size();
@@ -75,14 +90,15 @@ private:
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
     for(size_t i = 0; i < indicesSize; ++i)
     {
-      const Example_CPtr example = examples.at(indices[i]);
+      const Example_CPtr example = examples[indices[i]];
       const Descriptor_CPtr& descriptor = example->get_descriptor();
       expectedLabels[i] = example->get_label();
       classLabels.insert(expectedLabels[i]);
       predictedLabels[i] = m_randomForest.predict(descriptor);
     }
     
-    QuantitativePerformance accuracy(PerfUtil::get_accuracy(PerfUtil::get_conf_mtx(classLabels, expectedLabels, predictedLabels)));
+    //Calculates the quantitative performance measures.
+    QuantitativePerformance accuracy(PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
     return accuracy;
   }
 };
