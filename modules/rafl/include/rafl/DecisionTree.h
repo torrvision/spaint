@@ -9,14 +9,13 @@
 #include <set>
 #include <stdexcept>
 
-#include <boost/spirit/home/support/detail/hold_any.hpp>
-#include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
 #include "decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h"
+#include "evaluation/ParameterSetProductGenerator.h"
 #include "examples/ExampleReservoir.h"
 #include "examples/ExampleUtil.h"
 
@@ -75,7 +74,7 @@ public:
     //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
   private:
     typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
-    typedef std::map<std::string,hold_any> ParamSet;
+    typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
   public:
@@ -124,7 +123,7 @@ public:
 
       boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
 
-      std::string decisionFunctionGeneratorName = "";
+      std::string decisionFunctionGeneratorName;
       unsigned int randomSeed = 0;
 
       #define GET_SETTING(setting) PropertyUtil::get_required_property(tree, #setting, setting);
@@ -151,7 +150,7 @@ public:
     explicit Settings(const ParamSet& settings)
     {
 
-      std::string decisionFunctionGeneratorName = "";
+      std::string decisionFunctionGeneratorName;
       unsigned int randomSeed = 0;
 
       #define GET_SETTING(param) set_from_paramset(settings, param, #param);

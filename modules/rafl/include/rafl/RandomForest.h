@@ -8,8 +8,7 @@
 #include <map>
 #include <string>
 
-#include <boost/spirit/home/support/detail/hold_any.hpp>
-
+#include "evaluation/ParameterSetProductGenerator.h"
 #include "DecisionTree.h"
 
 namespace rafl {
@@ -25,7 +24,7 @@ private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef DecisionTree<Label> DT;
   typedef boost::shared_ptr<DT> DT_Ptr;
-  typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
+  typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
   //#################### PRIVATE VARIABLES ####################
 private:

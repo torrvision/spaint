@@ -14,9 +14,9 @@ BOOST_AUTO_TEST_SUITE(test_ParameterSetProductGenerator)
 BOOST_AUTO_TEST_CASE(get_foo_test)
 {
   std::vector<ParamSet> settings = ParameterSetProductGenerator()
-    .add_param("BumbleBees", list_of(3)(5))
+    .add_param("BumbleBees", list_of<int>(3)(5)(11))
     .add_param("Algorithm", list_of<std::string>("Foo")("Bar"))
-    .add_param("Dummies", list_of(9.0f)(100.0f))
+    .add_param("Dummies", list_of<float>(9.93f))
     .generate_maps();
 
   std::vector<std::string> settingStrings;
@@ -25,15 +25,19 @@ BOOST_AUTO_TEST_CASE(get_foo_test)
     settingStrings.push_back(ParameterSetProductGenerator::to_string(settings[i]));
   }
 
+  std::vector<std::string> trueStrings;
+  trueStrings.push_back("Algorithm-Foo_BumbleBees-3_Dummies-9.93");
+  trueStrings.push_back("Algorithm-Bar_BumbleBees-3_Dummies-9.93");
+  trueStrings.push_back("Algorithm-Foo_BumbleBees-5_Dummies-9.93");
+  trueStrings.push_back("Algorithm-Bar_BumbleBees-5_Dummies-9.93");
+  trueStrings.push_back("Algorithm-Foo_BumbleBees-11_Dummies-9.93");
+  trueStrings.push_back("Algorithm-Bar_BumbleBees-11_Dummies-9.93");
+
   for(size_t i = 0, iend = settingStrings.size(); i < iend; ++i)
   {
-    std::cout << settingStrings[i] << "\n";
+    BOOST_CHECK_EQUAL(settingStrings[i], trueStrings[i]);
   }
 
-  std::vector<std::string> trueStrings;
-  trueStrings.push_back("-n 3");
-
- //BOOST_CHECK_EQUAL(testConfMtxNormL1, trueConfMtxNormL1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
