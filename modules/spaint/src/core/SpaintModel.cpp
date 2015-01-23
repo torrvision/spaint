@@ -10,7 +10,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib)
+SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 : m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings)
 {
   // Set up the scene.
@@ -22,7 +22,7 @@ SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImag
   m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
   // Set up the scene view.
-  m_view.reset(new ITMView(calib, rgbImageSize, depthImageSize, settings.deviceType == ITMLibSettings::DEVICE_CUDA));
+  m_view.reset(new ITMView);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

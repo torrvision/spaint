@@ -24,7 +24,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
     // Use the GPU implementation of the visualisation engine.
     m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
-    // This should never happen as things stand - we set useGPU to false if CUDA support isn't available.
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
@@ -35,10 +35,8 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   }
 
   // Set up the live render state.
-  m_liveRenderState.reset(m_visualisationEngine->CreateRenderState(
-    model->get_scene().get(),
-    ITMTrackerFactory::GetTrackedImageSize(model->get_settings(), model->get_rgb_image_size(), model->get_depth_image_size())
-  ));
+  Vector2i trackedImageSize = ITMTrackerFactory::GetTrackedImageSize(model->get_settings(), model->get_rgb_image_size(), model->get_depth_image_size());
+  m_liveRenderState.reset(m_visualisationEngine->CreateRenderState(model->get_scene().get(),trackedImageSize));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

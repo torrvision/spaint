@@ -53,41 +53,8 @@ void SpaintPipeline::process_frame()
   const SpaintModel::View_Ptr& view = m_model->get_view();
 
   // Get the next frame.
-  m_imageSourceEngine->getImages(view.get());
-
-  // If we're using the GPU, transfer the relevant images in the frame across to it.
-  if(m_model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-    view->rgb->UpdateDeviceFromHost();
-
-    switch(view->inputImageType)
-    {
-      case ITMView::InfiniTAM_FLOAT_DEPTH_IMAGE:
-        view->depth->UpdateDeviceFromHost();
-        break;
-      case ITMView::InfiniTAM_SHORT_DEPTH_IMAGE:
-      case ITMView::InfiniTAM_DISPARITY_IMAGE:
-        view->rawDepth->UpdateDeviceFromHost();
-        break;
-      default:
-        // This should never happen.
-        throw std::runtime_error("Error: SpaintPipeline::process_frame: Unknown input image type");
-    }
-  }
-
-  // If the frame only contains a short depth image or a disparity image, make a proper floating-point depth image from what we have.
-  // Note that this will automatically run on either the GPU or the CPU behind the scenes, depending on which mode we're in.
-  switch(view->inputImageType)
-  {
-    case ITMView::InfiniTAM_SHORT_DEPTH_IMAGE:
-      m_lowLevelEngine->ConvertDepthMMToFloat(view->depth, view->rawDepth);
-      break;
-    case ITMView::InfiniTAM_DISPARITY_IMAGE:
-      m_lowLevelEngine->ConvertDisparityToDepth(view->depth, view->rawDepth, &view->calib->intrinsics_d, &view->calib->disparityCalib);
-      break;
-    default:
-      break;
-  }
+  m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
+  m_viewBuilder->UpdateView(m_model->get_view().get(), m_inputRGBImage.get(), m_inputRawDepthImage.get());
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted)
@@ -159,10 +126,15 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
   Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
+  // Set up the RGB and raw depth images into which input is to be read each frame.
+  m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, false));
+  m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, false));
+
   // Set up the spaint model.
-  m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize, m_imageSourceEngine->calib));
+  m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize));
 
   // Set up the InfiniTAM engines.
+  const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
   if(settings.deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
@@ -170,8 +142,9 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
     if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
+    m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib, settings.deviceType));
 #else
-    // This should never happen as things stand - we set useGPU to false if CUDA support isn't available.
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
@@ -181,6 +154,7 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
     if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
+    m_viewBuilder.reset(new ITMViewBuilder_CPU(calib, settings.deviceType));
   }
 
   // Set up the raycaster.

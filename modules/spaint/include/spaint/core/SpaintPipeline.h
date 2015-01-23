@@ -18,16 +18,25 @@ class SpaintPipeline
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<ITMSceneReconstructionEngine<SpaintVoxel,ITMVoxelIndex> > SceneReconstructionEngine_Ptr;
   typedef boost::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
   typedef boost::shared_ptr<ITMTracker> Tracker_Ptr;
+  typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
+
+  /** The image into which depth input is to be read each frame. */
+  ITMShortImage_Ptr m_inputRawDepthImage;
+
+  /** The image into which RGB input is to be read each frame. */
+  ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
@@ -52,6 +61,9 @@ private:
 
   /** The secondary camera tracker. */
   Tracker_Ptr m_trackerSecondary;
+
+  /** The view builder. */
+  ViewBuilder_Ptr m_viewBuilder;
 
   //#################### CONSTRUCTORS ####################
 public:

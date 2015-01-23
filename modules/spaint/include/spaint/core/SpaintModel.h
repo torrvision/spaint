@@ -60,9 +60,8 @@ public:
    * \param settings        The settings to use for InfiniTAM.
    * \param rgbImageSize    The dimensions of the RGB images from which the scene is being reconstructed.
    * \param depthImageSize  The dimensions of the depth images from which the scene is being reconstructed.
-   * \param calib           The calibration parameters for the RGB-D camera from which the scene is being reconstructed.
    */
-  SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib);
+  SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
