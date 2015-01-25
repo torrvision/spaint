@@ -92,16 +92,10 @@ private:
   /**
    * \brief Prepares to copy a visualisation image into the specified output image.
    *
-   * \param input   The visualisation image to be copied.
-   * \param output  The output image to which it will be copied.
+   * \param input   The size of the visualisation image to be copied.
+   * \param output  The output image to which the visualisation image will be copied.
    */
-  template <typename T>
-  void prepare_to_copy_visualisation(ORUtils::Image<T> *input, const UChar4Image_Ptr& output) const
-  {
-    output->Clear();
-    if(m_model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA) input->UpdateHostFromDevice();
-    output->ChangeDims(input->noDims);
-  }
+  void prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -127,13 +127,13 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
-  m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, false));
-  m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, false));
+  m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, true));
+  m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, true));
 
   // Set up the spaint model.
   m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize));
 
-  // Set up the InfiniTAM engines.
+  // Set up the InfiniTAM engines and view builder.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
   if(settings.deviceType == ITMLibSettings::DEVICE_CUDA)
   {
@@ -142,7 +142,7 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
     if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
-    m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib, settings.deviceType));
+    m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -154,8 +154,11 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
     if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
-    m_viewBuilder.reset(new ITMViewBuilder_CPU(calib, settings.deviceType));
+    m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
   }
+
+  // Allocate the view.
+  m_viewBuilder->AllocateView(m_model->get_view().get(), rgbImageSize, depthImageSize);
 
   // Set up the raycaster.
   m_raycaster.reset(new SpaintRaycaster(m_model));

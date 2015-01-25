@@ -100,7 +100,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   for(int i = 0; i < ovrEye_Count; ++i)
   {
-    m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, MEMORYDEVICE_CPU));
+    m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, true, true));
   }
   glGenTextures(ovrEye_Count, m_eyeTextureIDs);
 }
