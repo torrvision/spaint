@@ -1,9 +1,9 @@
 /**
- * spaint: SemanticRaycastImpl_Shared.h
+ * spaint: SemanticVisualiser_Shared.h
  */
 
-#ifndef H_SPAINT_SEMANTICRAYCASTIMPL_SHARED
-#define H_SPAINT_SEMANTICRAYCASTIMPL_SHARED
+#ifndef H_SPAINT_SEMANTICVISUALISER_SHARED
+#define H_SPAINT_SEMANTICVISUALISER_SHARED
 
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 #include <ITMLib/Engine/DeviceAgnostic/ITMVisualisationEngine.h>

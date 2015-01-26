@@ -1,18 +1,18 @@
 /**
- * spaint: SemanticRaycastImpl_CUDA.h
+ * spaint: SemanticVisualiser_CPU.h
  */
 
-#ifndef H_SPAINT_SEMANTICRAYCASTIMPL_CUDA
-#define H_SPAINT_SEMANTICRAYCASTIMPL_CUDA
+#ifndef H_SPAINT_SEMANTICVISUALISER_CPU
+#define H_SPAINT_SEMANTICVISUALISER_CPU
 
-#include "../interface/SemanticRaycastImpl.h"
+#include "../interface/SemanticVisualiser.h"
 
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to generate a semantic raycast of an InfiniTAM scene using CUDA.
+ * \brief An instance of this class can be used to generate a semantic raycast of an InfiniTAM scene using the CPU.
  */
-class SemanticRaycastImpl_CUDA : public SemanticRaycastImpl
+class SemanticVisualiser_CPU : public SemanticVisualiser
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

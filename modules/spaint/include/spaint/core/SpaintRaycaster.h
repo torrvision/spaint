@@ -8,7 +8,7 @@
 #include <boost/optional.hpp>
 
 #include "SpaintModel.h"
-#include "multiplatform/interface/SemanticRaycastImpl.h"
+#include "multiplatform/interface/SemanticVisualiser.h"
 
 namespace spaint {
 
@@ -29,7 +29,7 @@ public:
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief An enumeration specifying the different types of free-view raycasting that are supported.
    */
   enum RaycastType
   {
@@ -49,8 +49,8 @@ private:
   /** An image into which the raycast result may be copied when performing picking. */
   mutable Float4Image_Ptr m_raycastResult;
 
-  /** The platform-specific implementation of semantic raycasting. */
-  boost::shared_ptr<const SemanticRaycastImpl> m_semanticRaycastImpl;
+  /** The platform-specific semantic visualiser. */
+  boost::shared_ptr<const SemanticVisualiser> m_semanticVisualiser;
 
   /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_Ptr m_visualisationEngine;

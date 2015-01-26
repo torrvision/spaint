@@ -1,18 +1,18 @@
 /**
- * spaint: SemanticRaycastImpl_CPU.cpp
+ * spaint: SemanticVisualiser_CPU.cpp
  */
 
-#include "core/multiplatform/cpu/SemanticRaycastImpl_CPU.h"
+#include "core/multiplatform/cpu/SemanticVisualiser_CPU.h"
 
-#include "core/multiplatform/shared/SemanticRaycastImpl_Shared.h"
+#include "core/multiplatform/shared/SemanticVisualiser_Shared.h"
 
 namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SemanticRaycastImpl_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
-                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                     ITMUChar4Image *outputImage) const
+void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                                    const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                                    ITMUChar4Image *outputImage) const
 {
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();

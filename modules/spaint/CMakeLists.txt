@@ -40,30 +40,30 @@ include/spaint/core/SpaintRaycaster.h
 
 ##
 SET(core_multiplatform_cpu_sources
-src/core/multiplatform/cpu/SemanticRaycastImpl_CPU.cpp
+src/core/multiplatform/cpu/SemanticVisualiser_CPU.cpp
 )
 
 SET(core_multiplatform_cpu_headers
-include/spaint/core/multiplatform/cpu/SemanticRaycastImpl_CPU.h
+include/spaint/core/multiplatform/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
 SET(core_multiplatform_cuda_sources
-src/core/multiplatform/cuda/SemanticRaycastImpl_CUDA.cu
+src/core/multiplatform/cuda/SemanticVisualiser_CUDA.cu
 )
 
 SET(core_multiplatform_cuda_headers
-include/spaint/core/multiplatform/cuda/SemanticRaycastImpl_CUDA.h
+include/spaint/core/multiplatform/cuda/SemanticVisualiser_CUDA.h
 )
 
 ##
 SET(core_multiplatform_interface_headers
-include/spaint/core/multiplatform/interface/SemanticRaycastImpl.h
+include/spaint/core/multiplatform/interface/SemanticVisualiser.h
 )
 
 ##
 SET(core_multiplatform_shared_headers
-include/spaint/core/multiplatform/shared/SemanticRaycastImpl_Shared.h
+include/spaint/core/multiplatform/shared/SemanticVisualiser_Shared.h
 )
 
 ##

@@ -1,10 +1,10 @@
 /**
- * spaint: SemanticRaycastImpl_CUDA.cu
+ * spaint: SemanticVisualiser_CUDA.cu
  */
 
-#include "core/multiplatform/cuda/SemanticRaycastImpl_CUDA.h"
+#include "core/multiplatform/cuda/SemanticVisualiser_CUDA.h"
 
-#include "core/multiplatform/shared/SemanticRaycastImpl_Shared.h"
+#include "core/multiplatform/shared/SemanticVisualiser_Shared.h"
 
 namespace spaint {
 
@@ -23,9 +23,9 @@ __global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *pt
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SemanticRaycastImpl_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
-                                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                      ITMUChar4Image *outputImage) const
+void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                                     ITMUChar4Image *outputImage) const
 {
   // Set up the label colours (quick hack).
   ORUtils::MemoryBlock<Vector3u> labelColours(4 * sizeof(Vector3u), true, true);

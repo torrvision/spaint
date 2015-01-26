@@ -10,9 +10,9 @@
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
-#include "core/multiplatform/cpu/SemanticRaycastImpl_CPU.h"
+#include "core/multiplatform/cpu/SemanticVisualiser_CPU.h"
 #ifdef WITH_CUDA
-#include "core/multiplatform/cuda/SemanticRaycastImpl_CUDA.h"
+#include "core/multiplatform/cuda/SemanticVisualiser_CUDA.h"
 #endif
 
 namespace spaint {
@@ -27,7 +27,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   {
 #ifdef WITH_CUDA
     // Use the GPU implementations.
-    m_semanticRaycastImpl.reset(new SemanticRaycastImpl_CUDA);
+    m_semanticVisualiser.reset(new SemanticVisualiser_CUDA);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
@@ -37,7 +37,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   else
   {
     // Use the CPU implementations.
-    m_semanticRaycastImpl.reset(new SemanticRaycastImpl_CPU);
+    m_semanticVisualiser.reset(new SemanticVisualiser_CPU);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
   }
 
@@ -75,7 +75,7 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     case RT_SEMANTIC:
     {
       m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
-      m_semanticRaycastImpl->render(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage);
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage);
       break;
     }
     default:
