@@ -14,6 +14,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
                                     ITMUChar4Image *outputImage) const
 {
+  // TODO: Get rid of this bit (after checking to make sure that's ok).
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
 
@@ -39,6 +40,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
 
     castRay<SpaintVoxel,ITMVoxelIndex>(pointsRay[locId], x, y, voxelData, voxelIndex, invM, projParams, oneOverVoxelSize, mu, minmaximg[locId2]);
   }
+  // END TODO
 
   Vector3u labelColours[] =
   {

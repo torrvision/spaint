@@ -10,7 +10,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to generate a semantic raycast of an InfiniTAM scene using the CPU.
+ * \brief An instance of this class can be used to generate a semantic visualisation of an InfiniTAM scene using the CPU.
  */
 class SemanticVisualiser_CPU : public SemanticVisualiser
 {
