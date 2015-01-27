@@ -14,6 +14,12 @@ namespace rafl {
 typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+ParameterSetProductGenerator& ParameterSetProductGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options)
+{
+  m_paramOptions.push_back(std::make_pair(param, options));
+  return *this;
+}
+
 std::vector<std::map<std::string,hold_any> > ParameterSetProductGenerator::generate_maps() const
 {
   return generate_maps_for_params(0);

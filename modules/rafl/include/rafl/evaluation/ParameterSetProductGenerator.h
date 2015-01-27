@@ -1,3 +1,7 @@
+/**
+ * rafl: ParameterSetProductGenerator.h
+ */
+
 #ifndef H_RAFL_PARAMETERSETPRODUCTGENERATOR
 #define H_RAFL_PARAMETERSETPRODUCTGENERATOR
 
@@ -24,17 +28,9 @@ public:
 private:
 std::vector<std::pair<std::string,std::vector<boost::spirit::hold_any> > > m_paramOptions;
 
-  //#################### CONSTRUCTORS ####################
-public:
-  ParameterSetProductGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options)
-  {
-    m_paramOptions.push_back(std::make_pair(param, options));
-    return *this;
-  }
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  //std::vector<std::string> generate_strings() const;
+  ParameterSetProductGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options);
 
   std::vector<std::map<std::string,boost::spirit::hold_any> > generate_maps() const;
 

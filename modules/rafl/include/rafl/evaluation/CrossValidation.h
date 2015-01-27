@@ -20,10 +20,10 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class finds the Result of running an Algorithm on a set of Examples via n-fold
+ * \brief An instance of this class finds the QuantitativePerformance of running an Algorithm on a set of Examples via n-fold
  * cross-validation.
  */
-template <typename Algorithm, typename Result, typename Label>
+template <typename Algorithm, typename QuantitativePerformance, typename Label>
 class CrossValidation
 {
   //#################### PRIVATE TYPEDEFS ####################
@@ -64,28 +64,28 @@ public:
   /**
    * \brief Runs the cross-validation with a particular Algorithm and set of examples.
    *
-   * \param algorithm  A general object whose output is of type Result.
+   * \param algorithm  A general object whose output is of type QuantitativePerformance.
    * \param examples   The vector of examples making up the data on which to evaluate the Algorithm.
    *
-   * \return           The Result quantifying the average performance of the algorithm over the folds.
+   * \return           The QuantitativePerformance quantifying the average performance of the algorithm over the folds.
    */
-  Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
+  QuantitativePerformance run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
   {
     initialise_splits(examples.size());
 
-    std::vector<Result> performance;
+    std::vector<QuantitativePerformance> performance;
     for(size_t i = 0; i < m_foldCount; ++i)
     {
       performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
     }
 
-    Result averageResults(performance);
+    QuantitativePerformance averagePerformance = QuantitativePerformance::average(performance);
 
-    return averageResults;
+    return averagePerformance;
   }
 
   /**
-   * \brief Access the number of folds.
+   * \brief Gets the number of folds.
    *
    * \return The number of folds.
    */

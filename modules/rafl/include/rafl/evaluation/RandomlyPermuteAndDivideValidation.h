@@ -87,9 +87,7 @@ public:
       performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
     }
 
-    QuantitativePerformance average(performance);
-
-    return average;
+    return QuantitativePerformance::average(performance);
   }
 
   /**

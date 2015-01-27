@@ -34,7 +34,7 @@ private:
   /** The number of samples used to generate the performance measures. */
   size_t m_samples;
 
-  //#################### CONSTRUCTORS ####################
+  //#################### PUBLIC CONSTRUCTOR ####################
 public:
   /**
    * \brief Constructs a quantitative performance measure from a single sample.
@@ -48,27 +48,48 @@ public:
     m_accuracy.stdDev = 0.0f;
   }
 
+  //#################### PRIVATE CONSTRUCTOR ####################
+private:
+  /**
+   * \brief Constructs an arbitrary quantitative performance measure.
+   *
+   * \param accuracy   The accuracy measured from one sample.
+   * \param stdDev     The standard deviation of the accuracy samples.
+   * \param samples    The number of samples used to calculate the standard deviation. 
+   */
+  QuantitativePerformance(float accuracy, float stdDev, float sampleCount)
+  : m_samples(sampleCount)
+  {
+    m_accuracy.mean = accuracy;
+    m_accuracy.stdDev = stdDev;
+  }
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Constructs a single quantitative perofrmance measure form a vector of them.
    *
    * \param qpv    A vector of quantitative performance measures.
    */
-  explicit QuantitativePerformance(const std::vector<QuantitativePerformance> qpv)
-  : m_samples(qpv.size())
+  static QuantitativePerformance average(const std::vector<QuantitativePerformance> qpv)
   {
+    size_t sampleCount = qpv.size();
+
     float sumMean = 0;
-    for(size_t i = 0; i < m_samples; ++i)
+    for(size_t i = 0; i < sampleCount; ++i)
     {
       sumMean += qpv[i].mean_accuracy();
     }
-    m_accuracy.mean = sumMean / m_samples;
+    float mean = sumMean / sampleCount;
 
     float sumVariance = 0;
-    for(size_t i = 0; i < m_samples; ++i)
+    for(size_t i = 0; i < sampleCount; ++i)
     {
-      sumVariance += pow(m_accuracy.mean - qpv[i].mean_accuracy(), 2);
+      sumVariance += pow(mean - qpv[i].mean_accuracy(), 2);
     }
-    m_accuracy.stdDev = sqrt(sumVariance / m_samples);
+    float variance = sqrt(sumVariance / sampleCount);
+
+    return QuantitativePerformance(mean, variance, sampleCount);
   }
 
   /**
