@@ -18,7 +18,7 @@ __global__ void renderSemantic_device(Vector4u *outRendering, const Vector4f *pt
 
   int locId = y * imgSize.x + x;
   Vector4f ptRay = ptsRay[locId];
-  processPixelSemantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, lightSource, labelColours);
+  shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, lightSource, labelColours);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -10,7 +10,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to generate a semantic visualisation of an InfiniTAM scene using CUDA.
+ * \brief An instance of this class can be used to render a semantic visualisation of an InfiniTAM scene using CUDA.
  */
 class SemanticVisualiser_CUDA : public SemanticVisualiser
 {

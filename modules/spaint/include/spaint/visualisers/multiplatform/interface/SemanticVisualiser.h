@@ -15,7 +15,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of a class deriving from this one can be used to generate a semantic visualisation of an InfiniTAM scene.
+ * \brief An instance of a class deriving from this one can be used to render a semantic visualisation of an InfiniTAM scene.
  *
  * By "semantic visualisation", we mean an image showing the voxels of the scene labelled with various different classes, e.g. floor, table, etc.
  */
