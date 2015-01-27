@@ -6,6 +6,7 @@
 #define H_RAFL_RANDOMFOREST
 
 #include <map>
+#include <numeric>
 #include <string>
 
 #include "evaluation/ParameterSetProductGenerator.h"
@@ -52,12 +53,12 @@ public:
    *
    * \param settings The settings map needed to configure the random forest and decision trees.
    */
-  RandomForest(const ParamSet& settings)
+  explicit RandomForest(const ParamSet& settings)
   {
     size_t treeCount = 0;
     #define GET_SETTING(param) DT::Settings::set_from_paramset(settings, param, #param);
       GET_SETTING(treeCount);
-    #undef SET_SETTING
+    #undef GET_SETTING
 
     typename DT::Settings dtSettings( settings );
 
@@ -76,17 +77,18 @@ public:
    */
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
-    // Add the new examples to the different trees.
-    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
-    {
-      (*it)->add_examples(examples);
-    }
+    //Create a vector of indices indicating all examples should be added to the tree.
+    std::vector<size_t> indices(examples.size());
+    std::iota(indices.begin(), indices.end(), 0);
+
+    add_examples(examples, indices);
   }
 
   /**
    * \brief Adds new training examples to the forest.
    *
    * \param examples  The examples to be added.
+   * \param indices   A vector holding the indices of the examples to add to the decision trees in the random forest.
    */
   void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {

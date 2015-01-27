@@ -32,7 +32,6 @@ SET(decisionfunctions_sources
 src/decisionfunctions/FeatureThresholdingDecisionFunction.cpp
 )
 
-##
 SET(decisionfunctions_headers
 include/rafl/decisionfunctions/DecisionFunction.h
 include/rafl/decisionfunctions/DecisionFunctionGenerator.h
@@ -47,7 +46,6 @@ src/evaluation/PerfUtil.cpp
 src/evaluation/Results.cpp
 )
 
-##
 SET(evaluation_headers
 include/rafl/evaluation/CrossValidation.h
 include/rafl/evaluation/ParameterSetProductGenerator.h
@@ -84,6 +82,7 @@ ${evaluation_sources}
 SET(headers
 ${base_headers}
 ${decisionfunctions_headers}
+${evaluation_sources}
 ${examples_headers}
 ${toplevel_headers}
 )

@@ -6,6 +6,7 @@
 #define H_RAFL_DECISIONTREE
 
 #include <functional>
+#include <numeric>
 #include <set>
 #include <stdexcept>
 
@@ -202,9 +203,8 @@ public:
       std::cout << "setting param: " << paramName << "\n";
 #endif
       typename ParamSet::const_iterator it = settings.find(paramName);
-      typename ParamSet::const_iterator iend = settings.end();
 
-      if(it != iend){
+      if(it != settings.end()){
         param = boost::lexical_cast<T>(it->second);
       }
       else
@@ -264,24 +264,22 @@ public:
    */
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
-    // Add each example to the tree.
-    for(typename std::vector<Example_CPtr>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
-    {
-      add_example(*it);
-    }
+    //Create a vector of indices indicating all examples should be added to the tree.
+    std::vector<size_t> indices(examples.size());
+    std::iota(indices.begin(), indices.end(), 0);
 
-    update_dirty_nodes();
+    add_examples(examples, indices);
   }
 
   /**
    * \brief Adds new training examples to the decision tree.
    *
    * \param examples  The examples to be added.
-   * \param indices   The indices of examples to be added.
+   * \param indices   The indices of examples to be added to the decision tree.
    */
   void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
-    // Add each example to the tree.
+    // Add each example indicated in the indices list to the tree.
     for(size_t i = 0, iend = indices.size(); i < iend; ++i)
     {
       add_example(examples.at(indices[i]));

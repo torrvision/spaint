@@ -37,7 +37,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The number of folds. */
-  size_t m_num_folds;
+  size_t m_foldCount;
 
   /** A random number generator. */
   tvgutil::RandomNumberGenerator m_rng;
@@ -50,13 +50,13 @@ public:
   /**
    * \brief Creates a general cross-validation object.
    *
-   * \param num_folds  The number of folds with which to split the dataset of examples.
+   * \param foldCount  The number of folds with which to split the dataset of examples.
    * \param seed       The seed of the random number generator.
    */
-  CrossValidation(size_t num_folds, unsigned int seed)
-  : m_num_folds(num_folds), m_rng(seed)
+  CrossValidation(size_t foldCount, unsigned int seed)
+  : m_foldCount(foldCount), m_rng(seed)
   {
-    assert(m_num_folds > 1);
+    assert(m_foldCount > 1);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -74,7 +74,7 @@ public:
     initialise_splits(examples.size());
 
     std::vector<Result> performance;
-    for(size_t i = 0; i < m_num_folds; ++i)
+    for(size_t i = 0; i < m_foldCount; ++i)
     {
       performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
     }
@@ -89,9 +89,9 @@ public:
    *
    * \return The number of folds.
    */
-  size_t num_folds() const
+  size_t foldCount() const
   {
-    return m_num_folds;
+    return m_foldCount;
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -103,13 +103,13 @@ private:
    */
   void initialise_splits(size_t size)
   {
-    assert(m_num_folds <= size);
+    assert(m_foldCount <= size);
 
     //Generate a vector which will be used to assign an example to a random fold.
     std::vector<unsigned int> splitLabel(size);
     for(size_t i = 0; i < size; ++i)
     {
-      splitLabel[i] = m_rng.generate_int_from_uniform(0, m_num_folds - 1);
+      splitLabel[i] = m_rng.generate_int_from_uniform(0, m_foldCount - 1);
     }
 
 #if 1
@@ -118,7 +118,7 @@ private:
 
     //For each fold, split the data in two, the first set contains all examples except those indicated by validationFold.
     int validationFold = 0;
-    for(size_t fold = 0; fold < m_num_folds; ++fold)
+    for(size_t fold = 0; fold < m_foldCount; ++fold)
     {
       Split splitSet;
       for(size_t index = 0; index < size; ++index)
