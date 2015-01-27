@@ -20,7 +20,7 @@ void SemanticRaycastImpl_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel
   Vector2i imgSize = outputImage->noDims;
   float oneOverVoxelSize = 1.0f / scene->sceneParams->voxelSize;
 
-  Matrix4f invM = pose->invM;
+  Matrix4f invM = pose->GetInvM();
   Vector4f projParams = intrinsics->projectionParamsSimple.all;
   projParams.x = 1.0f / projParams.x;
   projParams.y = 1.0f / projParams.y;

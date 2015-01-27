@@ -45,7 +45,7 @@ void SemanticRaycastImpl_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxe
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     imgSize,
-    -Vector3f(pose->invM.getColumn(2)),
+    -Vector3f(pose->GetInvM().getColumn(2)),
     labelColours.GetData(MEMORYDEVICE_CUDA)
   );
 }
