@@ -94,7 +94,7 @@ void SpaintPipeline::process_frame()
     }
     case ITMLibSettings::TRACKER_COLOR:
     {
-      ITMPose rgbPose(view->calib->trafo_rgb_to_depth.calib_inv * trackingState->pose_d->M);
+      ITMPose rgbPose(view->calib->trafo_rgb_to_depth.calib_inv * trackingState->pose_d->GetM());
       visualisationEngine->CreateExpectedDepths(scene.get(), &rgbPose, &view->calib->intrinsics_rgb, liveRenderState.get());
       visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), liveRenderState.get(), m_model->get_settings().skipPoints);
       break;
