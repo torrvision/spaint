@@ -39,39 +39,6 @@ include/spaint/core/SpaintRaycaster.h
 )
 
 ##
-SET(core_multiplatform_cpu_sources
-src/core/multiplatform/cpu/SemanticVisualiser_CPU.cpp
-)
-
-SET(core_multiplatform_cpu_headers
-include/spaint/core/multiplatform/cpu/SemanticVisualiser_CPU.h
-)
-
-##
-SET(core_multiplatform_cuda_sources
-src/core/multiplatform/cuda/SemanticVisualiser_CUDA.cu
-)
-
-SET(core_multiplatform_cuda_headers
-include/spaint/core/multiplatform/cuda/SemanticVisualiser_CUDA.h
-)
-
-##
-SET(core_multiplatform_interface_headers
-include/spaint/core/multiplatform/interface/SemanticVisualiser.h
-)
-
-##
-SET(core_multiplatform_shared_headers
-include/spaint/core/multiplatform/shared/SemanticVisualiser_Shared.h
-)
-
-##
-SET(core_voxels_headers
-include/spaint/core/voxels/SpaintVoxel.h
-)
-
-##
 SET(input_sources
 src/input/InputState.cpp
 )
@@ -93,6 +60,35 @@ src/util/CameraPoseConverter.cpp
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
+include/spaint/util/SpaintVoxel.h
+)
+
+##
+SET(visualisers_multiplatform_cpu_sources
+src/visualisers/multiplatform/cpu/SemanticVisualiser_CPU.cpp
+)
+
+SET(visualisers_multiplatform_cpu_headers
+include/spaint/visualisers/multiplatform/cpu/SemanticVisualiser_CPU.h
+)
+
+##
+SET(visualisers_multiplatform_cuda_sources
+src/visualisers/multiplatform/cuda/SemanticVisualiser_CUDA.cu
+)
+
+SET(visualisers_multiplatform_cuda_headers
+include/spaint/visualisers/multiplatform/cuda/SemanticVisualiser_CUDA.h
+)
+
+##
+SET(visualisers_multiplatform_interface_headers
+include/spaint/visualisers/multiplatform/interface/SemanticVisualiser.h
+)
+
+##
+SET(visualisers_multiplatform_shared_headers
+include/spaint/visualisers/multiplatform/shared/SemanticVisualiser_Shared.h
 )
 
 #################################################################
@@ -101,25 +97,25 @@ include/spaint/util/CameraPoseConverter.h
 
 SET(sources
 ${core_sources}
-${core_multiplatform_cpu_sources}
 ${input_sources}
 ${util_sources}
+${visualisers_sources}
+${visualisers_multiplatform_cpu_sources}
 )
 
 SET(headers
 ${core_headers}
-${core_multiplatform_cpu_headers}
-${core_multiplatform_interface_headers}
-${core_multiplatform_shared_headers}
-${core_voxels_headers}
 ${input_headers}
 ${ogl_headers}
 ${util_headers}
+${visualisers_multiplatform_cpu_headers}
+${visualisers_multiplatform_interface_headers}
+${visualisers_multiplatform_shared_headers}
 )
 
 IF(WITH_CUDA)
-  SET(sources ${sources} ${core_multiplatform_cuda_sources})
-  SET(headers ${headers} ${core_multiplatform_cuda_headers})
+  SET(sources ${sources} ${visualisers_multiplatform_cuda_sources})
+  SET(headers ${headers} ${visualisers_multiplatform_cuda_headers})
 ENDIF()
 
 #############################
@@ -127,14 +123,13 @@ ENDIF()
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
-SOURCE_GROUP(core\\multiplatform\\cpu FILES ${core_multiplatform_cpu_sources} ${core_multiplatform_cpu_headers})
-SOURCE_GROUP(core\\multiplatform\\cuda FILES ${core_multiplatform_cuda_sources} ${core_multiplatform_cuda_headers})
-SOURCE_GROUP(core\\multiplatform\\interface FILES ${core_multiplatform_interface_headers})
-SOURCE_GROUP(core\\multiplatform\\shared FILES ${core_multiplatform_shared_headers})
-SOURCE_GROUP(core\\voxels FILES ${core_voxels_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
+SOURCE_GROUP(visualisers\\multiplatform\\cpu FILES ${visualisers_multiplatform_cpu_sources} ${visualisers_multiplatform_cpu_headers})
+SOURCE_GROUP(visualisers\\multiplatform\\cuda FILES ${visualisers_multiplatform_cuda_sources} ${visualisers_multiplatform_cuda_headers})
+SOURCE_GROUP(visualisers\\multiplatform\\interface FILES ${visualisers_multiplatform_interface_headers})
+SOURCE_GROUP(visualisers\\multiplatform\\shared FILES ${visualisers_multiplatform_shared_headers})
 
 ##########################################
 # Specify additional include directories #

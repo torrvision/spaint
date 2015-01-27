@@ -8,7 +8,7 @@
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 #include <ITMLib/Engine/DeviceAgnostic/ITMVisualisationEngine.h>
 
-#include "../../voxels/SpaintVoxel.h"
+#include "../../../util/SpaintVoxel.h"
 
 namespace spaint {
 

@@ -2,9 +2,9 @@
  * spaint: SemanticVisualiser_CUDA.cu
  */
 
-#include "core/multiplatform/cuda/SemanticVisualiser_CUDA.h"
+#include "visualisers/multiplatform/cuda/SemanticVisualiser_CUDA.h"
 
-#include "core/multiplatform/shared/SemanticVisualiser_Shared.h"
+#include "visualisers/multiplatform/shared/SemanticVisualiser_Shared.h"
 
 namespace spaint {
 

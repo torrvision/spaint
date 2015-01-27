@@ -10,9 +10,9 @@
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
-#include "core/multiplatform/cpu/SemanticVisualiser_CPU.h"
+#include "visualisers/multiplatform/cpu/SemanticVisualiser_CPU.h"
 #ifdef WITH_CUDA
-#include "core/multiplatform/cuda/SemanticVisualiser_CUDA.h"
+#include "visualisers/multiplatform/cuda/SemanticVisualiser_CUDA.h"
 #endif
 
 namespace spaint {

@@ -10,7 +10,7 @@
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "../../voxels/SpaintVoxel.h"
+#include "../../../util/SpaintVoxel.h"
 
 namespace spaint {
 

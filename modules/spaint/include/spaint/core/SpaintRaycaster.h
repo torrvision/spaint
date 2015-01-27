@@ -8,7 +8,7 @@
 #include <boost/optional.hpp>
 
 #include "SpaintModel.h"
-#include "multiplatform/interface/SemanticVisualiser.h"
+#include "../visualisers/multiplatform/interface/SemanticVisualiser.h"
 
 namespace spaint {
 
