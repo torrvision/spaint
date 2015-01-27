@@ -202,7 +202,8 @@ void Application::process_input()
       }
       case Renderer::CM_FREE:
       {
-        loc = m_spaintPipeline->get_raycaster()->pick(x, y, m_renderer->get_monocular_render_state());
+        Renderer::RenderState_CPtr renderState = m_renderer->get_monocular_render_state();
+        if(renderState) loc = m_spaintPipeline->get_raycaster()->pick(x, y, renderState);
         break;
       }
       default:
