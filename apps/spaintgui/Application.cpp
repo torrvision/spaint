@@ -48,8 +48,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(keysym.sym);
 
-  // If F1 is pressed, print out a list of keyboard controls.
-  if(keysym.sym == SDLK_F1)
+  // If the H key is pressed, print out a list of keyboard controls.
+  if(keysym.sym == SDLK_h)
   {
     std::cout << "\nControls:\n\n"
               << "W = Forwards\n"
