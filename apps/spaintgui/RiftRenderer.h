@@ -79,6 +79,9 @@ public:
   virtual rigging::MoveableCamera_Ptr get_camera();
 
   /** Override */
+  virtual RenderState_CPtr get_monocular_render_state() const;
+
+  /** Override */
   virtual void render() const;
 };
 

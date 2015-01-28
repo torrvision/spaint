@@ -94,6 +94,22 @@ const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisati
   return m_visualisationEngine;
 }
 
+boost::optional<Vector3f> SpaintRaycaster::pick(int x, int y, RenderState_CPtr renderState) const
+{
+  if(!renderState) renderState = m_liveRenderState;
+  if(!m_raycastResult) m_raycastResult.reset(new ITMFloat4Image(renderState->raycastResult->noDims, true, true));
+
+  // FIXME: It's inefficient to copy the raycast result across from the GPU each time we want to perform a picking operation.
+  m_raycastResult->SetFrom(
+    renderState->raycastResult,
+    m_model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4f>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4f>::CPU_TO_CPU
+  );
+
+  const Vector4f *imageData = m_raycastResult->GetData(MEMORYDEVICE_CPU);
+  Vector4f voxelData = imageData[y * m_raycastResult->noDims.x + x];
+  return voxelData.w > 0 ? boost::optional<Vector3f>(Vector3f(voxelData.x, voxelData.y, voxelData.z)) : boost::none;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void SpaintRaycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const
