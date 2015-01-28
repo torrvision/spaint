@@ -41,7 +41,7 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
   Vector2i imgSize = outputImage->noDims;
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
-  ck_render_semantic<<<gridSize, cudaBlockSize>>>(
+  ck_render_semantic<<<gridSize,cudaBlockSize>>>(
     outputImage->GetData(MEMORYDEVICE_CUDA),
     renderState->raycastResult->GetData(MEMORYDEVICE_CUDA),
     scene->localVBA.GetVoxelBlocks(),

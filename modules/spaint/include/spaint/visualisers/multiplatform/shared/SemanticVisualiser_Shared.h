@@ -28,8 +28,8 @@ namespace spaint {
  * \param labelColours  The colour map for the semantic labels.
  */
 _CPU_AND_GPU_CODE_
-inline void shade_pixel_semantic(DEVICEPTR(Vector4u)& dest, const DEVICEPTR(Vector3f)& point, bool foundPoint, const DEVICEPTR(SpaintVoxel) *voxelData,
-                                 const DEVICEPTR(ITMVoxelIndex::IndexData) *voxelIndex, Vector3f lightSource, const DEVICEPTR(Vector3u) *labelColours)
+inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool foundPoint, const SpaintVoxel *voxelData,
+                                 const ITMVoxelIndex::IndexData *voxelIndex, const Vector3f& lightSource, const Vector3u *labelColours)
 {
   dest = Vector4u((uchar)0);
   if(foundPoint)
@@ -41,9 +41,9 @@ inline void shade_pixel_semantic(DEVICEPTR(Vector4u)& dest, const DEVICEPTR(Vect
 
     // Determine the intensity of the pixel using a very simple version of the Lambertian lighting equation.
     Vector3f outNormal;
-    float angle;
-    computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, angle);
-    float intensity = 0.2f + 0.8f * angle;
+    float NdotL;
+    computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, NdotL);
+    float intensity = 0.2f + 0.8f * NdotL;
 
     // Fill in the final colour for the pixel by scaling the base colour by the intensity.
     dest.x = (uchar)(intensity * colour.r);
