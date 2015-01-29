@@ -26,7 +26,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   if(model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    // Use the GPU implementations.
+    // Use the CUDA implementations.
     m_semanticVisualiser.reset(new SemanticVisualiser_CUDA);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
 #else
