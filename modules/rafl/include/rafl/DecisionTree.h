@@ -11,12 +11,12 @@
 #include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/spirit/home/support/detail/hold_any.hpp>
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
 #include "decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h"
-#include "evaluation/ParameterSetProductGenerator.h"
 #include "examples/ExampleReservoir.h"
 #include "examples/ExampleUtil.h"
 
@@ -75,7 +75,6 @@ public:
     //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
   private:
     typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
-    typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
   public:
@@ -142,19 +141,19 @@ public:
     }
 
     /**
-     * \brief Attempts to load settings from a parameter settings map.
+     * \brief Attempts to load settings from a map.
      *
      * This will throw if the properties cannot be successfully loaded.
      *
-     * \param settings The map from string names to parameter values.
+     * \param settings The map from string names to setting values.
      */
-    explicit Settings(const ParamSet& settings)
+    explicit Settings(const std::map<std::string,boost::spirit::hold_any>& settings)
     {
 
       std::string decisionFunctionGeneratorName;
       unsigned int randomSeed = 0;
 
-      #define GET_SETTING(param) set_from_paramset(settings, param, #param);
+      #define GET_SETTING(param) set_from_map(settings, param, #param);
         GET_SETTING(candidateCount);
         GET_SETTING(decisionFunctionGeneratorName);
         GET_SETTING(gainThreshold);
@@ -197,19 +196,19 @@ public:
      * \param paramName  The name of the parameter to be set.
      */
     template <typename T>
-    static void set_from_paramset(const ParamSet& settings, T& param, const std::string& paramName)
+    static void set_from_map(const std::map<std::string,boost::spirit::hold_any>& settings, T& param, const std::string& paramName)
     {
 #if 1
       std::cout << "setting param: " << paramName << "\n";
 #endif
-      typename ParamSet::const_iterator it = settings.find(paramName);
+      typename std::map<std::string,boost::spirit::hold_any>::const_iterator it = settings.find(paramName);
 
       if(it != settings.end()){
         param = boost::lexical_cast<T>(it->second);
       }
       else
       {
-        throw std::runtime_error("Random forest " + paramName + " parameter not found.. this is very bad..\n");
+        throw std::runtime_error("Decision tree " + paramName + " parameter not found.. this is very bad..\n");
       }
 
     }

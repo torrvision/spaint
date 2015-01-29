@@ -55,8 +55,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} rafl)
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+TARGET_LINK_LIBRARIES(${targetname} rafl tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
 
 #############################

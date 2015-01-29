@@ -30,12 +30,13 @@ public:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef std::vector<size_t> Indices;
   typedef std::pair<Indices,Indices> Split;
-  typedef DecisionTree<Label> DT; typedef RandomForest<Label> RF;
+  typedef DecisionTree<Label> DT; 
+  typedef RandomForest<Label> RF;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** An instance of a random forest. */
-  RF m_randomForest;
+  boost::shared_ptr<RF> m_randomForest;
 
   /** The split budget of the random forest which may change over time. */
   size_t m_splitBudget;
@@ -48,13 +49,17 @@ public:
    * \param The settings of the random forest.
    */
   explicit RFOnlineLearner(const ParamSet& settings)
-  : m_randomForest(settings)
   {
+    typename DT::Settings decisionTreeSettings(settings);
+
     size_t splitBudget = 0; //this is the initial split budget as it may change over time.
-    #define GET_SETTING(param) DT::Settings::set_from_paramset(settings, param, #param);
+    size_t treeCount = 0;
+    #define GET_SETTING(param) DT::Settings::set_from_map(settings, param, #param);
       GET_SETTING(splitBudget);
+      GET_SETTING(treeCount);
     #undef GET_SETTING
     m_splitBudget = splitBudget;
+    m_randomForest.reset( new RF(treeCount, decisionTreeSettings));
   }
 
   /**
@@ -65,10 +70,10 @@ public:
   QuantitativePerformance cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
   {
     //Add training examples to forest.
-    m_randomForest.add_examples(examples, split.first);
+    m_randomForest->add_examples(examples, split.first);
 
     //Train the forest.
-    m_randomForest.train(m_splitBudget);
+    m_randomForest->train(m_splitBudget);
 
     //Predict on the validation set.
     return evaluate(examples, split.second);
@@ -94,7 +99,7 @@ private:
       const Descriptor_CPtr& descriptor = example->get_descriptor();
       expectedLabels[i] = example->get_label();
       classLabels.insert(expectedLabels[i]);
-      predictedLabels[i] = m_randomForest.predict(descriptor);
+      predictedLabels[i] = m_randomForest->predict(descriptor);
     }
 
     //Calculates the quantitative performance measures.

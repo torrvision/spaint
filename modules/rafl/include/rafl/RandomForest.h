@@ -9,7 +9,6 @@
 #include <numeric>
 #include <string>
 
-#include "evaluation/ParameterSetProductGenerator.h"
 #include "DecisionTree.h"
 
 namespace rafl {
@@ -25,7 +24,6 @@ private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef DecisionTree<Label> DT;
   typedef boost::shared_ptr<DT> DT_Ptr;
-  typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -45,26 +43,6 @@ public:
     for(size_t i = 0; i < treeCount; ++i)
     {
       m_trees.push_back(DT_Ptr(new DT(settings)));
-    }
-  }
-
-  /**
-   * \brief Constructs a random forest.
-   *
-   * \param settings The settings map needed to configure the random forest and decision trees.
-   */
-  explicit RandomForest(const ParamSet& settings)
-  {
-    size_t treeCount = 0;
-    #define GET_SETTING(param) DT::Settings::set_from_paramset(settings, param, #param);
-      GET_SETTING(treeCount);
-    #undef GET_SETTING
-
-    typename DT::Settings dtSettings( settings );
-
-    for(size_t i = 0; i < treeCount; ++i)
-    {
-      m_trees.push_back(DT_Ptr(new DT(dtSettings)));
     }
   }
 
