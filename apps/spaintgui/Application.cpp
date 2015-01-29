@@ -47,6 +47,27 @@ void Application::run()
 void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(keysym.sym);
+
+  // If the H key is pressed, print out a list of keyboard controls.
+  if(keysym.sym == SDLK_h)
+  {
+    std::cout << "\nControls:\n\n"
+              << "W = Forwards\n"
+              << "S = Backwards\n"
+              << "A = Strafe Left\n"
+              << "D = Strafe Right\n"
+              << "Q = Move Up\n"
+              << "E = Move Down\n"
+              << "Up = Look Down\n"
+              << "Down = Look Up\n"
+              << "Left = Turn Left\n"
+              << "Right = Turn Right\n"
+              << "R + 1 = To Windowed Renderer\n"
+              << "R + 2 = To Rift Renderer (Windowed)\n"
+              << "R + 3 = To Rift Renderer (Fullscreen)\n"
+              << "V + 1 = To Follow Camera Mode\n"
+              << "V + 2 = To Free Camera Mode\n";
+  }
 }
 
 void Application::handle_key_up(const SDL_Keysym& keysym)
