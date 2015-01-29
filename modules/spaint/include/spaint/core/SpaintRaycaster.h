@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 
 #include "SpaintModel.h"
+#include "../visualisers/multiplatform/interface/SemanticVisualiser.h"
 
 namespace spaint {
 
@@ -25,6 +26,18 @@ public:
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief An enumeration specifying the different types of free-view raycasting that are supported.
+   */
+  enum RaycastType
+  {
+    RT_COLOUR,
+    RT_LAMBERTIAN,
+    RT_SEMANTIC
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The render state corresponding to the live camera pose. */
@@ -35,6 +48,9 @@ private:
 
   /** An image into which the raycast result may be copied when performing picking. */
   mutable Float4Image_Ptr m_raycastResult;
+
+  /** The platform-specific semantic visualiser. */
+  boost::shared_ptr<const SemanticVisualiser> m_semanticVisualiser;
 
   /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_Ptr m_visualisationEngine;
@@ -56,11 +72,12 @@ public:
    * \param output      The location into which to put the output image.
    * \param renderState The render state to use for intermediate storage.
    * \param pose        The pose from which to raycast the scene.
+   * \param raycastType The type of raycast to generate.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose) const;
+  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType = RT_LAMBERTIAN) const;
 
   /**
-   * \brief Gets a raycast of the scene from the default pose (the current camera pose).
+   * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).
    *
    * \param output  The location into which to put the output image.
    */

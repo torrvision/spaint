@@ -14,8 +14,6 @@ namespace spaint {
  */
 struct SpaintVoxel
 {
-  // TEMPORARY
-
   _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
   _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
   _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
@@ -26,16 +24,15 @@ struct SpaintVoxel
   short sdf;
   /** Number of fused observations that make up @p sdf. */
   uchar w_depth;
-  /** Padding that may or may not improve performance on certain GPUs */
-  //uchar pad;
+  /** Semantic label. */
+  uchar label;
 
   _CPU_AND_GPU_CODE_ SpaintVoxel()
   {
     sdf = SDF_initialValue();
     w_depth = 0;
+    label = 0;
   }
-
-  // END TEMPORARY
 };
 
 }
