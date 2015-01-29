@@ -82,7 +82,7 @@ ${evaluation_sources}
 SET(headers
 ${base_headers}
 ${decisionfunctions_headers}
-${evaluation_sources}
+${evaluation_headers}
 ${examples_headers}
 ${toplevel_headers}
 )
