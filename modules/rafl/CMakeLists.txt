@@ -53,7 +53,6 @@ include/rafl/evaluation/PerfUtil.h
 include/rafl/evaluation/QuantitativePerformance.h
 include/rafl/evaluation/RandomlyPermuteAndDivideValidation.h
 include/rafl/evaluation/Results.h
-include/rafl/evaluation/RFOnlineLearner.h
 )
 
 ##

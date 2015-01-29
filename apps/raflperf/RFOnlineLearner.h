@@ -13,8 +13,8 @@
 
 #include <rafl/RandomForest.h>
 
-#include "PerfUtil.h"
-#include "QuantitativePerformance.h"
+#include <rafl/evaluation/PerfUtil.h>
+#include <rafl/evaluation/QuantitativePerformance.h>
 
 namespace rafl {
 
