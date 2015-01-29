@@ -20,6 +20,12 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
+SET(colours_headers
+include/tvgutil/colours/PaletteGenerator.h
+include/tvgutil/colours/RGBAColour.h
+)
+
+##
 SET(timers_headers
 include/tvgutil/timers/AverageTimer.h
 include/tvgutil/timers/Timer.h
@@ -51,6 +57,7 @@ ${toplevel_sources}
 )
 
 SET(headers
+${colours_headers}
 ${timers_headers}
 ${toplevel_headers}
 )
@@ -60,6 +67,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(colours FILES ${colours_headers})
 SOURCE_GROUP(timers FILES ${timers_headers})
 
 ##########################################
