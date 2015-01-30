@@ -139,27 +139,6 @@ public:
     //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
   private:
     /**
-     * \brief Constructs a decision function generator based on the name specified.
-     *        FIXME: (use a generator factory).
-     *
-     * \param decisionFunctionGeneratorName The name of the decision funciton generator.
-     * \param randomSeed                    The seed of the random number generator.
-     */
-    void generate_decision_function(const std::string& decisionFunctionGeneratorName, unsigned int randomSeed)
-    {
-      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-
-      if(decisionFunctionGeneratorName == "FeatureThresholding")
-      {
-          decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
-      }
-      else
-      {
-          throw std::runtime_error("The decision function you have selected was not found!\n");
-      }
-    }
-
-    /**
      * \brief TODO
      */
     void initialise(const std::map<std::string,std::string>& settings)
