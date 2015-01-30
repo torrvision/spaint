@@ -5,14 +5,10 @@
 #ifndef H_RAFL_DECISIONTREE
 #define H_RAFL_DECISIONTREE
 
-#include <functional>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 
-#include <boost/spirit/home/support/detail/hold_any.hpp>
-
-#include <tvgutil/MapUtil.h>
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
@@ -113,7 +109,7 @@ public:
     /**
      * \brief Attempts to load settings from the specified XML file.
      *
-     * This will throw if the properties cannot be successfully loaded.
+     * This will throw if the settings cannot be successfully loaded.
      *
      * \param filename The name of the file.
      */
@@ -125,28 +121,28 @@ public:
     }
 
     /**
-     * \brief Attempts to load settings from a map.
+     * \brief Loads settings from a parameter map.
      *
-     * This will throw if the properties cannot be successfully loaded.
-     *
-     * \param settings The map from string names to setting values.
+     * \param params  The parameter map (parameter names -> values).
      */
-    explicit Settings(const std::map<std::string,std::string>& settings)
+    explicit Settings(const std::map<std::string,std::string>& params)
     {
-      initialise(settings);
+      initialise(params);
     }
 
     //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
   private:
     /**
-     * \brief TODO
+     * \brief Loads settings from a parameter map.
+     *
+     * \param params  The parameter map (parameter names -> values).
      */
-    void initialise(const std::map<std::string,std::string>& settings)
+    void initialise(const std::map<std::string,std::string>& params)
     {
       std::string decisionFunctionGeneratorType;
       unsigned int randomSeed = 0;
 
-      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, param);
+      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(params, #param, param);
         GET_SETTING(candidateCount);
         GET_SETTING(decisionFunctionGeneratorType);
         GET_SETTING(gainThreshold);
@@ -211,7 +207,7 @@ public:
    */
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
-    //Create a vector of indices indicating all examples should be added to the tree.
+    // Create a vector of indices indicating that all the examples should be added to the tree.
     std::vector<size_t> indices(examples.size());
     std::iota(indices.begin(), indices.end(), 0);
 
@@ -221,13 +217,14 @@ public:
   /**
    * \brief Adds new training examples to the decision tree.
    *
-   * \param examples  The examples to be added.
-   * \param indices   The indices of examples to be added to the decision tree.
+   * \param examples                      A pool of examples that could potentially be added.
+   * \param indices                       The indices of the examples in the pool that should be added to the decision tree.
+   * \throws std::out_of_range_exception  If any of the indices are invalid.
    */
   void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
     // Add each example indicated in the indices list to the tree.
-    for(size_t i = 0, iend = indices.size(); i < iend; ++i)
+    for(size_t i = 0, size = indices.size(); i < size; ++i)
     {
       add_example(examples.at(indices[i]));
     }
