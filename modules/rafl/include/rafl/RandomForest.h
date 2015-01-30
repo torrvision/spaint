@@ -5,9 +5,6 @@
 #ifndef H_RAFL_RANDOMFOREST
 #define H_RAFL_RANDOMFOREST
 
-#include <map>
-#include <string>
-
 #include "DecisionTree.h"
 
 namespace rafl {
@@ -54,12 +51,11 @@ public:
    */
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
-    //Create a vector of indices indicating all examples should be added to the tree.
-    size_t size = examples.size();
-    std::vector<size_t> indices(size);
-    for(size_t i = 0; i < size; ++i) indices[i] = i;
-
-    add_examples(examples, indices);
+    // Add the new examples to the different trees.
+    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    {
+      (*it)->add_examples(examples);
+    }
   }
 
   /**
