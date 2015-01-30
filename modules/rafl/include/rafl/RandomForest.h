@@ -6,7 +6,6 @@
 #define H_RAFL_RANDOMFOREST
 
 #include <map>
-#include <numeric>
 #include <string>
 
 #include "DecisionTree.h"
@@ -56,8 +55,9 @@ public:
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
     //Create a vector of indices indicating all examples should be added to the tree.
-    std::vector<size_t> indices(examples.size());
-    std::iota(indices.begin(), indices.end(), 0);
+    size_t size = examples.size();
+    std::vector<size_t> indices(size);
+    for(size_t i = 0; i < size; ++i) indices[i] = i;
 
     add_examples(examples, indices);
   }

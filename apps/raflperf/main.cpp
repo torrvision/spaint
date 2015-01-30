@@ -1,4 +1,5 @@
 #include <cmath>
+
 #if 0
 #include <boost/asio/ip/host_name.hpp>
 #endif
@@ -112,7 +113,7 @@ int main(int argc, char *argv[])
   results.print_tab_delimited(std::cout);
 
   //Output results to a file.
-  std::ofstream resultsFile(outputResultPath);
+  std::ofstream resultsFile(outputResultPath.c_str());
   if(!resultsFile)
   {
     std::cout << "Warning could not open file for writing..\n";
