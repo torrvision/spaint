@@ -1,5 +1,7 @@
 #include <cmath>
+#if 0
 #include <boost/asio/ip/host_name.hpp>
+#endif
 #include <boost/assign/list_of.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 using boost::assign::list_of;
@@ -29,9 +31,10 @@ typedef ParameterSetProductGenerator::ParamSet ParamSet;
 
 int main(int argc, char *argv[])
 {
-
+#if 0
   std::string hostName = boost::asio::ip::host_name();
   if(hostName == "ms-tvg-workstation") std::cout << "Hey Mike..\n";
+#endif
 
   if((argc != 1) && (argc != 4))
   {
@@ -75,7 +78,7 @@ int main(int argc, char *argv[])
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = ParameterSetProductGenerator()
     .add_param("treeCount", list_of<size_t>(1)(3)(5)(7)(9)(11)(13)(15)(17)(19)(21))
-    .add_param("splitBudget", list_of<size_t>(pow(2,20)))
+    .add_param("splitBudget", list_of<size_t>(static_cast<size_t>(pow(2,20))))
     .add_param("candidateCount", list_of<int>(256))
     .add_param("decisionFunctionGeneratorName", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))

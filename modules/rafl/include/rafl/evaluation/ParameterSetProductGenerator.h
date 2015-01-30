@@ -22,17 +22,17 @@ class ParameterSetProductGenerator
 {
   //#################### PUBLIC TYPEDEFS ####################
 public:
-  typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
+  typedef std::map<std::string,std::string> ParamSet;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-std::vector<std::pair<std::string,std::vector<boost::spirit::hold_any> > > m_paramOptions;
+  std::vector<std::pair<std::string,std::vector<boost::spirit::hold_any> > > m_paramOptions;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   ParameterSetProductGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options);
 
-  std::vector<std::map<std::string,boost::spirit::hold_any> > generate_maps() const;
+  std::vector<ParamSet> generate_maps() const;
 
   static std::string to_string(const ParamSet& params);
 
@@ -46,4 +46,3 @@ private:
 }
 
 #endif
-

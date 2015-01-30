@@ -26,7 +26,6 @@ class RFOnlineLearner
 {
   //#################### PUBLIC TYPEDEFS ####################
 public:
-  typedef std::map<std::string,boost::spirit::hold_any> ParamSet;
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef std::vector<size_t> Indices;
   typedef std::pair<Indices,Indices> Split;
@@ -48,13 +47,13 @@ public:
    *
    * \param The settings of the random forest.
    */
-  explicit RFOnlineLearner(const ParamSet& settings)
+  explicit RFOnlineLearner(const std::map<std::string,std::string>& settings)
   {
     typename DT::Settings decisionTreeSettings(settings);
 
     size_t splitBudget = 0; //this is the initial split budget as it may change over time.
     size_t treeCount = 0;
-    #define GET_SETTING(param) DT::Settings::set_from_map(settings, param, #param);
+    #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, param);
       GET_SETTING(splitBudget);
       GET_SETTING(treeCount);
     #undef GET_SETTING

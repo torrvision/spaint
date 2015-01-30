@@ -111,7 +111,7 @@ private:
   {
     assert(size > 2);
 
-    std::vector<unsigned int> exampleIndices(size);
+    std::vector<size_t> exampleIndices(size);
     for(size_t i = 0; i < size; ++i)
     {
       exampleIndices[i] = i;
@@ -121,7 +121,7 @@ private:
     std::cout << "exampleIncides: \n" << tvgutil::make_limited_container(exampleIndices, 20) << "\n";
 #endif
 
-    size_t firstSetSize = m_ratio*size;
+    size_t firstSetSize = static_cast<size_t>(m_ratio * size);
     for(size_t fold = 0; fold < m_num_folds; ++fold)
     {
       Split splitSet;

@@ -57,7 +57,7 @@ private:
    * \param stdDev     The standard deviation of the accuracy samples.
    * \param samples    The number of samples used to calculate the standard deviation. 
    */
-  QuantitativePerformance(float accuracy, float stdDev, float sampleCount)
+  QuantitativePerformance(float accuracy, float stdDev, size_t sampleCount)
   : m_samples(sampleCount)
   {
     m_accuracy.mean = accuracy;
@@ -71,7 +71,7 @@ public:
    *
    * \param qpv    A vector of quantitative performance measures.
    */
-  static QuantitativePerformance average(const std::vector<QuantitativePerformance> qpv)
+  static QuantitativePerformance average(const std::vector<QuantitativePerformance>& qpv)
   {
     size_t sampleCount = qpv.size();
 

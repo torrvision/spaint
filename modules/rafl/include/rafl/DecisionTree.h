@@ -10,9 +10,9 @@
 #include <set>
 #include <stdexcept>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 
+#include <tvgutil/MapUtil.h>
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
@@ -68,9 +68,9 @@ private:
 
 public:
   /**
-   * \brief An instance of this struct can be used to provide the settings needed to configure a decision tree.
+   * \brief An instance of this class can be used to provide the settings needed to configure a decision tree.
    */
-  struct Settings
+  class Settings
   {
     //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
   private:
@@ -120,24 +120,8 @@ public:
     explicit Settings(const std::string& filename)
     {
       using tvgutil::PropertyUtil;
-
       boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
-
-      std::string decisionFunctionGeneratorName;
-      unsigned int randomSeed = 0;
-
-      #define GET_SETTING(setting) PropertyUtil::get_required_property(tree, #setting, setting);
-        GET_SETTING(candidateCount);
-        GET_SETTING(decisionFunctionGeneratorName);
-        GET_SETTING(gainThreshold);
-        GET_SETTING(maxClassSize);
-        GET_SETTING(maxTreeHeight);
-        GET_SETTING(randomSeed);
-        GET_SETTING(seenExamplesThreshold);
-        GET_SETTING(splittabilityThreshold);
-      #undef GET_SETTING
-
-      generate_decision_function(decisionFunctionGeneratorName, randomSeed);
+      initialise(PropertyUtil::make_property_map(tree));
     }
 
     /**
@@ -147,26 +131,13 @@ public:
      *
      * \param settings The map from string names to setting values.
      */
-    explicit Settings(const std::map<std::string,boost::spirit::hold_any>& settings)
+    explicit Settings(const std::map<std::string,std::string>& settings)
     {
-
-      std::string decisionFunctionGeneratorName;
-      unsigned int randomSeed = 0;
-
-      #define GET_SETTING(param) set_from_map(settings, param, #param);
-        GET_SETTING(candidateCount);
-        GET_SETTING(decisionFunctionGeneratorName);
-        GET_SETTING(gainThreshold);
-        GET_SETTING(maxClassSize);
-        GET_SETTING(maxTreeHeight);
-        GET_SETTING(randomSeed);
-        GET_SETTING(seenExamplesThreshold);
-        GET_SETTING(splittabilityThreshold);
-      #undef GET_SETTING
-
-      generate_decision_function(decisionFunctionGeneratorName, randomSeed);
+      initialise(settings);
     }
 
+    //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
+  private:
     /**
      * \brief Constructs a decision function generator based on the name specified.
      *        FIXME: (use a generator factory).
@@ -189,28 +160,25 @@ public:
     }
 
     /**
-     * \brief Sets a parameter based on the settings map provided.
-     *
-     * \param settings   The settings map.
-     * \param param      The parameter to be set.
-     * \param paramName  The name of the parameter to be set.
+     * \brief TODO
      */
-    template <typename T>
-    static void set_from_map(const std::map<std::string,boost::spirit::hold_any>& settings, T& param, const std::string& paramName)
+    void initialise(const std::map<std::string,std::string>& settings)
     {
-#if 1
-      std::cout << "setting param: " << paramName << "\n";
-#endif
-      typename std::map<std::string,boost::spirit::hold_any>::const_iterator it = settings.find(paramName);
+      std::string decisionFunctionGeneratorName;
+      unsigned int randomSeed = 0;
 
-      if(it != settings.end()){
-        param = boost::lexical_cast<T>(it->second);
-      }
-      else
-      {
-        throw std::runtime_error("Decision tree " + paramName + " parameter not found.. this is very bad..\n");
-      }
+      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, param);
+        GET_SETTING(candidateCount);
+        GET_SETTING(decisionFunctionGeneratorName);
+        GET_SETTING(gainThreshold);
+        GET_SETTING(maxClassSize);
+        GET_SETTING(maxTreeHeight);
+        GET_SETTING(randomSeed);
+        GET_SETTING(seenExamplesThreshold);
+        GET_SETTING(splittabilityThreshold);
+      #undef GET_SETTING
 
+      generate_decision_function(decisionFunctionGeneratorName, randomSeed);
     }
   };
 
