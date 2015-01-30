@@ -20,9 +20,13 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
+SET(colours_sources
+src/colours/ColourRGBA.cpp
+)
+
 SET(colours_headers
+include/tvgutil/colours/ColourRGBA.h
 include/tvgutil/colours/PaletteGenerator.h
-include/tvgutil/colours/RGBAColour.h
 )
 
 ##
@@ -53,6 +57,7 @@ include/tvgutil/RandomNumberGenerator.h
 #################################################################
 
 SET(sources
+${colours_sources}
 ${toplevel_sources}
 )
 
@@ -67,7 +72,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
-SOURCE_GROUP(colours FILES ${colours_headers})
+SOURCE_GROUP(colours FILES ${colours_sources} ${colours_headers})
 SOURCE_GROUP(timers FILES ${timers_headers})
 
 ##########################################

@@ -10,7 +10,7 @@
 
 #include "../RandomNumberGenerator.h"
 
-#include "RGBAColour.h"
+#include "ColourRGBA.h"
 
 namespace tvgutil {
 
@@ -22,25 +22,23 @@ class PaletteGenerator
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Constructs a palette with a random colour per label.
+   * \brief Constructs a palette with a random RGBA colour per label.
    *
    * \param labels  The set of labels.
    * \param seed    The seed for the random number generator.
    */
   template <typename Label>
-  static std::map<Label,RGBAColourUC> generate_random_palette(const std::set<Label>& labels, unsigned int seed)
+  static std::map<Label,ColourRGBA> generate_random_rgba_palette(const std::set<Label>& labels, unsigned int seed)
   {
-    std::map<Label,RGBAColourUC> result;
+    std::map<Label,ColourRGBA> result;
     RandomNumberGenerator rng(seed);
 
     for(typename std::set<Label>::const_iterator it = labels.begin(), iend = labels.end(); it != iend; ++it)
     {
-      result.insert(std::make_pair(*it, RGBAColourUC(
-        static_cast<unsigned char>(rng.generate_int_from_uniform(0, 255)),
-        static_cast<unsigned char>(rng.generate_int_from_uniform(0, 255)),
-        static_cast<unsigned char>(rng.generate_int_from_uniform(0, 255)),
-        static_cast<unsigned char>(255)
-      )));
+      int r = rng.generate_int_from_uniform(0, 255);
+      int g = rng.generate_int_from_uniform(0, 255);
+      int b = rng.generate_int_from_uniform(0, 255);
+      result.insert(std::make_pair(*it, ColourRGBA::from_ints(r, g, b, 255)));
     }
 
     return result;
