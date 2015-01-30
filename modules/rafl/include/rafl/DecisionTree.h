@@ -143,12 +143,12 @@ public:
      */
     void initialise(const std::map<std::string,std::string>& settings)
     {
-      std::string decisionFunctionGeneratorName;
+      std::string decisionFunctionGeneratorType;
       unsigned int randomSeed = 0;
 
       #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, param);
         GET_SETTING(candidateCount);
-        GET_SETTING(decisionFunctionGeneratorName);
+        GET_SETTING(decisionFunctionGeneratorType);
         GET_SETTING(gainThreshold);
         GET_SETTING(maxClassSize);
         GET_SETTING(maxTreeHeight);
@@ -158,7 +158,7 @@ public:
       #undef GET_SETTING
 
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorName, std::map<std::string,std::string>(), randomNumberGenerator);
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
     }
   };
 
