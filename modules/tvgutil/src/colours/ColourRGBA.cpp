@@ -23,26 +23,6 @@ ColourRGBA ColourRGBA::from_chars(unsigned char r, unsigned char g, unsigned cha
   return ColourRGBA(r, g, b, a);
 }
 
-ColourRGBA ColourRGBA::from_ints(int r, int g, int b, int a)
-{
-  // Clamp the components to [0,255].
-  if(r < 0) r = 0;
-  else if(r > 255) r = 255;
-  if(g < 0) g = 0;
-  else if(g > 255) g = 255;
-  if(b < 0) b = 0;
-  else if(b > 255) b = 255;
-  if(a < 0) a = 0;
-  else if(a > 255) a = 255;
-
-  return ColourRGBA(
-    static_cast<unsigned char>(r),
-    static_cast<unsigned char>(g),
-    static_cast<unsigned char>(b),
-    static_cast<unsigned char>(a)
-  );
-}
-
 ColourRGBA ColourRGBA::from_floats(float r, float g, float b, float a)
 {
   // Clamp the components to [0,1].
@@ -60,6 +40,26 @@ ColourRGBA ColourRGBA::from_floats(float r, float g, float b, float a)
     static_cast<unsigned char>(g * 255.0f + 0.5f),
     static_cast<unsigned char>(b * 255.0f + 0.5f),
     static_cast<unsigned char>(a * 255.0f + 0.5f)
+  );
+}
+
+ColourRGBA ColourRGBA::from_ints(int r, int g, int b, int a)
+{
+  // Clamp the components to [0,255].
+  if(r < 0) r = 0;
+  else if(r > 255) r = 255;
+  if(g < 0) g = 0;
+  else if(g > 255) g = 255;
+  if(b < 0) b = 0;
+  else if(b > 255) b = 255;
+  if(a < 0) a = 0;
+  else if(a > 255) a = 255;
+
+  return ColourRGBA(
+    static_cast<unsigned char>(r),
+    static_cast<unsigned char>(g),
+    static_cast<unsigned char>(b),
+    static_cast<unsigned char>(a)
   );
 }
 

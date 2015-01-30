@@ -60,18 +60,6 @@ public:
   static ColourRGBA from_chars(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 
   /**
-   * \brief Constructs an RGBA colour from components expressed as ints.
-   *
-   * Note that the supplied components will be clamped to the range [0,255].
-   *
-   * \param r The red component (0-255).
-   * \param g The green component (0-255).
-   * \param b The blue component (0-255).
-   * \param a The alpha component (0-255).
-   */
-  static ColourRGBA from_ints(int r, int g, int b, int a);
-
-  /**
    * \brief Constructs an RGBA colour from components expressed as floats.
    *
    * Note that the supplied components will be clamped to the range [0,1].
@@ -82,6 +70,18 @@ public:
    * \param a The alpha component (0.0-1.0).
    */
   static ColourRGBA from_floats(float r, float g, float b, float a);
+
+  /**
+   * \brief Constructs an RGBA colour from components expressed as ints.
+   *
+   * Note that the supplied components will be clamped to the range [0,255].
+   *
+   * \param r The red component (0-255).
+   * \param g The green component (0-255).
+   * \param b The blue component (0-255).
+   * \param a The alpha component (0-255).
+   */
+  static ColourRGBA from_ints(int r, int g, int b, int a);
 
   //#################### PUBLIC OPERATORS ####################
 public:
