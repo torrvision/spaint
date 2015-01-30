@@ -16,7 +16,7 @@
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
-#include "decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h"
+#include "decisionfunctions/DecisionFunctionGeneratorFactory.h"
 #include "examples/ExampleReservoir.h"
 #include "examples/ExampleUtil.h"
 
@@ -178,7 +178,8 @@ public:
         GET_SETTING(splittabilityThreshold);
       #undef GET_SETTING
 
-      generate_decision_function(decisionFunctionGeneratorName, randomSeed);
+      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorName, std::map<std::string,std::string>(), randomNumberGenerator);
     }
   };
 

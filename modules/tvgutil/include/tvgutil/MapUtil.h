@@ -30,7 +30,7 @@ public:
    * \throws std::runtime_error If the map does not contain the specified key.
    */
   template <typename K, typename V>
-  static V lookup(const std::map<K,V>& map, typename boost::mpl::identity<const K>::type& key)
+  static const V& lookup(const std::map<K,V>& map, typename boost::mpl::identity<const K>::type& key)
   {
     typename std::map<K,V>::const_iterator it = map.find(key);
     if(it != map.end()) return it->second;
