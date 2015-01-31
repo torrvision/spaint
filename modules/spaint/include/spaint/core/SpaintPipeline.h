@@ -55,6 +55,9 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
+  /** Whether or not fusion is run as part of the pipeline. */
+  bool m_runFusion;
+
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
@@ -104,6 +107,11 @@ public:
    * \brief Processes the next frame from the image source engine.
    */
   void process_frame();
+
+  /**
+   * \brief Toggles whether or not fusion is run as part of the pipeline.
+   */
+  void toggle_fusion();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

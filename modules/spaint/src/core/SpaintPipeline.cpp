@@ -59,13 +59,18 @@ void SpaintPipeline::process_frame()
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
-  // Run the dense mapper.
-  m_denseMapper->ProcessFrame(view.get(), trackingState.get());
+  // Run the fusion process.
+  if(m_runFusion) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), view.get());
 
   m_reconstructionStarted = true;
+}
+
+void SpaintPipeline::toggle_fusion()
+{
+  m_runFusion = !m_runFusion;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -129,8 +134,8 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
 
-  // Note: The trackers can only be run once reconstruction has started.
   m_reconstructionStarted = false;
+  m_runFusion = true;
 }
 
 }
