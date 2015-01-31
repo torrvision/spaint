@@ -10,13 +10,10 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintModel::SpaintModel(const Settings_CPtr& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState)
-: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings), m_trackingState(trackingState)
-{
-  // Set up the scene.
-  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  m_scene.reset(new Scene(&m_settings->sceneParams, settings->useSwapping, memoryType));
-}
+SpaintModel::SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
+                         const Settings_CPtr& settings)
+: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_scene(scene), m_settings(settings), m_trackingState(trackingState)
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 

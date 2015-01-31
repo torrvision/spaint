@@ -57,12 +57,14 @@ public:
   /**
    * \brief Constructs a model.
    *
-   * \param settings        The settings to use for InfiniTAM.
+   * \param scene           The InfiniTAM scene.
    * \param rgbImageSize    The dimensions of the RGB images from which the scene is being reconstructed.
    * \param depthImageSize  The dimensions of the depth images from which the scene is being reconstructed.
    * \param trackingState   The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM).
+   * \param settings        The settings to use for InfiniTAM.
    */
-  SpaintModel(const Settings_CPtr& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState);
+  SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
+              const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
