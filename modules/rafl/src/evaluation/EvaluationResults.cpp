@@ -1,33 +1,26 @@
 /**
- * rafl: Results.cpp
+ * rafl: EvaluationResults.cpp
  */
 
-#include "evaluation/Results.h"
+#include "evaluation/EvaluationResults.h"
 
 namespace rafl {
 
-//#################### CONSTRUCTORS ####################
-Results::Results(){}
-
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-void Results::push_back(const ParamSet& paramSet, const QuantitativePerformance& QP)
-{
-  m_results.push_back(std::make_pair(paramSet, QP));
-}
 
-void Results::print_tab_delimited(std::ostream& out) const
+void EvaluationResults::print_tab_delimited(std::ostream& os) const
 {
   //Get the first set of results, and print the names of the parameters in the set.
   ParamSet firstSet = m_results[0].first;
   ParamSet::iterator it, iend;
   for(it = firstSet.begin(), iend = firstSet.end(); it != iend; ++it)
   {
-    out << it->first << "\t";
+    os << it->first << "\t";
   }
 
   //Print the performance measure header.
-  m_results[0].second.print_accuracy_header(out);
-  out << "\n";
+  m_results[0].second.print_accuracy_header(os);
+  os << "\n";
 
   //Print the results to a stream.
   for(size_t i = 0, iend = m_results.size(); i < iend; ++i)
@@ -36,12 +29,16 @@ void Results::print_tab_delimited(std::ostream& out) const
     ParamSet::iterator it, itend;
     for(it = set.begin(), itend = set.end(); it != itend; ++it)
     {
-      out << it->second << "\t";
+      os << it->second << "\t";
     }
-    m_results[i].second.print_accuracy_values(out);
-    out << "\n";
+    m_results[i].second.print_accuracy_values(os);
+    os << "\n";
   }
 }
 
+void EvaluationResults::push_back(const ParamSet& paramSet, const QuantitativePerformance& QP)
+{
+  m_results.push_back(std::make_pair(paramSet, QP));
 }
 
+}

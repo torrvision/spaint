@@ -5,6 +5,8 @@
 #ifndef H_RAFL_QUANTITATIVEPERFORMANCE
 #define H_RAFL_QUANTITATIVEPERFORMANCE
 
+#include <cmath>
+
 namespace rafl {
 
 /**

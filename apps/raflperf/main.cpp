@@ -10,8 +10,8 @@ using boost::spirit::hold_any;
 
 #include <Eigen/Dense>
 
+#include <rafl/evaluation/EvaluationResults.h>
 #include <rafl/evaluation/PerfUtil.h>
-#include <rafl/evaluation/Results.h>
 #include <rafl/evaluation/QuantitativePerformance.h>
 #include <rafl/evaluation/CrossValidation.h>
 #include <rafl/evaluation/RandomlyPermuteAndDivideValidation.h>
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
   const size_t numFolds = 2;
   const unsigned int seed = 1234;
   boost::shared_ptr<RFO> randomAlgorithm;
-  Results results;
+  EvaluationResults results;
 
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {

@@ -42,18 +42,18 @@ include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
 
 ##
 SET(evaluation_sources
+src/evaluation/EvaluationResults.cpp
 src/evaluation/ParameterSetProductGenerator.cpp
 src/evaluation/PerfUtil.cpp
-src/evaluation/Results.cpp
 )
 
 SET(evaluation_headers
 include/rafl/evaluation/CrossValidation.h
+include/rafl/evaluation/EvaluationResults.h
 include/rafl/evaluation/ParameterSetProductGenerator.h
 include/rafl/evaluation/PerfUtil.h
 include/rafl/evaluation/QuantitativePerformance.h
 include/rafl/evaluation/RandomlyPermuteAndDivideValidation.h
-include/rafl/evaluation/Results.h
 )
 
 ##
