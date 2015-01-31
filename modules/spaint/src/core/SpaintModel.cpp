@@ -10,15 +10,12 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingController_CPtr& trackingController)
-: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings)
+SpaintModel::SpaintModel(const Settings_CPtr& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState)
+: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings), m_trackingState(trackingState)
 {
   // Set up the scene.
-  MemoryDeviceType memoryType = settings.deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  m_scene.reset(new Scene(&m_settings.sceneParams, settings.useSwapping, memoryType));
-
-  // Set up the initial tracking state.
-  m_trackingState.reset(trackingController->BuildTrackingState());
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  m_scene.reset(new Scene(&m_settings->sceneParams, settings->useSwapping, memoryType));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -53,7 +50,7 @@ SpaintModel::Scene_CPtr SpaintModel::get_scene() const
   return m_scene;
 }
 
-const ITMLibSettings& SpaintModel::get_settings() const
+const SpaintModel::Settings_CPtr& SpaintModel::get_settings() const
 {
   return m_settings;
 }
@@ -68,7 +65,7 @@ SpaintModel::TrackingState_CPtr SpaintModel::get_tracking_state() const
   return m_trackingState;
 }
 
-const SpaintModel::View_Ptr& SpaintModel::get_view()
+SpaintModel::View_Ptr& SpaintModel::get_view()
 {
   return m_view;
 }

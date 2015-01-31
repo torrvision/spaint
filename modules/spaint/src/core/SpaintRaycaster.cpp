@@ -6,8 +6,6 @@
 
 #include <stdexcept>
 
-#include <boost/serialization/shared_ptr.hpp>
-
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
@@ -20,8 +18,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintRaycaster::SpaintRaycaster(const SpaintModel_Ptr& model, const ITMRenderState *liveRenderState)
-: m_liveRenderState(liveRenderState, boost::serialization::null_deleter()), m_model(model)
+SpaintRaycaster::SpaintRaycaster(const SpaintModel_Ptr& model)
+: m_model(model)
 {
   // Set up the InfiniTAM visualisation engine.
   const SpaintModel::Scene_Ptr& scene = model->get_scene();
@@ -42,6 +40,9 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_Ptr& model, const ITMRenderSt
     m_semanticVisualiser.reset(new SemanticVisualiser_CPU);
     m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
   }
+
+  // Set up the live render state.
+  // TODO
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

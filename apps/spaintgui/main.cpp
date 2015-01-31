@@ -47,7 +47,7 @@ try
               depthImageMask = argc == 4 ? argv[3] : "";
 
   // Specify the InfiniTAM settings.
-  ITMLibSettings settings;
+  boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
 
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;

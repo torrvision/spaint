@@ -61,10 +61,9 @@ public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model           The spaint model.
-   * \param liveRenderState The render state corresponding to the live camera pose.
+   * \param model The spaint model.
    */
-  SpaintRaycaster(const SpaintModel_Ptr& model, const ITMRenderState *liveRenderState);
+  explicit SpaintRaycaster(const SpaintModel_Ptr& model);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

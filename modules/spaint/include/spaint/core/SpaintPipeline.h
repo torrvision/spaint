@@ -17,18 +17,25 @@ class SpaintPipeline
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<ITMSceneReconstructionEngine<SpaintVoxel,ITMVoxelIndex> > SceneReconstructionEngine_Ptr;
+  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
   typedef boost::shared_ptr<ITMTracker> Tracker_Ptr;
+  typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
+  typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The dense mapper. */
+  DenseMapper_Ptr m_denseMapper;
+
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
 
@@ -50,17 +57,8 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
-  /** The engine used to perform fusion. */
-  SceneReconstructionEngine_Ptr m_sceneReconstructionEngine;
-
-  /** The engine controlling the swapping of voxel blocks in/out of GPU memory. */
-  SwappingEngine_Ptr m_swappingEngine;
-
-  /** The primary camera tracker. */
-  Tracker_Ptr m_trackerPrimary;
-
-  /** The secondary camera tracker. */
-  Tracker_Ptr m_trackerSecondary;
+  /** The tracking controller. */
+  TrackingController_Ptr m_trackingController;
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
@@ -75,7 +73,7 @@ public:
    * \param openNIDeviceURI     An optional OpenNI device URI (if NULL is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
 #endif
 
   /**
@@ -86,7 +84,7 @@ public:
    * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const ITMLibSettings& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -116,7 +114,7 @@ private:
    *
    * \param settings  The settings to use for InfiniTAM.
    */
-  void initialise(ITMLibSettings settings);
+  void initialise(const Settings_CPtr& settings);
 };
 
 //#################### TYPEDEFS ####################
