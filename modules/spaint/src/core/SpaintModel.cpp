@@ -4,13 +4,13 @@
 
 #include "core/SpaintModel.h"
 
-#include <ITMLib/Engine/ITMTrackerFactory.h>
+//#include <ITMLib/Engine/ITMTrackerFactory.h>
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
+SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingController_CPtr& trackingController)
 : m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_settings(settings)
 {
   // Set up the scene.
@@ -18,11 +18,7 @@ SpaintModel::SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImag
   m_scene.reset(new Scene(&m_settings.sceneParams, settings.useSwapping, memoryType));
 
   // Set up the initial tracking state.
-  m_trackingState.reset(ITMTrackerFactory::MakeTrackingState(m_settings, m_rgbImageSize, m_depthImageSize));
-  m_trackingState->pose_d->SetFrom(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-
-  // Set up the scene view.
-  m_view.reset(new ITMView);
+  m_trackingState.reset(trackingController->BuildTrackingState());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

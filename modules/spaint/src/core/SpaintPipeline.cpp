@@ -8,7 +8,6 @@
 #include <Engine/OpenNIEngine.h>
 #endif
 #include <ITMLib/Engine/ITMRenTracker.cpp>
-#include <ITMLib/Engine/ITMTrackerFactory.h>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMRenTracker_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
@@ -88,15 +87,15 @@ void SpaintPipeline::process_frame()
     case ITMLibSettings::TRACKER_ICP:
     case ITMLibSettings::TRACKER_REN:
     {
-      visualisationEngine->CreateExpectedDepths(scene.get(), trackingState->pose_d, &view->calib->intrinsics_d, liveRenderState.get());
-      visualisationEngine->CreateICPMaps(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
+      visualisationEngine->CreateExpectedDepths(trackingState->pose_d, &view->calib->intrinsics_d, liveRenderState.get());
+      visualisationEngine->CreateICPMaps(view.get(), trackingState.get(), liveRenderState.get());
       break;
     }
     case ITMLibSettings::TRACKER_COLOR:
     {
       ITMPose rgbPose(view->calib->trafo_rgb_to_depth.calib_inv * trackingState->pose_d->GetM());
-      visualisationEngine->CreateExpectedDepths(scene.get(), &rgbPose, &view->calib->intrinsics_rgb, liveRenderState.get());
-      visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), liveRenderState.get(), m_model->get_settings().skipPoints);
+      visualisationEngine->CreateExpectedDepths(&rgbPose, &view->calib->intrinsics_rgb, liveRenderState.get());
+      visualisationEngine->CreatePointCloud(view.get(), trackingState.get(), liveRenderState.get(), m_model->get_settings().skipPoints);
       break;
     }
     default:
@@ -156,9 +155,6 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
     if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
     m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
   }
-
-  // Allocate the view.
-  m_viewBuilder->AllocateView(m_model->get_view().get(), rgbImageSize, depthImageSize);
 
   // Set up the raycaster.
   m_raycaster.reset(new SpaintRaycaster(m_model));

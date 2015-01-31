@@ -27,6 +27,7 @@ private:
 public:
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
+  typedef boost::shared_ptr<const ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
@@ -57,11 +58,12 @@ public:
   /**
    * \brief Constructs a model.
    *
-   * \param settings        The settings to use for InfiniTAM.
-   * \param rgbImageSize    The dimensions of the RGB images from which the scene is being reconstructed.
-   * \param depthImageSize  The dimensions of the depth images from which the scene is being reconstructed.
+   * \param settings            The settings to use for InfiniTAM.
+   * \param rgbImageSize        The dimensions of the RGB images from which the scene is being reconstructed.
+   * \param depthImageSize      The dimensions of the depth images from which the scene is being reconstructed.
+   * \param trackingController  The tracking controller.
    */
-  SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
+  SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingController_CPtr& trackingController);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

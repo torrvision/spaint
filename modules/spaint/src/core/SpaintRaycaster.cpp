@@ -6,7 +6,8 @@
 
 #include <stdexcept>
 
-#include <ITMLib/Engine/ITMTrackerFactory.h>
+#include <boost/serialization/shared_ptr.hpp>
+
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
@@ -19,16 +20,17 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
-: m_model(model)
+SpaintRaycaster::SpaintRaycaster(const SpaintModel_Ptr& model, const ITMRenderState *liveRenderState)
+: m_liveRenderState(liveRenderState, boost::serialization::null_deleter()), m_model(model)
 {
   // Set up the InfiniTAM visualisation engine.
+  const SpaintModel::Scene_Ptr& scene = model->get_scene();
   if(model->get_settings().deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     // Use the CUDA implementations.
     m_semanticVisualiser.reset(new SemanticVisualiser_CUDA);
-    m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
+    m_visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -38,12 +40,8 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model)
   {
     // Use the CPU implementations.
     m_semanticVisualiser.reset(new SemanticVisualiser_CPU);
-    m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
+    m_visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
   }
-
-  // Set up the live render state.
-  Vector2i trackedImageSize = ITMTrackerFactory::GetTrackedImageSize(model->get_settings(), model->get_rgb_image_size(), model->get_depth_image_size());
-  m_liveRenderState.reset(m_visualisationEngine->CreateRenderState(model->get_scene().get(),trackedImageSize));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -55,26 +53,26 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
   const ITMLibSettings& settings = m_model->get_settings();
   SpaintModel::View_CPtr view = m_model->get_view();
 
-  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), m_model->get_depth_image_size()));
+  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(m_model->get_depth_image_size()));
 
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_visualisationEngine->FindVisibleBlocks(&pose, intrinsics, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(&pose, intrinsics, renderState.get());
 
   switch(raycastType)
   {
     case RT_COLOUR:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage, true);
+      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage, true);
       break;
     }
     case RT_LAMBERTIAN:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage, false);
+      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage, false);
       break;
     }
     case RT_SEMANTIC:
     {
-      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+      m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage);
       break;
     }

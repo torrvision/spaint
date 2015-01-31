@@ -20,6 +20,7 @@ class SpaintRaycaster
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMFloat4Image> Float4Image_Ptr;
+  typedef boost::shared_ptr<const ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
 public:
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
@@ -44,7 +45,7 @@ private:
   RenderState_Ptr m_liveRenderState;
 
   /** The spaint model. */
-  SpaintModel_CPtr m_model;
+  SpaintModel_Ptr m_model;
 
   /** An image into which the raycast result may be copied when performing picking. */
   mutable Float4Image_Ptr m_raycastResult;
@@ -60,9 +61,10 @@ public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model The spaint model.
+   * \param model           The spaint model.
+   * \param liveRenderState The render state corresponding to the live camera pose.
    */
-  explicit SpaintRaycaster(const SpaintModel_CPtr& model);
+  SpaintRaycaster(const SpaintModel_Ptr& model, const ITMRenderState *liveRenderState);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
