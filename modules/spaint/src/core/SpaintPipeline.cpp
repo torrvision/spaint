@@ -48,13 +48,13 @@ void SpaintPipeline::process_frame()
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
   const SpaintModel::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
-  SpaintModel::View_Ptr& view = m_model->get_view();
+  const SpaintModel::View_Ptr& view = m_model->get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get());
-  if(newView != view.get()) view.reset(newView);
+  m_model->set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
@@ -122,12 +122,11 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
 
   // Set up the dense mapper and tracking controller.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
-	m_trackingController.reset(new ITMTrackingController(settings.get(), visualisationEngine.get(), m_lowLevelEngine.get(), scene.get(), liveRenderState.get()));
+  m_trackingController.reset(new ITMTrackingController(settings.get(), visualisationEngine.get(), m_lowLevelEngine.get(), scene.get(), liveRenderState.get()));
 
-  // Set up the spaint model.
-  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, TrackingState_Ptr(m_trackingController->BuildTrackingState()), settings));
-
-  // Set up the raycaster.
+  // Set up the spaint model and raycaster.
+  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
+  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
 
   // Note: The trackers can only be run once reconstruction has started.

@@ -4,8 +4,6 @@
 
 #include "core/SpaintModel.h"
 
-//#include <ITMLib/Engine/ITMTrackerFactory.h>
-
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -62,7 +60,7 @@ SpaintModel::TrackingState_CPtr SpaintModel::get_tracking_state() const
   return m_trackingState;
 }
 
-SpaintModel::View_Ptr& SpaintModel::get_view()
+const SpaintModel::View_Ptr& SpaintModel::get_view()
 {
   return m_view;
 }
@@ -70,6 +68,11 @@ SpaintModel::View_Ptr& SpaintModel::get_view()
 SpaintModel::View_CPtr SpaintModel::get_view() const
 {
   return m_view;
+}
+
+void SpaintModel::set_view(ITMView *view)
+{
+  if(m_view.get() != view) m_view.reset(view);
 }
 
 }

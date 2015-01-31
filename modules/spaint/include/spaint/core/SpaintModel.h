@@ -136,7 +136,7 @@ public:
    *
    * \return  The current view of the scene.
    */
-  View_Ptr& get_view();
+  const View_Ptr& get_view();
 
   /**
    * \brief Gets the current view of the scene.
@@ -144,6 +144,13 @@ public:
    * \return  The current view of the scene.
    */
   View_CPtr get_view() const;
+
+  /**
+   * \brief Sets the current view of the scene.
+   *
+   * \param view  The new current view of the scene.
+   */
+  void set_view(ITMView *view);
 };
 
 //#################### TYPEDEFS ####################

@@ -18,7 +18,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintRaycaster::SpaintRaycaster(const SpaintModel_Ptr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
+SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
 : m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
