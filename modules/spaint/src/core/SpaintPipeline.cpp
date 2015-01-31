@@ -90,17 +90,20 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, true));
   m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, true));
 
-  // Set up the spaint model.
-  m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize, TrackingState_Ptr(m_trackingController->BuildTrackingState())));
+  // Set up the scene.
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  SpaintModel::Scene_Ptr scene(new SpaintModel::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
   // Set up the InfiniTAM engines and view builder.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
+  VisualisationEngine_Ptr visualisationEngine;
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    // Use the GPU implementation of InfiniTAM.
+    // Use the CUDA implementations.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib));
+    visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -108,13 +111,24 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   }
   else
   {
-    // Use the CPU implementation of InfiniTAM.
+    // Use the CPU implementations.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
+    visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
   }
 
+  // Set up the live render state.
+  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(ITMTrackingController::GetTrackedImageSize(settings.get(), rgbImageSize, depthImageSize)));
+
+  // Set up the dense mapper and tracking controller.
+  m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
+	m_trackingController.reset(new ITMTrackingController(settings.get(), visualisationEngine.get(), m_lowLevelEngine.get(), scene.get(), liveRenderState.get()));
+
+  // Set up the spaint model.
+  m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize, TrackingState_Ptr(m_trackingController->BuildTrackingState())));
+
   // Set up the raycaster.
-  m_raycaster.reset(new SpaintRaycaster(m_model));
+  m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
 
   // Note: The trackers can only be run once reconstruction has started.
   m_reconstructionStarted = false;

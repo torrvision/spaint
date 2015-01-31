@@ -30,6 +30,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 SET(base_sources
 main.cpp
 Application.cpp
+CPUInstantiations.cpp
 WindowedRenderer.cpp
 )
 

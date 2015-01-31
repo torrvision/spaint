@@ -22,9 +22,8 @@ namespace spaint {
 class SpaintModel
 {
   //#################### TYPEDEFS ####################
-private:
-  typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
 public:
+  typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
