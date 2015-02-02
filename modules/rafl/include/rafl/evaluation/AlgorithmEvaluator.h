@@ -15,6 +15,11 @@ namespace rafl {
 template <typename Example, typename Result>
 class AlgorithmEvaluator
 {
+  //#################### TYPEDEFS ####################
+protected:
+  typedef boost::shared_ptr<const Example> Example_CPtr;
+  typedef Result ResultType;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The split generator to use. */
@@ -69,7 +74,7 @@ public:
   {
     std::vector<Result> results;
 
-    std::vector<SplitGenerator::Split> splits = m_splitGenerator->generate_splits();
+    std::vector<SplitGenerator::Split> splits = m_splitGenerator->generate_splits(examples.size());
     for(size_t i = 0, size = splits.size(); i < size; ++i)
     {
       results.push_back(evaluate_on_split(examples, splits[i]));
