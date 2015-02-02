@@ -120,28 +120,28 @@ public:
     }
 
     /**
-     * \brief Loads settings from a parameter map.
+     * \brief Loads settings from a property map.
      *
-     * \param params  The parameter map (parameter names -> values).
+     * \param properties  The property map.
      */
-    explicit Settings(const std::map<std::string,std::string>& params)
+    explicit Settings(const std::map<std::string,std::string>& properties)
     {
-      initialise(params);
+      initialise(properties);
     }
 
     //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
   private:
     /**
-     * \brief Loads settings from a parameter map.
+     * \brief Loads settings from a property map.
      *
-     * \param params  The parameter map (parameter names -> values).
+     * \param properties  The property map.
      */
-    void initialise(const std::map<std::string,std::string>& params)
+    void initialise(const std::map<std::string,std::string>& properties)
     {
       std::string decisionFunctionGeneratorType;
       unsigned int randomSeed = 0;
 
-      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(params, #param, param);
+      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
         GET_SETTING(candidateCount);
         GET_SETTING(decisionFunctionGeneratorType);
         GET_SETTING(gainThreshold);

@@ -36,15 +36,15 @@ private:
    */
   DecisionFunctionGeneratorFactory()
   {
-    // Register the makers for the various different types of decision function.
+    // Register the makers for the various different types of decision function generator.
     m_makers.insert(std::make_pair("FeatureThresholding", &feature_thresholding_maker));
   }
 
 public:
   /**
-   * \brief Gets the unique instance of the factory.
+   * \brief Gets the singleton instance.
    *
-   * \return  The unique instance of the factory.
+   * \return  The singleton instance.
    */
   static DecisionFunctionGeneratorFactory& instance()
   {
