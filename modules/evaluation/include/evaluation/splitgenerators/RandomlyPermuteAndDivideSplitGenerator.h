@@ -1,15 +1,15 @@
 /**
- * rafl: RandomlyPermuteAndDivideSplitGenerator.h
+ * evaluation: RandomlyPermuteAndDivideSplitGenerator.h
  */
 
-#ifndef H_RAFL_RANDOMLYPERMUTEANDDIVIDESPLITGENERATOR
-#define H_RAFL_RANDOMLYPERMUTEANDDIVIDESPLITGENERATOR
+#ifndef H_EVALUATION_RANDOMLYPERMUTEANDDIVIDESPLITGENERATOR
+#define H_EVALUATION_RANDOMLYPERMUTEANDDIVIDESPLITGENERATOR
 
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "SplitGenerator.h"
 
-namespace rafl {
+namespace evaluation {
 
 /**
  * \brief TODO

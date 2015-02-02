@@ -1,16 +1,16 @@
 /**
- * rafl: SplitGenerator.h
+ * evaluation: SplitGenerator.h
  */
 
-#ifndef H_RAFL_SPLITGENERATOR
-#define H_RAFL_SPLITGENERATOR
+#ifndef H_EVALUATION_SPLITGENERATOR
+#define H_EVALUATION_SPLITGENERATOR
 
 #include <utility>
 #include <vector>
 
 #include <tvgutil/RandomNumberGenerator.h>
 
-namespace rafl {
+namespace evaluation {
 
 /**
  * \brief An instance of a class deriving from this one can be used to generate example splits for algorithm evaluation.

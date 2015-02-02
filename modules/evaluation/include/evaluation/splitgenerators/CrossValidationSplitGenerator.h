@@ -1,15 +1,15 @@
 /**
- * rafl: CrossValidationSplitGenerator.h
+ * evaluation: CrossValidationSplitGenerator.h
  */
 
-#ifndef H_RAFL_CROSSVALIDATIONSPLITGENERATOR
-#define H_RAFL_CROSSVALIDATIONSPLITGENERATOR
+#ifndef H_EVALUATION_CROSSVALIDATIONSPLITGENERATOR
+#define H_EVALUATION_CROSSVALIDATIONSPLITGENERATOR
 
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "SplitGenerator.h"
 
-namespace rafl {
+namespace evaluation {
 
 /**
  * \brief An instance of this class can be used to generate example splits for cross-validation.

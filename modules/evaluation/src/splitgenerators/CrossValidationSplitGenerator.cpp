@@ -1,14 +1,14 @@
 /**
- * rafl: CrossValidationSplitGenerator.cpp
+ * evaluation: CrossValidationSplitGenerator.cpp
  */
 
-#include "evaluation/CrossValidationSplitGenerator.h"
+#include "splitgenerators/CrossValidationSplitGenerator.h"
 
 #include <stdexcept>
 
 #include <tvgutil/LimitedContainer.h>
 
-namespace rafl {
+namespace evaluation {
 
 //#################### HELPERS ####################
 

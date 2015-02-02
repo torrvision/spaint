@@ -7,8 +7,9 @@
 
 #include <boost/assign/list_of.hpp>
 
+#include <evaluation/AlgorithmEvaluator.h>
+
 #include <rafl/RandomForest.h>
-#include <rafl/evaluation/AlgorithmEvaluator.h>
 #include <rafl/evaluation/PerformanceMeasure.h>
 
 #include <tvgutil/MapUtil.h>
@@ -17,11 +18,11 @@
  * \brief TODO
  */
 template <typename Label>
-class RandomForestEvaluator : public rafl::AlgorithmEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> >
+class RandomForestEvaluator : public evaluation::AlgorithmEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> >
 {
   //#################### TYPEDEFS AND USINGS ####################
 private:
-  typedef rafl::AlgorithmEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> > Base;
+  typedef evaluation::AlgorithmEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> > Base;
   typedef rafl::DecisionTree<Label> DecisionTree;
   using typename Base::Example_CPtr;
   typedef rafl::RandomForest<Label> RandomForest;
@@ -39,7 +40,7 @@ public:
   /**
    * \brief TODO
    */
-  explicit RandomForestEvaluator(const rafl::SplitGenerator_Ptr& splitGenerator, const std::map<std::string,std::string>& settings)
+  explicit RandomForestEvaluator(const evaluation::SplitGenerator_Ptr& splitGenerator, const std::map<std::string,std::string>& settings)
   : Base(splitGenerator), m_decisionTreeSettings(settings)
   {
     #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, m_##param);
@@ -76,7 +77,7 @@ protected:
   }
 
   /** Override */
-  virtual ResultType evaluate_on_split(const std::vector<Example_CPtr>& examples, const SplitGenerator::Split& split) const
+  virtual ResultType evaluate_on_split(const std::vector<Example_CPtr>& examples, const evaluation::SplitGenerator::Split& split) const
   {
     RandomForest_Ptr randomForest(new RandomForest(m_treeCount, m_decisionTreeSettings));
 

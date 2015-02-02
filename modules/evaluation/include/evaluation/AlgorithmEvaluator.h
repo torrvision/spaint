@@ -1,13 +1,13 @@
 /**
- * rafl: AlgorithmEvaluator.h
+ * evaluation: AlgorithmEvaluator.h
  */
 
-#ifndef H_RAFL_ALGORITHMEVALUATOR
-#define H_RAFL_ALGORITHMEVALUATOR
+#ifndef H_EVALUATION_ALGORITHMEVALUATOR
+#define H_EVALUATION_ALGORITHMEVALUATOR
 
-#include "SplitGenerator.h"
+#include "splitgenerators/SplitGenerator.h"
 
-namespace rafl {
+namespace evaluation {
 
 /**
  * \brief An instance of a class deriving from an instantiation of this class template can be used to evaluate a learning algorithm.

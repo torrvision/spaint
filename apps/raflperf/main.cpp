@@ -143,7 +143,9 @@ using boost::spirit::hold_any;
 
 #include <Eigen/Dense>
 
-#include <rafl/evaluation/CrossValidationSplitGenerator.h>
+#include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
+using namespace evaluation;
+
 #include <rafl/evaluation/PerformanceTable.h>
 #include <rafl/evaluation/PerfUtil.h>
 #include <rafl/evaluation/ParameterSetProductGenerator.h>
