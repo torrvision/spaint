@@ -1,9 +1,9 @@
 /**
- * rafl: ParameterSetProductGenerator.h
+ * evaluation: ParameterSetProductGenerator.h
  */
 
-#ifndef H_RAFL_PARAMETERSETPRODUCTGENERATOR
-#define H_RAFL_PARAMETERSETPRODUCTGENERATOR
+#ifndef H_EVALUATION_PARAMETERSETPRODUCTGENERATOR
+#define H_EVALUATION_PARAMETERSETPRODUCTGENERATOR
 
 #include <map>
 #include <algorithm>
@@ -16,7 +16,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 
-namespace rafl {
+namespace evaluation {
 
 class ParameterSetProductGenerator
 {

@@ -1,16 +1,16 @@
 /**
- * rafl: PerformanceMeasure.h
+ * evaluation: PerformanceMeasure.h
  */
 
-#ifndef H_RAFL_PERFORMANCEMEASURE
-#define H_RAFL_PERFORMANCEMEASURE
+#ifndef H_EVALUATION_PERFORMANCEMEASURE
+#define H_EVALUATION_PERFORMANCEMEASURE
 
 #include <cmath>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-namespace rafl {
+namespace evaluation {
 
 /**
  * \brief An instance of this class represents a measure quantifying the performance of an algorithm.

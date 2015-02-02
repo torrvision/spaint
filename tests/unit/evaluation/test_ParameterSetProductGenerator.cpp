@@ -4,8 +4,8 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
-#include <rafl/evaluation/ParameterSetProductGenerator.h>
-using namespace rafl;
+#include <evaluation/util/ParameterSetProductGenerator.h>
+using namespace evaluation;
 
 typedef ParameterSetProductGenerator::ParamSet ParamSet;
 

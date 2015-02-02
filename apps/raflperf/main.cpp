@@ -143,13 +143,13 @@ using boost::spirit::hold_any;
 
 #include <Eigen/Dense>
 
+#include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h>
+#include <evaluation/util/ParameterSetProductGenerator.h>
 using namespace evaluation;
 
-#include <rafl/evaluation/PerformanceTable.h>
 #include <rafl/evaluation/PerfUtil.h>
-#include <rafl/evaluation/ParameterSetProductGenerator.h>
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
@@ -241,8 +241,8 @@ int main(int argc, char *argv[])
 #endif
 
   PerformanceTable results(list_of("Accuracy"));
-  //SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, numFolds));
-  SplitGenerator_Ptr splitGenerator(new RandomlyPermuteAndDivideSplitGenerator(seed, 5, 0.5f));
+  SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, numFolds));
+  //SplitGenerator_Ptr splitGenerator(new RandomlyPermuteAndDivideSplitGenerator(seed, 5, 0.5f));
   boost::shared_ptr<RandomForestEvaluator<Label> > evaluator;
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {

@@ -1,15 +1,15 @@
 /**
- * rafl: PerformanceTable.cpp
+ * evaluation: PerformanceTable.cpp
  */
 
-#include "evaluation/PerformanceTable.h"
+#include "core/PerformanceTable.h"
 
 #include <string>
 
 #include <tvgutil/MapUtil.h>
 using namespace tvgutil;
 
-namespace rafl {
+namespace evaluation {
 
 //#################### CONSTRUCTORS ####################
 

@@ -20,6 +20,17 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 #############################
 
 ##
+SET(core_sources
+src/core/PerformanceTable.cpp
+)
+
+SET(core_headers
+include/evaluation/core/AlgorithmEvaluator.h
+include/evaluation/core/PerformanceMeasure.h
+include/evaluation/core/PerformanceTable.h
+)
+
+##
 SET(splitgenerators_sources
 src/splitgenerators/CrossValidationSplitGenerator.cpp
 src/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.cpp
@@ -32,8 +43,12 @@ include/evaluation/splitgenerators/SplitGenerator.h
 )
 
 ##
-SET(toplevel_headers
-include/evaluation/AlgorithmEvaluator.h
+SET(util_sources
+src/util/ParameterSetProductGenerator.cpp
+)
+
+SET(util_headers
+include/evaluation/util/ParameterSetProductGenerator.h
 )
 
 #################################################################
@@ -41,20 +56,24 @@ include/evaluation/AlgorithmEvaluator.h
 #################################################################
 
 SET(sources
+${core_sources}
 ${splitgenerators_sources}
+${util_sources}
 )
 
 SET(headers
+${core_headers}
 ${splitgenerators_headers}
-${toplevel_headers}
+${util_headers}
 )
 
 #############################
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP("" FILES ${toplevel_headers})
+SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(splitgenerators FILES ${splitgenerators_sources} ${splitgenerators_headers})
+SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 
 ##########################################
 # Specify additional include directories #

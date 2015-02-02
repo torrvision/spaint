@@ -5,7 +5,7 @@
 #ifndef H_EVALUATION_ALGORITHMEVALUATOR
 #define H_EVALUATION_ALGORITHMEVALUATOR
 
-#include "splitgenerators/SplitGenerator.h"
+#include "../splitgenerators/SplitGenerator.h"
 
 namespace evaluation {
 

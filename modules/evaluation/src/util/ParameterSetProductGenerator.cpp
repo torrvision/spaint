@@ -1,15 +1,15 @@
 /**
- * rafl: ParameterSetProductGenerator.cpp
+ * evaluation: ParameterSetProductGenerator.cpp
  */
 
-#include "evaluation/ParameterSetProductGenerator.h"
+#include "util/ParameterSetProductGenerator.h"
 
 #include <boost/assign.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 using boost::spirit::hold_any;
 
-namespace rafl {
+namespace evaluation {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 ParameterSetProductGenerator& ParameterSetProductGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options)

@@ -1,9 +1,9 @@
 /**
- * rafl: PerformanceTable.h
+ * evaluation: PerformanceTable.h
  */
 
-#ifndef H_RAFL_PERFORMANCETABLE
-#define H_RAFL_PERFORMANCETABLE
+#ifndef H_EVALUATION_PERFORMANCETABLE
+#define H_EVALUATION_PERFORMANCETABLE
 
 #include <map>
 #include <ostream>
@@ -15,7 +15,7 @@
 
 #include "PerformanceMeasure.h"
 
-namespace rafl {
+namespace evaluation {
 
 /**
  * \brief An instance of this class represents a table of performance measures that indicate how well an algorithm performed for various different sets of parameters.

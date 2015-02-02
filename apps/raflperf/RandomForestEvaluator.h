@@ -7,10 +7,10 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include <evaluation/AlgorithmEvaluator.h>
+#include <evaluation/core/AlgorithmEvaluator.h>
+#include <evaluation/core/PerformanceMeasure.h>
 
 #include <rafl/RandomForest.h>
-#include <rafl/evaluation/PerformanceMeasure.h>
 
 #include <tvgutil/MapUtil.h>
 

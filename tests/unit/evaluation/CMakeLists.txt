@@ -1,20 +1,19 @@
-################################
-# CMakeLists.txt for unit/rafl #
-################################
+######################################
+# CMakeLists.txt for unit/evaluation #
+######################################
 
 ###############################
 # Specify the test suite name #
 ###############################
 
-SET(suitename rafl)
+SET(suitename evaluation)
 
 ##########################
 # Specify the test names #
 ##########################
 
 SET(testnames
-UnitCircleExampleGenerator
-PerfUtil
+ParameterSetProductGenerator
 )
 
 FOREACH(testname ${testnames})
@@ -46,7 +45,7 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/evaluation/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
@@ -59,7 +58,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetUnitTestTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} rafl tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} evaluation tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
 ENDFOREACH()
