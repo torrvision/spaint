@@ -14,8 +14,6 @@ SET(targetname raflperf)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
@@ -58,7 +56,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 
 TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
 
 #############################
 # Specify things to install #
