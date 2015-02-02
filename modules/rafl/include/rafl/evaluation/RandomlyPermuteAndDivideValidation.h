@@ -10,6 +10,9 @@
 #include <utility>
 
 #include <boost/shared_ptr.hpp>
+
+#include <boost/function.hpp>
+
 #include <Eigen/Dense>
 
 #include <tvgutil/RandomNumberGenerator.h>
@@ -26,11 +29,12 @@ namespace rafl {
  * then divide them into two sets where the first set has a percentage of the examples,
  * and the second set the remaining examples.
  */
-template <typename Algorithm, typename QuantitativePerformance, typename Label>
+template <typename Algorithm, typename Result, typename Label>
 class RandomlyPermuteAndDivideValidation
 {
-  //#################### PRIVATE TYPEDEFS ####################
+  //#################### TYPEDEFS ####################
 private:
+  typedef boost::function<Result(std::vector<Result>)> Averager;
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef boost::shared_ptr<Algorithm> Algorithm_Ptr;
   typedef std::vector<size_t> Indices;
@@ -77,17 +81,17 @@ public:
    *
    * \return The average quantitative performance of the algorithm over the folds.
    */
-  QuantitativePerformance run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
+  Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
   {
     initialise_splits(examples.size());
 
-    std::vector<QuantitativePerformance> performance;
+    std::vector<Result> performance;
     for(size_t i = 0; i < m_num_folds; ++i)
     {
       performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
     }
 
-    return QuantitativePerformance::average(performance);
+    return Result::average(performance);
   }
 
   /**

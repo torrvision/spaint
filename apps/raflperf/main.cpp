@@ -6,13 +6,14 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 using boost::assign::list_of;
+using boost::assign::map_list_of;
 using boost::spirit::hold_any;
 
 #include <Eigen/Dense>
 
+#include <rafl/evaluation/PerformanceMeasureSet.h>
 #include <rafl/evaluation/PerformanceTable.h>
 #include <rafl/evaluation/PerfUtil.h>
-#include <rafl/evaluation/QuantitativePerformance.h>
 #include <rafl/evaluation/CrossValidation.h>
 #include <rafl/evaluation/RandomlyPermuteAndDivideValidation.h>
 #include <rafl/evaluation/ParameterSetProductGenerator.h>
@@ -98,8 +99,8 @@ int main(int argc, char *argv[])
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
     randomAlgorithm.reset( new RFO(params[n]) );
-    RandomlyPermuteAndDivideValidation<RFO,QuantitativePerformance,Label> rpadv(0.5f, 5, seed);
-    QuantitativePerformance performance = rpadv.run(randomAlgorithm, examples);
+    RandomlyPermuteAndDivideValidation<RFO,PerformanceMeasureSet,Label> rpadv(0.5f, 5, seed);
+    PerformanceMeasureSet performance = rpadv.run(randomAlgorithm, examples);
     std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << performance << std::endl;
 #if 0
     CrossValidation<RFO,QuantitativePerformance,Label> cv(numFolds, seed);

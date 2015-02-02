@@ -13,8 +13,8 @@
 
 #include <rafl/RandomForest.h>
 
+#include <rafl/evaluation/PerformanceMeasureSet.h>
 #include <rafl/evaluation/PerfUtil.h>
-#include <rafl/evaluation/QuantitativePerformance.h>
 
 namespace rafl {
 
@@ -66,7 +66,7 @@ public:
    * this function trains the random forest on the examples selected by the first split,
    * and evaluates the random forest on the examples selected by the second split.
    */
-  QuantitativePerformance cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
+  PerformanceMeasureSet cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
   {
     //Add training examples to forest.
     m_randomForest->add_examples(examples, split.first);
@@ -85,9 +85,9 @@ private:
    *
    * \param examples  The set of examples to evaluate.
    * \param incides   The indices of the examples to use in the evaluation.
-   * \return          The quantitative performance.
+   * \return          The quantitative performance measures.
    */
-  QuantitativePerformance evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
+  PerformanceMeasureSet evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
     size_t indicesSize = indices.size();
     std::set<Label> classLabels;
@@ -101,13 +101,14 @@ private:
       predictedLabels[i] = m_randomForest->predict(descriptor);
     }
 
-    //Calculates the quantitative performance measures.
-    QuantitativePerformance accuracy(PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
-    return accuracy;
+    // Calculates the quantitative performance measures.
+    std::map<std::string,PerformanceMeasure> measures;
+    PerformanceMeasure measure("Accuracy", PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
+    measures.insert(std::make_pair(measure.get_name(), measure));
+    return PerformanceMeasureSet(measures);
   }
 };
 
 }
 
 #endif
-

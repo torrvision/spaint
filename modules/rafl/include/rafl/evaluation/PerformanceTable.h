@@ -13,12 +13,12 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "QuantitativePerformance.h"
+#include "PerformanceMeasure.h"
 
 namespace rafl {
 
 /**
- * \brief An instance of this class represents a table of performance results that indicate how well an algorithm performed for various different sets of parameters.
+ * \brief An instance of this class represents a table of performance measures that indicate how well an algorithm performed for various different sets of parameters.
  */
 class PerformanceTable
 {
@@ -31,8 +31,8 @@ private:
   /** The names of the measures (e.g. "Accuracy") that are recorded in the table. */
   std::vector<std::string> m_measureNames;
 
-  /** The quantitative results of the algorithm for the various sets of parameters. */
-  std::vector<std::pair<ParamSet,QuantitativePerformance> > m_results;
+  /** The results of running the algorithm with various sets of parameters. */
+  std::vector<std::pair<ParamSet,std::map<std::string,PerformanceMeasure> > > m_results;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -68,12 +68,12 @@ public:
   void output(std::ostream& os, const std::string& delimiter = "\t") const;
 
   /**
-   * \brief Records the quantitative performance of the algorithm when run with the specified set of parameters.
+   * \brief Records the performance of the algorithm when run with the specified set of parameters.
    *
-   * \param params      A set of parameters.
-   * \param performance The quantitative performance of the algorithm when run with that set of parameters.
+   * \param params    The parameters that were used when running the algorithm.
+   * \param measures  The performance measures for the algorithm when run with that set of parameters.
    */
-  void record_performance(const ParamSet& params, const QuantitativePerformance& performance);
+  void record_performance(const ParamSet& params, const std::map<std::string,PerformanceMeasure>& measures);
 };
 
 }

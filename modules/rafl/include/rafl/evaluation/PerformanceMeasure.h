@@ -154,6 +154,14 @@ public:
   }
 };
 
+//#################### STREAM OPERATORS ####################
+
+inline std::ostream& operator<<(std::ostream& os, const PerformanceMeasure& rhs)
+{
+  os << '[' << rhs.get_name() << ": " << rhs.get_mean() << " +/- " << rhs.get_std_dev() << " (" << rhs.get_sample_count() << " samples)]";
+  return os;
+}
+
 }
 
 #endif
