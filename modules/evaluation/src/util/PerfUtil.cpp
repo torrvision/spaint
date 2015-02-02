@@ -1,10 +1,10 @@
 /**
- * rafl: PerfUtil.cpp
+ * evaluation: PerfUtil.cpp
  */
 
-#include "evaluation/PerfUtil.h"
+#include "util/PerfUtil.h"
 
-namespace rafl {
+namespace evaluation {
 
 float PerfUtil::get_accuracy(const Eigen::MatrixXf confusion_matrix)
 {
@@ -24,4 +24,3 @@ Eigen::MatrixXf PerfUtil::normalise_rows_L1(const Eigen::MatrixXf matrix)
 }
 
 }
-

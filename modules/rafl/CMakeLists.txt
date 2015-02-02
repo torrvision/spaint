@@ -41,15 +41,6 @@ include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
 )
 
 ##
-SET(evaluation_sources
-src/evaluation/PerfUtil.cpp
-)
-
-SET(evaluation_headers
-include/rafl/evaluation/PerfUtil.h
-)
-
-##
 SET(examples_headers
 include/rafl/examples/Example.h
 include/rafl/examples/ExampleReservoir.h
@@ -69,13 +60,11 @@ include/rafl/RandomForest.h
 
 SET(sources
 ${decisionfunctions_sources}
-${evaluation_sources}
 )
 
 SET(headers
 ${base_headers}
 ${decisionfunctions_headers}
-${evaluation_headers}
 ${examples_headers}
 ${toplevel_headers}
 )
@@ -87,7 +76,6 @@ ${toplevel_headers}
 SOURCE_GROUP("" FILES ${toplevel_headers})
 SOURCE_GROUP(base FILES ${base_headers})
 SOURCE_GROUP(decisionfunctions FILES ${decisionfunctions_sources} ${decisionfunctions_headers})
-SOURCE_GROUP(evaluation FILES ${evaluation_sources} ${evaluation_headers})
 SOURCE_GROUP(examples FILES ${examples_headers})
 
 ##########################################

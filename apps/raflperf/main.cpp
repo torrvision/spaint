@@ -12,9 +12,9 @@ using boost::assign::map_list_of;
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h>
 #include <evaluation/util/ParameterSetProductGenerator.h>
+#include <evaluation/util/PerfUtil.h>
 using namespace evaluation;
 
-#include <rafl/evaluation/PerfUtil.h>
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
