@@ -55,6 +55,10 @@ public:
   virtual std::vector<Split> generate_splits(size_t exampleCount) = 0;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SplitGenerator> SplitGenerator_Ptr;
+
 }
 
 #endif
