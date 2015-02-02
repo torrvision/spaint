@@ -12,7 +12,11 @@
 namespace evaluation {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to generate example splits for algorithm evaluation.
+ *
+ * The approach used here first randomly permutes the example indices, then divides them into two sets,
+ * the first of which contains a specified percentage of the examples, and the second of which contains
+ * the remaining examples.
  */
 class RandomlyPermuteAndDivideSplitGenerator : public SplitGenerator
 {
@@ -27,7 +31,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a "randomly permute and divide" split generator.
    *
    * \param foldCount The number of folds to use.
    * \param seed      The seed to use for the random number generator when generating splits.

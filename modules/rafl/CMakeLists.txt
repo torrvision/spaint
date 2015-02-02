@@ -52,7 +52,6 @@ include/rafl/evaluation/ParameterSetProductGenerator.h
 include/rafl/evaluation/PerformanceMeasure.h
 include/rafl/evaluation/PerformanceTable.h
 include/rafl/evaluation/PerfUtil.h
-include/rafl/evaluation/RandomlyPermuteAndDivideValidation.h
 )
 
 ##
