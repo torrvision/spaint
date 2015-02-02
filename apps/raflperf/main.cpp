@@ -144,7 +144,6 @@ using boost::spirit::hold_any;
 #include <Eigen/Dense>
 
 #include <rafl/evaluation/CrossValidationSplitGenerator.h>
-#include <rafl/evaluation/PerformanceMeasureSet.h>
 #include <rafl/evaluation/PerformanceTable.h>
 #include <rafl/evaluation/PerfUtil.h>
 #include <rafl/evaluation/ParameterSetProductGenerator.h>
@@ -158,7 +157,6 @@ using namespace rafl;
 #include "RandomForestEvaluator.h"
 
 typedef int Label;
-//typedef RFOnlineLearner<Label> RFO;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef ParameterSetProductGenerator::ParamSet ParamSet;
@@ -247,7 +245,7 @@ int main(int argc, char *argv[])
     evaluator.reset(new RandomForestEvaluator<Label>(splitGenerator, params[n]));
     std::map<std::string,PerformanceMeasure> result = evaluator->evaluate(examples);
     results.record_performance(params[n], result);
-    std::cout << "The validation result after " << numFolds << " folds is: " << result << '\n';
+    //std::cout << "The validation result after " << numFolds << " folds is: " << result << '\n';
   }
 
   //Output results to the screen.

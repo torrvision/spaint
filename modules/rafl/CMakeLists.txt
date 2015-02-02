@@ -50,11 +50,9 @@ src/evaluation/PerfUtil.cpp
 
 SET(evaluation_headers
 include/rafl/evaluation/AlgorithmEvaluator.h
-include/rafl/evaluation/CrossValidation.h
 include/rafl/evaluation/CrossValidationSplitGenerator.h
 include/rafl/evaluation/ParameterSetProductGenerator.h
 include/rafl/evaluation/PerformanceMeasure.h
-include/rafl/evaluation/PerformanceMeasureSet.h
 include/rafl/evaluation/PerformanceTable.h
 include/rafl/evaluation/PerfUtil.h
 include/rafl/evaluation/RandomlyPermuteAndDivideSplitGenerator.h

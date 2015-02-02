@@ -29,7 +29,6 @@ main.cpp
 
 SET(headers
 RandomForestEvaluator.h
-RFOnlineLearner.h
 )
 
 #############################
