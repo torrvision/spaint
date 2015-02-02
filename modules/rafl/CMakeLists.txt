@@ -46,6 +46,7 @@ src/evaluation/CrossValidationSplitGenerator.cpp
 src/evaluation/ParameterSetProductGenerator.cpp
 src/evaluation/PerformanceTable.cpp
 src/evaluation/PerfUtil.cpp
+src/evaluation/RandomlyPermuteAndDivideSplitGenerator.cpp
 )
 
 SET(evaluation_headers
