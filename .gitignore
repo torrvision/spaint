@@ -7,6 +7,7 @@ libraries/Eigen-3.2.2/
 libraries/opencv-2.4.9/
 libraries/SDL2-2.0.3/
 libraries/*.log
+librarytags
 tags
 tests/mike/
 *.swp
