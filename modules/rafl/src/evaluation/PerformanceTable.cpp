@@ -1,16 +1,22 @@
 /**
- * rafl: EvaluationResults.cpp
+ * rafl: PerformanceTable.cpp
  */
 
-#include "evaluation/EvaluationResults.h"
+#include "evaluation/PerformanceTable.h"
 
 #include <string>
 
 namespace rafl {
 
+//#################### CONSTRUCTORS ####################
+
+PerformanceTable::PerformanceTable(const std::vector<std::string>& measureNames)
+: m_measureNames(measureNames)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void EvaluationResults::output(std::ostream& os, const std::string& delimiter) const
+void PerformanceTable::output(std::ostream& os, const std::string& delimiter) const
 {
   // Output the column titles (the parameter names and performance measures).
   const ParamSet& firstSet = m_results[0].first;
@@ -18,7 +24,10 @@ void EvaluationResults::output(std::ostream& os, const std::string& delimiter) c
   {
     os << it->first << delimiter;
   }
-  m_results[0].second.print_accuracy_header(os);
+  for(size_t i = 0, size = m_measureNames.size(); i < size; ++i)
+  {
+    os << m_measureNames[i] << "Mean" << delimiter << m_measureNames[i] << "StdDev";
+  }
   os << '\n';
 
   // Output the results of running the algorithm with different sets of parameters (one set per row).
@@ -34,7 +43,7 @@ void EvaluationResults::output(std::ostream& os, const std::string& delimiter) c
   }
 }
 
-void EvaluationResults::record_performance(const ParamSet& params, const QuantitativePerformance& performance)
+void PerformanceTable::record_performance(const ParamSet& params, const QuantitativePerformance& performance)
 {
   m_results.push_back(std::make_pair(params, performance));
 }

@@ -10,7 +10,8 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class represents the quantitative performance obtained by an algorithm.
+ * \brief An instance of this class represents a collection of performance measures 
+ that together indicate the quantitative performance of an algorithm.
  */
 class QuantitativePerformance
 {
@@ -30,6 +31,8 @@ private:
     float stdDev;
   };
 
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** The accuracy measure. */
   Measure m_accuracy;
 
@@ -69,7 +72,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Constructs a single quantitative perofrmance measure form a vector of them.
+   * \brief Constructs a single quantitative performance measure from a vector of them.
    *
    * \param qpv    A vector of quantitative performance measures.
    */
@@ -105,18 +108,6 @@ public:
   }
 
   /**
-   * \brief Prints a tab delineated header to a stream.
-   *
-   * \param out  The stream.
-   * \return     The stream.
-   */
-  std::ostream& print_accuracy_header(std::ostream& out) const
-  {
-    out << "Acc" << "\t" << "Std";
-    return out;
-  }
-
-  /**
    * \brief Prints tab delineated accuracy values to a stream.
    *
    * \param out  The stream.
@@ -145,4 +136,3 @@ public:
 } //end namespace rafl
 
 #endif
-
