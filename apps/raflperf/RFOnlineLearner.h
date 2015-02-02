@@ -31,14 +31,16 @@ public:
   typedef std::pair<Indices,Indices> Split;
   typedef DecisionTree<Label> DT; 
   typedef RandomForest<Label> RF;
+  typedef PerformanceMeasureSet Result;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  /** An instance of a random forest. */
-  boost::shared_ptr<RF> m_randomForest;
+  typename DT::Settings m_decisionTreeSettings;
 
   /** The split budget of the random forest which may change over time. */
   size_t m_splitBudget;
+
+  size_t m_treeCount;
 
   //#################### CONSTRUCTOR ####################
 public:
@@ -48,17 +50,12 @@ public:
    * \param The settings of the random forest.
    */
   explicit RFOnlineLearner(const std::map<std::string,std::string>& settings)
+  : m_decisionTreeSettings(settings)
   {
-    typename DT::Settings decisionTreeSettings(settings);
-
-    size_t splitBudget = 0; //this is the initial split budget as it may change over time.
-    size_t treeCount = 0;
-    #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, param);
-      GET_SETTING(splitBudget);
+    #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, m_##param);
+      GET_SETTING(splitBudget); //this is the initial split budget as it may change over time.
       GET_SETTING(treeCount);
     #undef GET_SETTING
-    m_splitBudget = splitBudget;
-    m_randomForest.reset( new RF(treeCount, decisionTreeSettings));
   }
 
   /**
@@ -66,16 +63,18 @@ public:
    * this function trains the random forest on the examples selected by the first split,
    * and evaluates the random forest on the examples selected by the second split.
    */
-  PerformanceMeasureSet cross_validation_offline_output(const std::vector<Example_CPtr>& examples, const Split& split)
+  PerformanceMeasureSet evaluate_on_split(const std::vector<Example_CPtr>& examples, const Split& split) const
   {
+    boost::shared_ptr<RF> randomForest(new RF(m_treeCount, m_decisionTreeSettings));
+
     //Add training examples to forest.
-    m_randomForest->add_examples(examples, split.first);
+    randomForest->add_examples(examples, split.first);
 
     //Train the forest.
-    m_randomForest->train(m_splitBudget);
+    randomForest->train(m_splitBudget);
 
     //Predict on the validation set.
-    return evaluate(examples, split.second);
+    return evaluate(randomForest, examples, split.second);
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -83,11 +82,12 @@ private:
   /**
    * \brief This function evaluates the random forest on a set of examples.
    *
-   * \param examples  The set of examples to evaluate.
-   * \param incides   The indices of the examples to use in the evaluation.
-   * \return          The quantitative performance measures.
+   * \param randomForest  The random forest.
+   * \param examples      The set of examples to evaluate.
+   * \param incides       The indices of the examples to use in the evaluation.
+   * \return              The quantitative performance measures.
    */
-  PerformanceMeasureSet evaluate(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
+  PerformanceMeasureSet evaluate(const boost::shared_ptr<RF>& randomForest, const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices) const
   {
     size_t indicesSize = indices.size();
     std::set<Label> classLabels;
@@ -98,7 +98,7 @@ private:
       const Descriptor_CPtr& descriptor = example->get_descriptor();
       expectedLabels[i] = example->get_label();
       classLabels.insert(expectedLabels[i]);
-      predictedLabels[i] = m_randomForest->predict(descriptor);
+      predictedLabels[i] = randomForest->predict(descriptor);
     }
 
     // Calculates the quantitative performance measures.

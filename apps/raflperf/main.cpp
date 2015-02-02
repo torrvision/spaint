@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
     randomAlgorithm.reset( new RFO(params[n]) );
-    RandomlyPermuteAndDivideValidation<RFO,PerformanceMeasureSet,Label> rpadv(0.5f, 5, seed);
+    RandomlyPermuteAndDivideValidation<RFO,Label> rpadv(0.5f, 5, seed);
     PerformanceMeasureSet performance = rpadv.run(randomAlgorithm, examples);
     std::cout << "The randomly-permute-and-divide-validation result after " << rpadv.num_folds() << " folds is: " << performance << std::endl;
 #if 0

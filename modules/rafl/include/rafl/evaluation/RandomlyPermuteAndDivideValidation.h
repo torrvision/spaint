@@ -29,14 +29,13 @@ namespace rafl {
  * then divide them into two sets where the first set has a percentage of the examples,
  * and the second set the remaining examples.
  */
-template <typename Algorithm, typename Result, typename Label>
+template <typename Algorithm, typename Label>
 class RandomlyPermuteAndDivideValidation
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::function<Result(std::vector<Result>)> Averager;
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-  typedef boost::shared_ptr<Algorithm> Algorithm_Ptr;
+  typedef boost::shared_ptr<const Algorithm> Algorithm_CPtr;
   typedef std::vector<size_t> Indices;
   typedef std::pair<Indices,Indices> Split;
   typedef std::vector<Split> Splits;
@@ -81,17 +80,17 @@ public:
    *
    * \return The average quantitative performance of the algorithm over the folds.
    */
-  Result run(Algorithm_Ptr algorithm, const std::vector<Example_CPtr>& examples)
+  typename Algorithm::Result run(const Algorithm_CPtr& algorithm, const std::vector<Example_CPtr>& examples)
   {
     initialise_splits(examples.size());
 
-    std::vector<Result> performance;
+    std::vector<typename Algorithm::Result> results;
     for(size_t i = 0; i < m_num_folds; ++i)
     {
-      performance.push_back(algorithm->cross_validation_offline_output(examples, m_splits[i]));
+      results.push_back(algorithm->evaluate_on_split(examples, m_splits[i]));
     }
 
-    return Result::average(performance);
+    return Algorithm::Result::average(results);
   }
 
   /**
