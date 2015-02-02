@@ -22,9 +22,6 @@ private:
   /** The mean of the measure. */
   float m_mean;
 
-  /** The name of the measure. */
-  std::string m_name;
-
   /** The number of samples used to generate the measure. */
   size_t m_sampleCount;
 
@@ -36,24 +33,22 @@ public:
   /**
    * \brief Constructs a performance measure from a single sample.
    *
-   * \param name  The name of the measure.
-   * \param value The performance measured on one sample.
+   * \param value The performance as measured on a single sample.
    */
-  PerformanceMeasure(const std::string& name, float value)
-  : m_mean(value), m_name(name), m_sampleCount(1), m_stdDev(0.0f)
+  PerformanceMeasure(float value)
+  : m_mean(value), m_sampleCount(1), m_stdDev(0.0f)
   {}
 
 private:
   /**
    * \brief Constructs an arbitrary performance measure.
    *
-   * \param name        The name of the measure.
    * \param sampleCount The number of samples used to calculate the measure.
    * \param mean        The mean of the measure.
    * \param stdDev      The standard deviation of the measure.
    */
-  PerformanceMeasure(const std::string& name, size_t sampleCount, float mean, float stdDev)
-  : m_mean(mean), m_name(name), m_sampleCount(sampleCount), m_stdDev(stdDev)
+  PerformanceMeasure(size_t sampleCount, float mean, float stdDev)
+  : m_mean(mean), m_sampleCount(sampleCount), m_stdDev(stdDev)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -66,16 +61,6 @@ public:
   float get_mean() const
   {
     return m_mean;
-  }
-
-  /**
-   * \brief Gets the name of the measure.
-   *
-   * \return  The name of the measure.
-   */
-  const std::string& get_name() const
-  {
-    return m_name;
   }
 
   /**
@@ -125,16 +110,10 @@ public:
     }
 
     // Compute the mean of the combined measure.
-    const std::string& measureName = measures[0].get_name();
     float combinedMean = 0.0f;
     size_t combinedSampleCount = 0;
     for(size_t i = 0, size = measures.size(); i < size; ++i)
     {
-      if(measures[i].get_name() != measureName)
-      {
-        throw std::runtime_error("Cannot average a heterogeneous set of measures");
-      }
-
       size_t sampleCount = measures[i].get_sample_count();
       combinedMean += sampleCount * measures[i].get_mean();
       combinedSampleCount += sampleCount;
@@ -150,7 +129,7 @@ public:
     }
     combinedVariance /= combinedSampleCount;
 
-    return PerformanceMeasure(measureName, combinedSampleCount, combinedMean, sqrt(combinedVariance));
+    return PerformanceMeasure(combinedSampleCount, combinedMean, sqrt(combinedVariance));
   }
 };
 
@@ -158,7 +137,7 @@ public:
 
 inline std::ostream& operator<<(std::ostream& os, const PerformanceMeasure& rhs)
 {
-  os << '[' << rhs.get_name() << ": " << rhs.get_mean() << " +/- " << rhs.get_std_dev() << " (" << rhs.get_sample_count() << " samples)]";
+  os << rhs.get_mean() << " +/- " << rhs.get_std_dev() << " (" << rhs.get_sample_count() << " samples)";
   return os;
 }
 

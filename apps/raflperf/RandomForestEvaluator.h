@@ -114,8 +114,7 @@ private:
       predictedLabels[i] = randomForest->predict(descriptor);
     }
 
-    PerformanceMeasure measure("Accuracy", PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
-    return boost::assign::map_list_of(measure.get_name(), measure);
+    return boost::assign::map_list_of("Accuracy", PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
   }
 };
 
