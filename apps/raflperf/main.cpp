@@ -78,10 +78,10 @@ int main(int argc, char *argv[])
 
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = ParameterSetProductGenerator()
-    .add_param("treeCount", list_of<size_t>(1)(3)(5)(7)(9)(11)(13)(15)(17)(19)(21))
+    .add_param("treeCount", list_of<size_t>(1)(3)/*(5)(7)(9)(11)(13)(15)(17)(19)(21)*/)
     .add_param("splitBudget", list_of<size_t>(static_cast<size_t>(pow(2,20))))
     .add_param("candidateCount", list_of<int>(256))
-    .add_param("decisionFunctionGeneratorName", list_of<std::string>("FeatureThresholding"))
+    .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
     .add_param("maxClassSize", list_of<size_t>(10000))
     .add_param("maxTreeHeight", list_of<size_t>(20))
@@ -106,11 +106,11 @@ int main(int argc, char *argv[])
     QuantitativePerformance performance = cv.run(randomAlgorithm, examples);
     std::cout << "The cross-validation result after " << cv.num_folds() << " folds is: " << performance << std::endl;
 #endif
-    results.push_back(params[n], performance);
+    results.record_performance(params[n], performance);
   }
 
   //Output results to the screen.
-  results.print_tab_delimited(std::cout);
+  results.output(std::cout);
 
   //Output results to a file.
   std::ofstream resultsFile(outputResultPath.c_str());
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    results.print_tab_delimited(resultsFile);
+    results.output(resultsFile);
   }
 
   return 0;

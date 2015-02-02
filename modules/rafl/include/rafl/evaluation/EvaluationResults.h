@@ -33,16 +33,20 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Prints the results of evaluating the algorithm to a stream.
+   * \brief Outputs a table showing the results of evaluating the algorithm to a stream.
    *
-   * \param os  The stream.
+   * \param os        The stream.
+   * \param delimiter The delimiter used to separate the columns of the table.
    */
-  void print_tab_delimited(std::ostream& os) const;
+  void output(std::ostream& os, const std::string& delimiter = "\t") const;
 
   /**
-   * \brief Adds a pair of parameters and quantitative performances to the results.
+   * \brief Records the quantitative performance of the algorithm when run with the specified set of parameters.
+   *
+   * \param params      The set of parameters.
+   * \param performance The quantitative performance of the algorithm when run with that set of parameters.
    */
-  void push_back(const ParamSet& paramSet, const QuantitativePerformance& QP);
+  void record_performance(const ParamSet& params, const QuantitativePerformance& performance);
 };
 
 }
