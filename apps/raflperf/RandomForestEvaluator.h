@@ -15,7 +15,7 @@
 #include <tvgutil/MapUtil.h>
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to evaluate a random forest using approaches based on example set splitting.
  */
 template <typename Label>
 class RandomForestEvaluator : public evaluation::LearnerEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> >
@@ -31,14 +31,22 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The settings to use for decision trees in the random forest. */
   typename DecisionTree::Settings m_decisionTreeSettings;
+
+  /** The maximum number of nodes per tree that may be split in each training step. */
   size_t m_splitBudget;
+
+  /** The number of decision trees to use in the random forest. */
   size_t m_treeCount;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a random forest evaluator.
+   *
+   * \param splitGenerator  The generator to use to split the example set.
+   * \param settings        The settings to use for the random forest.
    */
   explicit RandomForestEvaluator(const evaluation::SplitGenerator_Ptr& splitGenerator, const std::map<std::string,std::string>& settings)
   : Base(splitGenerator), m_decisionTreeSettings(settings)
@@ -79,40 +87,39 @@ protected:
   /** Override */
   virtual ResultType evaluate_on_split(const std::vector<Example_CPtr>& examples, const evaluation::SplitGenerator::Split& split) const
   {
+    // Make a random forest using the specified settings and add the examples in the training set to it.
     RandomForest_Ptr randomForest(new RandomForest(m_treeCount, m_decisionTreeSettings));
-
-    // Add the training examples to the forest.
     randomForest->add_examples(examples, split.first);
 
     // Train the forest.
     randomForest->train(m_splitBudget);
 
-    // Evaluate the forest on the validation set.
+    // Return the results of evaluating the forest on the validation set.
     return do_evaluation(randomForest, examples, split.second);
   }
 
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Evaluates a random forest on a set of examples.
+   * \brief Evaluates a random forest on a subset of a set of examples.
    *
    * \param randomForest  The random forest.
-   * \param examples      The set of examples on which to evaluate it.
-   * \param indices       The indices of the examples to use in the evaluation.
+   * \param examples      The overall set of examples from which the subset of evaluation examples is drawn.
+   * \param indices       The indices of the subset of examples on which to evaluate the random forest.
    * \return              The results of the evaluation.
    */
-  ResultType do_evaluation(const RandomForest_Ptr& randomForest, const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices) const
+  static ResultType do_evaluation(const RandomForest_Ptr& randomForest, const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
-    size_t indicesSize = indices.size();
     std::set<Label> classLabels;
+    size_t indicesSize = indices.size();
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
+
     for(size_t i = 0; i < indicesSize; ++i)
     {
       const Example_CPtr& example = examples[indices[i]];
-      const Descriptor_CPtr& descriptor = example->get_descriptor();
+      predictedLabels[i] = randomForest->predict(example->get_descriptor());
       expectedLabels[i] = example->get_label();
       classLabels.insert(expectedLabels[i]);
-      predictedLabels[i] = randomForest->predict(descriptor);
     }
 
     return boost::assign::map_list_of("Accuracy", PerfUtil::get_accuracy(PerfUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
