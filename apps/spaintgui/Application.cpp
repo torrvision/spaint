@@ -49,7 +49,10 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   m_inputState.press_key(keysym.sym);
 
   // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
-  if(keysym.sym == SDLK_f) m_spaintPipeline->toggle_fusion();
+  if(keysym.sym == SDLK_f)
+  {
+    m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
+  }
 
   // If the H key is pressed, print out a list of keyboard controls.
   if(keysym.sym == SDLK_h)

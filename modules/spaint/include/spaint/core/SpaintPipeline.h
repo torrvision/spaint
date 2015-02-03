@@ -36,6 +36,9 @@ private:
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
 
+  /** Whether or not fusion should be run as part of the pipeline. */
+  bool m_fusionEnabled;
+
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
 
@@ -59,9 +62,6 @@ private:
 
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
-
-  /** Whether or not fusion is run as part of the pipeline. */
-  bool m_runFusion;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
@@ -98,6 +98,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets whether or not fusion is currently being run as part of the pipeline.
+   *
+   * \return  true, if fusion is currently being run as part of the pipeline, or false otherwise.
+   */
+  bool get_fusion_enabled() const;
+
+  /**
    * \brief Gets the spaint model.
    *
    * \return  The spaint model.
@@ -117,9 +124,11 @@ public:
   void process_frame();
 
   /**
-   * \brief Toggles whether or not fusion is run as part of the pipeline.
+   * \brief Sets whether or not fusion should be run as part of the pipeline.
+   *
+   * \param fusionEnabled Whether or not fusion should be run as part of the pipeline.
    */
-  void toggle_fusion();
+  void set_fusion_enabled(bool fusionEnabled);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

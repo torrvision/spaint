@@ -33,6 +33,11 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+bool SpaintPipeline::get_fusion_enabled() const
+{
+  return m_fusionEnabled;
+}
+
 SpaintModel_CPtr SpaintPipeline::get_model() const
 {
   return m_model;
@@ -60,7 +65,7 @@ void SpaintPipeline::process_frame()
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
   // Run the fusion process.
-  if(m_runFusion) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
+  if(m_fusionEnabled) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), view.get());
@@ -68,9 +73,9 @@ void SpaintPipeline::process_frame()
   m_reconstructionStarted = true;
 }
 
-void SpaintPipeline::toggle_fusion()
+void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
 {
-  m_runFusion = !m_runFusion;
+  m_fusionEnabled = fusionEnabled;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -139,8 +144,8 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
 
+  m_fusionEnabled = true;
   m_reconstructionStarted = false;
-  m_runFusion = true;
 }
 
 }
