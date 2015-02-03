@@ -23,11 +23,11 @@ class RandomForestEvaluator : public evaluation::LearnerEvaluator<rafl::Example<
   //#################### TYPEDEFS AND USINGS ####################
 private:
   typedef evaluation::LearnerEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> > Base;
-  typedef rafl::DecisionTree<Label> DecisionTree;
   using typename Base::Example_CPtr;
+  using typename Base::ResultType;
+  typedef rafl::DecisionTree<Label> DecisionTree;
   typedef rafl::RandomForest<Label> RandomForest;
   typedef boost::shared_ptr<RandomForest> RandomForest_Ptr;
-  using typename Base::ResultType;
 
   //#################### PRIVATE VARIABLES ####################
 private:

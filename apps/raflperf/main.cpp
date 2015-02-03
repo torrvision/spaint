@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
-    .add_param("treeCount", list_of<size_t>(1)(3)/*(5)(7)(9)(11)(13)(15)(17)(19)(21)*/)
+    .add_param("treeCount", list_of<size_t>(1)(3)(5)(7)(9)(11)(13))
     .add_param("splitBudget", list_of<size_t>(static_cast<size_t>(pow(2,20))))
     .add_param("candidateCount", list_of<int>(256))
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
   const unsigned int seed = 1234;
 
   PerformanceTable results(list_of("Accuracy"));
-  SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, numFolds));
-  //SplitGenerator_Ptr splitGenerator(new RandomlyPermuteAndDivideSplitGenerator(seed, 5, 0.5f));
+  //SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, numFolds));
+  SplitGenerator_Ptr splitGenerator(new RandomlyPermuteAndDivideSplitGenerator(seed, 5, 0.5f));
   boost::shared_ptr<RandomForestEvaluator<Label> > evaluator;
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
