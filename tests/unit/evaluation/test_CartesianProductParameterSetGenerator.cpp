@@ -17,12 +17,12 @@ BOOST_AUTO_TEST_CASE(get_foo_test)
     .add_param("BumbleBees", list_of<int>(3)(5)(11))
     .add_param("Algorithm", list_of<std::string>("Foo")("Bar"))
     .add_param("Dummies", list_of<float>(9.93f))
-    .generate_maps();
+    .generate_param_sets();
 
   std::vector<std::string> settingStrings;
   for(size_t i = 0, iend = settings.size(); i < iend; ++i)
   {
-    settingStrings.push_back(CartesianProductParameterSetGenerator::to_string(settings[i]));
+    settingStrings.push_back(CartesianProductParameterSetGenerator::param_set_to_string(settings[i]));
   }
 
   std::vector<std::string> trueStrings;

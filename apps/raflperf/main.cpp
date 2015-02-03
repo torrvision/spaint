@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     .add_param("randomSeed", list_of<unsigned int>(1234))
     .add_param("seenExamplesThreshold", list_of<size_t>(50))
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
-    .generate_maps();
+    .generate_param_sets();
 
   const size_t numFolds = 2;
   const unsigned int seed = 1234;
