@@ -108,14 +108,14 @@ private:
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
     for(size_t i = 0; i < indicesSize; ++i)
     {
-      const Example_CPtr example = examples[indices[i]];
+      const Example_CPtr& example = examples[indices[i]];
       const Descriptor_CPtr& descriptor = example->get_descriptor();
       expectedLabels[i] = example->get_label();
       classLabels.insert(expectedLabels[i]);
       predictedLabels[i] = randomForest->predict(descriptor);
     }
 
-    return boost::assign::map_list_of("Accuracy", PerfUtil::get_accuracy(PerfUtil::get_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
+    return boost::assign::map_list_of("Accuracy", PerfUtil::get_accuracy(PerfUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
   }
 };
 

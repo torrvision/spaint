@@ -22,7 +22,7 @@ typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
  * \return               The generated confusion matrix.
  */
 template <typename Label>
-static Eigen::MatrixXf get_confusion_matrix(const std::set<Label>& classLabels, const std::vector<boost::shared_ptr<const Example<Label> > > groundTruth, const std::vector<boost::shared_ptr<const Example<Label> > > predicted)
+static Eigen::MatrixXf make_confusion_matrix(const std::set<Label>& classLabels, const std::vector<boost::shared_ptr<const Example<Label> > > groundTruth, const std::vector<boost::shared_ptr<const Example<Label> > > predicted)
 {
   assert(groundTruth.size() == predicted.size());
 
@@ -35,7 +35,7 @@ static Eigen::MatrixXf get_confusion_matrix(const std::set<Label>& classLabels, 
     pred.push_back( predicted.at(i)->get_label() );
   }
 
-  return PerfUtil::get_confusion_matrix(classLabels, gt, pred);
+  return PerfUtil::make_confusion_matrix(classLabels, gt, pred);
 }
 
 BOOST_AUTO_TEST_SUITE(test_PerformanceEvaluation)
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
   std::vector<Example_CPtr> predictedExamples = generator.generate_examples(list_of(5)(2)(1), 5);
 
   // Generate a confusion matrix.
-  Eigen::MatrixXf testConfMtx = get_confusion_matrix(classLabels, groundTruthExamples, predictedExamples);
+  Eigen::MatrixXf testConfMtx = make_confusion_matrix(classLabels, groundTruthExamples, predictedExamples);
 
   // The std::set orders the integers from smallest to largest.
   // The ground truth examples will be [1 5 9 1 5 9 ... 1 5 9]

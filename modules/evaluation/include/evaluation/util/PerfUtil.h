@@ -25,10 +25,10 @@ public:
    * \param confusionMtx   The confusion matrix.
    * \return               The trace of the confusion matrix divided by the sum of its elements.
    */
-  static float get_accuracy(const Eigen::MatrixXf confusion_matrix);
+  static float get_accuracy(const Eigen::MatrixXf& confusion_matrix);
 
   /**
-   * \brief A function which calculates a confusion matrix from a set of ground-truth and predicted label vectors.
+   * \brief Makes a confusion matrix from a set of ground-truth and predicted label vectors.
    *
    * \param classLabels    Contains the entire set of currently known class labels.
    * \param groundTruth    A vector of labels which are assumed to be correct.
@@ -36,7 +36,7 @@ public:
    * \return               The generated confusion matrix.
    */
   template <typename Label>
-  static Eigen::MatrixXf get_confusion_matrix(const std::set<Label>& classLabels, const std::vector<Label>& groundTruth, const std::vector<Label>& predicted)
+  static Eigen::MatrixXf make_confusion_matrix(const std::set<Label>& classLabels, const std::vector<Label>& groundTruth, const std::vector<Label>& predicted)
   {
     assert(groundTruth.size() == predicted.size());
 
@@ -61,12 +61,14 @@ public:
   }
 
   /**
-   * \brief This function generates a matrix whose rows sum to one by dividing each row by its L1-norm.
+   * \brief Generates a "row-L1-normalised" copy of a matrix in which each row sums to one.
    *
-   * \param matrix   The matrix.
-   * \return      The row-L1-normalised matrix.
+   * This is achieved by dividing each row in the input matrix by its L1 norm.
+   *
+   * \param matrix  The input matrix.
+   * \return        The row-L1-normalised copy.
    */
-  static Eigen::MatrixXf normalise_rows_L1(const Eigen::MatrixXf matrix);
+  static Eigen::MatrixXf normalise_rows_L1(const Eigen::MatrixXf& matrix);
 };
 
 }
