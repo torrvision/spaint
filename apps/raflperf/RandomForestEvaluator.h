@@ -7,7 +7,7 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include <evaluation/core/AlgorithmEvaluator.h>
+#include <evaluation/core/LearnerEvaluator.h>
 #include <evaluation/core/PerformanceMeasure.h>
 
 #include <rafl/RandomForest.h>
@@ -18,11 +18,11 @@
  * \brief TODO
  */
 template <typename Label>
-class RandomForestEvaluator : public evaluation::AlgorithmEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> >
+class RandomForestEvaluator : public evaluation::LearnerEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> >
 {
   //#################### TYPEDEFS AND USINGS ####################
 private:
-  typedef evaluation::AlgorithmEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> > Base;
+  typedef evaluation::LearnerEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> > Base;
   typedef rafl::DecisionTree<Label> DecisionTree;
   using typename Base::Example_CPtr;
   typedef rafl::RandomForest<Label> RandomForest;

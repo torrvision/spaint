@@ -1,19 +1,20 @@
 /**
- * evaluation: AlgorithmEvaluator.h
+ * evaluation: LearnerEvaluator.h
  */
 
-#ifndef H_EVALUATION_ALGORITHMEVALUATOR
-#define H_EVALUATION_ALGORITHMEVALUATOR
+#ifndef H_EVALUATION_LEARNEREVALUATOR
+#define H_EVALUATION_LEARNEREVALUATOR
 
 #include "../splitgenerators/SplitGenerator.h"
 
 namespace evaluation {
 
 /**
- * \brief An instance of a class deriving from an instantiation of this class template can be used to evaluate a learning algorithm.
+ * \brief An instance of a class deriving from an instantiation of this class template can be used to
+ *        evaluate a learner (e.g. a random forest) using approaches based on example set splitting.
  */
 template <typename Example, typename Result>
-class AlgorithmEvaluator
+class LearnerEvaluator
 {
   //#################### TYPEDEFS ####################
 protected:
@@ -22,26 +23,26 @@ protected:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The split generator to use. */
+  /** The generator to use to split the example set. */
   mutable SplitGenerator_Ptr m_splitGenerator;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs an algorithm evaluator.
+   * \brief Constructs a learner evaluator.
    *
-   * \param splitGenerator  The split generator to use.
+   * \param splitGenerator  The generator to use to split the example set.
    */
-  explicit AlgorithmEvaluator(const SplitGenerator_Ptr& splitGenerator)
+  explicit LearnerEvaluator(const SplitGenerator_Ptr& splitGenerator)
   : m_splitGenerator(splitGenerator)
   {}
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys the algorithm evaluator.
+   * \brief Destroys the learner evaluator.
    */
-  virtual ~AlgorithmEvaluator() {}
+  virtual ~LearnerEvaluator() {}
 
   //#################### PROTECTED ABSTRACT MEMBER FUNCTIONS ####################
 protected:
@@ -54,20 +55,20 @@ protected:
   virtual Result average_results(const std::vector<Result>& results) const = 0;
 
   /**
-   * \brief Evaluates the algorithm on the specified split of examples.
+   * \brief Evaluates the learner on the specified split of examples.
    *
-   * \param examples  The examples on which to evaluate the algorithm.
+   * \param examples  The examples on which to evaluate the learner.
    * \param split     The way in which the examples should be split into training and validation sets.
-   * \return          The result of evaluating the algorithm on the specified split.
+   * \return          The result of evaluating the learner on the specified split.
    */
   virtual Result evaluate_on_split(const std::vector<Example_CPtr>& examples, const SplitGenerator::Split& split) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Evaluates the algorithm on the specified set of examples.
+   * \brief Evaluates the learner on the specified set of examples.
    *
-   * \param examples  The examples on which to evaluate the algorithm.
+   * \param examples  The examples on which to evaluate the learner.
    * \return          The result of the evaluation process.
    */
   Result evaluate(const std::vector<Example_CPtr>& examples) const

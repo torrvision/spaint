@@ -25,7 +25,7 @@ src/core/PerformanceTable.cpp
 )
 
 SET(core_headers
-include/evaluation/core/AlgorithmEvaluator.h
+include/evaluation/core/LearnerEvaluator.h
 include/evaluation/core/PerformanceMeasure.h
 include/evaluation/core/PerformanceTable.h
 )
