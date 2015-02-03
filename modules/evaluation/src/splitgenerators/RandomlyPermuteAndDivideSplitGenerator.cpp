@@ -57,7 +57,7 @@ std::vector<SplitGenerator::Split> RandomlyPermuteAndDivideSplitGenerator::gener
     split.second.insert(split.second.begin(), exampleIndices.begin() + firstSetSize + 1, exampleIndices.end());
 
 #if 1
-    std::cout << "First: \n" << tvgutil::make_limited_container(split.first, 20) << "\n";
+    std::cout << "First: \n" << tvgutil::make_limited_container(split.first, 20) << '\n';
     std::cout << "Second: \n" << tvgutil::make_limited_container(split.second, 20) << "\n\n";
 #endif
 

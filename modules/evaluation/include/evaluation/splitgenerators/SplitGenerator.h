@@ -13,7 +13,7 @@
 namespace evaluation {
 
 /**
- * \brief An instance of a class deriving from this one can be used to generate example splits for algorithm evaluation.
+ * \brief An instance of a class deriving from this one can be used to generate example splits for learner evaluation.
  */
 class SplitGenerator
 {
@@ -47,7 +47,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Generates (binary) splits of a set of examples that can be used for algorithm evaluation.
+   * \brief Generates (binary) splits of a set of examples that can be used for learner evaluation.
    *
    * \param exampleCount  The overall number of examples.
    * \return              A set of splits, each of which represents a way in which the examples can be split into two pieces.

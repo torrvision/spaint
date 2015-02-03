@@ -32,6 +32,7 @@ void PerformanceTable::output(std::ostream& os, const std::string& delimiter) co
   for(size_t i = 0, size = m_measureNames.size(); i < size; ++i)
   {
     os << m_measureNames[i] << "Mean" << delimiter << m_measureNames[i] << "StdDev";
+    if(i != size - 1) os << delimiter;
   }
 
   os << '\n';

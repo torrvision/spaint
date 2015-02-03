@@ -61,8 +61,9 @@ public:
   /**
    * \brief Adds new training examples to the forest.
    *
-   * \param examples  The examples to be added.
-   * \param indices   A vector holding the indices of the examples to add to the decision trees in the random forest.
+   * \param examples                      A pool of examples that could potentially be added.
+   * \param indices                       The indices of the examples in the pool that should be added to the forest.
+   * \throws std::out_of_range_exception  If any of the indices are invalid.
    */
   void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
