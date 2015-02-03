@@ -11,7 +11,7 @@ using boost::assign::map_list_of;
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h>
-#include <evaluation/util/ParameterSetProductGenerator.h>
+#include <evaluation/util/CartesianProductParameterSetGenerator.h>
 #include <evaluation/util/PerfUtil.h>
 using namespace evaluation;
 
@@ -24,7 +24,7 @@ using namespace rafl;
 typedef int Label;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
-typedef ParameterSetProductGenerator::ParamSet ParamSet;
+typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 int main(int argc, char *argv[])
 {
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
   }
 
   //Generate parameters of your algorithm.
-  std::vector<ParamSet> params = ParameterSetProductGenerator()
+  std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
     .add_param("treeCount", list_of<size_t>(1)(3)/*(5)(7)(9)(11)(13)(15)(17)(19)(21)*/)
     .add_param("splitBudget", list_of<size_t>(static_cast<size_t>(pow(2,20))))
     .add_param("candidateCount", list_of<int>(256))

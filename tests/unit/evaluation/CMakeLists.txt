@@ -13,7 +13,7 @@ SET(suitename evaluation)
 ##########################
 
 SET(testnames
-ParameterSetProductGenerator
+CartesianProductParameterSetGenerator
 )
 
 FOREACH(testname ${testnames})

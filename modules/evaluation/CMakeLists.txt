@@ -44,12 +44,12 @@ include/evaluation/splitgenerators/SplitGenerator.h
 
 ##
 SET(util_sources
-src/util/ParameterSetProductGenerator.cpp
+src/util/CartesianProductParameterSetGenerator.cpp
 src/util/PerfUtil.cpp
 )
 
 SET(util_headers
-include/evaluation/util/ParameterSetProductGenerator.h
+include/evaluation/util/CartesianProductParameterSetGenerator.h
 include/evaluation/util/PerfUtil.h
 )
 

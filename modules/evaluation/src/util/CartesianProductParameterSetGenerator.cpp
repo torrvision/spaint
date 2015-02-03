@@ -1,8 +1,8 @@
 /**
- * evaluation: ParameterSetProductGenerator.cpp
+ * evaluation: CartesianProductParameterSetGenerator.cpp
  */
 
-#include "util/ParameterSetProductGenerator.h"
+#include "util/CartesianProductParameterSetGenerator.h"
 
 #include <boost/assign.hpp>
 using boost::assign::list_of;
@@ -12,18 +12,18 @@ using boost::spirit::hold_any;
 namespace evaluation {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-ParameterSetProductGenerator& ParameterSetProductGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options)
+CartesianProductParameterSetGenerator& CartesianProductParameterSetGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options)
 {
   m_paramOptions.push_back(std::make_pair(param, options));
   return *this;
 }
 
-std::vector<ParameterSetProductGenerator::ParamSet> ParameterSetProductGenerator::generate_maps() const
+std::vector<CartesianProductParameterSetGenerator::ParamSet> CartesianProductParameterSetGenerator::generate_maps() const
 {
   return generate_maps_for_params(0);
 }
 
-std::string ParameterSetProductGenerator::to_string(const ParamSet& params)
+std::string CartesianProductParameterSetGenerator::to_string(const ParamSet& params)
 {
   std::string paramString;
   size_t mapSize = params.size();
@@ -38,7 +38,7 @@ std::string ParameterSetProductGenerator::to_string(const ParamSet& params)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
-std::vector<ParameterSetProductGenerator::ParamSet> ParameterSetProductGenerator::generate_maps_for_param(const std::string& param, const std::vector<hold_any>& options)
+std::vector<CartesianProductParameterSetGenerator::ParamSet> CartesianProductParameterSetGenerator::generate_maps_for_param(const std::string& param, const std::vector<hold_any>& options)
 {
   std::vector<ParamSet> result;
   for(std::vector<hold_any>::const_iterator it = options.begin(), iend = options.end(); it != iend; ++it)
@@ -48,7 +48,7 @@ std::vector<ParameterSetProductGenerator::ParamSet> ParameterSetProductGenerator
   return result;
 }
 
-std::vector<ParameterSetProductGenerator::ParamSet> ParameterSetProductGenerator::generate_maps_for_params(size_t from) const
+std::vector<CartesianProductParameterSetGenerator::ParamSet> CartesianProductParameterSetGenerator::generate_maps_for_params(size_t from) const
 {
   if(from == m_paramOptions.size())
   {

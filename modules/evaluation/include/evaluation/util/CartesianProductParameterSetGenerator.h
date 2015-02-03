@@ -1,14 +1,14 @@
 /**
- * evaluation: ParameterSetProductGenerator.h
+ * evaluation: CartesianProductParameterSetGenerator.h
  */
 
-#ifndef H_EVALUATION_PARAMETERSETPRODUCTGENERATOR
-#define H_EVALUATION_PARAMETERSETPRODUCTGENERATOR
+#ifndef H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
+#define H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 
-#include <map>
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -18,7 +18,7 @@
 
 namespace evaluation {
 
-class ParameterSetProductGenerator
+class CartesianProductParameterSetGenerator
 {
   //#################### PUBLIC TYPEDEFS ####################
 public:
@@ -30,7 +30,7 @@ private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  ParameterSetProductGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options);
+  CartesianProductParameterSetGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options);
 
   std::vector<ParamSet> generate_maps() const;
 
