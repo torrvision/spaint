@@ -13,10 +13,10 @@ namespace evaluation {
 
 //#################### CONSTRUCTORS ####################
 
-RandomlyPermuteAndDivideSplitGenerator::RandomlyPermuteAndDivideSplitGenerator(unsigned int seed, size_t foldCount, float ratio)
-: SplitGenerator(seed), m_foldCount(foldCount), m_ratio(ratio)
+RandomlyPermuteAndDivideSplitGenerator::RandomlyPermuteAndDivideSplitGenerator(unsigned int seed, size_t splitCount, float ratio)
+: SplitGenerator(seed), m_ratio(ratio), m_splitCount(splitCount)
 {
-  assert(m_foldCount > 1);
+  assert(m_splitCount > 1);
   assert(m_ratio > 0.0f && m_ratio < 1.0f);
 
   if(m_ratio < 0.1f || m_ratio > 0.9f)
@@ -45,22 +45,23 @@ std::vector<SplitGenerator::Split> RandomlyPermuteAndDivideSplitGenerator::gener
 #endif
 
   size_t firstSetSize = static_cast<size_t>(m_ratio * exampleCount);
+
   std::vector<Split> splits;
-  for(size_t fold = 0; fold < m_foldCount; ++fold)
+  for(size_t i = 0; i < m_splitCount; ++i)
   {
-    Split splitSet;
+    Split split;
 
     // Randomly shuffle the indices.
     std::random_shuffle(exampleIndices.begin(), exampleIndices.end());
-    splitSet.first.insert(splitSet.first.begin(), exampleIndices.begin(), exampleIndices.begin() + firstSetSize);
-    splitSet.second.insert(splitSet.second.begin(), exampleIndices.begin() + firstSetSize + 1, exampleIndices.end());
+    split.first.insert(split.first.begin(), exampleIndices.begin(), exampleIndices.begin() + firstSetSize);
+    split.second.insert(split.second.begin(), exampleIndices.begin() + firstSetSize + 1, exampleIndices.end());
 
 #if 1
-    std::cout << "First: \n" << tvgutil::make_limited_container(splitSet.first, 20) << "\n";
-    std::cout << "Second: \n" << tvgutil::make_limited_container(splitSet.second, 20) << "\n\n";
+    std::cout << "First: \n" << tvgutil::make_limited_container(split.first, 20) << "\n";
+    std::cout << "Second: \n" << tvgutil::make_limited_container(split.second, 20) << "\n\n";
 #endif
 
-    splits.push_back(splitSet);
+    splits.push_back(split);
   }
 
   return splits;

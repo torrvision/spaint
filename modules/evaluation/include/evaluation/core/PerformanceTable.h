@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/assign/list_of.hpp>
 
 #include "PerformanceMeasure.h"
 
