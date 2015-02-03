@@ -19,11 +19,13 @@ class SpaintPipeline
 private:
   typedef boost::shared_ptr<ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef boost::shared_ptr<ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
@@ -36,6 +38,9 @@ private:
 
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
+
+  /** The IMU calibrator. */
+  IMUCalibrator_Ptr m_imuCalibrator;
 
   /** The image into which depth input is to be read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
@@ -57,6 +62,9 @@ private:
 
   /** Whether or not fusion is run as part of the pipeline. */
   bool m_runFusion;
+
+  /** The tracker. */
+  ITMTracker_Ptr m_tracker;
 
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;

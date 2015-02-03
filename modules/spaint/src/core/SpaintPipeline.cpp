@@ -123,11 +123,16 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   }
 
   // Set up the live render state.
-  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(ITMTrackingController::GetTrackedImageSize(settings.get(), rgbImageSize, depthImageSize)));
+  Vector2i trackedImageSize = ITMTrackingController::GetTrackedImageSize(settings.get(), rgbImageSize, depthImageSize);
+  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(trackedImageSize));
 
   // Set up the dense mapper and tracking controller.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
-  m_trackingController.reset(new ITMTrackingController(settings.get(), visualisationEngine.get(), m_lowLevelEngine.get(), scene.get(), liveRenderState.get()));
+  m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
+  m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
+    trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
+  ));
+  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
 
   // Set up the spaint model and raycaster.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
