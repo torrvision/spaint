@@ -10,4 +10,5 @@ libraries/*.log
 *.tags
 tags
 tests/mike/
+tests/scratch/rafl/settings.txt
 *.swp

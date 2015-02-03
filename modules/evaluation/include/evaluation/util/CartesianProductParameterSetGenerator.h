@@ -5,19 +5,22 @@
 #ifndef H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 #define H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 
-#include <algorithm>
-#include <iostream>
-#include <iterator>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 
 namespace evaluation {
 
+/**
+ * \brief An instance of this class can be used to generate sets of parameters using a Cartesian product approach.
+ *
+ * Example:
+ *
+ * A in {1,2}, B in {3,4}, C in {5,6,7} -> (A,B,C) in {(1,3,5), (1,3,6), (1,3,7), (1,4,5), ..., (2,4,7)}
+ */
 class CartesianProductParameterSetGenerator
 {
   //#################### PUBLIC TYPEDEFS ####################

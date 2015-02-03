@@ -5,6 +5,7 @@
 #include "util/CartesianProductParameterSetGenerator.h"
 
 #include <boost/assign.hpp>
+#include <boost/lexical_cast.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 using boost::spirit::hold_any;
@@ -12,6 +13,7 @@ using boost::spirit::hold_any;
 namespace evaluation {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
 CartesianProductParameterSetGenerator& CartesianProductParameterSetGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& options)
 {
   m_paramOptions.push_back(std::make_pair(param, options));
@@ -72,5 +74,4 @@ std::vector<CartesianProductParameterSetGenerator::ParamSet> CartesianProductPar
   }
 }
 
-} //end namespace rafl
-
+}
