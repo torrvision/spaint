@@ -48,6 +48,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(keysym.sym);
 
+  // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
+  if(keysym.sym == SDLK_f)
+  {
+    m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
+  }
+
   // If the H key is pressed, print out a list of keyboard controls.
   if(keysym.sym == SDLK_h)
   {
@@ -58,6 +64,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "D = Strafe Right\n"
               << "Q = Move Up\n"
               << "E = Move Down\n"
+              << "F = Toggle Fusion\n"
               << "Up = Look Down\n"
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
@@ -178,9 +185,9 @@ bool Application::process_events()
 
 void Application::process_input()
 {
-  process_renderer_input();
   process_camera_input();
   process_picking_input();
+  process_renderer_input();
 }
 
 void Application::process_picking_input()

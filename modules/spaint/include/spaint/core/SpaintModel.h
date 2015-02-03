@@ -22,11 +22,11 @@ namespace spaint {
 class SpaintModel
 {
   //#################### TYPEDEFS ####################
-private:
-  typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
 public:
+  typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
+  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
@@ -44,7 +44,7 @@ private:
   Scene_Ptr m_scene;
 
   /** The settings to use for InfiniTAM. */
-  ITMLibSettings m_settings;
+  Settings_CPtr m_settings;
 
   /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
   TrackingState_Ptr m_trackingState;
@@ -57,11 +57,14 @@ public:
   /**
    * \brief Constructs a model.
    *
-   * \param settings        The settings to use for InfiniTAM.
+   * \param scene           The InfiniTAM scene.
    * \param rgbImageSize    The dimensions of the RGB images from which the scene is being reconstructed.
    * \param depthImageSize  The dimensions of the depth images from which the scene is being reconstructed.
+   * \param trackingState   The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM).
+   * \param settings        The settings to use for InfiniTAM.
    */
-  SpaintModel(const ITMLibSettings& settings, const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
+  SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
+              const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -112,7 +115,7 @@ public:
    *
    * \return  The settings to use for InfiniTAM.
    */
-  const ITMLibSettings& get_settings() const;
+  const Settings_CPtr& get_settings() const;
 
   /**
    * \brief Gets the current tracking state.
@@ -141,6 +144,13 @@ public:
    * \return  The current view of the scene.
    */
   View_CPtr get_view() const;
+
+  /**
+   * \brief Sets the current view of the scene.
+   *
+   * \param view  The new current view of the scene.
+   */
+  void set_view(ITMView *view);
 };
 
 //#################### TYPEDEFS ####################

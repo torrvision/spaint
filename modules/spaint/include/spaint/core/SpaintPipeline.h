@@ -17,20 +17,33 @@ class SpaintPipeline
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef boost::shared_ptr<ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<ITMSceneReconstructionEngine<SpaintVoxel,ITMVoxelIndex> > SceneReconstructionEngine_Ptr;
-  typedef boost::shared_ptr<ITMSwappingEngine<SpaintVoxel,ITMVoxelIndex> > SwappingEngine_Ptr;
-  typedef boost::shared_ptr<ITMTracker> Tracker_Ptr;
+  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
+  typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
+  typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
+  typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The dense mapper. */
+  DenseMapper_Ptr m_denseMapper;
+
+  /** Whether or not fusion should be run as part of the pipeline. */
+  bool m_fusionEnabled;
+
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
+
+  /** The IMU calibrator. */
+  IMUCalibrator_Ptr m_imuCalibrator;
 
   /** The image into which depth input is to be read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
@@ -50,17 +63,11 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
-  /** The engine used to perform fusion. */
-  SceneReconstructionEngine_Ptr m_sceneReconstructionEngine;
+  /** The tracker. */
+  ITMTracker_Ptr m_tracker;
 
-  /** The engine controlling the swapping of voxel blocks in/out of GPU memory. */
-  SwappingEngine_Ptr m_swappingEngine;
-
-  /** The primary camera tracker. */
-  Tracker_Ptr m_trackerPrimary;
-
-  /** The secondary camera tracker. */
-  Tracker_Ptr m_trackerSecondary;
+  /** The tracking controller. */
+  TrackingController_Ptr m_trackingController;
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
@@ -75,7 +82,7 @@ public:
    * \param openNIDeviceURI     An optional OpenNI device URI (if NULL is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
 #endif
 
   /**
@@ -86,10 +93,17 @@ public:
    * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const ITMLibSettings& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Gets whether or not fusion is currently being run as part of the pipeline.
+   *
+   * \return  true, if fusion is currently being run as part of the pipeline, or false otherwise.
+   */
+  bool get_fusion_enabled() const;
+
   /**
    * \brief Gets the spaint model.
    *
@@ -109,6 +123,13 @@ public:
    */
   void process_frame();
 
+  /**
+   * \brief Sets whether or not fusion should be run as part of the pipeline.
+   *
+   * \param fusionEnabled Whether or not fusion should be run as part of the pipeline.
+   */
+  void set_fusion_enabled(bool fusionEnabled);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -116,7 +137,7 @@ private:
    *
    * \param settings  The settings to use for InfiniTAM.
    */
-  void initialise(ITMLibSettings settings);
+  void initialise(const Settings_CPtr& settings);
 };
 
 //#################### TYPEDEFS ####################

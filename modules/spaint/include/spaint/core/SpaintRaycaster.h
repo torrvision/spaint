@@ -60,9 +60,11 @@ public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model The spaint model.
+   * \param model               The spaint model.
+   * \param visualisationEngine The InfiniTAM engine used for raycasting the scene.
+   * \param liveRenderState     The render state corresponding to the live camera pose.
    */
-  explicit SpaintRaycaster(const SpaintModel_CPtr& model);
+  SpaintRaycaster(const SpaintModel_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

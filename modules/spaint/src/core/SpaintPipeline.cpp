@@ -8,7 +8,6 @@
 #include <Engine/OpenNIEngine.h>
 #endif
 #include <ITMLib/Engine/ITMRenTracker.cpp>
-#include <ITMLib/Engine/ITMTrackerFactory.h>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMRenTracker_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
@@ -19,20 +18,25 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const ITMLibSettings& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
 }
 #endif
 
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const ITMLibSettings& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
   initialise(settings);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool SpaintPipeline::get_fusion_enabled() const
+{
+  return m_fusionEnabled;
+}
 
 SpaintModel_CPtr SpaintPipeline::get_model() const
 {
@@ -48,69 +52,35 @@ void SpaintPipeline::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
-  const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
   const SpaintModel::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
   const SpaintModel::View_Ptr& view = m_model->get_view();
 
   // Get the next frame.
+  ITMView *newView = view.get();
   m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
-  m_viewBuilder->UpdateView(m_model->get_view().get(), m_inputRGBImage.get(), m_inputRawDepthImage.get());
+  m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get());
+  m_model->set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
-  if(m_reconstructionStarted)
-  {
-    if(m_trackerPrimary) m_trackerPrimary->TrackCamera(trackingState.get(), view.get());
-    if(m_trackerSecondary) m_trackerSecondary->TrackCamera(trackingState.get(), view.get());
-  }
+  if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
-  // Allocate voxel blocks as necessary.
-  RenderState_Ptr liveRenderState = m_raycaster->get_live_render_state();
-  m_sceneReconstructionEngine->AllocateSceneFromDepth(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
+  // Run the fusion process.
+  if(m_fusionEnabled) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
 
-  // Integrate (fuse) the view into the scene.
-  m_sceneReconstructionEngine->IntegrateIntoScene(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
-
-  // Swap voxel blocks between the GPU and CPU.
-  if(m_model->get_settings().useSwapping)
-  {
-    // CPU -> GPU
-    m_swappingEngine->IntegrateGlobalIntoLocal(scene.get(), liveRenderState.get());
-
-    // GPU -> CPU
-    m_swappingEngine->SaveToGlobalMemory(scene.get(), liveRenderState.get());
-  }
-
-  // Perform raycasting to visualise the scene.
-  // FIXME: It would be better to use dynamic dispatch for this.
-  const SpaintRaycaster::VisualisationEngine_Ptr& visualisationEngine = m_raycaster->get_visualisation_engine();
-  switch(m_model->get_settings().trackerType)
-  {
-    case ITMLibSettings::TRACKER_ICP:
-    case ITMLibSettings::TRACKER_REN:
-    {
-      visualisationEngine->CreateExpectedDepths(scene.get(), trackingState->pose_d, &view->calib->intrinsics_d, liveRenderState.get());
-      visualisationEngine->CreateICPMaps(scene.get(), view.get(), trackingState.get(), liveRenderState.get());
-      break;
-    }
-    case ITMLibSettings::TRACKER_COLOR:
-    {
-      ITMPose rgbPose(view->calib->trafo_rgb_to_depth.calib_inv * trackingState->pose_d->GetM());
-      visualisationEngine->CreateExpectedDepths(scene.get(), &rgbPose, &view->calib->intrinsics_rgb, liveRenderState.get());
-      visualisationEngine->CreatePointCloud(scene.get(), view.get(), trackingState.get(), liveRenderState.get(), m_model->get_settings().skipPoints);
-      break;
-    }
-    default:
-    {
-      throw std::runtime_error("Error: SpaintPipeline::process_frame: Unknown tracker type");
-    }
-  }
+  // Raycast from the live camera position to prepare for tracking in the next frame.
+  m_trackingController->Prepare(trackingState.get(), view.get());
 
   m_reconstructionStarted = true;
 }
 
+void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
+{
+  m_fusionEnabled = fusionEnabled;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintPipeline::initialise(ITMLibSettings settings)
+void SpaintPipeline::initialise(const Settings_CPtr& settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -130,19 +100,20 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
   m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, true));
   m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, true));
 
-  // Set up the spaint model.
-  m_model.reset(new SpaintModel(settings, rgbImageSize, depthImageSize));
+  // Set up the scene.
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  SpaintModel::Scene_Ptr scene(new SpaintModel::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
   // Set up the InfiniTAM engines and view builder.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
-  if(settings.deviceType == ITMLibSettings::DEVICE_CUDA)
+  VisualisationEngine_Ptr visualisationEngine;
+  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    // Use the GPU implementation of InfiniTAM.
+    // Use the CUDA implementations.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
-    m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
-    if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CUDA<SpaintVoxel,ITMVoxelIndex>);
     m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib));
+    visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -150,24 +121,30 @@ void SpaintPipeline::initialise(ITMLibSettings settings)
   }
   else
   {
-    // Use the CPU implementation of InfiniTAM.
+    // Use the CPU implementations.
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
-    m_sceneReconstructionEngine.reset(new ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
-    if(settings.useSwapping) m_swappingEngine.reset(new ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>);
     m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
+    visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
   }
 
-  // Allocate the view.
-  m_viewBuilder->AllocateView(m_model->get_view().get(), rgbImageSize, depthImageSize);
+  // Set up the live render state.
+  Vector2i trackedImageSize = ITMTrackingController::GetTrackedImageSize(settings.get(), rgbImageSize, depthImageSize);
+  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(trackedImageSize));
 
-  // Set up the raycaster.
-  m_raycaster.reset(new SpaintRaycaster(m_model));
+  // Set up the dense mapper and tracking controller.
+  m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
+  m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
+  m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
+    trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
+  ));
+  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
 
-  // Set up the trackers.
-  m_trackerPrimary.reset(ITMTrackerFactory::MakePrimaryTracker(settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get()));
-  m_trackerSecondary.reset(ITMTrackerFactory::MakeSecondaryTracker<SpaintVoxel,ITMVoxelIndex>(settings, rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_model->get_scene().get()));
+  // Set up the spaint model and raycaster.
+  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
+  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
+  m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
 
-  // Note: The trackers can only be run once reconstruction has started.
+  m_fusionEnabled = true;
   m_reconstructionStarted = false;
 }
 
