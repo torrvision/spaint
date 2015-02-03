@@ -77,17 +77,18 @@ public:
 
     std::vector<SplitGenerator::Split> splits = m_splitGenerator->generate_splits(examples.size());
 
-    size_t size = splits.size();
+    int size = static_cast<int>(splits.size());
 
-  #ifdef WITH_OPENMP
+#ifdef WITH_OPENMP
     #pragma omp parallel for
-  #endif
-    for(size_t i = 0; i < size; ++i)
+#endif
+    for(int i = 0; i < size; ++i)
     {
       Result evaluationResult = evaluate_on_split(examples, splits[i]);
-    #ifdef WITH_OPENMP
+
+#ifdef WITH_OPENMP
       #pragma omp critical
-    #endif
+#endif
       results.push_back(evaluationResult);
     }
 
