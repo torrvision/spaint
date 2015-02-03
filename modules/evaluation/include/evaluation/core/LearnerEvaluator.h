@@ -76,9 +76,19 @@ public:
     std::vector<Result> results;
 
     std::vector<SplitGenerator::Split> splits = m_splitGenerator->generate_splits(examples.size());
-    for(size_t i = 0, size = splits.size(); i < size; ++i)
+
+    size_t size = splits.size();
+
+  #ifdef WITH_OPENMP
+    #pragma omp parallel for
+  #endif
+    for(size_t i = 0; i < size; ++i)
     {
-      results.push_back(evaluate_on_split(examples, splits[i]));
+      Result evaluationResult = evaluate_on_split(examples, splits[i]);
+    #ifdef WITH_OPENMP
+      #pragma omp critical
+    #endif
+      results.push_back(evaluationResult);
     }
 
     return average_results(results);

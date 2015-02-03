@@ -21,6 +21,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 ##
 SET(core_sources
+src/core/PerformanceMeasure.cpp
 src/core/PerformanceTable.cpp
 )
 

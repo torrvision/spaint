@@ -11,7 +11,7 @@ using namespace tvgutil;
 
 namespace evaluation {
 
-//#################### CONSTRUCTORS ####################
+//#################### CONSTRUCTOR ####################
 
 PerformanceTable::PerformanceTable(const std::vector<std::string>& measureNames)
 : m_measureNames(measureNames)
