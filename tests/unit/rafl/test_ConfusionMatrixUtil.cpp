@@ -10,13 +10,17 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
+//#################### TYPEDEFS ####################
+
 typedef int Label;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
+//#################### HELPERS ####################
+
 /**
- * \brief A convenience function which calculates a confusion matrix from a set of ground-truth and predicted example vectors.
+ * \brief Makes a confusion matrix from a set of ground truth and predicted example vectors.
  *
- * \param classLabels    Contains the entire set of currently known class labels.
+ * \param classLabels    The entire set of currently known class labels.
  * \param groundTruth    A vector of examples with assumed correct labels.
  * \param predicted      A vector of the same examples with labels predicted by a machine.
  * \return               The generated confusion matrix.
@@ -38,7 +42,9 @@ static Eigen::MatrixXf make_confusion_matrix(const std::set<Label>& classLabels,
   return ConfusionMatrixUtil::make_confusion_matrix(classLabels, gt, pred);
 }
 
-BOOST_AUTO_TEST_SUITE(test_PerformanceEvaluation)
+//#################### TESTS ####################
+
+BOOST_AUTO_TEST_SUITE(test_ConfusionMatrixUtil)
 
 BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
 {

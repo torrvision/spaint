@@ -13,8 +13,8 @@ SET(suitename rafl)
 ##########################
 
 SET(testnames
+ConfusionMatrixUtil
 UnitCircleExampleGenerator
-PerfUtil
 )
 
 FOREACH(testname ${testnames})
