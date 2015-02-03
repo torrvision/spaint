@@ -8,6 +8,11 @@
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
+using namespace boost::posix_time;
+
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h>
@@ -25,11 +30,18 @@ typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
+std::string get_local_time()
+{
+  //time_facet *facet = new time_facet("%d%b%Y-%H%M%S");
+  ptime currentDateTime(second_clock::local_time());
+  return to_simple_string(currentDateTime);
+}
+
 int main(int argc, char *argv[])
 {
   if(argc != 1 && argc != 4)
   {
-    std::cerr << "Usage: raflperf [<training set file> <test set file> <output file>]\n";
+    std::cerr << "Usage: raflperf [<training set file> <test set file> <output path>]\n";
     return EXIT_FAILURE;
   }
 
@@ -47,8 +59,8 @@ int main(int argc, char *argv[])
 
     //Generate examples around the unit circle.
     UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
-    examples = uceg.generate_examples(classLabels, 100);
-    outputResultPath = "myDummyResultPath.txt";
+    examples = uceg.generate_examples(classLabels, 1000);
+    outputResultPath = "UnitCircleExampleGenerator_Results.txt";
   }
   else if(argc == 4)
   {
@@ -98,6 +110,9 @@ int main(int argc, char *argv[])
   //Output results to the screen.
   results.output(std::cout);
 
+  //Time-stamp the results file.
+  outputResultPath += get_local_time();
+
   //Output results to a file.
   std::ofstream resultsFile(outputResultPath.c_str());
   if(!resultsFile)
@@ -111,3 +126,4 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+
