@@ -12,7 +12,6 @@ using boost::assign::map_list_of;
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
-#include <evaluation/util/PerfUtil.h>
 using namespace evaluation;
 
 #include <rafl/examples/ExampleUtil.h>

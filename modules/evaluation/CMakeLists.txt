@@ -46,12 +46,12 @@ include/evaluation/splitgenerators/SplitGenerator.h
 ##
 SET(util_sources
 src/util/CartesianProductParameterSetGenerator.cpp
-src/util/PerfUtil.cpp
+src/util/ConfusionMatrixUtil.cpp
 )
 
 SET(util_headers
 include/evaluation/util/CartesianProductParameterSetGenerator.h
-include/evaluation/util/PerfUtil.h
+include/evaluation/util/ConfusionMatrixUtil.h
 )
 
 #################################################################

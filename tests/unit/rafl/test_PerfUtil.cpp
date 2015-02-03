@@ -4,7 +4,7 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
-#include <evaluation/util/PerfUtil.h>
+#include <evaluation/util/ConfusionMatrixUtil.h>
 using namespace evaluation;
 
 #include <rafl/examples/UnitCircleExampleGenerator.h>
@@ -35,7 +35,7 @@ static Eigen::MatrixXf make_confusion_matrix(const std::set<Label>& classLabels,
     pred.push_back( predicted.at(i)->get_label() );
   }
 
-  return PerfUtil::make_confusion_matrix(classLabels, gt, pred);
+  return ConfusionMatrixUtil::make_confusion_matrix(classLabels, gt, pred);
 }
 
 BOOST_AUTO_TEST_SUITE(test_PerformanceEvaluation)
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
 
   BOOST_CHECK_EQUAL(testConfMtx, trueConfMtx);
 
-  Eigen::MatrixXf testConfMtxNormL1 = PerfUtil::normalise_rows_L1(trueConfMtx);
+  Eigen::MatrixXf testConfMtxNormL1 = ConfusionMatrixUtil::normalise_rows_L1(trueConfMtx);
   Eigen::MatrixXf trueConfMtxNormL1 = Eigen::MatrixXf::Zero(4,4);
   trueConfMtxNormL1(0,0) = 1.0f;
   trueConfMtxNormL1(2,1) = 1.0f;

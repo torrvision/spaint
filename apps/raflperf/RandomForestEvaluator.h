@@ -9,6 +9,7 @@
 
 #include <evaluation/core/LearnerEvaluator.h>
 #include <evaluation/core/PerformanceMeasure.h>
+#include <evaluation/util/ConfusionMatrixUtil.h>
 
 #include <rafl/RandomForest.h>
 
@@ -122,7 +123,8 @@ private:
       classLabels.insert(expectedLabels[i]);
     }
 
-    return boost::assign::map_list_of("Accuracy", PerfUtil::get_accuracy(PerfUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels)));
+    Eigen::MatrixXf confusionMatrix = ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
+    return boost::assign::map_list_of("Accuracy", ConfusionMatrixUtil::calculate_accuracy(confusionMatrix));
   }
 };
 

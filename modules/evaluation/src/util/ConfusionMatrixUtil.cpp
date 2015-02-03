@@ -1,19 +1,19 @@
 /**
- * evaluation: PerfUtil.cpp
+ * evaluation: ConfusionMatrixUtil.cpp
  */
 
-#include "util/PerfUtil.h"
+#include "util/ConfusionMatrixUtil.h"
 
 namespace evaluation {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-float PerfUtil::get_accuracy(const Eigen::MatrixXf& confusion_matrix)
+float ConfusionMatrixUtil::calculate_accuracy(const Eigen::MatrixXf& confusionMatrix)
 {
-  return confusion_matrix.trace()/confusion_matrix.sum();
+  return confusionMatrix.trace() / confusionMatrix.sum();
 }
 
-Eigen::MatrixXf PerfUtil::normalise_rows_L1(const Eigen::MatrixXf& matrix)
+Eigen::MatrixXf ConfusionMatrixUtil::normalise_rows_L1(const Eigen::MatrixXf& matrix)
 {
   Eigen::MatrixXf matrixNormL1 = Eigen::MatrixXf::Zero(matrix.rows(), matrix.cols());
   for(size_t i = 0, rowCount = matrix.rows(); i < rowCount; ++i)
