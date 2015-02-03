@@ -24,7 +24,7 @@ protected:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The generator to use to split the example set. */
-  mutable SplitGenerator_Ptr m_splitGenerator;
+  SplitGenerator_Ptr m_splitGenerator;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -59,7 +59,7 @@ protected:
    *
    * \param examples  The examples on which to evaluate the learner.
    * \param split     The way in which the examples should be split into training and validation sets.
-   * \return          The result of evaluating the learner on the specified split.
+   * \return          The results of evaluating the learner on the specified split.
    */
   virtual Result evaluate_on_split(const std::vector<Example_CPtr>& examples, const SplitGenerator::Split& split) const = 0;
 
@@ -69,14 +69,12 @@ public:
    * \brief Evaluates the learner on the specified set of examples.
    *
    * \param examples  The examples on which to evaluate the learner.
-   * \return          The result of the evaluation process.
+   * \return          The results of the evaluation process.
    */
   Result evaluate(const std::vector<Example_CPtr>& examples) const
   {
     std::vector<Result> results;
-
     std::vector<SplitGenerator::Split> splits = m_splitGenerator->generate_splits(examples.size());
-
     int size = static_cast<int>(splits.size());
 
 #ifdef WITH_OPENMP

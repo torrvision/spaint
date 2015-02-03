@@ -2,9 +2,11 @@
  * evaluation: PerformanceMeasure.cpp
  */
 
-#include <ostream>
-
 #include "core/PerformanceMeasure.h"
+
+#include <cmath>
+#include <ostream>
+#include <stdexcept>
 
 namespace evaluation {
 
@@ -82,4 +84,3 @@ std::ostream& operator<<(std::ostream& os, const PerformanceMeasure& rhs)
 }
 
 }
-

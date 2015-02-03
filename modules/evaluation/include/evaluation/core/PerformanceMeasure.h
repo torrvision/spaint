@@ -5,9 +5,6 @@
 #ifndef H_EVALUATION_PERFORMANCEMEASURE
 #define H_EVALUATION_PERFORMANCEMEASURE
 
-#include <cmath>
-#include <stdexcept>
-#include <string>
 #include <vector>
 
 namespace evaluation {
@@ -87,6 +84,17 @@ public:
    */
   static PerformanceMeasure average(const std::vector<PerformanceMeasure>& measures);
 };
+
+//#################### STREAM OPERATORS ####################
+
+/**
+ * \brief Outputs a performance measure to a stream.
+ *
+ * \param os  The stream.
+ * \param rhs The performance measure.
+ * \return    The stream.
+ */
+std::ostream& operator<<(std::ostream& os, const PerformanceMeasure& rhs);
 
 }
 
