@@ -25,7 +25,6 @@ SET(targetname "unittest_${suitename}_${testname}")
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 #############################
 # Specify the project files #
@@ -45,7 +44,6 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/evaluation/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
@@ -59,7 +57,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetUnitTestTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} rafl tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
 ENDFOREACH()
