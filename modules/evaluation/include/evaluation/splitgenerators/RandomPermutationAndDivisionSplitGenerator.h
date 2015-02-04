@@ -1,9 +1,9 @@
 /**
- * evaluation: RandomlyPermuteAndDivideSplitGenerator.h
+ * evaluation: RandomPermutationAndDivisionSplitGenerator.h
  */
 
-#ifndef H_EVALUATION_RANDOMLYPERMUTEANDDIVIDESPLITGENERATOR
-#define H_EVALUATION_RANDOMLYPERMUTEANDDIVIDESPLITGENERATOR
+#ifndef H_EVALUATION_RANDOMPERMUTATIONANDDIVISIONSPLITGENERATOR
+#define H_EVALUATION_RANDOMPERMUTATIONANDDIVISIONSPLITGENERATOR
 
 #include <tvgutil/RandomNumberGenerator.h>
 
@@ -18,7 +18,7 @@ namespace evaluation {
  * the first of which contains a specified percentage of the examples, and the second of which contains
  * the remaining examples. This is repeated for each of the specified number of splits.
  */
-class RandomlyPermuteAndDivideSplitGenerator : public SplitGenerator
+class RandomPermutationAndDivisionSplitGenerator : public SplitGenerator
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -37,7 +37,7 @@ public:
    * \param splitCount  The number of splits to generate.
    * \param ratio       A ratio, namely [the number of examples in the training set] / [the number of examples in the validation set].
    */
-  RandomlyPermuteAndDivideSplitGenerator(unsigned int seed, size_t splitCount, float ratio);
+  RandomPermutationAndDivisionSplitGenerator(unsigned int seed, size_t splitCount, float ratio);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -1,8 +1,8 @@
 /**
- * evaluation: RandomlyPermuteAndDivideSplitGenerator.cpp
+ * evaluation: RandomPermutationAndDivisionSplitGenerator.cpp
  */
 
-#include "splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h"
+#include "splitgenerators/RandomPermutationAndDivisionSplitGenerator.h"
 
 #include <cassert>
 #include <stdexcept>
@@ -13,7 +13,7 @@ namespace evaluation {
 
 //#################### CONSTRUCTORS ####################
 
-RandomlyPermuteAndDivideSplitGenerator::RandomlyPermuteAndDivideSplitGenerator(unsigned int seed, size_t splitCount, float ratio)
+RandomPermutationAndDivisionSplitGenerator::RandomPermutationAndDivisionSplitGenerator(unsigned int seed, size_t splitCount, float ratio)
 : SplitGenerator(seed), m_ratio(ratio), m_splitCount(splitCount)
 {
   assert(m_splitCount > 1);
@@ -27,7 +27,7 @@ RandomlyPermuteAndDivideSplitGenerator::RandomlyPermuteAndDivideSplitGenerator(u
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::vector<SplitGenerator::Split> RandomlyPermuteAndDivideSplitGenerator::generate_splits(size_t exampleCount)
+std::vector<SplitGenerator::Split> RandomPermutationAndDivisionSplitGenerator::generate_splits(size_t exampleCount)
 {
   if(exampleCount <= 2)
   {

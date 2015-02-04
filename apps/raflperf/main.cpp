@@ -11,7 +11,7 @@ using boost::assign::map_list_of;
 
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
-#include <evaluation/splitgenerators/RandomlyPermuteAndDivideSplitGenerator.h>
+#include <evaluation/splitgenerators/RandomPermutationAndDivisionSplitGenerator.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
   PerformanceTable results(list_of("Accuracy"));
   //SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, numFolds));
-  SplitGenerator_Ptr splitGenerator(new RandomlyPermuteAndDivideSplitGenerator(seed, 5, 0.5f));
+  SplitGenerator_Ptr splitGenerator(new RandomPermutationAndDivisionSplitGenerator(seed, 5, 0.5f));
   boost::shared_ptr<RandomForestEvaluator<Label> > evaluator;
   for(size_t n = 0, nend = params.size(); n < nend; ++n)
   {
