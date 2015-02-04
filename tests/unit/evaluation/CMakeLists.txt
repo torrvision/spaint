@@ -17,6 +17,7 @@ CartesianProductParameterSetGenerator
 ConfusionMatrixUtil
 CrossValidationSplitGenerator
 PerformanceMeasure
+RandomPermutationAndDivisionSplitGenerator
 )
 
 FOREACH(testname ${testnames})

@@ -22,7 +22,7 @@ class RandomPermutationAndDivisionSplitGenerator : public SplitGenerator
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A ratio, namely [the number of examples in the training set] / [the number of examples in the validation set]. */
+  /** A ratio, namely [the number of examples to assign to the training set for each split] / [the total number of examples]. */
   float m_ratio;
 
   /** The number of splits to generate. */
@@ -31,11 +31,13 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a "randomly permute and divide" split generator.
+   * \brief Constructs a "random permutation and division" split generator.
+   *
+   * Note that the ratio must be strictly between 0 and 1.
    *
    * \param seed        The seed to use for the random number generator when generating splits.
    * \param splitCount  The number of splits to generate.
-   * \param ratio       A ratio, namely [the number of examples in the training set] / [the number of examples in the validation set].
+   * \param ratio       A ratio, namely [the number of examples to assign to the training set for each split] / [the total number of examples].
    */
   RandomPermutationAndDivisionSplitGenerator(unsigned int seed, size_t splitCount, float ratio);
 

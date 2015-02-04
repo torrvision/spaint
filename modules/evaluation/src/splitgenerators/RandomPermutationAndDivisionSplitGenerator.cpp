@@ -17,12 +17,14 @@ namespace evaluation {
 RandomPermutationAndDivisionSplitGenerator::RandomPermutationAndDivisionSplitGenerator(unsigned int seed, size_t splitCount, float ratio)
 : SplitGenerator(seed), m_ratio(ratio), m_splitCount(splitCount)
 {
-  assert(m_splitCount > 1);
-  assert(m_ratio > 0.0f && m_ratio < 1.0f);
-
-  if(m_ratio < 0.1f || m_ratio > 0.9f)
+  if(m_splitCount == 0)
   {
-    std::cout << "Warning: the ratio value being used: " << m_ratio << " seems unwise.\n";
+    throw std::runtime_error("Must generate at least one split");
+  }
+
+  if(m_ratio <= 0.0f || m_ratio >= 1.0f)
+  {
+    throw std::runtime_error("Split ratio out of range");
   }
 }
 
@@ -41,25 +43,21 @@ std::vector<SplitGenerator::Split> RandomPermutationAndDivisionSplitGenerator::g
     exampleIndices[i] = i;
   }
 
-#if 1
-  std::cout << "exampleIndices: \n" << tvgutil::make_limited_container(exampleIndices, 20) << '\n';
-#endif
-
-  size_t firstSetSize = static_cast<size_t>(m_ratio * exampleCount);
-
   std::vector<Split> splits;
+  size_t trainingSetSize = static_cast<size_t>(m_ratio * exampleCount);
   for(size_t i = 0; i < m_splitCount; ++i)
   {
+    // Randomly shuffle the indices and construct the split.
     Split split;
-
-    // Randomly shuffle the indices.
     std::random_shuffle(exampleIndices.begin(), exampleIndices.end(), RNGFunctor(m_rng));
-    split.first.insert(split.first.begin(), exampleIndices.begin(), exampleIndices.begin() + firstSetSize);
-    split.second.insert(split.second.begin(), exampleIndices.begin() + firstSetSize + 1, exampleIndices.end());
+    std::vector<size_t>& trainingSet = split.first;
+    std::vector<size_t>& validationSet = split.second;
+    split.first.insert(trainingSet.begin(), exampleIndices.begin(), exampleIndices.begin() + trainingSetSize);
+    split.second.insert(validationSet.begin(), exampleIndices.begin() + trainingSetSize, exampleIndices.end());
 
-#if 1
-    std::cout << "First: \n" << tvgutil::make_limited_container(split.first, 20) << '\n';
-    std::cout << "Second: \n" << tvgutil::make_limited_container(split.second, 20) << "\n\n";
+#if 0
+    std::cout << "Training: \n" << tvgutil::make_limited_container(trainingSet, 20) << '\n';
+    std::cout << "Validation: \n" << tvgutil::make_limited_container(validationSet, 20) << "\n\n";
 #endif
 
     splits.push_back(split);
