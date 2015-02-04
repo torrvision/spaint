@@ -5,6 +5,8 @@
 #ifndef H_EVALUATION_PERFORMANCEMEASURE
 #define H_EVALUATION_PERFORMANCEMEASURE
 
+#include <cstddef>
+#include <iosfwd>
 #include <vector>
 
 namespace evaluation {
