@@ -35,11 +35,13 @@ include/evaluation/core/PerformanceTable.h
 SET(splitgenerators_sources
 src/splitgenerators/CrossValidationSplitGenerator.cpp
 src/splitgenerators/RandomPermutationAndDivisionSplitGenerator.cpp
+src/splitgenerators/RNGFunctor.cpp
 )
 
 SET(splitgenerators_headers
 include/evaluation/splitgenerators/CrossValidationSplitGenerator.h
 include/evaluation/splitgenerators/RandomPermutationAndDivisionSplitGenerator.h
+include/evaluation/splitgenerators/RNGFunctor.h
 include/evaluation/splitgenerators/SplitGenerator.h
 )
 

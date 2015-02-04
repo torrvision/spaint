@@ -3,31 +3,13 @@
  */
 
 #include "splitgenerators/CrossValidationSplitGenerator.h"
+#include "splitgenerators/RNGFunctor.h"
 
 #include <stdexcept>
 
 #include <tvgutil/LimitedContainer.h>
 
 namespace evaluation {
-
-//#################### HELPERS ####################
-
-/**
- * \brief An instance of this struct can be used to forward calls from std::random_shuffle to a random number generator.
- */
-struct RNGFunctor
-{
-  tvgutil::RandomNumberGenerator& m_rng;
-
-  RNGFunctor(tvgutil::RandomNumberGenerator& rng)
-  : m_rng(rng)
-  {}
-
-  int operator()(int n) const
-  {
-    return m_rng.generate_int_from_uniform(0, n - 1);
-  }
-};
 
 //#################### CONSTRUCTORS ####################
 

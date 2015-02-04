@@ -3,6 +3,7 @@
  */
 
 #include "splitgenerators/RandomPermutationAndDivisionSplitGenerator.h"
+#include "splitgenerators/RNGFunctor.h"
 
 #include <cassert>
 #include <stdexcept>
@@ -52,7 +53,8 @@ std::vector<SplitGenerator::Split> RandomPermutationAndDivisionSplitGenerator::g
     Split split;
 
     // Randomly shuffle the indices.
-    std::random_shuffle(exampleIndices.begin(), exampleIndices.end());
+    RNGFunctor rngFunctor(m_rng);
+    std::random_shuffle(exampleIndices.begin(), exampleIndices.end(), rngFunctor);
     split.first.insert(split.first.begin(), exampleIndices.begin(), exampleIndices.begin() + firstSetSize);
     split.second.insert(split.second.begin(), exampleIndices.begin() + firstSetSize + 1, exampleIndices.end());
 
