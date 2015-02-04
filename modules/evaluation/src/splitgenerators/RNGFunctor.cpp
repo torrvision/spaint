@@ -6,11 +6,13 @@
 
 namespace evaluation {
 
-//#################### CONSTRUCTOR ####################
+//#################### CONSTRUCTORS ####################
 
 RNGFunctor::RNGFunctor(tvgutil::RandomNumberGenerator& rng)
 : m_rng(rng)
 {}
+
+//#################### PUBLIC OPERATORS ####################
 
 int RNGFunctor::operator()(int n) const
 {
@@ -18,4 +20,3 @@ int RNGFunctor::operator()(int n) const
 }
 
 }
-
