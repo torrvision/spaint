@@ -3,12 +3,13 @@
  */
 
 #include "splitgenerators/CrossValidationSplitGenerator.h"
-#include "splitgenerators/RNGFunctor.h"
 
 #include <set>
 #include <stdexcept>
 
 #include <tvgutil/LimitedContainer.h>
+
+#include "splitgenerators/RNGFunctor.h"
 
 namespace evaluation {
 
@@ -49,19 +50,21 @@ std::vector<SplitGenerator::Split> CrossValidationSplitGenerator::generate_split
   {
     // Split the examples into two halves.
     Split split;
+    std::vector<size_t>& trainingSet = split.first;
+    std::vector<size_t>& validationSet = split.second;
     for(size_t i = 0; i < exampleCount; ++i)
     {
-      (foldOfExample[i] == validationFold ? split.second : split.first).push_back(i);
+      (foldOfExample[i] == validationFold ? validationSet : trainingSet).push_back(i);
     }
 
     // Randomly shuffle the indices in each half of the split.
-    std::random_shuffle(split.first.begin(), split.first.end(), rngFunctor);
-    std::random_shuffle(split.second.begin(), split.second.end(), rngFunctor);
+    std::random_shuffle(trainingSet.begin(), trainingSet.end(), rngFunctor);
+    std::random_shuffle(validationSet.begin(), validationSet.end(), rngFunctor);
 
 #if 0
     std::cout << "Fold: " << validationFold << "\n";
-    std::cout << "First: \n" << tvgutil::make_limited_container(split.first, 20) << "\n";
-    std::cout << "Second: \n" << tvgutil::make_limited_container(split.second, 20) << "\n\n";
+    std::cout << "Training: \n" << tvgutil::make_limited_container(trainingSet, 20) << "\n";
+    std::cout << "Validation: \n" << tvgutil::make_limited_container(validationSet, 20) << "\n\n";
 #endif
 
     splits.push_back(split);

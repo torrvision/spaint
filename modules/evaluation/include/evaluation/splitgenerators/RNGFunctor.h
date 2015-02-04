@@ -12,8 +12,8 @@ namespace evaluation {
 /**
  * \brief An instance of this struct can be used to forward calls from std::random_shuffle to a random number generator.
  *
- * Note that these are deliberately intended to be used locally and then discarded. In particular,
- * they must not survive longer than the random number generator to which they refer.
+ * Note that these are deliberately intended to be used locally and then discarded. In particular, they must not survive
+ * longer than the random number generator to which they refer.
  */
 struct RNGFunctor
 {

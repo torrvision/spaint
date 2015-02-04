@@ -47,13 +47,15 @@ std::vector<SplitGenerator::Split> RandomPermutationAndDivisionSplitGenerator::g
   size_t trainingSetSize = static_cast<size_t>(m_ratio * exampleCount);
   for(size_t i = 0; i < m_splitCount; ++i)
   {
-    // Randomly shuffle the indices and construct the split.
-    Split split;
+    // Randomly shuffle the indices.
     std::random_shuffle(exampleIndices.begin(), exampleIndices.end(), RNGFunctor(m_rng));
+
+    // Construct the split.
+    Split split;
     std::vector<size_t>& trainingSet = split.first;
     std::vector<size_t>& validationSet = split.second;
-    split.first.insert(trainingSet.begin(), exampleIndices.begin(), exampleIndices.begin() + trainingSetSize);
-    split.second.insert(validationSet.begin(), exampleIndices.begin() + trainingSetSize, exampleIndices.end());
+    trainingSet.insert(trainingSet.begin(), exampleIndices.begin(), exampleIndices.begin() + trainingSetSize);
+    validationSet.insert(validationSet.begin(), exampleIndices.begin() + trainingSetSize, exampleIndices.end());
 
 #if 0
     std::cout << "Training: \n" << tvgutil::make_limited_container(trainingSet, 20) << '\n';

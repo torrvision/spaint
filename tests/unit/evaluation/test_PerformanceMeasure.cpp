@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_SUITE(test_PerformanceMeasure)
 BOOST_AUTO_TEST_CASE(average_test)
 {
   const float TOL = 1e-5f;
+
   #define CHECK_CLOSE(L,R) BOOST_CHECK_CLOSE(L,R,TOL)
 
   PerformanceMeasure m1 = PerformanceMeasure::average(list_of(1.0f)(2.0f)(3.0f));
