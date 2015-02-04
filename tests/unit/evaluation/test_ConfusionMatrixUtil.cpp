@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(test_ConfusionMatrixUtil)
 BOOST_AUTO_TEST_CASE(get_conf_mtx_test)
 {
   // Generate a set of labels;
-  std::set<int> classLabels = list_of(2)(5)(1)(9);
+  std::set<Label> classLabels = list_of(2)(5)(1)(9);
 
   // Generate dummy ground truth and predicted labels.
   std::vector<Label> groundTruthLabels = list_of(1)(5)(9)(1)(5)(9)(1)(5)(9)(1)(5)(9)(1)(5)(9);
