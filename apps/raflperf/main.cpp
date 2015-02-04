@@ -5,13 +5,9 @@
 #include <cmath>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-using namespace boost::posix_time;
 
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
@@ -30,11 +26,10 @@ typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
-std::string get_local_time()
+std::string get_iso_timestamp()
 {
-  //time_facet *facet = new time_facet("%d%b%Y-%H%M%S");
-  ptime currentDateTime(second_clock::local_time());
-  return to_simple_string(currentDateTime);
+  boost::posix_time::ptime currentDateTime(boost::posix_time::second_clock::local_time());
+  return boost::posix_time::to_iso_string(currentDateTime);
 }
 
 int main(int argc, char *argv[])
@@ -59,8 +54,8 @@ int main(int argc, char *argv[])
 
     //Generate examples around the unit circle.
     UnitCircleExampleGenerator<Label> uceg(classLabels, 1234);
-    examples = uceg.generate_examples(classLabels, 1000);
-    outputResultPath = "UnitCircleExampleGenerator_Results.txt";
+    examples = uceg.generate_examples(classLabels, 100);
+    outputResultPath = "UnitCircleExampleGenerator-Results.txt";
   }
   else if(argc == 4)
   {
@@ -80,8 +75,8 @@ int main(int argc, char *argv[])
 
   //Generate parameters of your algorithm.
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
-    .add_param("treeCount", list_of<size_t>(1)(3)(5)(7)(9)(11)(13))
-    .add_param("splitBudget", list_of<size_t>(static_cast<size_t>(pow(2,20))))
+    .add_param("treeCount", list_of<size_t>(1)(5)(9)(13))
+    .add_param("splitBudget", list_of<size_t>(static_cast<size_t>(pow(2,10)))(static_cast<size_t>(pow(2,20))))
     .add_param("candidateCount", list_of<int>(256))
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
@@ -104,14 +99,13 @@ int main(int argc, char *argv[])
     evaluator.reset(new RandomForestEvaluator<Label>(splitGenerator, params[n]));
     std::map<std::string,PerformanceMeasure> result = evaluator->evaluate(examples);
     results.record_performance(params[n], result);
-    //std::cout << "The validation result after " << numFolds << " folds is: " << result << '\n';
   }
 
   //Output results to the screen.
   results.output(std::cout);
 
   //Time-stamp the results file.
-  outputResultPath += get_local_time();
+  outputResultPath += "-" + get_iso_timestamp();
 
   //Output results to a file.
   std::ofstream resultsFile(outputResultPath.c_str());
