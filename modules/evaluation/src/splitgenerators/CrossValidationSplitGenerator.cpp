@@ -37,7 +37,7 @@ std::vector<SplitGenerator::Split> CrossValidationSplitGenerator::generate_split
   RNGFunctor rngFunctor(m_rng);
   std::random_shuffle(foldOfExample.begin(), foldOfExample.end(), rngFunctor);
 
-#if 1
+#if 0
   std::cout << "foldOfExample: \n" << tvgutil::make_limited_container(foldOfExample, 20) << '\n';
 #endif
 
@@ -58,7 +58,7 @@ std::vector<SplitGenerator::Split> CrossValidationSplitGenerator::generate_split
     std::random_shuffle(split.first.begin(), split.first.end(), rngFunctor);
     std::random_shuffle(split.second.begin(), split.second.end(), rngFunctor);
 
-#if 1
+#if 0
     std::cout << "Fold: " << validationFold << "\n";
     std::cout << "First: \n" << tvgutil::make_limited_container(split.first, 20) << "\n";
     std::cout << "Second: \n" << tvgutil::make_limited_container(split.second, 20) << "\n\n";
