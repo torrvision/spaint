@@ -34,6 +34,7 @@ src/decisionfunctions/FeatureThresholdingDecisionFunction.cpp
 SET(decisionfunctions_headers
 include/rafl/decisionfunctions/DecisionFunction.h
 include/rafl/decisionfunctions/DecisionFunctionGenerator.h
+include/rafl/decisionfunctions/DecisionFunctionGeneratorFactory.h
 include/rafl/decisionfunctions/FeatureThresholdingDecisionFunction.h
 include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
 )
