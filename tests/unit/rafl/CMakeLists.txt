@@ -13,7 +13,6 @@ SET(suitename rafl)
 ##########################
 
 SET(testnames
-ConfusionMatrixUtil
 UnitCircleExampleGenerator
 )
 

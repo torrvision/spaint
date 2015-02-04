@@ -14,6 +14,7 @@ SET(suitename evaluation)
 
 SET(testnames
 CartesianProductParameterSetGenerator
+ConfusionMatrixUtil
 )
 
 FOREACH(testname ${testnames})
