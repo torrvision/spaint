@@ -1,7 +1,23 @@
 set makeprg=[[\ -f\ Makefile\ ]]\ &&\ make\ \\\|\\\|\ make\ -C\ build/
 
 " recreate tags file with F5
-map <F5> :!ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+q --exclude=libraries -f tags .<CR>
-map <S-F5> :!ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+q -L libraries/ -f librarytags .<CR>
-set tags+=librarytags
+map <F5> :GenerateSpaintTags<CR>
 
+set tags+=spaint.tags
+set tags+=library.tags
+set tags+=infinitam.tags
+
+function GenerateSpaintTags()
+  !ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+qf --exclude=libraries -f spaint.tags .
+endfunction
+command GenerateSpaintTags execute GenerateSpaintTags()
+
+function GenerateLibraryTags()
+  !ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+qf -L libraries/ -f library.tags .
+endfunction
+command GenerateLibraryTags execute GenerateLibraryTags()
+
+function GenerateInfiniTAMTags()
+  !ctags -R --sort=yes --c++-kinds=+p --fields=+iaS --extra=+qf -L ../InfiniTAM/ -f infinitam.tags .
+endfunction
+command GenerateInfiniTAMTags execute GenerateInfiniTAMTags()
