@@ -5,6 +5,7 @@
 #include "splitgenerators/CrossValidationSplitGenerator.h"
 #include "splitgenerators/RNGFunctor.h"
 
+#include <set>
 #include <stdexcept>
 
 #include <tvgutil/LimitedContainer.h>
@@ -26,12 +27,15 @@ std::vector<SplitGenerator::Split> CrossValidationSplitGenerator::generate_split
     throw std::runtime_error("Too few examples to divide into the specified number of folds");
   }
 
-  // Allocate each example to a random fold.
+  // Allocate the examples to random folds.
   std::vector<int> foldOfExample(exampleCount);
   for(size_t i = 0; i < exampleCount; ++i)
   {
-    foldOfExample[i] = m_rng.generate_int_from_uniform(0, static_cast<int>(m_foldCount) - 1);
+    foldOfExample[i] = static_cast<int>(i % m_foldCount);
   }
+
+  RNGFunctor rngFunctor(m_rng);
+  std::random_shuffle(foldOfExample.begin(), foldOfExample.end(), rngFunctor);
 
 #if 1
   std::cout << "foldOfExample: \n" << tvgutil::make_limited_container(foldOfExample, 20) << '\n';
@@ -51,7 +55,6 @@ std::vector<SplitGenerator::Split> CrossValidationSplitGenerator::generate_split
     }
 
     // Randomly shuffle the indices in each half of the split.
-    RNGFunctor rngFunctor(m_rng);
     std::random_shuffle(split.first.begin(), split.first.end(), rngFunctor);
     std::random_shuffle(split.second.begin(), split.second.end(), rngFunctor);
 
