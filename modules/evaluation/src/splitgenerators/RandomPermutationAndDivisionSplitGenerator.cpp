@@ -48,7 +48,8 @@ std::vector<SplitGenerator::Split> RandomPermutationAndDivisionSplitGenerator::g
   for(size_t i = 0; i < m_splitCount; ++i)
   {
     // Randomly shuffle the indices.
-    std::random_shuffle(exampleIndices.begin(), exampleIndices.end(), RNGFunctor(m_rng));
+    RNGFunctor rngFunctor(m_rng);
+    std::random_shuffle(exampleIndices.begin(), exampleIndices.end(), rngFunctor);
 
     // Construct the split.
     Split split;
