@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
   classLabels.insert(3);
   classLabels.insert(5);
   classLabels.insert(7);
+  classLabels.insert(100);
+  classLabels.insert(239);
+  classLabels.insert(123);
 
   std::map<Label,cv::Scalar> palette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, 1234);
 
@@ -85,7 +88,7 @@ int main(int argc, char *argv[])
   CvMatPlot fig3(3, "ClassificationAccuracy");
 
   // Generate points on the 2d plane
-  std::vector<Descriptor_CPtr> pointsOnThePlane = generate_2d_descriptors_in_range(-2.0f, 2.0f, 0.1f);
+  std::vector<Descriptor_CPtr> pointsOnThePlane = generate_2d_descriptors_in_range(-2.5f, 2.5f, 0.03f);
 
   std::vector<float> performanceOverTime;
 
@@ -103,11 +106,8 @@ int main(int argc, char *argv[])
     // Online learning.
     orfl.question(currentExamples);
     std::map<std::string,evaluation::PerformanceMeasure> performance = orfl.answer(currentExamples);
-    /*
     orfl.update();
-    */
 
-/*
     // Plot bar chart.
     performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
     fig3.draw_bars(performanceOverTime, cv::Scalar(0,0,255));
@@ -119,10 +119,11 @@ int main(int argc, char *argv[])
       fig2.canvas_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), palette[orfl.predict(descriptor)], 2, 2);
     }
     fig2.show();
-*/
-    cv::waitKey(50);
+
+    cv::waitKey(100);
     //fig1.clf();
     //fig2.clf();
+    fig3.clf();
   }
 
 #if 0  
