@@ -4,6 +4,8 @@
 
 #include <numeric>
 
+#include <boost/lexical_cast.hpp>
+
 #include "CvMatPlot.h"
 
 //#################### CONSTRUCTOR #################### 
@@ -19,7 +21,7 @@ CvMatPlot::CvMatPlot(size_t figureNumber, std::string figureName, size_t imageWi
   m_scaleWidth = float(imageWidth) / m_axesLength;
   m_scaleHeight = float(imageHeight) / m_axesLength;
 
-  m_windowName = figureName + std::to_string(figureNumber);
+  m_windowName = figureName + boost::lexical_cast<std::string>(figureNumber);
 }
 
 void CvMatPlot::draw_text(std::string text, cv::Point position, const Colour& colour, double scale, int thick){
