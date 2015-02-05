@@ -12,6 +12,7 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
+#include "CvMatPlot.h"
 #include "OnlineRandomForestLearner.h"
 
 //#################### TYPEDEFS ####################
@@ -38,8 +39,6 @@ int main(int argc, char *argv[])
 
   // Generate examples around the unit circle.
   UnitCircleExampleGenerator<Label> uceg(classLabels, seed);
-  examples = uceg.generate_examples(classLabels, 100);
-  outputResultPath = "UnitCircleExampleGenerator-Results.txt";
 
   // Generate the parameter sets with which to test the random forest.
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
@@ -55,7 +54,25 @@ int main(int argc, char *argv[])
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_param_sets();
 
+  CvMatPlot fig1(1, "UnitCircleExampleGenerator");
+
+  const size_t maxIterations = 100;
+  for(size_t i = 0; i < maxIterations; ++i)
+  {
+    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(classLabels,50);
+    for(int j = 1, jend = currentExamples.size(); j < jend; ++j)
+    {
+      Example_CPtr example = currentExamples[j];
+      fig1.canvas_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), cv::Scalar(0,255,0), 2, 2);
+    }
+
+    fig1.show();
+    cv::waitKey(100);
+  }
+
 #if 0  
+  outputResultPath = "UnitCircleExampleGenerator-Results.txt";
+
   // Output the performance table to the screen.
   results.output(std::cout);
 

@@ -14,6 +14,7 @@ SET(targetname raflvis)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
@@ -23,9 +24,11 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 ##
 SET(sources
 main.cpp
+CvMatPlot.cpp
 )
 
 SET(headers
+  CvMatPlot.h
   OnlineRandomForestLearner.h
 )
 
@@ -55,6 +58,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 #################################
 
 TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgutil)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
 #############################
