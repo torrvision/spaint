@@ -10,8 +10,6 @@
 
 #include "../RandomNumberGenerator.h"
 
-#include "ColourRGBA.h"
-
 namespace tvgutil {
 
 /**
@@ -27,10 +25,10 @@ public:
    * \param labels  The set of labels.
    * \param seed    The seed for the random number generator.
    */
-  template <typename Label>
-  static std::map<Label,ColourRGBA> generate_random_rgba_palette(const std::set<Label>& labels, unsigned int seed)
+  template <typename Label, typename Colour>
+  static std::map<Label,Colour> generate_random_rgba_palette(const std::set<Label>& labels, unsigned int seed)
   {
-    std::map<Label,ColourRGBA> result;
+    std::map<Label,Colour> result;
     RandomNumberGenerator rng(seed);
 
     for(typename std::set<Label>::const_iterator it = labels.begin(), iend = labels.end(); it != iend; ++it)
@@ -38,11 +36,12 @@ public:
       int r = rng.generate_int_from_uniform(0, 255);
       int g = rng.generate_int_from_uniform(0, 255);
       int b = rng.generate_int_from_uniform(0, 255);
-      result.insert(std::make_pair(*it, ColourRGBA::from_ints(r, g, b, 255)));
+      result.insert(std::make_pair(*it, Colour(r, g, b, 255)));
     }
 
     return result;
   }
+
 };
 
 }

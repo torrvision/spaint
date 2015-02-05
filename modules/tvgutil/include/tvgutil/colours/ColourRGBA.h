@@ -36,7 +36,7 @@ public:
    */
   ColourRGBA();
 
-private:
+public: //TEMPORARY HACK FIXME this was private.
   /**
    * \brief Constructs an RGBA colour.
    *
