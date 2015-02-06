@@ -13,6 +13,7 @@ using namespace evaluation;
 using namespace rafl;
 
 #include <tvgutil/colours/PaletteGenerator.h>
+
 #include "CvMatPlot.h"
 #include "OnlineRandomForestLearner.h"
 
@@ -62,7 +63,9 @@ int main(int argc, char *argv[])
   classLabels.insert(239);
   classLabels.insert(123);
 
-  std::map<Label,cv::Scalar> palette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, 1234);
+  std::map<Label,cv::Scalar> randomPalette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, 1234);
+
+  std::map<std::string,cv::Scalar> basicPalette = tvgutil::PaletteGenerator::generate_basic_rgba_palette<cv::Scalar>();
 
   // Generate examples around the unit circle.
   UnitCircleExampleGenerator<Label> uceg(classLabels, seed);
@@ -84,7 +87,11 @@ int main(int argc, char *argv[])
   OnlineRandomForestLearner<Label> orfl(params[0]);
 
   CvMatPlot fig1(1, "UnitCircleExampleGenerator");
+  fig1.cartesian_axes(basicPalette["Red"]);
+  fig1.cartesian_unit_circle(basicPalette["Red"]);
+
   CvMatPlot fig2(2, "DecisionBoundary");
+
   CvMatPlot fig3(3, "ClassificationAccuracy");
 
   // Generate points on the 2d plane
@@ -99,7 +106,7 @@ int main(int argc, char *argv[])
     for(int j = 1, jend = currentExamples.size(); j < jend; ++j)
     {
       Example_CPtr example = currentExamples[j];
-      fig1.canvas_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), palette[example->get_label()], 2, 2);
+      fig1.cartesian_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), randomPalette[example->get_label()], 2, 2);
     }
     fig1.show();
 
@@ -110,13 +117,18 @@ int main(int argc, char *argv[])
 
     // Plot bar chart.
     performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
-    fig3.draw_bars(performanceOverTime, cv::Scalar(0,0,255));
+    fig3.draw_bars(performanceOverTime, basicPalette["Blue"]);
+
+    char currentPerformance[7]; sprintf(currentPerformance, "%0.3f", performanceOverTime.back());
+    char cumulativeAveragePerformance[7]; sprintf(cumulativeAveragePerformance, "%0.3f", static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size()));
+    fig3.draw_text( std::string("Cur") + (performance.find("Accuracy")->first) + std::string(currentPerformance), cv::Point2i(10, fig3.height() - 50), basicPalette["White"]);
+    fig3.draw_text( std::string("Avg") + (performance.find("Accuracy")->first) + std::string(cumulativeAveragePerformance), cv::Point2i(10, fig3.height() - 10), basicPalette["White"]);
     fig3.show();
 
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
-      fig2.canvas_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), palette[orfl.predict(descriptor)], 2, 2);
+      fig2.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[orfl.predict(descriptor)], 2, 2);
     }
     fig2.show();
 

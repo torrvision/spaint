@@ -28,8 +28,8 @@ CvMatPlot.cpp
 )
 
 SET(headers
-  CvMatPlot.h
-  OnlineRandomForestLearner.h
+CvMatPlot.h
+OnlineRandomForestLearner.h
 )
 
 #############################
