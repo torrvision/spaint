@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
 
   CvMatPlot fig1(1, "UnitCircleExampleGenerator");
   fig1.cartesian_axes(basicPalette["Red"]);
-  fig1.cartesian_unit_circle(basicPalette["Red"]);
 
   CvMatPlot fig2(2, "DecisionBoundary");
 
@@ -117,12 +116,12 @@ int main(int argc, char *argv[])
 
     // Plot bar chart.
     performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
-    fig3.draw_bars(performanceOverTime, basicPalette["Blue"]);
+    fig3.line_graph(performanceOverTime, basicPalette["Blue"]);
 
     char currentPerformance[7]; sprintf(currentPerformance, "%0.3f", performanceOverTime.back());
     char cumulativeAveragePerformance[7]; sprintf(cumulativeAveragePerformance, "%0.3f", static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size()));
-    fig3.draw_text( std::string("Cur") + (performance.find("Accuracy")->first) + std::string(currentPerformance), cv::Point2i(10, fig3.height() - 50), basicPalette["White"]);
-    fig3.draw_text( std::string("Avg") + (performance.find("Accuracy")->first) + std::string(cumulativeAveragePerformance), cv::Point2i(10, fig3.height() - 10), basicPalette["White"]);
+    fig3.image_text( std::string("Cur") + (performance.find("Accuracy")->first) + std::string(currentPerformance), cv::Point2i(10, fig3.height() - 50), basicPalette["White"]);
+    fig3.image_text( std::string("Avg") + (performance.find("Accuracy")->first) + std::string(cumulativeAveragePerformance), cv::Point2i(10, fig3.height() - 10), basicPalette["White"]);
     fig3.show();
 
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
