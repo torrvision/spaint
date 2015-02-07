@@ -39,10 +39,18 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
     const Vector3u colour = labelColours[voxel.label];
 
     // Determine the intensity of the pixel using a very simple version of the Lambertian lighting equation.
-    Vector3f outNormal;
+    Vector3f L = normalize(Vector3f(0,-100,0) - point);
+    Vector3f N;
     float NdotL;
-    computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, lightSource, outNormal, NdotL);
-    float intensity = 0.2f + 0.8f * NdotL;
+    computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, L, N, NdotL);
+    if(NdotL < 0) NdotL = 0.0f;
+
+    Vector3f R = 2*N*(dot(N,L)) - L;
+    Vector3f V = normalize(-point); // TEMPORARY
+    float RdotV = dot(R,V);
+    if(RdotV < 0) RdotV = 0.0f;
+
+    float intensity = 0.3f + 0.35f * NdotL + 0.35f * pow(RdotV,20);
 
     // Fill in the final colour for the pixel by scaling the base colour by the intensity.
     dest.x = (uchar)(intensity * colour.r);
