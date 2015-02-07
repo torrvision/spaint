@@ -24,12 +24,14 @@ namespace spaint {
  * \param foundPoint    A flag indicating whether or not any point was actually hit by the ray (true if yes; false if no).
  * \param voxelData     The scene's voxel data.
  * \param voxelIndex    The scene's voxel index.
- * \param lightSource   The position of the light source that is illuminating the scene.
  * \param labelColours  The colour map for the semantic labels.
+ * \param viewerPos     The position of the viewer.
+ * \param lightPos      The position of the light source that is illuminating the scene.
  */
 _CPU_AND_GPU_CODE_
 inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool foundPoint, const SpaintVoxel *voxelData,
-                                 const ITMVoxelIndex::IndexData *voxelIndex, const Vector3f& lightSource, const Vector3u *labelColours)
+                                 const ITMVoxelIndex::IndexData *voxelIndex, const Vector3u *labelColours,
+                                 const Vector3f& viewerPos, const Vector3f& lightPos)
 {
   dest = Vector4u((uchar)0);
   if(foundPoint)
@@ -38,19 +40,19 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
     const SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, point.toIntRound(), foundPoint);
     const Vector3u colour = labelColours[voxel.label];
 
-    // Determine the intensity of the pixel using a very simple version of the Lambertian lighting equation.
-    Vector3f L = normalize(Vector3f(0,-100,0) - point);
+    // Determine the intensity of the pixel using the Phong lighting equation.
+    Vector3f L = normalize(lightPos - point);
     Vector3f N;
     float NdotL;
     computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, L, N, NdotL);
     if(NdotL < 0) NdotL = 0.0f;
 
-    Vector3f R = 2*N*(dot(N,L)) - L;
-    Vector3f V = normalize(-point); // TEMPORARY
-    float RdotV = dot(R,V);
+    Vector3f R = 2 * N * NdotL - L;
+    Vector3f V = normalize(viewerPos - point);
+    float RdotV = dot(R, V);
     if(RdotV < 0) RdotV = 0.0f;
 
-    float intensity = 0.3f + 0.35f * NdotL + 0.35f * pow(RdotV,20);
+    float intensity = 0.3f + 0.35f * NdotL + 0.35f * pow(RdotV, 20);
 
     // Fill in the final colour for the pixel by scaling the base colour by the intensity.
     dest.x = (uchar)(intensity * colour.r);

@@ -11,14 +11,14 @@ namespace spaint {
 //#################### CUDA KERNELS ####################
 
 __global__ void ck_render_semantic(Vector4u *outRendering, const Vector4f *ptsRay, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex,
-                                   Vector2i imgSize, Vector3f lightSource, Vector3u *labelColours)
+                                   Vector2i imgSize, Vector3u *labelColours, Vector3f viewerPos, Vector3f lightPos)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if (x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
   Vector4f ptRay = ptsRay[locId];
-  shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, lightSource, labelColours);
+  shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -39,16 +39,21 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
 
   // Shade all of the pixels in the image.
   Vector2i imgSize = outputImage->noDims;
+  Vector3f lightPos(0.0f, -100.0f, 0.0f);
+  Vector3f viewerPos(pose->GetInvM().getColumn(3));
+
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
+
   ck_render_semantic<<<gridSize,cudaBlockSize>>>(
     outputImage->GetData(MEMORYDEVICE_CUDA),
     renderState->raycastResult->GetData(MEMORYDEVICE_CUDA),
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     imgSize,
-    -Vector3f(pose->GetInvM().getColumn(2)),
-    labelColours.GetData(MEMORYDEVICE_CUDA)
+    labelColours.GetData(MEMORYDEVICE_CUDA),
+    viewerPos,
+    lightPos
   );
 }
 

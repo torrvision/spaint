@@ -26,9 +26,10 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
 
   // Shade all of the pixels in the image.
   int imgSize = outputImage->noDims.x * outputImage->noDims.y;
-  Vector3f lightSource = -Vector3f(pose->GetInvM().getColumn(2));
+  Vector3f lightPos(0.0f, -100.0f, 0.0f);
   Vector4u *outRendering = outputImage->GetData(MEMORYDEVICE_CPU);
   const Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CPU);
+  Vector3f viewerPos(pose->GetInvM().getColumn(3));
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
 
@@ -38,7 +39,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
   for (int locId = 0; locId < imgSize; ++locId)
   {
     Vector4f ptRay = pointsRay[locId];
-    shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, lightSource, labelColours);
+    shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos);
   }
 }
 
