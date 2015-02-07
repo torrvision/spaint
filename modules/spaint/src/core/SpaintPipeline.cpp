@@ -18,7 +18,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);

@@ -79,10 +79,10 @@ public:
    * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source.
    *
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
-   * \param openNIDeviceURI     An optional OpenNI device URI (if NULL is passed in, the default OpenNI device will be used).
+   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::shared_ptr<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
 #endif
 
   /**
