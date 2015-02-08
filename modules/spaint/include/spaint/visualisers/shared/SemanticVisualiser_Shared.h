@@ -33,6 +33,11 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
                                  const ITMVoxelIndex::IndexData *voxelIndex, const Vector3u *labelColours,
                                  const Vector3f& viewerPos, const Vector3f& lightPos)
 {
+  const float ambient = 0.3f;
+  const float lambertianCoefficient = 0.35f;
+  const float phongCoefficient = 0.35f;
+  const float phongExponent = 20.0f;
+
   dest = Vector4u((uchar)0);
   if(foundPoint)
   {
@@ -40,19 +45,21 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
     const SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, point.toIntRound(), foundPoint);
     const Vector3u colour = labelColours[voxel.label];
 
-    // Determine the intensity of the pixel using the Phong lighting equation.
+    // Calculate the Lambertian lighting term.
     Vector3f L = normalize(lightPos - point);
     Vector3f N;
     float NdotL;
     computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, L, N, NdotL);
-    if(NdotL < 0) NdotL = 0.0f;
+    float lambertian = CLAMP(NdotL, 0.0f, 1.0f);
 
-    Vector3f R = 2 * N * NdotL - L;
+    // Calculate the Phong lighting term.
+    Vector3f R = 2.0f * N * NdotL - L;
     Vector3f V = normalize(viewerPos - point);
-    float RdotV = dot(R, V);
-    if(RdotV < 0) RdotV = 0.0f;
+    float phong = pow(CLAMP(dot(R,V), 0.0f, 1.0f), phongExponent);
+    phong = CLAMP(phong, 0.0f, 1.0f);
 
-    float intensity = 0.3f + 0.35f * NdotL + 0.35f * pow(RdotV, 20);
+    // Determine the intensity of the pixel using the Phong lighting equation.
+    float intensity = ambient + lambertianCoefficient * lambertian + phongCoefficient * phong;
 
     // Fill in the final colour for the pixel by scaling the base colour by the intensity.
     dest.x = (uchar)(intensity * colour.r);
