@@ -19,7 +19,19 @@
 #include <tvgutil/MapUtil.h>
 
 /**
- * \brief TODO
+ * \brief This class wraps a random forest intended for use as an online learner.
+ *
+ * Online learning takes place in a sequence of consecutive rounds.
+ * On each round, the random forest learner is given a question and is required to provide an answer.
+ * For example, a learner might receive a feature from a scene point,
+ * and the question is to which class does the feature belong to.
+ * To answer the question, the learner uses a prediction mechanism, termed a hypothesis,
+ * which is a mapping from the set of questions (examples) to the set of admissible answers (class labels).
+ * After predicting an answer, the learner gets the correct answer to the question.
+ * The quality of the learner's answer is assessed by a loss function that measures the discrepancy between the predicted answer and the correct one.
+ * The learner's ultimate goal is to minimise the cumulative loss suffered along its run.
+ * To achieve this goal, the learner may update the hypothesis after each round so as to be more accurate in later rounds.
+ * [Shai Shalev-Shwartz PhD Thesis, Link: ttic.uchicago.edu/~shai/]
  */
 template <typename Label>
 class OnlineRandomForestLearner
@@ -37,7 +49,7 @@ private:
   typename DecisionTree::Settings m_decisionTreeSettings;
 
   /** An instance of a random forest. */
-  RandomForest_Ptr m_randomForest;
+  mutable RandomForest_Ptr m_randomForest;
 
   /** The maximum number of nodes per tree that may be split in each training step. */
   size_t m_splitBudget;
@@ -66,50 +78,13 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /*
-   * \brief Pass data to the forest.
-   *
-   * \param examples  TODO.
-   */
-  void question(const std::vector<Example_CPtr>& examples)
-  {
-    m_randomForest->add_examples(examples);
-  }
-
-  /*
-   * \brief Get answers to questions with current model.
-   *
-   * \param examples  TODO.
-   */
-  std::map<std::string,evaluation::PerformanceMeasure> answer(const std::vector<Example_CPtr>& examples)
-  {
-    return do_evaluation(examples);
-  }
-
-  /*
-   * \brief Update the random forest to minimize prediction error in the future.
-   *
-   * \param examples  TODO.
-   */
-  void update()
-  {
-    m_randomForest->train(m_splitBudget);
-  }
-
-  Label predict(Descriptor_CPtr descriptor)
-  {
-    return m_randomForest->predict(descriptor);
-  }
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
   /**
-   * \brief Evaluates a random forest on a subset of a set of examples.
+   * \brief Gets an answer to the questions posed to the random forest.
    *
-   * \param examples      The overall set of examples from which the subset of evaluation examples is drawn.
-   * \return              The results of the evaluation.
+   * \param examples      The set of examples.
+   * \return              The answer to the questions as quantified by a performance measure.
    */
-  std::map<std::string,evaluation::PerformanceMeasure> do_evaluation(const std::vector<Example_CPtr>& examples)
+  std::map<std::string,evaluation::PerformanceMeasure> answer(const std::vector<Example_CPtr>& examples) const
   {
     std::set<Label> classLabels;
     size_t examplesSize = examples.size();
@@ -118,20 +93,46 @@ private:
     for(size_t i = 0; i < examplesSize; ++i)
     {
       const Example_CPtr& example = examples[i];
-      predictedLabels[i] = m_randomForest->predict(example->get_descriptor());
+      predictedLabels[i] = predict(example->get_descriptor());
       expectedLabels[i] = example->get_label();
       classLabels.insert(expectedLabels[i]);
-      std::cout << "pred=" << predictedLabels[i] << " expected=" << expectedLabels[i] << '\n';
     }
 
     Eigen::MatrixXf confusionMatrix = evaluation::ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
     std::cout << confusionMatrix;
 
-    std::map<std::string,evaluation::PerformanceMeasure> performance;
-    performance.insert(std::make_pair("Accuracy", evaluation::ConfusionMatrixUtil::calculate_accuracy(confusionMatrix)));
-    std::cout << tvgutil::make_limited_container(performance,5) << std::flush;
-    return performance;
-    //return boost::assign::map_list_of("Accuracy", evaluation::ConfusionMatrixUtil::calculate_accuracy(confusionMatrix));
+    return boost::assign::map_list_of("Accuracy", evaluation::ConfusionMatrixUtil::calculate_accuracy(confusionMatrix));
+  }
+
+  /*
+   * \brief  Predicts a label for thte specified desctiptor.
+   *
+   * \param desctiptor  The descriptor.
+   * return             The predicted label.
+   */
+  Label predict(Descriptor_CPtr descriptor) const
+  {
+    return m_randomForest->predict(descriptor);
+  }
+
+  /*
+   * \brief Ask multiple questions to the random forest posed as a set of examples.
+   *
+   * \param examples  Pairs of descriptors and labels.
+   */
+  void question(const std::vector<Example_CPtr>& examples) const
+  {
+    m_randomForest->add_examples(examples);
+  }
+
+  /*
+   * \brief Update the random forest to minimize prediction error in the future.
+   *
+   * \param examples  TODO.
+   */
+  void update() const
+  {
+    m_randomForest->train(m_splitBudget);
   }
 };
 

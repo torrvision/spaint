@@ -11,13 +11,13 @@
 
 #include "CvMatPlot.h"
 
-//#################### CONSTRUCTOR #################### 
+//#################### CONSTRUCTOR ####################
 
 CvMatPlot::CvMatPlot(size_t figureNumber, std::string figureName, size_t imageWidth, size_t imageHeight, int axesLength)
 : m_axesLength(axesLength),
   m_canvas( cv::Mat::zeros(imageHeight, imageWidth, CV_8UC3) ),
   m_imageHeight(imageHeight),
-  m_imageWidth(imageWidth), 
+  m_imageWidth(imageWidth),
   m_saveCounter(0),
   m_scaleHeight(static_cast<float>(imageHeight/axesLength)),
   m_scaleWidth(static_cast<float>(imageWidth/axesLength)),
@@ -31,24 +31,28 @@ CvMatPlot::CvMatPlot(size_t figureNumber, std::string figureName, size_t imageWi
   m_cartesianOriginInImage.y = imageHeight / 2.0f;
 }
 
-//#################### PUBLIC MEMBER FUNCTIONS #################### 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void CvMatPlot::cartesian_axes(const Colour& colour)
+void CvMatPlot::cartesian_axes(const cv::Scalar& colour) const
 {
-  cv::Point2f xleft(-5,0), xright(5,0);
-  cv::Point2f ydown(0,-5), yup(0,5);
-  image_line(axes2image(xleft), axes2image(xright), colour);
-  image_line(axes2image(ydown), axes2image(yup), colour);
+  int xMin = -1 * (m_axesLength / 2.0f);
+  int xMax = m_axesLength / 2.0f;
+  int yMin = xMin;
+  int yMax = xMax;
+
+  image_line(axes2image(cv::Point2f(xMin, 0)), axes2image(cv::Point2f(xMax, 0)), colour);
+  image_line(axes2image(cv::Point2f(0, yMin)), axes2image(cv::Point2f(0, yMax)), colour);
 }
 
-void CvMatPlot::cartesian_point(cv::Point2f point, const Colour& colour, int radius, int thickness)
+void CvMatPlot::cartesian_point(cv::Point2f point, const cv::Scalar& colour, int radius, int thickness) const
 {
   image_point(axes2image(point), colour, radius, thickness);
 }
 
-void CvMatPlot::clf(){
+void CvMatPlot::clf() const
+{
   m_canvas = cv::Mat::zeros(m_imageHeight, m_imageWidth, CV_8UC3);
-  m_canvas = Colour(0,0,0);
+  m_canvas = cv::Scalar(0,0,0);
 }
 
 size_t CvMatPlot::height() const
@@ -56,36 +60,39 @@ size_t CvMatPlot::height() const
   return m_imageHeight;
 }
 
-void CvMatPlot::image_line(cv::Point2f p1, cv::Point2f p2, const Colour& colour, int thick)
-{    
-  cv::line(m_canvas, p1, p2, rgb2bgr(colour), thick);     
+void CvMatPlot::image_line(cv::Point2f p1, cv::Point2f p2, const cv::Scalar& colour, int thick) const
+{
+  cv::line(m_canvas, p1, p2, rgb2bgr(colour), thick);
 }
 
-void CvMatPlot::image_point(const cv::Point2f& point, const Colour& colour, int radius, int thickness){
+void CvMatPlot::image_point(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
+{
   cv::circle(m_canvas, point, radius, rgb2bgr(colour), thickness);
 }
 
-void CvMatPlot::image_text(std::string text, cv::Point position, const Colour& colour, double scale, int thick){
-    //position- bottom left corner of text in image
-    putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thick, 8);
+void CvMatPlot::image_text(std::string text, cv::Point position, const cv::Scalar& colour, double scale, int thick) const
+{
+    // The variable position refers to the bottom left corner of text in the image.
+    putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thick);
 }
 
-void CvMatPlot::line_graph(const std::vector<float>& values, const Colour& colour)
+void CvMatPlot::line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
 {
   if(values.empty())
     throw std::runtime_error("The values vector is empty.");
 
-  int length = values.size();
-  int bar_w = cvRound( (double) m_imageWidth/length );
+  int valuesSize = values.size();
+  int lineSeparation = cvRound( static_cast<float>(m_imageWidth) / valuesSize );
 
   float maxval = *std::max_element(values.begin(),values.end());
-  
-  for( int j = 1; j < length; j++ )
+
+  const int lineThickness = 2;
+
+  for(int j = 1; j < valuesSize; ++j)
   {
-    cv::line( m_canvas, 
-      cv::Point(bar_w*(j-1), m_imageHeight - cvRound(m_imageHeight* (values[j-1]/maxval))),
-      cv::Point(bar_w*(j), m_imageHeight - cvRound(m_imageHeight* (values[j]/maxval))),
-      rgb2bgr(colour), 2, 8, 0);
+    cv::Point lineBegin(lineSeparation * (j-1), m_imageHeight - cvRound(m_imageHeight * (values[j - 1] / maxval)));
+    cv::Point lineEnd(lineSeparation * j, m_imageHeight - cvRound(m_imageHeight * (values[j] / maxval)));
+    image_line(lineBegin, lineEnd, rgb2bgr(colour), lineThickness);
   }
 
 }
@@ -97,29 +104,28 @@ void CvMatPlot::save(const std::string& path)
   imwrite(path + "/" + filename, m_canvas);
 }
 
-void CvMatPlot::show(){
+void CvMatPlot::show() const
+{
   cv::imshow(m_windowName, m_canvas);
 }
 
-//#################### PRIVATE MEMBER FUNCTIONS #################### 
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
-cv::Point2f CvMatPlot::axes2image(const cv::Point2f axesPoint){
-    
-  //scale
-  cv::Point2f imagePoint;
-  imagePoint.x = axesPoint.x*m_scaleWidth;
-  imagePoint.y = axesPoint.y*m_scaleHeight;
- 
-  //translate
+cv::Point2f CvMatPlot::axes2image(const cv::Point2f axesPoint) const
+{
+  // Scale
+  cv::Point2f imagePoint(axesPoint.x * m_scaleWidth, axesPoint.y * m_scaleHeight);
+
+  // Translation
   imagePoint.x += m_cartesianOriginInImage.x;
   imagePoint.y += m_cartesianOriginInImage.y;
   imagePoint.y = m_imageHeight - imagePoint.y;
-  
+
   return imagePoint;
 }
 
-cv::Scalar CvMatPlot::rgb2bgr(const cv::Scalar& colour)
+cv::Scalar CvMatPlot::rgb2bgr(const cv::Scalar& colour) const
 {
-  return cv::Scalar(colour.val[2],colour.val[1],colour.val[0]);
+  return cv::Scalar(colour.val[2], colour.val[1], colour.val[0]);
 }
 
