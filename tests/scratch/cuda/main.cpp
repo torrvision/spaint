@@ -93,7 +93,7 @@ void test_copy_1d_texture()
   checkCudaErrors(cudaMemcpy(&h_output[0], d_output, N, cudaMemcpyDeviceToHost));
 
   // Output the results.
-  for(size_t i = 0; i < N; ++i)
+  for(int i = 0; i < N; ++i)
   {
     std::cout << static_cast<int>(h_output[i]) << '\n';
   }

@@ -29,10 +29,10 @@ std::vector<SplitGenerator::Split> CrossValidationSplitGenerator::generate_split
   }
 
   // Allocate the examples to random folds.
-  std::vector<int> foldOfExample(exampleCount);
+  std::vector<size_t> foldOfExample(exampleCount);
   for(size_t i = 0; i < exampleCount; ++i)
   {
-    foldOfExample[i] = static_cast<int>(i % m_foldCount);
+    foldOfExample[i] = i % m_foldCount;
   }
 
   RNGFunctor rngFunctor(m_rng);
