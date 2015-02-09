@@ -18,7 +18,6 @@ using namespace rafl;
 #include "OnlineRandomForestLearner.h"
 
 //#################### TYPEDEFS ####################
-
 typedef int Label;
 typedef boost::shared_ptr<const Descriptor> Descriptor_CPtr;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
@@ -48,32 +47,30 @@ std::vector<Descriptor_CPtr> generate_2d_descriptors_in_range(float min, float m
 
 int main(int argc, char *argv[])
 {
-  const unsigned int seed = 1234;
-
-  std::vector<Example_CPtr> examples;
-  std::string outputResultPath;
+  // Used OpenCV to detect keyboard input.
+  static int key;
 
   // Generate a set of labels.
+  const size_t labelCount = 20;
   std::set<Label> classLabels;
-  classLabels.insert(1);
-  classLabels.insert(3);
-  classLabels.insert(5);
-  classLabels.insert(7);
-  classLabels.insert(100);
-  classLabels.insert(239);
-  classLabels.insert(123);
+  for(size_t i = 0; i < labelCount; ++i) classLabels.insert(i);
 
-  std::map<Label,cv::Scalar> randomPalette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, 1234);
+  // Generate a palette of random colours.
+  const unsigned int seed = 1234;
+  std::map<Label,cv::Scalar> randomPalette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, seed);
 
+  // Generate a palette of basic colours.
   std::map<std::string,cv::Scalar> basicPalette = tvgutil::PaletteGenerator::generate_basic_rgba_palette<cv::Scalar>();
 
-  // Generate examples around the unit circle.
-  UnitCircleExampleGenerator<Label> uceg(classLabels, seed);
+  // Initialise a unit example generator.
+  const float lowerSTD = 0.05f;
+  const float upperSTD = 0.18f;
+  UnitCircleExampleGenerator<Label> uceg(classLabels, seed, lowerSTD, upperSTD);
 
-  // Generate the parameter sets with which to test the random forest.
+  // Generate the parameter sets with which to train the random forest.
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
     .add_param("treeCount", list_of<size_t>(1))
-    .add_param("splitBudget", list_of<size_t>(1024)(1048576))
+    .add_param("splitBudget", list_of<size_t>(1048576))
     .add_param("candidateCount", list_of<int>(256))
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
@@ -84,46 +81,62 @@ int main(int argc, char *argv[])
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_param_sets();
 
+  // Initialise the online random forest with the specified parameters.
   OnlineRandomForestLearner<Label> orfl(params[0]);
 
+  // Generate some figures used to display the output of the online learner.
   CvMatPlot fig1(1, "UnitCircleExampleGenerator");
-  fig1.cartesian_axes(basicPalette["Red"]);
 
   CvMatPlot fig2(2, "DecisionBoundary");
 
   CvMatPlot fig3(3, "ClassificationAccuracy");
 
-  // Generate points on the 2d plane
-  std::vector<Descriptor_CPtr> pointsOnThePlane = generate_2d_descriptors_in_range(-2.5f, 2.5f, 0.03f);
+  // Generate a dense set of points covering the 2d plane within a specified range.
+  const float minVal = -2.5f;
+  const float maxVal = 2.5f;
+  const float resolution = 0.03f;
+  std::vector<Descriptor_CPtr> pointsOnThePlane = generate_2d_descriptors_in_range(minVal, maxVal, resolution);
 
+  // Initialise a vector to store the performance of the learner over time.
   std::vector<float> performanceOverTime;
 
   const size_t maxIterations = 100;
+
   for(size_t i = 0; i < maxIterations; ++i)
   {
+    // Generate a set of examples from each class around the unit circle.
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(classLabels,50);
+
+    // Draw the generated points in figure 1.
     for(int j = 1, jend = currentExamples.size(); j < jend; ++j)
     {
       Example_CPtr example = currentExamples[j];
       fig1.cartesian_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), randomPalette[example->get_label()], 2, 2);
     }
+    fig1.cartesian_axes(basicPalette["Red"]);
     fig1.show();
 
-    // Online learning.
+    // Pass the set of examples to the random forest.
     orfl.question(currentExamples);
+
+    // Predict the labels of the examples passed to the forest under the current hypothesis.
     std::map<std::string,evaluation::PerformanceMeasure> performance = orfl.answer(currentExamples);
+    performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
+
+    // Update the random forest to minimise errors on future predictions.
     orfl.update();
 
-    // Plot bar chart.
-    performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
+    // Plot a line graph showing the performance of the forest over time.
     fig3.line_graph(performanceOverTime, basicPalette["Blue"]);
 
+    // Draw the performance on the same figure as the line graph.
     char currentPerformance[7]; sprintf(currentPerformance, "%0.3f", performanceOverTime.back());
     char cumulativeAveragePerformance[7]; sprintf(cumulativeAveragePerformance, "%0.3f", static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size()));
     fig3.image_text( std::string("Cur") + (performance.find("Accuracy")->first) + std::string(currentPerformance), cv::Point2i(10, fig3.height() - 50), basicPalette["White"]);
     fig3.image_text( std::string("Avg") + (performance.find("Accuracy")->first) + std::string(cumulativeAveragePerformance), cv::Point2i(10, fig3.height() - 10), basicPalette["White"]);
     fig3.show();
 
+    // Draw the current decision boundary of the random forest by predicting the labels of the dense set of points generated in the 2D plane.
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
@@ -131,32 +144,15 @@ int main(int argc, char *argv[])
     }
     fig2.show();
 
-    cv::waitKey(100);
-    //fig1.clf();
-    //fig2.clf();
+    // Wait for keyboard events. 
+    key = cv::waitKey(100);
+    if(key == 'q') break;
+
+    // Clear relevant figures.
+    fig1.clf();
     fig3.clf();
   }
 
-#if 0  
-  outputResultPath = "UnitCircleExampleGenerator-Results.txt";
-
-  // Output the performance table to the screen.
-  results.output(std::cout);
-
-  // Time-stamp the results file.
-  outputResultPath += "-" + get_iso_timestamp();
-
-  // Output the performance table to the results file.
-  std::ofstream resultsFile(outputResultPath.c_str());
-  if(!resultsFile)
-  {
-    std::cout << "Warning could not open file for writing...\n";
-  }
-  else
-  {
-    results.output(resultsFile);
-  }
-#endif
-
   return 0;
 }
+
