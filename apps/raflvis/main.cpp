@@ -13,6 +13,7 @@ using namespace evaluation;
 using namespace rafl;
 
 #include <tvgutil/colours/PaletteGenerator.h>
+#include <tvgutil/RandomNumberGenerator.h>
 
 #include "CvMatPlot.h"
 #include "OnlineRandomForestLearner.h"
@@ -45,8 +46,31 @@ std::vector<Descriptor_CPtr> generate_2d_descriptors_in_range(float min, float m
   return descriptors;
 }
 
+template <typename T>
+class SetSampler
+{
+private:
+  tvgutil::RandomNumberGenerator m_rng;
+
+public:
+  SetSampler(unsigned int seed)
+  :m_rng(seed)
+  {}
+
+  T get_sample(const std::set<T> set)
+  {
+    int randomIndex = m_rng.generate_int_from_uniform(0, set.size() - 1);
+    typename std::set<T>::const_iterator it(set.begin());
+    std::advance(it, randomIndex);
+    return *it;
+  }
+};
+
 int main(int argc, char *argv[])
 {
+  // Set a seed for the random number generator.
+  const unsigned int seed = 1234;
+
   // Used OpenCV to detect keyboard input.
   static int key;
 
@@ -55,8 +79,15 @@ int main(int argc, char *argv[])
   std::set<Label> classLabels;
   for(size_t i = 0; i < labelCount; ++i) classLabels.insert(i);
 
+  //Initialise the set sampler.
+  SetSampler<Label> classLabelSampler(seed);
+
+  // Generate a subset of labels which are currently observable;
+  const size_t currentLabelCount = 2;
+  std::set<Label> currentClassLabels;
+  for(size_t i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
+
   // Generate a palette of random colours.
-  const unsigned int seed = 1234;
   std::map<Label,cv::Scalar> randomPalette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, seed);
 
   // Generate a palette of basic colours.
@@ -100,12 +131,15 @@ int main(int argc, char *argv[])
   // Initialise a vector to store the performance of the learner over time.
   std::vector<float> performanceOverTime;
 
-  const size_t maxIterations = 100;
+  const size_t maxLearningRounds = 500;
 
-  for(size_t i = 0; i < maxIterations; ++i)
+  for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
   {
+    if((roundCount % 20) == 0) currentClassLabels.insert( classLabelSampler.get_sample(classLabels) );
+
     // Generate a set of examples from each class around the unit circle.
-    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(classLabels,50);
+    //std::vector<Example_CPtr> currentExamples = uceg.generate_examples(classLabels, 50);
+    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(currentClassLabels, 50);
 
     // Draw the generated points in figure 1.
     for(int j = 1, jend = currentExamples.size(); j < jend; ++j)
@@ -144,13 +178,16 @@ int main(int argc, char *argv[])
     }
     fig2.show();
 
-    // Wait for keyboard events. 
-    key = cv::waitKey(100);
+    // Wait for keyboard events.
+    key = cv::waitKey(20);
     if(key == 'q') break;
 
     // Clear relevant figures.
     fig1.clf();
     fig3.clf();
+
+    //Remove class labels from the current label set.
+    if((roundCount % 40) == 0) currentClassLabels.erase( classLabelSampler.get_sample(classLabels) );
   }
 
   return 0;
