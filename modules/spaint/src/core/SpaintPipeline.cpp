@@ -13,7 +13,9 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#ifdef WITH_VICON
 #include "trackers/ViconTracker.h"
+#endif
 
 namespace spaint {
 
