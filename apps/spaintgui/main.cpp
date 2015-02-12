@@ -48,6 +48,10 @@ try
 
   // Specify the InfiniTAM settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  settings->noHierarchyLevels = 2;
+  settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
+  settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
+  settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
 
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;

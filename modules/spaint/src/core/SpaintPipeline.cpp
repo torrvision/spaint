@@ -140,7 +140,20 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
   if(m_useVicon)
   {
-    m_tracker.reset(new ViconTracker("192.168.0.111", "kinect"));
+    //m_tracker.reset(new ViconTracker("192.168.0.111", "kinect"));
+    ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+    compositeTracker->SetTracker(new ViconTracker("192.168.0.111", "kinect"), 0);
+    compositeTracker->SetTracker(
+      new ITMDepthTracker_CUDA(
+        trackedImageSize,
+        settings->trackingRegime,
+        settings->noHierarchyLevels,
+        settings->noICPRunTillLevel,
+        settings->depthTrackerICPThreshold,
+        m_lowLevelEngine.get()
+      ), 1
+    );
+    m_tracker.reset(compositeTracker);
   }
   else
   {
