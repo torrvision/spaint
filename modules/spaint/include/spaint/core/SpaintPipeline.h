@@ -8,6 +8,10 @@
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
+#ifdef WITH_VICON
+#include "../trackers/ViconTracker.h"
+#endif
+
 namespace spaint {
 
 /**
@@ -71,6 +75,11 @@ private:
 
   /** Whether or not to use the Vicon tracker. */
   bool m_useVicon;
+
+#ifdef WITH_VICON
+  /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
+  ViconTracker *m_viconTracker;
+#endif
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;

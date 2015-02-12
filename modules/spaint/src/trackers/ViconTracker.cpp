@@ -18,7 +18,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 ViconTracker::ViconTracker(const std::string& host, const std::string& subjectName)
-: m_subjectName(subjectName)
+: m_lostTracking(false), m_subjectName(subjectName)
 {
   // TODO: Validate the IP address.
 
@@ -48,6 +48,11 @@ ViconTracker::~ViconTracker()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+bool ViconTracker::lost_tracking() const
+{
+  return m_lostTracking;
+}
+
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   // If there's no frame currently available, early out.
@@ -63,8 +68,11 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << "\n\n";
 #endif
 
-  // Get the marker positions for the camera subject.
-  const std::map<std::string,Eigen::Vector3f> markerPositions = get_marker_positions(m_subjectName);
+  // Attempt to get the marker positions for the camera subject.
+  boost::optional<std::map<std::string,Eigen::Vector3f> > maybeMarkerPositions = try_get_marker_positions(m_subjectName);
+  m_lostTracking = !maybeMarkerPositions;
+  if(m_lostTracking) return;
+  const std::map<std::string,Eigen::Vector3f>& markerPositions = *maybeMarkerPositions;
 
 #if DEBUG_OUTPUT
   // Output the marker positions for debugging purposes.
@@ -126,7 +134,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-std::map<std::string,Eigen::Vector3f> ViconTracker::get_marker_positions(const std::string& subjectName) const
+boost::optional<std::map<std::string,Eigen::Vector3f> > ViconTracker::try_get_marker_positions(const std::string& subjectName) const
 {
   std::map<std::string,Eigen::Vector3f> result;
 
@@ -136,6 +144,9 @@ std::map<std::string,Eigen::Vector3f> ViconTracker::get_marker_positions(const s
     // Get the name of the marker and its position in the Vicon coordinate system.
     std::string markerName = m_vicon.GetMarkerName(subjectName, i).MarkerName;
     Output_GetMarkerGlobalTranslation trans = m_vicon.GetMarkerGlobalTranslation(subjectName, markerName);
+
+    // If we can't currently get the position of the marker, early out.
+    if(trans.Occluded) return boost::none;
 
     // Transform the marker position from the Vicon coordinate system to our one (the Vicon coordinate system is in mm, whereas ours is in metres).
     Eigen::Vector3f pos(trans.Translation[0] / 1000, trans.Translation[1] / 1000, trans.Translation[2] / 1000);

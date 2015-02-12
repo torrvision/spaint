@@ -13,10 +13,6 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
-#ifdef WITH_VICON
-#include "trackers/ViconTracker.h"
-#endif
-
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -70,6 +66,14 @@ void SpaintPipeline::process_frame()
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
+#ifdef WITH_VICON
+  if(m_useVicon)
+  {
+    // If we're using the Vicon tracker, make sure to only fuse when we have tracking information available.
+    m_fusionEnabled = !m_viconTracker->lost_tracking();
+  }
+#endif
+
   // Run the fusion process.
   if(m_fusionEnabled) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
 
@@ -97,6 +101,7 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   }
 #endif
 
+  // Make sure that we're not trying to use the Vicon tracker if Vicon support isn't enabled.
 #ifndef WITH_VICON
   if(m_useVicon)
   {
@@ -152,7 +157,8 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   {
 #ifdef WITH_VICON
     ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
-    compositeTracker->SetTracker(new ViconTracker("192.168.0.111", "kinect"), 0);
+    m_viconTracker = new ViconTracker("192.168.0.111", "kinect");
+    compositeTracker->SetTracker(m_viconTracker, 0);
     compositeTracker->SetTracker(
       new ITMDepthTracker_CUDA(
         trackedImageSize,
