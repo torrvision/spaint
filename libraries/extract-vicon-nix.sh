@@ -30,6 +30,9 @@ else
   then
     cp vicon-setup/Client.h vicon/include/vicon
     cp vicon-setup/lib* vicon/lib
+  else
+    cp vicon-setup/ViconDataStreamSDK_1.4.0.67498/Linux64-boost-1.53.0/20140404_67498h/Release/Client.h vicon/include/vicon
+    cp vicon-setup/ViconDataStreamSDK_1.4.0.67498/Linux64-boost-1.53.0/20140404_67498h/Release/lib* vicon/lib
   fi
 
   # Move the vicon directory into libraries and get rid of the tmp directory.
