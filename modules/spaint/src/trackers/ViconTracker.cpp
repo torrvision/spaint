@@ -60,7 +60,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 #if DEBUG_OUTPUT
   // Output the current frame number for debugging purposes.
   fs << "\n#####\n";
-  fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << '\n';
+  fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << "\n\n";
 #endif
 
   // Get the marker positions for the camera subject.
@@ -70,8 +70,9 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
   // Output the marker positions for debugging purposes.
   for(std::map<std::string,Eigen::Vector3f>::const_iterator it = markerPositions.begin(), iend = markerPositions.end(); it != iend; ++it)
   {
-    fs << it->first << ' ' << it->second.transpose() << '\n';
+    fs << it->first << ": " << it->second.transpose() << '\n';
   }
+  fs << '\n';
 #endif
 
   // Calculate the camera's v axis using the positions of the markers on top of the camera.
@@ -82,7 +83,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 
 #if DEBUG_OUTPUT
   // Output the v axis for debugging purposes.
-  fs << v.transpose() << '\n';
+  fs << "V: " << v.transpose() << '\n';
 #endif
 
   // Calculate the camera's n axis by projecting a vector from the right marker to the front marker into the plane defined by the markers on top of the camera.
@@ -92,7 +93,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 
 #if DEBUG_OUTPUT
   // Output the n axis for debugging purposes.
-  fs << n.transpose() << '\n';
+  fs << "N: " << n.transpose() << '\n';
 #endif
 
   // Create the camera and determine its pose.
@@ -114,6 +115,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 
 #if DEBUG_OUTPUT
   // Output the pose for debugging purposes.
+  fs << "\nM:\n";
   fs << std::fixed << std::setprecision(1) << M << '\n';
 #endif
 
