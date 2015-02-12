@@ -20,7 +20,6 @@ cd libraries
 #./build-opencv-2.4.9-nix.sh
 ./build-SDL2-2.0.3-nix.sh
 ./extract-Eigen-3.2.2.sh
-#./extract-vicon-nix.sh
 cd ..
 
 # Build spaint itself.
