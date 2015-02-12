@@ -7,9 +7,9 @@ using namespace ViconDataStreamSDK::CPP;
 
 #include <fstream>
 #include <iomanip>
-#include <stdexcept>
 
-#include <rigging/SimpleCamera.h>
+#include <tvgutil/MapUtil.h>
+using namespace tvgutil;
 
 #include "util/CameraPoseConverter.h"
 
@@ -22,171 +22,126 @@ ViconTracker::ViconTracker(const std::string& host, const std::string& subjectNa
 {
   // TODO: Validate the IP address.
 
+  // Connect to the Vicon system.
   if(m_vicon.Connect(host + ":801").Result != Result::Success || !m_vicon.IsConnected().Connected)
   {
     throw std::runtime_error("Could not connect to the Vicon system");
   }
 
+  // Set up the Vicon client.
   m_vicon.EnableMarkerData();
   m_vicon.EnableSegmentData();
   m_vicon.EnableUnlabeledMarkerData();
-  m_vicon.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
-
   m_vicon.SetAxisMapping(Direction::Right, Direction::Down, Direction::Forward);
+  m_vicon.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
 }
 
 //#################### DESTRUCTOR ####################
 
 ViconTracker::~ViconTracker()
 {
-  m_vicon.DisableUnlabeledMarkerData();
-  m_vicon.DisableSegmentData();
   m_vicon.DisableMarkerData();
+  m_vicon.DisableSegmentData();
+  m_vicon.DisableUnlabeledMarkerData();
   m_vicon.Disconnect();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Matrix4f to_matrix(const Output_GetSegmentGlobalRotationMatrix& r, const Output_GetSegmentGlobalTranslation& t)
-{
-  Matrix4f m;
-  int k = 0;
-  for(int y = 0; y < 3; ++y)
-  {
-    for(int x = 0; x < 3; ++x)
-    {
-      m(x,y) = r.Rotation[k++];
-    }
-    m(3,y) = t.Translation[y];
-  }
-  m(0,3) = m(1,3) = m(2,3) = 0;
-  m(3,3) = 1;
-  return m;
-}
-
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
+  // If there's no frame currently available, early out.
   if(m_vicon.GetFrame().Result != Result::Success) return;
 
-  int subjectIndex = find_subject_index(m_subjectName);
-  if(subjectIndex == -1) return;
+#define DEBUG_OUTPUT 0
 
-  //static std::ofstream fs("/Users/stuart/programs/spaint/foo.txt");
   std::ostream& fs = std::cout;
 
-#if 1
+#if DEBUG_OUTPUT
+  // Output the current frame number for debugging purposes.
   fs << "\n#####\n";
   fs << "Frame " << m_vicon.GetFrameNumber().FrameNumber << '\n';
 #endif
 
+  // Get the marker positions for the camera subject.
+  const std::map<std::string,Eigen::Vector3f> markerPositions = get_marker_positions(m_subjectName);
+
+#if DEBUG_OUTPUT
+  // Output the marker positions for debugging purposes.
+  for(std::map<std::string,Eigen::Vector3f>::const_iterator it = markerPositions.begin(), iend = markerPositions.end(); it != iend; ++it)
+  {
+    fs << it->first << ' ' << it->second.transpose() << '\n';
+  }
+#endif
+
+  // Calculate the camera's v axis using the positions of the markers on top of the camera.
+  const Eigen::Vector3f& c = MapUtil::lookup(markerPositions, "centre");
+  const Eigen::Vector3f& l = MapUtil::lookup(markerPositions, "left");
+  const Eigen::Vector3f& r = MapUtil::lookup(markerPositions, "right");
+  Eigen::Vector3f v = (r - c).cross(l - c).normalized();
+
+#if DEBUG_OUTPUT
+  // Output the v axis for debugging purposes.
+  fs << v.transpose() << '\n';
+#endif
+
+  // Calculate the camera's n axis by projecting a vector from the right marker to the front marker into the plane defined by the markers on top of the camera.
+  const Eigen::Vector3f& f = MapUtil::lookup(markerPositions, "front");
+  Eigen::Vector3f n = f - r;
+  n = (n - ((n.dot(v)) * v)).normalized();
+
+#if DEBUG_OUTPUT
+  // Output the n axis for debugging purposes.
+  fs << n.transpose() << '\n';
+#endif
+
+  // Create the camera and determine its pose.
+  rigging::SimpleCamera cam(c, n, v);
+  Matrix4f globalPose = CameraPoseConverter::camera_to_pose(cam).GetM();
+
+  // If this is the first pass, record the inverse of the camera's initial pose.
   static bool firstPass = true;
-  static Matrix4f initialPose, invInitialPose;
-  Matrix4f globalPose;
-  if(true)//firstPass)
+  static Matrix4f invInitialPose;
+  if(firstPass)
   {
-    //firstPass = false;
-
-    std::map<std::string,Eigen::Vector3f> markerPositions = get_marker_positions(m_subjectName);
-    for(std::map<std::string,Eigen::Vector3f>::const_iterator it = markerPositions.begin(), iend = markerPositions.end(); it != iend; ++it)
-    {
-      fs << it->first << ' ' << it->second.transpose() << '\n';
-    }
-
-    const Eigen::Vector3f& c = markerPositions["centre"];
-    const Eigen::Vector3f& l = markerPositions["left"];
-    const Eigen::Vector3f& r = markerPositions["right"];
-    Eigen::Vector3f v = (r - c).cross(l - c).normalized();
-    fs << v.transpose() << '\n';
-
-    const Eigen::Vector3f& f = markerPositions["front"];
-    Eigen::Vector3f n = f - r;
-    n = (n - ((n.dot(v)) * v)).normalized();
-    fs << n.transpose() << '\n';
-
-    rigging::SimpleCamera cam(c, n, v);
-    globalPose = CameraPoseConverter::camera_to_pose(cam).GetM();
-    if(firstPass)
-    {
-      initialPose = globalPose;
-      initialPose.inv(invInitialPose);
-      firstPass = false;
-    }
-
-    //fs << initialPose << '\n';
+    globalPose.inv(invInitialPose);
+    firstPass = false;
   }
 
-  int segmentCount = m_vicon.GetSegmentCount(m_subjectName).SegmentCount;
-  if(segmentCount == 0) return;
-
-  const int SEGMENT_INDEX = 0;
-  std::string segmentName = m_vicon.GetSegmentName(m_subjectName, SEGMENT_INDEX).SegmentName;
-  Output_GetSegmentGlobalTranslation tr = m_vicon.GetSegmentGlobalTranslation(m_subjectName, segmentName);
-#if 0
-  fs << "Translation: " << tr.Translation[0] << ' ' << tr.Translation[1] << ' ' << tr.Translation[2] << '\n';
-#endif
-
-  Output_GetSegmentGlobalRotationMatrix rr = m_vicon.GetSegmentGlobalRotationMatrix(m_subjectName, segmentName);
-#if 0
-  std::cout << "Rotation:\n";
-  for(int i = 0; i < 9; ++i)
-  {
-    fs << std::fixed << std::setprecision(3) << rr.Rotation[i] << ' ';
-    if(i % 3 == 2) std::cout << '\n';
-  }
-#endif
-
+  // Compute the camera's InfiniTAM pose (this is the relative transformation between the camera's initial pose and its current pose).
   Matrix4f M = globalPose * invInitialPose;
-  //fs << std::fixed << std::setprecision(1) << M << '\n';
-#if 0
-  for(int y = 0; y < 3; ++y)
-  {
-    for(int x = 0; x < 3; ++x)
-    {
-      trackingState->pose_d->R(x,y) = M(x,y);
-    }
-    trackingState->pose_d->T[y] = M(3,y);
-  }
-
-  trackingState->pose_d->SetParamsFromModelView();
-  trackingState->pose_d->SetModelViewFromParams();
-#endif
   trackingState->pose_d->SetM(M);
 
-  //fs << std::fixed << std::setprecision(1) << trackingState->pose_d->M << "\n\n";
+#if DEBUG_OUTPUT
+  // Output the pose for debugging purposes.
+  fs << std::fixed << std::setprecision(1) << M << '\n';
+#endif
 
-  //rigging::SimpleCamera cam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
-  //fs << cam.n() << "\n\n";
   fs.flush();
+
+#undef DEBUG_OUTPUT
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-int ViconTracker::find_subject_index(const std::string& name) const
-{
-  int subjectCount = m_vicon.GetSubjectCount().SubjectCount;
-  for(int i = 0; i < subjectCount; ++i)
-  {
-    std::string subjectName = m_vicon.GetSubjectName(i).SubjectName;
-    if(subjectName == name)
-    {
-      return i;
-    }
-  }
-  return -1;
-}
-
 std::map<std::string,Eigen::Vector3f> ViconTracker::get_marker_positions(const std::string& subjectName) const
 {
   std::map<std::string,Eigen::Vector3f> result;
+
   unsigned int markerCount = m_vicon.GetMarkerCount(subjectName).MarkerCount;
   for(unsigned int i = 0; i < markerCount; ++i)
   {
+    // Get the name of the marker and its position in the Vicon coordinate system.
     std::string markerName = m_vicon.GetMarkerName(subjectName, i).MarkerName;
-    Output_GetMarkerGlobalTranslation tr = m_vicon.GetMarkerGlobalTranslation(subjectName, markerName);
-    //result.insert(std::make_pair(markerName, Eigen::Vector3d(tr.Translation).cast<float>()));
-    Eigen::Vector3f p(tr.Translation[0] / 1000, tr.Translation[1] / 1000, tr.Translation[2] / 1000);
-    result.insert(std::make_pair(markerName, p));
+    Output_GetMarkerGlobalTranslation trans = m_vicon.GetMarkerGlobalTranslation(subjectName, markerName);
+
+    // Transform the marker position from the Vicon coordinate system to our one (the Vicon coordinate system is in mm, whereas ours is in metres).
+    Eigen::Vector3f pos(trans.Translation[0] / 1000, trans.Translation[1] / 1000, trans.Translation[2] / 1000);
+
+    // Record the position in the map.
+    result.insert(std::make_pair(markerName, pos));
   }
+
   return result;
 }
 

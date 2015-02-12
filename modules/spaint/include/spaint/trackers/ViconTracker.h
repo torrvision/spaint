@@ -17,13 +17,13 @@
 namespace spaint {
  
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to track the camera pose using a Vicon system.
  */
 class ViconTracker : public ITMLib::Engine::ITMTracker
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The name given to the camera subject in the Vicon software. */
   std::string m_subjectName;
 
   /** The Vicon client. */
@@ -32,14 +32,17 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a Vicon tracker.
+   *
+   * \param host        The IP address of the host on which the Vicon software is running.
+   * \param subjectName The name given to the camera subject in the Vicon software.
    */
   ViconTracker(const std::string& host, const std::string& subjectName);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief TODO
+   * \brief Destroys the Vicon tracker.
    */
   ~ViconTracker();
 
@@ -57,14 +60,10 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
-   */
-  int find_subject_index(const std::string& name) const;
-
-  /**
-   * \brief Gets the positions of the markers for the subject with the specified name.
+   * \brief Gets the positions of the markers for the Vicon subject with the specified name.
    *
-   * TODO
+   * \param subjectName The name of the subject.
+   * \return            The positions of the markers for the subject, indexed by name.
    */
   std::map<std::string,Eigen::Vector3f> get_marker_positions(const std::string& subjectName) const;
 };

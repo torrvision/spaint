@@ -56,12 +56,12 @@ include/spaint/ogl/WrappedGL.h
 )
 
 ##
+SET(trackers_sources)
+SET(trackers_headers)
+
 IF(WITH_VICON)
-  SET(trackers_sources src/trackers/ViconTracker.cpp)
-  SET(trackers_headers include/spaint/trackers/ViconTracker.h)
-ELSE()
-  SET(trackers_sources)
-  SET(trackers_headers)
+  SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/spaint/trackers/ViconTracker.h)
 ENDIF()
 
 ##
