@@ -2,6 +2,13 @@
 
 PLATFORM=`../detect-platform.sh`
 
+# Check that a valid Vicon archive has been specified.
+if [ $# -ne 1 ]
+then
+  echo "Usage: ./extract-vicon-nix.sh {Vicon archive}"
+  exit
+fi
+
 echo "[spaint] Setting up Vicon DataStream SDK"
 
 if [ -d vicon ]
@@ -11,12 +18,24 @@ then
 else
   echo "[spaint] ...Extracting archive..."
   /bin/rm -fR tmp
-  mkdir tmp
+  mkdir -p tmp/vicon-setup
+  unzip $1 -d tmp/vicon-setup > /dev/null 2>& 1
+
+  echo "[spaint] ...Normalising directory structure..."
   cd tmp
-  mkdir vicon
-  cd vicon
-  unzip ../../setup/vicon/Vicon_DataStream_SDK_1.3_MAC.zip > /dev/null 2>&1
-  cd ../..
+  mkdir -p vicon/include/vicon
+  mkdir -p vicon/lib
+
+  if [ $PLATFORM == "mac" ]
+  then
+    cp vicon-setup/Client.h vicon/include/vicon
+    cp vicon-setup/lib* vicon/lib
+  fi
+
+  # Move the vicon directory into libraries and get rid of the tmp directory.
+  cd ..
   mv tmp/vicon .
-  rmdir tmp
+  /bin/rm -fR tmp
+
+  echo "[spaint] ...Finished setting up Vicon DataStream SDK."
 fi
