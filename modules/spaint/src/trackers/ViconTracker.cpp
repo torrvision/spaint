@@ -20,8 +20,6 @@ namespace spaint {
 ViconTracker::ViconTracker(const std::string& host, const std::string& subjectName)
 : m_lostTracking(false), m_subjectName(subjectName)
 {
-  // TODO: Validate the IP address.
-
   // Connect to the Vicon system.
   if(m_vicon.Connect(host + ":801").Result != Result::Success || !m_vicon.IsConnected().Connected)
   {
