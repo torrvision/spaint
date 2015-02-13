@@ -65,10 +65,11 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
       m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage, false);
       break;
     }
-    case RT_SEMANTIC:
+    case RT_SEMANTICLAMBERTIAN:
+    case RT_SEMANTICPHONG:
     {
       m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage);
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), raycastType == RT_SEMANTICPHONG, renderState->raycastImage);
       break;
     }
     default:

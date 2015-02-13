@@ -153,7 +153,7 @@ void WindowedRenderer::end_2d()
 void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
 {
   // Raycast the scene.
-  m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
+  m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTICPHONG);
 
   // Draw a quad textured with the raycasted scene.
   begin_2d();

@@ -11,21 +11,21 @@ namespace spaint {
 //#################### CUDA KERNELS ####################
 
 __global__ void ck_render_semantic(Vector4u *outRendering, const Vector4f *ptsRay, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex,
-                                   Vector2i imgSize, Vector3u *labelColours, Vector3f viewerPos, Vector3f lightPos)
+                                   Vector2i imgSize, Vector3u *labelColours, Vector3f viewerPos, Vector3f lightPos, bool usePhong)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if (x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
   Vector4f ptRay = ptsRay[locId];
-  shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos);
+  shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos, usePhong);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                     ITMUChar4Image *outputImage) const
+                                     bool usePhong, ITMUChar4Image *outputImage) const
 {
   // Set up the label colours.
   // FIXME: These should ultimately be passed in from elsewhere.
@@ -53,7 +53,8 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
     imgSize,
     labelColours.GetData(MEMORYDEVICE_CUDA),
     viewerPos,
-    lightPos
+    lightPos,
+    usePhong
   );
 }
 

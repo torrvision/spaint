@@ -27,14 +27,15 @@ namespace spaint {
  * \param labelColours  The colour map for the semantic labels.
  * \param viewerPos     The position of the viewer.
  * \param lightPos      The position of the light source that is illuminating the scene.
+ * \param usePhong      Whether or not to use Phong lighting.
  */
 _CPU_AND_GPU_CODE_
 inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool foundPoint, const SpaintVoxel *voxelData,
                                  const ITMVoxelIndex::IndexData *voxelIndex, const Vector3u *labelColours,
-                                 const Vector3f& viewerPos, const Vector3f& lightPos)
+                                 const Vector3f& viewerPos, const Vector3f& lightPos, bool usePhong)
 {
-  const float ambient = 0.3f;
-  const float lambertianCoefficient = 0.35f;
+  const float ambient = usePhong ? 0.3f : 0.2f;
+  const float lambertianCoefficient = usePhong ? 0.35f : 0.8f;
   const float phongCoefficient = 0.35f;
   const float phongExponent = 20.0f;
 
@@ -52,14 +53,21 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
     computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, L, N, NdotL);
     float lambertian = CLAMP(NdotL, 0.0f, 1.0f);
 
-    // Calculate the Phong lighting term.
-    Vector3f R = 2.0f * N * NdotL - L;
-    Vector3f V = normalize(viewerPos - point);
-    float phong = pow(CLAMP(dot(R,V), 0.0f, 1.0f), phongExponent);
-    phong = CLAMP(phong, 0.0f, 1.0f);
+    // Determine the intensity of the pixel using the Lambertian lighting equation.
+    float intensity = ambient + lambertianCoefficient * lambertian;
 
-    // Determine the intensity of the pixel using the Phong lighting equation.
-    float intensity = ambient + lambertianCoefficient * lambertian + phongCoefficient * phong;
+    // If we're using Phong lighting:
+    if(usePhong)
+    {
+      // Calculate the Phong lighting term.
+      Vector3f R = 2.0f * N * NdotL - L;
+      Vector3f V = normalize(viewerPos - point);
+      float phong = pow(CLAMP(dot(R,V), 0.0f, 1.0f), phongExponent);
+      phong = CLAMP(phong, 0.0f, 1.0f);
+
+      // Add the Phong lighting term to the intensity.
+      intensity += phongCoefficient * phong;
+    }
 
     // Fill in the final colour for the pixel by scaling the base colour by the intensity.
     dest.x = (uchar)(intensity * colour.r);
