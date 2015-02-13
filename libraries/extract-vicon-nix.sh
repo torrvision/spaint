@@ -13,7 +13,7 @@ echo "[spaint] Setting up Vicon DataStream SDK"
 
 if [ -d vicon ]
 then
-  echo "[spaint] ...Skipping archive extraction (already extracted)"
+  echo "[spaint] ...Skipping (already set up)"
   exit
 else
   echo "[spaint] ...Extracting archive..."
