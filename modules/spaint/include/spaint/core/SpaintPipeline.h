@@ -151,6 +151,15 @@ private:
    * \param settings  The settings to use for InfiniTAM.
    */
   void initialise(const Settings_CPtr& settings);
+
+  /**
+   * \brief Sets up the tracker.
+   *
+   * \param settings          The settings to use for InfiniTAM.
+   * \param scene             The scene.
+   * \param trackedImageSize  The tracked image size.
+   */
+  void setup_tracker(const Settings_CPtr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
 };
 
 //#################### TYPEDEFS ####################

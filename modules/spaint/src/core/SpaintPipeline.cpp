@@ -152,7 +152,20 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
 
   // Set up the dense mapper and tracking controller.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
-  m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
+  setup_tracker(settings, scene, trackedImageSize);
+  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
+
+  // Set up the spaint model and raycaster.
+  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
+  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
+  m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
+
+  m_fusionEnabled = true;
+  m_reconstructionStarted = false;
+}
+
+void SpaintPipeline::setup_tracker(const Settings_CPtr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
+{
   if(m_useVicon)
   {
 #ifdef WITH_VICON
@@ -177,19 +190,11 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   }
   else
   {
+    m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
     m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
       trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
     ));
   }
-  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
-
-  // Set up the spaint model and raycaster.
-  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
-  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
-  m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
-
-  m_fusionEnabled = true;
-  m_reconstructionStarted = false;
 }
 
 }
