@@ -60,6 +60,9 @@ public:
   const Camera_CPtr& get_secondary_camera(const std::string& name) const;
 
   /** Override */
+  CompositeCamera& move(const Eigen::Vector3f& dir, float delta);
+
+  /** Override */
   CompositeCamera& move_n(float delta);
 
   /** Override */

@@ -19,20 +19,20 @@ BOOST_AUTO_TEST_CASE(stereo_test)
   // and point inwards at an angle of 45 degrees.
   Camera_CPtr leftCamera(new DerivedCamera(
     rig,
-    Eigen::AngleAxisf(-M_PI/4.0f, Eigen::Vector3f(0.0f, 1.0f, 0.0f)).toRotationMatrix(),  // the rotation is in *camera space*, i.e. about v
+    Eigen::AngleAxisf(static_cast<float>(-M_PI/4.0f), Eigen::Vector3f(0.0f, 1.0f, 0.0f)).toRotationMatrix(),  // the rotation is in *camera space*, i.e. about v
     Eigen::Vector3f(1.0f, 0.0f, 0.0f)                                                     // the translation is in *camera space*, i.e. along u
   ));
   rig->add_secondary_camera("left", leftCamera);
 
   Camera_CPtr rightCamera(new DerivedCamera(
     rig,
-    Eigen::AngleAxisf(M_PI/4.0f, Eigen::Vector3f(0.0f, 1.0f, 0.0f)).toRotationMatrix(),   // the rotation is in *camera space*, i.e. about v
+    Eigen::AngleAxisf(static_cast<float>(M_PI/4.0f), Eigen::Vector3f(0.0f, 1.0f, 0.0f)).toRotationMatrix(),   // the rotation is in *camera space*, i.e. about v
     Eigen::Vector3f(-1.0f, 0.0f, 0.0f)                                                    // the translation is in *camera space*, i.e. along -u
   ));
   rig->add_secondary_camera("right", rightCamera);
 
   // Rotate the entire rig so that it faces downwards.
-  rig->rotate(rig->u(), M_PI/2.0f);
+  rig->rotate(rig->u(), static_cast<float>(M_PI/2.0f));
 
   // Check the positions and orientations of the left and right eye cameras.
   const float ONE_OVER_ROOT_2 = 1.0f / sqrtf(2.0f);

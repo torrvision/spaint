@@ -17,6 +17,15 @@ class MoveableCamera : public Camera
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Moves the camera by the specified displacement in the specified direction.
+   *
+   * \param dir   The direction in which to move.
+   * \param delta The displacement by which to move.
+   * \return      The camera, after it has been moved.
+   */
+  virtual MoveableCamera& move(const Eigen::Vector3f& dir, float delta) = 0;
+
+  /**
    * \brief Moves the camera by the specified displacement in the n direction.
    *
    * \param delta The displacement by which to move.
