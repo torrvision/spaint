@@ -49,14 +49,20 @@ try
   // Specify the InfiniTAM settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
 
+  // Specify whether or not to use the Vicon tracker (if it's available).
+  bool useVicon = false;
+
   // If we're using the Vicon tracker, set up an appropriate tracking regime.
 #ifdef WITH_VICON
   // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
-  settings->noHierarchyLevels = 2;
-  delete [] settings->trackingRegime;
-  settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
-  settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
-  settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
+  if(useVicon)
+  {
+    settings->noHierarchyLevels = 2;
+    delete [] settings->trackingRegime;
+    settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
+    settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
+    settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
+  }
 #endif
 
   // Construct the spaint pipeline.
@@ -68,11 +74,6 @@ try
   }
   else
   {
-    bool useVicon = false;
-#ifdef WITH_VICON
-    useVicon = true;
-#endif
-
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI), settings, useVicon));
