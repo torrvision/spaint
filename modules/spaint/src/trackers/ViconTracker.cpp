@@ -149,7 +149,11 @@ boost::optional<std::map<std::string,Eigen::Vector3f> > ViconTracker::try_get_ma
     if(trans.Occluded) return boost::none;
 
     // Transform the marker position from the Vicon coordinate system to our one (the Vicon coordinate system is in mm, whereas ours is in metres).
-    Eigen::Vector3f pos(trans.Translation[0] / 1000, trans.Translation[1] / 1000, trans.Translation[2] / 1000);
+    Eigen::Vector3f pos(
+      static_cast<float>(trans.Translation[0] / 1000),
+      static_cast<float>(trans.Translation[1] / 1000),
+      static_cast<float>(trans.Translation[2] / 1000)
+    );
 
     // Record the position in the map.
     result.insert(std::make_pair(markerName, pos));

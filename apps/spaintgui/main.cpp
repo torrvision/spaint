@@ -62,9 +62,13 @@ try
   }
   else
   {
+    bool useVicon = false;
+#ifdef WITH_VICON
+    useVicon = true;
+#endif
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI), settings, true));
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI), settings, useVicon));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
