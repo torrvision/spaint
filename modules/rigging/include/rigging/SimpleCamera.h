@@ -42,6 +42,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  SimpleCamera& move(const Eigen::Vector3f& dir, float delta);
+
+  /** Override */
   SimpleCamera& move_n(float delta);
 
   /** Override */

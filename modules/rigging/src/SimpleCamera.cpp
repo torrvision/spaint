@@ -14,12 +14,22 @@ SimpleCamera::SimpleCamera(const Eigen::Vector3f& position, const Eigen::Vector3
   m_n.normalize();
   m_v.normalize();
 
-  // Compute the camera's u axis from its v and n axes.
+  // Compute the camera's u axis from the up vector that was passed in and its n axis.
   m_u = m_v.cross(m_n);
   m_u.normalize();
+
+  // Compute the camera's v axis from its n and u axes.
+  m_v = m_n.cross(m_u);
+  m_v.normalize();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+SimpleCamera& SimpleCamera::move(const Eigen::Vector3f& dir, float delta)
+{
+  m_position += delta * dir;
+  return *this;
+}
 
 SimpleCamera& SimpleCamera::move_n(float delta)
 {
