@@ -5,14 +5,13 @@
 #ifndef H_RAFL_DECISIONTREE
 #define H_RAFL_DECISIONTREE
 
-#include <functional>
 #include <set>
 #include <stdexcept>
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
-#include "decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h"
+#include "decisionfunctions/DecisionFunctionGeneratorFactory.h"
 #include "examples/ExampleReservoir.h"
 #include "examples/ExampleUtil.h"
 
@@ -64,9 +63,9 @@ private:
 
 public:
   /**
-   * \brief An instance of this struct can be used to provide the settings needed to configure a decision tree.
+   * \brief An instance of this class can be used to provide the settings needed to configure a decision tree.
    */
-  struct Settings
+  class Settings
   {
     //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
   private:
@@ -109,22 +108,42 @@ public:
     /**
      * \brief Attempts to load settings from the specified XML file.
      *
-     * This will throw if the properties cannot be successfully loaded.
+     * This will throw if the settings cannot be successfully loaded.
      *
      * \param filename The name of the file.
      */
     explicit Settings(const std::string& filename)
     {
       using tvgutil::PropertyUtil;
-
       boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
+      initialise(PropertyUtil::make_property_map(tree));
+    }
 
-      std::string decisionFunctionGeneratorName = "FeatureThresholding";
+    /**
+     * \brief Loads settings from a property map.
+     *
+     * \param properties  The property map.
+     */
+    explicit Settings(const std::map<std::string,std::string>& properties)
+    {
+      initialise(properties);
+    }
+
+    //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
+  private:
+    /**
+     * \brief Loads settings from a property map.
+     *
+     * \param properties  The property map.
+     */
+    void initialise(const std::map<std::string,std::string>& properties)
+    {
+      std::string decisionFunctionGeneratorType;
       unsigned int randomSeed = 0;
 
-      #define GET_SETTING(setting) PropertyUtil::get_required_property(tree, #setting, setting);
+      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
         GET_SETTING(candidateCount);
-        GET_SETTING(decisionFunctionGeneratorName);
+        GET_SETTING(decisionFunctionGeneratorType);
         GET_SETTING(gainThreshold);
         GET_SETTING(maxClassSize);
         GET_SETTING(maxTreeHeight);
@@ -134,9 +153,7 @@ public:
       #undef GET_SETTING
 
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-
-      // FIXME: Construct a decision function generator based on the name specified (use a generator factory).
-      decisionFunctionGenerator.reset(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
     }
   };
 
@@ -189,20 +206,30 @@ public:
    */
   void add_examples(const std::vector<Example_CPtr>& examples)
   {
-    // Add each example to the tree.
-    for(typename std::vector<Example_CPtr>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
+    // Create a vector of indices indicating that all the examples should be added to the tree.
+    size_t size = examples.size();
+    std::vector<size_t> indices(size);
+    for(size_t i = 0; i < size; ++i) indices[i] = i;
+
+    add_examples(examples, indices);
+  }
+
+  /**
+   * \brief Adds new training examples to the decision tree.
+   *
+   * \param examples                      A pool of examples that could potentially be added.
+   * \param indices                       The indices of the examples in the pool that should be added to the decision tree.
+   * \throws std::out_of_range_exception  If any of the indices are invalid.
+   */
+  void add_examples(const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
+  {
+    // Add each example indicated in the indices list to the tree.
+    for(size_t i = 0, size = indices.size(); i < size; ++i)
     {
-      add_example(*it);
+      add_example(examples.at(indices[i]));
     }
 
-    // Update the splittability values for any nodes whose reservoirs were changed whilst adding examples.
-    for(std::set<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
-    {
-      update_splittability(*it);
-    }
-
-    // Clear the list of dirty nodes once their splittability has been updated.
-    m_dirtyNodes.clear();
+    update_dirty_nodes();
   }
 
   /**
@@ -308,7 +335,7 @@ private:
   }
 
   /**
-   * \brief Fills the specified reservoir with examples sampled from an input set of examples. 
+   * \brief Fills the specified reservoir with examples sampled from an input set of examples.
    *
    * \param inputExamples The set of examples from which to sample.
    * \param multipliers   The per-class ratios between the total number of examples seen for a class and the number of examples currently in the source reservoir.
@@ -459,6 +486,20 @@ private:
     n.m_reservoir.clear();
 
     return true;
+  }
+
+  /**
+   * \brief Updates the splittability values for any nodes whose reservoirs were changed whilst adding exmaples.
+   */
+  void update_dirty_nodes()
+  {
+    for(std::set<int>::const_iterator it = m_dirtyNodes.begin(), iend = m_dirtyNodes.end(); it != iend; ++it)
+    {
+      update_splittability(*it);
+    }
+
+    // Clear the list of dirty nodes once their splittability has been updated.
+    m_dirtyNodes.clear();
   }
 
   /**

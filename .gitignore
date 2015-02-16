@@ -8,6 +8,7 @@ libraries/opencv-2.4.9/
 libraries/SDL2-2.0.3/
 libraries/vicon/
 libraries/*.log
+*.tags
 tags
 tests/mike/
 *.swp

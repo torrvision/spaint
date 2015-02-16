@@ -5,6 +5,9 @@
 #ifndef H_TVGUTIL_PROPERTYUTIL
 #define H_TVGUTIL_PROPERTYUTIL
 
+#include <map>
+#include <string>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
@@ -47,13 +50,21 @@ struct PropertyUtil
   }
 
   /**
-   * \brief Attempts to load a tree of properties from an XML file.
+   * \brief Attempts to load a property tree from an XML file.
    *
    * \param filename                                The name of the file.
-   * \return                                        The tree of properties.
+   * \return                                        The property tree.
    * \throws boost::property_tree::xml_parser_error If the load fails.
    */
   static boost::property_tree::ptree load_properties_from_xml(const std::string& filename);
+
+  /**
+   * \brief Converts a property tree into a property map.
+   *
+   * \param tree  The property tree.
+   * \return      The property map.
+   */
+  static std::map<std::string,std::string> make_property_map(const boost::property_tree::ptree& tree);
 };
 
 }

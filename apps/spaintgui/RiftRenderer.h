@@ -16,7 +16,7 @@
 #include "Renderer.h"
 
 /**
- * \brief An instance of this class can be used to render the scene constructed by the spaint engine to the Oculus Rift.
+ * \brief An instance of this class can be used to render the spaint scene to the Oculus Rift.
  */
 class RiftRenderer : public Renderer
 {
@@ -45,16 +45,20 @@ private:
   /** The Rift handle. */
   ovrHmd m_hmd;
 
+  /** The render states for the two eye views. */
+  mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderStates[ovrEye_Count];
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Rift renderer.
    *
-   * \param spaintEngine  The spaint engine.
+   * \param model         The spaint model.
+   * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
    * \param title         The title to give the window.
    * \param renderingMode The rendering mode to use.
    */
-  RiftRenderer(const spaint::SpaintEngine_Ptr& spaintEngine, const std::string& title, RiftRenderingMode renderingMode);
+  RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -73,6 +77,9 @@ private:
 public:
   /** Override */
   virtual rigging::MoveableCamera_Ptr get_camera();
+
+  /** Override */
+  virtual RenderState_CPtr get_monocular_render_state() const;
 
   /** Override */
   virtual void render() const;

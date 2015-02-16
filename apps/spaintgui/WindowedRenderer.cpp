@@ -15,8 +15,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const std::string& title, int width, int height)
-: Renderer(spaintEngine), m_height(height), m_width(width)
+WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
+                                   const std::string& title, int width, int height)
+: Renderer(model, raycaster), m_height(height), m_width(width)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -44,7 +45,7 @@ WindowedRenderer::WindowedRenderer(const SpaintEngine_Ptr& spaintEngine, const s
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
   // Set up the image and texture needed to render the reconstructed scene.
-  m_image.reset(new ITMUChar4Image(spaintEngine->get_image_source_engine()->getDepthImageSize(), false));
+  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
   glGenTextures(1, &m_textureID);
 }
 
@@ -62,6 +63,11 @@ rigging::MoveableCamera_Ptr WindowedRenderer::get_camera()
   return m_camera;
 }
 
+WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state() const
+{
+  return m_renderState;
+}
+
 void WindowedRenderer::render() const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -72,7 +78,7 @@ void WindowedRenderer::render() const
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
-      pose = m_spaintEngine->get_pose();
+      pose = m_model->get_pose();
       break;
     case CM_FREE:
       pose = CameraPoseConverter::camera_to_pose(*m_camera);
@@ -97,10 +103,10 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   switch(m_cameraMode)
   {
     case CM_FOLLOW:
-      m_spaintEngine->get_default_raycast(m_image);
+      m_raycaster->get_default_raycast(m_image);
       break;
     case CM_FREE:
-      m_spaintEngine->generate_free_raycast(m_image, pose);
+      m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
       break;
     default:
       // This should never happen.
@@ -122,7 +128,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
       glEnable(GL_TEXTURE_2D);
       {
         glBindTexture(GL_TEXTURE_2D, m_textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(false));
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glColor3f(1.0f, 1.0f, 1.0f);
@@ -148,7 +154,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    set_projection_matrix(m_spaintEngine->get_intrinsics(), m_width, m_height);
+    set_projection_matrix(m_model->get_intrinsics(), m_width, m_height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

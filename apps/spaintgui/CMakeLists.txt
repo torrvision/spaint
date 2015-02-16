@@ -17,6 +17,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
@@ -30,6 +31,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 SET(base_sources
 main.cpp
 Application.cpp
+CPUInstantiations.cpp
 WindowedRenderer.cpp
 )
 

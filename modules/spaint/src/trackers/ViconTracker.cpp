@@ -104,7 +104,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
     fs << n.transpose() << '\n';
 
     rigging::SimpleCamera cam(c, n, v);
-    globalPose = CameraPoseConverter::camera_to_pose(cam).M;
+    globalPose = CameraPoseConverter::camera_to_pose(cam).GetM();
     if(firstPass)
     {
       initialPose = globalPose;
@@ -137,6 +137,7 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 
   Matrix4f M = globalPose * invInitialPose;
   //fs << std::fixed << std::setprecision(1) << M << '\n';
+#if 0
   for(int y = 0; y < 3; ++y)
   {
     for(int x = 0; x < 3; ++x)
@@ -148,6 +149,8 @@ void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *v
 
   trackingState->pose_d->SetParamsFromModelView();
   trackingState->pose_d->SetModelViewFromParams();
+#endif
+  trackingState->pose_d->SetM(M);
 
   //fs << std::fixed << std::setprecision(1) << trackingState->pose_d->M << "\n\n";
 

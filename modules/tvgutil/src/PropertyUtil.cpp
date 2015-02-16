@@ -15,4 +15,16 @@ boost::property_tree::ptree PropertyUtil::load_properties_from_xml(const std::st
   return tree;
 }
 
+std::map<std::string,std::string> PropertyUtil::make_property_map(const boost::property_tree::ptree& tree)
+{
+  std::map<std::string,std::string> result;
+  for(boost::property_tree::ptree::const_iterator it = tree.begin(), iend = tree.end(); it != iend; ++it)
+  {
+    std::string value;
+    get_required_property<std::string>(tree, it->first, value);
+    result.insert(std::make_pair(it->first, value));
+  }
+  return result;
+}
+
 }

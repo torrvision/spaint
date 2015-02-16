@@ -63,28 +63,25 @@ ITMPose CameraPoseConverter::camera_to_pose(const Camera& camera)
   ( nx  ny  nz -p.n)
   (  0   0   0    1)
   */
-  pose.R(0,0) = -u.x(); pose.R(1,0) = -u.y(); pose.R(2,0) = -u.z(); pose.T.x = p.dot(u);
-  pose.R(0,1) = -v.x(); pose.R(1,1) = -v.y(); pose.R(2,1) = -v.z(); pose.T.y = p.dot(v);
-  pose.R(0,2) = n.x();  pose.R(1,2) = n.y();  pose.R(2,2) = n.z();  pose.T.z = -p.dot(n);
-
-  /*
-  Correctly set the rest of the InfiniTAM pose structure from the calculated pose matrix.
-  Note that the use of "ModelView" in the names of the ITMPose member functions refers
-  to the InfiniTAM pose matrix, and NOT the OpenGL model-view matrix. This is a crucial
-  distinction that can cause a lot of confusion!
-  */
-  pose.SetParamsFromModelView();
-  pose.SetModelViewFromParams();
+  Matrix4f M;
+  M(0,0) = -u.x(); M(1,0) = -u.y(); M(2,0) = -u.z(); M(3,0) = p.dot(u);
+  M(0,1) = -v.x(); M(1,1) = -v.y(); M(2,1) = -v.z(); M(3,1) = p.dot(v);
+  M(0,2) = n.x();  M(1,2) = n.y();  M(2,2) = n.z();  M(3,2) = -p.dot(n);
+  M(0,3) = M(1,3) = M(2,3) = 0.0f;
+  M(3,3) = 1.0f;
+  pose.SetM(M);
 
   return pose;
 }
 
 SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::Objects::ITMPose& pose)
 {
-  // Note: This can be derived by looking at the matrix in camera_to_pose.
-  Eigen::Vector3f p(pose.invT.x, pose.invT.y, pose.invT.z);
-  Eigen::Vector3f n(pose.R(0,2), pose.R(1,2), pose.R(2,2));
-  Eigen::Vector3f v(-pose.R(0,1), -pose.R(1,1), -pose.R(2,1));
+  // Note: This can be derived by looking at the matrices in camera_to_pose.
+  const Matrix4f& M = pose.GetM();
+  Matrix4f invM = pose.GetInvM();
+  Eigen::Vector3f p(invM(3,0), invM(3,1), invM(3,2));
+  Eigen::Vector3f n(M(0,2), M(1,2), M(2,2));
+  Eigen::Vector3f v(-M(0,1), -M(1,1), -M(2,1));
   return SimpleCamera(p, n, v);
 }
 
@@ -109,9 +106,10 @@ Eigen::Matrix4f CameraPoseConverter::pose_to_modelview(const ITMLib::Objects::IT
   the camera.
   */
   Eigen::Matrix4f m;
-  m(0,0) =  pose.R(0,0); m(0,1) =  pose.R(1,0); m(0,2) =  pose.R(2,0); m(0,3) =  pose.T.x;
-  m(1,0) = -pose.R(0,1); m(1,1) = -pose.R(1,1); m(1,2) = -pose.R(2,1); m(1,3) = -pose.T.y;
-  m(2,0) = -pose.R(0,2); m(2,1) = -pose.R(1,2); m(2,2) = -pose.R(2,2); m(2,3) = -pose.T.z;
+  const Matrix4f& poseM = pose.GetM();
+  m(0,0) =  poseM(0,0); m(0,1) =  poseM(1,0); m(0,2) =  poseM(2,0); m(0,3) =  poseM(3,0);
+  m(1,0) = -poseM(0,1); m(1,1) = -poseM(1,1); m(1,2) = -poseM(2,1); m(1,3) = -poseM(3,1);
+  m(2,0) = -poseM(0,2); m(2,1) = -poseM(1,2); m(2,2) = -poseM(2,2); m(2,3) = -poseM(3,2);
   m(3,0) = m(3,1) = m(3,2) = 0.0f;
   m(3,3) = 1.0f;
   return m;
