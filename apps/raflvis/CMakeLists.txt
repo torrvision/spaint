@@ -24,11 +24,13 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 SET(sources
 main.cpp
 CvMatPlot.cpp
+PaletteGenerator.cpp
 )
 
 SET(headers
 CvMatPlot.h
 OnlineRandomForestLearner.h
+PaletteGenerator.h
 )
 
 #############################

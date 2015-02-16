@@ -12,11 +12,11 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
-#include <tvgutil/colours/PaletteGenerator.h>
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "CvMatPlot.h"
 #include "OnlineRandomForestLearner.h"
+#include "PaletteGenerator.h"
 
 //#################### TYPEDEFS ####################
 typedef int Label;
@@ -88,10 +88,10 @@ int main(int argc, char *argv[])
   for(size_t i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
 
   // Generate a palette of random colours.
-  std::map<Label,cv::Scalar> randomPalette = tvgutil::PaletteGenerator::generate_random_rgba_palette<Label,cv::Scalar>(classLabels, seed);
+  std::map<Label,cv::Scalar> randomPalette = PaletteGenerator::generate_random_rgba_palette<Label>(classLabels, seed);
 
   // Generate a palette of basic colours.
-  std::map<std::string,cv::Scalar> basicPalette = tvgutil::PaletteGenerator::generate_basic_rgba_palette<cv::Scalar>();
+  std::map<std::string,cv::Scalar> basicPalette = PaletteGenerator::generate_basic_rgba_palette();
 
   // Initialise a unit example generator.
   const float lowerSTD = 0.05f;

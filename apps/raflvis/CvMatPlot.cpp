@@ -1,5 +1,5 @@
 /**
- * tvgplot: OcvPlot.cpp
+ * raflvis: CvMatPlot.cpp
  */
 
 #include <numeric>
