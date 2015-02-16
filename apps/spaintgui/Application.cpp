@@ -140,8 +140,8 @@ void Application::process_camera_input()
     if(m_inputState.key_down(SDLK_s)) camera->move_n(-SPEED);
     if(m_inputState.key_down(SDLK_d)) camera->move_u(-SPEED);
     if(m_inputState.key_down(SDLK_a)) camera->move_u(SPEED);
-    if(m_inputState.key_down(SDLK_q)) camera->move_v(SPEED);
-    if(m_inputState.key_down(SDLK_e)) camera->move_v(-SPEED);
+    if(m_inputState.key_down(SDLK_q)) camera->move(UP, SPEED);
+    if(m_inputState.key_down(SDLK_e)) camera->move(UP, -SPEED);
 
     if(m_inputState.key_down(SDLK_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
     if(m_inputState.key_down(SDLK_LEFT)) camera->rotate(UP, ANGULAR_SPEED);

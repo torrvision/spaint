@@ -29,6 +29,12 @@ const Camera_CPtr& CompositeCamera::get_secondary_camera(const std::string& name
   return it->second;
 }
 
+CompositeCamera& CompositeCamera::move(const Eigen::Vector3f& dir, float delta)
+{
+  m_primaryCamera.move(dir, delta);
+  return *this;
+}
+
 CompositeCamera& CompositeCamera::move_n(float delta)
 {
   m_primaryCamera.move_n(delta);
