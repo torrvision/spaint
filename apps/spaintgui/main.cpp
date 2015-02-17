@@ -76,7 +76,12 @@ try
   {
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI), settings, useVicon));
+    spaintPipeline.reset(new SpaintPipeline(
+      calibrationFilename,
+      openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI),
+      settings,
+      useVicon ? "192.168.0.111" : ""
+    ));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif

@@ -73,10 +73,13 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
-  /** Whether or not to use the Vicon tracker. */
-  bool m_useVicon;
-
 #ifdef WITH_VICON
+  /**
+   * The address of the Vicon host (the machine that is being used to control the Vicon system).
+   * If we're not using the Vicon tracker, this should be the empty string.
+   */
+  std::string m_viconHost;
+
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
   ViconTracker *m_viconTracker;
 #endif
@@ -93,9 +96,20 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
-   * \param useVicon            Whether or not to use the Vicon tracker.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings, bool useVicon);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
+
+#ifdef WITH_VICON
+  /**
+   * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source and a Vicon system for tracking.
+   *
+   * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
+   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
+   * \param settings            The settings to use for InfiniTAM.
+   * \param viconHost           The address of the Vicon host (the machine that is being used to control the Vicon system).
+   */
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings, const std::string& viconHost);
+#endif
 #endif
 
   /**

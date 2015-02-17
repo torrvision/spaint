@@ -18,16 +18,24 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings, bool useVicon)
-: m_useVicon(useVicon)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
+{
+  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
+  initialise(settings);
+}
+
+#ifdef WITH_VICON
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings,
+                               const std::string& viconHost)
+: m_viconHost(viconHost)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
 }
 #endif
+#endif
 
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings)
-: m_useVicon(false)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
   initialise(settings);
@@ -67,7 +75,7 @@ void SpaintPipeline::process_frame()
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
 #ifdef WITH_VICON
-  if(m_useVicon)
+  if(m_viconHost != "")
   {
     // If we're using the Vicon tracker, make sure to only fuse when we have tracking information available.
     m_fusionEnabled = !m_viconTracker->lost_tracking();
@@ -166,11 +174,11 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
 
 void SpaintPipeline::setup_tracker(const Settings_CPtr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
-  if(m_useVicon)
+  if(m_viconHost != "")
   {
 #ifdef WITH_VICON
     ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
-    m_viconTracker = new ViconTracker("192.168.0.111", "kinect");
+    m_viconTracker = new ViconTracker(m_viconHost, "kinect");
     compositeTracker->SetTracker(m_viconTracker, 0);
     compositeTracker->SetTracker(
       new ITMDepthTracker_CUDA(
