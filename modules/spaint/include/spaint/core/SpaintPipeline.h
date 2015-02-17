@@ -103,7 +103,7 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
-   * \param viconHost           The address of the Vicon host (the machine that is being used to control the Vicon system), if we're using it.
+   * \param viconHost           The address of the Vicon host (the machine that is being used to control the Vicon system).
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings, const std::string& viconHost);
 #endif
