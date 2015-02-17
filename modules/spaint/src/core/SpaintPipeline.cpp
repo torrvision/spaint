@@ -181,13 +181,12 @@ void SpaintPipeline::setup_tracker(const Settings_CPtr& settings, const SpaintMo
     m_viconTracker = new ViconTracker(m_viconHost, "kinect");
     compositeTracker->SetTracker(m_viconTracker, 0);
     compositeTracker->SetTracker(
-      new ITMDepthTracker_CUDA(
+      ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
         trackedImageSize,
-        settings->trackingRegime,
-        settings->noHierarchyLevels,
-        settings->noICPRunTillLevel,
-        settings->depthTrackerICPThreshold,
-        m_lowLevelEngine.get()
+        settings.get(),
+        m_lowLevelEngine.get(),
+        m_imuCalibrator.get(),
+        scene.get()
       ), 1
     );
     m_tracker.reset(compositeTracker);
