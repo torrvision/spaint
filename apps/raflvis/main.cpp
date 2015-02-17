@@ -20,7 +20,6 @@ using namespace rafl;
 
 //#################### TYPEDEFS ####################
 typedef int Label;
-typedef boost::shared_ptr<const Descriptor> Descriptor_CPtr;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
