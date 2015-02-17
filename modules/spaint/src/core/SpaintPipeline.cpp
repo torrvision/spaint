@@ -18,13 +18,6 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
-{
-  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
-  initialise(settings);
-}
-
-#ifdef WITH_VICON
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings,
                                const std::string& viconHost)
 : m_viconHost(viconHost)
@@ -32,7 +25,6 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
 }
-#endif
 #endif
 
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings)
@@ -111,10 +103,10 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
 
   // Make sure that we're not trying to use the Vicon tracker if Vicon support isn't enabled.
 #ifndef WITH_VICON
-  if(m_useVicon)
+  if(m_viconHost != "")
   {
     std::cerr << "[spaint] Vicon support unavailable, reverting to the ICP tracker\n";
-    m_useVicon = false;
+    m_viconHost = "";
   }
 #endif
 
