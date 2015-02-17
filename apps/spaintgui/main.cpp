@@ -52,7 +52,7 @@ try
   // Specify whether or not to use the Vicon tracker (if it's available).
   bool useVicon = false;
 
-  // If we're using the Vicon tracker, set up an appropriate tracking regime.
+  // If we're using the Vicon tracker, set an appropriate tracking regime for the corresponding ICP tracker.
 #ifdef WITH_VICON
   // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
   if(useVicon)
