@@ -49,11 +49,11 @@ try
   // Specify the InfiniTAM settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
 
+#ifdef WITH_VICON
   // Specify whether or not to use the Vicon tracker (if it's available).
   bool useVicon = false;
 
   // If we're using the Vicon tracker, set an appropriate tracking regime for the corresponding ICP tracker.
-#ifdef WITH_VICON
   // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
   if(useVicon)
   {
@@ -79,8 +79,10 @@ try
     spaintPipeline.reset(new SpaintPipeline(
       calibrationFilename,
       openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI),
-      settings,
-      useVicon ? "192.168.0.111" : ""
+      settings
+#ifdef WITH_VICON
+      , useVicon ? "192.168.0.111" : ""
+#endif
     ));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");

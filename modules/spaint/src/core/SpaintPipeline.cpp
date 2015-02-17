@@ -18,6 +18,13 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
+{
+  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
+  initialise(settings);
+}
+
+#ifdef WITH_VICON
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings,
                                const std::string& viconHost)
 : m_viconHost(viconHost)
@@ -25,6 +32,7 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
 }
+#endif
 #endif
 
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings)
@@ -101,15 +109,6 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
   }
 #endif
 
-  // Make sure that we're not trying to use the Vicon tracker if Vicon support isn't enabled.
-#ifndef WITH_VICON
-  if(m_viconHost != "")
-  {
-    std::cerr << "[spaint] Vicon support unavailable, reverting to the ICP tracker\n";
-    m_viconHost = "";
-  }
-#endif
-
   // Determine the RGB and depth image sizes.
   Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
   Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
@@ -166,9 +165,9 @@ void SpaintPipeline::initialise(const Settings_CPtr& settings)
 
 void SpaintPipeline::setup_tracker(const Settings_CPtr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
+#ifdef WITH_VICON
   if(m_viconHost != "")
   {
-#ifdef WITH_VICON
     ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
     m_viconTracker = new ViconTracker(m_viconHost, "kinect");
     compositeTracker->SetTracker(m_viconTracker, 0);
@@ -182,18 +181,17 @@ void SpaintPipeline::setup_tracker(const Settings_CPtr& settings, const SpaintMo
       ), 1
     );
     m_tracker.reset(compositeTracker);
-#else
-    // This should never happen as things stand - we set m_useVicon to false if Vicon support isn't available.
-    throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
-#endif
   }
   else
   {
+#endif
     m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
     m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
       trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
     ));
+#ifdef WITH_VICON
   }
+#endif
 }
 
 }

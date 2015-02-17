@@ -73,10 +73,10 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
+#ifdef WITH_VICON
   /** The address of the Vicon host (the machine that is being used to control the Vicon system), if we're using it. */
   std::string m_viconHost;
 
-#ifdef WITH_VICON
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
   ViconTracker *m_viconTracker;
 #endif
@@ -93,10 +93,20 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
+   */
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
+
+#ifdef WITH_VICON
+  /**
+   * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source and a Vicon system for tracking.
+   *
+   * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
+   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
+   * \param settings            The settings to use for InfiniTAM.
    * \param viconHost           The address of the Vicon host (the machine that is being used to control the Vicon system), if we're using it.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings,
-                 const std::string& viconHost = "");
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings, const std::string& viconHost);
+#endif
 #endif
 
   /**
