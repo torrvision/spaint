@@ -2,11 +2,18 @@
 
 PLATFORM=`../detect-platform.sh`
 
-# Check that a valid Vicon archive has been specified.
-if [ $# -ne 1 ]
+# Check whether a valid Vicon archive has been specified. If not, try a default if possible, or exit.
+if [ $# -eq 1 ]
 then
-  echo "Usage: ./extract-vicon-nix.sh {Vicon archive}"
-  exit
+  archive=$1
+else
+  if [ $PLATFORM == "mac" ]
+  then
+    archive=~/Downloads/vicon/Vicon_DataStream_SDK_1.3_MAC.zip
+  else
+    echo "Usage: ./extract-vicon-nix.sh {Vicon archive}"
+    exit
+  fi
 fi
 
 echo "[spaint] Setting up Vicon DataStream SDK"
@@ -19,7 +26,7 @@ else
   echo "[spaint] ...Extracting archive..."
   /bin/rm -fR tmp
   mkdir -p tmp/vicon-setup
-  unzip $1 -d tmp/vicon-setup > /dev/null 2>& 1
+  unzip $archive -d tmp/vicon-setup > /dev/null 2>& 1
 
   echo "[spaint] ...Normalising directory structure..."
   cd tmp
