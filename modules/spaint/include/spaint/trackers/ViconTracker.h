@@ -39,7 +39,7 @@ public:
   /**
    * \brief Constructs a Vicon tracker.
    *
-   * \param host        The IP address of the host on which the Vicon software is running.
+   * \param host        The host on which the Vicon software is running (e.g. "<IP address>:<port>").
    * \param subjectName The name given to the camera subject in the Vicon software.
    */
   ViconTracker(const std::string& host, const std::string& subjectName);

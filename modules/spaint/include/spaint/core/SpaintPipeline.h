@@ -74,7 +74,7 @@ private:
   TrackingController_Ptr m_trackingController;
 
 #ifdef WITH_VICON
-  /** The address of the Vicon host (the machine that is being used to control the Vicon system), if we're using it. */
+  /** The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker. */
   std::string m_viconHost;
 
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
@@ -103,7 +103,7 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
-   * \param viconHost           The address of the Vicon host (the machine that is being used to control the Vicon system).
+   * \param viconHost           The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker.
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& viconHost);
 #endif

@@ -81,7 +81,7 @@ try
       openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI),
       settings
 #ifdef WITH_VICON
-      , useVicon ? "192.168.0.111" : ""
+      , useVicon ? "192.168.0.111:801" : ""
 #endif
     ));
 #else

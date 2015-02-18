@@ -21,7 +21,7 @@ ViconTracker::ViconTracker(const std::string& host, const std::string& subjectNa
 : m_lostTracking(false), m_subjectName(subjectName)
 {
   // Connect to the Vicon system.
-  if(m_vicon.Connect(host + ":801").Result != Result::Success || !m_vicon.IsConnected().Connected)
+  if(m_vicon.Connect(host).Result != Result::Success || !m_vicon.IsConnected().Connected)
   {
     throw std::runtime_error("Could not connect to the Vicon system");
   }
