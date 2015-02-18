@@ -18,7 +18,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
@@ -35,7 +35,7 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
 #endif
 #endif
 
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_Ptr& settings)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
   initialise(settings);
@@ -98,14 +98,14 @@ void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintPipeline::initialise(const Settings_CPtr& settings)
+void SpaintPipeline::initialise(const Settings_Ptr& settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
-  if(settings.deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
     std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
-    settings.deviceType = ITMLibSettings::DEVICE_CPU;
+    settings->deviceType = ITMLibSettings::DEVICE_CPU;
   }
 #endif
 

@@ -28,7 +28,7 @@ private:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
   typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
@@ -94,7 +94,7 @@ public:
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings);
 
 #ifdef WITH_VICON
   /**
@@ -105,7 +105,7 @@ public:
    * \param settings            The settings to use for InfiniTAM.
    * \param viconHost           The address of the Vicon host (the machine that is being used to control the Vicon system).
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings, const std::string& viconHost);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& viconHost);
 #endif
 #endif
 
@@ -117,7 +117,7 @@ public:
    * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
    * \param settings            The settings to use for InfiniTAM.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_CPtr& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_Ptr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -161,7 +161,7 @@ private:
    *
    * \param settings  The settings to use for InfiniTAM.
    */
-  void initialise(const Settings_CPtr& settings);
+  void initialise(const Settings_Ptr& settings);
 
   /**
    * \brief Sets up the tracker.
@@ -170,7 +170,7 @@ private:
    * \param scene             The scene.
    * \param trackedImageSize  The tracked image size.
    */
-  void setup_tracker(const Settings_CPtr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
+  void setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
 };
 
 //#################### TYPEDEFS ####################
