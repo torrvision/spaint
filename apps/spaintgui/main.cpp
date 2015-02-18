@@ -49,6 +49,25 @@ try
   // Specify the InfiniTAM settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
 
+#ifdef WITH_VICON
+  // Specify whether or not to use the Vicon tracker (if it's available).
+  bool useVicon = false;
+
+  // Specify the Vicon host (at present this refers to Iain's machine on the oculab network in the JR).
+  const std::string viconHost = "192.168.0.111:801";
+
+  // If we're using the Vicon tracker, set an appropriate tracking regime for the corresponding ICP tracker.
+  // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
+  if(useVicon)
+  {
+    settings->noHierarchyLevels = 2;
+    delete [] settings->trackingRegime;
+    settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
+    settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
+    settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
+  }
+#endif
+
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;
   if(argc == 4)
@@ -60,7 +79,14 @@ try
   {
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI), settings));
+    spaintPipeline.reset(new SpaintPipeline(
+      calibrationFilename,
+      openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI),
+      settings
+#ifdef WITH_VICON
+      , useVicon ? viconHost : ""
+#endif
+    ));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif

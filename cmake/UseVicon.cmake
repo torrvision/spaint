@@ -1,0 +1,19 @@
+##################
+# UseVicon.cmake #
+##################
+
+OPTION(WITH_VICON "Build with Vicon support?" OFF)
+
+IF(WITH_VICON)
+  FIND_PATH(VICON_ROOT include/vicon/Client.h HINTS "${PROJECT_SOURCE_DIR}/libraries/vicon")
+
+  FIND_PATH(VICON_INCLUDE_DIR vicon/Client.h "${VICON_ROOT}/include")
+  FIND_LIBRARY(VICON_DATASTREAM_LIBRARY ViconDataStreamSDK_CPP HINTS "${VICON_ROOT}/lib")
+
+  IF(NOT MSVC_IDE)
+    FIND_LIBRARY(VICON_DEBUGSERVICES_LIBRARY DebugServices HINTS "${VICON_ROOT}/lib")
+  ENDIF()
+
+  INCLUDE_DIRECTORIES(${VICON_INCLUDE_DIR})
+  ADD_DEFINITIONS(-DWITH_VICON)
+ENDIF()

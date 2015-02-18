@@ -23,6 +23,16 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
 }
+
+#ifdef WITH_VICON
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
+                               const std::string& viconHost)
+: m_viconHost(viconHost)
+{
+  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
+  initialise(settings);
+}
+#endif
 #endif
 
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_Ptr& settings)
@@ -63,6 +73,14 @@ void SpaintPipeline::process_frame()
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
+
+#ifdef WITH_VICON
+  if(m_viconHost != "")
+  {
+    // If we're using the Vicon tracker, make sure to only fuse when we have tracking information available.
+    m_fusionEnabled = !m_viconTracker->lost_tracking();
+  }
+#endif
 
   // Run the fusion process.
   if(m_fusionEnabled) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
@@ -133,10 +151,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the dense mapper and tracking controller.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
-  m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-  m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-    trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
-  ));
+  setup_tracker(settings, scene, trackedImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
 
   // Set up the spaint model and raycaster.
@@ -146,6 +161,37 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   m_fusionEnabled = true;
   m_reconstructionStarted = false;
+}
+
+void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
+{
+#ifdef WITH_VICON
+  if(m_viconHost != "")
+  {
+    ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+    m_viconTracker = new ViconTracker(m_viconHost, "kinect");
+    compositeTracker->SetTracker(m_viconTracker, 0);
+    compositeTracker->SetTracker(
+      ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
+        trackedImageSize,
+        settings.get(),
+        m_lowLevelEngine.get(),
+        m_imuCalibrator.get(),
+        scene.get()
+      ), 1
+    );
+    m_tracker.reset(compositeTracker);
+  }
+  else
+  {
+#endif
+    m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
+    m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
+      trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
+    ));
+#ifdef WITH_VICON
+  }
+#endif
 }
 
 }

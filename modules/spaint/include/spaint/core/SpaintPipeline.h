@@ -8,6 +8,10 @@
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
+#ifdef WITH_VICON
+#include "../trackers/ViconTracker.h"
+#endif
+
 namespace spaint {
 
 /**
@@ -69,6 +73,14 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
+#ifdef WITH_VICON
+  /** The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker. */
+  std::string m_viconHost;
+
+  /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
+  ViconTracker *m_viconTracker;
+#endif
+
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
 
@@ -83,6 +95,18 @@ public:
    * \param settings            The settings to use for InfiniTAM.
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings);
+
+#ifdef WITH_VICON
+  /**
+   * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source and a Vicon system for tracking.
+   *
+   * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
+   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
+   * \param settings            The settings to use for InfiniTAM.
+   * \param viconHost           The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker.
+   */
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& viconHost);
+#endif
 #endif
 
   /**
@@ -138,6 +162,15 @@ private:
    * \param settings  The settings to use for InfiniTAM.
    */
   void initialise(const Settings_Ptr& settings);
+
+  /**
+   * \brief Sets up the tracker.
+   *
+   * \param settings          The settings to use for InfiniTAM.
+   * \param scene             The scene.
+   * \param trackedImageSize  The tracked image size.
+   */
+  void setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
 };
 
 //#################### TYPEDEFS ####################

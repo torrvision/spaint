@@ -21,6 +21,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 
 #############################
 # Specify the project files #
@@ -53,6 +54,15 @@ include/spaint/input/MouseButton.h
 SET(ogl_headers
 include/spaint/ogl/WrappedGL.h
 )
+
+##
+SET(trackers_sources)
+SET(trackers_headers)
+
+IF(WITH_VICON)
+  SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/spaint/trackers/ViconTracker.h)
+ENDIF()
 
 ##
 SET(util_sources
@@ -99,6 +109,7 @@ include/spaint/visualisers/multiplatform/shared/SemanticVisualiser_Shared.h
 SET(sources
 ${core_sources}
 ${input_sources}
+${trackers_sources}
 ${util_sources}
 ${visualisers_sources}
 ${visualisers_multiplatform_cpu_sources}
@@ -108,6 +119,7 @@ SET(headers
 ${core_headers}
 ${input_headers}
 ${ogl_headers}
+${trackers_headers}
 ${util_headers}
 ${visualisers_multiplatform_cpu_headers}
 ${visualisers_multiplatform_interface_headers}
@@ -126,6 +138,7 @@ ENDIF()
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
+SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisers\\multiplatform\\cpu FILES ${visualisers_multiplatform_cpu_sources} ${visualisers_multiplatform_cpu_headers})
 SOURCE_GROUP(visualisers\\multiplatform\\cuda FILES ${visualisers_multiplatform_cuda_sources} ${visualisers_multiplatform_cuda_headers})
