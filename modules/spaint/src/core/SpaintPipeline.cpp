@@ -25,7 +25,7 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
 }
 
 #ifdef WITH_VICON
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_CPtr& settings,
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
                                const std::string& viconHost)
 : m_viconHost(viconHost)
 {
@@ -163,7 +163,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_reconstructionStarted = false;
 }
 
-void SpaintPipeline::setup_tracker(const Settings_CPtr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
+void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
 #ifdef WITH_VICON
   if(m_viconHost != "")
