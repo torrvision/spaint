@@ -1,7 +1,7 @@
 /**
  * spaint: ViconTracker.h
  */
- 
+
 #ifndef H_SPAINT_VICONTRACKER
 #define H_SPAINT_VICONTRACKER
 
@@ -15,9 +15,9 @@
 #include <ITMLib/Engine/ITMTracker.h>
 
 #include <vicon/Client.h>
- 
+
 namespace spaint {
- 
+
 /**
  * \brief An instance of this class can be used to track the camera pose using a Vicon system.
  */
