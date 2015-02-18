@@ -53,6 +53,9 @@ try
   // Specify whether or not to use the Vicon tracker (if it's available).
   bool useVicon = false;
 
+  // Specify the Vicon host (at present this refers to Iain's machine on the oculab network in the JR).
+  const std::string viconHost = "192.168.0.111:801";
+
   // If we're using the Vicon tracker, set an appropriate tracking regime for the corresponding ICP tracker.
   // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
   if(useVicon)
@@ -81,7 +84,7 @@ try
       openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI),
       settings
 #ifdef WITH_VICON
-      , useVicon ? "192.168.0.111:801" : ""
+      , useVicon ? viconHost : ""
 #endif
     ));
 #else
