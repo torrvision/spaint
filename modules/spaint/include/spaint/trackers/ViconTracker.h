@@ -9,7 +9,7 @@
 #include <string>
 
 #include <boost/optional.hpp>
- 
+
 #include <Eigen/Dense>
 
 #include <ITMLib/Engine/ITMTracker.h>
