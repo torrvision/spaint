@@ -70,7 +70,7 @@ void CvPlotter::image_point(const cv::Point2f& point, const cv::Scalar& colour, 
   cv::circle(m_canvas, point, radius, rgb2bgr(colour), thickness);
 }
 
-void CvPlotter::image_text(std::string text, cv::Point position, const cv::Scalar& colour, double scale, int thick) const
+void CvPlotter::image_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale, int thick) const
 {
     // The variable position refers to the bottom left corner of text in the image.
     putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thick);
@@ -97,11 +97,16 @@ void CvPlotter::line_graph(const std::vector<float>& values, const cv::Scalar& c
 
 }
 
-void CvPlotter::save(const std::string& path)
+void CvPlotter::save(const boost::optional<std::string>& path)
 {
-  char num[6]; sprintf(num, "%05d", m_saveCounter++);
-  std::string filename = std::string(m_windowName+ "-" + std::string(num) + ".ppm");
-  imwrite(path + "/" + filename, m_canvas);
+  std::string filename = m_windowName + "-" + boost::lexical_cast<std::string>(m_saveCounter++) + ".ppm";
+
+  if(path){
+    imwrite(*path + "/" + filename, m_canvas);
+  }
+  else{
+    imwrite(filename, m_canvas);
+  }
 }
 
 void CvPlotter::show() const
@@ -111,10 +116,10 @@ void CvPlotter::show() const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-cv::Point2f CvPlotter::axes2image(const cv::Point2f axesPoint) const
+cv::Point2f CvPlotter::axes2image(const cv::Point2f& cartesianPoint) const
 {
   // Scale
-  cv::Point2f imagePoint(axesPoint.x * m_scaleWidth, axesPoint.y * m_scaleHeight);
+  cv::Point2f imagePoint(cartesianPoint.x * m_scaleWidth, cartesianPoint.y * m_scaleHeight);
 
   // Translation
   imagePoint.x += m_cartesianOriginInImage.x;

@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include <boost/optional.hpp>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -107,7 +109,7 @@ public:
    *
    * \param point      The image point.
    * \param colour     The colour of the point.
-   * \param radius     The The radius of the point.
+   * \param radius     The radius of the point.
    * \param thickness  The thickness of the point.
    */
   void image_point(const cv::Point2f& point, const cv::Scalar& colour, int radius = 5, int thickness = -1) const;
@@ -121,7 +123,7 @@ public:
    * \param scale      The size of the text.
    * \param thickness  The thickness of the text font.
    */
-  void image_text(std::string text, cv::Point position, const cv::Scalar& colour, double scale = 1.0, int thickness=2) const;
+  void image_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale = 1.0, int thickness = 2) const;
 
   /**
    * \brief Draws a line graph.
@@ -134,7 +136,7 @@ public:
   /**
    * \brief Saves the current image to file.
    */
-  void save(const std::string& path = "");
+  void save (const boost::optional<std::string>& path = boost::none);
 
   /**
    * \brief Displays the current image in a window.
@@ -146,10 +148,10 @@ private:
   /**
    * \brief Converts the Cartesian coordinate points to image coordinates.
    *
-   * \param axesPoint   The point in Cartesian coordinates.
+   * \param cartesianPoint   The point in Cartesian coordinates.
    * \return            The point in image coordinates.
    */
-  cv::Point2f axes2image(const cv::Point2f axesPoint) const;
+  cv::Point2f axes2image(const cv::Point2f& cartesianPoint) const;
 
   /**
    * \brief Converts a colour in RGB format to a colour in BGR format compatible with OpenCV.
