@@ -14,7 +14,7 @@ using namespace rafl;
 
 #include <tvgutil/RandomNumberGenerator.h>
 
-#include "CvMatPlot.h"
+#include "CvPlotter.h"
 #include "OnlineRandomForestLearner.h"
 #include "PaletteGenerator.h"
 
@@ -115,11 +115,11 @@ int main(int argc, char *argv[])
   OnlineRandomForestLearner<Label> orfl(params[0]);
 
   // Generate some figures used to display the output of the online learner.
-  CvMatPlot fig1(1, "UnitCircleExampleGenerator");
+  CvPlotter fig1(1, "UnitCircleExampleGenerator");
 
-  CvMatPlot fig2(2, "DecisionBoundary");
+  CvPlotter fig2(2, "DecisionBoundary");
 
-  CvMatPlot fig3(3, "ClassificationAccuracy");
+  CvPlotter fig3(3, "ClassificationAccuracy");
 
   // Generate a dense set of points covering the 2d plane within a specified range.
   const float minVal = -2.5f;

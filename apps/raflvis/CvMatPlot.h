@@ -1,9 +1,9 @@
 /**
- * tvgplot: CvMatPlot.h
+ * tvgplot: CvPlotter.h
  */
 
-#ifndef H_TVGPLOT_CVMATPLOT
-#define H_TVGPLOT_CVMATPLOT
+#ifndef H_TVGPLOT_CVPLOTTER
+#define H_TVGPLOT_CVPLOTTER
 
 #include <string>
 
@@ -14,7 +14,7 @@
  * \brief An instance of this class allows basic drawing in an OpenCV image,
  * as well as plotting basic shapes in Cartesian coordinates.
  */
-class CvMatPlot
+class CvPlotter
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -59,7 +59,7 @@ public:
    * \param imageHeight     The height of the image axes in pixels.
    * \param axesLength      The absolute length of the visible axis in both the x and y directions.
    */
-  CvMatPlot(size_t figureNumber, std::string figureName = "Drawing pad", size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
+  CvPlotter(size_t figureNumber, std::string figureName = "Drawing pad", size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
