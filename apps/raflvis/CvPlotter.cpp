@@ -13,7 +13,7 @@
 
 //#################### CONSTRUCTOR ####################
 
-CvPlotter::CvPlotter(size_t figureNumber, std::string figureName, size_t imageWidth, size_t imageHeight, int axesLength)
+CvPlotter::CvPlotter(std::string windowName, size_t imageWidth, size_t imageHeight, int axesLength)
 : m_axesLength(axesLength),
   m_canvas(cv::Mat::zeros(imageHeight, imageWidth, CV_8UC3)),
   m_imageHeight(imageHeight),
@@ -21,7 +21,7 @@ CvPlotter::CvPlotter(size_t figureNumber, std::string figureName, size_t imageWi
   m_saveCounter(0),
   m_scaleHeight(static_cast<float>(imageHeight/axesLength)),
   m_scaleWidth(static_cast<float>(imageWidth/axesLength)),
-  m_windowName(figureName + boost::lexical_cast<std::string>(figureNumber))
+  m_windowName(windowName)
 {
   if(axesLength <= 0)
     throw std::runtime_error("The axes lengths must be greater than zero.");
@@ -29,6 +29,9 @@ CvPlotter::CvPlotter(size_t figureNumber, std::string figureName, size_t imageWi
   // Sets the origin to the centre of the image.
   m_cartesianOriginInImage.x = imageWidth / 2.0f;
   m_cartesianOriginInImage.y = imageHeight / 2.0f;
+
+  // Create a window for display.
+  cv::namedWindow(m_windowName, cv::WINDOW_AUTOSIZE);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

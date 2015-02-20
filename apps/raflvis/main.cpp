@@ -114,11 +114,18 @@ int main(int argc, char *argv[])
   OnlineRandomForestLearner<Label> orfl(params[0]);
 
   // Generate some figures used to display the output of the online learner.
-  CvPlotter featureSpacePlot(1, "UnitCircleExampleGenerator");
+  CvPlotter featureSpacePlot("UnitCircleExampleGenerator");
 
-  CvPlotter decisionBoundaryPlot(2, "DecisionBoundary");
+  CvPlotter decisionBoundaryPlot("DecisionBoundary");
 
-  CvPlotter performancePlot(3, "ClassificationAccuracy");
+  CvPlotter performancePlot("ClassificationAccuracy");
+
+  // Set a specified time delay between learning iterations.
+  int timeDelay = 20; //milliseconds
+  const int maxDelay = 3000;
+
+  // Create an OpenCV trackbar to vary the delay on the fly.
+  cv::createTrackbar("Delay", "DecisionBoundary", &timeDelay, maxDelay);
 
   // Generate a dense set of points covering the 2d plane within a specified range.
   const float minVal = -2.5f;
@@ -176,12 +183,8 @@ int main(int argc, char *argv[])
     }
     decisionBoundaryPlot.show();
 
-    // Used OpenCV to detect keyboard input.
-    static int key;
-
     // Wait for keyboard events.
-    key = cv::waitKey(20);
-    if(key == 'q') break;
+    if(cv::waitKey(timeDelay) == 'q') break;
 
     // Clear relevant figures.
     featureSpacePlot.clf();

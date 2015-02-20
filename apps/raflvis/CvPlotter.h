@@ -29,9 +29,6 @@ private:
   /** The origin of the Cartesian coordinate system. */
   cv::Point2f m_cartesianOriginInImage;
 
-  /** The figure number used to identify multiple windows which share the same name. */
-  size_t m_figureNumber;
-
   /** The height of the underlying image axes in pixels. */
   size_t m_imageHeight;
 
@@ -55,13 +52,12 @@ public:
   /**
    * \brief Constructs an OpenCV image for drawing.
    *
-   * \param figureNumber    The number used to identify multiple windows which share the same name.
-   * \param figureName      The name to display on the window.
+   * \param windowName      The name to display on the window.
    * \param imageWidth      The width of the image axes in pixels.
    * \param imageHeight     The height of the image axes in pixels.
    * \param axesLength      The absolute length of the visible axis in both the x and y directions.
    */
-  CvPlotter(size_t figureNumber, std::string figureName = "Drawing pad", size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
+  explicit CvPlotter(std::string windowName, size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -117,8 +113,8 @@ public:
   /**
    * \brief Draws text in image coordinates.
    *
-   * \param text       The text to be drawn.
-   * \param position   The bottom left corner of the text string in the image.
+   * \param text       The test to be drawn.
+   * \param poitition  The x-y position at which to draw the text.
    * \param colour     The colour of the text.
    * \param scale      The size of the text.
    * \param thickness  The thickness of the text font.
