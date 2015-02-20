@@ -59,8 +59,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 #################################
 
 TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgutil)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 
 #############################
 # Specify things to install #
