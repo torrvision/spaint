@@ -47,7 +47,7 @@ private:
   /** The name to display on the window. */
   std::string m_windowName;
 
-  //#################### CONSTRUCTOR ####################
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs an OpenCV image for drawing.
@@ -57,7 +57,7 @@ public:
    * \param imageHeight     The height of the image axes in pixels.
    * \param axesLength      The absolute length of the visible axis in both the x and y directions.
    */
-  explicit CvPlotter(std::string windowName, size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
+  explicit CvPlotter(const std::string& windowName, size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -2,6 +2,8 @@
  * raflvis: CvPlotter.cpp
  */
 
+#include "CvPlotter.h"
+
 #include <numeric>
 #include <stdexcept>
 
@@ -9,18 +11,16 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "CvPlotter.h"
+//#################### CONSTRUCTORS ####################
 
-//#################### CONSTRUCTOR ####################
-
-CvPlotter::CvPlotter(std::string windowName, size_t imageWidth, size_t imageHeight, int axesLength)
+CvPlotter::CvPlotter(const std::string& windowName, size_t imageWidth, size_t imageHeight, int axesLength)
 : m_axesLength(axesLength),
   m_canvas(cv::Mat::zeros(imageHeight, imageWidth, CV_8UC3)),
   m_imageHeight(imageHeight),
   m_imageWidth(imageWidth),
   m_saveCounter(0),
-  m_scaleHeight(static_cast<float>(imageHeight/axesLength)),
-  m_scaleWidth(static_cast<float>(imageWidth/axesLength)),
+  m_scaleHeight(static_cast<float>(imageHeight)/axesLength),
+  m_scaleWidth(static_cast<float>(imageWidth)/axesLength),
   m_windowName(windowName)
 {
   if(axesLength <= 0)
