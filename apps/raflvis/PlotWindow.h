@@ -1,5 +1,5 @@
 /**
- * tvgplot: CvPlotter.h
+ * tvgplot: PlotWindow.h
  */
 
 #ifndef H_TVGPLOT_CVPLOTTER
@@ -16,7 +16,7 @@
  * \brief An instance of this class allows basic drawing in an OpenCV image,
  * as well as plotting basic shapes in Cartesian coordinates.
  */
-class CvPlotter
+class PlotWindow
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -57,7 +57,7 @@ public:
    * \param imageHeight     The height of the image axes in pixels.
    * \param axesLength      The absolute length of the visible axis in both the x and y directions.
    */
-  explicit CvPlotter(const std::string& windowName, size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
+  explicit PlotWindow(const std::string& windowName, size_t imageWidth = 700, size_t imageHeight = 700, int axesLength = 5);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -76,12 +76,12 @@ public:
    * \param radius    The radius of the point.
    * \param thickness The thickness of the point.
    */
-  void cartesian_point(cv::Point2f point, const cv::Scalar& colour, int radius = 2, int thickness = -1) const;
+  void cartesian_point(const cv::Point2f& point, const cv::Scalar& colour, int radius = 2, int thickness = -1) const;
 
   /**
    * \brief Sets all the pixel values in the image to black.
    */
-  void clf() const;
+  void clear_figure() const;
 
   /**
    * \brief Gets the current height of the image.
@@ -98,7 +98,7 @@ public:
    * \param colour    The colour of the line.
    * \param thickness The thickness of the line.
    */
-  void image_line(cv::Point2f point1, cv::Point2f point2, const cv::Scalar& colour, int thickness = 1)const;
+  void image_line(const cv::Point2f& point1, const cv::Point2f& point2, const cv::Scalar& colour, int thickness = 1)const;
 
   /**
    * \brief Draws a point in image coordinates.

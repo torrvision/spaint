@@ -16,7 +16,7 @@ using namespace rafl;
 
 #include <tvgutil/RandomNumberGenerator.h>
 
-#include "CvPlotter.h"
+#include "PlotWindow.h"
 #include "OnlineRandomForestLearner.h"
 #include "PaletteGenerator.h"
 
@@ -114,11 +114,11 @@ int main(int argc, char *argv[])
   OnlineRandomForestLearner<Label> orfl(params[0]);
 
   // Generate some figures used to display the output of the online learner.
-  CvPlotter featureSpacePlot("UnitCircleExampleGenerator");
+  PlotWindow featureSpacePlot("UnitCircleExampleGenerator");
 
-  CvPlotter decisionBoundaryPlot("DecisionBoundary");
+  PlotWindow decisionBoundaryPlot("DecisionBoundary");
 
-  CvPlotter performancePlot("ClassificationAccuracy");
+  PlotWindow performancePlot("ClassificationAccuracy");
 
   // Set a specified time delay between learning iterations.
   int timeDelay = 20; //milliseconds
@@ -187,8 +187,8 @@ int main(int argc, char *argv[])
     if(cv::waitKey(timeDelay) == 'q') break;
 
     // Clear relevant figures.
-    featureSpacePlot.clf();
-    performancePlot.clf();
+    featureSpacePlot.clear_figure();
+    performancePlot.clear_figure();
 
     // Remove class labels from the current label set.
     if(roundCount % 40 == 0) currentClassLabels.erase( classLabelSampler.get_sample(classLabels) );
