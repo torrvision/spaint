@@ -5,6 +5,8 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
+#include <boost/format.hpp>
+
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
@@ -70,15 +72,12 @@ int main(int argc, char *argv[])
   // Set a seed for the random number generator.
   const unsigned int seed = 1234;
 
-  // Used OpenCV to detect keyboard input.
-  static int key;
-
   // Generate a set of labels.
   const size_t labelCount = 20;
   std::set<Label> classLabels;
   for(size_t i = 0; i < labelCount; ++i) classLabels.insert(i);
 
-  //Initialise the set sampler.
+  // Initialise the set sampler.
   SetSampler<Label> classLabelSampler(seed);
 
   // Generate a subset of labels which are currently observable;
@@ -115,11 +114,11 @@ int main(int argc, char *argv[])
   OnlineRandomForestLearner<Label> orfl(params[0]);
 
   // Generate some figures used to display the output of the online learner.
-  CvPlotter fig1(1, "UnitCircleExampleGenerator");
+  CvPlotter featureSpacePlot(1, "UnitCircleExampleGenerator");
 
-  CvPlotter fig2(2, "DecisionBoundary");
+  CvPlotter decisionBoundaryPlot(2, "DecisionBoundary");
 
-  CvPlotter fig3(3, "ClassificationAccuracy");
+  CvPlotter performancePlot(3, "ClassificationAccuracy");
 
   // Generate a dense set of points covering the 2d plane within a specified range.
   const float minVal = -2.5f;
@@ -134,20 +133,19 @@ int main(int argc, char *argv[])
 
   for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
   {
-    if((roundCount % 20) == 0) currentClassLabels.insert( classLabelSampler.get_sample(classLabels) );
+    if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
 
     // Generate a set of examples from each class around the unit circle.
-    //std::vector<Example_CPtr> currentExamples = uceg.generate_examples(classLabels, 50);
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(currentClassLabels, 50);
 
     // Draw the generated points in figure 1.
-    for(int j = 1, jend = currentExamples.size(); j < jend; ++j)
+    for(size_t j = 1, jend = currentExamples.size(); j < jend; ++j)
     {
-      Example_CPtr example = currentExamples[j];
-      fig1.cartesian_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), randomPalette[example->get_label()], 2, 2);
+      const Example_CPtr& example = currentExamples[j];
+      featureSpacePlot.cartesian_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), randomPalette[example->get_label()], 2, 2);
     }
-    fig1.cartesian_axes(basicPalette["Red"]);
-    fig1.show();
+    featureSpacePlot.cartesian_axes(basicPalette["Red"]);
+    featureSpacePlot.show();
 
     // Pass the set of examples to the random forest.
     orfl.question(currentExamples);
@@ -160,33 +158,37 @@ int main(int argc, char *argv[])
     orfl.update();
 
     // Plot a line graph showing the performance of the forest over time.
-    fig3.line_graph(performanceOverTime, basicPalette["Blue"]);
+    performancePlot.line_graph(performanceOverTime, basicPalette["Blue"]);
 
     // Draw the performance on the same figure as the line graph.
-    char currentPerformance[7]; sprintf(currentPerformance, "%0.3f", performanceOverTime.back());
-    char cumulativeAveragePerformance[7]; sprintf(cumulativeAveragePerformance, "%0.3f", static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size()));
-    fig3.image_text( std::string("Cur") + (performance.find("Accuracy")->first) + std::string(currentPerformance), cv::Point2i(10, fig3.height() - 50), basicPalette["White"]);
-    fig3.image_text( std::string("Avg") + (performance.find("Accuracy")->first) + std::string(cumulativeAveragePerformance), cv::Point2i(10, fig3.height() - 10), basicPalette["White"]);
-    fig3.show();
+    boost::format threeDecimalPlaces("%0.3f");
+    std::string currentPerformance = (threeDecimalPlaces % performanceOverTime.back()).str();
+    std::string cumulativeAveragePerformance = (threeDecimalPlaces % static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size())).str();
+    performancePlot.image_text( std::string("Cur") + (performance.find("Accuracy")->first) + currentPerformance, cv::Point2i(10, performancePlot.height() - 50), basicPalette["White"]);
+    performancePlot.image_text( std::string("Avg") + (performance.find("Accuracy")->first) + cumulativeAveragePerformance, cv::Point2i(10, performancePlot.height() - 10), basicPalette["White"]);
+    performancePlot.show();
 
     // Draw the current decision boundary of the random forest by predicting the labels of the dense set of points generated in the 2D plane.
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
-      fig2.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[orfl.predict(descriptor)], 2, 2);
+      decisionBoundaryPlot.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[orfl.predict(descriptor)], 2, 2);
     }
-    fig2.show();
+    decisionBoundaryPlot.show();
+
+    // Used OpenCV to detect keyboard input.
+    static int key;
 
     // Wait for keyboard events.
     key = cv::waitKey(20);
     if(key == 'q') break;
 
     // Clear relevant figures.
-    fig1.clf();
-    fig3.clf();
+    featureSpacePlot.clf();
+    performancePlot.clf();
 
-    //Remove class labels from the current label set.
-    if((roundCount % 40) == 0) currentClassLabels.erase( classLabelSampler.get_sample(classLabels) );
+    // Remove class labels from the current label set.
+    if(roundCount % 40 == 0) currentClassLabels.erase( classLabelSampler.get_sample(classLabels) );
   }
 
   return 0;

@@ -1,5 +1,5 @@
 /**
- * raflperf: OnlineRandomForestLearner.h
+ * raflvis: OnlineRandomForestLearner.h
  */
 
 #ifndef H_RAFLPERF_ONLINERANDOMFORESTLEARNER
@@ -24,7 +24,7 @@
  * Online learning takes place in a sequence of consecutive rounds.
  * On each round, the random forest learner is given a question and is required to provide an answer.
  * For example, a learner might receive a feature from a scene point,
- * and the question is to which class does the feature belong to.
+ * and the question is: To which class does the feature belong?.
  * To answer the question, the learner uses a prediction mechanism, termed a hypothesis,
  * which is a mapping from the set of questions (examples) to the set of admissible answers (class labels).
  * After predicting an answer, the learner gets the correct answer to the question.
@@ -126,8 +126,6 @@ public:
 
   /*
    * \brief Update the random forest to minimize prediction error in the future.
-   *
-   * \param examples  TODO.
    */
   void update() const
   {

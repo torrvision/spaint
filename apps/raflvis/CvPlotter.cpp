@@ -15,7 +15,7 @@
 
 CvPlotter::CvPlotter(size_t figureNumber, std::string figureName, size_t imageWidth, size_t imageHeight, int axesLength)
 : m_axesLength(axesLength),
-  m_canvas( cv::Mat::zeros(imageHeight, imageWidth, CV_8UC3) ),
+  m_canvas(cv::Mat::zeros(imageHeight, imageWidth, CV_8UC3)),
   m_imageHeight(imageHeight),
   m_imageWidth(imageWidth),
   m_saveCounter(0),
@@ -26,7 +26,7 @@ CvPlotter::CvPlotter(size_t figureNumber, std::string figureName, size_t imageWi
   if(axesLength <= 0)
     throw std::runtime_error("The axes lengths must be greater than zero.");
 
-  // Sets the origin to the center of the image.
+  // Sets the origin to the centre of the image.
   m_cartesianOriginInImage.x = imageWidth / 2.0f;
   m_cartesianOriginInImage.y = imageHeight / 2.0f;
 }
@@ -78,20 +78,19 @@ void CvPlotter::image_text(const std::string& text, const cv::Point& position, c
 
 void CvPlotter::line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
 {
-  if(values.empty())
-    throw std::runtime_error("The values vector is empty.");
+  if(values.empty()) throw std::runtime_error("The values vector is empty.");
 
-  int valuesSize = values.size();
+  int valuesSize = static_cast<int>(values.size());
   int lineSeparation = cvRound( static_cast<float>(m_imageWidth) / valuesSize );
 
-  float maxval = *std::max_element(values.begin(),values.end());
+  float maxval = *std::max_element(values.begin(), values.end());
 
   const int lineThickness = 2;
 
   for(int j = 1; j < valuesSize; ++j)
   {
-    cv::Point lineBegin(lineSeparation * (j-1), m_imageHeight - cvRound(m_imageHeight * (values[j - 1] / maxval)));
-    cv::Point lineEnd(lineSeparation * j, m_imageHeight - cvRound(m_imageHeight * (values[j] / maxval)));
+    cv::Point lineBegin = calculateLineGraphValuePositionInImage(lineSeparation, j - 1, m_imageHeight, values[j - 1], maxval);
+    cv::Point lineEnd = calculateLineGraphValuePositionInImage(lineSeparation, j, m_imageHeight, values[j], maxval);
     image_line(lineBegin, lineEnd, rgb2bgr(colour), lineThickness);
   }
 
@@ -122,11 +121,17 @@ cv::Point2f CvPlotter::axes2image(const cv::Point2f& cartesianPoint) const
   cv::Point2f imagePoint(cartesianPoint.x * m_scaleWidth, cartesianPoint.y * m_scaleHeight);
 
   // Translation
-  imagePoint.x += m_cartesianOriginInImage.x;
-  imagePoint.y += m_cartesianOriginInImage.y;
+  imagePoint += m_cartesianOriginInImage;
+
+  // Vertical Flipping
   imagePoint.y = m_imageHeight - imagePoint.y;
 
   return imagePoint;
+}
+
+cv::Point CvPlotter::calculateLineGraphValuePositionInImage(int lineSeparation, int valueIndex, int imageHeight, float value, float maxValue) const
+{
+  return cv::Point(lineSeparation * valueIndex, imageHeight - cvRound(imageHeight * (value / maxValue)));
 }
 
 cv::Scalar CvPlotter::rgb2bgr(const cv::Scalar& colour) const

@@ -117,8 +117,8 @@ public:
   /**
    * \brief Draws text in image coordinates.
    *
-   * \param text       The test to be drawn.
-   * \param poitition  The x-y position at which to draw the text.
+   * \param text       The text to be drawn.
+   * \param position   The bottom left corner of the text string in the image.
    * \param colour     The colour of the text.
    * \param scale      The size of the text.
    * \param thickness  The thickness of the text font.
@@ -152,6 +152,11 @@ private:
    * \return            The point in image coordinates.
    */
   cv::Point2f axes2image(const cv::Point2f& cartesianPoint) const;
+
+  /**
+   * \brief TODO
+   */
+  cv::Point calculateLineGraphValuePositionInImage(int lineSeparation, int valueIndex, int imageHeight, float value, float maxValue) const;
 
   /**
    * \brief Converts a colour in RGB format to a colour in BGR format compatible with OpenCV.
