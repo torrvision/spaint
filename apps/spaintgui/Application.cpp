@@ -208,7 +208,7 @@ void Application::process_picking_input()
   }
   else canChangeBrushRadius = true;
 
-  // Allow the user to pick voxels.
+  // Allow the user to pick cubes of voxels of the specified radius and mark them with the current label.
   if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
     boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cube;
