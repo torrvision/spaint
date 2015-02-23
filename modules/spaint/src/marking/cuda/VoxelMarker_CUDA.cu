@@ -10,17 +10,16 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_mark_voxels(const Vector3s *voxelLocations, const unsigned char *voxelLabels, int voxelCount,
+__global__ void ck_mark_voxels(const Vector3s *voxelLocations, unsigned char label, int voxelCount,
                                SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  if(tid < voxelCount) mark_voxel(voxelLocations[tid], voxelLabels[tid], voxelData, voxelIndex);
+  if(tid < voxelCount) mark_voxel(voxelLocations[tid], label, voxelData, voxelIndex);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned char>& voxelLabelsMB,
-                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   int voxelCount = voxelLocationsMB.dataSize;
 
@@ -29,7 +28,7 @@ void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLo
 
   ck_mark_voxels<<<numBlocks,threadsPerBlock>>>(
     voxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
-    voxelLabelsMB.GetData(MEMORYDEVICE_CUDA),
+    label,
     voxelCount,
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData()

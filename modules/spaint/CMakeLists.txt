@@ -85,31 +85,31 @@ include/spaint/ogl/WrappedGL.h
 
 ##
 SET(selection_transformers_cpu_sources
-src/selection/transformers/cpu/VoxelToBlockSelectionTransformer_CPU.cpp
+src/selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.cpp
 )
 
 SET(selection_transformers_cpu_headers
-include/spaint/selection/transformers/cpu/VoxelToBlockSelectionTransformer_CPU.h
+include/spaint/selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.h
 )
 
 ##
 SET(selection_transformers_cuda_sources
-src/selection/transformers/cuda/VoxelToBlockSelectionTransformer_CUDA.cu
+src/selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.cu
 )
 
 SET(selection_transformers_cuda_headers
-include/spaint/selection/transformers/cuda/VoxelToBlockSelectionTransformer_CUDA.h
+include/spaint/selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h
 )
 
 ##
 SET(selection_transformers_interface_headers
 include/spaint/selection/transformers/interface/SelectionTransformer.h
-include/spaint/selection/transformers/interface/VoxelToBlockSelectionTransformer.h
+include/spaint/selection/transformers/interface/VoxelToCubeSelectionTransformer.h
 )
 
 ##
 SET(selection_transformers_shared_headers
-include/spaint/selection/transformers/shared/VoxelToBlockSelectionTransformer_Shared.h
+include/spaint/selection/transformers/shared/VoxelToCubeSelectionTransformer_Shared.h
 )
 
 ##
