@@ -4,6 +4,8 @@
 
 #include "selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
 
+#include "selection/transformers/shared/VoxelToCubeSelectionTransformer_Shared.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -35,16 +37,9 @@ void VoxelToCubeSelectionTransformer_CPU::transform_selection(const ORUtils::Mem
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int i = 0; i < outputVoxelCount; ++i)
+  for(int outputVoxelIndex = 0; outputVoxelIndex < outputVoxelCount; ++outputVoxelIndex)
   {
-    int inputVoxelIndex = i / cubeSize;
-    const Vector3s& inputVoxel = inputSelection[inputVoxelIndex];
-
-    int xOffset = i % cubeSideLength - m_radius;
-    int yOffset = i % (cubeSideLength * cubeSideLength) / cubeSideLength - m_radius;
-    int zOffset = i / (cubeSideLength * cubeSideLength) - m_radius;
-
-    outputSelection[i] = Vector3s(inputVoxel.x + xOffset, inputVoxel.y + yOffset, inputVoxel.z + zOffset);
+    write_output_voxel(outputVoxelIndex, cubeSideLength, cubeSize, m_radius, inputSelection, outputSelection);
   }
 }
 
