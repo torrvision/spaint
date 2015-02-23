@@ -84,6 +84,35 @@ include/spaint/ogl/WrappedGL.h
 )
 
 ##
+SET(selection_transformers_cpu_sources
+src/selection/transformers/cpu/VoxelToBlockSelectionTransformer_CPU.cpp
+)
+
+SET(selection_transformers_cpu_headers
+include/spaint/selection/transformers/cpu/VoxelToBlockSelectionTransformer_CPU.h
+)
+
+##
+SET(selection_transformers_cuda_sources
+src/selection/transformers/cuda/VoxelToBlockSelectionTransformer_CUDA.cu
+)
+
+SET(selection_transformers_cuda_headers
+include/spaint/selection/transformers/cuda/VoxelToBlockSelectionTransformer_CUDA.h
+)
+
+##
+SET(selection_transformers_interface_headers
+include/spaint/selection/transformers/interface/SelectionTransformer.h
+include/spaint/selection/transformers/interface/VoxelToBlockSelectionTransformer.h
+)
+
+##
+SET(selection_transformers_shared_headers
+include/spaint/selection/transformers/shared/VoxelToBlockSelectionTransformer_Shared.h
+)
+
+##
 SET(trackers_sources)
 SET(trackers_headers)
 
@@ -138,6 +167,7 @@ SET(sources
 ${core_sources}
 ${input_sources}
 ${marking_cpu_sources}
+${selection_transformers_cpu_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
@@ -151,6 +181,9 @@ ${marking_cpu_headers}
 ${marking_interface_headers}
 ${marking_shared_headers}
 ${ogl_headers}
+${selection_transformers_cpu_headers}
+${selection_transformers_interface_headers}
+${selection_transformers_shared_headers}
 ${trackers_headers}
 ${util_headers}
 ${visualisers_cpu_headers}
@@ -159,8 +192,17 @@ ${visualisers_shared_headers}
 )
 
 IF(WITH_CUDA)
-  SET(sources ${sources} ${marking_cuda_sources} ${visualisers_cuda_sources})
-  SET(headers ${headers} ${marking_cuda_headers} ${visualisers_cuda_headers})
+  SET(sources ${sources}
+    ${marking_cuda_sources}
+    ${selection_transformers_cuda_sources}
+    ${visualisers_cuda_sources}
+  )
+
+  SET(headers ${headers}
+    ${marking_cuda_headers}
+    ${selection_transformers_cuda_headers}
+    ${visualisers_cuda_headers}
+  )
 ENDIF()
 
 #############################
@@ -174,6 +216,10 @@ SOURCE_GROUP(marking\\cuda FILES ${marking_cuda_sources} ${marking_cuda_headers}
 SOURCE_GROUP(marking\\interface FILES ${marking_interface_headers})
 SOURCE_GROUP(marking\\shared FILES ${marking_shared_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
+SOURCE_GROUP(selection\\transformers\\cpu FILES ${selection_transformers_cpu_sources} ${selection_transformers_cpu_headers})
+SOURCE_GROUP(selection\\transformers\\cuda FILES ${selection_transformers_cuda_sources} ${selection_transformers_cuda_headers})
+SOURCE_GROUP(selection\\transformers\\interface FILES ${selection_transformers_interface_headers})
+SOURCE_GROUP(selection\\transformers\\shared FILES ${selection_transformers_shared_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
