@@ -17,7 +17,7 @@ class VoxelToCubeSelectionTransformer_CPU : public VoxelToCubeSelectionTransform
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a voxel to cube selection transformer that works on the CPU.
+   * \brief Constructs a voxel to cube selection transformer that uses the CPU.
    *
    * \param radius  The (Manhattan) radius to select around each initial voxel.
    */
@@ -25,9 +25,6 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual int compute_output_selection_size(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB) const;
-
   /** Override */
   virtual void transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB, ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const;
 };

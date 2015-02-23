@@ -16,6 +16,12 @@ class VoxelToCubeSelectionTransformer : public SelectionTransformer
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** TODO */
+  const int m_cubeSideLength;
+
+  /** TODO */
+  const int m_cubeSize;
+
   /** The (Manhattan) radius to select around each initial voxel. */
   const int m_radius;
 
@@ -27,8 +33,18 @@ public:
    * \param radius  The (Manhattan) radius to select around each initial voxel.
    */
   explicit VoxelToCubeSelectionTransformer(int radius)
-  : m_radius(radius)
+  : m_cubeSideLength(2 * radius + 1),
+    m_cubeSize(m_cubeSideLength * m_cubeSideLength * m_cubeSideLength),
+    m_radius(radius)
   {}
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual int compute_output_selection_size(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB) const
+  {
+    return inputSelectionMB.dataSize * m_cubeSize;
+  }
 };
 
 }

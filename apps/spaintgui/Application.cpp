@@ -11,7 +11,7 @@ using namespace rigging;
 
 #include <spaint/marking/cuda/VoxelMarker_CUDA.h>
 #include <spaint/ogl/WrappedGL.h>
-#include <spaint/selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.h>
+#include <spaint/selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h>
 using namespace spaint;
 
 #ifdef WITH_OVR
@@ -224,12 +224,12 @@ void Application::process_picking_input()
     if(loc)
     {
       spaint::VoxelMarker_CUDA marker;
-      spaint::VoxelToCubeSelectionTransformer_CPU transformer(2);
+      spaint::VoxelToCubeSelectionTransformer_CUDA transformer(2);
       ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(1, true, true);
       voxelLocationsMB.GetData(MEMORYDEVICE_CPU)[0] = loc->toShortRound();
-      ORUtils::MemoryBlock<Vector3s> transformedVoxelLocationsMB(transformer.compute_output_selection_size(voxelLocationsMB), true, true);
+      voxelLocationsMB.UpdateDeviceFromHost();
+      ORUtils::MemoryBlock<Vector3s> transformedVoxelLocationsMB(transformer.compute_output_selection_size(voxelLocationsMB), MEMORYDEVICE_CUDA);
       transformer.transform_selection(voxelLocationsMB, transformedVoxelLocationsMB);
-      transformedVoxelLocationsMB.UpdateDeviceFromHost();
       marker.mark_voxels(transformedVoxelLocationsMB, 1, m_spaintPipeline->get_model()->get_scene().get());
       std::cout << *loc << '\n';
     }
