@@ -22,7 +22,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const spaint::SpaintPipeline_Ptr& spaintPipeline)
-: m_spaintPipeline(spaintPipeline)
+: m_brushRadius(2), m_spaintPipeline(spaintPipeline)
 {
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
 }
@@ -197,7 +197,7 @@ void Application::process_picking_input()
   // Allow the user to pick voxels.
   if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
-    boost::optional<Vector3f> loc;
+    boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cube;
     int x = m_inputState.mouse_position_x();
     int y = m_inputState.mouse_position_y();
 
@@ -205,13 +205,13 @@ void Application::process_picking_input()
     {
       case Renderer::CM_FOLLOW:
       {
-        loc = m_spaintPipeline->get_raycaster()->pick(x, y);
+        cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, m_brushRadius);
         break;
       }
       case Renderer::CM_FREE:
       {
         Renderer::RenderState_CPtr renderState = m_renderer->get_monocular_render_state();
-        if(renderState) loc = m_spaintPipeline->get_raycaster()->pick(x, y, renderState);
+        if(renderState) cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, m_brushRadius, renderState);
         break;
       }
       default:
@@ -221,17 +221,10 @@ void Application::process_picking_input()
       }
     }
 
-    if(loc)
+    if(cube)
     {
       spaint::VoxelMarker_CUDA marker;
-      spaint::VoxelToCubeSelectionTransformer_CUDA transformer(2);
-      ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(1, true, true);
-      voxelLocationsMB.GetData(MEMORYDEVICE_CPU)[0] = loc->toShortRound();
-      voxelLocationsMB.UpdateDeviceFromHost();
-      ORUtils::MemoryBlock<Vector3s> transformedVoxelLocationsMB(transformer.compute_output_selection_size(voxelLocationsMB), MEMORYDEVICE_CUDA);
-      transformer.transform_selection(voxelLocationsMB, transformedVoxelLocationsMB);
-      marker.mark_voxels(transformedVoxelLocationsMB, 1, m_spaintPipeline->get_model()->get_scene().get());
-      std::cout << *loc << '\n';
+      marker.mark_voxels(*cube, 1, m_spaintPipeline->get_model()->get_scene().get());
     }
     else std::cout << "No hit\n";
   }

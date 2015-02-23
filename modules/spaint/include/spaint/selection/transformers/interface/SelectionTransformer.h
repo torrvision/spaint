@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_SELECTIONTRANSFORMER
 #define H_SPAINT_SELECTIONTRANSFORMER
 
+#include <boost/shared_ptr.hpp>
+
 #include <ITMLib/Objects/ITMScene.h>
 
 namespace spaint {
@@ -39,6 +41,10 @@ public:
    */
   virtual void transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB, ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const = 0;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const SelectionTransformer> SelectionTransformer_CPtr;
 
 }
 

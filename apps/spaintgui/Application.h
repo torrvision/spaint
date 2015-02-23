@@ -23,6 +23,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The brush radius to use for manual labelling with the mouse. */
+  int m_brushRadius;
+
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;
 

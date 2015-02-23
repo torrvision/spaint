@@ -9,8 +9,11 @@
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
+#include "selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
 #include "visualisers/cpu/SemanticVisualiser_CPU.h"
+
 #ifdef WITH_CUDA
+#include "selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h"
 #include "visualisers/cuda/SemanticVisualiser_CUDA.h"
 #endif
 
@@ -133,6 +136,42 @@ boost::optional<Vector3f> SpaintRaycaster::pick(int x, int y, RenderState_CPtr r
   const Vector4f *imageData = m_raycastResult->GetData(MEMORYDEVICE_CPU);
   Vector4f voxelData = imageData[y * m_raycastResult->noDims.x + x];
   return voxelData.w > 0 ? boost::optional<Vector3f>(Vector3f(voxelData.x, voxelData.y, voxelData.z)) : boost::none;
+}
+
+boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > SpaintRaycaster::pick_cube(int x, int y, int radius, RenderState_CPtr renderState) const
+{
+  // Try and pick an individual voxel. If we don't hit anything, early out.
+  boost::optional<Vector3f> loc = pick(x, y, renderState);
+  if(!loc) return boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> >();
+
+  // Make the transformer that we need in order to expand the selection to the specified radius.
+  spaint::SelectionTransformer_CPtr selectionTransformer;
+  const ITMLibSettings::DeviceType deviceType = m_model->get_settings()->deviceType;
+  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    selectionTransformer.reset(new spaint::VoxelToCubeSelectionTransformer_CUDA(radius));
+#else
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    selectionTransformer.reset(new spaint::VoxelToCubeSelectionTransformer_CPU(radius));
+  }
+
+  // Make a selection that contains only the voxel we picked.
+  ORUtils::MemoryBlock<Vector3s> locMB(1, true, true);
+  locMB.GetData(MEMORYDEVICE_CPU)[0] = loc->toShortRound();
+  locMB.UpdateDeviceFromHost();
+
+  // Expand it using the transformer.
+  MemoryDeviceType memoryDeviceType = deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cubeMB(new ORUtils::MemoryBlock<Vector3s>(selectionTransformer->compute_output_selection_size(locMB), memoryDeviceType));
+  selectionTransformer->transform_selection(locMB, *cubeMB);
+
+  return cubeMB;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
