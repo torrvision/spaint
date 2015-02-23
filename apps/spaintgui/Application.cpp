@@ -194,6 +194,20 @@ void Application::process_input()
 
 void Application::process_picking_input()
 {
+  // Allow the user to change the brush radius.
+  static bool canChangeBrushRadius = true;
+  if(m_inputState.key_down(SDLK_LEFTBRACKET))
+  {
+    if(canChangeBrushRadius && m_brushRadius > 1) --m_brushRadius;
+    canChangeBrushRadius = false;
+  }
+  else if(m_inputState.key_down(SDLK_RIGHTBRACKET))
+  {
+    if(canChangeBrushRadius && m_brushRadius < 10) ++m_brushRadius;
+    canChangeBrushRadius = false;
+  }
+  else canChangeBrushRadius = true;
+
   // Allow the user to pick voxels.
   if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
@@ -226,7 +240,6 @@ void Application::process_picking_input()
       spaint::VoxelMarker_CUDA marker;
       marker.mark_voxels(*cube, 1, m_spaintPipeline->get_model()->get_scene().get());
     }
-    else std::cout << "No hit\n";
   }
 }
 
