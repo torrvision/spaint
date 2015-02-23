@@ -9,6 +9,7 @@
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
+#include <spaint/marking/cuda/VoxelMarker_CUDA.h>
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
@@ -219,7 +220,18 @@ void Application::process_picking_input()
       }
     }
 
-    if(loc) std::cout << *loc << '\n';
+    if(loc)
+    {
+      spaint::VoxelMarker_CUDA marker;
+      ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(1, true, true);
+      voxelLocationsMB.GetData(MEMORYDEVICE_CPU)[0] = loc->toShortRound();
+      voxelLocationsMB.UpdateDeviceFromHost();
+      ORUtils::MemoryBlock<unsigned char> voxelLabelsMB(1, true, true);
+      voxelLabelsMB.GetData(MEMORYDEVICE_CPU)[0] = 1;
+      voxelLabelsMB.UpdateDeviceFromHost();
+      marker.mark_voxels(voxelLocationsMB, voxelLabelsMB, m_spaintPipeline->get_model()->get_scene().get());
+      std::cout << *loc << '\n';
+    }
     else std::cout << "No hit\n";
   }
 }

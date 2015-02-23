@@ -48,6 +48,11 @@ bool SpaintPipeline::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
+const SpaintModel_Ptr& SpaintPipeline::get_model()
+{
+  return m_model;
+}
+
 SpaintModel_CPtr SpaintPipeline::get_model() const
 {
   return m_model;

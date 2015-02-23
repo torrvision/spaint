@@ -133,6 +133,13 @@ public:
    *
    * \return  The spaint model.
    */
+  const SpaintModel_Ptr& get_model();
+
+  /**
+   * \brief Gets the spaint model.
+   *
+   * \return  The spaint model.
+   */
   SpaintModel_CPtr get_model() const;
 
   /**
