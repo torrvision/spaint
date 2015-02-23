@@ -51,6 +51,34 @@ include/spaint/input/MouseButton.h
 )
 
 ##
+SET(marking_cpu_sources
+src/marking/cpu/VoxelMarker_CPU.cpp
+)
+
+SET(marking_cpu_headers
+include/spaint/marking/cpu/VoxelMarker_CPU.h
+)
+
+##
+SET(marking_cuda_sources
+src/marking/cuda/VoxelMarker_CUDA.cu
+)
+
+SET(marking_cuda_headers
+include/spaint/marking/cuda/VoxelMarker_CUDA.h
+)
+
+##
+SET(marking_interface_headers
+include/spaint/marking/interface/VoxelMarker.h
+)
+
+##
+SET(marking_shared_headers
+include/spaint/marking/shared/VoxelMarker_Shared.h
+)
+
+##
 SET(ogl_headers
 include/spaint/ogl/WrappedGL.h
 )
@@ -109,6 +137,7 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 SET(sources
 ${core_sources}
 ${input_sources}
+${marking_cpu_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
@@ -118,6 +147,9 @@ ${visualisers_sources}
 SET(headers
 ${core_headers}
 ${input_headers}
+${marking_cpu_headers}
+${marking_interface_headers}
+${marking_shared_headers}
 ${ogl_headers}
 ${trackers_headers}
 ${util_headers}
@@ -127,8 +159,8 @@ ${visualisers_shared_headers}
 )
 
 IF(WITH_CUDA)
-  SET(sources ${sources} ${visualisers_cuda_sources})
-  SET(headers ${headers} ${visualisers_cuda_headers})
+  SET(sources ${sources} ${marking_cuda_sources} ${visualisers_cuda_sources})
+  SET(headers ${headers} ${marking_cuda_headers} ${visualisers_cuda_headers})
 ENDIF()
 
 #############################
@@ -137,6 +169,10 @@ ENDIF()
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
+SOURCE_GROUP(marking\\cpu FILES ${marking_cpu_sources} ${marking_cpu_headers})
+SOURCE_GROUP(marking\\cuda FILES ${marking_cuda_sources} ${marking_cuda_headers})
+SOURCE_GROUP(marking\\interface FILES ${marking_interface_headers})
+SOURCE_GROUP(marking\\shared FILES ${marking_shared_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
