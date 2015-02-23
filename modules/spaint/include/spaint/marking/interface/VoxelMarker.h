@@ -5,8 +5,6 @@
 #ifndef H_SPAINT_VOXELMARKER
 #define H_SPAINT_VOXELMARKER
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Objects/ITMScene.h>
 
 #include "../../util/SpaintVoxel.h"
@@ -34,12 +32,9 @@ public:
    * \param label             The semantic label with which to mark the voxels.
    * \param scene             The scene.
    */
-  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
+                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 };
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<const VoxelMarker> VoxelMarker_CPtr;
 
 }
 
