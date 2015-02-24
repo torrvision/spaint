@@ -7,6 +7,11 @@
 
 #include <SDL.h>
 
+// Suppress the definition of M_PI provided by SDL - we want the one in <cmath>.
+#ifdef M_PI
+#undef M_PI
+#endif
+
 #include <spaint/core/SpaintPipeline.h>
 #include <spaint/input/InputState.h>
 

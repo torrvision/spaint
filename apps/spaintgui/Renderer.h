@@ -9,6 +9,7 @@
 
 #include <rigging/MoveableCamera.h>
 
+#include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
 
@@ -47,6 +48,9 @@ protected:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
+  /** The interactor that is used to interact with the InfiniTAM scene. */
+  spaint::SpaintInteractor_CPtr m_interactor;
+
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
 
@@ -61,11 +65,12 @@ public:
   /**
    * \brief Constructs a renderer.
    *
-   * \param model     The spaint model.
-   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param model       The spaint model.
+   * \param raycaster   The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param interactor  The interactor that is used to interact with the InfiniTAM scene.
    */
-  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
-  : m_cameraMode(CM_FOLLOW), m_model(model), m_raycaster(raycaster)
+  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const spaint::SpaintInteractor_CPtr& interactor)
+  : m_cameraMode(CM_FOLLOW), m_interactor(interactor), m_model(model), m_raycaster(raycaster)
   {}
 
   //#################### DESTRUCTOR ####################

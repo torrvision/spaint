@@ -25,9 +25,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
+RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const spaint::SpaintInteractor_CPtr& interactor,
                            const std::string& title, RiftRenderingMode renderingMode)
-: Renderer(model, raycaster)
+: Renderer(model, raycaster, interactor)
 {
   // Initialise the Rift.
   ovr_Initialize();

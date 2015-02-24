@@ -41,13 +41,15 @@ public:
   /**
    * \brief Constructs a windowed renderer.
    *
-   * \param model     The spaint model.
-   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param title     The title of the window.
-   * \param width     The width of the window.
-   * \param height    The height of the window.
+   * \param model       The spaint model.
+   * \param raycaster   The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param interactor  The interactor that is used to interact with the InfiniTAM scene.
+   * \param title       The title of the window.
+   * \param width       The width of the window.
+   * \param height      The height of the window.
    */
-  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, int width, int height);
+  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const spaint::SpaintInteractor_CPtr& interactor,
+                   const std::string& title, int width, int height);
 
   //#################### DESTRUCTOR ####################
 public:
