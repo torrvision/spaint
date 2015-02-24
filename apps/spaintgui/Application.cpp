@@ -9,9 +9,7 @@
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
-#include <spaint/marking/cuda/VoxelMarker_CUDA.h>
 #include <spaint/ogl/WrappedGL.h>
-#include <spaint/selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h>
 using namespace spaint;
 
 #ifdef WITH_OVR
@@ -21,7 +19,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const spaint::SpaintPipeline_Ptr& spaintPipeline)
+Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 : m_brushRadius(2), m_spaintPipeline(spaintPipeline)
 {
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
@@ -211,6 +209,7 @@ void Application::process_picking_input()
   // Allow the user to pick cubes of voxels of the specified radius and mark them with the current label.
   if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
+    // Determine the cube of voxels picked by the user (if any).
     boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cube;
     int x = m_inputState.mouse_position_x();
     int y = m_inputState.mouse_position_y();
@@ -235,11 +234,8 @@ void Application::process_picking_input()
       }
     }
 
-    if(cube)
-    {
-      spaint::VoxelMarker_CUDA marker;
-      marker.mark_voxels(*cube, 1, m_spaintPipeline->get_model()->get_scene().get());
-    }
+    // If there was a cube of voxels, mark it with the current semantic label.
+    if(cube) m_spaintPipeline->get_model()->mark_voxels(*cube, 1);
   }
 }
 

@@ -4,6 +4,11 @@
 
 #include "core/SpaintModel.h"
 
+#include "marking/cpu/VoxelMarker_CPU.h"
+#ifdef WITH_CUDA
+#include "marking/cuda/VoxelMarker_CUDA.h"
+#endif
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -11,7 +16,24 @@ namespace spaint {
 SpaintModel::SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
                          const Settings_CPtr& settings)
 : m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_scene(scene), m_settings(settings), m_trackingState(trackingState)
-{}
+{
+  // Set up the voxel marker.
+  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    // Use the CUDA implementation.
+    m_voxelMarker.reset(new VoxelMarker_CUDA);
+#else
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    // Use the CPU implementation.
+    m_voxelMarker.reset(new VoxelMarker_CPU);
+  }
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -68,6 +90,11 @@ const SpaintModel::View_Ptr& SpaintModel::get_view()
 SpaintModel::View_CPtr SpaintModel::get_view() const
 {
   return m_view;
+}
+
+void SpaintModel::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label)
+{
+  m_voxelMarker->mark_voxels(voxelLocationsMB, label, m_scene.get());
 }
 
 void SpaintModel::set_view(ITMView *view)
