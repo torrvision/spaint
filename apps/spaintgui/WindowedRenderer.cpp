@@ -97,6 +97,27 @@ void WindowedRenderer::render() const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
+void WindowedRenderer::begin_2d()
+{
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+}
+
+void WindowedRenderer::end_2d()
+{
+  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
+  glPopMatrix();
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+}
+
 void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
 {
   // Raycast the scene.
@@ -114,39 +135,25 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   }
 
   // Draw a quad textured with the raycasted scene.
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  {
-    glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
+  begin_2d();
+    glEnable(GL_TEXTURE_2D);
     {
-      glLoadIdentity();
-
-      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, m_textureID);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glColor3f(1.0f, 1.0f, 1.0f);
+      glBegin(GL_QUADS);
       {
-        glBindTexture(GL_TEXTURE_2D, m_textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glBegin(GL_QUADS);
-        {
-          glTexCoord2f(0, 1); glVertex2f(0, 0);
-          glTexCoord2f(1, 1); glVertex2f(1, 0);
-          glTexCoord2f(1, 0); glVertex2f(1, 1);
-          glTexCoord2f(0, 0); glVertex2f(0, 1);
-        }
-        glEnd();
+        glTexCoord2f(0, 1); glVertex2f(0, 0);
+        glTexCoord2f(1, 1); glVertex2f(1, 0);
+        glTexCoord2f(1, 0); glVertex2f(1, 1);
+        glTexCoord2f(0, 0); glVertex2f(0, 1);
       }
-      glDisable(GL_TEXTURE_2D);
+      glEnd();
     }
-    glPopMatrix();
-  }
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
+    glDisable(GL_TEXTURE_2D);
+  end_2d();
 }
 
 void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const

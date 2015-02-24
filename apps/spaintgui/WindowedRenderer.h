@@ -76,6 +76,16 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Sets appropriate projection and model-view matrices for 2D rendering.
+   */
+  static void begin_2d();
+
+  /**
+   * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
+   */
+  static void end_2d();
+
+  /**
    * \brief Renders the reconstructed scene.
    *
    * \param pose  The camera pose.
