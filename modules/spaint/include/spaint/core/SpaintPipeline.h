@@ -5,6 +5,7 @@
 #ifndef H_SPAINT_SPAINTPIPELINE
 #define H_SPAINT_SPAINTPIPELINE
 
+#include "SpaintInteractor.h"
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
@@ -54,6 +55,9 @@ private:
 
   /** The image into which RGB input is to be read each frame. */
   ITMUChar4Image_Ptr m_inputRGBImage;
+
+  /** The interactor that is used to interact with the InfiniTAM scene. */
+  SpaintInteractor_Ptr m_interactor;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
@@ -129,11 +133,11 @@ public:
   bool get_fusion_enabled() const;
 
   /**
-   * \brief Gets the spaint model.
+   * \brief Gets the interactor that is used to interact with the InfiniTAM scene.
    *
-   * \return  The spaint model.
+   * \return  The interactor that is used to interact with the InfiniTAM scene.
    */
-  const SpaintModel_Ptr& get_model();
+  const SpaintInteractor_Ptr& get_interactor();
 
   /**
    * \brief Gets the spaint model.

@@ -9,7 +9,6 @@
 
 #include <Engine/ImageSourceEngine.h>
 
-#include "../marking/interface/VoxelMarker.h"
 #include "../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -32,7 +31,6 @@ public:
   typedef boost::shared_ptr<const ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
-  typedef boost::shared_ptr<const VoxelMarker> VoxelMarker_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -53,9 +51,6 @@ private:
 
   /** The current view of the scene. */
   View_Ptr m_view;
-
-  /** The voxel marker (used to apply semantic labels to voxels in the scene). */
-  VoxelMarker_CPtr m_voxelMarker;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -149,14 +144,6 @@ public:
    * \return  The current view of the scene.
    */
   View_CPtr get_view() const;
-
-  /**
-   * \brief Marks a set of voxels in the scene with the specified semantic label.
-   *
-   * \param voxelLocationsMB  A memory block containing the locations of the voxels in the scene.
-   * \param label             The semantic label with which to mark the voxels.
-   */
-  void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label);
 
   /**
    * \brief Sets the current view of the scene.

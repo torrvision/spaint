@@ -29,12 +29,14 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 
 ##
 SET(core_sources
+src/core/SpaintInteractor.cpp
 src/core/SpaintModel.cpp
 src/core/SpaintPipeline.cpp
 src/core/SpaintRaycaster.cpp
 )
 
 SET(core_headers
+include/spaint/core/SpaintInteractor.h
 include/spaint/core/SpaintModel.h
 include/spaint/core/SpaintPipeline.h
 include/spaint/core/SpaintRaycaster.h

@@ -249,7 +249,7 @@ void Application::process_picking_input()
     }
 
     // If there was a cube of voxels, mark it with the current semantic label.
-    if(cube) m_spaintPipeline->get_model()->mark_voxels(*cube, m_currentLabel);
+    if(cube) m_spaintPipeline->get_interactor()->mark_voxels(*cube, m_currentLabel);
   }
 }
 
