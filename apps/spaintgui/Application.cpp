@@ -20,7 +20,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
-: m_brushRadius(2), m_spaintPipeline(spaintPipeline)
+: m_brushRadius(2), m_currentLabel(1), m_spaintPipeline(spaintPipeline)
 {
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
 }
@@ -206,6 +206,20 @@ void Application::process_picking_input()
   }
   else canChangeBrushRadius = true;
 
+  // Allow the user to change the current semantic label.
+  static bool canChangeLabel = true;
+  if(m_inputState.key_down(SDLK_PAGEUP))
+  {
+    if(canChangeLabel && m_currentLabel < 3) ++m_currentLabel;
+    canChangeLabel = false;
+  }
+  else if(m_inputState.key_down(SDLK_PAGEDOWN))
+  {
+    if(canChangeLabel && m_currentLabel > 0) --m_currentLabel;
+    canChangeLabel = false;
+  }
+  else canChangeLabel = true;
+
   // Allow the user to pick cubes of voxels of the specified radius and mark them with the current label.
   if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
@@ -235,7 +249,7 @@ void Application::process_picking_input()
     }
 
     // If there was a cube of voxels, mark it with the current semantic label.
-    if(cube) m_spaintPipeline->get_model()->mark_voxels(*cube, 1);
+    if(cube) m_spaintPipeline->get_model()->mark_voxels(*cube, m_currentLabel);
   }
 }
 
