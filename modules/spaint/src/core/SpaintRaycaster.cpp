@@ -139,11 +139,11 @@ boost::optional<Vector3f> SpaintRaycaster::pick(int x, int y, RenderState_CPtr r
   return voxelData.w > 0 ? boost::optional<Vector3f>(Vector3f(voxelData.x, voxelData.y, voxelData.z)) : boost::none;
 }
 
-boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > SpaintRaycaster::pick_cube(int x, int y, int radius, RenderState_CPtr renderState) const
+boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > SpaintRaycaster::pick_cube(int x, int y, int radius, boost::optional<Vector3f>& pickPoint, RenderState_CPtr renderState) const
 {
   // Try and pick an individual voxel. If we don't hit anything, early out.
-  boost::optional<Vector3f> loc = pick(x, y, renderState);
-  if(!loc) return boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> >();
+  pickPoint = pick(x, y, renderState);
+  if(!pickPoint) return boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> >();
 
   // Make the transformer that we need in order to expand the selection to the specified radius.
   boost::shared_ptr<const SelectionTransformer> selectionTransformer;
@@ -163,17 +163,17 @@ boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > SpaintRaycaster::pick_cube(in
   }
 
   // Make a selection that contains only the voxel we picked.
-  ORUtils::MemoryBlock<Vector3s> locMB(1, true, true);
-  locMB.GetData(MEMORYDEVICE_CPU)[0] = loc->toShortRound();
-  locMB.UpdateDeviceFromHost();
+  ORUtils::MemoryBlock<Vector3s> pickPointMB(1, true, true);
+  pickPointMB.GetData(MEMORYDEVICE_CPU)[0] = pickPoint->toShortRound();
+  pickPointMB.UpdateDeviceFromHost();
 
   // Expand it using the transformer.
   MemoryDeviceType memoryDeviceType = deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cubeMB(new ORUtils::MemoryBlock<Vector3s>(
-    selectionTransformer->compute_output_selection_size(locMB),
+    selectionTransformer->compute_output_selection_size(pickPointMB),
     memoryDeviceType)
   );
-  selectionTransformer->transform_selection(locMB, *cubeMB);
+  selectionTransformer->transform_selection(pickPointMB, *cubeMB);
 
   return cubeMB;
 }

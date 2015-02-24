@@ -81,7 +81,12 @@ include/spaint/marking/shared/VoxelMarker_Shared.h
 )
 
 ##
+SET(ogl_sources
+src/ogl/QuadricRenderer.cpp
+)
+
 SET(ogl_headers
+include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
 )
 
@@ -169,6 +174,7 @@ SET(sources
 ${core_sources}
 ${input_sources}
 ${marking_cpu_sources}
+${ogl_sources}
 ${selection_transformers_cpu_sources}
 ${trackers_sources}
 ${util_sources}
@@ -217,7 +223,7 @@ SOURCE_GROUP(marking\\cpu FILES ${marking_cpu_sources} ${marking_cpu_headers})
 SOURCE_GROUP(marking\\cuda FILES ${marking_cuda_sources} ${marking_cuda_headers})
 SOURCE_GROUP(marking\\interface FILES ${marking_interface_headers})
 SOURCE_GROUP(marking\\shared FILES ${marking_shared_headers})
-SOURCE_GROUP(ogl FILES ${ogl_headers})
+SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
 SOURCE_GROUP(selection\\transformers\\cpu FILES ${selection_transformers_cpu_sources} ${selection_transformers_cpu_headers})
 SOURCE_GROUP(selection\\transformers\\cuda FILES ${selection_transformers_cuda_sources} ${selection_transformers_cuda_headers})
 SOURCE_GROUP(selection\\transformers\\interface FILES ${selection_transformers_interface_headers})

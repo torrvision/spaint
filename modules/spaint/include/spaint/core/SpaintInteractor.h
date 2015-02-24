@@ -5,7 +5,10 @@
 #ifndef H_SPAINT_SPAINTINTERACTOR
 #define H_SPAINT_SPAINTINTERACTOR
 
+#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <Eigen/Dense>
 
 #include "SpaintModel.h"
 #include "../marking/interface/VoxelMarker.h"
@@ -28,6 +31,9 @@ private:
 
   /** The spaint model. */
   SpaintModel_Ptr m_model;
+
+  /** The most recent point picked by the user (if any). */
+  boost::optional<Eigen::Vector3f> m_pickPoint;
 
   /** The semantic label to use for manually labelling the scene. */
   unsigned char m_semanticLabel;
@@ -54,6 +60,13 @@ public:
   int get_brush_radius() const;
 
   /**
+   * \brief Gets the most recent point picked by the user (if any).
+   *
+   * \return  The most recent point picked by the user (if any).
+   */
+  const boost::optional<Eigen::Vector3f>& get_pick_point() const;
+
+  /**
    * \brief Gets the semantic label to use for manually labelling the scene.
    *
    * \return  The semantic label to use for manually labelling the scene.
@@ -74,6 +87,13 @@ public:
    * \param brushRadius The brush radius to use for manually labelling the scene with the mouse.
    */
   void set_brush_radius(int brushRadius);
+
+  /**
+   * \brief Sets the most recent point picked by the user (if any).
+   *
+   * \param pickPoint The most recent point picked by the user (if any).
+   */
+  void set_pick_point(const boost::optional<Eigen::Vector3f>& pickPoint);
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.

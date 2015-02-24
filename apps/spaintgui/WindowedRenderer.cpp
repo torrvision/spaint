@@ -9,7 +9,7 @@
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
 
-#include <spaint/ogl/WrappedGL.h>
+#include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
@@ -174,6 +174,16 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
         glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
         glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
       glEnd();
+
+      // Render the most recent pick point (if any) to show how we're interacting with the scene.
+      const boost::optional<Eigen::Vector3f>& pickPoint = m_interactor->get_pick_point();
+      if(pickPoint)
+      {
+        glColor3f(1.0f, 0.0f, 1.0f);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        QuadricRenderer::render_sphere(*pickPoint, m_interactor->get_brush_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      }
     }
     glPopMatrix();
   }

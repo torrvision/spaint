@@ -41,6 +41,11 @@ int SpaintInteractor::get_brush_radius() const
   return m_brushRadius;
 }
 
+const boost::optional<Eigen::Vector3f>& SpaintInteractor::get_pick_point() const
+{
+  return m_pickPoint;
+}
+
 unsigned char SpaintInteractor::get_semantic_label() const
 {
   return m_semanticLabel;
@@ -54,6 +59,11 @@ void SpaintInteractor::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLo
 void SpaintInteractor::set_brush_radius(int brushRadius)
 {
   m_brushRadius = brushRadius;
+}
+
+void SpaintInteractor::set_pick_point(const boost::optional<Eigen::Vector3f>& pickPoint)
+{
+  m_pickPoint = pickPoint;
 }
 
 void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)

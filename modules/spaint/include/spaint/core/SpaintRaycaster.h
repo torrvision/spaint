@@ -127,7 +127,7 @@ public:
   /**
    * \brief TODO
    */
-  boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > pick_cube(int x, int y, int radius, RenderState_CPtr renderState = RenderState_CPtr()) const;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > pick_cube(int x, int y, int radius, boost::optional<Vector3f>& pickPoint, RenderState_CPtr renderState = RenderState_CPtr()) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
