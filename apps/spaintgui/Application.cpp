@@ -20,7 +20,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
-: m_brushRadius(2), m_currentLabel(1), m_spaintPipeline(spaintPipeline)
+: m_spaintPipeline(spaintPipeline)
 {
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
 }
@@ -192,16 +192,20 @@ void Application::process_input()
 
 void Application::process_picking_input()
 {
+  SpaintInteractor_Ptr interactor = m_spaintPipeline->get_interactor();
+  int brushRadius = interactor->get_brush_radius();
+  unsigned char semanticLabel = interactor->get_semantic_label();
+
   // Allow the user to change the brush radius.
   static bool canChangeBrushRadius = true;
   if(m_inputState.key_down(SDLK_LEFTBRACKET))
   {
-    if(canChangeBrushRadius && m_brushRadius > 1) --m_brushRadius;
+    if(canChangeBrushRadius && brushRadius > 1) --brushRadius;
     canChangeBrushRadius = false;
   }
   else if(m_inputState.key_down(SDLK_RIGHTBRACKET))
   {
-    if(canChangeBrushRadius && m_brushRadius < 10) ++m_brushRadius;
+    if(canChangeBrushRadius && brushRadius < 10) ++brushRadius;
     canChangeBrushRadius = false;
   }
   else canChangeBrushRadius = true;
@@ -210,15 +214,19 @@ void Application::process_picking_input()
   static bool canChangeLabel = true;
   if(m_inputState.key_down(SDLK_PAGEUP))
   {
-    if(canChangeLabel && m_currentLabel < 3) ++m_currentLabel;
+    if(canChangeLabel && semanticLabel < 3) ++semanticLabel;
     canChangeLabel = false;
   }
   else if(m_inputState.key_down(SDLK_PAGEDOWN))
   {
-    if(canChangeLabel && m_currentLabel > 0) --m_currentLabel;
+    if(canChangeLabel && semanticLabel > 0) --semanticLabel;
     canChangeLabel = false;
   }
   else canChangeLabel = true;
+
+  // Update the brush radius and semantic label in the interactor.
+  interactor->set_brush_radius(brushRadius);
+  interactor->set_semantic_label(semanticLabel);
 
   // Allow the user to pick cubes of voxels of the specified radius and mark them with the current label.
   if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
@@ -232,13 +240,13 @@ void Application::process_picking_input()
     {
       case Renderer::CM_FOLLOW:
       {
-        cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, m_brushRadius);
+        cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, brushRadius);
         break;
       }
       case Renderer::CM_FREE:
       {
         Renderer::RenderState_CPtr renderState = m_renderer->get_monocular_render_state();
-        if(renderState) cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, m_brushRadius, renderState);
+        if(renderState) cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, brushRadius, renderState);
         break;
       }
       default:
@@ -249,7 +257,7 @@ void Application::process_picking_input()
     }
 
     // If there was a cube of voxels, mark it with the current semantic label.
-    if(cube) m_spaintPipeline->get_interactor()->mark_voxels(*cube, m_currentLabel);
+    if(cube) m_spaintPipeline->get_interactor()->mark_voxels(*cube, semanticLabel);
   }
 }
 
