@@ -75,31 +75,31 @@ include/spaint/util/SpaintVoxel.h
 )
 
 ##
-SET(visualisers_multiplatform_cpu_sources
-src/visualisers/multiplatform/cpu/SemanticVisualiser_CPU.cpp
+SET(visualisers_cpu_sources
+src/visualisers/cpu/SemanticVisualiser_CPU.cpp
 )
 
-SET(visualisers_multiplatform_cpu_headers
-include/spaint/visualisers/multiplatform/cpu/SemanticVisualiser_CPU.h
-)
-
-##
-SET(visualisers_multiplatform_cuda_sources
-src/visualisers/multiplatform/cuda/SemanticVisualiser_CUDA.cu
-)
-
-SET(visualisers_multiplatform_cuda_headers
-include/spaint/visualisers/multiplatform/cuda/SemanticVisualiser_CUDA.h
+SET(visualisers_cpu_headers
+include/spaint/visualisers/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
-SET(visualisers_multiplatform_interface_headers
-include/spaint/visualisers/multiplatform/interface/SemanticVisualiser.h
+SET(visualisers_cuda_sources
+src/visualisers/cuda/SemanticVisualiser_CUDA.cu
+)
+
+SET(visualisers_cuda_headers
+include/spaint/visualisers/cuda/SemanticVisualiser_CUDA.h
 )
 
 ##
-SET(visualisers_multiplatform_shared_headers
-include/spaint/visualisers/multiplatform/shared/SemanticVisualiser_Shared.h
+SET(visualisers_interface_headers
+include/spaint/visualisers/interface/SemanticVisualiser.h
+)
+
+##
+SET(visualisers_shared_headers
+include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 )
 
 #################################################################
@@ -111,8 +111,8 @@ ${core_sources}
 ${input_sources}
 ${trackers_sources}
 ${util_sources}
+${visualisers_cpu_sources}
 ${visualisers_sources}
-${visualisers_multiplatform_cpu_sources}
 )
 
 SET(headers
@@ -121,14 +121,14 @@ ${input_headers}
 ${ogl_headers}
 ${trackers_headers}
 ${util_headers}
-${visualisers_multiplatform_cpu_headers}
-${visualisers_multiplatform_interface_headers}
-${visualisers_multiplatform_shared_headers}
+${visualisers_cpu_headers}
+${visualisers_interface_headers}
+${visualisers_shared_headers}
 )
 
 IF(WITH_CUDA)
-  SET(sources ${sources} ${visualisers_multiplatform_cuda_sources})
-  SET(headers ${headers} ${visualisers_multiplatform_cuda_headers})
+  SET(sources ${sources} ${visualisers_cuda_sources})
+  SET(headers ${headers} ${visualisers_cuda_headers})
 ENDIF()
 
 #############################
@@ -140,10 +140,10 @@ SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(ogl FILES ${ogl_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
-SOURCE_GROUP(visualisers\\multiplatform\\cpu FILES ${visualisers_multiplatform_cpu_sources} ${visualisers_multiplatform_cpu_headers})
-SOURCE_GROUP(visualisers\\multiplatform\\cuda FILES ${visualisers_multiplatform_cuda_sources} ${visualisers_multiplatform_cuda_headers})
-SOURCE_GROUP(visualisers\\multiplatform\\interface FILES ${visualisers_multiplatform_interface_headers})
-SOURCE_GROUP(visualisers\\multiplatform\\shared FILES ${visualisers_multiplatform_shared_headers})
+SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
+SOURCE_GROUP(visualisers\\cuda FILES ${visualisers_cuda_sources} ${visualisers_cuda_headers})
+SOURCE_GROUP(visualisers\\interface FILES ${visualisers_interface_headers})
+SOURCE_GROUP(visualisers\\shared FILES ${visualisers_shared_headers})
 
 ##########################################
 # Specify additional include directories #
