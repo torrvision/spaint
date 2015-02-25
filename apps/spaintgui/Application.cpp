@@ -199,7 +199,7 @@ void Application::process_input()
 void Application::process_labelling_input()
 {
   // Allow the user to change the voxel selector or its parameters.
-  SpaintInteractor_Ptr interactor = m_spaintPipeline->get_interactor();
+  const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
   interactor->update_selector(m_inputState);
 
   // Allow the user to change the current semantic label.
@@ -243,8 +243,8 @@ void Application::process_labelling_input()
   // Determine the voxels selected by the user (if any).
   Selector::Selection_CPtr selection = interactor->select_voxels(m_inputState, renderState);
 
-  // If the user is currently pressing the left mouse button and there are selected voxels, mark them with the current semantic label.
-  if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT) && selection)
+  // If there are selected voxels and the user is currently pressing the left mouse button, mark the voxels with the current semantic label.
+  if(selection && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
     interactor->mark_voxels(*selection, semanticLabel);
   }
