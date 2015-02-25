@@ -7,6 +7,8 @@
 
 #include <boost/optional.hpp>
 
+#include <Eigen/Dense>
+
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "Selector.h"
@@ -25,7 +27,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The most recent point picked by the user (if any), in voxel coordinates. */
   mutable boost::optional<Vector3f> m_pickPoint;
 
   /** The selection radius (we select all voxels in a cube of side length 2 * radius + 1, centered on the voxel the user actually clicks). */
@@ -49,6 +51,20 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the most recent point picked by the user (if any), in world coordinates.
+   *
+   * \return  The most recent point picked by the user (if any), in world coordinates.
+   */
+  boost::optional<Eigen::Vector3f> get_pick_point() const;
+
+  /**
+   * \brief Gets the selection radius.
+   *
+   * \return  The selection radius.
+   */
+  int get_radius() const;
+
+  /**
    * \brief Determines the nearest scene point (if any) that would be hit by a ray cast through (x,y) on the image plane
    *        when viewed from the camera pose with the specified render state.
    *
@@ -58,13 +74,6 @@ public:
    * \return            The coordinates of the nearest scene point (if any) that is hit by the ray.
    */
   boost::optional<Vector3f> pick(int x, int y, const RenderState_CPtr& renderState) const;
-
-  /**
-   * \brief Gets the selection radius.
-   *
-   * \return  The selection radius.
-   */
-  int radius() const;
 
   /** Override */
   virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;

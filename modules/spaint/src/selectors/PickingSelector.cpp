@@ -19,6 +19,17 @@ PickingSelector::PickingSelector(const Settings_CPtr& settings)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+boost::optional<Eigen::Vector3f> PickingSelector::get_pick_point() const
+{
+  float voxelSize = m_settings->sceneParams.voxelSize;
+  return m_pickPoint ? boost::optional<Eigen::Vector3f>(Eigen::Vector3f(m_pickPoint->x * voxelSize, m_pickPoint->y * voxelSize, m_pickPoint->z * voxelSize)) : boost::none;
+}
+
+int PickingSelector::get_radius() const
+{
+  return m_radius;
+}
+
 boost::optional<Vector3f> PickingSelector::pick(int x, int y, const RenderState_CPtr& renderState) const
 {
   if(!m_raycastResult) m_raycastResult.reset(new ITMFloat4Image(renderState->raycastResult->noDims, true, true));
@@ -79,11 +90,6 @@ Selector::Selection_CPtr PickingSelector::select_voxels(const InputState& inputS
   selectionTransformer->transform_selection(pickPointMB, *cubeMB);
 
   return cubeMB;
-}
-
-int PickingSelector::radius() const
-{
-  return m_radius;
 }
 
 void PickingSelector::update(const InputState& inputState)

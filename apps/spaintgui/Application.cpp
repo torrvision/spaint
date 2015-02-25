@@ -249,16 +249,6 @@ void Application::process_picking_input()
       }
     }
 
-#if 0
-    // Record the pick point (if any) in the interactor.
-    if(pickPointInVoxels)
-    {
-      float voxelSize = settings->sceneParams.voxelSize;
-      Eigen::Vector3f pickPoint(pickPointInVoxels->x * voxelSize, pickPointInVoxels->y * voxelSize, pickPointInVoxels->z * voxelSize);
-      interactor->set_pick_point(pickPoint);
-    }
-#endif
-
     // If the user is currently pressing the left mouse button and there was a cube of voxels, mark it with the current semantic label.
     if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT) && cube)
     {

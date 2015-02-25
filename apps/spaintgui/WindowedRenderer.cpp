@@ -10,6 +10,7 @@
 using namespace rigging;
 
 #include <spaint/ogl/QuadricRenderer.h>
+#include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
@@ -176,16 +177,18 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
       glEnd();
 
       // Render the most recent pick point (if any) to show how we're interacting with the scene.
-#if 0
-      const boost::optional<Eigen::Vector3f>& pickPoint = m_interactor->get_pick_point();
-      if(pickPoint)
+      boost::shared_ptr<const PickingSelector> selector = boost::dynamic_pointer_cast<const PickingSelector>(m_interactor->get_selector());
+      if(selector)
       {
-        glColor3f(1.0f, 0.0f, 1.0f);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        QuadricRenderer::render_sphere(*pickPoint, m_interactor->get_brush_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        boost::optional<Eigen::Vector3f> pickPoint = selector->get_pick_point();
+        if(pickPoint)
+        {
+          glColor3f(1.0f, 0.0f, 1.0f);
+          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+          QuadricRenderer::render_sphere(*pickPoint, selector->get_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
       }
-#endif
     }
     glPopMatrix();
   }
