@@ -120,6 +120,16 @@ include/spaint/selectiontransformers/shared/VoxelToCubeSelectionTransformer_Shar
 )
 
 ##
+SET(selectors_sources
+src/selectors/PickingSelector.cpp
+)
+
+SET(selectors_headers
+include/spaint/selectors/PickingSelector.h
+include/spaint/selectors/Selector.h
+)
+
+##
 SET(trackers_sources)
 SET(trackers_headers)
 
@@ -176,6 +186,7 @@ ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${selectiontransformers_cpu_sources}
+${selectors_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
@@ -192,6 +203,7 @@ ${ogl_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
+${selectors_headers}
 ${trackers_headers}
 ${util_headers}
 ${visualisers_cpu_headers}
@@ -228,6 +240,7 @@ SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_source
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
 SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_headers})
 SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
+SOURCE_GROUP(selectors FILES ${selectors_sources} ${selectors_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
