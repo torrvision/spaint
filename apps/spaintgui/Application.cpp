@@ -220,40 +220,30 @@ void Application::process_picking_input()
 
   interactor->set_semantic_label(semanticLabel);
 
-  // Allow the user to pick cubes of voxels of the specified radius and mark them with the current label.
-  if(m_inputState.mouse_position_known())
+  // Get an appropriate render state for the current camera mode (if possible).
+  Renderer::RenderState_CPtr renderState;
+  switch(m_renderer->get_camera_mode())
   {
-    // Determine the cube of voxels picked by the user (if any).
-    boost::optional<Vector3f> pickPointInVoxels;
-    boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cube;
-    int x = m_inputState.mouse_position_x();
-    int y = m_inputState.mouse_position_y();
+    case Renderer::CM_FOLLOW:
+      renderState = m_spaintPipeline->get_raycaster()->get_live_render_state();
+      break;
+    case Renderer::CM_FREE:
+      renderState = m_renderer->get_monocular_render_state();
+      break;
+    default:
+      // This should never happen.
+      throw std::runtime_error("Unknown camera mode");
+  }
 
-    switch(m_renderer->get_camera_mode())
-    {
-      case Renderer::CM_FOLLOW:
-      {
-        cube = interactor->select_voxels(m_inputState, m_spaintPipeline->get_raycaster()->get_live_render_state());
-        break;
-      }
-      case Renderer::CM_FREE:
-      {
-        Renderer::RenderState_CPtr renderState = m_renderer->get_monocular_render_state();
-         if(renderState) cube = interactor->select_voxels(m_inputState, renderState);
-        break;
-      }
-      default:
-      {
-        // This should never happen.
-        throw std::runtime_error("Unknown camera mode");
-      }
-    }
+  if(!renderState) return;
 
-    // If the user is currently pressing the left mouse button and there was a cube of voxels, mark it with the current semantic label.
-    if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT) && cube)
-    {
-      interactor->mark_voxels(*cube, semanticLabel);
-    }
+  // Determine the voxels selected by the user (if any).
+  Selector::Selection_CPtr selection = interactor->select_voxels(m_inputState, renderState);
+
+  // If the user is currently pressing the left mouse button and there are selected voxels, mark them with the current semantic label.
+  if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT) && selection)
+  {
+    interactor->mark_voxels(*selection, semanticLabel);
   }
 }
 
