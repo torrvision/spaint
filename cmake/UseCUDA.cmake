@@ -9,6 +9,11 @@ IF(WITH_CUDA)
 
   SET(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" FORCE)
 
+  # If on Windows, enable GPU debug information.
+  IF(MSVC_IDE)
+    #SET(CUDA_NVCC_FLAGS -G; ${CUDA_NVCC_FLAGS})
+  ENDIF()
+
   # If on Mac OS X 10.9 (Mavericks), make sure everything compiles and links using the correct C++ Standard Library.
   IF(${CMAKE_SYSTEM} MATCHES "Darwin-13.")
     SET(CUDA_HOST_COMPILER /usr/bin/clang)
