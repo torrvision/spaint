@@ -101,9 +101,9 @@ private:
   void process_input();
 
   /**
-   * \brief Processes user input that deals with picking.
+   * \brief Processes user input that deals with labelling the scene.
    */
-  void process_picking_input();
+  void process_labelling_input();
 
   /**
    * \brief Processes user input that deals with switching renderers.

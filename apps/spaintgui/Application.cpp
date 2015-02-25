@@ -192,13 +192,13 @@ bool Application::process_events()
 void Application::process_input()
 {
   process_camera_input();
-  process_picking_input();
+  process_labelling_input();
   process_renderer_input();
 }
 
-void Application::process_picking_input()
+void Application::process_labelling_input()
 {
-  // Allow the user to change the selector or its parameters.
+  // Allow the user to change the voxel selector or its parameters.
   SpaintInteractor_Ptr interactor = m_spaintPipeline->get_interactor();
   interactor->update_selector(m_inputState);
 
@@ -208,11 +208,13 @@ void Application::process_picking_input()
 
   if(m_inputState.key_down(SDLK_PAGEUP))
   {
+    // FIXME: The maximum semantic label shouldn't be hard-coded like this.
     if(canChangeLabel && semanticLabel < 3) ++semanticLabel;
     canChangeLabel = false;
   }
   else if(m_inputState.key_down(SDLK_PAGEDOWN))
   {
+    // FIXME: The minimum semantic label shouldn't be hard-coded like this.
     if(canChangeLabel && semanticLabel > 0) --semanticLabel;
     canChangeLabel = false;
   }
@@ -235,6 +237,7 @@ void Application::process_picking_input()
       throw std::runtime_error("Unknown camera mode");
   }
 
+  // If we can't get an appropriate render state (e.g. because we're rendering in stereo), early out.
   if(!renderState) return;
 
   // Determine the voxels selected by the user (if any).
