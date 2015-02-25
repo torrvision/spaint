@@ -2,9 +2,9 @@
  * spaint: SemanticVisualiser_CPU.cpp
  */
 
-#include "visualisers/multiplatform/cpu/SemanticVisualiser_CPU.h"
+#include "visualisers/cpu/SemanticVisualiser_CPU.h"
 
-#include "visualisers/multiplatform/shared/SemanticVisualiser_Shared.h"
+#include "visualisers/shared/SemanticVisualiser_Shared.h"
 
 namespace spaint {
 
