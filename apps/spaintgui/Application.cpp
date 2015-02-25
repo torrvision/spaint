@@ -198,28 +198,14 @@ void Application::process_input()
 
 void Application::process_picking_input()
 {
+  // Allow the user to change the selector or its parameters.
   SpaintInteractor_Ptr interactor = m_spaintPipeline->get_interactor();
-  const SpaintModel::Settings_CPtr& settings = m_spaintPipeline->get_model()->get_settings();
-
-  int brushRadius = interactor->get_brush_radius();
-  unsigned char semanticLabel = interactor->get_semantic_label();
-
-  // Allow the user to change the brush radius.
-  static bool canChangeBrushRadius = true;
-  if(m_inputState.key_down(SDLK_LEFTBRACKET))
-  {
-    if(canChangeBrushRadius && brushRadius > 1) --brushRadius;
-    canChangeBrushRadius = false;
-  }
-  else if(m_inputState.key_down(SDLK_RIGHTBRACKET))
-  {
-    if(canChangeBrushRadius && brushRadius < 10) ++brushRadius;
-    canChangeBrushRadius = false;
-  }
-  else canChangeBrushRadius = true;
+  interactor->update_selector(m_inputState);
 
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
+  unsigned char semanticLabel = interactor->get_semantic_label();
+
   if(m_inputState.key_down(SDLK_PAGEUP))
   {
     if(canChangeLabel && semanticLabel < 3) ++semanticLabel;
@@ -232,12 +218,9 @@ void Application::process_picking_input()
   }
   else canChangeLabel = true;
 
-  // Update the brush radius and semantic label in the interactor.
-  interactor->set_brush_radius(brushRadius);
   interactor->set_semantic_label(semanticLabel);
 
   // Allow the user to pick cubes of voxels of the specified radius and mark them with the current label.
-  interactor->set_pick_point(boost::none);
   if(m_inputState.mouse_position_known())
   {
     // Determine the cube of voxels picked by the user (if any).
@@ -250,13 +233,13 @@ void Application::process_picking_input()
     {
       case Renderer::CM_FOLLOW:
       {
-        cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, brushRadius, pickPointInVoxels);
+        cube = interactor->select_voxels(m_inputState, m_spaintPipeline->get_raycaster()->get_live_render_state());
         break;
       }
       case Renderer::CM_FREE:
       {
         Renderer::RenderState_CPtr renderState = m_renderer->get_monocular_render_state();
-        if(renderState) cube = m_spaintPipeline->get_raycaster()->pick_cube(x, y, brushRadius, pickPointInVoxels, renderState);
+         if(renderState) cube = interactor->select_voxels(m_inputState, renderState);
         break;
       }
       default:
@@ -266,6 +249,7 @@ void Application::process_picking_input()
       }
     }
 
+#if 0
     // Record the pick point (if any) in the interactor.
     if(pickPointInVoxels)
     {
@@ -273,6 +257,7 @@ void Application::process_picking_input()
       Eigen::Vector3f pickPoint(pickPointInVoxels->x * voxelSize, pickPointInVoxels->y * voxelSize, pickPointInVoxels->z * voxelSize);
       interactor->set_pick_point(pickPoint);
     }
+#endif
 
     // If the user is currently pressing the left mouse button and there was a cube of voxels, mark it with the current semantic label.
     if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT) && cube)

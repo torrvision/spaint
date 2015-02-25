@@ -12,6 +12,7 @@
 
 #include "SpaintModel.h"
 #include "../markers/interface/VoxelMarker.h"
+#include "../selectors/Selector.h"
 
 namespace spaint {
 
@@ -22,18 +23,18 @@ class SpaintInteractor
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_CPtr;
+  typedef Selector::Selection Selection;
+  typedef boost::shared_ptr<Selection> Selection_CPtr;
   typedef boost::shared_ptr<const VoxelMarker> VoxelMarker_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The brush radius to use for manually labelling the scene with the mouse. */
-  int m_brushRadius;
-
   /** The spaint model. */
   SpaintModel_Ptr m_model;
 
-  /** The most recent point picked by the user (if any). */
-  boost::optional<Eigen::Vector3f> m_pickPoint;
+  /** TODO */
+  Selector_Ptr m_selector;
 
   /** The semantic label to use for manually labelling the scene. */
   unsigned char m_semanticLabel;
@@ -53,18 +54,11 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the brush radius to use for manually labelling the scene with the mouse.
+   * \brief Gets the current selector.
    *
-   * \return  The brush radius to use for manually labelling the scene with the mouse.
+   * \return  The current selector.
    */
-  int get_brush_radius() const;
-
-  /**
-   * \brief Gets the most recent point picked by the user (if any).
-   *
-   * \return  The most recent point picked by the user (if any).
-   */
-  const boost::optional<Eigen::Vector3f>& get_pick_point() const;
+  Selector_CPtr get_selector() const;
 
   /**
    * \brief Gets the semantic label to use for manually labelling the scene.
@@ -82,18 +76,13 @@ public:
   void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label);
 
   /**
-   * \brief Sets the brush radius to use for manually labelling the scene with the mouse.
+   * \brief Selects some voxels in the scene using the current selector.
    *
-   * \param brushRadius The brush radius to use for manually labelling the scene with the mouse.
+   * \param inputState  The current input state.
+   * \param renderState The render state corresponding to a camera from which the scene is being viewed.
+   * \return            A memory block containing the locations of the selected voxels.
    */
-  void set_brush_radius(int brushRadius);
-
-  /**
-   * \brief Sets the most recent point picked by the user (if any).
-   *
-   * \param pickPoint The most recent point picked by the user (if any).
-   */
-  void set_pick_point(const boost::optional<Eigen::Vector3f>& pickPoint);
+  Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.
@@ -101,6 +90,13 @@ public:
    * \param semanticLabel The semantic label to use for manually labelling the scene.
    */
   void set_semantic_label(unsigned char semanticLabel);
+
+  /**
+   * \brief Allows the user to change the selector or its parameters.
+   *
+   * \param inputState  The current input state.
+   */
+  void update_selector(const InputState& inputState);
 };
 
 //#################### TYPEDEFS ####################

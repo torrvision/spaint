@@ -58,6 +58,11 @@ SpaintModel_CPtr SpaintPipeline::get_model() const
   return m_model;
 }
 
+const SpaintRaycaster_Ptr& SpaintPipeline::get_raycaster()
+{
+  return m_raycaster;
+}
+
 SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
 {
   return m_raycaster;

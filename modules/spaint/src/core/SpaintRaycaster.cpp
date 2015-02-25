@@ -123,61 +123,6 @@ const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisati
   return m_visualisationEngine;
 }
 
-boost::optional<Vector3f> SpaintRaycaster::pick(int x, int y, RenderState_CPtr renderState) const
-{
-  if(!renderState) renderState = m_liveRenderState;
-  if(!m_raycastResult) m_raycastResult.reset(new ITMFloat4Image(renderState->raycastResult->noDims, true, true));
-
-  // FIXME: It's inefficient to copy the raycast result across from the GPU each time we want to perform a picking operation.
-  m_raycastResult->SetFrom(
-    renderState->raycastResult,
-    m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4f>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4f>::CPU_TO_CPU
-  );
-
-  const Vector4f *imageData = m_raycastResult->GetData(MEMORYDEVICE_CPU);
-  Vector4f voxelData = imageData[y * m_raycastResult->noDims.x + x];
-  return voxelData.w > 0 ? boost::optional<Vector3f>(Vector3f(voxelData.x, voxelData.y, voxelData.z)) : boost::none;
-}
-
-boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > SpaintRaycaster::pick_cube(int x, int y, int radius, boost::optional<Vector3f>& pickPoint, RenderState_CPtr renderState) const
-{
-  // Try and pick an individual voxel. If we don't hit anything, early out.
-  pickPoint = pick(x, y, renderState);
-  if(!pickPoint) return boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> >();
-
-  // Make the transformer that we need in order to expand the selection to the specified radius.
-  boost::shared_ptr<const SelectionTransformer> selectionTransformer;
-  const ITMLibSettings::DeviceType deviceType = m_model->get_settings()->deviceType;
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    selectionTransformer.reset(new VoxelToCubeSelectionTransformer_CUDA(radius));
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    selectionTransformer.reset(new VoxelToCubeSelectionTransformer_CPU(radius));
-  }
-
-  // Make a selection that contains only the voxel we picked.
-  ORUtils::MemoryBlock<Vector3s> pickPointMB(1, true, true);
-  pickPointMB.GetData(MEMORYDEVICE_CPU)[0] = pickPoint->toShortRound();
-  pickPointMB.UpdateDeviceFromHost();
-
-  // Expand it using the transformer.
-  MemoryDeviceType memoryDeviceType = deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cubeMB(new ORUtils::MemoryBlock<Vector3s>(
-    selectionTransformer->compute_output_selection_size(pickPointMB),
-    memoryDeviceType)
-  );
-  selectionTransformer->transform_selection(pickPointMB, *cubeMB);
-
-  return cubeMB;
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void SpaintRaycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const

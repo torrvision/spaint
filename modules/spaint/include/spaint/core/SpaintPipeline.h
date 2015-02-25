@@ -151,6 +151,13 @@ public:
    *
    * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
    */
+  const SpaintRaycaster_Ptr& get_raycaster();
+
+  /**
+   * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
+   *
+   * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
+   */
   SpaintRaycaster_CPtr get_raycaster() const;
 
   /**

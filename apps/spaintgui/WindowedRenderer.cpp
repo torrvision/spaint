@@ -176,6 +176,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
       glEnd();
 
       // Render the most recent pick point (if any) to show how we're interacting with the scene.
+#if 0
       const boost::optional<Eigen::Vector3f>& pickPoint = m_interactor->get_pick_point();
       if(pickPoint)
       {
@@ -184,6 +185,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
         QuadricRenderer::render_sphere(*pickPoint, m_interactor->get_brush_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       }
+#endif
     }
     glPopMatrix();
   }

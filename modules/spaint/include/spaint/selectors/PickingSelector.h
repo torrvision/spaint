@@ -59,6 +59,13 @@ public:
    */
   boost::optional<Vector3f> pick(int x, int y, const RenderState_CPtr& renderState) const;
 
+  /**
+   * \brief Gets the selection radius.
+   *
+   * \return  The selection radius.
+   */
+  int radius() const;
+
   /** Override */
   virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
 

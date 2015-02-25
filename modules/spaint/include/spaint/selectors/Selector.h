@@ -38,9 +38,9 @@ public:
   /**
    * \brief Selects some voxels in the scene based on the current input state.
    *
-   * \param inputState            The current input state.
-   * \param monocularRenderState  The render state for the monocular camera from which the scene is currently being viewed (may be null if a stereo view is being used).
-   * \return                      The selected voxels.
+   * \param inputState  The current input state.
+   * \param renderState The render state corresponding to a camera from which the scene is being viewed.
+   * \return            The selected voxels.
    */
   virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const = 0;
 
@@ -51,6 +51,11 @@ public:
    */
   virtual void update(const InputState& inputState) = 0;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<Selector> Selector_Ptr;
+typedef boost::shared_ptr<const Selector> Selector_CPtr;
 
 }
 

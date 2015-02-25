@@ -36,6 +36,9 @@ boost::optional<Vector3f> PickingSelector::pick(int x, int y, const RenderState_
 
 Selector::Selection_CPtr PickingSelector::select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const
 {
+  // Reset the most recent pick point.
+  m_pickPoint = boost::none;
+
   // Try and get the position of the mouse.
   if(!inputState.mouse_position_known()) return Selection_CPtr();
   int x = inputState.mouse_position_x();
@@ -76,6 +79,11 @@ Selector::Selection_CPtr PickingSelector::select_voxels(const InputState& inputS
   selectionTransformer->transform_selection(pickPointMB, *cubeMB);
 
   return cubeMB;
+}
+
+int PickingSelector::radius() const
+{
+  return m_radius;
 }
 
 void PickingSelector::update(const InputState& inputState)
