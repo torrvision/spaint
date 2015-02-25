@@ -7,17 +7,19 @@ using boost::assign::list_of;
 
 #include <boost/format.hpp>
 
+#include <evaluation/util/ConfusionMatrixUtil.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
+#include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
 #include <rafl/examples/ExampleUtil.h>
+#include <rafl/RandomForest.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "PlotWindow.h"
-#include "OnlineRandomForestLearner.h"
 #include "PaletteGenerator.h"
 
 //#################### TYPEDEFS ####################
@@ -45,6 +47,31 @@ std::vector<Descriptor_CPtr> generate_2d_descriptors_in_range(float min, float m
     }
   }
   return descriptors;
+}
+
+/**
+ * \brief Gets an answer to the questions posed to the random forest.
+ *
+ * \param examples      The set of examples.
+ * \return              The answer to the questions as quantified by a performance measure.
+ */
+std::map<std::string,evaluation::PerformanceMeasure> evaluate_forest_on_accuracy(const RandomForest& forest, const std::vector<Example_CPtr>& examples) const
+{
+  std::set<Label> classLabels;
+  size_t examplesSize = examples.size();
+  std::vector<Label> expectedLabels(examplesSize), predictedLabels(examplesSize);
+
+  for(size_t i = 0; i < examplesSize; ++i)
+  {
+    const Example_CPtr& example = examples[i];
+    predictedLabels[i] = forest->predict(example->get_descriptor());
+    expectedLabels[i] = example->get_label();
+    classLabels.insert(expectedLabels[i]);
+  }
+
+  Eigen::MatrixXf confusionMatrix = evaluation::ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
+
+  return boost::assign::map_list_of("Accuracy", evaluation::ConfusionMatrixUtil::calculate_accuracy(confusionMatrix));
 }
 
 template <typename T>
@@ -111,7 +138,7 @@ int main(int argc, char *argv[])
     .generate_param_sets();
 
   // Initialise the online random forest with the specified parameters.
-  OnlineRandomForestLearner<Label> orfl(params[0]);
+  RandomForest<Label> randomForest(params[0]);
 
   // Generate some figures used to display the output of the online learner.
   PlotWindow featureSpacePlot("UnitCircleExampleGenerator");
@@ -155,14 +182,14 @@ int main(int argc, char *argv[])
     featureSpacePlot.show();
 
     // Pass the set of examples to the random forest.
-    orfl.question(currentExamples);
+    randomForest.add_examples(examples);
 
     // Predict the labels of the examples passed to the forest under the current hypothesis.
-    std::map<std::string,evaluation::PerformanceMeasure> performance = orfl.answer(currentExamples);
+    std::map<std::string,evaluation::PerformanceMeasure> performance = evaluate_forest_accuracy(randomForest, currentExamples);
     performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
 
     // Update the random forest to minimise errors on future predictions.
-    orfl.update();
+    randomForest.train(MapUtil::lookup(params[0], "splitBudget"));
 
     // Plot a line graph showing the performance of the forest over time.
     performancePlot.line_graph(performanceOverTime, basicPalette["Blue"]);
@@ -179,7 +206,7 @@ int main(int argc, char *argv[])
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
-      decisionBoundaryPlot.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[orfl.predict(descriptor)], 2, 2);
+      decisionBoundaryPlot.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[randomForest.predict(descriptor)], 2, 2);
     }
     decisionBoundaryPlot.show();
 

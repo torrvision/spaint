@@ -29,7 +29,6 @@ PaletteGenerator.cpp
 
 SET(headers
 PlotWindow.h
-OnlineRandomForestLearner.h
 PaletteGenerator.h
 )
 
