@@ -2,9 +2,9 @@
  * spaint: VoxelToCubeSelectionTransformer_CPU.cpp
  */
 
-#include "selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
+#include "selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
 
-#include "selection/transformers/shared/VoxelToCubeSelectionTransformer_Shared.h"
+#include "selectiontransformers/shared/VoxelToCubeSelectionTransformer_Shared.h"
 
 namespace spaint {
 

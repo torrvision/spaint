@@ -2,9 +2,9 @@
  * spaint: VoxelMarker_CPU.cpp
  */
 
-#include "marking/cpu/VoxelMarker_CPU.h"
+#include "markers/cpu/VoxelMarker_CPU.h"
 
-#include "marking/shared/VoxelMarker_Shared.h"
+#include "markers/shared/VoxelMarker_Shared.h"
 
 namespace spaint {
 

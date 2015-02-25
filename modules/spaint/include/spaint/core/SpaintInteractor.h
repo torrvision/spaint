@@ -11,7 +11,7 @@
 #include <Eigen/Dense>
 
 #include "SpaintModel.h"
-#include "../marking/interface/VoxelMarker.h"
+#include "../markers/interface/VoxelMarker.h"
 
 namespace spaint {
 

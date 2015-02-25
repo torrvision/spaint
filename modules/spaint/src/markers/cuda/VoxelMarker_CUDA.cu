@@ -2,9 +2,9 @@
  * spaint: VoxelMarker_CUDA.cu
  */
 
-#include "marking/cuda/VoxelMarker_CUDA.h"
+#include "markers/cuda/VoxelMarker_CUDA.h"
 
-#include "marking/shared/VoxelMarker_Shared.h"
+#include "markers/shared/VoxelMarker_Shared.h"
 
 namespace spaint {
 

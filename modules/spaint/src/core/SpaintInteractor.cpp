@@ -4,9 +4,9 @@
 
 #include "core/SpaintInteractor.h"
 
-#include "marking/cpu/VoxelMarker_CPU.h"
+#include "markers/cpu/VoxelMarker_CPU.h"
 #ifdef WITH_CUDA
-#include "marking/cuda/VoxelMarker_CUDA.h"
+#include "markers/cuda/VoxelMarker_CUDA.h"
 #endif
 
 namespace spaint {

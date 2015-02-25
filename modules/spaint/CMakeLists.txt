@@ -53,31 +53,31 @@ include/spaint/input/MouseButton.h
 )
 
 ##
-SET(marking_cpu_sources
-src/marking/cpu/VoxelMarker_CPU.cpp
+SET(markers_cpu_sources
+src/markers/cpu/VoxelMarker_CPU.cpp
 )
 
-SET(marking_cpu_headers
-include/spaint/marking/cpu/VoxelMarker_CPU.h
-)
-
-##
-SET(marking_cuda_sources
-src/marking/cuda/VoxelMarker_CUDA.cu
-)
-
-SET(marking_cuda_headers
-include/spaint/marking/cuda/VoxelMarker_CUDA.h
+SET(markers_cpu_headers
+include/spaint/markers/cpu/VoxelMarker_CPU.h
 )
 
 ##
-SET(marking_interface_headers
-include/spaint/marking/interface/VoxelMarker.h
+SET(markers_cuda_sources
+src/markers/cuda/VoxelMarker_CUDA.cu
+)
+
+SET(markers_cuda_headers
+include/spaint/markers/cuda/VoxelMarker_CUDA.h
 )
 
 ##
-SET(marking_shared_headers
-include/spaint/marking/shared/VoxelMarker_Shared.h
+SET(markers_interface_headers
+include/spaint/markers/interface/VoxelMarker.h
+)
+
+##
+SET(markers_shared_headers
+include/spaint/markers/shared/VoxelMarker_Shared.h
 )
 
 ##
@@ -91,32 +91,32 @@ include/spaint/ogl/WrappedGL.h
 )
 
 ##
-SET(selection_transformers_cpu_sources
-src/selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.cpp
+SET(selectiontransformers_cpu_sources
+src/selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.cpp
 )
 
-SET(selection_transformers_cpu_headers
-include/spaint/selection/transformers/cpu/VoxelToCubeSelectionTransformer_CPU.h
-)
-
-##
-SET(selection_transformers_cuda_sources
-src/selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.cu
-)
-
-SET(selection_transformers_cuda_headers
-include/spaint/selection/transformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h
+SET(selectiontransformers_cpu_headers
+include/spaint/selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.h
 )
 
 ##
-SET(selection_transformers_interface_headers
-include/spaint/selection/transformers/interface/SelectionTransformer.h
-include/spaint/selection/transformers/interface/VoxelToCubeSelectionTransformer.h
+SET(selectiontransformers_cuda_sources
+src/selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.cu
+)
+
+SET(selectiontransformers_cuda_headers
+include/spaint/selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h
 )
 
 ##
-SET(selection_transformers_shared_headers
-include/spaint/selection/transformers/shared/VoxelToCubeSelectionTransformer_Shared.h
+SET(selectiontransformers_interface_headers
+include/spaint/selectiontransformers/interface/SelectionTransformer.h
+include/spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h
+)
+
+##
+SET(selectiontransformers_shared_headers
+include/spaint/selectiontransformers/shared/VoxelToCubeSelectionTransformer_Shared.h
 )
 
 ##
@@ -173,9 +173,9 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 SET(sources
 ${core_sources}
 ${input_sources}
-${marking_cpu_sources}
+${markers_cpu_sources}
 ${ogl_sources}
-${selection_transformers_cpu_sources}
+${selectiontransformers_cpu_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
@@ -185,13 +185,13 @@ ${visualisers_sources}
 SET(headers
 ${core_headers}
 ${input_headers}
-${marking_cpu_headers}
-${marking_interface_headers}
-${marking_shared_headers}
+${markers_cpu_headers}
+${markers_interface_headers}
+${markers_shared_headers}
 ${ogl_headers}
-${selection_transformers_cpu_headers}
-${selection_transformers_interface_headers}
-${selection_transformers_shared_headers}
+${selectiontransformers_cpu_headers}
+${selectiontransformers_interface_headers}
+${selectiontransformers_shared_headers}
 ${trackers_headers}
 ${util_headers}
 ${visualisers_cpu_headers}
@@ -201,14 +201,14 @@ ${visualisers_shared_headers}
 
 IF(WITH_CUDA)
   SET(sources ${sources}
-    ${marking_cuda_sources}
-    ${selection_transformers_cuda_sources}
+    ${markers_cuda_sources}
+    ${selectiontransformers_cuda_sources}
     ${visualisers_cuda_sources}
   )
 
   SET(headers ${headers}
-    ${marking_cuda_headers}
-    ${selection_transformers_cuda_headers}
+    ${markers_cuda_headers}
+    ${selectiontransformers_cuda_headers}
     ${visualisers_cuda_headers}
   )
 ENDIF()
@@ -219,15 +219,15 @@ ENDIF()
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
-SOURCE_GROUP(marking\\cpu FILES ${marking_cpu_sources} ${marking_cpu_headers})
-SOURCE_GROUP(marking\\cuda FILES ${marking_cuda_sources} ${marking_cuda_headers})
-SOURCE_GROUP(marking\\interface FILES ${marking_interface_headers})
-SOURCE_GROUP(marking\\shared FILES ${marking_shared_headers})
+SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
+SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
+SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
+SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
-SOURCE_GROUP(selection\\transformers\\cpu FILES ${selection_transformers_cpu_sources} ${selection_transformers_cpu_headers})
-SOURCE_GROUP(selection\\transformers\\cuda FILES ${selection_transformers_cuda_sources} ${selection_transformers_cuda_headers})
-SOURCE_GROUP(selection\\transformers\\interface FILES ${selection_transformers_interface_headers})
-SOURCE_GROUP(selection\\transformers\\shared FILES ${selection_transformers_shared_headers})
+SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
+SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
+SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_headers})
+SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
