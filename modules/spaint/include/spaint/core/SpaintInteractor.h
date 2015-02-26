@@ -5,10 +5,7 @@
 #ifndef H_SPAINT_SPAINTINTERACTOR
 #define H_SPAINT_SPAINTINTERACTOR
 
-#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include <Eigen/Dense>
 
 #include "SpaintModel.h"
 #include "../markers/interface/VoxelMarker.h"
@@ -33,7 +30,7 @@ private:
   /** The spaint model. */
   SpaintModel_Ptr m_model;
 
-  /** TODO */
+  /** The selector to use for selecting voxels in the scene. */
   Selector_Ptr m_selector;
 
   /** The semantic label to use for manually labelling the scene. */
@@ -54,23 +51,23 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the current selector.
+   * \brief Gets the selector that is being used to select voxels in the scene.
    *
-   * \return  The current selector.
+   * \return  The selector that is being used to select voxels in the scene.
    */
   Selector_CPtr get_selector() const;
 
   /**
-   * \brief Gets the semantic label to use for manually labelling the scene.
+   * \brief Gets the semantic label that is being used for manually labelling the scene.
    *
-   * \return  The semantic label to use for manually labelling the scene.
+   * \return  The semantic label that is being used for manually labelling the scene.
    */
   unsigned char get_semantic_label() const;
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.
    *
-   * \param selection A memory block containing the locations of the voxels to be marked.
+   * \param selection The selection of voxels.
    * \param label     The semantic label with which to mark the voxels.
    */
   void mark_voxels(const Selection_CPtr& selection, unsigned char label);
@@ -80,7 +77,7 @@ public:
    *
    * \param inputState  The current input state.
    * \param renderState The render state corresponding to a camera from which the scene is being viewed.
-   * \return            A memory block containing the locations of the selected voxels.
+   * \return            The selected voxels in the scene.
    */
   Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
 
@@ -92,7 +89,7 @@ public:
   void set_semantic_label(unsigned char semanticLabel);
 
   /**
-   * \brief Allows the user to change the selector or its parameters.
+   * \brief Allows the user to change the selector or update the parameters of the current selector.
    *
    * \param inputState  The current input state.
    */
