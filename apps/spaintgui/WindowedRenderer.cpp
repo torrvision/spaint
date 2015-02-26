@@ -49,9 +49,7 @@ public:
 
 WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
                                    const std::string& title, int width, int height)
-: Renderer(model, raycaster),
-  m_height(height),
-  m_width(width)
+: Renderer(model, raycaster), m_height(height), m_width(width)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
