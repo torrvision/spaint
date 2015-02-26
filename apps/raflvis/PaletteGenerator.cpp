@@ -4,8 +4,8 @@
 
 #include "PaletteGenerator.h"
 
-
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
 std::map<std::string,cv::Scalar> PaletteGenerator::generate_basic_rgba_palette()
 {
   const int alpha = 255;
@@ -18,7 +18,7 @@ std::map<std::string,cv::Scalar> PaletteGenerator::generate_basic_rgba_palette()
     ("Blue",cv::Scalar(0,0,255,alpha))
     ("Yellow",cv::Scalar(255,255,0,alpha))
     ("Cyan",cv::Scalar(0,255,255,alpha))
-    ("Magneta",cv::Scalar(255,0,255,alpha))
+    ("Magenta",cv::Scalar(255,0,255,alpha))
     ("Silver",cv::Scalar(192,192,192,alpha))
     ("Gray",cv::Scalar(128,128,128,alpha))
     ("Maroon",cv::Scalar(128,0,0,alpha))

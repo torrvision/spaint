@@ -2,15 +2,15 @@
  * raflvis: PaletteGenerator.h
  */
 
-#ifndef H_TVGUTIL_PALETTEGENERATOR
-#define H_TVGUTIL_PALETTEGENERATOR
+#ifndef H_RAFLVIS_PALETTEGENERATOR
+#define H_RAFLVIS_PALETTEGENERATOR
 
 #include <map>
 #include <set>
 
-#include <opencv2/core/core.hpp>
-
 #include <boost/assign/list_of.hpp>
+
+#include <opencv2/core/core.hpp>
 
 #include <tvgutil/RandomNumberGenerator.h>
 
@@ -21,6 +21,13 @@ class PaletteGenerator
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Constructs a palette with commonly-used colours.
+   *
+   * \return The generated palette.
+   */
+  static std::map<std::string,cv::Scalar> generate_basic_rgba_palette();
+
   /**
    * \brief Constructs a palette with a random RGBA colour per label.
    *
@@ -44,13 +51,6 @@ public:
 
     return result;
   }
-
-  /**
-   * \brief Constructs a palette with commonly used colours.
-   *
-   * \return The generated palette.
-   */
-  static std::map<std::string,cv::Scalar> generate_basic_rgba_palette();
 };
 
 #endif

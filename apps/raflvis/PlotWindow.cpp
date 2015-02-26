@@ -19,11 +19,11 @@ PlotWindow::PlotWindow(const std::string& windowName, size_t imageWidth, size_t 
   m_imageHeight(imageHeight),
   m_imageWidth(imageWidth),
   m_saveCounter(0),
-  m_scaleHeight(static_cast<float>(imageHeight)/axesLength),
-  m_scaleWidth(static_cast<float>(imageWidth)/axesLength),
+  m_scaleHeight(static_cast<float>(imageHeight) / axesLength),
+  m_scaleWidth(static_cast<float>(imageWidth) / axesLength),
   m_windowName(windowName)
 {
-  if(axesLength <= 0) throw std::runtime_error("The axes lengths must be greater than zero.");
+  if(axesLength <= 0) throw std::runtime_error("The lengths of the axes must be greater than zero.");
 
   // Sets the origin to the centre of the image.
   m_cartesianOriginInImage.x = imageWidth / 2.0f;

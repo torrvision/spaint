@@ -15,7 +15,9 @@ using namespace evaluation;
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/RandomForest.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
-using namespace rafl;
+using rafl::Descriptor;
+using rafl::Descriptor_Ptr;
+using rafl::Descriptor_CPtr;
 
 #include <tvgutil/RandomNumberGenerator.h>
 
@@ -24,8 +26,11 @@ using namespace rafl;
 
 //#################### TYPEDEFS ####################
 typedef int Label;
-typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
+typedef boost::shared_ptr<const rafl::Example<Label> > Example_CPtr;
+typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
+typedef rafl::DecisionTree<Label> DecisionTree;
+typedef rafl::RandomForest<Label> RandomForest;
+typedef boost::shared_ptr<RandomForest> RandomForest_Ptr;
 
 //#################### FUNCTIONS ####################
 Descriptor_CPtr make_2d_descriptor(float x, float y)
@@ -55,7 +60,7 @@ std::vector<Descriptor_CPtr> generate_2d_descriptors_in_range(float min, float m
  * \param examples      The set of examples.
  * \return              The answer to the questions as quantified by a performance measure.
  */
-std::map<std::string,evaluation::PerformanceMeasure> evaluate_forest_on_accuracy(const RandomForest& forest, const std::vector<Example_CPtr>& examples) const
+std::map<std::string,evaluation::PerformanceMeasure> evaluate_forest_on_accuracy(const RandomForest_Ptr& forest, const std::vector<Example_CPtr>& examples)
 {
   std::set<Label> classLabels;
   size_t examplesSize = examples.size();
@@ -121,7 +126,7 @@ int main(int argc, char *argv[])
   // Initialise a unit example generator.
   const float lowerSTD = 0.05f;
   const float upperSTD = 0.18f;
-  UnitCircleExampleGenerator<Label> uceg(classLabels, seed, lowerSTD, upperSTD);
+  rafl::UnitCircleExampleGenerator<Label> uceg(classLabels, seed, lowerSTD, upperSTD);
 
   // Generate the parameter sets with which to train the random forest.
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
@@ -138,7 +143,10 @@ int main(int argc, char *argv[])
     .generate_param_sets();
 
   // Initialise the online random forest with the specified parameters.
-  RandomForest<Label> randomForest(params[0]);
+  size_t treeCount  = 0;
+  tvgutil::MapUtil::typed_lookup(params[0], "treeCount", treeCount);
+  DecisionTree::Settings settings(params[0]);
+  RandomForest_Ptr randomForest(new RandomForest(treeCount, settings));
 
   // Generate some figures used to display the output of the online learner.
   PlotWindow featureSpacePlot("UnitCircleExampleGenerator");
@@ -163,6 +171,11 @@ int main(int argc, char *argv[])
   // Initialise a vector to store the performance of the learner over time.
   std::vector<float> performanceOverTime;
 
+  // Set the splitBudget of the random forest.
+  size_t splitBudget = 0;
+  tvgutil::MapUtil::typed_lookup(params[0], "splitBudget", splitBudget);
+
+  // Set the maximum number of learning rounds.
   const size_t maxLearningRounds = 500;
 
   for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
@@ -182,14 +195,14 @@ int main(int argc, char *argv[])
     featureSpacePlot.show();
 
     // Pass the set of examples to the random forest.
-    randomForest.add_examples(examples);
+    randomForest->add_examples(currentExamples);
 
     // Predict the labels of the examples passed to the forest under the current hypothesis.
-    std::map<std::string,evaluation::PerformanceMeasure> performance = evaluate_forest_accuracy(randomForest, currentExamples);
+    std::map<std::string,evaluation::PerformanceMeasure> performance = evaluate_forest_on_accuracy(randomForest, currentExamples);
     performanceOverTime.push_back(performance.find("Accuracy")->second.get_mean());
 
     // Update the random forest to minimise errors on future predictions.
-    randomForest.train(MapUtil::lookup(params[0], "splitBudget"));
+    randomForest->train(splitBudget);
 
     // Plot a line graph showing the performance of the forest over time.
     performancePlot.line_graph(performanceOverTime, basicPalette["Blue"]);
@@ -206,7 +219,7 @@ int main(int argc, char *argv[])
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
-      decisionBoundaryPlot.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[randomForest.predict(descriptor)], 2, 2);
+      decisionBoundaryPlot.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[randomForest->predict(descriptor)], 2, 2);
     }
     decisionBoundaryPlot.show();
 
