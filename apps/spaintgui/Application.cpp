@@ -246,7 +246,7 @@ void Application::process_labelling_input()
   // If there are selected voxels and the user is currently pressing the left mouse button, mark the voxels with the current semantic label.
   if(selection && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
-    interactor->mark_voxels(*selection, semanticLabel);
+    interactor->mark_voxels(selection, semanticLabel);
   }
 }
 

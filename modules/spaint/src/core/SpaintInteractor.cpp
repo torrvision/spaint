@@ -49,9 +49,9 @@ unsigned char SpaintInteractor::get_semantic_label() const
   return m_semanticLabel;
 }
 
-void SpaintInteractor::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, unsigned char label)
 {
-  m_voxelMarker->mark_voxels(voxelLocationsMB, label, m_model->get_scene().get());
+  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get());
 }
 
 SpaintInteractor::Selection_CPtr SpaintInteractor::select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const

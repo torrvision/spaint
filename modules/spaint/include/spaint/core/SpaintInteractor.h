@@ -68,12 +68,12 @@ public:
   unsigned char get_semantic_label() const;
 
   /**
-   * \brief Marks a set of voxels in the scene with the specified semantic label.
+   * \brief Marks a selection of voxels in the scene with the specified semantic label.
    *
-   * \param voxelLocationsMB  A memory block containing the locations of the voxels in the scene.
-   * \param label             The semantic label with which to mark the voxels.
+   * \param selection A memory block containing the locations of the voxels to be marked.
+   * \param label     The semantic label with which to mark the voxels.
    */
-  void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label);
+  void mark_voxels(const Selection_CPtr& selection, unsigned char label);
 
   /**
    * \brief Selects some voxels in the scene using the current selector.
