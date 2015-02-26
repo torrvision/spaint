@@ -35,9 +35,7 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
   if(foundPoint)
   {
     // Determine the base colour to use for the pixel based on the semantic label of the voxel we hit.
-    // FIXME: Since the labels are currently not set, this currently uses the weight value from the voxel for interest value, but we should change this in due course.
     SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, Vector3i((int)ROUND(point.x), (int)ROUND(point.y), (int)ROUND(point.z)), foundPoint);
-    //Vector3u colour = labelColours[voxel.w_depth / 32 > 3 ? 3 : voxel.w_depth / 32];
     Vector3u colour = labelColours[voxel.label];
 
     // Determine the intensity of the pixel using a very simple version of the Lambertian lighting equation.
