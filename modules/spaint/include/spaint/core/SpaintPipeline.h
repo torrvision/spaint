@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_SPAINTPIPELINE
 #define H_SPAINT_SPAINTPIPELINE
 
+#include <boost/optional.hpp>
+
 #include "SpaintInteractor.h"
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
