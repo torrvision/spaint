@@ -50,6 +50,9 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /** Override */
+  virtual void accept(const SelectorVisitor& visitor) const;
+
   /**
    * \brief Gets the point picked by the user (if any) in the most recent call to select_voxels, in world coordinates.
    *

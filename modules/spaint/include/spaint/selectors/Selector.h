@@ -10,6 +10,7 @@
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Objects/ITMScene.h>
 
+#include "SelectorVisitor.h"
 #include "../input/InputState.h"
 
 namespace spaint {
@@ -35,6 +36,13 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Accepts a visitor.
+   *
+   * \param visitor The visitor to accept.
+   */
+  virtual void accept(const SelectorVisitor& visitor) const = 0;
+
   /**
    * \brief Selects some voxels in the scene based on the current input state.
    *

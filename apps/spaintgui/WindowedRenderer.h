@@ -108,6 +108,10 @@ private:
    * \param height      The height of the viewport.
    */
   static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
+
+  //#################### FRIENDS ####################
+
+  friend class SelectorRenderer;
 };
 
 #endif

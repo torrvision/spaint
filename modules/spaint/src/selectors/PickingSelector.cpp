@@ -19,6 +19,11 @@ PickingSelector::PickingSelector(const Settings_CPtr& settings)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void PickingSelector::accept(const SelectorVisitor& visitor) const
+{
+  visitor.visit(*this);
+}
+
 boost::optional<Eigen::Vector3f> PickingSelector::get_pick_point() const
 {
   if(m_pickPointInVoxels)

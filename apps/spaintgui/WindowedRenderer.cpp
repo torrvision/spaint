@@ -14,6 +14,37 @@ using namespace rigging;
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
+//#################### LOCAL TYPES ####################
+
+/**
+ * \brief An instance of this class can be used to visit selectors in order to render them.
+ */
+class SelectorRenderer : public SelectorVisitor
+{
+private:
+  const WindowedRenderer *m_base;
+
+  //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+public:
+  explicit SelectorRenderer(const WindowedRenderer *base)
+  : m_base(base)
+  {}
+
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+public:
+  /** Override */
+  virtual void visit(const PickingSelector& selector) const
+  {
+    boost::optional<Eigen::Vector3f> pickPoint = selector.get_pick_point();
+    if(!pickPoint) return;
+
+    glColor3f(1.0f, 0.0f, 1.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    QuadricRenderer::render_sphere(*pickPoint, selector.get_radius() * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+};
+
 //#################### CONSTRUCTORS ####################
 
 WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
@@ -178,19 +209,8 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selecto
         glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
       glEnd();
 
-      // Render the most recent pick point (if any) to show how we're interacting with the scene.
-      boost::shared_ptr<const PickingSelector> pickingSelector = boost::dynamic_pointer_cast<const PickingSelector>(selector);
-      if(selector)
-      {
-        boost::optional<Eigen::Vector3f> pickPoint = pickingSelector->get_pick_point();
-        if(pickPoint)
-        {
-          glColor3f(1.0f, 0.0f, 1.0f);
-          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-          QuadricRenderer::render_sphere(*pickPoint, pickingSelector->get_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
-          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-      }
+      // Render the current selector (if any) to show how we're interacting with the scene.
+      if(selector) selector->accept(SelectorRenderer(this));
     }
     glPopMatrix();
   }
