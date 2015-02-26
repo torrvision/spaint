@@ -16,13 +16,13 @@ class VoxelToCubeSelectionTransformer : public SelectionTransformer
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** The length of each side of a cube (in voxels). */
+  /** The length of each side of one of the cubes (in voxels). */
   const int m_cubeSideLength;
 
-  /** The number of voxels in a cube. */
+  /** The number of voxels in each cube. */
   const int m_cubeSize;
 
-  /** The (Manhattan) radius to select around each initial voxel. */
+  /** The (Manhattan) radius (in voxels) to select around each initial voxel. */
   const int m_radius;
 
   //#################### CONSTRUCTORS ####################
@@ -30,7 +30,7 @@ public:
   /**
    * \brief Constructs a voxel to cube selection transformer.
    *
-   * \param radius  The (Manhattan) radius to select around each initial voxel.
+   * \param radius  The (Manhattan) radius (in voxels) to select around each initial voxel.
    */
   explicit VoxelToCubeSelectionTransformer(int radius)
   : m_cubeSideLength(2 * radius + 1),
