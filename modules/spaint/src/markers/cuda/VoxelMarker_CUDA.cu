@@ -19,7 +19,8 @@ __global__ void ck_mark_voxels(const Vector3s *voxelLocations, unsigned char lab
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
+                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   int voxelCount = voxelLocationsMB.dataSize;
 
