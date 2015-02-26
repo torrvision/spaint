@@ -9,9 +9,9 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
+#include <spaint/selectors/Selector.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
