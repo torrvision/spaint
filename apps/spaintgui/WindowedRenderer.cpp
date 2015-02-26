@@ -153,18 +153,7 @@ void WindowedRenderer::end_2d()
 void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
 {
   // Raycast the scene.
-  switch(m_cameraMode)
-  {
-    case CM_FOLLOW:
-      m_raycaster->get_default_raycast(m_image);
-      break;
-    case CM_FREE:
-      m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("Error: Unknown camera mode");
-  }
+  m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
 
   // Draw a quad textured with the raycasted scene.
   begin_2d();
