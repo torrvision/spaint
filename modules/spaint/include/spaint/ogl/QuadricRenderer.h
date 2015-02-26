@@ -39,10 +39,10 @@ public:
   /**
    * \brief Renders a sphere of the specified radius at the specified position.
    *
-   * \param centre  The position of the centre of the sphere.
-   * \param radius  The radius of the sphere.
-   * \param slices  The number of subdivisions of the sphere around its vertical axis (similar to lines of longitude).
-   * \param stacks  The number of subdivisions of the sphere along its vertical axis (similar to lines of latitude).
+   * \param centre          The position of the centre of the sphere.
+   * \param radius          The radius of the sphere.
+   * \param slices          The number of subdivisions of the sphere around its vertical axis (similar to lines of longitude).
+   * \param stacks          The number of subdivisions of the sphere along its vertical axis (similar to lines of latitude).
    * \param optionalQuadric An optional GLU quadric to use when rendering the sphere (if none is specified, one will be created on the fly).
    */
   static void render_sphere(const Eigen::Vector3f& centre, double radius, int slices, int stacks,
@@ -56,7 +56,7 @@ private:
    * By default, GLU quadrics are positioned at the origin and oriented along the z axis.
    * If we want to draw them elsewhere, we need to set the model-view matrix appropriately.
    *
-   * \param p     The desired position of the quadric's anchor point (for cylinders, this is the centre of the base; for spheres, it is the centre).
+   * \param p     The desired position of the quadric's anchor point (for cylinders, this is the centre of the base).
    * \param axis  The axis along which the quadric should be oriented.
    */
   static void begin_oriented_quadric(const Eigen::Vector3f& p, const Eigen::Vector3f& axis);
