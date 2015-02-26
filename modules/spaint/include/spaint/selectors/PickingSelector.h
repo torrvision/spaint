@@ -27,8 +27,8 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The most recent point picked by the user (if any), in voxel coordinates. */
-  mutable boost::optional<Vector3f> m_pickPoint;
+  /** The point picked by the user (if any) in the most recent call to select_voxels, in voxel coordinates. */
+  mutable boost::optional<Vector3f> m_pickPointInVoxels;
 
   /** The selection radius (we select all voxels in a cube of side length 2 * radius + 1, centered on the voxel the user actually clicks). */
   int m_radius;
@@ -51,9 +51,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the most recent point picked by the user (if any), in world coordinates.
+   * \brief Gets the point picked by the user (if any) in the most recent call to select_voxels, in world coordinates.
    *
-   * \return  The most recent point picked by the user (if any), in world coordinates.
+   * \return  The point picked by the user (if any) in the most recent call to select_voxels, in world coordinates.
    */
   boost::optional<Eigen::Vector3f> get_pick_point() const;
 
@@ -64,6 +64,14 @@ public:
    */
   int get_radius() const;
 
+  /** Override */
+  virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
+
+  /** Override */
+  virtual void update(const InputState& inputState);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /**
    * \brief Determines the nearest scene point (if any) that would be hit by a ray cast through (x,y) on the image plane
    *        when viewed from the camera pose with the specified render state.
@@ -71,15 +79,9 @@ public:
    * \param x           The x coordinate of the point on the image plane through which the ray is cast.
    * \param y           The y coordinate of the point on the image plane through which the ray is cast.
    * \param renderState The render state corresponding to a camera pose.
-   * \return            The coordinates of the nearest scene point (if any) that is hit by the ray.
+   * \return            The voxel coordinates of the nearest scene point (if any) that is hit by the ray.
    */
   boost::optional<Vector3f> pick(int x, int y, const RenderState_CPtr& renderState) const;
-
-  /** Override */
-  virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
-
-  /** Override */
-  virtual void update(const InputState& inputState);
 };
 
 }
