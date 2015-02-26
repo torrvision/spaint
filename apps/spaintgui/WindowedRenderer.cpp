@@ -16,9 +16,11 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const spaint::SpaintInteractor_CPtr& interactor,
+WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
                                    const std::string& title, int width, int height)
-: Renderer(model, raycaster, interactor), m_height(height), m_width(width)
+: Renderer(model, raycaster),
+  m_height(height),
+  m_width(width)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -69,7 +71,7 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
   return m_renderState;
 }
 
-void WindowedRenderer::render() const
+void WindowedRenderer::render(const Selector_CPtr& selector) const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -91,7 +93,7 @@ void WindowedRenderer::render() const
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose);
-  render_synthetic_scene(pose);
+  render_synthetic_scene(pose, selector);
 
   SDL_GL_SwapWindow(m_window.get());
 }
@@ -157,7 +159,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   end_2d();
 }
 
-void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
+void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selector_CPtr& selector) const
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -177,15 +179,15 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
       glEnd();
 
       // Render the most recent pick point (if any) to show how we're interacting with the scene.
-      boost::shared_ptr<const PickingSelector> selector = boost::dynamic_pointer_cast<const PickingSelector>(m_interactor->get_selector());
+      boost::shared_ptr<const PickingSelector> pickingSelector = boost::dynamic_pointer_cast<const PickingSelector>(selector);
       if(selector)
       {
-        boost::optional<Eigen::Vector3f> pickPoint = selector->get_pick_point();
+        boost::optional<Eigen::Vector3f> pickPoint = pickingSelector->get_pick_point();
         if(pickPoint)
         {
           glColor3f(1.0f, 0.0f, 1.0f);
           glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-          QuadricRenderer::render_sphere(*pickPoint, selector->get_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+          QuadricRenderer::render_sphere(*pickPoint, pickingSelector->get_radius() * m_model->get_settings()->sceneParams.voxelSize, 10, 10);
           glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
       }

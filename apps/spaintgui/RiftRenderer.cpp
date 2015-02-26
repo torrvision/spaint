@@ -25,9 +25,8 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const spaint::SpaintInteractor_CPtr& interactor,
-                           const std::string& title, RiftRenderingMode renderingMode)
-: Renderer(model, raycaster, interactor)
+RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, RiftRenderingMode renderingMode)
+: Renderer(model, raycaster)
 {
   // Initialise the Rift.
   ovr_Initialize();
@@ -127,7 +126,7 @@ RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state() const
   return RenderState_CPtr();
 }
 
-void RiftRenderer::render() const
+void RiftRenderer::render(const Selector_CPtr& selector) const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);

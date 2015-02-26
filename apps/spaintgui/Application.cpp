@@ -25,7 +25,6 @@ Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
   m_renderer.reset(new WindowedRenderer(
     spaintPipeline->get_model(),
     spaintPipeline->get_raycaster(),
-    spaintPipeline->get_interactor(),
     "Semantic Paint",
     640, 480
   ));
@@ -44,7 +43,7 @@ void Application::run()
 
     // Process and render the next frame.
     m_spaintPipeline->process_frame();
-    m_renderer->render();
+    m_renderer->render(m_spaintPipeline->get_interactor()->get_selector());
   }
 }
 
@@ -264,7 +263,6 @@ void Application::process_renderer_input()
         m_renderer.reset(new WindowedRenderer(
           m_spaintPipeline->get_model(),
           m_spaintPipeline->get_raycaster(),
-          m_spaintPipeline->get_interactor(),
           "Semantic Paint",
           640, 480
         ));
@@ -278,7 +276,6 @@ void Application::process_renderer_input()
           m_renderer.reset(new RiftRenderer(
             m_spaintPipeline->get_model(),
             m_spaintPipeline->get_raycaster(),
-            m_spaintPipeline->get_interactor(),
             "Semantic Paint",
             m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
           ));

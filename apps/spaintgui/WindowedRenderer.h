@@ -41,15 +41,13 @@ public:
   /**
    * \brief Constructs a windowed renderer.
    *
-   * \param model       The spaint model.
-   * \param raycaster   The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param interactor  The interactor that is used to interact with the InfiniTAM scene.
-   * \param title       The title of the window.
-   * \param width       The width of the window.
-   * \param height      The height of the window.
+   * \param model     The spaint model.
+   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param title     The title of the window.
+   * \param width     The width of the window.
+   * \param height    The height of the window.
    */
-  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const spaint::SpaintInteractor_CPtr& interactor,
-                   const std::string& title, int width, int height);
+  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, int width, int height);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -73,7 +71,7 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const;
 
   /** Override */
-  virtual void render() const;
+  virtual void render(const spaint::Selector_CPtr& selector) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -97,11 +95,10 @@ private:
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * (This is currently experimental and only renders a set of axes.)
-   *
-   * \param pose  The camera pose.
+   * \param pose      The camera pose.
+   * \param selector  The selector that is being used to select voxels in the InfiniTAM scene.
    */
-  void render_synthetic_scene(const ITMPose& pose) const;
+  void render_synthetic_scene(const ITMPose& pose, const spaint::Selector_CPtr& selector) const;
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
