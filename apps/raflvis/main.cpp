@@ -189,10 +189,10 @@ int main(int argc, char *argv[])
     for(size_t j = 1, jend = currentExamples.size(); j < jend; ++j)
     {
       const Example_CPtr& example = currentExamples[j];
-      featureSpacePlot.cartesian_point(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), randomPalette[example->get_label()], 2, 2);
+      featureSpacePlot.draw_cartesian_circle(cv::Point2f((*example->get_descriptor())[0],(*example->get_descriptor())[1]), randomPalette[example->get_label()], 2, 2);
     }
-    featureSpacePlot.cartesian_axes(basicPalette["Red"]);
-    featureSpacePlot.show();
+    featureSpacePlot.draw_cartesian_axes(basicPalette["Red"]);
+    featureSpacePlot.refresh();
 
     // Pass the set of examples to the random forest.
     randomForest->add_examples(currentExamples);
@@ -211,17 +211,17 @@ int main(int argc, char *argv[])
     boost::format threeDecimalPlaces("%0.3f");
     std::string currentPerformance = (threeDecimalPlaces % performanceOverTime.back()).str();
     std::string cumulativeAveragePerformance = (threeDecimalPlaces % static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size())).str();
-    performancePlot.image_text( std::string("Cur") + (performance.find("Accuracy")->first) + currentPerformance, cv::Point2i(10, performancePlot.height() - 50), basicPalette["White"]);
-    performancePlot.image_text( std::string("Avg") + (performance.find("Accuracy")->first) + cumulativeAveragePerformance, cv::Point2i(10, performancePlot.height() - 10), basicPalette["White"]);
-    performancePlot.show();
+    performancePlot.draw_image_text( std::string("Cur") + (performance.find("Accuracy")->first) + currentPerformance, cv::Point2i(10, performancePlot.canvas_height() - 50), basicPalette["White"]);
+    performancePlot.draw_image_text( std::string("Avg") + (performance.find("Accuracy")->first) + cumulativeAveragePerformance, cv::Point2i(10, performancePlot.canvas_height() - 10), basicPalette["White"]);
+    performancePlot.refresh();
 
     // Draw the current decision boundary of the random forest by predicting the labels of the dense set of points generated in the 2D plane.
     for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
-      decisionBoundaryPlot.cartesian_point(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[randomForest->predict(descriptor)], 2, 2);
+      decisionBoundaryPlot.draw_cartesian_circle(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[randomForest->predict(descriptor)], 2, 2);
     }
-    decisionBoundaryPlot.show();
+    decisionBoundaryPlot.refresh();
 
     // Wait for keyboard events.
     if(cv::waitKey(timeDelay) == 'q') break;

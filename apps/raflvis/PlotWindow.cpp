@@ -13,21 +13,21 @@
 
 //#################### CONSTRUCTORS ####################
 
-PlotWindow::PlotWindow(const std::string& windowName, size_t imageWidth, size_t imageHeight, int axesLength)
+PlotWindow::PlotWindow(const std::string& windowName, size_t canvasWidth, size_t canvasHeight, int axesLength)
 : m_axesLength(axesLength),
-  m_canvas(cv::Mat::zeros(imageHeight, imageWidth, CV_8UC3)),
-  m_imageHeight(imageHeight),
-  m_imageWidth(imageWidth),
+  m_canvas(cv::Mat::zeros(canvasHeight, canvasWidth, CV_8UC3)),
+  m_canvasHeight(canvasHeight),
+  m_canvasWidth(canvasWidth),
   m_saveCounter(0),
-  m_scaleHeight(static_cast<float>(imageHeight) / axesLength),
-  m_scaleWidth(static_cast<float>(imageWidth) / axesLength),
+  m_scaleHeight(static_cast<float>(canvasHeight) / axesLength),
+  m_scaleWidth(static_cast<float>(canvasWidth) / axesLength),
   m_windowName(windowName)
 {
   if(axesLength <= 0) throw std::runtime_error("The lengths of the axes must be greater than zero.");
 
   // Sets the origin to the centre of the image.
-  m_cartesianOriginInImage.x = imageWidth / 2.0f;
-  m_cartesianOriginInImage.y = imageHeight / 2.0f;
+  m_cartesianOriginInCanvas.x = canvasWidth / 2.0f;
+  m_cartesianOriginInCanvas.y = canvasHeight / 2.0f;
 
   // Create a window for display.
   cv::namedWindow(m_windowName, cv::WINDOW_AUTOSIZE);
@@ -35,20 +35,23 @@ PlotWindow::PlotWindow(const std::string& windowName, size_t imageWidth, size_t 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void PlotWindow::cartesian_axes(const cv::Scalar& colour) const
+void PlotWindow::draw_cartesian_axes(const cv::Scalar& colour) const
 {
-  float xMin = static_cast<float>(-m_axesLength) / 2.0f;
-  float xMax = static_cast<float>(m_axesLength) / 2.0f;
-  float yMin = xMin;
-  float yMax = xMax;
+  float axisMax = static_cast<float>(m_axesLength) / 2.0f;
+  float axisMin = -axisMax;
 
-  image_line(axes2image(cv::Point2f(xMin, 0)), axes2image(cv::Point2f(xMax, 0)), colour);
-  image_line(axes2image(cv::Point2f(0, yMin)), axes2image(cv::Point2f(0, yMax)), colour);
+  draw_cartesian_line(cv::Point2f(axisMin, 0), cv::Point2f(axisMax, 0), colour);
+  draw_cartesian_line(cv::Point2f(0, axisMin), cv::Point2f(0, axisMax), colour);
 }
 
-void PlotWindow::cartesian_point(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
+void PlotWindow::draw_cartesian_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
 {
-  image_point(axes2image(point), colour, radius, thickness);
+  draw_image_line(cartesian_to_image(p1), cartesian_to_image(p2), colour, thickness);
+}
+
+void PlotWindow::draw_cartesian_circle(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
+{
+  draw_image_circle(cartesian_to_image(point), colour, radius, thickness);
 }
 
 void PlotWindow::clear_figure() const
@@ -56,43 +59,44 @@ void PlotWindow::clear_figure() const
   m_canvas = cv::Scalar(0,0,0);
 }
 
-size_t PlotWindow::height() const
+size_t PlotWindow::canvas_height() const
 {
-  return m_imageHeight;
+  return m_canvasHeight;
 }
 
-void PlotWindow::image_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thick) const
+void PlotWindow::draw_image_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
 {
-  cv::line(m_canvas, p1, p2, rgb2bgr(colour), thick);
+  cv::line(m_canvas, p1, p2, rgb_to_bgr(colour), thickness);
 }
 
-void PlotWindow::image_point(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
+void PlotWindow::draw_image_circle(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
 {
-  cv::circle(m_canvas, point, radius, rgb2bgr(colour), thickness);
+  cv::circle(m_canvas, point, radius, rgb_to_bgr(colour), thickness);
 }
 
-void PlotWindow::image_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale, int thick) const
+void PlotWindow::draw_image_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale, int thickness) const
 {
-    // The variable position refers to the bottom left corner of text in the image.
-    putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thick);
+    putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thickness);
 }
 
 void PlotWindow::line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
 {
-  if(values.empty()) throw std::runtime_error("The values vector is empty.");
+  if(values.empty()) throw std::runtime_error("Cannot draw the line graph of an empty set of values.");
 
   int valuesSize = static_cast<int>(values.size());
-  int lineSeparation = cvRound( static_cast<float>(m_imageWidth) / valuesSize );
+  int lineSeparation = cvRound(static_cast<float>(m_canvasWidth) / valuesSize);
 
   float maxval = *std::max_element(values.begin(), values.end());
 
+  const cv::Scalar col = rgb_to_bgr(colour);
   const int lineThickness = 2;
 
-  for(int j = 1; j < valuesSize; ++j)
+  cv::Point lineBegin(0,0), lineEnd(0,0);
+  for(int j = 0; j < valuesSize; ++j)
   {
-    cv::Point lineBegin = calculateLineGraphValuePositionInImage(lineSeparation, j - 1, m_imageHeight, values[j - 1], maxval);
-    cv::Point lineEnd = calculateLineGraphValuePositionInImage(lineSeparation, j, m_imageHeight, values[j], maxval);
-    image_line(lineBegin, lineEnd, rgb2bgr(colour), lineThickness);
+    lineBegin = line_graph_value_position_in_image_calculator(lineSeparation, j, values[j], maxval);
+    if(j > 0) draw_image_line(lineBegin, lineEnd, col, lineThickness);
+    lineEnd = lineBegin;
   }
 
 }
@@ -101,41 +105,43 @@ void PlotWindow::save(const boost::optional<std::string>& path)
 {
   std::string filename = m_windowName + "-" + boost::lexical_cast<std::string>(m_saveCounter++) + ".ppm";
 
-  if(path){
+  if(path)
+  {
     imwrite(*path + "/" + filename, m_canvas);
   }
-  else{
+  else
+  {
     imwrite(filename, m_canvas);
   }
 }
 
-void PlotWindow::show() const
+void PlotWindow::refresh() const
 {
   cv::imshow(m_windowName, m_canvas);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-cv::Point2f PlotWindow::axes2image(const cv::Point2f& cartesianPoint) const
+cv::Point2f PlotWindow::cartesian_to_image(const cv::Point2f& cartesianPoint) const
 {
   // Scale
   cv::Point2f imagePoint(cartesianPoint.x * m_scaleWidth, cartesianPoint.y * m_scaleHeight);
 
   // Translation
-  imagePoint += m_cartesianOriginInImage;
+  imagePoint += m_cartesianOriginInCanvas;
 
   // Vertical Flipping
-  imagePoint.y = m_imageHeight - imagePoint.y;
+  imagePoint.y = m_canvasHeight - imagePoint.y;
 
   return imagePoint;
 }
 
-cv::Point PlotWindow::calculateLineGraphValuePositionInImage(int lineSeparation, int valueIndex, int imageHeight, float value, float maxValue) const
+cv::Point PlotWindow::line_graph_value_position_in_image_calculator(int lineSeparation, int valueIndex, float value, float maxValue) const
 {
-  return cv::Point(lineSeparation * valueIndex, imageHeight - cvRound(imageHeight * (value / maxValue)));
+  return cv::Point(lineSeparation * valueIndex, m_canvasHeight - cvRound(m_canvasHeight * (value / maxValue)));
 }
 
-cv::Scalar PlotWindow::rgb2bgr(const cv::Scalar& colour) const
+cv::Scalar PlotWindow::rgb_to_bgr(const cv::Scalar& colour) const
 {
   return cv::Scalar(colour.val[2], colour.val[1], colour.val[0]);
 }

@@ -23,13 +23,13 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 ##
 SET(sources
 main.cpp
-PlotWindow.cpp
 PaletteGenerator.cpp
+PlotWindow.cpp
 )
 
 SET(headers
-PlotWindow.h
 PaletteGenerator.h
+PlotWindow.h
 )
 
 #############################
