@@ -14,6 +14,10 @@ namespace spaint {
  */
 class SelectionTransformer
 {
+  //#################### TYPEDEFS ####################
+public:
+  typedef ORUtils::MemoryBlock<Vector3s> Selection;
+
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -29,7 +33,7 @@ public:
    * \param inputSelectionMB  A memory block containing the input selection of voxels.
    * \return                  The size of the output selection of voxels corresponding to the specified input selection.
    */
-  virtual int compute_output_selection_size(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB) const = 0;
+  virtual int compute_output_selection_size(const Selection& inputSelectionMB) const = 0;
 
   /**
    * \brief Transforms one selection of voxels in the scene into another.
@@ -37,7 +41,7 @@ public:
    * \param inputSelectionMB  A memory block containing the input selection of voxels.
    * \param outputSelectionMB A memory block into which to store the output selection of voxels.
    */
-  virtual void transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB, ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const = 0;
+  virtual void transform_selection(const Selection& inputSelectionMB, Selection& outputSelectionMB) const = 0;
 };
 
 }

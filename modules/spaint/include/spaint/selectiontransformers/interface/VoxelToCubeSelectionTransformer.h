@@ -41,7 +41,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual int compute_output_selection_size(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB) const
+  virtual int compute_output_selection_size(const Selection& inputSelectionMB) const
   {
     // We create one cube for each initial voxel.
     return inputSelectionMB.dataSize * m_cubeSize;

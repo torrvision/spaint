@@ -26,7 +26,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB, ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const;
+  virtual void transform_selection(const Selection& inputSelectionMB, Selection& outputSelectionMB) const;
 };
 
 }
