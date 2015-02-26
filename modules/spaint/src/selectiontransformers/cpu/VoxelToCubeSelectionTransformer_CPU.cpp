@@ -16,7 +16,8 @@ VoxelToCubeSelectionTransformer_CPU::VoxelToCubeSelectionTransformer_CPU(int rad
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelToCubeSelectionTransformer_CPU::transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB, ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const
+void VoxelToCubeSelectionTransformer_CPU::transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB,
+                                                              ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const
 {
   const Vector3s *inputSelection = inputSelectionMB.GetData(MEMORYDEVICE_CPU);
   Vector3s *outputSelection = outputSelectionMB.GetData(MEMORYDEVICE_CPU);

@@ -24,7 +24,8 @@ VoxelToCubeSelectionTransformer_CUDA::VoxelToCubeSelectionTransformer_CUDA(int r
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelToCubeSelectionTransformer_CUDA::transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB, ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const
+void VoxelToCubeSelectionTransformer_CUDA::transform_selection(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB,
+                                                               ORUtils::MemoryBlock<Vector3s>& outputSelectionMB) const
 {
   int outputVoxelCount = outputSelectionMB.dataSize;
 
