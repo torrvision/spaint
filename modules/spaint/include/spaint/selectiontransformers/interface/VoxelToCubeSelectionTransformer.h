@@ -10,16 +10,16 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to expand a selection of individual voxels to a selection of cubes around the initial voxels.
+ * \brief An instance of this class can be used to expand a selection of individual voxels into a selection of voxel cubes around the initial voxels.
  */
 class VoxelToCubeSelectionTransformer : public SelectionTransformer
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** TODO */
+  /** The length of each side of a cube (in voxels). */
   const int m_cubeSideLength;
 
-  /** TODO */
+  /** The number of voxels in a cube. */
   const int m_cubeSize;
 
   /** The (Manhattan) radius to select around each initial voxel. */
@@ -43,6 +43,7 @@ public:
   /** Override */
   virtual int compute_output_selection_size(const ORUtils::MemoryBlock<Vector3s>& inputSelectionMB) const
   {
+    // We create one cube for each initial voxel.
     return inputSelectionMB.dataSize * m_cubeSize;
   }
 };
