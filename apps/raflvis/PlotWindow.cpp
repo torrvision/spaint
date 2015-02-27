@@ -69,14 +69,14 @@ void PlotWindow::draw_cartesian_axes(const cv::Scalar& colour) const
   draw_cartesian_line(cv::Point2f(0, axisMin), cv::Point2f(0, axisMax), colour);
 }
 
-void PlotWindow::draw_cartesian_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
-{
-  draw_canvas_line(cartesian_to_canvas(p1), cartesian_to_canvas(p2), colour, thickness);
-}
-
 void PlotWindow::draw_cartesian_circle(const cv::Point2f& centre, const cv::Scalar& colour, int radius, int thickness) const
 {
   draw_canvas_circle(cartesian_to_canvas(centre), colour, radius, thickness);
+}
+
+void PlotWindow::draw_cartesian_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
+{
+  draw_canvas_line(cartesian_to_canvas(p1), cartesian_to_canvas(p2), colour, thickness);
 }
 
 void PlotWindow::draw_line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
