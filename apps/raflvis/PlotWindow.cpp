@@ -13,7 +13,7 @@
 
 //#################### CONSTRUCTORS ####################
 
-PlotWindow::PlotWindow(const std::string& windowName, size_t canvasWidth, size_t canvasHeight, int axesLength)
+PlotWindow::PlotWindow(const std::string& windowName, int canvasWidth, int canvasHeight, float axesLength)
 : m_axesLength(axesLength),
   m_canvas(cv::Mat::zeros(canvasHeight, canvasWidth, CV_8UC3)),
   m_canvasHeight(canvasHeight),
@@ -35,6 +35,31 @@ PlotWindow::PlotWindow(const std::string& windowName, size_t canvasWidth, size_t
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+int PlotWindow::canvas_height() const
+{
+  return m_canvasHeight;
+}
+
+void PlotWindow::clear_figure() const
+{
+  m_canvas = cv::Scalar(0,0,0);
+}
+
+void PlotWindow::draw_canvas_circle(const cv::Point2f& centre, const cv::Scalar& colour, int radius, int thickness) const
+{
+  cv::circle(m_canvas, centre, radius, rgb_to_bgr(colour), thickness);
+}
+
+void PlotWindow::draw_canvas_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
+{
+  cv::line(m_canvas, p1, p2, rgb_to_bgr(colour), thickness);
+}
+
+void PlotWindow::draw_canvas_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale, int thickness) const
+{
+    putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thickness);
+}
+
 void PlotWindow::draw_cartesian_axes(const cv::Scalar& colour) const
 {
   float axisMax = static_cast<float>(m_axesLength) / 2.0f;
@@ -46,40 +71,15 @@ void PlotWindow::draw_cartesian_axes(const cv::Scalar& colour) const
 
 void PlotWindow::draw_cartesian_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
 {
-  draw_image_line(cartesian_to_image(p1), cartesian_to_image(p2), colour, thickness);
+  draw_canvas_line(cartesian_to_canvas(p1), cartesian_to_canvas(p2), colour, thickness);
 }
 
-void PlotWindow::draw_cartesian_circle(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
+void PlotWindow::draw_cartesian_circle(const cv::Point2f& centre, const cv::Scalar& colour, int radius, int thickness) const
 {
-  draw_image_circle(cartesian_to_image(point), colour, radius, thickness);
+  draw_canvas_circle(cartesian_to_canvas(centre), colour, radius, thickness);
 }
 
-void PlotWindow::clear_figure() const
-{
-  m_canvas = cv::Scalar(0,0,0);
-}
-
-size_t PlotWindow::canvas_height() const
-{
-  return m_canvasHeight;
-}
-
-void PlotWindow::draw_image_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
-{
-  cv::line(m_canvas, p1, p2, rgb_to_bgr(colour), thickness);
-}
-
-void PlotWindow::draw_image_circle(const cv::Point2f& point, const cv::Scalar& colour, int radius, int thickness) const
-{
-  cv::circle(m_canvas, point, radius, rgb_to_bgr(colour), thickness);
-}
-
-void PlotWindow::draw_image_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale, int thickness) const
-{
-    putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thickness);
-}
-
-void PlotWindow::line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
+void PlotWindow::draw_line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
 {
   if(values.empty()) throw std::runtime_error("Cannot draw the line graph of an empty set of values.");
 
@@ -95,10 +95,14 @@ void PlotWindow::line_graph(const std::vector<float>& values, const cv::Scalar& 
   for(int j = 0; j < valuesSize; ++j)
   {
     lineBegin = line_graph_value_position_in_image_calculator(lineSeparation, j, values[j], maxval);
-    if(j > 0) draw_image_line(lineBegin, lineEnd, col, lineThickness);
+    if(j > 0) draw_canvas_line(lineBegin, lineEnd, col, lineThickness);
     lineEnd = lineBegin;
   }
+}
 
+void PlotWindow::refresh() const
+{
+  cv::imshow(m_windowName, m_canvas);
 }
 
 void PlotWindow::save(const boost::optional<std::string>& path)
@@ -115,14 +119,9 @@ void PlotWindow::save(const boost::optional<std::string>& path)
   }
 }
 
-void PlotWindow::refresh() const
-{
-  cv::imshow(m_windowName, m_canvas);
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-cv::Point2f PlotWindow::cartesian_to_image(const cv::Point2f& cartesianPoint) const
+cv::Point2f PlotWindow::cartesian_to_canvas(const cv::Point2f& cartesianPoint) const
 {
   // Scale
   cv::Point2f imagePoint(cartesianPoint.x * m_scaleWidth, cartesianPoint.y * m_scaleHeight);
@@ -145,4 +144,3 @@ cv::Scalar PlotWindow::rgb_to_bgr(const cv::Scalar& colour) const
 {
   return cv::Scalar(colour.val[2], colour.val[1], colour.val[0]);
 }
-

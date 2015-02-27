@@ -30,4 +30,3 @@ std::map<std::string,cv::Scalar> PaletteGenerator::generate_basic_rgba_palette()
 
   return result;
 }
-

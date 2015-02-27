@@ -92,7 +92,7 @@ public:
 
   T get_sample(const std::set<T> set)
   {
-    int randomIndex = m_rng.generate_int_from_uniform(0, set.size() - 1);
+    int randomIndex = m_rng.generate_int_from_uniform(0, static_cast<int>(set.size()) - 1);
     typename std::set<T>::const_iterator it(set.begin());
     std::advance(it, randomIndex);
     return *it;
@@ -105,17 +105,17 @@ int main(int argc, char *argv[])
   const unsigned int seed = 1234;
 
   // Generate a set of labels.
-  const size_t labelCount = 20;
+  const int labelCount = 20;
   std::set<Label> classLabels;
-  for(size_t i = 0; i < labelCount; ++i) classLabels.insert(i);
+  for(int i = 0; i < labelCount; ++i) classLabels.insert(i);
 
   // Initialise the set sampler.
   SetSampler<Label> classLabelSampler(seed);
 
   // Generate a subset of labels which are currently observable;
-  const size_t currentLabelCount = 2;
+  const int currentLabelCount = 2;
   std::set<Label> currentClassLabels;
-  for(size_t i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
+  for(int i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
 
   // Generate a palette of random colours.
   std::map<Label,cv::Scalar> randomPalette = PaletteGenerator::generate_random_rgba_palette<Label>(classLabels, seed);
@@ -205,18 +205,18 @@ int main(int argc, char *argv[])
     randomForest->train(splitBudget);
 
     // Plot a line graph showing the performance of the forest over time.
-    performancePlot.line_graph(performanceOverTime, basicPalette["Blue"]);
+    performancePlot.draw_line_graph(performanceOverTime, basicPalette["Blue"]);
 
     // Draw the performance on the same figure as the line graph.
     boost::format threeDecimalPlaces("%0.3f");
     std::string currentPerformance = (threeDecimalPlaces % performanceOverTime.back()).str();
     std::string cumulativeAveragePerformance = (threeDecimalPlaces % static_cast<float>(std::accumulate(performanceOverTime.begin(), performanceOverTime.end(), 0.0f)/performanceOverTime.size())).str();
-    performancePlot.draw_image_text( std::string("Cur") + (performance.find("Accuracy")->first) + currentPerformance, cv::Point2i(10, performancePlot.canvas_height() - 50), basicPalette["White"]);
-    performancePlot.draw_image_text( std::string("Avg") + (performance.find("Accuracy")->first) + cumulativeAveragePerformance, cv::Point2i(10, performancePlot.canvas_height() - 10), basicPalette["White"]);
+    performancePlot.draw_canvas_text( std::string("Cur") + (performance.find("Accuracy")->first) + currentPerformance, cv::Point2i(10, performancePlot.canvas_height() - 50), basicPalette["White"]);
+    performancePlot.draw_canvas_text( std::string("Avg") + (performance.find("Accuracy")->first) + cumulativeAveragePerformance, cv::Point2i(10, performancePlot.canvas_height() - 10), basicPalette["White"]);
     performancePlot.refresh();
 
     // Draw the current decision boundary of the random forest by predicting the labels of the dense set of points generated in the 2D plane.
-    for(int j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
+    for(size_t j = 1, jend = pointsOnThePlane.size(); j < jend; ++j)
     {
       Descriptor_CPtr descriptor = pointsOnThePlane[j];
       decisionBoundaryPlot.draw_cartesian_circle(cv::Point2f((*descriptor)[0],(*descriptor)[1]), randomPalette[randomForest->predict(descriptor)], 2, 2);
