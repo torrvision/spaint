@@ -3,21 +3,18 @@
  */
 
 #include <boost/assign/list_of.hpp>
+#include <boost/format.hpp>
 using boost::assign::list_of;
 
-#include <boost/format.hpp>
-
-#include <evaluation/util/ConfusionMatrixUtil.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
+#include <evaluation/util/ConfusionMatrixUtil.h>
 #include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
-#include <rafl/examples/ExampleUtil.h>
 #include <rafl/RandomForest.h>
+#include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
-using rafl::Descriptor;
-using rafl::Descriptor_Ptr;
-using rafl::Descriptor_CPtr;
+using namespace rafl;
 
 #include <tvgutil/RandomNumberGenerator.h>
 
@@ -25,15 +22,20 @@ using rafl::Descriptor_CPtr;
 #include "PaletteGenerator.h"
 
 //#################### TYPEDEFS ####################
+
 typedef int Label;
-typedef boost::shared_ptr<const rafl::Example<Label> > Example_CPtr;
-typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
-typedef rafl::DecisionTree<Label> DecisionTree;
-typedef rafl::RandomForest<Label> RandomForest;
-typedef boost::shared_ptr<RandomForest> RandomForest_Ptr;
+
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+
+typedef DecisionTree<Label> DT;
+typedef RandomForest<Label> RF;
+typedef boost::shared_ptr<RF> RF_Ptr;
+
+typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################
-Descriptor_CPtr make_2d_descriptor(float x, float y)
+
+static Descriptor_CPtr make_2d_descriptor(float x, float y)
 {
   Descriptor_Ptr d(new Descriptor(2));
   (*d)[0] = x;
@@ -41,26 +43,26 @@ Descriptor_CPtr make_2d_descriptor(float x, float y)
   return d;
 }
 
-std::vector<Descriptor_CPtr> generate_2d_descriptors_in_range(float min, float max, float resolution)
+static std::vector<Descriptor_CPtr> generate_2d_descriptors_in_range(float min, float max, float resolution)
 {
   std::vector<Descriptor_CPtr> descriptors;
-  for(float x = min; x < max; x+=resolution)
+  for(float x = min; x < max; x += resolution)
   {
-    for(float y = min; y < max; y+=resolution)
+    for(float y = min; y < max; y += resolution)
     {
-      descriptors.push_back(make_2d_descriptor(x,y));
+      descriptors.push_back(make_2d_descriptor(x, y));
     }
   }
   return descriptors;
 }
 
 /**
- * \brief Gets an answer to the questions posed to the random forest.
+ * \brief Evaluates the accuracy of the random forest on a set of examples.
  *
- * \param examples      The set of examples.
- * \return              The answer to the questions as quantified by a performance measure.
+ * \param examples  The set of examples.
+ * \return          The accuracy of the random forest on the examples.
  */
-std::map<std::string,evaluation::PerformanceMeasure> evaluate_forest_on_accuracy(const RandomForest_Ptr& forest, const std::vector<Example_CPtr>& examples)
+std::map<std::string,evaluation::PerformanceMeasure> evaluate_forest_on_accuracy(const RF_Ptr& forest, const std::vector<Example_CPtr>& examples)
 {
   std::set<Label> classLabels;
   size_t examplesSize = examples.size();
@@ -145,8 +147,8 @@ int main(int argc, char *argv[])
   // Initialise the online random forest with the specified parameters.
   size_t treeCount  = 0;
   tvgutil::MapUtil::typed_lookup(params[0], "treeCount", treeCount);
-  DecisionTree::Settings settings(params[0]);
-  RandomForest_Ptr randomForest(new RandomForest(treeCount, settings));
+  DT::Settings settings(params[0]);
+  RF_Ptr randomForest(new RF(treeCount, settings));
 
   // Generate some figures used to display the output of the online learner.
   PlotWindow featureSpacePlot("UnitCircleExampleGenerator");
