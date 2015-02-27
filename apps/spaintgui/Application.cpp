@@ -216,7 +216,10 @@ void Application::process_labelling_input()
 
   interactor->set_semantic_label(semanticLabel);
 
-  // Get an appropriate render state for the current camera mode (if possible).
+  // If we're rendering in stereo (e.g. on the Rift), early out.
+  if(!m_renderer->get_monocular_render_state()) return;
+
+  // Otherwise, get an appropriate render state for the current camera mode.
   Renderer::RenderState_CPtr renderState;
   switch(m_renderer->get_camera_mode())
   {
@@ -230,9 +233,6 @@ void Application::process_labelling_input()
       // This should never happen.
       throw std::runtime_error("Unknown camera mode");
   }
-
-  // If we can't get an appropriate render state (e.g. because we're rendering in stereo), early out.
-  if(!renderState) return;
 
   // Determine the voxels selected by the user (if any).
   Selector::Selection_CPtr selection = interactor->select_voxels(m_inputState, renderState);
