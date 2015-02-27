@@ -23,9 +23,9 @@ PlotWindow::PlotWindow(const std::string& windowName, int canvasWidth, int canva
   m_scaleWidth(static_cast<float>(canvasWidth) / axesLength),
   m_windowName(windowName)
 {
-  if(axesLength <= 0) throw std::runtime_error("The lengths of the axes must be greater than zero.");
+  if(axesLength <= 0) throw std::runtime_error("The lengths of the axes must be greater than zero");
 
-  // Sets the origin to the centre of the image.
+  // Place the origin of the Cartesian coordinate system in the centre of the canvas.
   m_cartesianOriginInCanvas.x = canvasWidth / 2.0f;
   m_cartesianOriginInCanvas.y = canvasHeight / 2.0f;
 
@@ -81,7 +81,7 @@ void PlotWindow::draw_cartesian_circle(const cv::Point2f& centre, const cv::Scal
 
 void PlotWindow::draw_line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
 {
-  if(values.empty()) throw std::runtime_error("Cannot draw the line graph of an empty set of values.");
+  if(values.empty()) throw std::runtime_error("Cannot draw the line graph of an empty set of values");
 
   int valuesSize = static_cast<int>(values.size());
   int lineSeparation = cvRound(static_cast<float>(m_canvasWidth) / valuesSize);

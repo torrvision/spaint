@@ -25,22 +25,22 @@ private:
   /** The canvas on which to draw the shapes or graph. */
   mutable cv::Mat m_canvas;
 
-  /** The height of the canvas in pixels. */
+  /** The height of the canvas (in pixels). */
   int m_canvasHeight;
 
-  /** The width of the canvas in pixels. */
+  /** The width of the canvas (in pixels). */
   int m_canvasWidth;
 
-  /** The origin of the Cartesian coordinate system. */
+  /** The origin of the Cartesian coordinate system (in canvas coordinates). */
   cv::Point2f m_cartesianOriginInCanvas;
 
   /** A counter recording how many times the canvas has been saved (this is used to name the files when saving a stream of images to disk). */
   int m_saveCounter;
 
-  /** The vertical scaling factor by which to multiply when converting Cartesian coordinates to image coordinates. */
+  /** The vertical scaling factor by which to multiply when converting Cartesian coordinates to canvas coordinates. */
   float m_scaleHeight;
 
-  /** The horizontal scaling factor by which to multiply when converting Cartesian coordinates to image coordinates. */
+  /** The horizontal scaling factor by which to multiply when converting Cartesian coordinates to canvas coordinates. */
   float m_scaleWidth;
 
   /** The name to display in the window. */
@@ -52,8 +52,8 @@ public:
    * \brief Constructs a window into which we can plot shapes and/or a graph.
    *
    * \param windowName      The name to display in the window.
-   * \param canvasWidth     The width of the canvas in pixels.
-   * \param canvasHeight    The height of the canvas in pixels.
+   * \param canvasWidth     The width of the canvas (in pixels).
+   * \param canvasHeight    The height of the canvas (in pixels).
    * \param axesLength      The absolute length of the visible axis in both the x and y directions.
    */
   explicit PlotWindow(const std::string& windowName, int canvasWidth = 700, int canvasHeight = 700, float axesLength = 5);
@@ -61,14 +61,14 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the current height of the canvas.
+   * \brief Gets the height of the canvas (in pixels).
    *
-   * \return The height of the canvas being used for drawing.
+   * \return The height of the canvas (in pixels).
    */
   int canvas_height() const;
 
   /**
-   * \brief Sets the values of all the pixels in the image to black.
+   * \brief Sets the values of all the pixels in the canvas to black.
    */
   void clear_figure() const;
 
@@ -96,7 +96,7 @@ public:
    * \brief Draws text in canvas coordinates.
    *
    * \param text       The text to be drawn.
-   * \param position   The x-y position at which to draw the bottom-left corner of the text.
+   * \param position   The x-y position of the bottom-left corner of the text.
    * \param colour     The colour of the text.
    * \param scale      The size of the text.
    * \param thickness  The thickness of the text font.
@@ -133,18 +133,20 @@ public:
   /**
    * \brief Draws a line graph.
    *
-   * \param values   The values making up the line graph.
-   * \param colour   The colour of the line graph.
+   * \param values  The values making up the line graph.
+   * \param colour  The colour of the line graph.
    */
   void draw_line_graph(const std::vector<float>& values, const cv::Scalar& colour) const;
 
   /**
-   * \brief Refreshes the current image in the window.
+   * \brief Refreshes the canvas.
    */
   void refresh() const;
 
   /**
-   * \brief Saves the current image to file.
+   * \brief Saves the current canvas to a file.
+   *
+   * \param path  An optional path to a directory in which to place the file (if boost::none, the current working directory is assumed).
    */
   void save(const boost::optional<std::string>& path = boost::none);
 
