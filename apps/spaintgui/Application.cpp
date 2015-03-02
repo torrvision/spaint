@@ -19,7 +19,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const spaint::SpaintPipeline_Ptr& spaintPipeline)
+Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 : m_spaintPipeline(spaintPipeline)
 {
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
@@ -38,7 +38,7 @@ void Application::run()
 
     // Process and render the next frame.
     m_spaintPipeline->process_frame();
-    m_renderer->render();
+    m_renderer->render(m_spaintPipeline->get_interactor()->get_selector());
   }
 }
 
@@ -69,11 +69,17 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
               << "Right = Turn Right\n"
+              << "I + 1 = To Null Selector\n"
+              << "I + 2 = To Picking Selector\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
               << "R + 3 = To Rift Renderer (Fullscreen)\n"
               << "V + 1 = To Follow Camera Mode\n"
-              << "V + 2 = To Free Camera Mode\n";
+              << "V + 2 = To Free Camera Mode\n"
+              << "[ = Decrease Picking Selection Radius\n"
+              << "] = Increase Picking Selection Radius\n"
+              << "RShift + [ = To Previous Semantic Label\n"
+              << "RShift + ] = To Next Semantic Label\n";
   }
 }
 
@@ -186,41 +192,62 @@ bool Application::process_events()
 void Application::process_input()
 {
   process_camera_input();
-  process_picking_input();
+  process_labelling_input();
   process_renderer_input();
 }
 
-void Application::process_picking_input()
+void Application::process_labelling_input()
 {
-  // Allow the user to pick voxels.
-  if(m_inputState.mouse_position_known() && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
+  // If we're rendering in stereo (e.g. on the Rift), early out.
+  if(!m_renderer->get_monocular_render_state()) return;
+
+  // Otherwise, get an appropriate render state for the current camera mode.
+  Renderer::RenderState_CPtr renderState;
+  switch(m_renderer->get_camera_mode())
   {
-    boost::optional<Vector3f> loc;
-    int x = m_inputState.mouse_position_x();
-    int y = m_inputState.mouse_position_y();
+    case Renderer::CM_FOLLOW:
+      renderState = m_spaintPipeline->get_raycaster()->get_live_render_state();
+      break;
+    case Renderer::CM_FREE:
+      renderState = m_renderer->get_monocular_render_state();
+      break;
+    default:
+      // This should never happen.
+      throw std::runtime_error("Unknown camera mode");
+  }
 
-    switch(m_renderer->get_camera_mode())
-    {
-      case Renderer::CM_FOLLOW:
-      {
-        loc = m_spaintPipeline->get_raycaster()->pick(x, y);
-        break;
-      }
-      case Renderer::CM_FREE:
-      {
-        Renderer::RenderState_CPtr renderState = m_renderer->get_monocular_render_state();
-        if(renderState) loc = m_spaintPipeline->get_raycaster()->pick(x, y, renderState);
-        break;
-      }
-      default:
-      {
-        // This should never happen.
-        throw std::runtime_error("Unknown camera mode");
-      }
-    }
+  // Allow the user to change the current semantic label.
+  static bool canChangeLabel = true;
+  const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
+  unsigned char semanticLabel = interactor->get_semantic_label();
 
-    if(loc) std::cout << *loc << '\n';
-    else std::cout << "No hit\n";
+  if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
+  {
+    // FIXME: The maximum semantic label shouldn't be hard-coded like this.
+    if(canChangeLabel && semanticLabel < 3) ++semanticLabel;
+    canChangeLabel = false;
+  }
+  else if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_LEFTBRACKET))
+  {
+    // FIXME: The minimum semantic label shouldn't be hard-coded like this.
+    if(canChangeLabel && semanticLabel > 0) --semanticLabel;
+    canChangeLabel = false;
+  }
+  else canChangeLabel = true;
+
+  interactor->set_semantic_label(semanticLabel);
+
+  // Update the current selector.
+  interactor->update_selector(m_inputState, renderState);
+
+  // If the current selector is active:
+  if(interactor->selector_is_active())
+  {
+    // Get the voxels selected by the user (if any).
+    Selector::Selection_CPtr selection = interactor->get_selection();
+
+    // If there are selected voxels, mark the voxels with the current semantic label.
+    if(selection) interactor->mark_voxels(selection, semanticLabel);
   }
 }
 

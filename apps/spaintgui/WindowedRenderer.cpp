@@ -9,9 +9,41 @@
 #include <rigging/SimpleCamera.h>
 using namespace rigging;
 
-#include <spaint/ogl/WrappedGL.h>
+#include <spaint/ogl/QuadricRenderer.h>
+#include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
+
+//#################### LOCAL TYPES ####################
+
+/**
+ * \brief An instance of this class can be used to visit selectors in order to render them.
+ */
+class SelectorRenderer : public SelectorVisitor
+{
+private:
+  const WindowedRenderer *m_base;
+
+  //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+public:
+  explicit SelectorRenderer(const WindowedRenderer *base)
+  : m_base(base)
+  {}
+
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+public:
+  /** Override */
+  virtual void visit(const PickingSelector& selector) const
+  {
+    boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
+    if(!pickPoint) return;
+
+    glColor3f(1.0f, 0.0f, 1.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    QuadricRenderer::render_sphere(*pickPoint, selector.get_radius() * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+};
 
 //#################### CONSTRUCTORS ####################
 
@@ -68,7 +100,7 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
   return m_renderState;
 }
 
-void WindowedRenderer::render() const
+void WindowedRenderer::render(const Selector_CPtr& selector) const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -90,66 +122,62 @@ void WindowedRenderer::render() const
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose);
-  render_synthetic_scene(pose);
+  render_synthetic_scene(pose, selector);
 
   SDL_GL_SwapWindow(m_window.get());
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
+void WindowedRenderer::begin_2d()
 {
-  // Raycast the scene.
-  switch(m_cameraMode)
-  {
-    case CM_FOLLOW:
-      m_raycaster->get_default_raycast(m_image);
-      break;
-    case CM_FREE:
-      m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("Error: Unknown camera mode");
-  }
-
-  // Draw a quad textured with the raycasted scene.
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
-  {
-    glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+  glLoadIdentity();
+  glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    {
-      glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+}
 
-      glEnable(GL_TEXTURE_2D);
-      {
-        glBindTexture(GL_TEXTURE_2D, m_textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glBegin(GL_QUADS);
-        {
-          glTexCoord2f(0, 1); glVertex2f(0, 0);
-          glTexCoord2f(1, 1); glVertex2f(1, 0);
-          glTexCoord2f(1, 0); glVertex2f(1, 1);
-          glTexCoord2f(0, 0); glVertex2f(0, 1);
-        }
-        glEnd();
-      }
-      glDisable(GL_TEXTURE_2D);
-    }
-    glPopMatrix();
-  }
+void WindowedRenderer::end_2d()
+{
+  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
+  glPopMatrix();
+
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
 }
 
-void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
+void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
+{
+  // Raycast the scene.
+  m_raycaster->generate_free_raycast(m_image, m_renderState, pose, SpaintRaycaster::RT_SEMANTIC);
+
+  // Draw a quad textured with the raycasted scene.
+  begin_2d();
+    glEnable(GL_TEXTURE_2D);
+    {
+      glBindTexture(GL_TEXTURE_2D, m_textureID);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glColor3f(1.0f, 1.0f, 1.0f);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f(0, 1); glVertex2f(0, 0);
+        glTexCoord2f(1, 1); glVertex2f(1, 0);
+        glTexCoord2f(1, 0); glVertex2f(1, 1);
+        glTexCoord2f(0, 0); glVertex2f(0, 1);
+      }
+      glEnd();
+    }
+    glDisable(GL_TEXTURE_2D);
+  end_2d();
+}
+
+void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selector_CPtr& selector) const
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -167,6 +195,9 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose) const
         glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
         glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
       glEnd();
+
+      // Render the current selector to show how we're interacting with the scene.
+      selector->accept(SelectorRenderer(this));
     }
     glPopMatrix();
   }

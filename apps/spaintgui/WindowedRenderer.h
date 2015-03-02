@@ -71,10 +71,20 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const;
 
   /** Override */
-  virtual void render() const;
+  virtual void render(const spaint::Selector_CPtr& selector) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Sets appropriate projection and model-view matrices for 2D rendering.
+   */
+  static void begin_2d();
+
+  /**
+   * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
+   */
+  static void end_2d();
+
   /**
    * \brief Renders the reconstructed scene.
    *
@@ -85,11 +95,10 @@ private:
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * (This is currently experimental and only renders a set of axes.)
-   *
-   * \param pose  The camera pose.
+   * \param pose      The camera pose.
+   * \param selector  The selector that is being used to select voxels in the InfiniTAM scene.
    */
-  void render_synthetic_scene(const ITMPose& pose) const;
+  void render_synthetic_scene(const ITMPose& pose, const spaint::Selector_CPtr& selector) const;
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
@@ -99,6 +108,10 @@ private:
    * \param height      The height of the viewport.
    */
   static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
+
+  //#################### FRIENDS ####################
+
+  friend class SelectorRenderer;
 };
 
 #endif

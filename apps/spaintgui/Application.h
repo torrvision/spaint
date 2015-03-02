@@ -7,6 +7,11 @@
 
 #include <SDL.h>
 
+// Suppress the definition of M_PI provided by SDL - we want the one in <cmath>.
+#ifdef M_PI
+#undef M_PI
+#endif
+
 #include <spaint/core/SpaintPipeline.h>
 #include <spaint/input/InputState.h>
 
@@ -96,9 +101,9 @@ private:
   void process_input();
 
   /**
-   * \brief Processes user input that deals with picking.
+   * \brief Processes user input that deals with labelling the scene.
    */
-  void process_picking_input();
+  void process_labelling_input();
 
   /**
    * \brief Processes user input that deals with switching renderers.

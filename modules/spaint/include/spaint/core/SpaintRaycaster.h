@@ -5,8 +5,6 @@
 #ifndef H_SPAINT_SPAINTRAYCASTER
 #define H_SPAINT_SPAINTRAYCASTER
 
-#include <boost/optional.hpp>
-
 #include "SpaintModel.h"
 #include "../visualisers/interface/SemanticVisualiser.h"
 
@@ -19,7 +17,6 @@ class SpaintRaycaster
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMFloat4Image> Float4Image_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
 public:
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
@@ -45,9 +42,6 @@ private:
 
   /** The spaint model. */
   SpaintModel_CPtr m_model;
-
-  /** An image into which the raycast result may be copied when performing picking. */
-  mutable Float4Image_Ptr m_raycastResult;
 
   /** The platform-specific semantic visualiser. */
   boost::shared_ptr<const SemanticVisualiser> m_semanticVisualiser;
@@ -112,17 +106,6 @@ public:
    * \return  The InfiniTAM engine used for raycasting the scene.
    */
   const VisualisationEngine_Ptr& get_visualisation_engine();
-
-  /**
-   * \brief Determines the nearest scene point (if any) that would be hit by a ray cast through (x,y) on the image plane
-   *        when viewed from the camera pose with the specified render state.
-   *
-   * \param x           The x coordinate of the point on the image plane through which the ray is cast.
-   * \param y           The y coordinate of the point on the image plane through which the ray is cast.
-   * \param renderState An optional render state corresponding to a particular camera pose (if null, the live render state is used).
-   * \return            The coordinates of the nearest scene point (if any) that is hit by the ray.
-   */
-  boost::optional<Vector3f> pick(int x, int y, RenderState_CPtr renderState = RenderState_CPtr()) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

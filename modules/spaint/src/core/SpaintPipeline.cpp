@@ -48,9 +48,19 @@ bool SpaintPipeline::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
+const SpaintInteractor_Ptr& SpaintPipeline::get_interactor()
+{
+  return m_interactor;
+}
+
 SpaintModel_CPtr SpaintPipeline::get_model() const
 {
   return m_model;
+}
+
+const SpaintRaycaster_Ptr& SpaintPipeline::get_raycaster()
+{
+  return m_raycaster;
 }
 
 SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
@@ -154,10 +164,11 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   setup_tracker(settings, scene, trackedImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
 
-  // Set up the spaint model and raycaster.
+  // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
+  m_interactor.reset(new SpaintInteractor(m_model));
 
   m_fusionEnabled = true;
   m_reconstructionStarted = false;
