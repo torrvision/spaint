@@ -51,6 +51,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the voxels in the scene (if any) that have been selected by the current selector.
+   *
+   * \return  The voxels in the scene (if any) that have been selected by the current selector.
+   */
+  Selection_CPtr get_selection() const;
+
+  /**
    * \brief Gets the selector that is being used to select voxels in the scene.
    *
    * \return  The selector that is being used to select voxels in the scene.
@@ -73,11 +80,11 @@ public:
   void mark_voxels(const Selection_CPtr& selection, unsigned char label);
 
   /**
-   * \brief Selects some voxels in the scene using the current selector.
+   * \brief Gets whether or not there is a currently-active selector.
    *
-   * \return  The selected voxels in the scene.
+   * \return  true, if there is a currently active selector, or false otherwise.
    */
-  Selection_CPtr select_voxels() const;
+  bool selector_is_active() const;
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.

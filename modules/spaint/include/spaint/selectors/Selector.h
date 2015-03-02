@@ -27,6 +27,20 @@ public:
   typedef boost::shared_ptr<Selection> Selection_Ptr;
   typedef boost::shared_ptr<Selection> Selection_CPtr;
 
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** Whether or not the selector is currently active. */
+  bool m_isActive;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a selector.
+   */
+  Selector()
+  : m_isActive(false)
+  {}
+
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -44,11 +58,21 @@ public:
   virtual void accept(const SelectorVisitor& visitor) const = 0;
 
   /**
-   * \brief Selects some voxels in the scene.
+   * \brief Gets the voxels in the scene (if any) that were selected by the last update.
    *
-   * \return  The selected voxels.
+   * \return  The voxels in the scene (if any) that were selected by the last update.
    */
-  virtual Selection_CPtr select_voxels() const = 0;
+  virtual Selection_CPtr get_selection() const = 0;
+
+  /**
+   * \brief Gets whether or not the selector is currently active.
+   *
+   * \return  true, if the selector is currently active, or false otherwise.
+   */
+  bool is_active() const
+  {
+    return m_isActive;
+  }
 
   /**
    * \brief Updates the selector based on the current input state.

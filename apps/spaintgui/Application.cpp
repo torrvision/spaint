@@ -231,14 +231,14 @@ void Application::process_labelling_input()
       throw std::runtime_error("Unknown camera mode");
   }
 
-  // Update the voxel selector.
+  // Update the current selector (if any).
   interactor->update_selector(m_inputState, renderState);
 
-  // If the selector is active:
-  if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
+  // If there is a currently-active selector:
+  if(interactor->selector_is_active())
   {
-    // Determine the voxels selected by the user (if any).
-    Selector::Selection_CPtr selection = interactor->select_voxels();
+    // Gets the voxels selected by the user (if any).
+    Selector::Selection_CPtr selection = interactor->get_selection();
 
     // If there are selected voxels, mark the voxels with the current semantic label.
     if(selection) interactor->mark_voxels(selection, semanticLabel);

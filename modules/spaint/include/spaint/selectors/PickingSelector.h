@@ -75,7 +75,7 @@ public:
   int get_radius() const;
 
   /** Override */
-  virtual Selection_CPtr select_voxels() const;
+  virtual Selection_CPtr get_selection() const;
 
   /** Override */
   virtual void update(const InputState& inputState, const RenderState_CPtr& renderState);

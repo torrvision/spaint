@@ -39,6 +39,11 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
+{
+  return m_selector ? m_selector->get_selection() : Selection_CPtr();
+}
+
 Selector_CPtr SpaintInteractor::get_selector() const
 {
   return m_selector;
@@ -54,9 +59,9 @@ void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, unsigned cha
   m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get());
 }
 
-SpaintInteractor::Selection_CPtr SpaintInteractor::select_voxels() const
+bool SpaintInteractor::selector_is_active() const
 {
-  return m_selector ? m_selector->select_voxels() : Selection_CPtr();
+  return m_selector && m_selector->is_active();
 }
 
 void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)

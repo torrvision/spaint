@@ -66,7 +66,7 @@ int PickingSelector::get_radius() const
   return m_radius;
 }
 
-Selector::Selection_CPtr PickingSelector::select_voxels() const
+Selector::Selection_CPtr PickingSelector::get_selection() const
 {
   // If the last update did not yield a valid pick point, early out.
   if(!m_pickPointValid) return Selection_CPtr();
@@ -101,6 +101,9 @@ Selector::Selection_CPtr PickingSelector::select_voxels() const
 
 void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
+  // Update whether or not the selector is active.
+  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
+
   // Allow the user to change the selection radius.
   const int minRadius = 1;
   const int maxRadius = 10;
