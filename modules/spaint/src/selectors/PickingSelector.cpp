@@ -24,8 +24,7 @@ PickingSelector::PickingSelector(const Settings_CPtr& settings)
   m_settings(settings)
 {
   // Make the picker.
-  const ITMLibSettings::DeviceType deviceType = m_settings->deviceType;
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_picker.reset(new Picker_CUDA);
@@ -57,7 +56,7 @@ boost::optional<Eigen::Vector3f> PickingSelector::get_position() const
 
   // Convert the pick point from voxel coordinates into scene coordinates and return it.
   float voxelSize = m_settings->sceneParams.voxelSize;
-  const Vector3f& pickPoint = m_pickPointFloatMB.GetData(MEMORYDEVICE_CPU)[0];
+  const Vector3f& pickPoint = *m_pickPointFloatMB.GetData(MEMORYDEVICE_CPU);
   return Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
 }
 

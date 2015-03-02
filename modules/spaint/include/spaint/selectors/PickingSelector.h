@@ -23,7 +23,6 @@ class PickingSelector : public Selector
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMFloat4Image> Float4Image_Ptr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
@@ -35,9 +34,9 @@ private:
   mutable ORUtils::MemoryBlock<Vector3f> m_pickPointFloatMB;
 
   /** A memory block into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
-  mutable ORUtils::MemoryBlock<Vector3s> m_pickPointShortMB;
+  ORUtils::MemoryBlock<Vector3s> m_pickPointShortMB;
 
-  /** Whether or not the most recent picking operation returned a valid pick point. */
+  /** Whether or not the most recent update operation returned a valid pick point. */
   bool m_pickPointValid;
 
   /** The selection radius (we select all voxels in a cube of side length 2 * radius + 1, centered on the voxel the user actually clicks). */

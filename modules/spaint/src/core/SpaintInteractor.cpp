@@ -80,7 +80,7 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
     else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(m_model->get_settings()));
   }
 
-  // If there is a current selector, update it.
+  // Update the current selector.
   m_selector->update(inputState, renderState);
 }
 

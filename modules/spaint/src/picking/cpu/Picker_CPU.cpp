@@ -22,7 +22,7 @@ bool Picker_CPU::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rende
 
 void Picker_CPU::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const
 {
-  pickPointShortMB.GetData(MEMORYDEVICE_CPU)[0] = pickPointFloatMB.GetData(MEMORYDEVICE_CPU)[0].toShortRound();
+  *pickPointShortMB.GetData(MEMORYDEVICE_CPU) = pickPointFloatMB.GetData(MEMORYDEVICE_CPU)->toShortRound();
 }
 
 }

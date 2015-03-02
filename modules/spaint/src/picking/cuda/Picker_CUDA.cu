@@ -33,7 +33,7 @@ bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rend
     *result.GetData(MEMORYDEVICE_CUDA)
   );
   result.UpdateHostFromDevice();
-  return result.GetData(MEMORYDEVICE_CPU)[0];
+  return *result.GetData(MEMORYDEVICE_CPU);
 }
 
 void Picker_CUDA::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const
