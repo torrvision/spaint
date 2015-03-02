@@ -243,7 +243,7 @@ void Application::process_labelling_input()
   // If the current selector is active:
   if(interactor->selector_is_active())
   {
-    // Gets the voxels selected by the user (if any).
+    // Get the voxels selected by the user (if any).
     Selector::Selection_CPtr selection = interactor->get_selection();
 
     // If there are selected voxels, mark the voxels with the current semantic label.

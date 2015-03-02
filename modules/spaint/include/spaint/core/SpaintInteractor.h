@@ -80,9 +80,9 @@ public:
   void mark_voxels(const Selection_CPtr& selection, unsigned char label);
 
   /**
-   * \brief Gets whether or not there is a current selector and it is active.
+   * \brief Gets whether or not the current selector is active.
    *
-   * \return  true, if there is a current selector and it is active, or false otherwise.
+   * \return  true, if the current selector is active, or false otherwise.
    */
   bool selector_is_active() const;
 
