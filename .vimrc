@@ -1,5 +1,7 @@
 set makeprg=[[\ -f\ Makefile\ ]]\ &&\ make\ \\\|\\\|\ make\ -C\ build/
 
+set grepprg=grep\ -nrI\ --exclude-dir={.git,docs,build,libraries}\ --exclude=*tags
+
 " recreate tags file with F5
 map <F5> :GenerateSpaintTags<CR>
 
