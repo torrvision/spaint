@@ -29,7 +29,7 @@ public:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** Whether or not the selector is currently active. */
+  /** Whether or not the selector is active. */
   bool m_isActive;
 
   //#################### CONSTRUCTORS ####################
@@ -65,9 +65,9 @@ public:
   virtual Selection_CPtr get_selection() const = 0;
 
   /**
-   * \brief Gets whether or not the selector is currently active.
+   * \brief Gets whether or not the selector is active.
    *
-   * \return  true, if the selector is currently active, or false otherwise.
+   * \return  true, if the selector is active, or false otherwise.
    */
   bool is_active() const
   {

@@ -51,16 +51,16 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the voxels in the scene (if any) that have been selected by the current selector.
+   * \brief Gets the voxels in the scene (if any) that were selected the last time the current selector was updated.
    *
-   * \return  The voxels in the scene (if any) that have been selected by the current selector.
+   * \return  The voxels in the scene (if any) that were selected the last time the current selector was updated.
    */
   Selection_CPtr get_selection() const;
 
   /**
-   * \brief Gets the selector that is being used to select voxels in the scene.
+   * \brief Gets the selector (if any) that is currently being used to select voxels in the scene.
    *
-   * \return  The selector that is being used to select voxels in the scene.
+   * \return  The selector (if any) that is currently being used to select voxels in the scene.
    */
   Selector_CPtr get_selector() const;
 
@@ -80,9 +80,9 @@ public:
   void mark_voxels(const Selection_CPtr& selection, unsigned char label);
 
   /**
-   * \brief Gets whether or not there is a currently-active selector.
+   * \brief Gets whether or not there is a current selector and it is active.
    *
-   * \return  true, if there is a currently active selector, or false otherwise.
+   * \return  true, if there is a current selector and it is active, or false otherwise.
    */
   bool selector_is_active() const;
 
@@ -94,10 +94,10 @@ public:
   void set_semantic_label(unsigned char semanticLabel);
 
   /**
-   * \brief Allows the user to change the selector or update the parameters of the current selector.
+   * \brief Allows the user to change selector or update the current selector.
    *
    * \param inputState  The current input state.
-   * \param renderState The render state corresponding to a camera from which the scene is being viewed.
+   * \param renderState The render state corresponding to the camera from which the scene is being viewed.
    */
   void update_selector(const InputState& inputState, const RenderState_CPtr& renderState);
 };

@@ -192,6 +192,24 @@ void Application::process_input()
 
 void Application::process_labelling_input()
 {
+  // If we're rendering in stereo (e.g. on the Rift), early out.
+  if(!m_renderer->get_monocular_render_state()) return;
+
+  // Otherwise, get an appropriate render state for the current camera mode.
+  Renderer::RenderState_CPtr renderState;
+  switch(m_renderer->get_camera_mode())
+  {
+    case Renderer::CM_FOLLOW:
+      renderState = m_spaintPipeline->get_raycaster()->get_live_render_state();
+      break;
+    case Renderer::CM_FREE:
+      renderState = m_renderer->get_monocular_render_state();
+      break;
+    default:
+      // This should never happen.
+      throw std::runtime_error("Unknown camera mode");
+  }
+
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
   const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
@@ -212,24 +230,6 @@ void Application::process_labelling_input()
   else canChangeLabel = true;
 
   interactor->set_semantic_label(semanticLabel);
-
-  // If we're rendering in stereo (e.g. on the Rift), early out.
-  if(!m_renderer->get_monocular_render_state()) return;
-
-  // Otherwise, get an appropriate render state for the current camera mode.
-  Renderer::RenderState_CPtr renderState;
-  switch(m_renderer->get_camera_mode())
-  {
-    case Renderer::CM_FOLLOW:
-      renderState = m_spaintPipeline->get_raycaster()->get_live_render_state();
-      break;
-    case Renderer::CM_FREE:
-      renderState = m_renderer->get_monocular_render_state();
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("Unknown camera mode");
-  }
 
   // Update the current selector (if any).
   interactor->update_selector(m_inputState, renderState);
