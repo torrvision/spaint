@@ -16,8 +16,8 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
-#include "PlotWindow.h"
 #include "PaletteGenerator.h"
+#include "PlotWindow.h"
 
 //#################### TYPEDEFS ####################
 
