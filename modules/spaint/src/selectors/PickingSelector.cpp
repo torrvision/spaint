@@ -4,8 +4,11 @@
 
 #include "selectors/PickingSelector.h"
 
+#include "picking/cpu/Picker_CPU.h"
 #include "selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
+
 #ifdef WITH_CUDA
+#include "picking/cuda/Picker_CUDA.h"
 #include "selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h"
 #endif
 
@@ -14,8 +17,28 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 PickingSelector::PickingSelector(const Settings_CPtr& settings)
-: m_radius(2), m_settings(settings)
-{}
+: m_pickPointFloatMB(1, true, true),
+  m_pickPointShortMB(1, true, true),
+  m_pickPointValid(false),
+  m_radius(2),
+  m_settings(settings)
+{
+  // Make the picker.
+  const ITMLibSettings::DeviceType deviceType = m_settings->deviceType;
+  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    m_picker.reset(new Picker_CUDA);
+#else
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    m_picker.reset(new Picker_CPU);
+  }
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -24,17 +47,18 @@ void PickingSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
-boost::optional<Eigen::Vector3f> PickingSelector::get_pick_point() const
+boost::optional<Eigen::Vector3f> PickingSelector::get_position() const
 {
-  if(m_pickPointInVoxels)
-  {
-    float voxelSize = m_settings->sceneParams.voxelSize;
-    return Eigen::Vector3f(m_pickPointInVoxels->x * voxelSize, m_pickPointInVoxels->y * voxelSize, m_pickPointInVoxels->z * voxelSize);
-  }
-  else
-  {
-    return boost::none;
-  }
+  // If the last update did not yield a valid pick point, early out.
+  if(!m_pickPointValid) return boost::none;
+
+  // If the pick point is on the GPU, copy it across to the CPU.
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointFloatMB.UpdateHostFromDevice();
+
+  // Convert the pick point from voxel coordinates into scene coordinates and return it.
+  float voxelSize = m_settings->sceneParams.voxelSize;
+  const Vector3f& pickPoint = m_pickPointFloatMB.GetData(MEMORYDEVICE_CPU)[0];
+  return Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
 }
 
 int PickingSelector::get_radius() const
@@ -42,19 +66,10 @@ int PickingSelector::get_radius() const
   return m_radius;
 }
 
-Selector::Selection_CPtr PickingSelector::select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const
+Selector::Selection_CPtr PickingSelector::select_voxels() const
 {
-  // Reset the most recent pick point.
-  m_pickPointInVoxels = boost::none;
-
-  // Try and get the position of the mouse. If it's not currently known, early out.
-  if(!inputState.mouse_position_known()) return Selection_CPtr();
-  int x = inputState.mouse_position_x();
-  int y = inputState.mouse_position_y();
-
-  // Try and pick an individual voxel. If we don't hit anything, early out.
-  m_pickPointInVoxels = pick(x, y, renderState);
-  if(!m_pickPointInVoxels) return Selection_CPtr();
+  // If the last update did not yield a valid pick point, early out.
+  if(!m_pickPointValid) return Selection_CPtr();
 
   // Make the transformer that we need in order to expand the selection to the specified radius.
   boost::shared_ptr<const SelectionTransformer> selectionTransformer;
@@ -73,23 +88,18 @@ Selector::Selection_CPtr PickingSelector::select_voxels(const InputState& inputS
     selectionTransformer.reset(new VoxelToCubeSelectionTransformer_CPU(m_radius));
   }
 
-  // Make a selection that contains only the voxel we picked, and transfer it to the GPU if necessary.
-  ORUtils::MemoryBlock<Vector3s> pickPointMB(1, true, true);
-  pickPointMB.GetData(MEMORYDEVICE_CPU)[0] = m_pickPointInVoxels->toShortRound();
-  if(deviceType == ITMLibSettings::DEVICE_CUDA) pickPointMB.UpdateDeviceFromHost();
-
-  // Expand the selection using the transformer.
+  // Expand the picked point to a cube of voxels using the transformer.
   MemoryDeviceType memoryDeviceType = deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cubeMB(new ORUtils::MemoryBlock<Vector3s>(
-    selectionTransformer->compute_output_selection_size(pickPointMB),
-    memoryDeviceType)
-  );
-  selectionTransformer->transform_selection(pickPointMB, *cubeMB);
+    selectionTransformer->compute_output_selection_size(m_pickPointShortMB),
+    memoryDeviceType
+  ));
+  selectionTransformer->transform_selection(m_pickPointShortMB, *cubeMB);
 
   return cubeMB;
 }
 
-void PickingSelector::update(const InputState& inputState)
+void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Allow the user to change the selection radius.
   const int minRadius = 1;
@@ -107,23 +117,16 @@ void PickingSelector::update(const InputState& inputState)
     canChange = false;
   }
   else canChange = true;
-}
 
-//#################### PRIVATE MEMBER FUNCTIONS ####################
+  // Try and pick an individual voxel.
+  m_pickPointValid = false;
 
-boost::optional<Vector3f> PickingSelector::pick(int x, int y, const RenderState_CPtr& renderState) const
-{
-  if(!m_raycastResult) m_raycastResult.reset(new ITMFloat4Image(renderState->raycastResult->noDims, true, true));
+  if(!inputState.mouse_position_known()) return;
+  int x = inputState.mouse_position_x();
+  int y = inputState.mouse_position_y();
 
-  // FIXME: It's inefficient to copy the raycast result across from the GPU each time we want to perform a picking operation.
-  m_raycastResult->SetFrom(
-    renderState->raycastResult,
-    m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4f>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4f>::CPU_TO_CPU
-  );
-
-  const Vector4f *imageData = m_raycastResult->GetData(MEMORYDEVICE_CPU);
-  Vector4f voxelData = imageData[y * m_raycastResult->noDims.x + x];
-  return voxelData.w > 0 ? boost::optional<Vector3f>(Vector3f(voxelData.x, voxelData.y, voxelData.z)) : boost::none;
+  m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
+  if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, m_pickPointShortMB);
 }
 
 }

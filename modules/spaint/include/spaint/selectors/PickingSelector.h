@@ -12,6 +12,7 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "Selector.h"
+#include "../picking/interface/Picker.h"
 
 namespace spaint {
 
@@ -27,14 +28,20 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The point picked by the user (if any) in the most recent call to select_voxels, in voxel coordinates. */
-  mutable boost::optional<Vector3f> m_pickPointInVoxels;
+  /** The picker. */
+  boost::shared_ptr<const Picker> m_picker;
+
+  /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
+  mutable ORUtils::MemoryBlock<Vector3f> m_pickPointFloatMB;
+
+  /** A memory block into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
+  mutable ORUtils::MemoryBlock<Vector3s> m_pickPointShortMB;
+
+  /** Whether or not the most recent picking operation returned a valid pick point. */
+  bool m_pickPointValid;
 
   /** The selection radius (we select all voxels in a cube of side length 2 * radius + 1, centered on the voxel the user actually clicks). */
   int m_radius;
-
-  /** An image into which the raycast result may be copied when performing picking. */
-  mutable Float4Image_Ptr m_raycastResult;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
@@ -54,11 +61,11 @@ public:
   virtual void accept(const SelectorVisitor& visitor) const;
 
   /**
-   * \brief Gets the point picked by the user (if any) in the most recent call to select_voxels, in world coordinates.
+   * \brief Gets the position of the selector (if known).
    *
-   * \return  The point picked by the user (if any) in the most recent call to select_voxels, in world coordinates.
+   * \return  The position of the selector (if known), or boost::none otherwise.
    */
-  boost::optional<Eigen::Vector3f> get_pick_point() const;
+  boost::optional<Eigen::Vector3f> get_position() const;
 
   /**
    * \brief Gets the selection radius.
@@ -68,23 +75,10 @@ public:
   int get_radius() const;
 
   /** Override */
-  virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
+  virtual Selection_CPtr select_voxels() const;
 
   /** Override */
-  virtual void update(const InputState& inputState);
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Determines the nearest scene point (if any) that would be hit by a ray cast through (x,y) on the image plane
-   *        when viewed from the camera pose with the specified render state.
-   *
-   * \param x           The x coordinate of the point on the image plane through which the ray is cast.
-   * \param y           The y coordinate of the point on the image plane through which the ray is cast.
-   * \param renderState The render state corresponding to a camera pose.
-   * \return            The voxel coordinates of the nearest scene point (if any) that is hit by the ray.
-   */
-  boost::optional<Vector3f> pick(int x, int y, const RenderState_CPtr& renderState) const;
+  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState);
 };
 
 }

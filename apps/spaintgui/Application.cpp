@@ -192,12 +192,9 @@ void Application::process_input()
 
 void Application::process_labelling_input()
 {
-  // Allow the user to change the voxel selector or its parameters.
-  const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
-  interactor->update_selector(m_inputState);
-
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
+  const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
   unsigned char semanticLabel = interactor->get_semantic_label();
 
   if(m_inputState.key_down(SDLK_PAGEUP))
@@ -234,13 +231,17 @@ void Application::process_labelling_input()
       throw std::runtime_error("Unknown camera mode");
   }
 
-  // Determine the voxels selected by the user (if any).
-  Selector::Selection_CPtr selection = interactor->select_voxels(m_inputState, renderState);
+  // Update the voxel selector.
+  interactor->update_selector(m_inputState, renderState);
 
-  // If there are selected voxels and the user is currently pressing the left mouse button, mark the voxels with the current semantic label.
-  if(selection && m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
+  // If the selector is active:
+  if(m_inputState.mouse_button_down(MOUSE_BUTTON_LEFT))
   {
-    interactor->mark_voxels(selection, semanticLabel);
+    // Determine the voxels selected by the user (if any).
+    Selector::Selection_CPtr selection = interactor->select_voxels();
+
+    // If there are selected voxels, mark the voxels with the current semantic label.
+    if(selection) interactor->mark_voxels(selection, semanticLabel);
   }
 }
 

@@ -35,7 +35,7 @@ public:
   /** Override */
   virtual void visit(const PickingSelector& selector) const
   {
-    boost::optional<Eigen::Vector3f> pickPoint = selector.get_pick_point();
+    boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 
     glColor3f(1.0f, 0.0f, 1.0f);

@@ -33,7 +33,15 @@ public:
    * \param pickPointMB A memory block into which to write the voxel coordinates of the nearest scene point (if any) that is hit by the ray.
    * \return            true, if the ray hit the scene, or false otherwise.
    */
-  bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const;
+  virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const = 0;
+
+  /**
+   * \brief Converts a pick point expressed as a Vector3f into a Vector3s.
+   *
+   * \param pickPointFloatMB  A memory block containing the pick point expressed as a Vector3f.
+   * \param pickPointShortMB  A memory block into which to write the pick point expressed as a Vector3s.
+   */
+  virtual void to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const = 0;
 };
 
 }

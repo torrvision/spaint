@@ -54,9 +54,9 @@ void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, unsigned cha
   m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get());
 }
 
-SpaintInteractor::Selection_CPtr SpaintInteractor::select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const
+SpaintInteractor::Selection_CPtr SpaintInteractor::select_voxels() const
 {
-  return m_selector ? m_selector->select_voxels(inputState, renderState) : Selection_CPtr();
+  return m_selector ? m_selector->select_voxels() : Selection_CPtr();
 }
 
 void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)
@@ -64,7 +64,7 @@ void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)
   m_semanticLabel = semanticLabel;
 }
 
-void SpaintInteractor::update_selector(const InputState& inputState)
+void SpaintInteractor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Allow the user to switch between different selectors.
   if(inputState.key_down(SDLK_i))
@@ -73,8 +73,8 @@ void SpaintInteractor::update_selector(const InputState& inputState)
     else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(m_model->get_settings()));
   }
 
-  // Allow the user to update the parameters of the current selector.
-  if(m_selector) m_selector->update(inputState);
+  // Update the current selector.
+  if(m_selector) m_selector->update(inputState, renderState);
 }
 
 }

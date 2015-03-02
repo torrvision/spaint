@@ -75,11 +75,9 @@ public:
   /**
    * \brief Selects some voxels in the scene using the current selector.
    *
-   * \param inputState  The current input state.
-   * \param renderState The render state corresponding to a camera from which the scene is being viewed.
-   * \return            The selected voxels in the scene.
+   * \return  The selected voxels in the scene.
    */
-  Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const;
+  Selection_CPtr select_voxels() const;
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.
@@ -92,8 +90,9 @@ public:
    * \brief Allows the user to change the selector or update the parameters of the current selector.
    *
    * \param inputState  The current input state.
+   * \param renderState The render state corresponding to a camera from which the scene is being viewed.
    */
-  void update_selector(const InputState& inputState);
+  void update_selector(const InputState& inputState, const RenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

@@ -44,20 +44,19 @@ public:
   virtual void accept(const SelectorVisitor& visitor) const = 0;
 
   /**
-   * \brief Selects some voxels in the scene based on the current input state.
+   * \brief Selects some voxels in the scene.
    *
-   * \param inputState  The current input state.
-   * \param renderState The render state corresponding to a camera from which the scene is being viewed.
-   * \return            The selected voxels.
+   * \return  The selected voxels.
    */
-  virtual Selection_CPtr select_voxels(const InputState& inputState, const RenderState_CPtr& renderState) const = 0;
+  virtual Selection_CPtr select_voxels() const = 0;
 
   /**
-   * \brief Updates the selector based on the current input state (this is how we allow the user to control the parameters of the selector).
+   * \brief Updates the selector based on the current input state.
    *
    * \param inputState  The current input state.
+   * \param renderState The render state corresponding to the camera from which the scene is being viewed.
    */
-  virtual void update(const InputState& inputState) = 0;
+  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState) = 0;
 };
 
 //#################### TYPEDEFS ####################
