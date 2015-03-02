@@ -69,11 +69,17 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
               << "Right = Turn Right\n"
+              << "I + 1 = To Null Selector\n"
+              << "I + 2 = To Picking Selector\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
               << "R + 3 = To Rift Renderer (Fullscreen)\n"
               << "V + 1 = To Follow Camera Mode\n"
-              << "V + 2 = To Free Camera Mode\n";
+              << "V + 2 = To Free Camera Mode\n"
+              << "[ = Decrease Picking Selection Radius\n"
+              << "] = Increase Picking Selection Radius\n"
+              << "RShift + [ = To Previous Semantic Label\n"
+              << "RShift + ] = To Next Semantic Label\n";
   }
 }
 
@@ -215,13 +221,13 @@ void Application::process_labelling_input()
   const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
   unsigned char semanticLabel = interactor->get_semantic_label();
 
-  if(m_inputState.key_down(SDLK_PAGEUP))
+  if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
   {
     // FIXME: The maximum semantic label shouldn't be hard-coded like this.
     if(canChangeLabel && semanticLabel < 3) ++semanticLabel;
     canChangeLabel = false;
   }
-  else if(m_inputState.key_down(SDLK_PAGEDOWN))
+  else if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_LEFTBRACKET))
   {
     // FIXME: The minimum semantic label shouldn't be hard-coded like this.
     if(canChangeLabel && semanticLabel > 0) --semanticLabel;
