@@ -237,10 +237,10 @@ void Application::process_labelling_input()
 
   interactor->set_semantic_label(semanticLabel);
 
-  // Update the current selector (if any).
+  // Update the current selector.
   interactor->update_selector(m_inputState, renderState);
 
-  // If there is a currently-active selector:
+  // If the current selector is active:
   if(interactor->selector_is_active())
   {
     // Gets the voxels selected by the user (if any).

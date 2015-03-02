@@ -5,10 +5,12 @@
 #include "core/SpaintInteractor.h"
 
 #include "markers/cpu/VoxelMarker_CPU.h"
+#include "selectors/NullSelector.h"
+#include "selectors/PickingSelector.h"
+
 #ifdef WITH_CUDA
 #include "markers/cuda/VoxelMarker_CUDA.h"
 #endif
-#include "selectors/PickingSelector.h"
 
 namespace spaint {
 
@@ -16,7 +18,7 @@ namespace spaint {
 
 SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 : m_model(model),
-  m_selector(new PickingSelector(model->get_settings())),
+  m_selector(new NullSelector),
   m_semanticLabel(1)
 {
   // Set up the voxel marker.
@@ -41,7 +43,7 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
 {
-  return m_selector ? m_selector->get_selection() : Selection_CPtr();
+  return m_selector->get_selection();
 }
 
 Selector_CPtr SpaintInteractor::get_selector() const
@@ -61,7 +63,7 @@ void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, unsigned cha
 
 bool SpaintInteractor::selector_is_active() const
 {
-  return m_selector && m_selector->is_active();
+  return m_selector->is_active();
 }
 
 void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)
@@ -74,12 +76,12 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
   // Allow the user to switch between different selectors.
   if(inputState.key_down(SDLK_i))
   {
-    if(inputState.key_down(SDLK_1)) m_selector.reset();
+    if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector);
     else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(m_model->get_settings()));
   }
 
   // If there is a current selector, update it.
-  if(m_selector) m_selector->update(inputState, renderState);
+  m_selector->update(inputState, renderState);
 }
 
 }

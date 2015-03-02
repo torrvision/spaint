@@ -9,6 +9,7 @@ namespace spaint {
 
 //#################### FORWARD DECLARATIONS ####################
 
+class NullSelector;
 class PickingSelector;
 
 /**
@@ -25,6 +26,13 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Visits a null selector.
+   *
+   * \param selector  The selector to visit.
+   */
+  virtual void visit(const NullSelector& selector) const;
+
   /**
    * \brief Visits a picking selector.
    *

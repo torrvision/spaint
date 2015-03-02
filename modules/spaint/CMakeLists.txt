@@ -149,11 +149,13 @@ include/spaint/selectiontransformers/shared/VoxelToCubeSelectionTransformer_Shar
 
 ##
 SET(selectors_sources
+src/selectors/NullSelector.cpp
 src/selectors/PickingSelector.cpp
 src/selectors/SelectorVisitor.cpp
 )
 
 SET(selectors_headers
+include/spaint/selectors/NullSelector.h
 include/spaint/selectors/PickingSelector.h
 include/spaint/selectors/Selector.h
 include/spaint/selectors/SelectorVisitor.h

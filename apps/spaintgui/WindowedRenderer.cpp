@@ -196,8 +196,8 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selecto
         glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
       glEnd();
 
-      // Render the current selector (if any) to show how we're interacting with the scene.
-      if(selector) selector->accept(SelectorRenderer(this));
+      // Render the current selector to show how we're interacting with the scene.
+      selector->accept(SelectorRenderer(this));
     }
     glPopMatrix();
   }
