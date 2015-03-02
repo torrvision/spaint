@@ -27,7 +27,7 @@ void VoxelToCubeSelectionTransformer_CPU::transform_selection(const Selection& i
 #endif
   for(int outputVoxelIndex = 0; outputVoxelIndex < outputVoxelCount; ++outputVoxelIndex)
   {
-    write_output_voxel(outputVoxelIndex, m_cubeSideLength, m_cubeSize, m_radius, inputSelection, outputSelection);
+    write_voxel_to_output_selection(outputVoxelIndex, m_cubeSideLength, m_cubeSize, m_radius, inputSelection, outputSelection);
   }
 }
 

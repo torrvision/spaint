@@ -13,7 +13,7 @@ namespace spaint {
 __global__ void ck_transform_selection(int cubeSideLength, int cubeSize, int radius, const Vector3s *inputSelection, Vector3s *outputSelection, int outputVoxelCount)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  if(tid < outputVoxelCount) write_output_voxel(tid, cubeSideLength, cubeSize, radius, inputSelection, outputSelection);
+  if(tid < outputVoxelCount) write_voxel_to_output_selection(tid, cubeSideLength, cubeSize, radius, inputSelection, outputSelection);
 }
 
 //#################### CONSTRUCTORS ####################

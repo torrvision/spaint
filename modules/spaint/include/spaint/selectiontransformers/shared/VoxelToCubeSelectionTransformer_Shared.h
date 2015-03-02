@@ -20,7 +20,7 @@ namespace spaint {
  * \param outputSelection   The output selection of voxels.
  */
 _CPU_AND_GPU_CODE_
-inline void write_output_voxel(int outputVoxelIndex, int cubeSideLength, int cubeSize, int radius, const Vector3s *inputSelection, Vector3s *outputSelection)
+inline void write_voxel_to_output_selection(int outputVoxelIndex, int cubeSideLength, int cubeSize, int radius, const Vector3s *inputSelection, Vector3s *outputSelection)
 {
   // Look up the input voxel that corresponds to this output voxel (there is one input voxel for each cube of output voxels).
   int inputVoxelIndex = outputVoxelIndex / cubeSize;
