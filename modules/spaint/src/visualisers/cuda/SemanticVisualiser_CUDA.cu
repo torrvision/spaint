@@ -37,10 +37,13 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
   labelColoursData[3] = Vector3u(0, 0, 255);
   labelColours.UpdateDeviceFromHost();
 
+  // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
+  const float voxelSize = scene->sceneParams->voxelSize;
+  Vector3f lightPos = Vector3f(0.0f, -10.0f, -10.0f) / voxelSize;
+  Vector3f viewerPos = Vector3f(pose->GetInvM().getColumn(3)) / voxelSize;
+
   // Shade all of the pixels in the image.
   Vector2i imgSize = outputImage->noDims;
-  Vector3f lightPos(0.0f, -100.0f, 0.0f);
-  Vector3f viewerPos(pose->GetInvM().getColumn(3));
 
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));

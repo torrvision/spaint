@@ -24,12 +24,15 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
     Vector3u(0, 0, 255)
   };
 
+  // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
+  const float voxelSize = scene->sceneParams->voxelSize;
+  Vector3f lightPos = Vector3f(0.0f, -10.0f, -10.0f) / voxelSize;
+  Vector3f viewerPos = Vector3f(pose->GetInvM().getColumn(3)) / voxelSize;
+
   // Shade all of the pixels in the image.
   int imgSize = outputImage->noDims.x * outputImage->noDims.y;
-  Vector3f lightPos(0.0f, -100.0f, 0.0f);
   Vector4u *outRendering = outputImage->GetData(MEMORYDEVICE_CPU);
   const Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CPU);
-  Vector3f viewerPos(pose->GetInvM().getColumn(3));
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
 

@@ -63,7 +63,6 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
       Vector3f R = 2.0f * N * NdotL - L;
       Vector3f V = normalize(viewerPos - point);
       float phong = pow(CLAMP(dot(R,V), 0.0f, 1.0f), phongExponent);
-      phong = CLAMP(phong, 0.0f, 1.0f);
 
       // Add the Phong lighting term to the intensity.
       intensity += phongCoefficient * phong;
