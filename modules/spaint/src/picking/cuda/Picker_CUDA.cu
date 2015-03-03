@@ -10,9 +10,9 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_get_pick_point(int x, int y, int width, const Vector4f *imageData, Vector3f& pickPoint, bool& result)
+__global__ void ck_get_pick_point(int x, int y, int width, const Vector4f *imageData, Vector3f *pickPoint, bool *result)
 {
-  result = get_pick_point(x, y, width, imageData, pickPoint);
+  *result = get_pick_point(x, y, width, imageData, *pickPoint);
 }
 
 __global__ void ck_to_short(const Vector3f *pickPointFloat, Vector3s *pickPointShort)
@@ -29,8 +29,8 @@ bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rend
     x, y,
     renderState->raycastResult->noDims.x,
     renderState->raycastResult->GetData(MEMORYDEVICE_CUDA),
-    *pickPointMB.GetData(MEMORYDEVICE_CUDA),
-    *result.GetData(MEMORYDEVICE_CUDA)
+    pickPointMB.GetData(MEMORYDEVICE_CUDA),
+    result.GetData(MEMORYDEVICE_CUDA)
   );
   result.UpdateHostFromDevice();
   return *result.GetData(MEMORYDEVICE_CPU);
