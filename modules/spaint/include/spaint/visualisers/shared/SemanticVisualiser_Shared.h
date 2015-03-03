@@ -25,8 +25,8 @@ namespace spaint {
  * \param voxelData     The scene's voxel data.
  * \param voxelIndex    The scene's voxel index.
  * \param labelColours  The colour map for the semantic labels.
- * \param viewerPos     The position of the viewer.
- * \param lightPos      The position of the light source that is illuminating the scene.
+ * \param viewerPos     The position of the viewer (in voxel coordinates).
+ * \param lightPos      The position of the light source that is illuminating the scene (in voxel coordinates).
  * \param usePhong      Whether or not to use Phong lighting.
  */
 _CPU_AND_GPU_CODE_
