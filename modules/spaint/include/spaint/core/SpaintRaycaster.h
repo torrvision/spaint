@@ -32,7 +32,8 @@ public:
   {
     RT_COLOUR,
     RT_LAMBERTIAN,
-    RT_SEMANTIC
+    RT_SEMANTICLAMBERTIAN,
+    RT_SEMANTICPHONG
   };
 
   //#################### PRIVATE VARIABLES ####################

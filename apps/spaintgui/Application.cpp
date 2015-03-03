@@ -54,6 +54,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
+  // If the P key is pressed, toggle whether or not Phong lighting is enabled.
+  if(keysym.sym == SDLK_p)
+  {
+    m_renderer->set_phong_enabled(!m_renderer->get_phong_enabled());
+  }
+
   // If the H key is pressed, print out a list of keyboard controls.
   if(keysym.sym == SDLK_h)
   {
@@ -65,6 +71,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Q = Move Up\n"
               << "E = Move Down\n"
               << "F = Toggle Fusion\n"
+              << "P = Toggle Phong Lighting\n"
               << "Up = Look Down\n"
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
