@@ -263,6 +263,11 @@ IF(WITH_LEAP)
 ENDIF()
 
 ##
+SET(touch_headers
+include/spaint/touch/TouchState.h
+)
+
+##
 SET(trackers_sources)
 SET(trackers_headers)
 
@@ -369,6 +374,7 @@ ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
 ${selectors_headers}
+${touch_headers}
 ${trackers_headers}
 ${util_headers}
 ${visualisers_cpu_headers}
