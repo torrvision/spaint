@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_LEAPSELECTOR
 #define H_SPAINT_LEAPSELECTOR
 
+#include <Leap.h>
+
 #include "Selector.h"
 
 namespace spaint {
@@ -14,6 +16,14 @@ namespace spaint {
  */
 class LeapSelector : public Selector
 {
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The most recent frame of data from the Leap Motion. */
+  Leap::Frame m_frame;
+
+  /** The Leap Motion controller. */
+  Leap::Controller m_leap;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
