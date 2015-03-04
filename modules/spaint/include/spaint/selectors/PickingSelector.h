@@ -21,7 +21,11 @@ namespace spaint {
  */
 class PickingSelector : public Selector
 {
-  //#################### PRIVATE VARIABLES ####################
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+
+  //#################### PROTECTED VARIABLES ####################
 private:
   /** The picker. */
   boost::shared_ptr<const Picker> m_picker;

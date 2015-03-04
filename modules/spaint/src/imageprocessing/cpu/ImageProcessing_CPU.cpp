@@ -2,9 +2,9 @@
  * spaint: ImageProcessing_CPU.cpp
  */
 
-#include "interaction/cpu/ImageProcessing_CPU.h"
+#include "imageprocessing/cpu/ImageProcessing_CPU.h"
 
-#include "interaction/shared/ImageProcessing_Shared.h"
+#include "imageprocessing/shared/ImageProcessing_Shared.h"
 
 namespace spaint {
 

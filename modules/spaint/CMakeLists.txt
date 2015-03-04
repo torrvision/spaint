@@ -55,6 +55,34 @@ include/spaint/input/MouseButton.h
 )
 
 ##
+SET(imageprocessing_cpu_sources
+src/imageprocessing/cpu/ImageProcessing_CPU.cpp
+)
+
+SET(imageprocessing_cpu_headers
+include/spaint/imageprocessing/cpu/ImageProcessing_CPU.h
+)
+
+##
+SET(imageprocessing_cuda_sources
+src/imageprocessing/cuda/ImageProcessing_CUDA.cu
+)
+
+SET(imageprocessing_cuda_headers
+include/spaint/imageprocessing/cuda/ImageProcessing_CUDA.h
+)
+
+##
+SET(imageprocessing_interface_headers
+include/spaint/imageprocessing/interface/ImageProcessing.h
+)
+
+##
+SET(imageprocessing_shared_headers
+include/spaint/imageprocessing/shared/ImageProcessing_Shared.h
+)
+
+##
 SET(markers_cpu_sources
 src/markers/cpu/VoxelMarker_CPU.cpp
 )
@@ -92,6 +120,11 @@ SET(ogl_headers
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
+)
+
+##
+SET(ocv_headers
+include/spaint/util/OCVdebugger.h
 )
 
 ##
@@ -213,6 +246,7 @@ SET(selectors_sources
 src/selectors/NullSelector.cpp
 src/selectors/PickingSelector.cpp
 src/selectors/SelectorVisitor.cpp
+src/selectors/TouchSelector.cpp
 )
 
 SET(selectors_headers
@@ -220,6 +254,7 @@ include/spaint/selectors/NullSelector.h
 include/spaint/selectors/PickingSelector.h
 include/spaint/selectors/Selector.h
 include/spaint/selectors/SelectorVisitor.h
+include/spaint/selectors/TouchSelector.h
 )
 
 IF(WITH_LEAP)
@@ -295,6 +330,7 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 SET(sources
 ${core_sources}
 ${input_sources}
+${imageprocessing_cpu_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
@@ -314,6 +350,9 @@ ${visualisers_interface_sources}
 SET(headers
 ${core_headers}
 ${input_headers}
+${imageprocessing_cpu_headers}
+${imageprocessing_interface_headers}
+${imageprocessing_shared_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
@@ -353,6 +392,10 @@ IF(WITH_CUDA)
     ${selectiontransformers_cuda_headers}
     ${visualisers_cuda_headers}
   )
+ENDIF()
+
+IF(WITH_OPENCV)
+  SET(headers ${headers} ${ocv_headers})
 ENDIF()
 
 #############################
