@@ -162,6 +162,11 @@ include/spaint/selectors/Selector.h
 include/spaint/selectors/SelectorVisitor.h
 )
 
+IF(WITH_LEAP)
+  SET(selectors_sources ${selectors_sources} src/selectors/LeapSelector.cpp)
+  SET(selectors_headers ${selectors_headers} include/spaint/selectors/LeapSelector.h)
+ENDIF()
+
 ##
 SET(trackers_sources)
 SET(trackers_headers)

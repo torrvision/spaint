@@ -9,6 +9,9 @@ namespace spaint {
 
 //#################### FORWARD DECLARATIONS ####################
 
+#ifdef WITH_LEAP
+class LeapSelector;
+#endif
 class NullSelector;
 class PickingSelector;
 
@@ -26,6 +29,15 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+#ifdef WITH_LEAP
+  /**
+   * \brief Visits a Leap selector.
+   *
+   * \param selector  The selector to visit.
+   */
+  virtual void visit(const LeapSelector& selector) const;
+#endif
+
   /**
    * \brief Visits a null selector.
    *
