@@ -8,6 +8,7 @@
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "selectors/NullSelector.h"
 #include "selectors/PickingSelector.h"
+#include "selectors/TouchSelector.h"
 
 #ifdef WITH_CUDA
 #include "markers/cuda/VoxelMarker_CUDA.h"
@@ -107,6 +108,9 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
     else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(settings));
 #ifdef WITH_LEAP
     else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
+#endif
+#ifdef WITH_ARRAYFIRE
+    else if(inputState.key_down(SDLK_4)) m_selector.reset(new TouchSelector(m_model->get_settings()));
 #endif
   }
 
