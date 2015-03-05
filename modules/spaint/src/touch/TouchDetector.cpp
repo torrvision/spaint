@@ -4,6 +4,8 @@
 
 #include "touch/TouchDetector.h"
 
+#include <iostream>
+
 #include "imageprocessing/cpu/ImageProcessing_CPU.h"
 #include "visualisers/cpu/DepthCalculator_CPU.h"
 #ifdef WITH_CUDA
@@ -13,6 +15,8 @@
 
 #ifdef WITH_OPENCV
 #include "util/OCVdebugger.h"
+#include "util/OpenCVExtra.h"
+#include "opencv2/core/ocl.hpp"
 #endif
 
 namespace spaint {
@@ -43,6 +47,21 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 
   // Calculate the difference between the raw depth and the raycasted depth.
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
+
+  static cv::Mat cvDiffRawRaycast(rawDepth->noDims.y, rawDepth->noDims.x, CV_32F);
+  OpenCVExtra::ITM2MAT(m_diffRawRaycast.get(), &cvDiffRawRaycast);
+  OpenCVExtra::imshow_float_and_scale("cvDiffRawRaycast", cvDiffRawRaycast, 1000.0f);
+
+  static cv::UMat tmpUMat;
+  cvDiffRawRaycast.copyTo(tmpUMat);
+  
+  //std::cout << (cv::ocl::useOpenCL() ? "OpenCL enabled" : "CPU") << "mode\n";
+
+  cv::threshold(tmpUMat, tmpUMat, 0.01f, 5.0f, cv::THRESH_BINARY);
+  cv::erode(tmpUMat, tmpUMat, cv::Mat(), cv::Point(-1,-1), 3);
+  cv::dilate(tmpUMat, tmpUMat, cv::Mat(), cv::Point(-1,-1), 3);
+  
+  OpenCVExtra::imshow_float_scale_to_range("Thresholded above 1cm", tmpUMat.getMat(cv::ACCESS_RW));
 
 #ifndef WITH_CUDA
 #ifdef WITH_OPENCV

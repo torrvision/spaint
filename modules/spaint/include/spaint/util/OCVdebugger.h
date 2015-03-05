@@ -8,15 +8,12 @@
 #include <algorithm>
 #include <vector>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include "OpenCVExtra.h"
 
 namespace spaint {
 
-class OCVdebugger{
+class OCVdebugger
+{
 public:
   static void display_image_and_scale(ITMFloatImage *infiniTAMImage, float scaleFactor, const std::string& windowName)
   {
@@ -34,7 +31,7 @@ public:
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
       {
-        float intensity = get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * scaleFactor;
+        float intensity = OpenCVExtra::get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * scaleFactor;
         if((intensity < 0) || (intensity > 255)) intensity = 0;
         set_ocv_mat_8UC1(OCVImageDataPtr, x, y, width, static_cast<int8_t>(intensity));
       }
@@ -66,7 +63,7 @@ public:
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
       {
-        float intensity = get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * alpha + beta;
+        float intensity = OpenCVExtra::get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * alpha + beta;
         set_ocv_mat_8UC1(OCVImageDataPtr, x, y, width, static_cast<int8_t>(intensity));
       }
 
@@ -79,11 +76,6 @@ private:
   static void set_ocv_mat_8UC1(int8_t *OCVImageDataPtr, int x, int y, int width, int8_t value)
   {
     OCVImageDataPtr[y * width + x] = value;
-  }
-
-  static float get_itm_mat_32SC1(float *ITMImageDataPtr, int x, int y, int width)
-  {
-    return ITMImageDataPtr[y * width + x];
   }
 
   static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *ITMImageDataPtr, int width, int height)
