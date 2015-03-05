@@ -11,7 +11,7 @@ namespace spaint {
 //#################### CONSTRUCTORS #################### 
 
 TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view)
-: PickingSelector(settings), m_touchDetector(new TouchDetector), m_trackingState(trackingState), m_view(view)
+: PickingSelector(settings), m_touchDetector(new TouchDetector(view->depth->noDims)), m_trackingState(trackingState), m_view(view)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
@@ -28,6 +28,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   static boost::shared_ptr<rigging::SimpleCamera> camera(new rigging::SimpleCamera(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()));
   camera->set_from(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d));
   static float voxelSize = m_settings->sceneParams.voxelSize;
+  //static const ITMIntrinsics& intrinsics = m_view->calib->intrinsics_d;
 
   m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth);
   const TouchState& touchState = m_touchDetector->get_touch_state();

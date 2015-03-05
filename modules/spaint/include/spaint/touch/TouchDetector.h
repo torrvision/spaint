@@ -10,6 +10,7 @@
 #include <rigging/SimpleCamera.h>
 
 #include "../imageprocessing/interface/ImageProcessing.h"
+#include "../visualisers/interface/DepthCalculator.h"
 #include "TouchState.h"
 
 namespace spaint {
@@ -26,6 +27,9 @@ private:
 
   //#################### PRIVATE VARIABLES #################### 
 private:
+  /** The depth calculator. */
+  boost::shared_ptr<const DepthCalculator> m_depthCalculator;
+
   /** An image in which each pixel is the difference between the currentandraycasted depth. */
   FloatImage_Ptr m_diffRawRaycast;
 
@@ -43,7 +47,7 @@ public:
   /**
    * \brief TODO.
    */
-  TouchDetector();
+  TouchDetector(const Vector2i& imgSize);
 
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
@@ -59,15 +63,6 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS #################### 
 private:
-  /**
-   * \brief Gets a depth raycast of the scene.
-   *
-   * \param output      The location into which to store the depth values.
-   * \param renderState The current render state.
-   * \param camera      The camera from which to raycast the scene.
-   * \param voxelSize   The size of a voxel in the scene, usually in meters.
-   */
-  void generate_depth_raycast(const FloatImage_Ptr& output, const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize) const;
 };
 
 }
