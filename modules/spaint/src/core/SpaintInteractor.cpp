@@ -110,7 +110,7 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
     else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
 #endif
 #ifdef WITH_ARRAYFIRE
-    else if(inputState.key_down(SDLK_4)) m_selector.reset(new TouchSelector(m_model->get_settings()));
+    else if(inputState.key_down(SDLK_4)) m_selector.reset(new TouchSelector(m_model->get_settings(), m_model->get_tracking_state(), m_model->get_view()));
 #endif
   }
 

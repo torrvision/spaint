@@ -263,7 +263,13 @@ IF(WITH_LEAP)
 ENDIF()
 
 ##
+SET(touch_sources
+src/touch/TouchDetector.cpp
+src/touch/TouchState.cpp
+)
+
 SET(touch_headers
+include/spaint/touch/TouchDetector.h
 include/spaint/touch/TouchState.h
 )
 
@@ -346,6 +352,7 @@ ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
 ${selectors_sources}
+${touch_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}

@@ -5,9 +5,11 @@
 #ifndef H_SPAINT_TOUCHSELECTOR
 #define H_SPAINT_TOUCHSELECTOR
 
-#include "imageprocessing/interface/ImageProcessing.h"
+#include <ITMLib/Objects/ITMTrackingState.h>
+#include <ITMLib/Objects/ITMView.h>
+
 #include "PickingSelector.h"
-#include "../touch/TouchState.h"
+#include "../touch/TouchDetector.h"
 
 namespace spaint {
 
@@ -18,21 +20,20 @@ class TouchSelector : public PickingSelector
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
+  typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
+  typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<ITMView> View_Ptr;
 
   //#################### PRIVATE VARIABLES #################### 
 private:
-  /** An image in which each pixel is the difference between the currentandraycasted depth. */
-  mutable FloatImage_Ptr m_diffRawRaycast;
+  /** A touch detector. */
+  TouchDetector_Ptr m_touchDetector;
 
-  /** Multiplatform image processing tools. */
-  boost::shared_ptr<const ImageProcessing> m_imageProcessor;
+  /** The traching state. */
+  TrackingState_Ptr m_trackingState;
 
-  /** An image into which to store the depth calculation of the currently visible scene from the camera. */
-  mutable FloatImage_Ptr m_raycastedDepthResult;
-
-  /** An instance of the current state of touching. */
-  mutable TouchState m_touchState;
+  /** The view. */
+  View_Ptr m_view;
 
   //#################### CONSTRUCTORS #################### 
 public:
@@ -41,17 +42,12 @@ public:
    *
    * \param settings  The settings to use for InfiniTAM.
    */
-  explicit TouchSelector(const Settings_CPtr& settings);
+  explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view);
 
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
   /** Override */
   virtual Selection_CPtr get_selection() const;
-
-  /**
-   * \brief Gets a touch selection.
-   */
-  void touch_pipeline() const;
 
   /** Override */
   virtual void update(const InputState& inputState, const RenderState_CPtr& renderState);

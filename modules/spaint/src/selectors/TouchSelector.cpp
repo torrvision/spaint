@@ -4,12 +4,14 @@
 
 #include "selectors/TouchSelector.h"
 
+#include "util/CameraPoseConverter.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS #################### 
 
-TouchSelector::TouchSelector(const Settings_CPtr& settings)
-: PickingSelector(settings)
+TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view)
+: PickingSelector(settings), m_touchDetector(new TouchDetector), m_trackingState(trackingState), m_view(view)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
@@ -20,30 +22,27 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
   return PickingSelector::get_selection();
 }
 
-void TouchSelector::touch_pipeline() const
-{
-  // The touch pipeline will go here.
-
-  // Update the touch state.
-  m_touchState.set_touch_state(250, 250, true, true);
-}
-
 void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Run the touch pipeline.
-  touch_pipeline();
+  static boost::shared_ptr<rigging::SimpleCamera> camera(new rigging::SimpleCamera(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()));
+  camera->set_from(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d));
+  static float voxelSize = m_settings->sceneParams.voxelSize;
+
+  m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth);
+  const TouchState& touchState = m_touchDetector->get_touch_state();
 
   // Update whether or not the selector is active.
-  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT) || m_touchState.touching_surface();
+  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT) || touchState.touching_surface();
   const int radius = 5;
   m_radius = radius;
 
   // Try and pick an individual voxel.
   m_pickPointValid = false;
 
-  if(!m_touchState.touch_position_known()) return;
-  int x = m_touchState.position_x();
-  int y = m_touchState.position_y();
+  if(!touchState.touch_position_known()) return;
+  int x = touchState.position_x();
+  int y = touchState.position_y();
 
   //FIXME The following two lines are duplicated from PickingSelector.cpp
   m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);

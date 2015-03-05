@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_TOUCHSTATE
 #define H_SPAINT_TOUCHSTATE
 
+#include <boost/shared_ptr.hpp>
+
 namespace spaint {
 
 /**
@@ -51,6 +53,10 @@ public:
     return m_touchPositionKnown;
   }
 };
+
+//#################### TYPEDEFS #################### 
+typedef boost::shared_ptr<TouchState> TouchState_Ptr;
+typedef boost::shared_ptr<const TouchState> TouchState_CPtr;
 
 }
 
