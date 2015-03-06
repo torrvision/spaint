@@ -19,6 +19,17 @@ namespace spaint {
  */
 class DepthCalculator
 {
+  //#################### ENUMERATIONS #################### 
+public:
+  /**
+   * \brief An enumeration specifying the different typesof depth raycasting that is supported.
+   */
+  enum DepthType
+  {
+    DT_EUCLIDEAN,
+    DT_ORTHOGRAPHIC
+  };
+
   //#################### DESTRUCTOR #################### 
 public:
   /**
@@ -37,6 +48,8 @@ public:
   virtual void render_euclidean_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
 
   virtual void render_orthographic_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
+
+  virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize, DepthType = DT_ORTHOGRAPHIC) const = 0;
 };
 
 }

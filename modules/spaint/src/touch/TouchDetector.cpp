@@ -16,7 +16,6 @@
 #ifdef WITH_OPENCV
 #include "util/OCVdebugger.h"
 #include "util/OpenCVExtra.h"
-#include "opencv2/core/ocl.hpp"
 #endif
 
 namespace spaint {
@@ -46,22 +45,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   m_depthCalculator->render_orthographic_distance(m_raycastedDepthResult.get(), renderState.get(), camera.get(), voxelSize);
 
   // Calculate the difference between the raw depth and the raycasted depth.
-  m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
-
-  static cv::Mat cvDiffRawRaycast(rawDepth->noDims.y, rawDepth->noDims.x, CV_32F);
-  OpenCVExtra::ITM2MAT(m_diffRawRaycast.get(), &cvDiffRawRaycast);
-  OpenCVExtra::imshow_float_and_scale("cvDiffRawRaycast", cvDiffRawRaycast, 1000.0f);
-
-  static cv::UMat tmpUMat;
-  cvDiffRawRaycast.copyTo(tmpUMat);
-  
-  //std::cout << (cv::ocl::useOpenCL() ? "OpenCL enabled" : "CPU") << "mode\n";
-
-  cv::threshold(tmpUMat, tmpUMat, 0.01f, 5.0f, cv::THRESH_BINARY);
-  cv::erode(tmpUMat, tmpUMat, cv::Mat(), cv::Point(-1,-1), 3);
-  cv::dilate(tmpUMat, tmpUMat, cv::Mat(), cv::Point(-1,-1), 3);
-  
-  OpenCVExtra::imshow_float_scale_to_range("Thresholded above 1cm", tmpUMat.getMat(cv::ACCESS_RW));
+  //m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
 
 #ifndef WITH_CUDA
 #ifdef WITH_OPENCV
@@ -69,6 +53,12 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   OCVdebugger::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
   OCVdebugger::display_image_and_scale(m_diffRawRaycast.get(), 1000.0f, "Difference between raw and raycasted depth");
 #endif
+#endif
+
+#ifdef WITH_OPENCV
+  // Run the OpenCV CPU only pipeline.
+  opencv_cpu_pipeline(m_diffRawRaycast);
+#else
 #endif
 }
 
@@ -78,5 +68,23 @@ const TouchState& TouchDetector::get_touch_state() const
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS #################### 
+
+#ifdef WITH_OPENCV
+void TouchDetector::opencv_cpu_pipeline(const FloatImage_Ptr& rawDiff) const
+{
+  static cv::Mat tmpMat32F(rawDiff->noDims.y, rawDiff->noDims.x, CV_32F);
+  OpenCVExtra::ITM2MAT(rawDiff.get(), &tmpMat32F);
+  OpenCVExtra::imshow_float_and_scale("cvDiffRawRaycast", tmpMat32F, 1000.0f);
+
+  static cv::Mat tmpMat8U;
+
+  cv::threshold(tmpMat32F, tmpMat8U, 0.01f, 255.0f, cv::THRESH_BINARY);
+  cv::erode(tmpMat8U, tmpMat8U, cv::Mat(), cv::Point(-1,-1), 3);
+  cv::dilate(tmpMat8U, tmpMat8U, cv::Mat(), cv::Point(-1,-1), 3);
+  
+  cv::imshow("Thresholded above 1cm", tmpMat8U);
+}
+#endif
+
 }
 

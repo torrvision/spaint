@@ -2,9 +2,9 @@
  * spaint: ImageProcessing_CUDA.cu
  */
 
-#include "interaction/cuda/ImageProcessing_CUDA.h"
+#include "imageprocessing/cuda/ImageProcessing_CUDA.h"
 
-#include "interaction/shared/ImageProcessing_Shared.h"
+#include "imageprocessing/shared/ImageProcessing_Shared.h"
 
 namespace spaint {
 

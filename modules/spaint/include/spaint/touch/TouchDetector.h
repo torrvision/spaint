@@ -63,6 +63,10 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS #################### 
 private:
+  /**
+   * \brief An implementation of the touch detection in opencv for cpu only.
+   */
+  void opencv_cpu_pipeline(const FloatImage_Ptr& rawDiff) const;
 };
 
 }

@@ -79,5 +79,9 @@ void DepthCalculator_CUDA::render_orthographic_distance(ITMFloatImage *outputIma
     voxelSize
   );
 }
+
+void DepthCalculator_CUDA::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize, DepthType depthType) const
+{}
+
 }
 

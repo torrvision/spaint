@@ -17,8 +17,25 @@ namespace spaint {
 
 class OpenCVExtra
 {
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  static cv::Mat ITM2UMATNOCOPY(ITMFloatImage *infiniTAMImage)
+  {
+    int width = infiniTAMImage->noDims.x;
+    int height = infiniTAMImage->noDims.y;
+
+    // Get the InfiniTAM image data pointer.
+    float *infiniTAMImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
+
+    std::vector<float> tmpImgVector(infiniTAMImageDataPtr, infiniTAMImageDataPtr + width * height);
+
+    const bool copyData = false;
+    cv::Mat opencvImage(tmpImgVector, copyData);
+    opencvImage.reshape(1, height);
+
+    return opencvImage;
+  }
+
   static void ITM2MAT(ITMFloatImage *infiniTAMImage, cv::Mat *opencvImage)
   {
     if(opencvImage->type() != CV_32F)
@@ -30,6 +47,7 @@ public:
     int height = infiniTAMImage->noDims.y;
 
     // Get the InfiniTAM image data pointer.
+    infiniTAMImage->UpdateHostFromDevice();
     float *infiniTAMImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
 
     // Get the OpenCV image data pointer.
@@ -40,7 +58,7 @@ public:
       for(int x = 0; x < width; ++x)
       {
         float intensity = get_itm_mat_32SC1(infiniTAMImageDataPtr, x, y, width);
-        set_ocv_mat_32SC1(opencvImageDataPtr, x, y, width, intensity);
+        set_ocv_mat_32F(opencvImageDataPtr, x, y, width, intensity);
       }
   }
 
@@ -66,7 +84,7 @@ public:
     cv::imshow(windowName, canvas);
   }
 
-  static void set_ocv_mat_32SC1(float *opencvImageDataPtr, int x, int y, int width, float value)
+  static void set_ocv_mat_32F(float *opencvImageDataPtr, int x, int y, int width, float value)
   {
     opencvImageDataPtr[y * width + x] = value;
   }

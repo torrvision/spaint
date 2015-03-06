@@ -391,6 +391,7 @@ ${visualisers_shared_headers}
 
 IF(WITH_CUDA)
   SET(sources ${sources}
+    ${imageprocessing_cuda_sources}
     ${markers_cuda_sources}
     ${picking_cuda_sources}
     ${sampling_cuda_sources}
@@ -399,6 +400,7 @@ IF(WITH_CUDA)
   )
 
   SET(headers ${headers}
+    ${imageprocessing_cuda_headers}
     ${markers_cuda_headers}
     ${picking_cuda_headers}
     ${sampling_cuda_headers}

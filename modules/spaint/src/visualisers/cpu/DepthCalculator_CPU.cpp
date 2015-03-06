@@ -60,4 +60,8 @@ void DepthCalculator_CPU::render_orthographic_distance(ITMFloatImage *outputImag
   }
 }
 
+void DepthCalculator::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize, DepthType depthType) const
+{
+}
+
 }

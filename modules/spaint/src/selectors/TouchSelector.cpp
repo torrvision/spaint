@@ -2,6 +2,8 @@
  * spaint: TouchSelector.cpp
  */
 
+#include <tvgutil/timers/Timer.h>
+
 #include "selectors/TouchSelector.h"
 
 #include "util/CameraPoseConverter.h"
@@ -30,7 +32,8 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   static float voxelSize = m_settings->sceneParams.voxelSize;
   //static const ITMIntrinsics& intrinsics = m_view->calib->intrinsics_d;
 
-  m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth);
+  TIME(m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth),milliseconds, runningTouchDetectorOnFrame);
+  std::cout << runningTouchDetectorOnFrame << '\n';
   const TouchState& touchState = m_touchDetector->get_touch_state();
 
   // Update whether or not the selector is active.
