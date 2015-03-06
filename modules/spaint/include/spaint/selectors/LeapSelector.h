@@ -7,12 +7,15 @@
 
 #include <Eigen/Dense>
 
+#include <ITMLib/Objects/ITMScene.h>
+
 // Note: This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
 #undef PI
 
 #include <Leap.h>
 
 #include "Selector.h"
+#include "../util/SpaintVoxel.h"
 
 namespace spaint {
 
@@ -21,6 +24,11 @@ namespace spaint {
  */
 class LeapSelector : public Selector
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<const Scene> Scene_CPtr;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The most recent frame of data from the Leap Motion. */
@@ -28,6 +36,23 @@ private:
 
   /** The Leap Motion controller. */
   Leap::Controller m_leap;
+
+  /** A memory block into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
+  // FIXME: This is the same as in PickingSelector - we should factor out the common code.
+  ORUtils::MemoryBlock<Vector3s> m_pickPointShortMB;
+
+  /** The InfiniTAM scene. */
+  Scene_CPtr m_scene;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a Leap selector.
+   *
+   * \param settings  The settings to use for InfiniTAM.
+   * \param scene     The InfiniTAM scene.
+   */
+  LeapSelector(const Settings_CPtr& settings, const Scene_CPtr& scene);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

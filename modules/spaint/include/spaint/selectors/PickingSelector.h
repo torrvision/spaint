@@ -21,10 +21,6 @@ namespace spaint {
  */
 class PickingSelector : public Selector
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
@@ -41,9 +37,6 @@ private:
 
   /** The selection radius (we select all voxels in a cube of side length 2 * radius + 1, centered on the voxel the user actually clicks). */
   int m_radius;
-
-  /** The settings to use for InfiniTAM. */
-  Settings_CPtr m_settings;
 
   //#################### CONSTRUCTORS ####################
 public:

@@ -22,7 +22,7 @@ namespace spaint {
 
 SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 : m_model(model),
-  m_selector(new NullSelector),
+  m_selector(new NullSelector(model->get_settings())),
   m_semanticLabel(1)
 {
   // Set up the voxel marker.
@@ -78,12 +78,13 @@ void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)
 void SpaintInteractor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Allow the user to switch between different selectors.
+  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
   if(inputState.key_down(SDLK_i))
   {
-    if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector);
-    else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(m_model->get_settings()));
+    if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector(settings));
+    else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(settings));
 #ifdef WITH_LEAP
-    else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector);
+    else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
 #endif
   }
 

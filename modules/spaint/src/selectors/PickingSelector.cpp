@@ -17,11 +17,11 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 PickingSelector::PickingSelector(const Settings_CPtr& settings)
-: m_pickPointFloatMB(1, true, true),
+: Selector(settings),
+  m_pickPointFloatMB(1, true, true),
   m_pickPointShortMB(1, true, true),
   m_pickPointValid(false),
-  m_radius(2),
-  m_settings(settings)
+  m_radius(2)
 {
   // Make the picker.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -89,10 +89,7 @@ Selector::Selection_CPtr PickingSelector::get_selection() const
 
   // Expand the picked point to a cube of voxels using the transformer.
   MemoryDeviceType memoryDeviceType = deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > cubeMB(new ORUtils::MemoryBlock<Vector3s>(
-    selectionTransformer->compute_output_selection_size(m_pickPointShortMB),
-    memoryDeviceType
-  ));
+  Selection_Ptr cubeMB(new Selection(selectionTransformer->compute_output_selection_size(m_pickPointShortMB), memoryDeviceType));
   selectionTransformer->transform_selection(m_pickPointShortMB, *cubeMB);
 
   return cubeMB;
