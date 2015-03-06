@@ -78,6 +78,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Right = Turn Right\n"
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
+              << "I + 3 = To Leap Selector\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
               << "R + 3 = To Rift Renderer (Fullscreen)\n"

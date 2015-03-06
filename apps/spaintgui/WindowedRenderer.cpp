@@ -10,6 +10,9 @@
 using namespace rigging;
 
 #include <spaint/ogl/QuadricRenderer.h>
+#ifdef WITH_LEAP
+#include <spaint/selectors/LeapSelector.h>
+#endif
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
@@ -32,6 +35,38 @@ public:
 
   //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 public:
+#ifdef WITH_LEAP
+  /** Override */
+  virtual void visit(const LeapSelector& selector) const
+  {
+    const Leap::Frame& frame = selector.get_frame();
+    if(!frame.isValid() || frame.hands().count() != 1) return;
+
+    for(int fingerIndex = 0, fingerCount = frame.hands()[0].fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
+    {
+      const Leap::Finger& finger = frame.hands()[0].fingers()[fingerIndex];
+
+      glColor3f(0.8f, 0.8f, 0.8f);
+      for(int boneIndex = 0; boneIndex < 4; ++boneIndex)
+      {
+        const Leap::Bone& bone = finger.bone(Leap::Bone::Type(boneIndex));
+
+        glColor3f(0.8f, 0.8f, 0.8f);
+        QuadricRenderer::render_cylinder(
+          LeapSelector::from_leap_vector(bone.prevJoint()),
+          LeapSelector::from_leap_vector(bone.nextJoint()),
+          bone.width() * 0.5f / 1000,
+          bone.width() * 0.5f / 1000,
+          10
+        );
+
+        glColor3f(1.0f, 0.0f, 0.0f);
+        QuadricRenderer::render_sphere(LeapSelector::from_leap_vector(bone.nextJoint()), bone.width() * 0.7f / 1000, 10, 10);
+      }
+    }
+  }
+#endif
+
   /** Override */
   virtual void visit(const PickingSelector& selector) const
   {
@@ -53,6 +88,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
   m_window.reset(
     SDL_CreateWindow(
@@ -72,6 +108,9 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
   );
 
   glViewport(0, 0, width, height);
+
+  glDepthFunc(GL_LEQUAL);
+  glEnable(GL_DEPTH_TEST);
 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
@@ -139,10 +178,14 @@ void WindowedRenderer::begin_2d()
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
+
+  glDepthMask(false);
 }
 
 void WindowedRenderer::end_2d()
 {
+  glDepthMask(true);
+
   // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
   glPopMatrix();
 

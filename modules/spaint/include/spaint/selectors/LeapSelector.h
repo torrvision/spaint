@@ -5,6 +5,11 @@
 #ifndef H_SPAINT_LEAPSELECTOR
 #define H_SPAINT_LEAPSELECTOR
 
+#include <Eigen/Dense>
+
+// Note: This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
+#undef PI
+
 #include <Leap.h>
 
 #include "Selector.h"
@@ -29,11 +34,28 @@ public:
   /** Override */
   virtual void accept(const SelectorVisitor& visitor) const;
 
+  /**
+   * \brief Gets the most recent frame of data from the Leap Motion.
+   *
+   * \return  The most recent frame of data from the Leap Motion.
+   */
+  const Leap::Frame& get_frame() const;
+
   /** Override */
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
   virtual void update(const InputState& inputState, const RenderState_CPtr& renderState);
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Converts a vector in the Leap coordinate system into one in our coordinate system.
+   *
+   * \param leapVec The vector in the Leap coordinate system.
+   * \return        The vector in our coordinate system.
+   */
+  static Eigen::Vector3f from_leap_vector(const Leap::Vector& leapVec);
 };
 
 }

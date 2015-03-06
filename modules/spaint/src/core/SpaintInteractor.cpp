@@ -12,6 +12,10 @@
 #include "markers/cuda/VoxelMarker_CUDA.h"
 #endif
 
+#ifdef WITH_LEAP
+#include "selectors/LeapSelector.h"
+#endif
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -78,6 +82,9 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
   {
     if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector);
     else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(m_model->get_settings()));
+#ifdef WITH_LEAP
+    else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector);
+#endif
   }
 
   // Update the current selector.
