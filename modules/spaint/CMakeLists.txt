@@ -120,6 +120,15 @@ include/spaint/picking/shared/Picker_Shared.h
 )
 
 ##
+SET(selectiontransformers_sources
+src/selectiontransformers/SelectionTransformerFactory.cpp
+)
+
+SET(selectiontransformers_headers
+include/spaint/selectiontransformers/SelectionTransformerFactory.h
+)
+
+##
 SET(selectiontransformers_cpu_sources
 src/selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.cpp
 )
@@ -138,6 +147,10 @@ include/spaint/selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h
 )
 
 ##
+SET(selectiontransformers_interface_sources
+src/selectiontransformers/interface/SelectionTransformer.cpp
+)
+
 SET(selectiontransformers_interface_headers
 include/spaint/selectiontransformers/interface/SelectionTransformer.h
 include/spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h
@@ -224,7 +237,9 @@ ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
+${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
+${selectiontransformers_interface_sources}
 ${selectors_sources}
 ${trackers_sources}
 ${util_sources}
@@ -242,6 +257,7 @@ ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
+${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
@@ -284,9 +300,10 @@ SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
+SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
-SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_headers})
+SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_sources} ${selectiontransformers_interface_headers})
 SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
 SOURCE_GROUP(selectors FILES ${selectors_sources} ${selectors_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})

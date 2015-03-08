@@ -5,11 +5,10 @@
 #include "selectors/PickingSelector.h"
 
 #include "picking/cpu/Picker_CPU.h"
-#include "selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
+#include "selectiontransformers/SelectionTransformerFactory.h"
 
 #ifdef WITH_CUDA
 #include "picking/cuda/Picker_CUDA.h"
-#include "selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h"
 #endif
 
 namespace spaint {
@@ -70,29 +69,10 @@ Selector::Selection_CPtr PickingSelector::get_selection() const
   // If the last update did not yield a valid pick point, early out.
   if(!m_pickPointValid) return Selection_CPtr();
 
-  // Make the transformer that we need in order to expand the selection to the specified radius.
-  boost::shared_ptr<const SelectionTransformer> selectionTransformer;
+  // Transform the picked voxel into a cube of voxels and return it.
   const ITMLibSettings::DeviceType deviceType = m_settings->deviceType;
-  if(deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    selectionTransformer.reset(new VoxelToCubeSelectionTransformer_CUDA(m_radius));
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    selectionTransformer.reset(new VoxelToCubeSelectionTransformer_CPU(m_radius));
-  }
-
-  // Expand the picked point to a cube of voxels using the transformer.
-  MemoryDeviceType memoryDeviceType = deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  Selection_Ptr cubeMB(new Selection(selectionTransformer->compute_output_selection_size(m_pickPointShortMB), memoryDeviceType));
-  selectionTransformer->transform_selection(m_pickPointShortMB, *cubeMB);
-
-  return cubeMB;
+  SelectionTransformer_CPtr transformer = SelectionTransformerFactory::make_voxel_to_cube(m_radius, deviceType);
+  return Selection_CPtr(transformer->transform_selection(m_pickPointShortMB, deviceType));
 }
 
 void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
