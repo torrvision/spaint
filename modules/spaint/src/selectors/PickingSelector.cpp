@@ -70,9 +70,7 @@ Selector::Selection_CPtr PickingSelector::get_selection() const
   if(!m_pickPointValid) return Selection_CPtr();
 
   // Transform the picked voxel into a cube of voxels and return it.
-  const ITMLibSettings::DeviceType deviceType = m_settings->deviceType;
-  SelectionTransformer_CPtr transformer = SelectionTransformerFactory::make_voxel_to_cube(m_radius, deviceType);
-  return Selection_CPtr(transformer->transform_selection(m_pickPointShortMB, deviceType));
+  return Selection_CPtr(SelectionTransformerFactory::make_voxel_to_cube(m_radius, m_settings->deviceType)->transform_selection(m_pickPointShortMB));
 }
 
 void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)

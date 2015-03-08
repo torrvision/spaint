@@ -19,6 +19,20 @@ class SelectionTransformer
 public:
   typedef ORUtils::MemoryBlock<Vector3s> Selection;
 
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The device on which the transformer is operating. */
+  const ITMLibSettings::DeviceType m_deviceType;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a selection transformer.
+   *
+   * \param deviceType  The device on which the transformer is operating.
+   */
+  explicit SelectionTransformer(ITMLibSettings::DeviceType deviceType);
+
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -55,10 +69,9 @@ public:
    * because this header is included in a .cu file that's compiled by nvcc, and nvcc can't handle Boost.
    *
    * \param inputSelectionMB  A memory block containing the input selection of voxels.
-   * \param deviceType        The device on which to perform the transformation.
    * \return                  A pointer to a memory block containing the output selection of voxels.
    */
-  Selection *transform_selection(const Selection& inputSelectionMB, ITMLibSettings::DeviceType deviceType) const;
+  Selection *transform_selection(const Selection& inputSelectionMB) const;
 };
 
 }

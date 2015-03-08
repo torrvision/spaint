@@ -26,14 +26,16 @@ protected:
   const int m_radius;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief Constructs a voxel to cube selection transformer.
    *
-   * \param radius  The (Manhattan) radius (in voxels) to select around each initial voxel.
+   * \param radius      The (Manhattan) radius (in voxels) to select around each initial voxel.
+   * \param deviceType  The device on which the transformer is operating.
    */
-  explicit VoxelToCubeSelectionTransformer(int radius)
-  : m_cubeSideLength(2 * radius + 1),
+  VoxelToCubeSelectionTransformer(int radius, ITMLibSettings::DeviceType deviceType)
+  : SelectionTransformer(deviceType),
+    m_cubeSideLength(2 * radius + 1),
     m_cubeSize(m_cubeSideLength * m_cubeSideLength * m_cubeSideLength),
     m_radius(radius)
   {}

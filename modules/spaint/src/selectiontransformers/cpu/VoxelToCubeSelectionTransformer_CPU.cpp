@@ -11,7 +11,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 VoxelToCubeSelectionTransformer_CPU::VoxelToCubeSelectionTransformer_CPU(int radius)
-: VoxelToCubeSelectionTransformer(radius)
+: VoxelToCubeSelectionTransformer(radius, ITMLibSettings::DEVICE_CPU)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

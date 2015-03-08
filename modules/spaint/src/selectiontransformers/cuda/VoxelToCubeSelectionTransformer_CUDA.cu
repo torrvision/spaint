@@ -19,7 +19,7 @@ __global__ void ck_transform_selection(int cubeSideLength, int cubeSize, int rad
 //#################### CONSTRUCTORS ####################
 
 VoxelToCubeSelectionTransformer_CUDA::VoxelToCubeSelectionTransformer_CUDA(int radius)
-: VoxelToCubeSelectionTransformer(radius)
+: VoxelToCubeSelectionTransformer(radius, ITMLibSettings::DEVICE_CUDA)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
