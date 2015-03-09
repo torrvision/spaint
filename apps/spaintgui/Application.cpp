@@ -22,7 +22,8 @@ using namespace spaint;
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 : m_spaintPipeline(spaintPipeline)
 {
-  m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
+  const Vector2i& imgSize = spaintPipeline->get_model()->get_depth_image_size();
+  m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -269,7 +270,8 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(SDLK_1))
       {
-        m_renderer.reset(new WindowedRenderer(m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster(), "Semantic Paint", 640, 480));
+        const Vector2i& imgSize = m_spaintPipeline->get_model()->get_depth_image_size();
+        m_renderer.reset(new WindowedRenderer(m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
