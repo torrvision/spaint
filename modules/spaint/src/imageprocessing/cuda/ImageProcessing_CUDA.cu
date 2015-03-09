@@ -12,7 +12,7 @@ namespace spaint {
 
 __global__ void ck_absolute_difference_calculator(float *outputImage, float *firstInputImage, float *secondInputImage, Vector2i imgSize)
 {
-  int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y + blockDim.y + threadIdx.y;
+  int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if(x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
