@@ -21,20 +21,9 @@ __global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Ve
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
 
-void DepthCalculator_CUDA::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize, DepthType depthType) const
+void DepthCalculator_CUDA::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
 {
   Vector2i imgSize = outputImage->noDims;
-  const Eigen::Vector3f& cameraPositionEigen = camera->p();
-  Vector3f cameraPosition;
-  cameraPosition.x = cameraPositionEigen[0];
-  cameraPosition.y = cameraPositionEigen[1];
-  cameraPosition.z = cameraPositionEigen[2];
-
-  const Eigen::Vector3f& cameraLookVectorEigen = camera->n();
-  Vector3f cameraLookVector;
-  cameraLookVector.x = cameraLookVectorEigen[0];
-  cameraLookVector.y = cameraLookVectorEigen[1];
-  cameraLookVector.z = cameraLookVectorEigen[2];
 
   // Shade all the pixels in the image.
   dim3 cudaBlockSize(8, 8);

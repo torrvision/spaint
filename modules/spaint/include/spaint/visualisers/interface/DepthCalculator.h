@@ -10,8 +10,6 @@
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "rigging/SimpleCamera.h"
-
 namespace spaint {
 
 /**
@@ -45,11 +43,7 @@ public:
    * \param renderState The render state corresponding to the specified camera pose.
    * \param outputImage The image into which to write the semantic visualisation of the scene.
    */
-  //virtual void render_euclidean_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
-
-  //virtual void render_orthographic_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
-
-  virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize, DepthType = DT_ORTHOGRAPHIC) const = 0;
+  virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType = DT_ORTHOGRAPHIC) const = 0;
 };
 
 }
