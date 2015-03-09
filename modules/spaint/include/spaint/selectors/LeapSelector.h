@@ -37,9 +37,8 @@ private:
   /** The Leap Motion controller. */
   Leap::Controller m_leap;
 
-  /** A memory block into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
-  // FIXME: This is the same as in PickingSelector - we should factor out the common code.
-  ORUtils::MemoryBlock<Vector3s> m_pickPointShortMB;
+  /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
+  Selection_Ptr m_pickPointShortMB;
 
   /** The InfiniTAM scene. */
   Scene_CPtr m_scene;

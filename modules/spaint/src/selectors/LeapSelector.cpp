@@ -12,7 +12,7 @@ namespace spaint {
 
 LeapSelector::LeapSelector(const Settings_CPtr& settings, const Scene_CPtr& scene)
 : Selector(settings),
-  m_pickPointShortMB(1, true, true),
+  m_pickPointShortMB(new ORUtils::MemoryBlock<Vector3s>(1, true, true)),
   m_scene(scene)
 {}
 
@@ -30,8 +30,7 @@ const Leap::Frame& LeapSelector::get_frame() const
 
 Selector::Selection_CPtr LeapSelector::get_selection() const
 {
-  // Transform the picked voxel into a cube of voxels and return it.
-  return Selection_CPtr(SelectionTransformerFactory::make_voxel_to_cube(10, m_settings->deviceType)->transform_selection(m_pickPointShortMB));
+  return m_pickPointShortMB;
 }
 
 void LeapSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
@@ -50,8 +49,8 @@ void LeapSelector::update(const InputState& inputState, const RenderState_CPtr& 
   Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_scene->sceneParams->voxelSize;
 
   // Record the selected voxel.
-  *m_pickPointShortMB.GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB.UpdateDeviceFromHost();
+  *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
