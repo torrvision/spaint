@@ -14,9 +14,9 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-SelectionTransformer_CPtr SelectionTransformerFactory::make_voxel_to_cube(int radius, ITMLibSettings::DeviceType deviceType)
+SelectionTransformer_Ptr SelectionTransformerFactory::make_voxel_to_cube(int radius, ITMLibSettings::DeviceType deviceType)
 {
-  boost::shared_ptr<const SelectionTransformer> transformer;
+  SelectionTransformer_Ptr transformer;
 
   if(deviceType == ITMLibSettings::DEVICE_CUDA)
   {

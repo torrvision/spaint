@@ -73,9 +73,12 @@ public:
     boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 
+    // FIXME: Get this from the selection transformer.
+    const int selectionRadius = 2;
+
     glColor3f(1.0f, 0.0f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    QuadricRenderer::render_sphere(*pickPoint, selector.get_radius() * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+    QuadricRenderer::render_sphere(*pickPoint, selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
 };

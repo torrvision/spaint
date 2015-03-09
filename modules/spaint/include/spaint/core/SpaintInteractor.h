@@ -9,6 +9,7 @@
 
 #include "SpaintModel.h"
 #include "../markers/interface/VoxelMarker.h"
+#include "../selectiontransformers/interface/SelectionTransformer.h"
 #include "../selectors/Selector.h"
 
 namespace spaint {
@@ -22,13 +23,17 @@ class SpaintInteractor
 private:
   typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef Selector::Selection Selection;
-  typedef boost::shared_ptr<Selection> Selection_CPtr;
+  typedef boost::shared_ptr<const Selection> Selection_CPtr;
+  typedef boost::shared_ptr<SelectionTransformer> SelectionTransformer_Ptr;
   typedef boost::shared_ptr<const VoxelMarker> VoxelMarker_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The spaint model. */
   SpaintModel_Ptr m_model;
+
+  /** The selection transformer to use. */
+  SelectionTransformer_Ptr m_selectionTransformer;
 
   /** The selector to use for selecting voxels in the scene. */
   Selector_Ptr m_selector;

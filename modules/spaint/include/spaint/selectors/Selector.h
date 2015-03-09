@@ -26,7 +26,7 @@ public:
   typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef ORUtils::MemoryBlock<Vector3s> Selection;
   typedef boost::shared_ptr<Selection> Selection_Ptr;
-  typedef boost::shared_ptr<Selection> Selection_CPtr;
+  typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
   //#################### PROTECTED VARIABLES ####################

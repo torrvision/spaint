@@ -5,6 +5,7 @@
 #include "core/SpaintInteractor.h"
 
 #include "markers/cpu/VoxelMarker_CPU.h"
+#include "selectiontransformers/SelectionTransformerFactory.h"
 #include "selectors/NullSelector.h"
 #include "selectors/PickingSelector.h"
 
@@ -22,6 +23,7 @@ namespace spaint {
 
 SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 : m_model(model),
+  m_selectionTransformer(SelectionTransformerFactory::make_voxel_to_cube(2, model->get_settings()->deviceType)),
   m_selector(new NullSelector(model->get_settings())),
   m_semanticLabel(1)
 {
@@ -47,7 +49,8 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
 {
-  return m_selector->get_selection();
+  Selection_CPtr selection = m_selector->get_selection();
+  return m_selectionTransformer ? Selection_CPtr(m_selectionTransformer->transform_selection(*selection)) : selection;
 }
 
 Selector_CPtr SpaintInteractor::get_selector() const
@@ -87,6 +90,9 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
     else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
 #endif
   }
+
+  // Update the current selection transformer (if any).
+  if(m_selectionTransformer) m_selectionTransformer->update(inputState);
 
   // Update the current selector.
   m_selector->update(inputState, renderState);

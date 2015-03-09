@@ -5,7 +5,6 @@
 #include "selectors/PickingSelector.h"
 
 #include "picking/cpu/Picker_CPU.h"
-#include "selectiontransformers/SelectionTransformerFactory.h"
 
 #ifdef WITH_CUDA
 #include "picking/cuda/Picker_CUDA.h"
@@ -18,9 +17,8 @@ namespace spaint {
 PickingSelector::PickingSelector(const Settings_CPtr& settings)
 : Selector(settings),
   m_pickPointFloatMB(1, true, true),
-  m_pickPointShortMB(1, true, true),
-  m_pickPointValid(false),
-  m_radius(2)
+  m_pickPointShortMB(new ORUtils::MemoryBlock<Vector3s>(1, true, true)),
+  m_pickPointValid(false)
 {
   // Make the picker.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -59,41 +57,15 @@ boost::optional<Eigen::Vector3f> PickingSelector::get_position() const
   return Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
 }
 
-int PickingSelector::get_radius() const
-{
-  return m_radius;
-}
-
 Selector::Selection_CPtr PickingSelector::get_selection() const
 {
-  // If the last update did not yield a valid pick point, early out.
-  if(!m_pickPointValid) return Selection_CPtr();
-
-  // Transform the picked voxel into a cube of voxels and return it.
-  return Selection_CPtr(SelectionTransformerFactory::make_voxel_to_cube(m_radius, m_settings->deviceType)->transform_selection(m_pickPointShortMB));
+  return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
 }
 
 void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Update whether or not the selector is active.
   m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
-
-  // Allow the user to change the selection radius.
-  const int minRadius = 1;
-  const int maxRadius = 10;
-  static bool canChange = true;
-
-  if(!inputState.key_down(SDLK_RSHIFT) && inputState.key_down(SDLK_LEFTBRACKET))
-  {
-    if(canChange && m_radius > minRadius) --m_radius;
-    canChange = false;
-  }
-  else if(!inputState.key_down(SDLK_RSHIFT) && inputState.key_down(SDLK_RIGHTBRACKET))
-  {
-    if(canChange && m_radius < maxRadius) ++m_radius;
-    canChange = false;
-  }
-  else canChange = true;
 
   // Try and pick an individual voxel.
   m_pickPointValid = false;
@@ -103,7 +75,7 @@ void PickingSelector::update(const InputState& inputState, const RenderState_CPt
   int y = inputState.mouse_position_y();
 
   m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
-  if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, m_pickPointShortMB);
+  if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, *m_pickPointShortMB);
 }
 
 }

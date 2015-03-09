@@ -8,6 +8,8 @@
 #include <ITMLib/Objects/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include "../../input/InputState.h"
+
 namespace spaint {
 
 /**
@@ -57,6 +59,13 @@ public:
    * \param outputSelectionMB A memory block into which to store the output selection of voxels.
    */
   virtual void transform_selection(const Selection& inputSelectionMB, Selection& outputSelectionMB) const = 0;
+
+  /**
+   * \brief Updates the selection transformer.
+   *
+   * \param inputState  The current input state.
+   */
+  virtual void update(const InputState& inputState) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

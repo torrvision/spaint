@@ -16,38 +16,42 @@ class VoxelToCubeSelectionTransformer : public SelectionTransformer
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** The length of each side of one of the cubes (in voxels). */
-  const int m_cubeSideLength;
-
-  /** The number of voxels in each cube. */
-  const int m_cubeSize;
-
   /** The (Manhattan) radius (in voxels) to select around each initial voxel. */
-  const int m_radius;
+  int m_radius;
 
   //#################### CONSTRUCTORS ####################
 protected:
   /**
    * \brief Constructs a voxel to cube selection transformer.
    *
-   * \param radius      The (Manhattan) radius (in voxels) to select around each initial voxel.
+   * \param radius      The initial (Manhattan) radius (in voxels) to select around each initial voxel.
    * \param deviceType  The device on which the transformer is operating.
    */
-  VoxelToCubeSelectionTransformer(int radius, ITMLibSettings::DeviceType deviceType)
-  : SelectionTransformer(deviceType),
-    m_cubeSideLength(2 * radius + 1),
-    m_cubeSize(m_cubeSideLength * m_cubeSideLength * m_cubeSideLength),
-    m_radius(radius)
-  {}
+  VoxelToCubeSelectionTransformer(int radius, ITMLibSettings::DeviceType deviceType);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual int compute_output_selection_size(const Selection& inputSelectionMB) const
-  {
-    // We create one cube for each initial voxel.
-    return inputSelectionMB.dataSize * m_cubeSize;
-  }
+  virtual int compute_output_selection_size(const Selection& inputSelectionMB) const;
+
+  /** Override */
+  virtual void update(const InputState& inputState);
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Calculates the length of each side of one of the cubes (in voxels).
+   *
+   * \return  The length of each side of one of the cubes (in voxels).
+   */
+  int cube_side_length() const;
+
+  /**
+   * \brief Calculates the number of voxels in each cube.
+   *
+   * \return  The number of voxels in each cube.
+   */
+  int cube_size() const;
 };
 
 }
