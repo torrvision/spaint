@@ -42,7 +42,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth) const
 {
   // Calculate the depth raycast from the current scene, this is in meters.
-  m_depthCalculator->render_orthographic_distance(m_raycastedDepthResult.get(), renderState.get(), camera.get(), voxelSize);
+  m_depthCalculator->render_depth(m_raycastedDepthResult.get(), renderState.get(), camera.get(), voxelSize, DepthCalculator::DT_ORTHOGRAPHIC);
 
   // Calculate the difference between the raw depth and the raycasted depth.
   //m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());

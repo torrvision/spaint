@@ -45,9 +45,9 @@ public:
    * \param renderState The render state corresponding to the specified camera pose.
    * \param outputImage The image into which to write the semantic visualisation of the scene.
    */
-  virtual void render_euclidean_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
+  //virtual void render_euclidean_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
 
-  virtual void render_orthographic_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
+  //virtual void render_orthographic_distance(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize) const = 0;
 
   virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, const rigging::SimpleCamera *camera, float voxelSize, DepthType = DT_ORTHOGRAPHIC) const = 0;
 };
