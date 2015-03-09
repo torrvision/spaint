@@ -57,12 +57,14 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
   {
     case RT_COLOUR:
     {
-      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage, true);
+      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::Engine::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case RT_LAMBERTIAN:
     {
-      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage, false);
+      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::Engine::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
     case RT_SEMANTICLAMBERTIAN:
