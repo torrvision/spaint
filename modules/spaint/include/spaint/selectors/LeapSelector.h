@@ -74,6 +74,14 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Converts a size in the Leap coordinate system into one in our coordinate system.
+   *
+   * \param leapSize  The size in the Leap coordinate system.
+   * \return          The size in our coordinate system.
+   */
+  static float from_leap_size(float leapSize);
+
+  /**
    * \brief Converts a vector in the Leap coordinate system into one in our coordinate system.
    *
    * \param leapVec The vector in the Leap coordinate system.

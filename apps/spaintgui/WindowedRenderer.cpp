@@ -45,12 +45,13 @@ public:
     const Leap::Frame& frame = selector.get_frame();
     if(!frame.isValid() || frame.hands().count() != 1) return;
 
-    for(int fingerIndex = 0, fingerCount = frame.hands()[0].fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
+    const Leap::Hand& hand = frame.hands()[0];
+    for(int fingerIndex = 0, fingerCount = hand.fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
     {
-      const Leap::Finger& finger = frame.hands()[0].fingers()[fingerIndex];
+      const Leap::Finger& finger = hand.fingers()[fingerIndex];
 
-      glColor3f(0.8f, 0.8f, 0.8f);
-      for(int boneIndex = 0; boneIndex < 4; ++boneIndex)
+      const int boneCount = 4;  // there are four bones per finger in the Leap hand model
+      for(int boneIndex = 0; boneIndex < boneCount; ++boneIndex)
       {
         const Leap::Bone& bone = finger.bone(Leap::Bone::Type(boneIndex));
 
@@ -58,13 +59,13 @@ public:
         QuadricRenderer::render_cylinder(
           LeapSelector::from_leap_vector(bone.prevJoint()),
           LeapSelector::from_leap_vector(bone.nextJoint()),
-          bone.width() * 0.5f / 1000,
-          bone.width() * 0.5f / 1000,
+          LeapSelector::from_leap_size(bone.width() * 0.5f),
+          LeapSelector::from_leap_size(bone.width() * 0.5f),
           10
         );
 
         glColor3f(1.0f, 0.0f, 0.0f);
-        QuadricRenderer::render_sphere(LeapSelector::from_leap_vector(bone.nextJoint()), bone.width() * 0.7f / 1000, 10, 10);
+        QuadricRenderer::render_sphere(LeapSelector::from_leap_vector(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
       }
     }
   }
