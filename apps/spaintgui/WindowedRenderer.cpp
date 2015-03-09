@@ -10,6 +10,7 @@
 using namespace rigging;
 
 #include <spaint/ogl/QuadricRenderer.h>
+#include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #ifdef WITH_LEAP
 #include <spaint/selectors/LeapSelector.h>
 #endif
@@ -22,10 +23,12 @@ using namespace spaint;
 /**
  * \brief An instance of this class can be used to visit selectors in order to render them.
  */
-class SelectorRenderer : public SelectorVisitor
+class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisitor
 {
+  //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
   const WindowedRenderer *m_base;
+  mutable int m_selectionRadius;
 
   //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 public:
@@ -73,13 +76,16 @@ public:
     boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 
-    // FIXME: Get this from the selection transformer.
-    const int selectionRadius = 2;
-
     glColor3f(1.0f, 0.0f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    QuadricRenderer::render_sphere(*pickPoint, selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+    QuadricRenderer::render_sphere(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+
+  /** Override */
+  virtual void visit(const VoxelToCubeSelectionTransformer& transformer) const
+  {
+    m_selectionRadius = transformer.get_radius();
   }
 };
 
@@ -244,8 +250,9 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const SpaintI
 
       // Render the current selector to show how we're interacting with the scene.
       SelectorRenderer selectorRenderer(this);
+      SpaintInteractor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      if(transformer) transformer->accept(selectorRenderer);
       interactor->get_selector()->accept(selectorRenderer);
-      // TODO: The selection transformer bit.
     }
     glPopMatrix();
   }

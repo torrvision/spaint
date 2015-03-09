@@ -32,7 +32,17 @@ protected:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  virtual void accept(const SelectionTransformerVisitor& visitor) const;
+
+  /** Override */
   virtual int compute_output_selection_size(const Selection& inputSelectionMB) const;
+
+  /**
+   * \brief Gets the (Manhattan) radius (in voxels) to select around each initial voxel.
+   *
+   * \return  The (Manhattan) radius (in voxels) to select around each initial voxel.
+   */
+  int get_radius() const;
 
   /** Override */
   virtual void update(const InputState& inputState);

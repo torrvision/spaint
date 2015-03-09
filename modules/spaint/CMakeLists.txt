@@ -149,11 +149,13 @@ include/spaint/selectiontransformers/cuda/VoxelToCubeSelectionTransformer_CUDA.h
 ##
 SET(selectiontransformers_interface_sources
 src/selectiontransformers/interface/SelectionTransformer.cpp
+src/selectiontransformers/interface/SelectionTransformerVisitor.cpp
 src/selectiontransformers/interface/VoxelToCubeSelectionTransformer.cpp
 )
 
 SET(selectiontransformers_interface_headers
 include/spaint/selectiontransformers/interface/SelectionTransformer.h
+include/spaint/selectiontransformers/interface/SelectionTransformerVisitor.h
 include/spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h
 )
 

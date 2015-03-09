@@ -26,6 +26,8 @@ private:
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<SelectionTransformer> SelectionTransformer_Ptr;
   typedef boost::shared_ptr<const VoxelMarker> VoxelMarker_CPtr;
+public:
+  typedef boost::shared_ptr<const SelectionTransformer> SelectionTransformer_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -63,9 +65,16 @@ public:
   Selection_CPtr get_selection() const;
 
   /**
-   * \brief Gets the selector (if any) that is currently being used to select voxels in the scene.
+   * \brief Gets the selection transformer that is currently being used.
    *
-   * \return  The selector (if any) that is currently being used to select voxels in the scene.
+   * \return  The selection transformer that is currently being used.
+   */
+  SelectionTransformer_CPtr get_selection_transformer() const;
+
+  /**
+   * \brief Gets the selector that is currently being used to select voxels in the scene.
+   *
+   * \return  The selector that is currently being used to select voxels in the scene.
    */
   Selector_CPtr get_selector() const;
 

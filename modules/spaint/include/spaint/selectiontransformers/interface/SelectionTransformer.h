@@ -8,6 +8,7 @@
 #include <ITMLib/Objects/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include "SelectionTransformerVisitor.h"
 #include "../../input/InputState.h"
 
 namespace spaint {
@@ -44,6 +45,13 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Accepts a visitor.
+   *
+   * \param visitor The visitor to accept.
+   */
+  virtual void accept(const SelectionTransformerVisitor& visitor) const = 0;
+
   /**
    * \brief Computes the size of the output selection of voxels corresponding to the specified input selection.
    *
