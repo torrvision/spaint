@@ -21,6 +21,7 @@ public:
     int height = infiniTAMImage->noDims.y;
 
     // Get the infiniTAM image pointer.
+    infiniTAMImage->UpdateHostFromDevice();
     float *ITMImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
 
     //Create an OpenCV image and get the data pointer.
@@ -47,6 +48,7 @@ public:
     int height = infiniTAMImage->noDims.y;
 
     // Get the minimum and maximum values in the infiniTAM image.
+    infiniTAMImage->UpdateHostFromDevice();
     float *ITMImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
     std::pair<float, float> minAndMax = itm_mat_32SC1_min_max_calculator(ITMImageDataPtr, width, height);
 

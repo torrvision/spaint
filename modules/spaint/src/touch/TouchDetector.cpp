@@ -45,19 +45,20 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   m_depthCalculator->render_depth(m_raycastedDepthResult.get(), renderState.get(), camera.get(), voxelSize, DepthCalculator::DT_ORTHOGRAPHIC);
 
   // Calculate the difference between the raw depth and the raycasted depth.
-  //m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
+  //rawDepth->UpdateDeviceFromHost();
+  m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
 
-#ifndef WITH_CUDA
-#ifdef WITH_OPENCV
+#if defined(WITH_OPENCV)
+//#if defined(WITH_OPENCV) && !defined(WITH_CUDA)
   OCVdebugger::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
   OCVdebugger::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
   OCVdebugger::display_image_and_scale(m_diffRawRaycast.get(), 1000.0f, "Difference between raw and raycasted depth");
 #endif
-#endif
 
 #ifdef WITH_OPENCV
   // Run the OpenCV CPU only pipeline.
-  opencv_cpu_pipeline(m_diffRawRaycast);
+  //m_diffRawRaycast->UpdateHostFromDevice();
+  //opencv_cpu_pipeline(m_diffRawRaycast);
 #else
 #endif
 }

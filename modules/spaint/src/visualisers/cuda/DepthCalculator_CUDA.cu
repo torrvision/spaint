@@ -15,7 +15,7 @@ __global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Ve
   if(x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
-  Vector4f ptRay = ptRay[locId];
+  Vector4f ptRay = ptsRay[locId];
   shade_pixel_depth(outRendering[locId], cameraPosition, cameraLookVector, ptRay.toVector3(), voxelSize, ptRay.w > 0, depthType);
 }
 

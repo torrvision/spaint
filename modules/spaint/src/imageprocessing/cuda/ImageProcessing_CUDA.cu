@@ -30,6 +30,7 @@ void ImageProcessing_CUDA::absolute_difference_calculator(ITMFloatImage *outputI
 
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
+  printf("gridSize = %d x %d\n", gridSize.x, gridSize.y);
   ck_absolute_difference_calculator<<<gridSize,cudaBlockSize>>>(
     outputImage->GetData(MEMORYDEVICE_CUDA),
     firstInputImage->GetData(MEMORYDEVICE_CUDA),
