@@ -142,7 +142,7 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
   return m_renderState;
 }
 
-void WindowedRenderer::render(const Selector_CPtr& selector) const
+void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -164,7 +164,7 @@ void WindowedRenderer::render(const Selector_CPtr& selector) const
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose);
-  render_synthetic_scene(pose, selector);
+  render_synthetic_scene(pose, interactor);
 
   SDL_GL_SwapWindow(m_window.get());
 }
@@ -223,7 +223,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   end_2d();
 }
 
-void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selector_CPtr& selector) const
+void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -243,7 +243,9 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selecto
       glEnd();
 
       // Render the current selector to show how we're interacting with the scene.
-      selector->accept(SelectorRenderer(this));
+      SelectorRenderer selectorRenderer(this);
+      interactor->get_selector()->accept(selectorRenderer);
+      // TODO: The selection transformer bit.
     }
     glPopMatrix();
   }

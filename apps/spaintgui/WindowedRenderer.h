@@ -71,7 +71,7 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const;
 
   /** Override */
-  virtual void render(const spaint::Selector_CPtr& selector) const;
+  virtual void render(const spaint::SpaintInteractor_CPtr& interactor) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -95,10 +95,10 @@ private:
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param pose      The camera pose.
-   * \param selector  The selector that is being used to select voxels in the InfiniTAM scene.
+   * \param pose        The camera pose.
+   * \param interactor  The interactor that is being used to interact with the scene.
    */
-  void render_synthetic_scene(const ITMPose& pose, const spaint::Selector_CPtr& selector) const;
+  void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.

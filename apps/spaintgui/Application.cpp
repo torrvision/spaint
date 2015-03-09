@@ -38,7 +38,7 @@ void Application::run()
 
     // Process and render the next frame.
     m_spaintPipeline->process_frame();
-    m_renderer->render(m_spaintPipeline->get_interactor()->get_selector());
+    m_renderer->render(m_spaintPipeline->get_interactor());
   }
 }
 
