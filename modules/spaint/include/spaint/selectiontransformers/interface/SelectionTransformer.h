@@ -6,6 +6,10 @@
 #define H_SPAINT_SELECTIONTRANSFORMER
 
 #include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
+
+#include "SelectionTransformerVisitor.h"
+#include "../../input/InputState.h"
 
 namespace spaint {
 
@@ -18,15 +22,36 @@ class SelectionTransformer
 public:
   typedef ORUtils::MemoryBlock<Vector3s> Selection;
 
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The device on which the transformer is operating. */
+  const ITMLibSettings::DeviceType m_deviceType;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a selection transformer.
+   *
+   * \param deviceType  The device on which the transformer is operating.
+   */
+  explicit SelectionTransformer(ITMLibSettings::DeviceType deviceType);
+
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the selection transformer.
    */
-  virtual ~SelectionTransformer() {}
+  virtual ~SelectionTransformer();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Accepts a visitor.
+   *
+   * \param visitor The visitor to accept.
+   */
+  virtual void accept(const SelectionTransformerVisitor& visitor) const = 0;
+
   /**
    * \brief Computes the size of the output selection of voxels corresponding to the specified input selection.
    *
@@ -42,6 +67,28 @@ public:
    * \param outputSelectionMB A memory block into which to store the output selection of voxels.
    */
   virtual void transform_selection(const Selection& inputSelectionMB, Selection& outputSelectionMB) const = 0;
+
+  /**
+   * \brief Updates the selection transformer.
+   *
+   * \param inputState  The current input state.
+   */
+  virtual void update(const InputState& inputState) = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Transforms one selection of voxels in the scene into another.
+   *
+   * This function returns a raw pointer to memory allocated with new. It is the caller's responsibility
+   * to ensure that this memory is eventually deleted. The easiest way to ensure this is to immediately
+   * wrap the raw pointer in a shared_ptr when this function returns. This function can't use shared_ptr
+   * because this header is included in a .cu file that's compiled by nvcc, and nvcc can't handle Boost.
+   *
+   * \param inputSelectionMB  A memory block containing the input selection of voxels.
+   * \return                  A pointer to a memory block containing the output selection of voxels.
+   */
+  Selection *transform_selection(const Selection& inputSelectionMB) const;
 };
 
 }

@@ -5,11 +5,16 @@
 #include "core/SpaintInteractor.h"
 
 #include "markers/cpu/VoxelMarker_CPU.h"
+#include "selectiontransformers/SelectionTransformerFactory.h"
 #include "selectors/NullSelector.h"
 #include "selectors/PickingSelector.h"
 
 #ifdef WITH_CUDA
 #include "markers/cuda/VoxelMarker_CUDA.h"
+#endif
+
+#ifdef WITH_LEAP
+#include "selectors/LeapSelector.h"
 #endif
 
 namespace spaint {
@@ -18,9 +23,13 @@ namespace spaint {
 
 SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 : m_model(model),
-  m_selector(new NullSelector),
+  m_selector(new NullSelector(model->get_settings())),
   m_semanticLabel(1)
 {
+  // Set up the selection transformer.
+  const int initialSelectionRadius = 2;
+  m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, model->get_settings()->deviceType);
+
   // Set up the voxel marker.
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
@@ -43,7 +52,13 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
 {
-  return m_selector->get_selection();
+  Selection_CPtr selection = m_selector->get_selection();
+  return m_selectionTransformer ? Selection_CPtr(m_selectionTransformer->transform_selection(*selection)) : selection;
+}
+
+SpaintInteractor::SelectionTransformer_CPtr SpaintInteractor::get_selection_transformer() const
+{
+  return m_selectionTransformer;
 }
 
 Selector_CPtr SpaintInteractor::get_selector() const
@@ -74,11 +89,18 @@ void SpaintInteractor::set_semantic_label(unsigned char semanticLabel)
 void SpaintInteractor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Allow the user to switch between different selectors.
+  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
   if(inputState.key_down(SDLK_i))
   {
-    if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector);
-    else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(m_model->get_settings()));
+    if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector(settings));
+    else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(settings));
+#ifdef WITH_LEAP
+    else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
+#endif
   }
+
+  // Update the current selection transformer (if any).
+  if(m_selectionTransformer) m_selectionTransformer->update(inputState);
 
   // Update the current selector.
   m_selector->update(inputState, renderState);

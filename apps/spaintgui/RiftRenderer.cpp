@@ -127,7 +127,7 @@ RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state() const
   return RenderState_CPtr();
 }
 
-void RiftRenderer::render(const Selector_CPtr& selector) const
+void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);

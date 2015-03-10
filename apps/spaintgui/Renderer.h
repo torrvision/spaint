@@ -9,9 +9,9 @@
 
 #include <rigging/MoveableCamera.h>
 
+#include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
-#include <spaint/selectors/Selector.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -98,9 +98,9 @@ public:
   /**
    * \brief Renders the scene.
    *
-   * \param selector  The selector that is being used to select voxels in the InfiniTAM scene.
+   * \param interactor  The interactor that is being used to interact with the scene.
    */
-  virtual void render(const spaint::Selector_CPtr& selector) const = 0;
+  virtual void render(const spaint::SpaintInteractor_CPtr& interactor) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

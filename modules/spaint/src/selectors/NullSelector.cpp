@@ -6,6 +6,12 @@
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+NullSelector::NullSelector(const Settings_CPtr& settings)
+: Selector(settings)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void NullSelector::accept(const SelectorVisitor& visitor) const

@@ -11,13 +11,15 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 VoxelToCubeSelectionTransformer_CPU::VoxelToCubeSelectionTransformer_CPU(int radius)
-: VoxelToCubeSelectionTransformer(radius)
+: VoxelToCubeSelectionTransformer(radius, ITMLibSettings::DEVICE_CPU)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VoxelToCubeSelectionTransformer_CPU::transform_selection(const Selection& inputSelectionMB, Selection& outputSelectionMB) const
 {
+  const int cubeSideLength = cube_side_length();
+  const int cubeSize = cube_size();
   const Vector3s *inputSelection = inputSelectionMB.GetData(MEMORYDEVICE_CPU);
   Vector3s *outputSelection = outputSelectionMB.GetData(MEMORYDEVICE_CPU);
   int outputVoxelCount = outputSelectionMB.dataSize;
@@ -27,7 +29,7 @@ void VoxelToCubeSelectionTransformer_CPU::transform_selection(const Selection& i
 #endif
   for(int outputVoxelIndex = 0; outputVoxelIndex < outputVoxelCount; ++outputVoxelIndex)
   {
-    write_voxel_to_output_selection(outputVoxelIndex, m_cubeSideLength, m_cubeSize, m_radius, inputSelection, outputSelection);
+    write_voxel_to_output_selection(outputVoxelIndex, cubeSideLength, cubeSize, m_radius, inputSelection, outputSelection);
   }
 }
 

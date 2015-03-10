@@ -9,6 +9,7 @@
 
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "SelectorVisitor.h"
 #include "../input/InputState.h"
@@ -25,20 +26,26 @@ public:
   typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef ORUtils::MemoryBlock<Vector3s> Selection;
   typedef boost::shared_ptr<Selection> Selection_Ptr;
-  typedef boost::shared_ptr<Selection> Selection_CPtr;
+  typedef boost::shared_ptr<const Selection> Selection_CPtr;
+  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** Whether or not the selector is active. */
   bool m_isActive;
 
+  /** The settings to use for InfiniTAM. */
+  Settings_CPtr m_settings;
+
   //#################### CONSTRUCTORS ####################
 protected:
   /**
    * \brief Constructs a selector.
+   *
+   * \param settings  The settings to use for InfiniTAM.
    */
-  Selector()
-  : m_isActive(false)
+  explicit Selector(const Settings_CPtr& settings)
+  : m_isActive(false), m_settings(settings)
   {}
 
   //#################### DESTRUCTOR ####################

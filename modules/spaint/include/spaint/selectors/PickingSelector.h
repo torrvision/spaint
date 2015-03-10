@@ -21,10 +21,6 @@ namespace spaint {
  */
 class PickingSelector : public Selector
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
@@ -33,17 +29,11 @@ private:
   /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
   mutable ORUtils::MemoryBlock<Vector3f> m_pickPointFloatMB;
 
-  /** A memory block into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
-  ORUtils::MemoryBlock<Vector3s> m_pickPointShortMB;
+  /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
+  Selection_Ptr m_pickPointShortMB;
 
   /** Whether or not the most recent update operation returned a valid pick point. */
   bool m_pickPointValid;
-
-  /** The selection radius (we select all voxels in a cube of side length 2 * radius + 1, centered on the voxel the user actually clicks). */
-  int m_radius;
-
-  /** The settings to use for InfiniTAM. */
-  Settings_CPtr m_settings;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -65,13 +55,6 @@ public:
    * \return  The position of the selector (if known), or boost::none otherwise.
    */
   boost::optional<Eigen::Vector3f> get_position() const;
-
-  /**
-   * \brief Gets the selection radius.
-   *
-   * \return  The selection radius.
-   */
-  int get_radius() const;
 
   /** Override */
   virtual Selection_CPtr get_selection() const;

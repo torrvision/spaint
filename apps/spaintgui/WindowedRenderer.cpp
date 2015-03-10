@@ -10,6 +10,10 @@
 using namespace rigging;
 
 #include <spaint/ogl/QuadricRenderer.h>
+#include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
+#ifdef WITH_LEAP
+#include <spaint/selectors/LeapSelector.h>
+#endif
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
@@ -19,10 +23,12 @@ using namespace spaint;
 /**
  * \brief An instance of this class can be used to visit selectors in order to render them.
  */
-class SelectorRenderer : public SelectorVisitor
+class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisitor
 {
+  //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
   const WindowedRenderer *m_base;
+  mutable int m_selectionRadius;
 
   //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 public:
@@ -32,6 +38,39 @@ public:
 
   //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 public:
+#ifdef WITH_LEAP
+  /** Override */
+  virtual void visit(const LeapSelector& selector) const
+  {
+    const Leap::Frame& frame = selector.get_frame();
+    if(!frame.isValid() || frame.hands().count() != 1) return;
+
+    const Leap::Hand& hand = frame.hands()[0];
+    for(int fingerIndex = 0, fingerCount = hand.fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
+    {
+      const Leap::Finger& finger = hand.fingers()[fingerIndex];
+
+      const int boneCount = 4;  // there are four bones per finger in the Leap hand model
+      for(int boneIndex = 0; boneIndex < boneCount; ++boneIndex)
+      {
+        const Leap::Bone& bone = finger.bone(Leap::Bone::Type(boneIndex));
+
+        glColor3f(0.8f, 0.8f, 0.8f);
+        QuadricRenderer::render_cylinder(
+          LeapSelector::from_leap_vector(bone.prevJoint()),
+          LeapSelector::from_leap_vector(bone.nextJoint()),
+          LeapSelector::from_leap_size(bone.width() * 0.5f),
+          LeapSelector::from_leap_size(bone.width() * 0.5f),
+          10
+        );
+
+        glColor3f(1.0f, 0.0f, 0.0f);
+        QuadricRenderer::render_sphere(LeapSelector::from_leap_vector(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
+      }
+    }
+  }
+#endif
+
   /** Override */
   virtual void visit(const PickingSelector& selector) const
   {
@@ -40,8 +79,14 @@ public:
 
     glColor3f(1.0f, 0.0f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    QuadricRenderer::render_sphere(*pickPoint, selector.get_radius() * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+    QuadricRenderer::render_sphere(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+
+  /** Override */
+  virtual void visit(const VoxelToCubeSelectionTransformer& transformer) const
+  {
+    m_selectionRadius = transformer.get_radius();
   }
 };
 
@@ -53,6 +98,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
   m_window.reset(
     SDL_CreateWindow(
@@ -72,6 +118,9 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
   );
 
   glViewport(0, 0, width, height);
+
+  glDepthFunc(GL_LEQUAL);
+  glEnable(GL_DEPTH_TEST);
 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
@@ -100,7 +149,7 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
   return m_renderState;
 }
 
-void WindowedRenderer::render(const Selector_CPtr& selector) const
+void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -122,7 +171,7 @@ void WindowedRenderer::render(const Selector_CPtr& selector) const
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose);
-  render_synthetic_scene(pose, selector);
+  render_synthetic_scene(pose, interactor);
 
   SDL_GL_SwapWindow(m_window.get());
 }
@@ -139,10 +188,14 @@ void WindowedRenderer::begin_2d()
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
+
+  glDepthMask(false);
 }
 
 void WindowedRenderer::end_2d()
 {
+  glDepthMask(true);
+
   // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
   glPopMatrix();
 
@@ -177,7 +230,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   end_2d();
 }
 
-void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selector_CPtr& selector) const
+void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -197,7 +250,10 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const Selecto
       glEnd();
 
       // Render the current selector to show how we're interacting with the scene.
-      selector->accept(SelectorRenderer(this));
+      SelectorRenderer selectorRenderer(this);
+      SpaintInteractor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      if(transformer) transformer->accept(selectorRenderer);
+      interactor->get_selector()->accept(selectorRenderer);
     }
     glPopMatrix();
   }

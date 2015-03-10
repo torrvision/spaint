@@ -2,4 +2,4 @@
 # UseOpenGL.cmake #
 ###################
 
-FIND_PACKAGE(OpenGL)
+FIND_PACKAGE(OpenGL REQUIRED)

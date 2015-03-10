@@ -19,7 +19,7 @@ __global__ void ck_transform_selection(int cubeSideLength, int cubeSize, int rad
 //#################### CONSTRUCTORS ####################
 
 VoxelToCubeSelectionTransformer_CUDA::VoxelToCubeSelectionTransformer_CUDA(int radius)
-: VoxelToCubeSelectionTransformer(radius)
+: VoxelToCubeSelectionTransformer(radius, ITMLibSettings::DEVICE_CUDA)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -32,8 +32,8 @@ void VoxelToCubeSelectionTransformer_CUDA::transform_selection(const Selection& 
   int numBlocks = (outputVoxelCount + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_transform_selection<<<numBlocks,threadsPerBlock>>>(
-    m_cubeSideLength,
-    m_cubeSize,
+    cube_side_length(),
+    cube_size(),
     m_radius,
     inputSelectionMB.GetData(MEMORYDEVICE_CUDA),
     outputSelectionMB.GetData(MEMORYDEVICE_CUDA),

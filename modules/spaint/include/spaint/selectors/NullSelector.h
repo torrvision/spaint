@@ -14,6 +14,15 @@ namespace spaint {
  */
 class NullSelector : public Selector
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a null selector.
+   *
+   * \param settings  The settings to use for InfiniTAM.
+   */
+  explicit NullSelector(const Settings_CPtr& settings);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
