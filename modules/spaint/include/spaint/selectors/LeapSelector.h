@@ -9,7 +9,8 @@
 
 #include <ITMLib/Objects/ITMScene.h>
 
-// Note: This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
+// This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
+// Since the Leap SDK defines PI as a float (static const float PI = ...), things would break if we didn't do this.
 #undef PI
 
 #include <Leap.h>
@@ -74,18 +75,18 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Converts a size in the Leap coordinate system into one in our coordinate system.
+   * \brief Converts a size in the Leap coordinate system into one in the InfiniTAM coordinate system.
    *
    * \param leapSize  The size in the Leap coordinate system.
-   * \return          The size in our coordinate system.
+   * \return          The size in the InfiniTAM coordinate system.
    */
   static float from_leap_size(float leapSize);
 
   /**
-   * \brief Converts a vector in the Leap coordinate system into one in our coordinate system.
+   * \brief Converts a vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
    *
    * \param leapVec The vector in the Leap coordinate system.
-   * \return        The vector in our coordinate system.
+   * \return        The vector in the InfiniTAM coordinate system.
    */
   static Eigen::Vector3f from_leap_vector(const Leap::Vector& leapVec);
 };

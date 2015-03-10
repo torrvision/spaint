@@ -23,10 +23,13 @@ namespace spaint {
 
 SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 : m_model(model),
-  m_selectionTransformer(SelectionTransformerFactory::make_voxel_to_cube(2, model->get_settings()->deviceType)),
   m_selector(new NullSelector(model->get_settings())),
   m_semanticLabel(1)
 {
+  // Set up the selection transformer.
+  const int initialSelectionRadius = 2;
+  m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, model->get_settings()->deviceType);
+
   // Set up the voxel marker.
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
