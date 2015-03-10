@@ -1,74 +1,57 @@
-/*******************************************************
- * Copyright (c) 2014, ArrayFire
- * All rights reserved.
- *
- * This file is distributed under 3-clause BSD license.
- * The complete license agreement can be obtained at:
- * http://arrayfire.com/licenses/BSD-3-Clause
- ********************************************************/
-
+#include <stdexcept>
+#include <stdio.h>
 #include <arrayfire.h>
-#include <cstdio>
 
-using namespace af;
+// 5x5 sigma-3 gaussian blur weights
+static const float h_gauss[] = {
+    0.0318,  0.0375,  0.0397,  0.0375,  0.0318,
+    0.0375,  0.0443,  0.0469,  0.0443,  0.0375,
+    0.0397,  0.0469,  0.0495,  0.0469,  0.0397,
+    0.0375,  0.0443,  0.0469,  0.0443,  0.0375,
+    0.0318,  0.0375,  0.0397,  0.0375,  0.0318,
+};
 
-int main(int argc, char *argv[])
+void img_test_demo(bool console, const std::string& pathToImage)
 {
-    try {
+  // load convolution kernels
+  af::array gauss_k = af::array(5, 5, h_gauss);
 
+  //load image
+  af::array img_gray = af::loadimage(pathToImage.c_str(), false); // 1 channel grayscale [0-255]
+}
 
-        // Select a device and display arrayfire info
-        int device = argc > 1 ? atoi(argv[1]) : 0;
-        af::setDevice(device);
-        af::info();
+int main(int argc, char **argv)
+{
+  if(argc != 2)
+  {
+    throw std::runtime_error("You need to enter the path to a grayscale image\n");
+  }
+  std::string pathToImage(argv[1]);
 
-        printf("Create a 5-by-3 matrix of random floats on the GPU\n");
-        array A = randu(5,3, f32);
-        af_print(A);
+  int device = 0;
+  bool console = false;
 
-        printf("Element-wise arithmetic\n");
-        array B = sin(A) + 1.5;
-        af_print(B);
+  std::cout << "device=" << device << ", console=" << console << std::endl;
+  std::cout << "image path =" << pathToImage << std::endl;
 
-        printf("Negate the first three elements of second column\n");
-        B(seq(0, 2), 1) = B(seq(0, 2), 1) * -1;
-        af_print(B);
+  try
+  {
+    af::deviceset(device);
+    af::info();
+    std::cout << "Testing the arrayfire image processing.\n";
+    img_test_demo(console, pathToImage);
+  }
+  catch (af::exception& ae)
+  {
+    std::cout << ae.what() << std::endl;
+    throw;
+  }
 
-        printf("Fourier transform the result\n");
-        array C = fft(B);
-        af_print(C);
+  if(!console)
+  {
+    std::cout << "Hit [Enter] ...";
+    getchar();
+  }
 
-        printf("Grab last row\n");
-        array c = C.row(end);
-        af_print(c);
-
-        printf("Create 2-by-3 matrix from host data\n");
-        float d[] = { 1, 2, 3, 4, 5, 6 };
-        array D(2, 3, d, af::afHost);
-        af_print(D);
-
-        printf("Copy last column onto first\n");
-        D.col(0) = D.col(end);
-        af_print(D);
-
-        // Sort A
-        printf("Sort A and print sorted array and corresponding indices\n");
-        array vals, inds;
-        sort(vals, inds, A);
-        af_print(vals);
-        af_print(inds);
-
-    } catch (af::exception& e) {
-        fprintf(stderr, "%s\n", e.what());
-        throw;
-    }
-
-    #ifdef WIN32 // pause in Windows
-    if (!(argc == 2 && argv[1][0] == '-')) {
-        printf("hit [enter]...");
-        fflush(stdout);
-        getchar();
-    }
-    #endif
-    return 0;
+  return 0;
 }
