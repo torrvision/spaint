@@ -62,7 +62,7 @@ void LeapSelector::update(const InputState& inputState, const RenderState_CPtr& 
 float LeapSelector::from_leap_size(float leapSize)
 {
   // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the size by 1000.
-  return leapSize / 1000;
+  return leapSize / 1000.0f;
 }
 
 Eigen::Vector3f LeapSelector::from_leap_vector(const Leap::Vector& leapVec)
@@ -74,7 +74,7 @@ Eigen::Vector3f LeapSelector::from_leap_vector(const Leap::Vector& leapVec)
   // the InfiniTAM coordinate system has x pointing right, y pointing down and z pointing into the screen. As
   // such, we need to flip y and z when converting from the Leap coordinate system to our one. Moreover, the
   // Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the result by 1000.
-  return (Eigen::Vector3f(leapVec.x, -leapVec.y, -leapVec.z) + offset) / 1000;
+  return (Eigen::Vector3f(leapVec.x, -leapVec.y, -leapVec.z) + offset) / 1000.0f;
 }
 
 }
