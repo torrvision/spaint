@@ -13,8 +13,11 @@
 #include "visualisers/cuda/DepthCalculator_CUDA.h"
 #endif
 
+#ifdef WITH_ARRAYFIRE
+#include <arrayfire.h>
+#endif
+
 #ifdef WITH_OPENCV
-#include "util/OCVdebugger.h"
 #include "util/OpenCVExtra.h"
 #endif
 
@@ -58,11 +61,17 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   //rawDepth->UpdateDeviceFromHost();
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
 
+#if defined(WITH_ARRAYFIRE)
+  // Convert the InfiniTAM image to arrayfire.
+  
+
+#endif
+
 #if defined(WITH_OPENCV)
 //#if defined(WITH_OPENCV) && !defined(WITH_CUDA)
-  OCVdebugger::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
-  OCVdebugger::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
-  OCVdebugger::display_image_and_scale(m_diffRawRaycast.get(), 1000.0f, "Difference between raw and raycasted depth");
+  OpenCVExtra::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
+  OpenCVExtra::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
+  OpenCVExtra::display_image_and_scale(m_diffRawRaycast.get(), 1000.0f, "Difference between raw and raycasted depth");
 #endif
 
 #ifdef WITH_OPENCV
@@ -80,7 +89,7 @@ const TouchState& TouchDetector::get_touch_state() const
 
 //#################### PRIVATE MEMBER FUNCTIONS #################### 
 
-#ifdef WITH_OPENCV
+/*#ifdef WITH_OPENCV
 void TouchDetector::opencv_cpu_pipeline(const FloatImage_Ptr& rawDiff) const
 {
   static cv::Mat tmpMat32F(rawDiff->noDims.y, rawDiff->noDims.x, CV_32F);
@@ -94,8 +103,9 @@ void TouchDetector::opencv_cpu_pipeline(const FloatImage_Ptr& rawDiff) const
   cv::dilate(tmpMat8U, tmpMat8U, cv::Mat(), cv::Point(-1,-1), 3);
   
   cv::imshow("Thresholded above 1cm", tmpMat8U);
+  cv::waitKey(10);
 }
-#endif
+#endif*/
 
 }
 
