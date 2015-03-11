@@ -13,6 +13,7 @@ SET(targetname scratchtest_arrayfire)
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 
 #############################
 # Specify the project files #
@@ -44,3 +45,4 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 
 #TARGET_LINK_LIBRARIES(${targetname})
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
