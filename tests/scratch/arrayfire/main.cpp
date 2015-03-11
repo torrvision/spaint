@@ -5,10 +5,23 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-void ocvfig(unsigned char *pixels, int width, int height) 
+enum Order
 {
-  cv::Mat img(height, width, CV_8UC1, pixels);
-  cv::imshow("test", img);
+  ROW_MAJOR,
+  COL_MAJOR
+};
+
+void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order) 
+{
+  int step = height * sizeof(unsigned char);
+
+  cv::Mat img(width, height, CV_8UC1, pixels, step);
+  if(order == Order::COL_MAJOR)
+  {
+    cv::transpose(img, img);
+  }
+
+  cv::imshow(windowName, img);
 }
 
 // 5x5 sigma-3 gaussian blur weights
@@ -20,16 +33,18 @@ static const float h_gauss[] = {
     0.0318,  0.0375,  0.0397,  0.0375,  0.0318,
 };
 
-void img_test_demo(const std::string& inPath, const std::string& outPath)
+void img_test_demo(const af::array& source)
 {
-  //load image
-  af::array img_gray = af::loadimage(inPath.c_str(), false); // 1 channel grayscale [0-255]
+  static int width = source.dims(1);
+  static int height = source.dims(0);
+  std::cout << "width = " << width << ", height = " << height << '\n';
+  ocvfig("source", source.as(u8).host<unsigned char>(), width, height, Order::COL_MAJOR);
 
   // load convolution kernels
   af::array gauss_k = af::array(5, 5, h_gauss);
 
   // Convolve with gaussian kernel.
-  af::array transformedArray = af::convolve(img_gray, gauss_k);
+  af::array transformedArray = af::convolve(source, gauss_k);
 
   // Threshold the image.
   af::array thresholdedArray = transformedArray < 50.0f;
@@ -40,41 +55,41 @@ void img_test_demo(const std::string& inPath, const std::string& outPath)
   int maximum = af::max<int>(connectedComponents);
   for(int i = 1; i <= maximum; ++i)
   {
-    char buffer[200];
-    sprintf(buffer, "connected-component-%d.jpg", i);
-    af::array tmp = (connectedComponents == i);
-    af::saveImage(buffer, tmp);
+    af::array tmp = (connectedComponents == i) * 255.0f;
+    ocvfig("tmp " + std::to_string(i), tmp.as(u8).host<unsigned char>(), width, height, Order::COL_MAJOR);
   }
 
-  unsigned char *pixels = thresholdedArray.as(u8).host<unsigned char>();
-  ocvfig(pixels, thresholdedArray.dims(0), thresholdedArray.dims(1));
-  // Save the image to file.
-  af::saveimage(outPath.c_str(), thresholdedArray);
+  thresholdedArray = 255.0f * thresholdedArray;
+  ocvfig("thresholded", thresholdedArray.as(u8).host<unsigned char>(), width, height, Order::COL_MAJOR);
 }
 
 int main(int argc, char **argv)
 {
   // Deal with the input.
-  if(argc != 3)
+  if(argc != 2)
   {
     throw std::runtime_error("You need to enter the input path to a grayscale image, and an output path to save the transformed image.\n");
   }
   std::string inPath(argv[1]);
-  std::string outPath(argv[2]);
 
   int device = 0;
   std::cout << "device=" << device << std::endl;
   std::cout << "image input path =" << inPath << std::endl;
-  std::cout << "image output path =" << outPath << std::endl;
   
   try
   {
     af::deviceset(device);
     af::info();
     std::cout << "Testing the arrayfire image processing.\n";
+
+    // Load image
+    af::array img_gray = af::loadimage(inPath.c_str(), false); // 1 channel grayscale [0-255]
+    cv::Mat cv_img_gray = cv::imread(inPath, CV_LOAD_IMAGE_GRAYSCALE);
+    ocvfig("opencv image", (unsigned char*)cv_img_gray.data, cv_img_gray.cols, cv_img_gray.rows, Order::ROW_MAJOR);
+
     for(;;)
     {
-      img_test_demo(inPath, outPath);
+      img_test_demo(img_gray);
 
       if(cv::waitKey(30) == 'q')
         break;
