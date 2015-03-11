@@ -124,7 +124,7 @@ include/spaint/ogl/WrappedGL.h
 
 ##
 SET(ocv_headers
-include/spaint/util/OCVdebugger.h
+include/spaint/util/OpenCVExtra.h
 )
 
 ##
