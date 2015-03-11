@@ -111,10 +111,10 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
-#ifdef WITH_VICON
   /** The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker. */
   std::string m_viconHost;
 
+#ifdef WITH_VICON
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
   ViconTracker *m_viconTracker;
 #endif

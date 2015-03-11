@@ -14,6 +14,7 @@
 using namespace InfiniTAM::Engine;
 
 #include "sampling/VoxelSamplerFactory.h"
+#include "trackers/RiftTracker.h"
 
 namespace spaint {
 
@@ -98,6 +99,8 @@ void SpaintPipeline::run_main_section()
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
+
+  std::cout << trackingState->pose_d->GetM() << "\n\n";
 
 #ifdef WITH_VICON
   if(m_viconHost != "")
@@ -208,6 +211,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
+  m_tracker->SetInitialPose(trackingState.get());
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
@@ -259,9 +263,9 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
-#ifdef WITH_VICON
   if(m_viconHost != "")
   {
+#ifdef WITH_VICON
     ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
     m_viconTracker = new ViconTracker(m_viconHost, "kinect");
     compositeTracker->SetTracker(m_viconTracker, 0);
@@ -275,17 +279,34 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       ), 1
     );
     m_tracker.reset(compositeTracker);
+#else
+    // TEMPORARY
+    throw 23;
+#endif
+  }
+  else if(true /* m_useRift */)
+  {
+    // TEMPORARY: Factor out the common code.
+    ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+    compositeTracker->SetTracker(new RiftTracker, 0);
+    compositeTracker->SetTracker(
+      ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
+        trackedImageSize,
+        settings.get(),
+        m_lowLevelEngine.get(),
+        m_imuCalibrator.get(),
+        scene.get()
+      ), 1
+    );
+    m_tracker.reset(compositeTracker);
   }
   else
   {
-#endif
     m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
     m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
       trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
     ));
-#ifdef WITH_VICON
   }
-#endif
 }
 
 }

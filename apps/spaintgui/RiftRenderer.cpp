@@ -29,8 +29,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
                            const std::string& title, RiftRenderingMode renderingMode)
 : Renderer(model, raycaster)
 {
-  // Initialise the Rift.
-  ovr_Initialize();
+  // Get a handle to the Rift.
   m_hmd = ovrHmd_Create(0);
   if(!m_hmd)
   {
@@ -111,7 +110,6 @@ RiftRenderer::~RiftRenderer()
 {
   glDeleteTextures(ovrEye_Count, m_eyeTextureIDs);
   ovrHmd_Destroy(m_hmd);
-  ovr_Shutdown();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

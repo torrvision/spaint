@@ -9,6 +9,10 @@
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
 
+#ifdef WITH_OVR
+#include <OVR.h>
+#endif
+
 #include <SDL.h>
 
 #include <spaint/core/SpaintPipeline.h>
@@ -48,6 +52,26 @@ try
 
   // Specify the InfiniTAM settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+
+#ifdef WITH_OVR
+  // Specify whether or not to use the Rift (if it's available).
+  bool useRift = true;
+
+  // If we're using the Rift, initialise it.
+  if(useRift) ovr_Initialize();
+
+  // If we're using the Rift tracker, set an appropriate tracking regime for the corresponding ICP tracker.
+  // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
+  // FIXME: This shouldn't be a duplicate of the below.
+  if(useRift)
+  {
+    settings->noHierarchyLevels = 2;
+    delete [] settings->trackingRegime;
+    settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
+    settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
+    settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
+  }
+#endif
 
 #ifdef WITH_VICON
   // Specify whether or not to use the Vicon tracker (if it's available).
@@ -95,6 +119,11 @@ try
   // Run the application.
   Application app(spaintPipeline);
   app.run();
+
+#ifdef WITH_OVR
+  // If we were using the Rift, shut it down.
+  if(useRift) ovr_Shutdown();
+#endif
 
   // Shut down SDL.
   SDL_Quit();
