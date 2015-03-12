@@ -59,18 +59,6 @@ try
 
   // If we're using the Rift, initialise it.
   if(useRift) ovr_Initialize();
-
-  // If we're using the Rift tracker, set an appropriate tracking regime for the corresponding ICP tracker.
-  // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
-  // FIXME: This shouldn't be a duplicate of the below.
-  if(useRift)
-  {
-    settings->noHierarchyLevels = 2;
-    delete [] settings->trackingRegime;
-    settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
-    settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
-    settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
-  }
 #endif
 
 #ifdef WITH_VICON

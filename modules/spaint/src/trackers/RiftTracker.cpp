@@ -26,13 +26,13 @@ RiftTracker::RiftTracker()
 
 void RiftTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
-  update_tracking_state(trackingState);
+  try_update_tracking_state(trackingState);
 }
 
 void RiftTracker::UpdateInitialPose(ITMTrackingState *trackingState)
 {
   // Keep trying to update the tracking state until we succeed (the Rift takes some time to start up).
-  while(!update_tracking_state(trackingState));
+  while(!try_update_tracking_state(trackingState));
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -52,8 +52,10 @@ Matrix3f RiftTracker::extract_rotation_matrix(const ovrTrackingState& riftTracki
   return R;
 }
 
-bool RiftTracker::update_tracking_state(ITMTrackingState *trackingState) const
+bool RiftTracker::try_update_tracking_state(ITMTrackingState *trackingState) const
 {
+  // Set the orientation component of the pose based on information from the Rift's gyro.
+  // (The Rift doesn't provide positional information, so that will be updated elsewhere.)
   ovrTrackingState riftTrackingState = ovrHmd_GetTrackingState(m_hmd, ovr_GetTimeInSeconds());
   if(riftTrackingState.StatusFlags & ovrStatus_OrientationTracked)
   {

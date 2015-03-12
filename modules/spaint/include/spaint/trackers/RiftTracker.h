@@ -47,9 +47,14 @@ private:
   static Matrix3f extract_rotation_matrix(const ovrTrackingState& riftTrackingState);
 
   /**
-   * \brief TODO
+   * \brief Attempts to update the InfiniTAM tracking state using information from the Rift.
+   *
+   * The update can fail if it wasn't possible to read information from the Rift.
+   *
+   * \param trackingState The InfiniTAM tracking state.
+   * \return              true, if the update succeeded, or false otherwise.
    */
-  bool update_tracking_state(ITMTrackingState *trackingState) const;
+  bool try_update_tracking_state(ITMTrackingState *trackingState) const;
 };
 
 }
