@@ -25,6 +25,12 @@ inline void shade_pixel_absolute_difference(float *destination, float firstInput
   }
 }
 
+int column_major_index_from_row_major_index(int rowMajorIndex, int width, int height)
+{
+  int row = rowMajorIndex / width;
+  int col = rowMajorIndex % width;
+  return col * height + row;
+}
 }
 
 #endif

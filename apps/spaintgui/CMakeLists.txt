@@ -106,6 +106,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 
 TARGET_LINK_LIBRARIES(${targetname} rigging spaint tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)

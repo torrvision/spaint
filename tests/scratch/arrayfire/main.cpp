@@ -13,15 +13,19 @@ enum Order
 
 void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order) 
 {
-  int step = height * sizeof(unsigned char);
-
-  cv::Mat img(width, height, CV_8UC1, pixels, step);
   if(order == Order::COL_MAJOR)
   {
+    int step = height * sizeof(unsigned char);
+    cv::Mat img(width, height, CV_8UC1, pixels, step);
     cv::transpose(img, img);
+    cv::imshow(windowName, img);
   }
-
-  cv::imshow(windowName, img);
+  else
+  {
+    int step = width * sizeof(unsigned char);
+    cv::Mat img(height, width, CV_8UC1, pixels, step);
+    cv::imshow(windowName, img);
+  }
 }
 
 // 5x5 sigma-3 gaussian blur weights
@@ -35,8 +39,13 @@ static const float h_gauss[] = {
 
 void img_test_demo(const af::array& source)
 {
-  static int width = source.dims(1);
-  static int height = source.dims(0);
+  static int rows = source.dims(0);
+  static int cols = source.dims(1);
+
+  /*static int width = source.dims(1);
+  static int height = source.dims(0);*/
+  static int width = cols;
+  static int height = rows;
   std::cout << "width = " << width << ", height = " << height << '\n';
   ocvfig("source", source.as(u8).host<unsigned char>(), width, height, Order::COL_MAJOR);
 
@@ -53,7 +62,7 @@ void img_test_demo(const af::array& source)
   af::array connectedComponents = af::regions(thresholdedArray);
 
   int maximum = af::max<int>(connectedComponents);
-  for(int i = 1; i <= maximum; ++i)
+  for(int i = 1; i <= 2; ++i)
   {
     af::array tmp = (connectedComponents == i) * 255.0f;
     ocvfig("tmp " + std::to_string(i), tmp.as(u8).host<unsigned char>(), width, height, Order::COL_MAJOR);

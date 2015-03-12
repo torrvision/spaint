@@ -29,6 +29,28 @@ void ImageProcessing_CPU::absolute_difference_calculator(ITMFloatImage *outputIm
   }
 }
 
+void ImageProcessing_CPU::absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
+{
+  ImageProcessing::check_image_size_equal(outputImage, firstInputImage);
+  ImageProcessing::check_image_size_equal(secondInputImage, firstInputImage);
+
+  int width = outputImage->dims(1);
+  int height = outputImage->dims(0);
+  int imgSize = height * width;
+  float *output = outputImage->host<float>();
+  float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
+  float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int locId = 0; locId < imgSize; ++locId)
+  {
+    int locIdcm = column_major_index_from_row_major_index(locId, width, height);
+    shade_pixel_absolute_difference(&output[locIdcm], first[locId], second[locId]);
+  }
+}
+
 /*void ImageProcessing_CPU::binary_threshold_calculator(ITMFloatImage *outputImage, ITMFloatImage *inputImage, float threshold, float maxBinaryValue) const
 {
   ImageProcessing::check_image_size_equal(outputImage, inputImage);

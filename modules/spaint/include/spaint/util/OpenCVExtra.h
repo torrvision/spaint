@@ -17,9 +17,16 @@ namespace spaint {
 
 class OpenCVExtra
 {
+public:
+  enum Order
+  {
+    ROW_MAJOR,
+    COL_MAJOR
+  };
+
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
-  static void imshow_float_and_scale(const std::string& windowName, const cv::Mat& image, float scaleFactor)
+/*  static void imshow_float_and_scale(const std::string& windowName, const cv::Mat& image, float scaleFactor)
   {
     cv::Mat canvas;
     image.convertTo(canvas, CV_8U, scaleFactor, 0.0f);
@@ -40,7 +47,7 @@ public:
 
     cv::imshow(windowName, canvas);
   }
-
+*/
   static void display_image_and_scale(ITMFloatImage *infiniTAMImage, float scaleFactor, const std::string& windowName)
   {
     int width = infiniTAMImage->noDims.x;
@@ -96,6 +103,23 @@ public:
 
     // Display the image.
     cv::imshow(windowName, OCVImage);
+  }
+
+  static void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order) 
+  {
+    if(order == Order::COL_MAJOR)
+    {
+      int step = height * sizeof(unsigned char);
+      cv::Mat img(width, height, CV_8UC1, pixels, step);
+      cv::transpose(img, img);
+      cv::imshow(windowName, img);
+    }
+    else
+    {
+      int step = width * sizeof(unsigned char);
+      cv::Mat img(height, width, CV_8UC1, pixels, step);
+      cv::imshow(windowName, img);
+    }
   }
 
 private:

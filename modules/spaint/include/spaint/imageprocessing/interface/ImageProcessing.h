@@ -7,6 +7,7 @@
 
 #include <stdexcept>
 
+#include <arrayfire.h>
 #include <ITMLib/Utils/ITMLibDefines.h>
 
 namespace spaint {
@@ -35,6 +36,8 @@ public:
    */
   virtual void absolute_difference_calculator(ITMFloatImage *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const = 0;
 
+  virtual void absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const = 0;
+
   /**
    * \brief Calculates a binary image from an input image by applying a threshold on its pixel values.
    *
@@ -55,14 +58,21 @@ public:
    */
   static void check_image_size_equal(ITMFloatImage *imgA, ITMFloatImage *imgB)
   {
-    if((imgA->noDims.x == imgB->noDims.x) && (imgA->noDims.y == imgB->noDims.y))
-    {
-      return;
-    }
-    else
-    {
-      throw std::runtime_error("The image dimensions are not equal.\n");
-    }
+    check_equal(imgA->noDims.x, imgB->noDims.x);
+    check_equal(imgA->noDims.y, imgB->noDims.y);
+  }
+
+  static void check_image_size_equal(af::array *imgA, ITMFloatImage *imgB)
+  {
+    check_equal(imgA->dims(0), imgB->noDims.y);
+    check_equal(imgA->dims(1), imgB->noDims.x);
+  }
+
+private:
+  static void check_equal(int a, int b)
+  {
+    if(a == b) return;
+    else throw std::runtime_error("The image dimensions are not equal.\n");
   }
 };
 

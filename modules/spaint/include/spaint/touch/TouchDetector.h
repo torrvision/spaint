@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_TOUCHDETECTOR
 #define H_SPAINT_TOUCHDETECTOR
 
+#include <arrayfire.h>
+
 #include <ITMLib/Objects/ITMRenderState.h>
 
 #include <rigging/SimpleCamera.h>
@@ -22,6 +24,7 @@ class TouchDetector
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<af::array> AFImage_Ptr;
   typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
   typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_Ptr;
 
@@ -32,6 +35,7 @@ private:
 
   /** An image in which each pixel is the difference between the currentandraycasted depth. */
   FloatImage_Ptr m_diffRawRaycast;
+  AFImage_Ptr m_workspace;
 
   /** Multiplatform image processing tools. */
   boost::shared_ptr<const ImageProcessing> m_imageProcessor;

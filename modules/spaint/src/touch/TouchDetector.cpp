@@ -13,13 +13,11 @@
 #include "visualisers/cuda/DepthCalculator_CUDA.h"
 #endif
 
-#ifdef WITH_ARRAYFIRE
-#include <arrayfire.h>
-#endif
-
 #ifdef WITH_OPENCV
 #include "util/OpenCVExtra.h"
 #endif
+
+#include "util/ArrayFireExtra.h"
 
 namespace spaint {
 
@@ -35,6 +33,7 @@ Vector3f convert_eigenv3f_to_itmv3f(const Eigen::Vector3f& v)
 
 //#################### CONSTRUCTORS #################### 
 TouchDetector::TouchDetector(const Vector2i& imgSize)
+: m_workspace(new af::array(imgSize.y, imgSize.x))
 {
 #ifdef WITH_CUDA
   m_diffRawRaycast.reset(new ITMFloatImage(imgSize, true, true));
@@ -58,28 +57,23 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   m_depthCalculator->render_depth(m_raycastedDepthResult.get(), renderState.get(), convert_eigenv3f_to_itmv3f(camera->p()), convert_eigenv3f_to_itmv3f(camera->n()), voxelSize, DepthCalculator::DT_ORTHOGRAPHIC);
 
   // Calculate the difference between the raw depth and the raycasted depth.
-  //rawDepth->UpdateDeviceFromHost();
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
-
-#if defined(WITH_ARRAYFIRE)
-  // Convert the InfiniTAM image to arrayfire.
-  
-
-#endif
+  m_imageProcessor->absolute_difference_calculator(m_workspace.get(), rawDepth, m_raycastedDepthResult.get());
 
 #if defined(WITH_OPENCV)
 //#if defined(WITH_OPENCV) && !defined(WITH_CUDA)
   OpenCVExtra::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
   OpenCVExtra::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
   OpenCVExtra::display_image_and_scale(m_diffRawRaycast.get(), 1000.0f, "Difference between raw and raycasted depth");
+
+  *m_workspace = *m_workspace * 1000.0f;
+  static int rows = m_workspace->dims(0);
+  static int cols = m_workspace->dims(1);
+  OpenCVExtra::ocvfig("diff image in arrayfire", m_workspace->as(u8).host<unsigned char>(), cols, rows, OpenCVExtra::Order::COL_MAJOR);
+
+  cv::waitKey(10);
 #endif
 
-#ifdef WITH_OPENCV
-  // Run the OpenCV CPU only pipeline.
-  //m_diffRawRaycast->UpdateHostFromDevice();
-  //opencv_cpu_pipeline(m_diffRawRaycast);
-#else
-#endif
 }
 
 const TouchState& TouchDetector::get_touch_state() const

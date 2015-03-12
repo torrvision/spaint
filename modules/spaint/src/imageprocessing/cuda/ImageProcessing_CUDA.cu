@@ -9,7 +9,6 @@
 namespace spaint {
 
 //#################### CUDA KERNELS ####################
-
 __global__ void ck_absolute_difference_calculator(float *outputImage, float *firstInputImage, float *secondInputImage, Vector2i imgSize)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -17,6 +16,16 @@ __global__ void ck_absolute_difference_calculator(float *outputImage, float *fir
 
   int locId = y * imgSize.x + x;
   shade_pixel_absolute_difference(&outputImage[locId], firstInputImage[locId], secondInputImage[locId]);
+}
+
+__global__ void ck_absolute_difference_calculator_cmrmrm(float *outputImage, float *firstInputImage, float *secondInputImage, Vector2i imgSize)
+{
+  int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
+  if(x >= imgSize.x || y >= imgSize.y) return;
+
+  int locIdcm = x * imgSize.y + y;
+  int locIdrm = y * imgSize.x + x;
+  shade_pixel_absolute_difference(&outputImage[locIdcm], firstInputImage[locIdrm], secondInputImage[locIdrm]);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -30,7 +39,6 @@ void ImageProcessing_CUDA::absolute_difference_calculator(ITMFloatImage *outputI
 
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
-  printf("gridSize = %d x %d\n", gridSize.x, gridSize.y);
   ck_absolute_difference_calculator<<<gridSize,cudaBlockSize>>>(
     outputImage->GetData(MEMORYDEVICE_CUDA),
     firstInputImage->GetData(MEMORYDEVICE_CUDA),
@@ -39,4 +47,22 @@ void ImageProcessing_CUDA::absolute_difference_calculator(ITMFloatImage *outputI
   );
 }
 
+void ImageProcessing_CUDA::absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
+{
+  ImageProcessing::check_image_size_equal(outputImage, firstInputImage);
+  ImageProcessing::check_image_size_equal(secondInputImage, firstInputImage);
+
+  Vector2i imgSize;
+  imgSize.y = outputImage->dims(0);
+  imgSize.x = outputImage->dims(1);
+
+  dim3 cudaBlockSize(8, 8);
+  dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
+  ck_absolute_difference_calculator_cmrmrm<<<gridSize,cudaBlockSize>>>(
+    outputImage->device<float>(),
+    firstInputImage->GetData(MEMORYDEVICE_CUDA),
+    secondInputImage->GetData(MEMORYDEVICE_CUDA),
+    imgSize
+  );
+}
 }

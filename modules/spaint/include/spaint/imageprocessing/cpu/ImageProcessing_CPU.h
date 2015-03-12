@@ -2,8 +2,8 @@
  * spaint: ImageProcessing_CPU.h
  */
 
-#ifndef H_SPAINT_DIFFCALCULATOR_CPU
-#define H_SPAINT_DIFFCALCULATOR_CPU
+#ifndef H_SPAINT_IMAGEPROCESSING_CPU
+#define H_SPAINT_IMAGEPROCESSING_CPU
 
 #include "../interface/ImageProcessing.h"
 
@@ -18,6 +18,8 @@ class ImageProcessing_CPU : public ImageProcessing
 public:
   /** Override. */
   virtual void absolute_difference_calculator(ITMFloatImage *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const;
+
+  virtual void absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const;
 
   /** Override. */
   //virtual void binary_threhold_caluclator(ITMFloatImage *outputImage, ITMFloatImage *inputImage, float threshold, float maxBinaryValue) const;

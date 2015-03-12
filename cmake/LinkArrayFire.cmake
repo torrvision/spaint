@@ -3,5 +3,9 @@
 #######################
 
 IF(WITH_ARRAYFIRE)
-  TARGET_LINK_LIBRARIES(${targetname} ${ArrayFire_LIBRARIES})
+  IF(WITH_CUDA)
+    TARGET_LINK_LIBRARIES(${targetname} ${ArrayFire_CUDA_LIBRARIES})
+  ELSE()
+    TARGET_LINK_LIBRARIES(${targetname} ${ArrayFire_CPU_LIBRARIES})
+  ENDIF()
 ENDIF()

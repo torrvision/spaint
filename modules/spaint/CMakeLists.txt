@@ -12,6 +12,7 @@ SET(targetname spaint)
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
@@ -454,7 +455,6 @@ INCLUDE_DIRECTORIES(include/spaint)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
-#INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)
 
 ##########################################
 # Specify the target and where to put it #

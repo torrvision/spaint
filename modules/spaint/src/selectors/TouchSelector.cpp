@@ -37,9 +37,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   const TouchState& touchState = m_touchDetector->get_touch_state();
 
   // Update whether or not the selector is active.
-  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT) || touchState.touching_surface();
-  const int radius = 5;
-  m_radius = radius;
+  m_isActive = touchState.touching_surface();
 
   // Try and pick an individual voxel.
   m_pickPointValid = false;
