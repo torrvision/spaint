@@ -22,22 +22,12 @@ namespace spaint {
 
 #ifdef WITH_OPENNI
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                               bool useRiftTracker)
-: m_useRiftTracker(useRiftTracker)
+                               TrackerType trackerType, const std::string& trackerParams)
+: m_trackerType(trackerType), m_trackerParams(trackerParams)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
 }
-
-#ifdef WITH_VICON
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                               const std::string& viconHost)
-: m_useRiftTracker(false), m_viconHost(viconHost)
-{
-  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
-  initialise(settings);
-}
-#endif
 #endif
 
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_Ptr& settings)
@@ -103,7 +93,7 @@ void SpaintPipeline::run_main_section()
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
 #ifdef WITH_VICON
-  if(m_viconHost != "")
+  if(m_trackerType == TRACKER_VICON)
   {
     // If we're using the Vicon tracker, make sure to only fuse when we have tracking information available.
     m_fusionEnabled = !m_viconTracker->lost_tracking();
@@ -279,31 +269,36 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
-  if(m_useRiftTracker)
+  switch(m_trackerType)
   {
+    case TRACKER_RIFT:
+    {
 #ifdef WITH_OVR
-    m_tracker.reset(make_hybrid_tracker(new RiftTracker, settings, scene, trackedImageSize));
+      m_tracker.reset(make_hybrid_tracker(new RiftTracker, settings, scene, trackedImageSize));
+      break;
 #else
-    // This should never happen as things stand - we never set m_useRiftTracker if Rift support isn't available.
-    throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
+      // This should never happen as things stand - we never set m_useRiftTracker if Rift support isn't available.
+      throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
 #endif
-  }
-  else if(m_viconHost != "")
-  {
+    }
+    case TRACKER_VICON:
+    {
 #ifdef WITH_VICON
-    m_viconTracker = new ViconTracker(m_viconHost, "kinect");
-    m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
+      m_viconTracker = new ViconTracker(m_trackerParams, "kinect");
+      m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
+      break;
 #else
-    // This should never happen as things stand - we never set m_viconHost if Vicon support isn't available.
-    throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+      // This should never happen as things stand - we never set m_viconHost if Vicon support isn't available.
+      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
 #endif
-  }
-  else
-  {
-    m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-    m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-      trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
-    ));
+    }
+    default: // TRACKER_INFINITAM
+    {
+      m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
+      m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
+        trackedImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
+      ));
+    }
   }
 }
 

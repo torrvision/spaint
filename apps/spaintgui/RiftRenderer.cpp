@@ -109,7 +109,6 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
 RiftRenderer::~RiftRenderer()
 {
   glDeleteTextures(ovrEye_Count, m_eyeTextureIDs);
-  ovrHmd_Destroy(m_hmd);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -44,7 +44,7 @@ private:
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief The values of this enumeration specify the different modes in which the pipeline can be running.
+   * \brief The different modes in which the pipeline can be running.
    */
   enum Mode
   {
@@ -56,6 +56,16 @@ public:
 
     /** In training mode, a model is trained using voxels sampled from the current raycast. */
     MODE_TRAINING
+  };
+
+  /**
+   * \brief The different tracker types we can use.
+   */
+  enum TrackerType
+  {
+    TRACKER_INFINITAM,
+    TRACKER_RIFT,
+    TRACKER_VICON
   };
 
   //#################### PRIVATE VARIABLES ####################
@@ -108,14 +118,17 @@ private:
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
+  /**
+   * The parameters for the tracker (if any). For example, this would be the host on which the
+   * Vicon software is running (e.g. "<IP address>:<port>") if we're using the Vicon tracker.
+   */
+  std::string m_trackerParams;
+
+  /** The type of tracker to use. */
+  TrackerType m_trackerType;
+
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
-
-  /** Whether or not to use the Rift tracker, if available. */
-  bool m_useRiftTracker;
-
-  /** The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker. */
-  std::string m_viconHost;
 
 #ifdef WITH_VICON
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
@@ -137,21 +150,11 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
-   * \param useRiftTracker      Whether or not to use the Rift tracker, if available.
+   * \param trackerType         The type of tracker to use.
+   * \param trackerParams       The parameters for the tracker (if any).
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, bool useRiftTracker);
-
-#ifdef WITH_VICON
-  /**
-   * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source and a Vicon system for tracking.
-   *
-   * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
-   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
-   * \param settings            The settings to use for InfiniTAM.
-   * \param viconHost           The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker.
-   */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& viconHost);
-#endif
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
+                 TrackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
 #endif
 
   /**

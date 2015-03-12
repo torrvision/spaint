@@ -38,6 +38,11 @@ try
     quit("Error: Failed to initialise SDL.");
   }
 
+#ifdef WITH_OVR
+  // If we built with Rift support, initialise the Rift SDK.
+  ovr_Initialize();
+#endif
+
   // Parse the command-line arguments.
   if (argc > 4)
   {
@@ -50,38 +55,42 @@ try
               rgbImageMask = argc == 4 ? argv[2] : "",
               depthImageMask = argc == 4 ? argv[3] : "";
 
-  // Specify the InfiniTAM settings.
+  // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_RIFT;
+  std::string trackerParams;
 
-#ifdef WITH_OVR
-  // Specify whether or not to use the Rift (if it's available).
-  bool useRift = true;
-
-  // Specify whether or not to use the Rift tracker (if it's available).
-  bool useRiftTracker = useRift && false;
-
-  // If we're using the Rift, initialise it.
-  if(useRift) ovr_Initialize();
-#endif
-
-#ifdef WITH_VICON
-  // Specify whether or not to use the Vicon tracker (if it's available).
-  bool useVicon = false;
-
-  // Specify the Vicon host (at present this refers to Iain's machine on the oculab network in the JR).
-  const std::string viconHost = "192.168.0.111:801";
-
-  // If we're using the Vicon tracker, set an appropriate tracking regime for the corresponding ICP tracker.
-  // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
-  if(useVicon)
+  // If we're trying to use the Rift tracker:
+  if(trackerType == SpaintPipeline::TRACKER_RIFT)
   {
+#ifdef WITH_OVR
+    // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
+    if(ovrHmd_Detect() == 0) trackerType = SpaintPipeline::TRACKER_INFINITAM;
+#else
+    // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
+    trackerType = SpaintPipeline::TRACKER_INFINITAM;
+#endif
+  }
+
+  // If we're trying to use the Vicon tracker:
+  if(trackerType == SpaintPipeline::TRACKER_VICON)
+  {
+#ifdef WITH_VICON
+    // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
+    // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
+    trackerParams = "192.168.0.111:801";
+
+    // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
     settings->noHierarchyLevels = 2;
     delete [] settings->trackingRegime;
     settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
     settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
     settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
-  }
+#else
+    // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
+    trackerType = SpaintPipeline::TRACKER_INFINITAM;
 #endif
+  }
 
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;
@@ -95,18 +104,7 @@ try
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
-    if(useRiftTracker)
-    {
-      spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, true));
-    }
-    else
-    {
-      spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings
-#ifdef WITH_VICON
-        , useVicon ? viconHost : ""
-#endif
-      ));
-    }
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, trackerType, trackerParams));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
@@ -117,8 +115,8 @@ try
   app.run();
 
 #ifdef WITH_OVR
-  // If we were using the Rift, shut it down.
-  if(useRift) ovr_Shutdown();
+  // If we built with Rift support, shut down the Rift SDK.
+  ovr_Shutdown();
 #endif
 
   // Shut down SDL.
