@@ -277,7 +277,7 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       m_tracker.reset(make_hybrid_tracker(new RiftTracker, settings, scene, trackedImageSize));
       break;
 #else
-      // This should never happen as things stand - we never set m_useRiftTracker if Rift support isn't available.
+      // This should never happen as things stand - we never try to use the Rift tracker if Rift support isn't available.
       throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
 #endif
     }
@@ -288,7 +288,7 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
       break;
 #else
-      // This should never happen as things stand - we never set m_viconHost if Vicon support isn't available.
+      // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.
       throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
 #endif
     }
