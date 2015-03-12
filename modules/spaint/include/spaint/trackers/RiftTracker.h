@@ -31,12 +31,12 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void SetInitialPose(ITMTrackingState *trackingState);
-
-  /** Override */
   virtual void TrackCamera(ITMTrackingState *trackingState, const ITMView *view);
 
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+  /** Override */
+  virtual void UpdateInitialPose(ITMTrackingState *trackingState);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
    * \brief Extracts a rotation matrix suitable for use in an InfiniTAM pose from the Rift's tracking state.
@@ -45,6 +45,11 @@ private:
    * \return                  The rotation matrix corresponding to the Rift's tracking state.
    */
   static Matrix3f extract_rotation_matrix(const ovrTrackingState& riftTrackingState);
+
+  /**
+   * \brief TODO
+   */
+  bool update_tracking_state(ITMTrackingState *trackingState) const;
 };
 
 }

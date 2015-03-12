@@ -24,31 +24,18 @@ RiftTracker::RiftTracker()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void RiftTracker::SetInitialPose(ITMTrackingState *trackingState)
-{
-  for(;;)
-  {
-    ovrTrackingState riftTrackingState = ovrHmd_GetTrackingState(m_hmd, ovr_GetTimeInSeconds());
-    if(riftTrackingState.StatusFlags & ovrStatus_OrientationTracked)
-    {
-      trackingState->pose_d->SetR(extract_rotation_matrix(riftTrackingState));
-      trackingState->pose_d->Coerce();
-      break;
-    }
-  }
-}
-
 void RiftTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
-  ovrTrackingState riftTrackingState = ovrHmd_GetTrackingState(m_hmd, ovr_GetTimeInSeconds());
-  if(riftTrackingState.StatusFlags & ovrStatus_OrientationTracked)
-  {
-    trackingState->pose_d->SetR(extract_rotation_matrix(riftTrackingState));
-    trackingState->pose_d->Coerce();
-  }
+  update_tracking_state(trackingState);
 }
 
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+void RiftTracker::UpdateInitialPose(ITMTrackingState *trackingState)
+{
+  // Keep trying to update the tracking state until we succeed (the Rift takes some time to start up).
+  while(!update_tracking_state(trackingState));
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 Matrix3f RiftTracker::extract_rotation_matrix(const ovrTrackingState& riftTrackingState)
 {
@@ -63,6 +50,18 @@ Matrix3f RiftTracker::extract_rotation_matrix(const ovrTrackingState& riftTracki
   R(0,2) = r.M[2][0]; R(1,2) = -r.M[2][1]; R(2,2) = r.M[2][2];
 
   return R;
+}
+
+bool RiftTracker::update_tracking_state(ITMTrackingState *trackingState) const
+{
+  ovrTrackingState riftTrackingState = ovrHmd_GetTrackingState(m_hmd, ovr_GetTimeInSeconds());
+  if(riftTrackingState.StatusFlags & ovrStatus_OrientationTracked)
+  {
+    trackingState->pose_d->SetR(extract_rotation_matrix(riftTrackingState));
+    trackingState->pose_d->Coerce();
+    return true;
+  }
+  else return false;
 }
 
 }

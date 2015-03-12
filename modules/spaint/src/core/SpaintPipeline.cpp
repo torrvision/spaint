@@ -100,8 +100,6 @@ void SpaintPipeline::run_main_section()
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
-  std::cout << trackingState->pose_d->GetM() << "\n\n";
-
 #ifdef WITH_VICON
   if(m_viconHost != "")
   {
@@ -211,7 +209,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
-  m_tracker->SetInitialPose(trackingState.get());
+  m_tracker->UpdateInitialPose(trackingState.get());
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
