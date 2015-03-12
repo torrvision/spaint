@@ -4,7 +4,6 @@
 
 #include "trackers/RiftTracker.h"
 
-#include <iostream>
 #include <stdexcept>
 
 namespace spaint {
@@ -54,11 +53,11 @@ Matrix3f RiftTracker::extract_rotation_matrix(const ovrTrackingState& riftTracki
 
 bool RiftTracker::try_update_tracking_state(ITMTrackingState *trackingState) const
 {
-  // Set the orientation component of the pose based on information from the Rift's gyro.
-  // (The Rift doesn't provide positional information, so that will be updated elsewhere.)
   ovrTrackingState riftTrackingState = ovrHmd_GetTrackingState(m_hmd, ovr_GetTimeInSeconds());
   if(riftTrackingState.StatusFlags & ovrStatus_OrientationTracked)
   {
+    // Set the orientation component of the pose based on information from the Rift's gyro.
+    // (The Rift doesn't provide positional information, so that will be updated elsewhere.)
     trackingState->pose_d->SetR(extract_rotation_matrix(riftTrackingState));
     trackingState->pose_d->Coerce();
     return true;
