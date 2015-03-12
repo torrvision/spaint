@@ -154,7 +154,7 @@ public:
    * \param trackerParams       The parameters for the tracker (if any).
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                 TrackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
+                 TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
 #endif
 
   /**
