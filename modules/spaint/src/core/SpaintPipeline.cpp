@@ -21,7 +21,9 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
+                               bool useRiftTracker)
+: m_useRiftTracker(useRiftTracker)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
@@ -30,7 +32,7 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
 #ifdef WITH_VICON
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
                                const std::string& viconHost)
-: m_viconHost(viconHost)
+: m_useRiftTracker(false), m_viconHost(viconHost)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
   initialise(settings);
@@ -229,6 +231,22 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_sampledVoxelsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
 }
 
+ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
+{
+  ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+  compositeTracker->SetTracker(primaryTracker, 0);
+  compositeTracker->SetTracker(
+    ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
+      trackedImageSize,
+      settings.get(),
+      m_lowLevelEngine.get(),
+      m_imuCalibrator.get(),
+      scene.get()
+    ), 1
+  );
+  return compositeTracker;
+}
+
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
@@ -261,42 +279,24 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
-  if(m_viconHost != "")
+  if(m_useRiftTracker)
   {
-#ifdef WITH_VICON
-    ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
-    m_viconTracker = new ViconTracker(m_viconHost, "kinect");
-    compositeTracker->SetTracker(m_viconTracker, 0);
-    compositeTracker->SetTracker(
-      ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
-        trackedImageSize,
-        settings.get(),
-        m_lowLevelEngine.get(),
-        m_imuCalibrator.get(),
-        scene.get()
-      ), 1
-    );
-    m_tracker.reset(compositeTracker);
+#ifdef WITH_OVR
+    m_tracker.reset(make_hybrid_tracker(new RiftTracker, settings, scene, trackedImageSize));
 #else
-    // TEMPORARY
-    throw 23;
+    // This should never happen as things stand - we never set m_useRiftTracker if Rift support isn't available.
+    throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
 #endif
   }
-  else if(true /* m_useRift */)
+  else if(m_viconHost != "")
   {
-    // TEMPORARY: Factor out the common code.
-    ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
-    compositeTracker->SetTracker(new RiftTracker, 0);
-    compositeTracker->SetTracker(
-      ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
-        trackedImageSize,
-        settings.get(),
-        m_lowLevelEngine.get(),
-        m_imuCalibrator.get(),
-        scene.get()
-      ), 1
-    );
-    m_tracker.reset(compositeTracker);
+#ifdef WITH_VICON
+    m_viconTracker = new ViconTracker(m_viconHost, "kinect");
+    m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
+#else
+    // This should never happen as things stand - we never set m_viconHost if Vicon support isn't available.
+    throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+#endif
   }
   else
   {

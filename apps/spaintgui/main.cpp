@@ -57,6 +57,9 @@ try
   // Specify whether or not to use the Rift (if it's available).
   bool useRift = true;
 
+  // Specify whether or not to use the Rift tracker (if it's available).
+  bool useRiftTracker = useRift && false;
+
   // If we're using the Rift, initialise it.
   if(useRift) ovr_Initialize();
 #endif
@@ -91,14 +94,19 @@ try
   {
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    spaintPipeline.reset(new SpaintPipeline(
-      calibrationFilename,
-      openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI),
-      settings
+    boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
+    if(useRiftTracker)
+    {
+      spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, true));
+    }
+    else
+    {
+      spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings
 #ifdef WITH_VICON
-      , useVicon ? viconHost : ""
+        , useVicon ? viconHost : ""
 #endif
-    ));
+      ));
+    }
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif

@@ -111,6 +111,9 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
+  /** Whether or not to use the Rift tracker, if available. */
+  bool m_useRiftTracker;
+
   /** The host on which the Vicon software is running (e.g. "<IP address>:<port>"), if we're using the Vicon tracker. */
   std::string m_viconHost;
 
@@ -134,8 +137,9 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings            The settings to use for InfiniTAM.
+   * \param useRiftTracker      Whether or not to use the Rift tracker, if available.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, bool useRiftTracker);
 
 #ifdef WITH_VICON
   /**
@@ -247,6 +251,17 @@ private:
    * \param settings  The settings to use for InfiniTAM.
    */
   void initialise(const Settings_Ptr& settings);
+
+  /**
+   * \brief Makes a hybrid tracker that refines the results of a primary tracker using ICP.
+   *
+   * \param primaryTracker    The primary tracker (e.g. a Rift or Vicon tracker).
+   * \param settings          The settings to use for InfiniTAM.
+   * \param scene             The scene.
+   * \param trackedImageSize  The tracked image size.
+   * \return                  The hybrid tracker.
+   */
+  ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
 
   /**
    * \brief Runs the section of the pipeline associated with training mode.
