@@ -33,12 +33,27 @@ private:
 #ifdef DEBUG_TOUCH
   //#################### PRIVATE DEBUGGING VARIABLES #################### 
 private:
+  /** The delay between processing frames (0 = pause). */
+  int m_debugDelayms;
+
   /** The thresholded value to supply to the opencv trackbar. */
   int m_depthThresholdmm;
+
+  /** The size of the square morphological operator. */
+  int m_morphKernelSize;
 #endif
 
   //#################### PRIVATE VARIABLES #################### 
 private:
+  /** The minimum image area of a candidate rouch region (number of pixels). */
+  int m_areaThreshold;
+
+  /** The minimum image area of a candidate touch region expressed as a percentage of the number of image pixels. */
+  float m_areaPercentageThreshold;
+
+  /** The image holding the connedted components. */
+  af::array m_connectedComponents;
+
   /** The depth calculator. */
   boost::shared_ptr<const DepthCalculator> m_depthCalculator;
 
