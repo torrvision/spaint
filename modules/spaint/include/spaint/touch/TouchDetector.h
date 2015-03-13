@@ -15,6 +15,8 @@
 #include "../visualisers/interface/DepthCalculator.h"
 #include "TouchState.h"
 
+#define DEBUG_TOUCH
+
 namespace spaint {
 
 /**
@@ -28,14 +30,23 @@ private:
   typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
   typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_Ptr;
 
+#ifdef DEBUG_TOUCH
+  //#################### PRIVATE DEBUGGING VARIABLES #################### 
+private:
+  /** The thresholded value to supply to the opencv trackbar. */
+  int m_depthThresholdmm;
+#endif
+
   //#################### PRIVATE VARIABLES #################### 
 private:
   /** The depth calculator. */
   boost::shared_ptr<const DepthCalculator> m_depthCalculator;
 
+  /** The threshold below which the raw and raycasted depth is assumed to be equal. */
+  float m_depthThreshold;
+
   /** An image in which each pixel is the difference between the currentandraycasted depth. */
   FloatImage_Ptr m_diffRawRaycast;
-  AFImage_Ptr m_workspace;
 
   /** Multiplatform image processing tools. */
   boost::shared_ptr<const ImageProcessing> m_imageProcessor;
@@ -43,8 +54,14 @@ private:
   /** An image into which to store the depth calculation of the currently visible scene from the camera. */
   FloatImage_Ptr m_raycastedDepthResult;
 
+  /** An array in which to store a binary image. */
+  af::array m_thresholded;
+
   /** An instance of the current state of touching. */
   TouchState m_touchState;
+
+  /** An ArrayFire array used to interface with infiniTAM images. */
+  AFImage_Ptr m_workspace;
 
   //#################### CONSTRUCTORS #################### 
 public:
@@ -58,7 +75,7 @@ public:
   /**
    * \brief TODO.
    */
-  void run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth) const;
+  void run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth);
 
   /**
    * \brief TODO.
