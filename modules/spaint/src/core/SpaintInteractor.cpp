@@ -8,7 +8,6 @@
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "selectors/NullSelector.h"
 #include "selectors/PickingSelector.h"
-#include "selectors/TouchSelector.h"
 
 #ifdef WITH_CUDA
 #include "markers/cuda/VoxelMarker_CUDA.h"
@@ -16,6 +15,10 @@
 
 #ifdef WITH_LEAP
 #include "selectors/LeapSelector.h"
+#endif
+
+#ifdef WITH_ARRAYFIRE
+#include "selectors/TouchSelector.h"
 #endif
 
 namespace spaint {

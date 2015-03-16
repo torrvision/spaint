@@ -5,6 +5,10 @@
 #ifndef H_SPAINT_TOUCHSELECTOR
 #define H_SPAINT_TOUCHSELECTOR
 
+#include <boost/optional.hpp>
+
+#include <Eigen/Dense>
+
 #include <ITMLib/Objects/ITMTrackingState.h>
 #include <ITMLib/Objects/ITMView.h>
 
@@ -16,7 +20,7 @@ namespace spaint {
 /**
  * \brief An instance of this class can be used to select a cube of voxels in the scene using touch.
  */
-class TouchSelector : public PickingSelector
+class TouchSelector : public Selector
 {
   //#################### TYPEDEFS ####################
 private:
@@ -26,6 +30,18 @@ private:
 
   //#################### PRIVATE VARIABLES #################### 
 private:
+  /** The picker. */
+  boost::shared_ptr<const Picker> m_picker;
+
+  /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
+  mutable ORUtils::MemoryBlock<Vector3f> m_pickPointFloatMB;
+
+  /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
+  Selection_Ptr m_pickPointShortMB;
+
+  /** Whether or not the most recent update operation returned a valid pick point. */
+  bool m_pickPointValid;
+
   /** A touch detector. */
   TouchDetector_Ptr m_touchDetector;
 
@@ -46,6 +62,16 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
+  /** Override */
+  virtual void accept(const SelectorVisitor& visitor) const;
+
+  /**
+   * \brief Gets the position of the selector (if known).
+   *
+   * \return The position of the selector (if known), or boost::none otherwise.
+   */
+  boost::optional<Eigen::Vector3f> get_position() const;
+
   /** Override */
   virtual Selection_CPtr get_selection() const;
 

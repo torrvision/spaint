@@ -25,7 +25,7 @@ class PickingSelector : public Selector
 private:
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
-  //#################### PROTECTED VARIABLES ####################
+  //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
   boost::shared_ptr<const Picker> m_picker;

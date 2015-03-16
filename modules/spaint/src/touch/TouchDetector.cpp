@@ -206,8 +206,6 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 
     af::array goodPixelPositions = af::where((temporaryCandidate > m_depthLowerThreshold * 1000.0f ) && (temporaryCandidate < 20));
 
-    std::vector<int> pointsx;
-    std::vector<int> pointsy;
     if(goodPixelPositions.elements() > 0.0001 * cols * rows)
     {
 #ifdef DEBUG_TOUCH
@@ -215,6 +213,8 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
       cv::Mat touchPointImage = cv::Mat::zeros(rows, cols, CV_8UC1);
 #endif
 
+      std::vector<int> pointsx;
+      std::vector<int> pointsy;
       int numberOfTouchPoints = goodPixelPositions.dims(0);
       int *touchIndices = goodPixelPositions.as(s32).host<int>();
 
@@ -236,7 +236,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
     }
     else
     {
-      m_touchState.set_touch_state(pointsx[0], pointsy[0], false, true);
+      m_touchState.set_touch_state(-1, -1, false, false);
     }
 
 #ifdef DEBUG_TOUCH

@@ -6,26 +6,72 @@
 
 #include "selectors/TouchSelector.h"
 
+#include "picking/cpu/Picker_CPU.h"
+
 #include "util/CameraPoseConverter.h"
+
+#ifdef WITH_CUDA
+#include "picking/cuda/Picker_CUDA.h"
+#endif
 
 namespace spaint {
 
 //#################### CONSTRUCTORS #################### 
 
 TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view)
-: PickingSelector(settings), m_touchDetector(new TouchDetector(view->depth->noDims)), m_trackingState(trackingState), m_view(view)
-{}
+: Selector(settings), 
+  m_pickPointFloatMB(1, true, true),
+  m_pickPointShortMB(new ORUtils::MemoryBlock<Vector3s>(1, true, true)),
+  m_pickPointValid(false),
+  m_touchDetector(new TouchDetector(view->depth->noDims)), 
+  m_trackingState(trackingState), 
+  m_view(view)
+{
+  //Make the picker. 
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    m_picker.reset(new Picker_CUDA);
+#else
+    //This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    m_picker.reset(new Picker_CPU);
+  }
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
 
+void TouchSelector::accept(const SelectorVisitor& visitor) const
+{
+  visitor.visit(*this);
+}
+
+boost::optional<Eigen::Vector3f> TouchSelector::get_position() const
+{
+  // If the last update did not yield a valid pick point, early out.
+  if(!m_pickPointValid) return boost::none;
+
+  // If the pick point is onthe GPU, copy it across to the CPU.
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointFloatMB.UpdateHostFromDevice();
+
+  // Convert the pick point from voxel coordinates into scene coordinates and return it.
+  float voxelSize = m_settings->sceneParams.voxelSize;
+  const Vector3f& pickPoint = *m_pickPointFloatMB.GetData(MEMORYDEVICE_CPU);
+  return Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
+}
+
 Selector::Selection_CPtr TouchSelector::get_selection() const
 {
-  std::cout << "This is the touch selector!\n";
-  return PickingSelector::get_selection();
+  return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
 }
 
 void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
+#if 0
   // Run the touch pipeline.
   static boost::shared_ptr<rigging::SimpleCamera> camera(new rigging::SimpleCamera(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()));
   camera->set_from(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d));
@@ -45,6 +91,19 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   if(!touchState.touch_position_known()) return;
   int x = touchState.position_x();
   int y = touchState.position_y();
+
+#else
+  // Update whether or not the selector is active.
+  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
+
+  // Try and pick an individual voxel.
+  m_pickPointValid = false;
+
+  if(!inputState.mouse_position_known()) return;
+  int x = inputState.mouse_position_x();
+  int y = inputState.mouse_position_y();
+#endif
+
 
   //FIXME The following two lines are duplicated from PickingSelector.cpp
   m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
