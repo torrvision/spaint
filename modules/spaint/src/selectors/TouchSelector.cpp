@@ -71,7 +71,6 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
 
 void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
-#if 0
   // Run the touch pipeline.
   static boost::shared_ptr<rigging::SimpleCamera> camera(new rigging::SimpleCamera(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()));
   camera->set_from(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d));
@@ -82,6 +81,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   std::cout << runningTouchDetectorOnFrame << '\n';
   const TouchState& touchState = m_touchDetector->get_touch_state();
 
+#if 0
   // Update whether or not the selector is active.
   m_isActive = touchState.touching_surface();
 
@@ -92,22 +92,10 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   int x = touchState.position_x();
   int y = touchState.position_y();
 
-#else
-  // Update whether or not the selector is active.
-  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
-
-  // Try and pick an individual voxel.
-  m_pickPointValid = false;
-
-  if(!inputState.mouse_position_known()) return;
-  int x = inputState.mouse_position_x();
-  int y = inputState.mouse_position_y();
-#endif
-
-
   //FIXME The following two lines are duplicated from PickingSelector.cpp
   m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
-  if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, m_pickPointShortMB);
+  if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, *m_pickPointShortMB);
+#endif
 }
 
 }
