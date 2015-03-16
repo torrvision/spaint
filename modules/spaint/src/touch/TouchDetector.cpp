@@ -35,7 +35,8 @@ Vector3f convert_eigenv3f_to_itmv3f(const Eigen::Vector3f& v)
 TouchDetector::TouchDetector(const Vector2i& imgSize)
 : m_areaPercentageThreshold(1),
   m_connectedComponents(imgSize.y, imgSize.x),
-  m_depthThreshold(0.010f), 
+  m_depthLowerThreshold(0.010f), 
+  m_depthUpperThreshold(0.255f),
   m_thresholded(imgSize.y, imgSize.x), 
   m_workspace(new af::array(imgSize.y, imgSize.x))
 {
@@ -57,7 +58,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 
 #ifdef DEBUG_TOUCH
   m_debugDelayms = 10;
-  m_depthThresholdmm = m_depthThreshold * 1000;
+  m_depthLowerThresholdmm = m_depthLowerThreshold * 1000;
   m_morphKernelSize = 5;
 #endif
 }
@@ -87,19 +88,19 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 #endif
 
   // Threshold the difference image.
-  m_thresholded = *m_workspace > m_depthThreshold;
+  m_thresholded = (*m_workspace > m_depthLowerThreshold) && (*m_workspace < m_depthUpperThreshold);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH)
   // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)
   {
     cv::namedWindow("DebuggingOutputWindow", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("depthThresholdmm", "DebuggingOutputWindow", &m_depthThresholdmm, 50);
+    cv::createTrackbar("depthThresholdmm", "DebuggingOutputWindow", &m_depthLowerThresholdmm, 50);
     cv::createTrackbar("debugDelaymx", "DebuggingOutputWindow", &m_debugDelayms, 3000);
     cv::createTrackbar("areaThreshold", "DebuggingOutputWindow", &m_areaThreshold, rows*cols);
   }
   // Update the current depth Threshold in meters;
-  m_depthThreshold = m_depthThresholdmm / 1000.0f;
+  m_depthLowerThreshold = m_depthLowerThresholdmm / 1000.0f;
 
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_thresholded * 255.0f;
@@ -143,53 +144,147 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   // Set the first element to zero as this corresponds to the background.
   histogram(0) = 0;
 
+/*
 #ifdef DEBUG_TOUCH
   af::print("Histogram of connected component image", histogram);
 #endif
+*/
 
   af::array goodCandidates = af::where(histogram > m_areaThreshold);
 
+/*
 #ifdef DEBUG_TOUCH
   if(goodCandidates.elements() > 0)
   {
     af::print("goodCandidates", goodCandidates);
   }
 #endif
+*/
 
   if(goodCandidates.elements() > 0)
   {
-    //float closestValueToSurface = 100000;
-    //unsigned int closestIndexToSurface = -1;
+    int numberOfGoodCandidates = goodCandidates.dims(0);
+    int bestCandidate;
     int *candidateIds = goodCandidates.as(s32).host<int>();
-    static af::array temporaryCandidate;
-    static af::array mask;
-    for(size_t i = 0, iend = goodCandidates.dims(0); i < iend; ++i)
+
+    static af::array mask(rows, cols, u8);
+    static af::array temporaryCandidate(rows, cols, u8);
+    static af::array workspaceCopyMillimeters32F(rows, cols, f32);
+    static af::array workspaceCopyMillimetersU8(rows, cols, u8);
+
+    workspaceCopyMillimeters32F = ((*m_workspace) * 1000.0f);
+    workspaceCopyMillimeters32F = workspaceCopyMillimeters32F - ((workspaceCopyMillimeters32F > 255.0f) | (workspaceCopyMillimeters32F < 0)) * workspaceCopyMillimeters32F;
+    workspaceCopyMillimetersU8 = workspaceCopyMillimeters32F.as(u8);
+
+    if(numberOfGoodCandidates > 1)
     {
-      mask = m_connectedComponents == candidateIds[i];
-      temporaryCandidate = (*m_workspace) * mask.as(f32);
-
-      /*af::array closestElements = temporaryCandidate > m_depthThreshold;
-      af::print("closestElements", closestElements);
-
-      float value;
-      unsigned int index;
-      af::min<float>(&value, &index, temporaryCandidate);
-
-      if(closestValueToSurface > value)
+      std::vector<float> means(numberOfGoodCandidates);
+      int minElement;
+      for(int i = 0; i < numberOfGoodCandidates; ++i)
       {
-        closestValueToSurface = value;
-        closestIndexToSurface = index;
-        std::cout << "\n\n Value=" << closestValueToSurface << ", Index=" << closestIndexToSurface << "\n\n";
-      }*/
+        mask = m_connectedComponents == candidateIds[i];
+        temporaryCandidate = workspaceCopyMillimetersU8 * mask;
+        means[i] = af::mean<float>(temporaryCandidate);
+        //std::cout << "mean" << i << "=" << means[i] << '\n';
+      }
+      minElement = *std::min_element(means.begin(), means.end());
+      bestCandidate = candidateIds[minElement];
+      //std::cout << "bestCandidate=" << bestCandidate << '\n';
+    }
+    else
+    {
+      bestCandidate = candidateIds[0];
+    }
+
+    mask = m_connectedComponents == bestCandidate;
+    temporaryCandidate = workspaceCopyMillimetersU8 * mask;
+
+    // Quantize the intensity levels to 32 levels from 256.
+    temporaryCandidate = (temporaryCandidate / 8).as(u8) * 8;
+    // Filter the best candidate region prior to calculating the histogram.
+    af::medfilt(temporaryCandidate, 5, 5); // NOt sure if this is needed yet.
+
+    af::array goodPixelPositions = af::where((temporaryCandidate > m_depthLowerThreshold * 1000.0f ) && (temporaryCandidate < 20));
+
+    std::vector<int> pointsx;
+    std::vector<int> pointsy;
+    if(goodPixelPositions.elements() > 0.0001 * cols * rows)
+    {
+#ifdef DEBUG_TOUCH
+      af::print("goodPixelPositions", goodPixelPositions);
+      cv::Mat touchPointImage = cv::Mat::zeros(rows, cols, CV_8UC1);
+#endif
+
+      int numberOfTouchPoints = goodPixelPositions.dims(0);
+      int *touchIndices = goodPixelPositions.as(s32).host<int>();
+
+      for(int i = 0; i < numberOfTouchPoints; ++i)
+      {
+        pointsy.push_back(touchIndices[i] / rows); // Row.
+        pointsx.push_back(touchIndices[i] % rows); // Column.
 
 #ifdef DEBUG_TOUCH
-      af::array temporaryCandidateDisplay = temporaryCandidate * 1000.0f + (50.0f * (temporaryCandidate == 0));
-      OpenCVExtra::ocvfig("tmp" + std::to_string(i), temporaryCandidateDisplay.as(u8).host<unsigned char>(), cols, rows, OpenCVExtra::Order::COL_MAJOR);
+        cv::circle(touchPointImage, cv::Point(pointsy.back(), pointsx.back()), 5, cv::Scalar(255), 2);
+#endif
+      }
+
+#ifdef DEBUG_TOUCH
+      cv::imshow("touchPointImage", touchPointImage);
       cv::waitKey(5);
+#endif
+      m_touchState.set_touch_state(pointsx[0], pointsy[0], true, true);
+    }
+    else
+    {
+      m_touchState.set_touch_state(pointsx[0], pointsy[0], false, true);
+    }
+
+#ifdef DEBUG_TOUCH
+    static af::array temporaryCandidateDisplay(rows, cols, u8);
+    temporaryCandidateDisplay = temporaryCandidate;
+    OpenCVExtra::ocvfig("bestCandidate", temporaryCandidateDisplay.host<unsigned char>(), cols, rows, OpenCVExtra::Order::COL_MAJOR);
+    cv::waitKey(5);
 #endif
 
 
+    /*
+    static af::array depthHistogram;
+    depthHistogram = af::histogram(temporaryCandidate, 256);
+    depthHistogram(0) = 0; // These pixels correspond to the background.
+
+    af::array goodPointerCandidates = af::where(depthHistogram > 10); //10 pixels.
+
+#ifdef DEBUG_TOUCH
+    if(goodPointerCandidates.elements() > 0)
+    {
+      af::print("goodPointerCandidates", goodPointerCandidates);
     }
+#endif
+
+    int numberOfGoodPointerCandidates = goodPointerCandidates.dims(0);
+    int *goodPointerCandidateIds = goodPointerCandidates.as(s32).host<int>();
+    for(int i = 0; i < numberOfGoodPointerCandidates; ++i)
+    {
+      if(goodPointerCandidateIds[i] < 15) //15 millimeters.
+      {
+        std::cout << "We have touchdown!\n";
+        // Calculate the pixel positions at this depth value.
+
+        af::array pixelPositions = af::where(temporaryCandidate == goodPointerCandidateIds[i]);
+        if(pixelPositions.elements() > 0)
+        {
+          af::print("pixelPositions", pixelPositions);
+        }
+      }
+    }
+
+#ifdef DEBUG_TOUCH
+    af::print("Histogram of depth values in best candidate", depthHistogram);
+#endif
+    */
+  }
+  else{
+    m_touchState.set_touch_state(-1, -1, false, false);
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH)

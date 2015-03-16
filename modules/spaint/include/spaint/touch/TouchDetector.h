@@ -37,7 +37,7 @@ private:
   int m_debugDelayms;
 
   /** The thresholded value to supply to the opencv trackbar. */
-  int m_depthThresholdmm;
+  int m_depthLowerThresholdmm;
 
   /** The size of the square morphological operator. */
   int m_morphKernelSize;
@@ -58,7 +58,8 @@ private:
   boost::shared_ptr<const DepthCalculator> m_depthCalculator;
 
   /** The threshold below which the raw and raycasted depth is assumed to be equal. */
-  float m_depthThreshold;
+  float m_depthLowerThreshold;
+  float m_depthUpperThreshold;
 
   /** An image in which each pixel is the difference between the currentandraycasted depth. */
   FloatImage_Ptr m_diffRawRaycast;
