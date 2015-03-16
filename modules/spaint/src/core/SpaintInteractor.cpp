@@ -53,7 +53,7 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
 {
   Selection_CPtr selection = m_selector->get_selection();
-  return m_selectionTransformer ? Selection_CPtr(m_selectionTransformer->transform_selection(*selection)) : selection;
+  return selection && m_selectionTransformer ? Selection_CPtr(m_selectionTransformer->transform_selection(*selection)) : selection;
 }
 
 SpaintInteractor::SelectionTransformer_CPtr SpaintInteractor::get_selection_transformer() const
