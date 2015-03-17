@@ -209,7 +209,9 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
     if(goodPixelPositions.elements() > 0.0001 * cols * rows)
     {
 #ifdef DEBUG_TOUCH
+      /*
       af::print("goodPixelPositions", goodPixelPositions);
+      */
       cv::Mat touchPointImage = cv::Mat::zeros(rows, cols, CV_8UC1);
 #endif
 
@@ -220,11 +222,11 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 
       for(int i = 0; i < numberOfTouchPoints; ++i)
       {
-        pointsy.push_back(touchIndices[i] / rows); // Row.
-        pointsx.push_back(touchIndices[i] % rows); // Column.
+        pointsx.push_back(touchIndices[i] / rows); // Column.
+        pointsy.push_back(touchIndices[i] % rows); // Row.
 
 #ifdef DEBUG_TOUCH
-        cv::circle(touchPointImage, cv::Point(pointsy.back(), pointsx.back()), 5, cv::Scalar(255), 2);
+        cv::circle(touchPointImage, cv::Point(pointsx.back(), pointsy.back()), 5, cv::Scalar(255), 2);
 #endif
       }
 

@@ -81,7 +81,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   std::cout << runningTouchDetectorOnFrame << '\n';
   const TouchState& touchState = m_touchDetector->get_touch_state();
 
-#if 0
+#if 1
   // Update whether or not the selector is active.
   m_isActive = touchState.touching_surface();
 
@@ -95,6 +95,9 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   //FIXME The following two lines are duplicated from PickingSelector.cpp
   m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
   if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, *m_pickPointShortMB);
+  std::cout << "touchStateKnown=" << touchState.touch_position_known() << '\n';
+  std::cout << "x=" << x << ", y=" << y << '\n';
+  std::cout << "pickPointValid=" << m_pickPointValid << '\n';
 #endif
 }
 
