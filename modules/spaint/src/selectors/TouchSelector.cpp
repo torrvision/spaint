@@ -80,8 +80,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   TIME(m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth),milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
   const TouchState& touchState = m_touchDetector->get_touch_state();
-
-#if 1
+#if  0
   // Update whether or not the selector is active.
   m_isActive = touchState.touching_surface();
 
@@ -89,15 +88,12 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   m_pickPointValid = false;
 
   if(!touchState.touch_position_known()) return;
-  int x = touchState.position_x();
-  int y = touchState.position_y();
+  const std::vector<int>& pointsx = touchState.position_x();
+  const std::vector<int>& pointsy = touchState.position_y();
 
-  //FIXME The following two lines are duplicated from PickingSelector.cpp
-  m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
+  //FIXME Only selecting the forest point for now.
+  m_pickPointValid = m_picker->pick(pointsx[0], pointsy[0], renderState.get(), m_pickPointFloatMB);
   if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, *m_pickPointShortMB);
-  std::cout << "touchStateKnown=" << touchState.touch_position_known() << '\n';
-  std::cout << "x=" << x << ", y=" << y << '\n';
-  std::cout << "pickPointValid=" << m_pickPointValid << '\n';
 #endif
 }
 

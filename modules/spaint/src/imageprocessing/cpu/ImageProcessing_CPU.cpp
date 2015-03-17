@@ -29,26 +29,43 @@ void ImageProcessing_CPU::absolute_difference_calculator(ITMFloatImage *outputIm
   }
 }
 
+void set_pixel(float *element, float value)
+{
+  *element = value;
+}
+
 void ImageProcessing_CPU::absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
 {
   ImageProcessing::check_image_size_equal(outputImage, firstInputImage);
   ImageProcessing::check_image_size_equal(secondInputImage, firstInputImage);
 
-  int width = outputImage->dims(1);
   int height = outputImage->dims(0);
+  int width = outputImage->dims(1);
   int imgSize = height * width;
-  float *output = outputImage->host<float>();
   float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
   float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
 
+  /*
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
+*/
+  float *output = outputImage->host<float>();
   for(int locId = 0; locId < imgSize; ++locId)
   {
     int locIdcm = column_major_index_from_row_major_index(locId, width, height);
-    shade_pixel_absolute_difference(&output[locIdcm], first[locId], second[locId]);
+    //printf("\n\nBEFORE: locId=%d, locIdcm = %d, first[locId]=%0.5f, second[locId]=%0.5f, output[locIdcm]=%0.5f\n", locId, locIdcm, first[locId], second[locId], output[locIdcm]);
+    //shade_pixel_absolute_difference(&output[locIdcm], first[locId], second[locId]);
+    shade_pixel_absolute_difference(&outputImage->host<float>()[locIdcm], first[locId], second[locId]);
+    set_pixel(&outputImage->host<float>()[locIdcm], 10.3);
+    if(locId % 25 == 0)
+    {
+      printf("AFTER: locId=%d, locIdcm = %d, first[locId]=%0.5f, second[locId]=%0.5f, output[locIdcm]=%0.5f\n", locId, locIdcm, first[locId], second[locId], outputImage->host<float>()[locIdcm]);
+
+      printf("output[locIdcm]=%0.5f\n", outputImage->host<float>()[locIdcm]);
+    }
   }
+
 }
 
 /*void ImageProcessing_CPU::binary_threshold_calculator(ITMFloatImage *outputImage, ITMFloatImage *inputImage, float threshold, float maxBinaryValue) const

@@ -15,27 +15,27 @@ namespace spaint {
 class TouchState
 {
 private:
-  int m_position_x;
-  int m_position_y;
+  std::vector<int> m_position_x;
+  std::vector<int> m_position_y;
   bool m_touchingSurface;
   bool m_touchPositionKnown;
 
 public:
   TouchState()
-  : m_position_x(-1), m_position_y(-1), m_touchingSurface(false), m_touchPositionKnown(false)
+  : m_touchingSurface(false), m_touchPositionKnown(false)
   {}
 
-  int position_x() const
+  const std::vector<int>& position_x() const
   {
     return m_position_x;
   }
 
-  int position_y() const
+  const std::vector<int>& position_y() const
   {
     return m_position_y;
   }
 
-  void set_touch_state(int position_x, int position_y, bool touchingSurface, bool touchPositionKnown)
+  void set_touch_state(const std::vector<int>& position_x, const std::vector<int>& position_y, bool touchingSurface, bool touchPositionKnown)
   {
     m_position_x = position_x;
     m_position_y = position_y;
