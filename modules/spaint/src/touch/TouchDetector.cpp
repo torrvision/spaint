@@ -72,29 +72,15 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   m_depthCalculator->render_depth(m_raycastedDepthResult.get(), renderState.get(), convert_eigenv3f_to_itmv3f(camera->p()), convert_eigenv3f_to_itmv3f(camera->n()), voxelSize, DepthCalculator::DT_ORTHOGRAPHIC);
 
   // Calculate the difference between the raw depth and the raycasted depth.
-  //m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
-  af::array temp(m_rows, m_cols, f32);
-  af::print("BEFORE temp", af::resize(0.2f, temp));
-  m_imageProcessor->absolute_difference_calculator(&temp, rawDepth, m_raycastedDepthResult.get());
-  af::print("AFTER temp", af::resize(0.2f, temp));
+  m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
+
   // Threshold the difference image.
-  //m_thresholded = (*m_diffRawRaycast > m_depthLowerThreshold) && (*m_diffRawRaycast < m_depthUpperThreshold);
+  m_thresholded = (*m_diffRawRaycast > m_depthLowerThreshold) && (*m_diffRawRaycast < m_depthUpperThreshold);
 
   // Display the raw depth and the raycasted depth.
   OpenCVExtra::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
   OpenCVExtra::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
 
-  af::print("diff", af::resize(0.2f, *m_diffRawRaycast));
-
-  // Display the absolute difference between the raw and raycasted depth.
-  static af::array tmp;
-  tmp = *m_diffRawRaycast * 1000.0f;
-  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
- 
-  cv::waitKey(0);
-
-
-#if 0
   // Perform morphological operations on the image to get rid of small segments.
   static af::array morphKernel;
 #ifdef DEBUG_TOUCH_DISPLAY
@@ -220,7 +206,6 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 
 #ifdef DEBUG_TOUCH_DISPLAY
     run_debugging_display(rawDepth, temporaryCandidate);
-#endif
 #endif
 }
 
