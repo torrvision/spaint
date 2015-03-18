@@ -8,7 +8,7 @@
 
 namespace spaint {
 
-//#################### PUBLIC MEMBER FUNCTIONS #################### 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void DepthCalculator_CPU::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
 {

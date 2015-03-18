@@ -8,7 +8,8 @@
 
 namespace spaint {
 
-//#################### CUDA KERNELS #################### 
+//#################### CUDA KERNELS ####################
+
 __global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Vector3f cameraLookVector, const Vector4f *ptsRay, Vector2i imgSize, float voxelSize, DepthCalculator::DepthType depthType)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -19,7 +20,7 @@ __global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Ve
   shade_pixel_depth(outRendering[locId], cameraPosition, cameraLookVector, ptRay.toVector3(), voxelSize, ptRay.w > 0, depthType);
 }
 
-//#################### PUBLIC MEMBER FUNCTIONS #################### 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void DepthCalculator_CUDA::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
 {

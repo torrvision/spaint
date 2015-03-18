@@ -2,8 +2,8 @@
  * spaint: DepthCalculator_Shared.h
  */
 
-#ifndef H_SPAINT_DEPTHVISUALISER_SHARED
-#define H_SPAINT_DEPTHVISUALISER_SHARED
+#ifndef H_SPAINT_DEPTHCALCULATOR_SHARED
+#define H_SPAINT_DEPTHCALCULATOR_SHARED
 
 #include <cstdlib>
 
@@ -12,7 +12,7 @@
 
 namespace spaint {
 
-//#################### SHARED HELPER FUNCTIONS #################### 
+//#################### SHARED HELPER FUNCTIONS ####################
 
 /**
  * \brief Computes the necessart depth of a pixel from the camera plane.

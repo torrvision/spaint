@@ -2,32 +2,30 @@
  * spaint: TouchSelector.cpp
  */
 
-#include <tvgutil/timers/Timer.h>
-
 #include "selectors/TouchSelector.h"
 
+#include <tvgutil/timers/Timer.h>
+
 #include "picking/cpu/Picker_CPU.h"
-
-#include "util/CameraPoseConverter.h"
-
 #ifdef WITH_CUDA
 #include "picking/cuda/Picker_CUDA.h"
 #endif
+#include "util/CameraPoseConverter.h"
 
 namespace spaint {
 
-//#################### CONSTRUCTORS #################### 
+//#################### CONSTRUCTORS ####################
 
 TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view)
-: Selector(settings), 
+: Selector(settings),
   m_pickPointFloatMB(1, true, true),
   m_pickPointShortMB(new ORUtils::MemoryBlock<Vector3s>(1, true, true)),
   m_pickPointValid(false),
-  m_touchDetector(new TouchDetector(view->depth->noDims)), 
-  m_trackingState(trackingState), 
+  m_touchDetector(new TouchDetector(view->depth->noDims)),
+  m_trackingState(trackingState),
   m_view(view)
 {
-  //Make the picker. 
+  //Make the picker.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
@@ -43,7 +41,7 @@ TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_
   }
 }
 
-//#################### PUBLIC MEMBER FUNCTIONS #################### 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void TouchSelector::accept(const SelectorVisitor& visitor) const
 {

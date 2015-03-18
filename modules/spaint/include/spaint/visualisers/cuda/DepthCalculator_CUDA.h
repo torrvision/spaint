@@ -2,8 +2,8 @@
  * spaint: DepthCalculator_CUDA.h
  */
 
-#ifndef H_SPAINT_DEPTHVISUALISER_CUDA
-#define H_SPAINT_DEPTHVISUALISER_CUDA
+#ifndef H_SPAINT_DEPTHCALCULATOR_CUDA
+#define H_SPAINT_DEPTHCALCULATOR_CUDA
 
 #include "../interface/DepthCalculator.h"
 
@@ -14,7 +14,7 @@ namespace spaint {
  */
 class DepthCalculator_CUDA : public DepthCalculator
 {
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
   virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const;

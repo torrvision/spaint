@@ -17,11 +17,9 @@
 #include "util/OpenCVExtra.h"
 #endif
 
-#include "util/ArrayFireExtra.h"
-
 namespace spaint {
 
-//#################### TEMPORARY FUNCTIONS #################### 
+//#################### TEMPORARY FUNCTIONS ####################
 Vector3f convert_eigenv3f_to_itmv3f(const Eigen::Vector3f& v)
 {
   Vector3f itmv;
@@ -31,13 +29,13 @@ Vector3f convert_eigenv3f_to_itmv3f(const Eigen::Vector3f& v)
   return itmv;
 }
 
-//#################### CONSTRUCTORS #################### 
+//#################### CONSTRUCTORS ####################
 
 TouchDetector::TouchDetector(const Vector2i& imgSize)
 : m_areaPercentageThreshold(1), // 1%.
   m_cols(imgSize.x),
   m_connectedComponents(imgSize.y, imgSize.x),
-  m_depthLowerThreshold(0.010f), 
+  m_depthLowerThreshold(0.010f),
   m_depthUpperThreshold(0.255f),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_morphKernelSize(5),
@@ -65,7 +63,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 #endif
 }
 
-//#################### PUBLIC MEMBER FUNCTIONS #################### 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth)
 {
   // Calculate the depth raycast from the current scene, this is in meters.
@@ -99,7 +97,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   m_thresholded = af::dilate(m_thresholded, morphKernel);
 
   // Calculate the connected components.
-  m_connectedComponents = af::regions(m_thresholded); 
+  m_connectedComponents = af::regions(m_thresholded);
   int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
 
   // Create a histogram of the connected components to identify the size of each region.
@@ -172,7 +170,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
     // Filter the best candidate region prior to calculating the histogram.
     af::medfilt(temporaryCandidate, 5, 5);
 
-    // Find the array positions which are within a narrow range close to a surface. 
+    // Find the array positions which are within a narrow range close to a surface.
     static float depthLowerThresholdMillimeters = m_depthLowerThreshold * 1000.0f;
     static float depthUpperThresholdMillimeters = depthLowerThresholdMillimeters + 10.0f;
     af::array goodPixelPositions = af::where((temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters));
@@ -214,7 +212,7 @@ const TouchState& TouchDetector::get_touch_state() const
   return m_touchState;
 }
 
-//#################### PRIVATE MEMBER FUNCTIONS #################### 
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
 void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::array& temporaryCandidate)
@@ -278,5 +276,6 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
   initialised = true;
 }
 #endif
+
 }
 

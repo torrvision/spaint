@@ -32,18 +32,18 @@ private:
   typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_Ptr;
 
 #ifdef DEBUG_TOUCH_DISPLAY
-  //#################### PRIVATE DEBUGGING VARIABLES #################### 
+  //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
   /** The delay between processing frames (0 = pause). */
   int m_debugDelayms;
 
-  /** The thresholded value to supply to the opencv trackbar. */
+  /** The lower depth threshold value in millimeters needed to the opencv trackbar. */
   int m_depthLowerThresholdmm;
 #endif
 
-  //#################### PRIVATE VARIABLES #################### 
+  //#################### PRIVATE VARIABLES ####################
 private:
-  /** The minimum image area of a candidate touch region expressed as a percentage of the number of image pixels. */
+  /** The minimum image area a candidate touch region must have, expressed as a percentage of the number of pixels in the image. */
   float m_areaPercentageThreshold;
 
   /** The number of columns in the image matrix, (width). */
@@ -61,7 +61,7 @@ private:
   /** The threshold above which any difference in the raw and raycasted depth is ignored. */
   float m_depthUpperThreshold;
 
-  /** An image in which each pixel is the difference between the current and raycasted depth. */
+  /** An image in which each pixel is the absolute difference between the current and raycasted depth. */
   AFImage_Ptr m_diffRawRaycast;
 
   /** Multiplatform image processing tools. */
@@ -88,18 +88,18 @@ private:
   /** An image used to interface with infiniTAM images. */
   AFImage_Ptr m_workspace;
 
-  //#################### CONSTRUCTORS #################### 
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief An instance of this class may be used to identify those pixels which are touching a surface.
    */
   TouchDetector(const Vector2i& imgSize);
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Perform image processing routines on the raw and raycasted depth images in order to set the touch state.
-   * 
+   *
    * \param renderState   The render state.
    * \param camera        The camera.
    * \param voxelSize     The scene voxel size.
@@ -115,12 +115,12 @@ public:
   const TouchState& get_touch_state() const;
 
 #ifdef DEBUG_TOUCH_DISPLAY
-  //#################### PRIVATE MEMBER FUNCTIONS #################### 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
    * \brief Display various debugging information.
    *
-   * \param rawDepth    The raw depth image from the camera.
+   * \param rawDepth             The raw depth image from the camera.
    * \param temporaryCandidate   The region which represents the touch interaction.
    */
   void run_debugging_display(ITMFloatImage *rawDepth, const af::array& temporaryCandidate);

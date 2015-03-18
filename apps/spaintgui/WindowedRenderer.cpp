@@ -96,6 +96,7 @@ public:
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
+    // FIXME This is an exact copy of the picking selector. What should be rendered at the touch points?
     boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 

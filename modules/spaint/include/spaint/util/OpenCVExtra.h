@@ -15,9 +15,16 @@
 
 namespace spaint {
 
+/**
+ * \brief This class provides helper functions to visualise InfiniTAM and ArrayFire images in OpenCV.
+ */
 class OpenCVExtra
 {
+  //#################### PUBLIC ENUMERATIONS ####################
 public:
+  /**
+   * \brief An enumeration containing two possible ways of arranging multidimensional arrays in a single linear array.
+   */
   enum Order
   {
     ROW_MAJOR,
@@ -26,28 +33,13 @@ public:
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
-/*  static void imshow_float_and_scale(const std::string& windowName, const cv::Mat& image, float scaleFactor)
-  {
-    cv::Mat canvas;
-    image.convertTo(canvas, CV_8U, scaleFactor, 0.0f);
-    cv::imshow(windowName, canvas);
-  }
-
-  static void imshow_float_scale_to_range(const std::string& windowName, const cv::Mat& image)
-  {
-    double minValue, maxValue;
-    cv::Mat tmp;
-    image.copyTo(tmp);
-    cv::minMaxLoc(tmp, &minValue, &maxValue);
-    double range = maxValue - minValue;
-
-    cv::Mat canvas;
-
-    image.convertTo(canvas, CV_8U, 255.0/range, -minValue * 255.0 / range);
-
-    cv::imshow(windowName, canvas);
-  }
-*/
+  /*
+   * \brief Displays an image and scales the pixel values by a specified scaling factor.
+   *
+   * \param infiniTAMImage  The InfiniTAM image.
+   * \param scaleFactor     The facotr by which to scale the image pixels.
+   * \param windowName      The name of the window in which to display the resulting image.
+   */
   static void display_image_and_scale(ITMFloatImage *infiniTAMImage, float scaleFactor, const std::string& windowName)
   {
     int width = infiniTAMImage->noDims.x;
@@ -74,6 +66,12 @@ public:
     cv::imshow(windowName, OCVImage);
   }
 
+  /*
+   * \brief Displays an image and scales the pixel values to occupy the entire range [0-255].
+   *
+   * \param infiniTAMImage  The InfiniTAM image.
+   * \param windowName      The name of the window in which to display the resulting image.
+   */
   static void display_image_scale_to_range(ITMFloatImage *infiniTAMImage, const std::string& windowName)
   {
     int width = infiniTAMImage->noDims.x;
@@ -92,7 +90,7 @@ public:
     // Create an OpenCV image and get the data pointer.
     cv::Mat OCVImage = cv::Mat::zeros(height, width, CV_8UC1);
     int8_t *OCVImageDataPtr = (int8_t*)OCVImage.data;
-    
+
     // Inner loop to set the OpenCV Image Pixels.
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
@@ -105,7 +103,16 @@ public:
     cv::imshow(windowName, OCVImage);
   }
 
-  static void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order) 
+  /**
+   * \brief Displays an image in a window from an array of pixel values.
+   *
+   * \param windowName   The name of the window.
+   * \param pixels       A pointer to the first pixel element in the image.
+   * \param width        The width of the image.
+   * \param height       The hwight of the image.
+   * \param order        Whether the pixel values are arrange din column-major or row-major order.
+   */
+  static void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order)
   {
     if(order == Order::COL_MAJOR)
     {
@@ -122,12 +129,30 @@ public:
     }
   }
 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Sets an opencv image pixel.
+   *
+   * \param OCVImageDataPtr   The pointer to the first element in the image.
+   * \param x                 The x position in the image.
+   * \param y                 The y position in wht image.
+   * \param width             The width of the image.
+   * \param value             The pixel value to assign to the specified image pixel.
+   */
   static void set_ocv_mat_8UC1(int8_t *OCVImageDataPtr, int x, int y, int width, int8_t value)
   {
     OCVImageDataPtr[y * width + x] = value;
   }
 
+  /**
+   * \brief Calculate the minimum and maximum values in an InfiniTAM image.
+   *
+   * \param ITMImageDataPtr   The InfiniTAM image data pointer.
+   * \param width             The width of the image.
+   * \param height            The height of the image.
+   * \return                  A pair of values indicating the minimum and maximum values found.
+   */
   static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *ITMImageDataPtr, int width, int height)
   {
     std::vector<float> tmpImgVector(ITMImageDataPtr, ITMImageDataPtr + width * height);
@@ -135,11 +160,15 @@ private:
     return std::make_pair(*result.first, *result.second);
   }
 
-  static void set_ocv_mat_32F(float *opencvImageDataPtr, int x, int y, int width, float value)
-  {
-    opencvImageDataPtr[y * width + x] = value;
-  }
-
+  /**
+   * \brief Gets the value contained at a specified position in an InfiniTAM image.
+   *
+   * \param InfiniTAMImageDataPtr   The pointer to the first element in the InfiniTAM image.
+   * \param x                       The x position in the image.
+   * \param y                       The y position in the image.
+   * \param width                   The width of the image.
+   * \return                        The value contained at the specified location.
+   */
   static float get_itm_mat_32SC1(float *InfiniTAMImageDataPtr, int x, int y, int width)
   {
     return InfiniTAMImageDataPtr[y * width + x];

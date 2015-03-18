@@ -2,11 +2,11 @@
 # CMakeLists.txt for tests/scratch #
 ####################################
 
-ADD_SUBDIRECTORY(boost)
-
 IF(WITH_ARRAYFIRE)
   ADD_SUBDIRECTORY(arrayfire)
 ENDIF()
+
+ADD_SUBDIRECTORY(boost)
 
 IF(WITH_CUDA)
   ADD_SUBDIRECTORY(cuda)

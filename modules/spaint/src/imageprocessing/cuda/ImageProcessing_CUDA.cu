@@ -9,6 +9,7 @@
 namespace spaint {
 
 //#################### CUDA KERNELS ####################
+
 __global__ void ck_absolute_difference_calculator(float *outputImage, float *firstInputImage, float *secondInputImage, Vector2i imgSize)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -65,4 +66,5 @@ void ImageProcessing_CUDA::absolute_difference_calculator(af::array *outputImage
     imgSize
   );
 }
+
 }

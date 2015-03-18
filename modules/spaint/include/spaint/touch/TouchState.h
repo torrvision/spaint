@@ -10,51 +10,70 @@
 namespace spaint {
 
 /**
- * brief An instance of this class can be used to access the touch position, if a valid position exists.
+ * brief An instance of this class can be used to model the touch state.
  */
 class TouchState
 {
+  //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** The x touch positions. */
   std::vector<int> m_position_x;
+
+  /** The y touch positions. */
   std::vector<int> m_position_y;
+
+  /** A flag indicating whether the surface is being touched. */
   bool m_touchingSurface;
+
+  /** A flag indicating whether the touch position is known. */
   bool m_touchPositionKnown;
 
+  //#################### CONSTRUCTORS ####################
 public:
-  TouchState()
-  : m_touchingSurface(false), m_touchPositionKnown(false)
-  {}
+  TouchState();
 
-  const std::vector<int>& position_x() const
-  {
-    return m_position_x;
-  }
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the x touch positions.
+   *
+   * \return   The x touch positions.
+   */
+  const std::vector<int>& position_x() const;
 
-  const std::vector<int>& position_y() const
-  {
-    return m_position_y;
-  }
+  /**
+   * \brief Gets the y touch positions.
+   *
+   * \return   The y touch positions.
+   */
+  const std::vector<int>& position_y() const;
 
-  void set_touch_state(const std::vector<int>& position_x, const std::vector<int>& position_y, bool touchingSurface, bool touchPositionKnown)
-  {
-    m_position_x = position_x;
-    m_position_y = position_y;
-    m_touchingSurface = touchingSurface;
-    m_touchPositionKnown = touchPositionKnown;
-  }
+  /**
+   * \brief Sets the touch state.
+   *
+   * \param position_x          The x positions.
+   * \param position_y          The y positions.
+   * \param touchingSurface     Whether the surface is being touched or not.
+   * \param touchPositionKnown  Whether the touch position is known.
+   */
+  void set_touch_state(const std::vector<int>& position_x, const std::vector<int>& position_y, bool touchingSurface, bool touchPositionKnown);
 
-  bool touching_surface() const
-  {
-    return m_touchingSurface;
-  }
+  /**
+   * \brief Gets whether the surface is being touched.
+   *
+   * \return The touching-surface flag.
+   */
+  bool touching_surface() const;
 
-  bool touch_position_known() const
-  {
-    return m_touchPositionKnown;
-  }
+  /**
+   * \brief Gets whether the touch positin is known.
+   *
+   * \return The touch-position-known flag.
+   */
+  bool touch_position_known() const;
 };
 
-//#################### TYPEDEFS #################### 
+//#################### TYPEDEFS ####################
 typedef boost::shared_ptr<TouchState> TouchState_Ptr;
 typedef boost::shared_ptr<const TouchState> TouchState_CPtr;
 

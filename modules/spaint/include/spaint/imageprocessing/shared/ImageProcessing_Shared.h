@@ -10,7 +10,11 @@ namespace spaint {
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
- * \brief TODO
+ * \brief Shades a pixel with the absolute difference between two other images if the values in the two other images are greater than or equal to zero.
+ *
+ * \param destination   The location into which to write the computed absolute difference.
+ * \param firstInput    The first value.
+ * \param secondInput   The second value.
  */
 _CPU_AND_GPU_CODE_
 inline void shade_pixel_absolute_difference(float *destination, float firstInput, float secondInput) 
@@ -23,13 +27,6 @@ inline void shade_pixel_absolute_difference(float *destination, float firstInput
   {
     *destination = fabs(firstInput - secondInput);
   }
-}
-
-int column_major_index_from_row_major_index(int rowMajorIndex, int width, int height)
-{
-  int row = rowMajorIndex / width;
-  int col = rowMajorIndex % width;
-  return col * height + row;
 }
 }
 

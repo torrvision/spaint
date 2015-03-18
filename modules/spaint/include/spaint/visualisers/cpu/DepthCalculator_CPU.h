@@ -2,8 +2,8 @@
  * spaint: DepthCalculator_CPU.h
  */
 
-#ifndef H_SPAINT_DEPTHVISUALISER_CPU
-#define H_SPAINT_DEPTHVISUALISER_CPU
+#ifndef H_SPAINT_DEPTHCALCULATOR_CPU
+#define H_SPAINT_DEPTHCALCULATOR_CPU
 
 #include "../interface/DepthCalculator.h"
 

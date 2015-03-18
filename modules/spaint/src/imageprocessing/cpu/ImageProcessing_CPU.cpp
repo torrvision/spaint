@@ -46,9 +46,9 @@ void ImageProcessing_CPU::absolute_difference_calculator(af::array *outputImage,
 #endif
   for(int locId = 0; locId < imgSize; ++locId)
   {
-    int locIdcm = column_major_index_from_row_major_index(locId, width, height);
+    int locIdcm = ImageProcessing::column_major_index_from_row_major_index(locId, width, height);
     shade_pixel_absolute_difference(&output[locIdcm], first[locId], second[locId]);
   }
-
 }
+
 }

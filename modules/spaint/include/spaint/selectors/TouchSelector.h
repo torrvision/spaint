@@ -12,7 +12,8 @@
 #include <ITMLib/Objects/ITMTrackingState.h>
 #include <ITMLib/Objects/ITMView.h>
 
-#include "PickingSelector.h"
+#include "Selector.h"
+#include "../picking/interface/Picker.h"
 #include "../touch/TouchDetector.h"
 
 namespace spaint {
@@ -28,7 +29,7 @@ private:
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
 
-  //#################### PRIVATE VARIABLES #################### 
+  //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
   boost::shared_ptr<const Picker> m_picker;
@@ -42,7 +43,7 @@ private:
   /** Whether or not the most recent update operation returned a valid pick point. */
   bool m_pickPointValid;
 
-  /** A touch detector. */
+  /** The touch detector. */
   TouchDetector_Ptr m_touchDetector;
 
   /** The traching state. */
@@ -51,16 +52,18 @@ private:
   /** The view. */
   View_Ptr m_view;
 
-  //#################### CONSTRUCTORS #################### 
+  //#################### CONSTRUCTORS ####################
 public:
   /*
    * \brief Constructs a touch selector.
    *
-   * \param settings  The settings to use for InfiniTAM.
+   * \param settings       The settings to use for InfiniTAM which contains the voxel size.
+   * \param trachingState  The InfiniTAM tracking state which contains the pose of the camera.
+   * \param view           The InfiniTAM view which contains the raw depth image.
    */
   explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view);
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
   virtual void accept(const SelectorVisitor& visitor) const;

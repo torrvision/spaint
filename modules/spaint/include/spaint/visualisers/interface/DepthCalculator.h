@@ -17,10 +17,10 @@ namespace spaint {
  */
 class DepthCalculator
 {
-  //#################### ENUMERATIONS #################### 
+  //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief An enumeration specifying the different typesof depth raycasting that is supported.
+   * \brief An enumeration specifying the different typesof depth calculation that is supported.
    */
   enum DepthType
   {
@@ -28,20 +28,24 @@ public:
     DT_ORTHOGRAPHIC
   };
 
-  //#################### DESTRUCTOR #################### 
+  //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the semantic visualiser.
    */
   virtual ~DepthCalculator() {}
 
-  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief REnders a depth view of the specified scene fro the specified camera pose.
+   * \brief Renders a depth view of the specified scene from the specified camera pose.
    *
-   * \param renderState The render state corresponding to the specified camera pose.
-   * \param outputImage The image into which to write the semantic visualisation of the scene.
+   * \param outputImage       The image into which to write the depth calculation.
+   * \param renderState       The render state.
+   * \param cameraPosition    The camera translation from the origin of the world coordinate system.
+   * \param cameraLookVector  The the camera look vector.
+   * \param voxelSize         The size of an InfiniTAM voxel.
+   * \param depthType         The type of depth calculation.
    */
   virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType = DT_ORTHOGRAPHIC) const = 0;
 };
