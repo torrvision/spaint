@@ -4,7 +4,7 @@
 
 #include "sampling/interface/VoxelSampler.h"
 
-#include <tvgutil/random/RandomNumberGenerator.h>
+#include <tvgutil/RandomNumberGenerator.h>
 
 namespace {
 
