@@ -126,14 +126,15 @@ void SpaintPipeline::process_frame()
   {
     // FIXME: These shouldn't be hard-coded here ultimately.
     const int labelCount = 2;
-    const int raycastResultSize = 640 * 480;
+    const int maxVoxelsPerLabel = 1024;
 
     // Sample voxels from the scene to use for training the random forest.
-    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(labelCount * raycastResultSize, true, true/*memoryDeviceType*/);
+    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(labelCount * maxVoxelsPerLabel, true, true/*memoryDeviceType*/);
     ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(labelCount, true, true);
     m_voxelSampler->sample_voxels(
       m_raycaster->get_live_render_state()->raycastResult,
       scene.get(),
+      maxVoxelsPerLabel,
       voxelLocationsMB,
       voxelCountsForLabelsMB
     );

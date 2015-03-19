@@ -24,6 +24,9 @@ protected:
   /** The size of the raycast result image (in pixels). */
   const int m_raycastResultSize;
 
+  /** A memory block in which to store the locations of the voxels in each semantic class. */
+  mutable ORUtils::MemoryBlock<Vector3s> m_voxelLocationsByClassMB;
+
   /**
    * A memory block in which to store the prefix sums for the voxel masks. These are used
    * to determine the locations in the output array into which to write sample voxels.
@@ -107,10 +110,11 @@ public:
    *
    * \param raycastResult           The current raycast result.
    * \param scene                   The scene.
+   * \param maxVoxelsPerLabel       The maximum number of voxels to sample for each label.
    * \param voxelLocationsMB        A memory block into which to write the locations of the sampled voxels.
    * \param voxelCountsForLabelsMB  A memory block into which to write the numbers of voxels sampled for each label.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+  void sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, int maxVoxelsPerLabel,
                      ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 };
 
