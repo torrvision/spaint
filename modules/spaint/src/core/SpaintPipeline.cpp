@@ -78,7 +78,8 @@ void SpaintPipeline::process_frame()
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
-  m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get());
+  const bool useBilateralFilter = false;
+  m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
   m_model->set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
