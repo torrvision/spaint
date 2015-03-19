@@ -50,6 +50,22 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
   }
 }
 
+_CPU_AND_GPU_CODE_
+inline void write_sampled_voxel_location(int voxelIndex, int labelCount, int maxVoxelsPerLabel, int raycastResultSize,
+                                         const Vector3s *voxelLocationsByClass, const int *randomVoxelIndices,
+                                         Vector3s *sampledVoxelLocations)
+{
+  // For each label:
+  for(int k = 0; k < labelCount; ++k)
+  {
+    int randomVoxelIndex = randomVoxelIndices[k * maxVoxelsPerLabel + voxelIndex];
+    if(randomVoxelIndex != -1)
+    {
+      sampledVoxelLocations[k * maxVoxelsPerLabel + voxelIndex] = voxelLocationsByClass[k * raycastResultSize + randomVoxelIndex];
+    }
+  }
+}
+
 /**
  * \brief Attempts to write the location of the specified voxel to the segment of the voxel location array
  *        corresponding to the label (if any) for which it could serve as a sample.

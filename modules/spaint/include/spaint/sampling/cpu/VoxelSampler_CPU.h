@@ -42,6 +42,9 @@ private:
                                 ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 
   /** Override */
+  virtual void write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;
+
+  /** Override */
   virtual void write_voxel_locations(const ITMFloat4Image *raycastResult,
                                      const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
                                      const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,

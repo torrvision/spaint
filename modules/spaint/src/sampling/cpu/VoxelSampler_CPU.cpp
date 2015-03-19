@@ -76,6 +76,29 @@ void VoxelSampler_CPU::set_voxel_counts(const ORUtils::MemoryBlock<unsigned int>
   }
 }
 
+void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
+{
+  const Vector3s *voxelLocationsByClass = m_voxelLocationsByClassMB.GetData(MEMORYDEVICE_CPU);
+  const int *randomVoxelIndices = m_randomVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  Vector3s *sampledVoxelLocations = sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int voxelIndex = 0; voxelIndex < m_maxVoxelsPerLabel; ++voxelIndex)
+  {
+    write_sampled_voxel_location(
+      voxelIndex,
+      m_labelCount,
+      m_maxVoxelsPerLabel,
+      m_raycastResultSize,
+      voxelLocationsByClass,
+      randomVoxelIndices,
+      sampledVoxelLocations
+    );
+  }
+}
+
 void VoxelSampler_CPU::write_voxel_locations(const ITMFloat4Image *raycastResult,
                                              const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
                                              const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,

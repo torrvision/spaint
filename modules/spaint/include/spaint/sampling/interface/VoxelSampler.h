@@ -98,6 +98,13 @@ private:
                                 ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
 
   /**
+   * \brief Writes the locations of the sampled voxels into the sampled voxel location memory block.
+   *
+   * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
+   */
+  virtual void write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
+
+  /**
    * \brief Writes the locations of the sampled voxels into the output memory block.
    *
    * \param raycastRaycast        The current raycast result.

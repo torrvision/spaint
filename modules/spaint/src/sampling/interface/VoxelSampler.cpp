@@ -66,7 +66,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   m_randomVoxelIndicesMB.UpdateDeviceFromHost();
 
   // Write the sampled voxel locations into the sampled voxel location array.
-  // TODO
+  write_sampled_voxel_locations(voxelLocationsMB);
 }
 
 }
