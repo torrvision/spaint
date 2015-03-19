@@ -120,6 +120,38 @@ include/spaint/picking/shared/Picker_Shared.h
 )
 
 ##
+SET(sampling_cpu_sources
+src/sampling/cpu/VoxelSampler_CPU.cpp
+)
+
+SET(sampling_cpu_headers
+include/spaint/sampling/cpu/VoxelSampler_CPU.h
+)
+
+##
+SET(sampling_cuda_sources
+src/sampling/cuda/VoxelSampler_CUDA.cu
+)
+
+SET(sampling_cuda_headers
+include/spaint/sampling/cuda/VoxelSampler_CUDA.h
+)
+
+##
+SET(sampling_interface_sources
+src/sampling/interface/VoxelSampler.cpp
+)
+
+SET(sampling_interface_headers
+include/spaint/sampling/interface/VoxelSampler.h
+)
+
+##
+SET(sampling_shared_headers
+include/spaint/sampling/shared/VoxelSampler_Shared.h
+)
+
+##
 SET(selectiontransformers_sources
 src/selectiontransformers/SelectionTransformerFactory.cpp
 )
@@ -246,6 +278,8 @@ ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
+${sampling_cpu_sources}
+${sampling_interface_sources}
 ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
@@ -266,6 +300,9 @@ ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
+${sampling_cpu_headers}
+${sampling_interface_headers}
+${sampling_shared_headers}
 ${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
@@ -282,6 +319,7 @@ IF(WITH_CUDA)
   SET(sources ${sources}
     ${markers_cuda_sources}
     ${picking_cuda_sources}
+    ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
     ${visualisers_cuda_sources}
   )
@@ -289,6 +327,7 @@ IF(WITH_CUDA)
   SET(headers ${headers}
     ${markers_cuda_headers}
     ${picking_cuda_headers}
+    ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
     ${visualisers_cuda_headers}
   )
@@ -309,6 +348,10 @@ SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
+SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers})
+SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
+SOURCE_GROUP(sampling\\interface FILES ${sampling_interface_sources} ${sampling_interface_headers})
+SOURCE_GROUP(sampling\\shared FILES ${sampling_shared_headers})
 SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})

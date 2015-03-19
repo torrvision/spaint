@@ -48,6 +48,7 @@ try
 
   // Specify the InfiniTAM settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  //settings->deviceType = ITMLibSettings::DEVICE_CPU;
 
 #ifdef WITH_VICON
   // Specify whether or not to use the Vicon tracker (if it's available).

@@ -11,6 +11,8 @@
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
+#include "../sampling/interface/VoxelSampler.h"
+
 #ifdef WITH_VICON
 #include "../trackers/ViconTracker.h"
 #endif
@@ -37,6 +39,7 @@ private:
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const VoxelSampler> VoxelSampler_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -89,6 +92,9 @@ private:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
+
+  /** The voxel sampler. */
+  VoxelSampler_CPtr m_voxelSampler;
 
   //#################### CONSTRUCTORS ####################
 public:

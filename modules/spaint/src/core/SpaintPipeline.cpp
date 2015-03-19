@@ -13,6 +13,13 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#include "sampling/cpu/VoxelSampler_CPU.h"
+
+#ifdef WITH_CUDA
+#include "markers/cuda/VoxelMarker_CUDA.h"
+#include "sampling/cuda/VoxelSampler_CUDA.h"
+#endif
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -104,6 +111,7 @@ void SpaintPipeline::process_frame()
   {
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_reconstructionStarted = true;
   }
   else
   {
@@ -114,7 +122,25 @@ void SpaintPipeline::process_frame()
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
 
-  m_reconstructionStarted = true;
+  if(true /* We're in training mode. */)
+  {
+    // FIXME: These shouldn't be hard-coded here ultimately.
+    const int labelCount = 2;
+    const unsigned short maxVoxelsPerLabel = 1024;
+
+    // Sample voxels from the scene to use for training the random forest.
+    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(labelCount * maxVoxelsPerLabel, true, true/*memoryDeviceType*/);
+    ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(labelCount, true, true);
+    m_voxelSampler->sample_voxels(
+      m_raycaster->get_live_render_state()->raycastResult,
+      scene.get(),
+      voxelLocationsMB,
+      voxelCountsForLabelsMB
+    );
+
+    VoxelMarker_CUDA marker;
+    marker.mark_voxels(voxelLocationsMB, 2, scene.get());
+  }
 }
 
 void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
@@ -148,7 +174,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   SpaintModel::Scene_Ptr scene(new SpaintModel::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
-  // Set up the InfiniTAM engines and view builder.
+  // Set up the platform-specific components.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
   VisualisationEngine_Ptr visualisationEngine;
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -158,6 +184,9 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib));
     visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
+
+    // FIXME: These values shouldn't be hard-coded here ultimately.
+    m_voxelSampler.reset(new VoxelSampler_CUDA(2, 1024, depthImageSize.width * depthImageSize.height));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -169,6 +198,9 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
     visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
+
+    // FIXME: These values shouldn't be hard-coded here ultimately.
+    m_voxelSampler.reset(new VoxelSampler_CPU(2, 1024, depthImageSize.width * depthImageSize.height));
   }
 
   // Set up the live render state.
