@@ -21,9 +21,6 @@ protected:
   /** The number of semantic labels that are in use. */
   const int m_labelCount;
 
-  /** The maximum number of voxels to sample for each label. */
-  const unsigned int m_maxVoxelsPerLabel;
-
   /** The size of the raycast result image (in pixels). */
   const int m_raycastResultSize;
 
@@ -45,11 +42,10 @@ protected:
    * \brief Constructs a voxel sampler.
    *
    * \param labelCount        The number of semantic labels that are in use.
-   * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    * \param memoryDeviceType  The type of memory device on which to allocate the internal memory blocks (i.e. CPU or CUDA).
    */
-  VoxelSampler(int labelCount, unsigned int maxVoxelsPerLabel, int raycastResultSize, MemoryDeviceType memoryDeviceType);
+  VoxelSampler(int labelCount, int raycastResultSize, MemoryDeviceType memoryDeviceType);
 
   //#################### DESTRUCTOR ####################
 public:

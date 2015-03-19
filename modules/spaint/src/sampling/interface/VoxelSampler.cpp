@@ -8,9 +8,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(int labelCount, unsigned int maxVoxelsPerLabel, int raycastResultSize, MemoryDeviceType memoryDeviceType)
+VoxelSampler::VoxelSampler(int labelCount, int raycastResultSize, MemoryDeviceType memoryDeviceType)
 : m_labelCount(labelCount),
-  m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
   m_voxelMaskPrefixSumsMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/),
   m_voxelMasksMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/)

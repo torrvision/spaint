@@ -24,29 +24,27 @@ __global__ void ck_calculate_voxel_masks(const Vector4f *raycastResult, int rayc
   }
 }
 
-__global__ void ck_set_voxel_counts(int raycastResultSize, unsigned int maxVoxelsPerLabel,
-                                       const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
+__global__ void ck_set_voxel_counts(int raycastResultSize, const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
 {
   int label = threadIdx.x + blockDim.x * blockIdx.x;
-  set_voxel_count(label, raycastResultSize, maxVoxelsPerLabel, voxelMaskPrefixSums, voxelCountsForLabels);
+  set_voxel_count(label, raycastResultSize, voxelMaskPrefixSums, voxelCountsForLabels);
 }
 
 __global__ void ck_write_voxel_locations(const Vector4f *raycastResult, int raycastResultSize,
                                          const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
-                                         int labelCount, unsigned int maxVoxelsPerLabel,
-                                         Vector3s *voxelLocations)
+                                         int labelCount, Vector3s *voxelLocations)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
   {
-    write_voxel_location(voxelIndex, raycastResult, raycastResultSize, voxelMasks, voxelMaskPrefixSums, labelCount, maxVoxelsPerLabel, voxelLocations);
+    write_voxel_location(voxelIndex, raycastResult, raycastResultSize, voxelMasks, voxelMaskPrefixSums, labelCount, voxelLocations);
   }
 }
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CUDA::VoxelSampler_CUDA(int labelCount, unsigned int maxVoxelsPerLabel, int raycastResultSize)
-: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, MEMORYDEVICE_CUDA)
+VoxelSampler_CUDA::VoxelSampler_CUDA(int labelCount, int raycastResultSize)
+: VoxelSampler(labelCount, raycastResultSize, MEMORYDEVICE_CUDA)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -105,7 +103,6 @@ void VoxelSampler_CUDA::set_voxel_counts(const ORUtils::MemoryBlock<unsigned int
 {
   ck_set_voxel_counts<<<1,m_labelCount>>>(
     m_raycastResultSize,
-    m_maxVoxelsPerLabel,
     voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
     voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CUDA)
   );
@@ -129,7 +126,6 @@ void VoxelSampler_CUDA::write_voxel_locations(const ITMFloat4Image *raycastResul
     voxelMasksMB.GetData(MEMORYDEVICE_CUDA),
     voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
     m_labelCount,
-    m_maxVoxelsPerLabel,
     voxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
   );
 

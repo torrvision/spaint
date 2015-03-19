@@ -20,10 +20,9 @@ public:
    * \brief Constructs a CUDA-based voxel sampler.
    *
    * \param labelCount        The number of semantic labels that are in use.
-   * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    */
-  VoxelSampler_CUDA(int labelCount, unsigned int maxVoxelsPerLabel, int raycastResultSize);
+  VoxelSampler_CUDA(int labelCount, int raycastResultSize);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

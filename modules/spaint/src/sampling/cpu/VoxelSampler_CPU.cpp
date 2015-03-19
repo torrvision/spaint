@@ -10,8 +10,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CPU::VoxelSampler_CPU(int labelCount, unsigned int maxVoxelsPerLabel, int raycastResultSize)
-: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, MEMORYDEVICE_CPU)
+VoxelSampler_CPU::VoxelSampler_CPU(int labelCount, int raycastResultSize)
+: VoxelSampler(labelCount, raycastResultSize, MEMORYDEVICE_CPU)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -72,7 +72,7 @@ void VoxelSampler_CPU::set_voxel_counts(const ORUtils::MemoryBlock<unsigned int>
 #endif
   for(int k = 0; k < m_labelCount; ++k)
   {
-    set_voxel_count(k, m_raycastResultSize, m_maxVoxelsPerLabel, voxelMaskPrefixSums, voxelCountsForLabels);
+    set_voxel_count(k, m_raycastResultSize, voxelMaskPrefixSums, voxelCountsForLabels);
   }
 }
 
@@ -97,7 +97,6 @@ void VoxelSampler_CPU::write_voxel_locations(const ITMFloat4Image *raycastResult
       voxelMasks,
       voxelMaskPrefixSums,
       m_labelCount,
-      m_maxVoxelsPerLabel,
       voxelLocations
     );
   }

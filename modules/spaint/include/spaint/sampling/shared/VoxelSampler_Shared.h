@@ -14,16 +14,13 @@ namespace spaint {
  *
  * \param label                 The label for which to set the voxel count.
  * \param raycastResultSize     The size of the raycast result image (in pixels).
- * \param maxVoxelsPerLabel     The maximum number of voxels to sample for each label.
  * \param voxelMaskPrefixSums   The prefix sums for the voxel masks.
  * \param voxelCountsForLabels  An array into which to write the numbers of voxels sampled for each label.
  */
 _CPU_AND_GPU_CODE_
-inline void set_voxel_count(int label, int raycastResultSize, unsigned int maxVoxelsPerLabel,
-                            const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
+inline void set_voxel_count(int label, int raycastResultSize, const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
 {
   voxelCountsForLabels[label] += voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
-  if(voxelCountsForLabels[label] > maxVoxelsPerLabel) voxelCountsForLabels[label] = maxVoxelsPerLabel;
 }
 
 /**
@@ -59,11 +56,13 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
  *
  * Note 1: If we already have enough samples for a particular label, we will avoid writing any more.
  * Note 2: If the voxel cannot serve as a sample for any label, nothing is written.
+ *
+ * \param voxelIndex  TODO
  */
 _CPU_AND_GPU_CODE_
 inline void write_voxel_location(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
                                  const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
-                                 int labelCount, unsigned int maxVoxelsPerLabel, Vector3s *voxelLocations)
+                                 int labelCount, Vector3s *voxelLocations)
 {
   // For each label:
   for(int k = 0; k < labelCount; ++k)
@@ -78,7 +77,7 @@ inline void write_voxel_location(int voxelIndex, const Vector4f *raycastResult, 
       unsigned int i = voxelMaskPrefixSums[k * (raycastResultSize+1) + voxelIndex];
 
       // Provided it won't cause us to exceed the maximum number of voxels for this label, write the voxel's location to the voxel location array.
-      if(i < maxVoxelsPerLabel) voxelLocations[k * maxVoxelsPerLabel + i] = loc;
+      voxelLocations[k * raycastResultSize + i] = loc;
     }
   }
 }

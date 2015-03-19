@@ -126,10 +126,10 @@ void SpaintPipeline::process_frame()
   {
     // FIXME: These shouldn't be hard-coded here ultimately.
     const int labelCount = 2;
-    const unsigned short maxVoxelsPerLabel = 1024;
+    const int raycastResultSize = 640 * 480;
 
     // Sample voxels from the scene to use for training the random forest.
-    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(labelCount * maxVoxelsPerLabel, true, true/*memoryDeviceType*/);
+    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(labelCount * raycastResultSize, true, true/*memoryDeviceType*/);
     ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(labelCount, true, true);
     m_voxelSampler->sample_voxels(
       m_raycaster->get_live_render_state()->raycastResult,
@@ -186,7 +186,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 
     // FIXME: These values shouldn't be hard-coded here ultimately.
-    m_voxelSampler.reset(new VoxelSampler_CUDA(2, 1024, depthImageSize.width * depthImageSize.height));
+    m_voxelSampler.reset(new VoxelSampler_CUDA(2, depthImageSize.width * depthImageSize.height));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -200,7 +200,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 
     // FIXME: These values shouldn't be hard-coded here ultimately.
-    m_voxelSampler.reset(new VoxelSampler_CPU(2, 1024, depthImageSize.width * depthImageSize.height));
+    m_voxelSampler.reset(new VoxelSampler_CPU(2, depthImageSize.width * depthImageSize.height));
   }
 
   // Set up the live render state.
