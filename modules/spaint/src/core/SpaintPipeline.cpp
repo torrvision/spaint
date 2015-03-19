@@ -13,6 +13,7 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#include "markers/cpu/VoxelMarker_CPU.h"
 #include "sampling/cpu/VoxelSampler_CPU.h"
 
 #ifdef WITH_CUDA
@@ -139,6 +140,7 @@ void SpaintPipeline::process_frame()
     );
 
     VoxelMarker_CUDA marker;
+    //VoxelMarker_CPU marker;
     marker.mark_voxels(voxelLocationsMB, 2, scene.get());
   }
 }
