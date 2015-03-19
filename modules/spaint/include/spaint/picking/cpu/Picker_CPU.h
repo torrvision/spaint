@@ -20,6 +20,10 @@ public:
   virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const;
 
   /** Override */
+/*  virtual bool pick(const std::vector<int>& x, const std::vector<int>& y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBLock<Vector3f>& pickPointMB)
+ *  const;*/
+
+  /** Override */
   virtual void to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const;
 };
 

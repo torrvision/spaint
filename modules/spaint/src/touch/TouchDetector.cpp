@@ -75,10 +75,6 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   // Threshold the difference image.
   m_thresholded = (*m_diffRawRaycast > m_depthLowerThreshold) && (*m_diffRawRaycast < m_depthUpperThreshold);
 
-  // Display the raw depth and the raycasted depth.
-  OpenCVExtra::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
-  OpenCVExtra::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
-
   // Perform morphological operations on the image to get rid of small segments.
   static af::array morphKernel;
 #ifdef DEBUG_TOUCH_DISPLAY
@@ -173,7 +169,9 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
     // Find the array positions which are within a narrow range close to a surface.
     static float depthLowerThresholdMillimeters = m_depthLowerThreshold * 1000.0f;
     static float depthUpperThresholdMillimeters = depthLowerThresholdMillimeters + 10.0f;
-    af::array goodPixelPositions = af::where((temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters));
+
+    static float scaleFactor = 0.5f;
+    af::array goodPixelPositions = af::where(af::resize(scaleFactor, (temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters)));
 
     static float touchAreaLowerThreshold = 0.0001 * m_cols * m_rows;
     if(goodPixelPositions.elements() > touchAreaLowerThreshold)
@@ -187,8 +185,19 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 
       for(int i = 0; i < numberOfTouchPoints; ++i)
       {
-        pointsx.push_back(touchIndices[i] / m_rows); // Column.
-        pointsy.push_back(touchIndices[i] % m_rows); // Row.
+        /*static float quantizationRows = 0.006 * m_rows;
+        static float quantizationCols = 0.006 * m_cols;
+
+        int column = touchIndices[i] / m_rows;
+        int row = touchIndices[i] % m_rows;
+        int qcolumn = (int)(column / quantizationCols) * quantizationCols;
+        int qrow = (int)(row / quantizationRows) * quantizationRows;
+
+        pointsx.push_back(qcolumn); // Column.
+        pointsy.push_back(qrow); // Row.
+        */
+        pointsx.push_back((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
+        pointsy.push_back((touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
       }
 
       m_touchState.set_touch_state(pointsx, pointsy, true, true);

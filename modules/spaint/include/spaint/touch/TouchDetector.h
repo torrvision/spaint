@@ -16,7 +16,7 @@
 #include "TouchState.h"
 
 //#define DEBUG_TOUCH_VERBOSE
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 

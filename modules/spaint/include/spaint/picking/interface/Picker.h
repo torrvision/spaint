@@ -35,6 +35,8 @@ public:
    */
   virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const = 0;
 
+/*  virtual bool pick(const std::vector<int>& x, const std::vector<int>& y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBLock<Vector3f>& pickPointMB) const = 0;*/
+
   /**
    * \brief Converts a pick point expressed as a Vector3f into a Vector3s.
    *

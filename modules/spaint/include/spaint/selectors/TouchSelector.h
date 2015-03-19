@@ -35,13 +35,19 @@ private:
   boost::shared_ptr<const Picker> m_picker;
 
   /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
-  mutable ORUtils::MemoryBlock<Vector3f> m_pickPointFloatMB;
+  mutable boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;
 
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
 
-  /** Whether or not the most recent update operation returned a valid pick point. */
+  /** Whether or not the most recent update operation returned at least one valid pick point. */
   bool m_pickPointValid;
+
+  /** The maximum number of pick-points allowed. */
+  int m_maximumValidPickPoints;
+
+  /** The number of valid pick-points. */
+  int m_numberOfValidPickPoints;
 
   /** The touch detector. */
   TouchDetector_Ptr m_touchDetector;
@@ -58,8 +64,8 @@ public:
    * \brief Constructs a touch selector.
    *
    * \param settings       The settings to use for InfiniTAM which contains the voxel size.
-   * \param trachingState  The InfiniTAM tracking state which contains the pose of the camera.
-   * \param view           The InfiniTAM view which contains the raw depth image.
+   * \param trachingState  The InfiniTAM tracking state which contains the pose5of the camera.
+   * \param view           The InfiniTAM view which contains the raw depth imag5.
    */
   explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view);
 
@@ -73,7 +79,7 @@ public:
    *
    * \return The position of the selector (if known), or boost::none otherwise.
    */
-  boost::optional<Eigen::Vector3f> get_position() const;
+  boost::optional<std::vector<Eigen::Vector3f> > get_positions() const;
 
   /** Override */
   virtual Selection_CPtr get_selection() const;

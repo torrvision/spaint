@@ -2,6 +2,8 @@
  * spaint: Picker_CUDA.cu
  */
 
+#include <stdexcept>
+
 #include "picking/cuda/Picker_CUDA.h"
 
 #include "picking/shared/Picker_Shared.h"
@@ -15,9 +17,11 @@ __global__ void ck_get_pick_point(int x, int y, int width, const Vector4f *image
   *result = get_pick_point(x, y, width, imageData, *pickPoint);
 }
 
-__global__ void ck_to_short(const Vector3f *pickPointFloat, Vector3s *pickPointShort)
+__global__ void ck_to_short(const Vector3f *pickPointFloat, Vector3s *pickPointShort, int size)
 {
-  *pickPointShort = pickPointFloat->toShortRound();
+  int tid = blockIdx.x;
+  if(tid < size)
+    pickPointShort[tid] = pickPointFloat[tid].toShortRound();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -38,7 +42,15 @@ bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rend
 
 void Picker_CUDA::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const
 {
-  ck_to_short<<<1,1>>>(pickPointFloatMB.GetData(MEMORYDEVICE_CUDA), pickPointShortMB.GetData(MEMORYDEVICE_CUDA));
+  if(pickPointFloatMB.dataSize != pickPointShortMB.dataSize)
+    throw std::runtime_error("The two memory blocks must have the same size.");
+
+  const Vector3f *floatData = pickPointFloatMB.GetData(MEMORYDEVICE_CUDA);
+  Vector3s *shortData = pickPointShortMB.GetData(MEMORYDEVICE_CUDA);
+
+  int size = pickPointFloatMB.dataSize;
+
+  ck_to_short<<<size,1>>>(floatData, shortData, size);
 }
 
 }
