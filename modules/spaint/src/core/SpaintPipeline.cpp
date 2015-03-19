@@ -134,7 +134,6 @@ void SpaintPipeline::process_frame()
     m_voxelSampler->sample_voxels(
       m_raycaster->get_live_render_state()->raycastResult,
       scene.get(),
-      maxVoxelsPerLabel,
       voxelLocationsMB,
       voxelCountsForLabelsMB
     );
@@ -187,7 +186,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 
     // FIXME: These values shouldn't be hard-coded here ultimately.
-    m_voxelSampler.reset(new VoxelSampler_CUDA(2, depthImageSize.width * depthImageSize.height));
+    const int maxVoxelsPerLabel = 1024;
+    m_voxelSampler.reset(new VoxelSampler_CUDA(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -201,7 +201,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
 
     // FIXME: These values shouldn't be hard-coded here ultimately.
-    m_voxelSampler.reset(new VoxelSampler_CPU(2, depthImageSize.width * depthImageSize.height));
+    const int maxVoxelsPerLabel = 1024;
+    m_voxelSampler.reset(new VoxelSampler_CPU(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height));
   }
 
   // Set up the live render state.

@@ -10,8 +10,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CPU::VoxelSampler_CPU(int labelCount, int raycastResultSize)
-: VoxelSampler(labelCount, raycastResultSize, MEMORYDEVICE_CPU)
+VoxelSampler_CPU::VoxelSampler_CPU(int labelCount, int maxVoxelsPerLabel, int raycastResultSize)
+: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, MEMORYDEVICE_CPU)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

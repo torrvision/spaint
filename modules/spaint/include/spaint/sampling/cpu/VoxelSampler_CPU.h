@@ -20,9 +20,10 @@ public:
    * \brief Constructs a CPU-based voxel sampler.
    *
    * \param labelCount        The number of semantic labels that are in use.
+   * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    */
-  VoxelSampler_CPU(int labelCount, int raycastResultSize);
+  VoxelSampler_CPU(int labelCount, int maxVoxelsPerLabel, int raycastResultSize);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

@@ -19,8 +19,10 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(int labelCount, int raycastResultSize, MemoryDeviceType memoryDeviceType)
+VoxelSampler::VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, MemoryDeviceType memoryDeviceType)
 : m_labelCount(labelCount),
+  m_maxVoxelsPerLabel(maxVoxelsPerLabel),
+  m_randomVoxelIndicesMB(labelCount * maxVoxelsPerLabel, true, true/*memoryDeviceType*/),
   m_raycastResultSize(raycastResultSize),
   m_voxelLocationsByClassMB(m_labelCount * raycastResultSize, true, true/*memoryDeviceType*/),
   m_voxelMaskPrefixSumsMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/),
@@ -33,7 +35,7 @@ VoxelSampler::~VoxelSampler() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, int maxVoxelsPerLabel,
+void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                  ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   // Calculate the voxel masks for the various labels (these indicate which voxels could serve as examples of each label).
@@ -50,8 +52,18 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   // Sets the voxel counts for the different labels.
   set_voxel_counts(m_voxelMaskPrefixSumsMB, voxelCountsForLabelsMB);
 
-  // Randomly sample from the voxel locations for each class.
-  // TODO
+  // Generate random indices of voxel locations to sample from each class.
+  // TEMPORARY: This should be implemented on both CPU and GPU.
+  const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
+  int *randomVoxelIndices = m_randomVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  for(int k = 0; k < m_labelCount; ++k)
+  {
+    for(int i = 0; i < m_maxVoxelsPerLabel; ++i)
+    {
+      randomVoxelIndices[k * m_maxVoxelsPerLabel + i] = i < voxelCountsForLabels[k] ? rng.generate_int_from_uniform(0, voxelCountsForLabels[k] - 1) : -1;
+    }
+  }
+  m_randomVoxelIndicesMB.UpdateDeviceFromHost();
 
   // Write the sampled voxel locations into the sampled voxel location array.
   // TODO

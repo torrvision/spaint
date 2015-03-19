@@ -43,8 +43,8 @@ __global__ void ck_write_voxel_locations(const Vector4f *raycastResult, int rayc
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CUDA::VoxelSampler_CUDA(int labelCount, int raycastResultSize)
-: VoxelSampler(labelCount, raycastResultSize, MEMORYDEVICE_CUDA)
+VoxelSampler_CUDA::VoxelSampler_CUDA(int labelCount, int maxVoxelsPerLabel, int raycastResultSize)
+: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, MEMORYDEVICE_CUDA)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -107,10 +107,7 @@ void VoxelSampler_CUDA::set_voxel_counts(const ORUtils::MemoryBlock<unsigned int
     voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CUDA)
   );
 
-#if 1
-  // FOR DEBUGGING
   voxelCountsForLabelsMB.UpdateHostFromDevice();
-#endif
 }
 
 void VoxelSampler_CUDA::write_voxel_locations(const ITMFloat4Image *raycastResult,

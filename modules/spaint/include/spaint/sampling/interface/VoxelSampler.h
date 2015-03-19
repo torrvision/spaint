@@ -21,6 +21,12 @@ protected:
   /** The number of semantic labels that are in use. */
   const int m_labelCount;
 
+  /** The maximum number of voxels to sample for each label. */
+  const int m_maxVoxelsPerLabel;
+
+  /** A memory block in which to store random voxel indices when sampling from the voxels for each class. */
+  mutable ORUtils::MemoryBlock<int> m_randomVoxelIndicesMB;
+
   /** The size of the raycast result image (in pixels). */
   const int m_raycastResultSize;
 
@@ -45,10 +51,11 @@ protected:
    * \brief Constructs a voxel sampler.
    *
    * \param labelCount        The number of semantic labels that are in use.
+   * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    * \param memoryDeviceType  The type of memory device on which to allocate the internal memory blocks (i.e. CPU or CUDA).
    */
-  VoxelSampler(int labelCount, int raycastResultSize, MemoryDeviceType memoryDeviceType);
+  VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, MemoryDeviceType memoryDeviceType);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -110,11 +117,10 @@ public:
    *
    * \param raycastResult           The current raycast result.
    * \param scene                   The scene.
-   * \param maxVoxelsPerLabel       The maximum number of voxels to sample for each label.
    * \param voxelLocationsMB        A memory block into which to write the locations of the sampled voxels.
    * \param voxelCountsForLabelsMB  A memory block into which to write the numbers of voxels sampled for each label.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, int maxVoxelsPerLabel,
+  void sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                      ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 };
 
