@@ -38,17 +38,17 @@ private:
                                      ORUtils::MemoryBlock<unsigned char>& voxelMasksMB) const;
 
   /** Override */
-  virtual void set_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+  virtual void write_candidate_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
+                                            ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+
+  /** Override */
+  virtual void write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
+                                               const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
+                                               const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
+                                               ORUtils::MemoryBlock<Vector3s>& candidateVoxelLocationsMB) const;
 
   /** Override */
   virtual void write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;
-
-  /** Override */
-  virtual void write_voxel_locations(const ITMFloat4Image *raycastResult,
-                                     const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                     const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                     ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB) const;
 };
 
 }

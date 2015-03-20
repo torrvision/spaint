@@ -61,8 +61,8 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
   }
 }
 
-void VoxelSampler_CPU::set_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                        ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
+                                                    ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   const unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
@@ -72,14 +72,40 @@ void VoxelSampler_CPU::set_voxel_counts(const ORUtils::MemoryBlock<unsigned int>
 #endif
   for(int k = 0; k < m_labelCount; ++k)
   {
-    set_voxel_count(k, m_raycastResultSize, voxelMaskPrefixSums, voxelCountsForLabels);
+    write_candidate_voxel_count(k, m_raycastResultSize, voxelMaskPrefixSums, voxelCountsForLabels);
+  }
+}
+
+void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
+                                                       const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
+                                                       const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
+                                                       ORUtils::MemoryBlock<Vector3s>& candidateVoxelLocationsMB) const
+{
+  const unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
+  Vector3s *candidateVoxelLocations = candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int voxelIndex = 0; voxelIndex < m_raycastResultSize; ++voxelIndex)
+  {
+    write_candidate_voxel_location(
+      voxelIndex,
+      raycastResult->GetData(MEMORYDEVICE_CPU),
+      m_raycastResultSize,
+      voxelMasks,
+      voxelMaskPrefixSums,
+      m_labelCount,
+      candidateVoxelLocations
+    );
   }
 }
 
 void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
-  const Vector3s *voxelLocationsByClass = m_voxelLocationsByClassMB.GetData(MEMORYDEVICE_CPU);
-  const int *randomVoxelIndices = m_randomVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3s *candidateVoxelLocations = m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
+  const int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
   Vector3s *sampledVoxelLocations = sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -92,35 +118,9 @@ void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector
       m_labelCount,
       m_maxVoxelsPerLabel,
       m_raycastResultSize,
-      voxelLocationsByClass,
-      randomVoxelIndices,
+      candidateVoxelLocations,
+      candidateVoxelIndices,
       sampledVoxelLocations
-    );
-  }
-}
-
-void VoxelSampler_CPU::write_voxel_locations(const ITMFloat4Image *raycastResult,
-                                             const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                             const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                             ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB) const
-{
-  const unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CPU);
-  const unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
-  Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-  //#pragma omp parallel for
-#endif
-  for(int voxelIndex = 0; voxelIndex < m_raycastResultSize; ++voxelIndex)
-  {
-    write_voxel_location(
-      voxelIndex,
-      raycastResult->GetData(MEMORYDEVICE_CPU),
-      m_raycastResultSize,
-      voxelMasks,
-      voxelMaskPrefixSums,
-      m_labelCount,
-      voxelLocations
     );
   }
 }

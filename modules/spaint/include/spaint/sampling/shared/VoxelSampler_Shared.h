@@ -10,20 +10,6 @@
 namespace spaint {
 
 /**
- * \brief Sets the voxel count for the specified label.
- *
- * \param label                 The label for which to set the voxel count.
- * \param raycastResultSize     The size of the raycast result image (in pixels).
- * \param voxelMaskPrefixSums   The prefix sums for the voxel masks.
- * \param voxelCountsForLabels  An array into which to write the numbers of voxels sampled for each label.
- */
-_CPU_AND_GPU_CODE_
-inline void set_voxel_count(int label, int raycastResultSize, const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
-{
-  voxelCountsForLabels[label] += voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
-}
-
-/**
  * \brief Updates the voxel masks for the various labels based on the contents of the specified voxel (if it exists).
  *
  * \param voxelIndex        The index of the voxel whose entries in the mask should be updated.
@@ -50,6 +36,23 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
   }
 }
 
+/**
+ * \brief Writes the number of candidate voxels that are available for the specified label into the voxel counts array.
+ *
+ * \param label                 The label for which to store the number of available candidate voxels.
+ * \param raycastResultSize     The size of the raycast result image (in pixels).
+ * \param voxelMaskPrefixSums   The prefix sums for the voxel masks.
+ * \param voxelCountsForLabels  An array into which to write the numbers of candidate voxels that are available for each label.
+ */
+_CPU_AND_GPU_CODE_
+inline void write_candidate_voxel_count(int label, int raycastResultSize, const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
+{
+  voxelCountsForLabels[label] += voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
+}
+
+/**
+ * \brief TODO
+ */
 _CPU_AND_GPU_CODE_
 inline void write_sampled_voxel_location(int voxelIndex, int labelCount, int maxVoxelsPerLabel, int raycastResultSize,
                                          const Vector3s *voxelLocationsByClass, const int *randomVoxelIndices,
@@ -67,33 +70,32 @@ inline void write_sampled_voxel_location(int voxelIndex, int labelCount, int max
 }
 
 /**
- * \brief Attempts to write the location of the specified voxel to the segment of the voxel location array
- *        corresponding to the label (if any) for which it could serve as a sample.
+ * \brief Attempts to write the location of the specified candidate voxel to the segment of the candidate voxel
+ *        locations array corresponding to the label (if any) for which it is a candidate sample.
  *
- * Note 1: If we already have enough samples for a particular label, we will avoid writing any more.
- * Note 2: If the voxel cannot serve as a sample for any label, nothing is written.
+ * Note: If the voxel cannot serve as a sample for any label, nothing is written.
  *
  * \param voxelIndex  TODO
  */
 _CPU_AND_GPU_CODE_
-inline void write_voxel_location(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
-                                 const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
-                                 int labelCount, Vector3s *voxelLocations)
+inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
+                                           const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
+                                           int labelCount, Vector3s *candidateVoxelLocations)
 {
   // For each label:
   for(int k = 0; k < labelCount; ++k)
   {
-    // If the voxel we're processing is a suitable sample for this label:
+    // If the voxel we're processing is a candidate for this label:
     if(voxelMasks[k * (raycastResultSize+1) + voxelIndex])
     {
       // Calculate its location.
       Vector3s loc = raycastResult[voxelIndex].toVector3().toShortRound();
 
-      // Determine the index to which it should be written in the segment of the voxel location array that corresponds to this label.
+      // Determine the index to which it should be written in the segment of the candidate voxel location array that corresponds to this label.
       unsigned int i = voxelMaskPrefixSums[k * (raycastResultSize+1) + voxelIndex];
 
-      // Provided it won't cause us to exceed the maximum number of voxels for this label, write the voxel's location to the voxel location array.
-      voxelLocations[k * raycastResultSize + i] = loc;
+      // Write the candidate voxel's location to the candidate voxel locations array.
+      candidateVoxelLocations[k * raycastResultSize + i] = loc;
     }
   }
 }
