@@ -29,7 +29,7 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
 {
   // Set up the label colours.
   // FIXME: These should ultimately be passed in from elsewhere.
-  ORUtils::MemoryBlock<Vector3u> labelColours(4 * sizeof(Vector3u), true, true);
+  ORUtils::MemoryBlock<Vector3u> labelColours(4, true, true);
   Vector3u *labelColoursData = labelColours.GetData(MEMORYDEVICE_CPU);
   labelColoursData[0] = Vector3u(255, 255, 255);
   labelColoursData[1] = Vector3u(255, 0, 0);
