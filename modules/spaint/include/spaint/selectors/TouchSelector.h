@@ -5,8 +5,6 @@
 #ifndef H_SPAINT_TOUCHSELECTOR
 #define H_SPAINT_TOUCHSELECTOR
 
-#include <boost/optional.hpp>
-
 #include <Eigen/Dense>
 
 #include <ITMLib/Objects/ITMTrackingState.h>
@@ -79,7 +77,7 @@ public:
    *
    * \return The position of the selector (if known), or boost::none otherwise.
    */
-  boost::optional<std::vector<Eigen::Vector3f> > get_positions() const;
+  std::vector<Eigen::Vector3f> get_positions() const;
 
   /** Override */
   virtual Selection_CPtr get_selection() const;

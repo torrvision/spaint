@@ -12,6 +12,8 @@
 #endif
 #include "util/CameraPoseConverter.h"
 
+using namespace rigging;
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -51,13 +53,13 @@ void TouchSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
-boost::optional<std::vector<Eigen::Vector3f> > TouchSelector::get_positions() const
+std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
 {
+  // If the last update did not yield a valid pick point, early out.
+  if(!m_pickPointValid) return std::vector<Eigen::Vector3f>();
+
   int nPickPoints = std::min(m_numberOfValidPickPoints, m_maximumValidPickPoints);
   std::vector<Eigen::Vector3f> pickPoints(nPickPoints);
-
-  // If the last update did not yield a valid pick point, early out.
-  if(!m_pickPointValid) return boost::none;
 
   // If the pick point is onthe GPU, copy it across to the CPU.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointFloatMB->UpdateHostFromDevice();
@@ -79,14 +81,18 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
 
 void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
-  // Run the touch pipeline.
-  static boost::shared_ptr<rigging::SimpleCamera> camera(new rigging::SimpleCamera(Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero()));
-  camera->set_from(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d));
-  static float voxelSize = m_settings->sceneParams.voxelSize;
-  //static const ITMIntrinsics& intrinsics = m_view->calib->intrinsics_d;
+  // Get camera.
+  static boost::shared_ptr<SimpleCamera> camera;
+  camera.reset( new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
 
+  // Get voxel size.
+  static float voxelSize = m_settings->sceneParams.voxelSize;
+
+  // Run the touch pipeline.
   TIME(m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth),milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
+
+  // Get the touch state.
   const TouchState& touchState = m_touchDetector->get_touch_state();
 
   // Update whether or not the selector is active.
@@ -99,15 +105,21 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   if(!touchState.touch_position_known()) return;
   const std::vector<int>& pointsx = touchState.position_x();
   const std::vector<int>& pointsy = touchState.position_y();
+  int nTouchPoints = pointsx.size();
+
+  // FIXME: Instead of clearing the MemoryBlock at each frame, pass around it's size. Resizeable with fixed length back buffer.
+  if(nTouchPoints < m_maximumValidPickPoints)
+    m_pickPointFloatMB.reset(new ORUtils::MemoryBlock<Vector3f>(m_maximumValidPickPoints, true, true));
 
   Vector3f *m_pickPointFloatMBData = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
 
   //FIXME Only selecting the forest point for now.
-  for(int i = 0, iend = pointsx.size(); i < iend; ++i)
+  for(int i = 0; i < nTouchPoints; ++i)
   {
+    bool pickPointValid = false;
     ORUtils::MemoryBlock<Vector3f> pickPointFloatMB(1, true, true);
-    m_pickPointValid = m_picker->pick(pointsx[i], pointsy[i], renderState.get(), pickPointFloatMB);
-    if(m_pickPointValid)
+    pickPointValid = m_picker->pick(pointsx[i], pointsy[i], renderState.get(), pickPointFloatMB);
+    if(pickPointValid)
     {
       pickPointFloatMB.UpdateHostFromDevice();
       Vector3f * pickPointFloatMBData = pickPointFloatMB.GetData(MEMORYDEVICE_CPU);
@@ -120,6 +132,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
 
   if(m_numberOfValidPickPoints > 0)
   {
+    m_pickPointValid = true;
     m_pickPointFloatMB->UpdateDeviceFromHost();
 /*    {
       Vector3f *tmp = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
@@ -142,6 +155,10 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
       }
     }
 */
+  }
+  else
+  {
+    m_pickPointValid = false;
   }
 }
 

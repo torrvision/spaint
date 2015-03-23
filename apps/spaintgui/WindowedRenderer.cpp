@@ -97,14 +97,14 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // FIXME This is an exact copy of the picking selector. What should be rendered at the touch points?
-    boost::optional<std::vector<Eigen::Vector3f> > pickPoints = selector.get_positions();
-    if(!pickPoints) return;
+    std::vector<Eigen::Vector3f> pickPoints = selector.get_positions();
+    if(pickPoints.empty()) return;
 
-    for(int i = 0, iend = (*pickPoints).size(); i < iend; ++i)
+    for(int i = 0, iend = pickPoints.size(); i < iend; ++i)
     {
       glColor3f(1.0f, 0.0f, 1.0f);
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      QuadricRenderer::render_sphere((*pickPoints)[i], m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
+      QuadricRenderer::render_sphere(pickPoints[i], m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
   }
