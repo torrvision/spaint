@@ -66,9 +66,12 @@ std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
 
   // Convert the pick points from voxel coordinates into scene coordinates and return it.
   float voxelSize = m_settings->sceneParams.voxelSize;
+
+  m_pickPointFloatMB->UpdateHostFromDevice();
+  Vector3f *pickPointFloatMBData = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
   for(int i = 0; i < nPickPoints; ++i)
   {
-    const Vector3f& pickPoint = *m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU)[i];
+    const Vector3f& pickPoint = pickPointFloatMBData[i];
     pickPoints[i] = Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
   }
   return pickPoints;
