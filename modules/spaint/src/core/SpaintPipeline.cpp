@@ -93,8 +93,16 @@ void SpaintPipeline::process_frame()
   }
 #endif
 
-  // Run the fusion process.
-  if(m_fusionEnabled) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
+  if(m_fusionEnabled)
+  {
+    // Run the fusion process.
+    m_denseMapper->ProcessFrame(view.get(), trackingState.get());
+  }
+  else
+  {
+    // Update the list of visible blocks so that things are kept up to date even when we're not fusing.
+    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get());
+  }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), view.get());
