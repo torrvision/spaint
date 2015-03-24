@@ -48,6 +48,10 @@ echo "[spaint] ...Running build..."
 if [ $PLATFORM == "mac" ]
 then
   ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-test --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 cxxflags="-stdlib=libstdc++" linkflags="-stdlib=libstdc++" install >> $LOG
+
+  echo "[spaint] ...Fixing headers..."
+  perl -i -pe 's/INT128__\)$/INT128__) && !defined(__CUDACC__)/g' ../boost_1_56_0/include/boost/config/compiler/clang.hpp
+  perl -i -pe 's/~this_type\(\);$/~sp_counted_impl_pda<P, D, A>();/g' ../boost_1_56_0/include/boost/smart_ptr/detail/sp_counted_impl.hpp
 else
   ./b2 -j2 --libdir=../boost_1_56_0/lib --includedir=../boost_1_56_0/include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-test --with-thread --build-type=complete --layout=tagged toolset=$TOOLSET architecture=x86 address-model=64 install >> $LOG
 fi
