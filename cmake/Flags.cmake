@@ -18,7 +18,11 @@ IF(${CMAKE_SYSTEM} MATCHES "Linux")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 ENDIF()
 
-# If on Windows and using Visual Studio, make sure that the maths constants are defined.
+# If on Windows and using Visual Studio:
 IF(MSVC_IDE)
+  # Disable the annoying warnings about using secure CRT functions (they're Microsoft-specific, so we can't use them portably).
+  ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+
+  # Make sure that the maths constants are defined.
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 ENDIF()
