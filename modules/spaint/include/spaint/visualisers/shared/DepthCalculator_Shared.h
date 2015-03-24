@@ -29,7 +29,7 @@ inline void shade_pixel_depth(float& dest, const Vector3f& cameraPoint, const Ve
   {
     if(depthType == DepthCalculator::DT_ORTHOGRAPHIC)
     {
-      dest = (ORUtils::dot(worldPoint, cameraLookVector) - ORUtils::dot(cameraPoint, cameraLookVector)) * voxelSize;
+      dest = (ORUtils::dot(worldPoint, cameraLookVector) - ORUtils::dot(cameraPoint, cameraLookVector));
     }
     else if(depthType == DepthCalculator::DT_EUCLIDEAN)
     {
@@ -37,7 +37,7 @@ inline void shade_pixel_depth(float& dest, const Vector3f& cameraPoint, const Ve
       float dy = abs(cameraPoint.y - worldPoint.y);
       float dz = abs(cameraPoint.z - worldPoint.z);
 
-      dest = sqrt(dx * dx + dy * dy + dz * dz) * voxelSize;
+      dest = sqrt(dx * dx + dy * dy + dz * dz);
     }
   }
 }

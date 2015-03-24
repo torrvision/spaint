@@ -24,7 +24,7 @@ void DepthCalculator_CPU::render_depth(ITMFloatImage *outputImage, const ITMLib:
   for(int locId = 0; locId < imgSize; ++locId)
   {
     Vector4f ptRay = pointsRay[locId];
-    shade_pixel_depth(outRendering[locId], cameraPosition, cameraLookVector, ptRay.toVector3(), voxelSize, ptRay.w > 0, depthType);
+    shade_pixel_depth(outRendering[locId], cameraPosition, cameraLookVector, ptRay.toVector3() * voxelSize, voxelSize, ptRay.w > 0, depthType);
   }
 }
 

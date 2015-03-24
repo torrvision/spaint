@@ -68,6 +68,20 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   // Calculate the difference between the raw depth and the raycasted depth.
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
 
+#if 0
+  // Display the raw depth and the raycasted depth.
+  OpenCVExtra::display_image_and_scale(rawDepth, 100.0f, "Current raw depth from camera in millimeters");
+  OpenCVExtra::display_image_and_scale(m_raycastedDepthResult.get(), 100.0f, "Current depth raycast in millimeters");
+
+  // Display the absolute difference between the raw and raycasted depth.
+  static af::array tmp;
+  tmp = *m_diffRawRaycast * 1000.0f;
+  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+
+  cv::waitKey(100);
+#endif
+
+#if 1
   // Threshold the difference image.
   m_thresholded = (*m_diffRawRaycast > m_depthLowerThreshold) && (*m_diffRawRaycast < m_depthUpperThreshold);
 
@@ -210,6 +224,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   else{
     m_touchState.set_touch_state(points, false, false);
   }
+#endif
 
 #ifdef DEBUG_TOUCH_DISPLAY
     run_debugging_display(rawDepth, temporaryCandidate);
@@ -254,6 +269,7 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
   thresholdedDisplay = m_thresholded * 255.0f;
   OpenCVExtra::ocvfig("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
 
+#if 1
   // Initialise the OpenCV Trackbar for the morphological kernel size.
   if(!initialised)
   {
@@ -273,13 +289,14 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
 
   // Display the touch points.
   cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
-  const std::vector<int>& pointsx = m_touchState.position_x();
-  const std::vector<int>& pointsy = m_touchState.position_y();
-  for(size_t i = 0, iend = pointsx.size(); i < iend; ++i)
+  const boost::shared_ptr<const std::vector<Eigen::Vector2i> >& points = m_touchState.get_positions();
+  for(size_t i = 0, iend = points->size(); i < iend; ++i)
   {
-    cv::circle(touchPointImage, cv::Point(pointsx[i], pointsy[i]), 5, cv::Scalar(255), 2);
+    const Eigen::Vector2i v = points->at(i);
+    cv::circle(touchPointImage, cv::Point(v[0], v[1]), 5, cv::Scalar(255), 2);
   }
   cv::imshow("touchPointImage", touchPointImage);
+#endif
 
   cv::waitKey(m_debugDelayms);
   initialised = true;
