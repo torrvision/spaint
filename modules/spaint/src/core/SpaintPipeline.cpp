@@ -72,6 +72,8 @@ void SpaintPipeline::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
+  const SpaintRaycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
+  const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
   const SpaintModel::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
   const SpaintModel::View_Ptr& view = m_model->get_view();
 
@@ -93,11 +95,19 @@ void SpaintPipeline::process_frame()
   }
 #endif
 
-  // Run the fusion process.
-  if(m_fusionEnabled) m_denseMapper->ProcessFrame(view.get(), trackingState.get());
+  if(m_fusionEnabled)
+  {
+    // Run the fusion process.
+    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+  }
+  else
+  {
+    // Update the list of visible blocks so that things are kept up to date even when we're not fusing.
+    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+  }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), view.get());
+  m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
 
   m_reconstructionStarted = true;
 }
@@ -161,12 +171,12 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(trackedImageSize));
 
   // Set up the dense mapper and tracking controller.
-  m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get(), scene.get(), liveRenderState.get()));
+  m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
   setup_tracker(settings, scene, trackedImageSize);
-  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), liveRenderState.get(), settings.get()));
+  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), settings.get()));
 
   // Set up the spaint model, raycaster and interactor.
-  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState());
+  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
