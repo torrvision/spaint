@@ -250,7 +250,7 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
   // Display the absolute difference between the raw and raycasted depth.
   static af::array tmp;
   tmp = *m_diffRawRaycast * 1000.0f;
-  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 
   // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)
@@ -267,7 +267,7 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
   // Display the thresholded image.
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_thresholded * 255.0f;
-  OpenCVExtra::ocvfig("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+  OpenCVExtra::ocvfig("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 
 #if 1
   // Initialise the OpenCV Trackbar for the morphological kernel size.
@@ -280,12 +280,12 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
   // Display the threholded image after applying morphological operations.
   static af::array morphDisplay;
   morphDisplay = m_thresholded * 255.0f;
-  OpenCVExtra::ocvfig("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+  OpenCVExtra::ocvfig("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 
   // Display the best candidate's difference image.
   static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
   temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVExtra::ocvfig("bestCandidate", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+  OpenCVExtra::ocvfig("bestCandidate", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 
   // Display the touch points.
   cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);

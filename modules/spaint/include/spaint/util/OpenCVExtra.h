@@ -114,7 +114,7 @@ public:
    */
   static void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order)
   {
-    if(order == Order::COL_MAJOR)
+    if(order == COL_MAJOR)
     {
       int step = height * sizeof(unsigned char);
       cv::Mat img(width, height, CV_8UC1, pixels, step);
