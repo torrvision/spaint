@@ -5,7 +5,10 @@
 #ifndef H_SPAINT_TOUCHSTATE
 #define H_SPAINT_TOUCHSTATE
 
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
+
 #include <Eigen/Dense>
 
 namespace spaint {
