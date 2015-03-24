@@ -6,6 +6,7 @@
 #define H_SPAINT_TOUCHSTATE
 
 #include <boost/shared_ptr.hpp>
+#include <Eigen/Dense>
 
 namespace spaint {
 
@@ -14,8 +15,15 @@ namespace spaint {
  */
 class TouchState
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<const std::vector<Eigen::Vector2i> > TouchPositions_CPtr;
+
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** The touch positions. */
+  TouchPositions_CPtr m_touchPositions;
+
   /** The x touch positions. */
   std::vector<int> m_position_x;
 
@@ -35,18 +43,11 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the x touch positions.
+   * \brief Gets the touch positions.
    *
-   * \return   The x touch positions.
+   * \return  The touch positions.
    */
-  const std::vector<int>& position_x() const;
-
-  /**
-   * \brief Gets the y touch positions.
-   *
-   * \return   The y touch positions.
-   */
-  const std::vector<int>& position_y() const;
+  TouchPositions_CPtr get_positions() const;
 
   /**
    * \brief Sets the touch state.
@@ -56,7 +57,7 @@ public:
    * \param touchingSurface     Whether the surface is being touched or not.
    * \param touchPositionKnown  Whether the touch position is known.
    */
-  void set_touch_state(const std::vector<int>& position_x, const std::vector<int>& position_y, bool touchingSurface, bool touchPositionKnown);
+  void set_touch_state(TouchPositions_CPtr touchPositions, bool touchingSurface, bool touchPositionKnown);
 
   /**
    * \brief Gets whether the surface is being touched.

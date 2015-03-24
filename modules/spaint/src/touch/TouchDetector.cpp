@@ -16,18 +16,9 @@
 #ifdef WITH_OPENCV
 #include "util/OpenCVExtra.h"
 #endif
+#include "util/TypeConversions.h"
 
 namespace spaint {
-
-//#################### TEMPORARY FUNCTIONS ####################
-Vector3f convert_eigenv3f_to_itmv3f(const Eigen::Vector3f& v)
-{
-  Vector3f itmv;
-  itmv.x = v[0];
-  itmv.y = v[1];
-  itmv.z = v[2];
-  return itmv;
-}
 
 //#################### CONSTRUCTORS ####################
 
@@ -67,7 +58,12 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth)
 {
   // Calculate the depth raycast from the current scene, this is in metres.
-  m_depthCalculator->render_depth(m_raycastedDepthResult.get(), renderState.get(), convert_eigenv3f_to_itmv3f(camera->p()), convert_eigenv3f_to_itmv3f(camera->n()), voxelSize, DepthCalculator::DT_ORTHOGRAPHIC);
+  m_depthCalculator->render_depth(m_raycastedDepthResult.get(),
+      renderState.get(),
+      TypeConversions::EigV3f_to_ITMV3f(camera->p()),
+      TypeConversions::EigV3f_to_ITMV3f(camera->n()),
+      voxelSize,
+      DepthCalculator::DT_ORTHOGRAPHIC);
 
   // Calculate the difference between the raw depth and the raycasted depth.
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
@@ -116,8 +112,9 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
 
   // Post-process the good candidates to identify the region which is most likely to be touching a surface.
   static af::array temporaryCandidate(m_rows, m_cols, u8);
-  std::vector<int> pointsx;
-  std::vector<int> pointsy;
+  static boost::shared_ptr<std::vector<Eigen::Vector2i> > points;
+  points.reset(new std::vector<Eigen::Vector2i>());
+
   if(goodCandidates.elements() > 0)
   {
     int numberOfGoodCandidates = goodCandidates.dims(0);
@@ -196,19 +193,22 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
         pointsx.push_back(qcolumn); // Column.
         pointsy.push_back(qrow); // Row.
         */
-        pointsx.push_back((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
-        pointsy.push_back((touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
+        Eigen::Vector2i point((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)), (touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
+
+        points->push_back(point);
+        //pointsx.push_back((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
+        //pointsy.push_back((touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
       }
 
-      m_touchState.set_touch_state(pointsx, pointsy, true, true);
+      m_touchState.set_touch_state(points, true, true);
     }
     else
     {
-      m_touchState.set_touch_state(pointsx, pointsy, false, false);
+      m_touchState.set_touch_state(points, false, false);
     }
   }
   else{
-    m_touchState.set_touch_state(pointsx, pointsy, false, false);
+    m_touchState.set_touch_state(points, false, false);
   }
 
 #ifdef DEBUG_TOUCH_DISPLAY

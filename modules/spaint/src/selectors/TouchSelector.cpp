@@ -106,9 +106,8 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   m_numberOfValidPickPoints = 0;
 
   if(!touchState.touch_position_known()) return;
-  const std::vector<int>& pointsx = touchState.position_x();
-  const std::vector<int>& pointsy = touchState.position_y();
-  int nTouchPoints = pointsx.size();
+  const boost::shared_ptr<const std::vector<Eigen::Vector2i> >& points = touchState.get_positions();
+  int nTouchPoints = points->size();
 
   // FIXME: Instead of clearing the MemoryBlock at each frame, pass around it's size. Resizeable with fixed length back buffer.
   if(nTouchPoints < m_maximumValidPickPoints)
@@ -121,7 +120,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   {
     bool pickPointValid = false;
     ORUtils::MemoryBlock<Vector3f> pickPointFloatMB(1, true, true);
-    pickPointValid = m_picker->pick(pointsx[i], pointsy[i], renderState.get(), pickPointFloatMB);
+    pickPointValid = m_picker->pick(points->at(i)[0], points->at(i)[1], renderState.get(), pickPointFloatMB);
     if(pickPointValid)
     {
       pickPointFloatMB.UpdateHostFromDevice();
