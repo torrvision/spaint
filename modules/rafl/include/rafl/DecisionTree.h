@@ -10,6 +10,7 @@
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
+#include <tvgutil/Serialization.h>
 
 #include "decisionfunctions/DecisionFunctionGeneratorFactory.h"
 #include "examples/ExampleReservoir.h"
@@ -59,6 +60,19 @@ private:
     Node(size_t depth, size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
     : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
+
+    //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
+
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & m_depth;
+      ar & m_leftChildIndex;
+      ar & m_reservoir;
+      ar & m_rightChildIndex;
+      ar & m_splitter;
+    }
   };
 
 public:

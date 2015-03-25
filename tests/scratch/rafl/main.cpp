@@ -1,3 +1,33 @@
+#if 1
+#include <Eigen/Dense>
+
+#include <rafl/RandomForest.h>
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
+using namespace rafl;
+
+typedef int Label;
+typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+typedef DecisionTree<Label> DT;
+typedef RandomForest<Label> RF;
+typedef boost::shared_ptr<DT::Settings> Settings_Ptr;
+
+Descriptor_CPtr make_descriptor(float *arr)
+{
+  Descriptor_Ptr d(new Descriptor(10));
+  for(int i = 0; i < 10; ++i)
+  {
+    (*d)[i] = arr[i];
+  }
+  return d;
+}
+
+int main()
+{
+  return 0;
+}
+
+#endif
+
 //###
 #if 0
 
@@ -28,7 +58,7 @@ int main()
 #endif
 
 //###
-#if 1
+#if 0
 
 #include <Eigen/Dense>
 
