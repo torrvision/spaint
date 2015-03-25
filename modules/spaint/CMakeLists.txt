@@ -247,7 +247,6 @@ SET(selectors_sources
 src/selectors/NullSelector.cpp
 src/selectors/PickingSelector.cpp
 src/selectors/SelectorVisitor.cpp
-src/selectors/TouchSelector.cpp
 )
 
 SET(selectors_headers
@@ -255,7 +254,6 @@ include/spaint/selectors/NullSelector.h
 include/spaint/selectors/PickingSelector.h
 include/spaint/selectors/Selector.h
 include/spaint/selectors/SelectorVisitor.h
-include/spaint/selectors/TouchSelector.h
 )
 
 IF(WITH_LEAP)
@@ -274,6 +272,11 @@ include/spaint/touch/TouchDetector.h
 include/spaint/touch/TouchState.h
 )
 
+IF(WITH_ARRAYFIRE)
+  SET(selectors_sources ${selectors_sources} src/selectors/TouchSelector.cpp)
+  SET(selectors_headers ${selectors_headers} include/spaint/selectors/TouchSelector.h)
+ENDIF()
+
 ##
 SET(trackers_sources)
 SET(trackers_headers)
@@ -282,6 +285,17 @@ IF(WITH_VICON)
   SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
   SET(trackers_headers ${trackers_headers} include/spaint/trackers/ViconTracker.h)
 ENDIF()
+
+##
+SET(touch_sources
+src/touch/TouchDetector.cpp
+src/touch/TouchState.cpp
+)
+
+SET(touch_headers
+include/spaint/touch/TouchDetector.h
+include/spaint/touch/TouchState.h
+)
 
 ##
 SET(util_sources
@@ -344,7 +358,6 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 SET(sources
 ${core_sources}
 ${input_sources}
-${imageprocessing_cpu_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
@@ -365,9 +378,6 @@ ${visualisers_interface_sources}
 SET(headers
 ${core_headers}
 ${input_headers}
-${imageprocessing_cpu_headers}
-${imageprocessing_interface_headers}
-${imageprocessing_shared_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
@@ -392,9 +402,13 @@ ${visualisers_interface_headers}
 ${visualisers_shared_headers}
 )
 
+IF(WITH_ARRAYFIRE)
+  SET(sources ${sources} ${imageprocessing_cpu_sources})
+  SET(headers ${headers} ${imageprocessing_cpu_headers} ${imageprocessing_interface_headers} ${imageprocessing_shared_headers})
+ENDIF()
+
 IF(WITH_CUDA)
   SET(sources ${sources}
-    ${imageprocessing_cuda_sources}
     ${markers_cuda_sources}
     ${picking_cuda_sources}
     ${sampling_cuda_sources}
@@ -403,13 +417,18 @@ IF(WITH_CUDA)
   )
 
   SET(headers ${headers}
-    ${imageprocessing_cuda_headers}
     ${markers_cuda_headers}
     ${picking_cuda_headers}
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
     ${visualisers_cuda_headers}
   )
+
+  IF(WITH_ARRAYFIRE)
+    SET(sources ${sources} ${imageprocessing_cuda_sources})
+    SET(headers ${headers} ${imageprocessing_cuda_headers})
+  ENDIF()
+
 ENDIF()
 
 IF(WITH_OPENCV)

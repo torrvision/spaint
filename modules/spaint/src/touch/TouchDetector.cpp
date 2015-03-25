@@ -226,7 +226,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderSta
   }
 #endif
 
-#ifdef DEBUG_TOUCH_DISPLAY
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
     run_debugging_display(rawDepth, temporaryCandidate);
 #endif
 }

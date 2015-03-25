@@ -93,6 +93,7 @@ public:
     m_selectionRadius = transformer.get_radius();
   }
 
+#ifdef WITH_ARRAYFIRE
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
@@ -108,6 +109,7 @@ public:
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
   }
+#endif
 };
 
 //#################### CONSTRUCTORS ####################

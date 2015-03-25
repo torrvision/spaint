@@ -156,8 +156,9 @@ private:
   static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *ITMImageDataPtr, int width, int height)
   {
     std::vector<float> tmpImgVector(ITMImageDataPtr, ITMImageDataPtr + width * height);
-    auto result = std::minmax_element(tmpImgVector.begin(), tmpImgVector.end());
-    return std::make_pair(*result.first, *result.second);
+    float minElement = *std::min_element(tmpImgVector.begin(), tmpImgVector.end());
+    float maxElement = *std::max_element(tmpImgVector.begin(), tmpImgVector.end());
+    return std::make_pair(minElement, maxElement);
   }
 
   /**

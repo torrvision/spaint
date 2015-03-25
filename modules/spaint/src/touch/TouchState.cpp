@@ -9,7 +9,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 TouchState::TouchState()
-: m_touchPositions(0), m_touchingSurface(false), m_touchPositionKnown(false)
+: m_touchingSurface(false), m_touchPositionKnown(false)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
