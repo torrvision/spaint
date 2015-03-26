@@ -7,9 +7,8 @@
 namespace tvgutil {
 
 //#################### CONSTRUCTORS ####################
-
 RandomNumberGenerator::RandomNumberGenerator(unsigned int seed)
-: m_gen(seed)
+: m_gen(seed), m_seed(seed)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -9,6 +9,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
+#include "Serialization.h"
+
 namespace tvgutil {
 
 /**
@@ -23,6 +25,9 @@ private:
 
   /** The mutex used to synchronise access to the random number generator. */
   boost::mutex m_mutex;
+
+  /** The seed of the random number generator. */
+  unsigned int m_seed;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -75,6 +80,15 @@ public:
     boost::random::uniform_real_distribution<T> dist(lower, upper);
     return dist(m_gen);
   }
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_seed;
+  }
 };
 
 //#################### TYPEDEFS ####################
@@ -82,5 +96,27 @@ public:
 typedef boost::shared_ptr<RandomNumberGenerator> RandomNumberGenerator_Ptr;
 
 }
+
+#if 1
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
+    {
+      // Save the data required to construct instance.
+      ar << rng->m_seed;
+    }
+template<class Archive>
+inline void load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
+{
+  // Retrieve data from archive required to construct new instance.
+  unsigned int m_seed;
+  ar >> m_seed;
+
+  // Invoke inplace constructor to initialise instance of class.
+  ::new(rng)tvgutil::RandomNumberGenerator(m_seed);
+}
+}}
+#endif
+
 
 #endif

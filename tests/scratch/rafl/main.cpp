@@ -1,4 +1,4 @@
-#if 1
+#if 0
 #include <Eigen/Dense>
 
 #include <rafl/RandomForest.h>
@@ -23,35 +23,55 @@ Descriptor_CPtr make_descriptor(float *arr)
 
 int main()
 {
+
   return 0;
 }
 
 #endif
 
 //###
-#if 0
+#if 1
 
 #include <iostream>
 
 #include <rafl/base/ProbabilityMassFunction.h>
+#include <rafl/examples/ExampleReservoir.h>
+
+#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/Serialization.h>
+
 using namespace rafl;
+using namespace tvgutil;
+
+typedef Histogram<int> HistogramS32;
 
 int main()
 {
-  Histogram<int> hist;
+  HistogramS32 hist;
   for(int i=0; i<5; ++i) hist.add(23);
   for(int i=0; i<5; ++i) hist.add(9);
   for(int i=0; i<5; ++i) hist.add(84);
   for(int i=0; i<500; ++i) hist.add(24);
-  ProbabilityMassFunction<int> pmf(hist);
-  const std::map<int,float>& masses = pmf.get_masses();
-  /*for(std::map<int,float>::const_iterator it = masses.begin(), iend = masses.end(); it != iend; ++it)
-  {
-    std::cout << it->first << ' ' << it->second << '\n';
-  }*/
-  //std::cout << pmf << '\n';
+
+  std::string path = "./myhistogram.hist";
+  boost_serial_save<HistogramS32>(path, &hist);
+
+  HistogramS32 hist2;
+  boost_serial_load<HistogramS32>(path, &hist2);
+
+  ProbabilityMassFunction<int> pmf(hist2);
   std::cout << pmf << '\n';
   std::cout << "Entropy=" << pmf.calculate_entropy() << '\n';
+
+  RandomNumberGenerator rng(12345);
+  boost_serial_save<tvgutil::RandomNumberGenerator>("./rng.rng", &rng);
+
+  RandomNumberGenerator rng2(1);
+  boost_serial_load("./rng.rng", &rng2);
+
+  ExampleReservoir<int> res1;
+  boost_serial_save<ExampleReservoir<int>>("./examplereservoir.res", &res1);
+
   return 0;
 }
 

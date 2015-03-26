@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include <tvgutil/LimitedContainer.h>
+#include <tvgutil/Serialization.h>
 
 namespace rafl {
 
@@ -76,6 +77,16 @@ public:
   size_t get_count() const
   {
     return m_count;
+  }
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_bins;
+    ar & m_count;
   }
 };
 

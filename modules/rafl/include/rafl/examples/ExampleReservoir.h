@@ -53,6 +53,8 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
+  ExampleReservoir(){}
+
   /**
    * \brief Constructs a reservoir that can store at most the specified number of examples of each class.
    *
@@ -202,6 +204,21 @@ public:
 
     return os;
   }
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_curSize;
+    //ar & m_examples;
+    ar & m_histogram;
+    ar & m_maxClassSize;
+    //ar & m_randomNumberGenerator;
+    ar & m_seenExamples;
+  }
+
 };
 
 }
