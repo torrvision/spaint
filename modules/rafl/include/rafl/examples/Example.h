@@ -8,6 +8,7 @@
 #include <ostream>
 
 #include <tvgutil/LimitedContainer.h>
+#include <tvgutil/Serialization.h>
 
 #include "../base/Descriptor.h"
 
@@ -60,6 +61,19 @@ public:
   {
     return m_label;
   }
+
+  //#################### SERIALIZATIONN ####################  
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {}
+
+  template<class Archive>
+  friend void boost::serialization::save_construct_data(Archive& ar, const rafl::Example<int> *example, const unsigned int file_version);
+
+  template<class Archive>
+  friend void boost::serialization::load_construct_data(Archive& ar, rafl::Example<int> *example, const unsigned int file_version);
 };
 
 //#################### STREAM OPERATORS ####################
@@ -80,5 +94,27 @@ std::ostream& operator<<(std::ostream& os, const Example<Label>& rhs)
 }
 
 }
+
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const rafl::Example<int> *example, const unsigned int file_version)
+{
+  ar << example->m_descriptor;
+  ar << example->m_label;
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, rafl::Example<int> *example, const unsigned int file_version)
+{
+  //Retrieve data from archive required to construct new instance.
+  rafl::Descriptor_Ptr descriptor;
+  ar >> descriptor;
+
+  int label;
+  ar >> label;
+
+  ::new(example)rafl::Example<int>(descriptor, label);
+}
+}}
 
 #endif

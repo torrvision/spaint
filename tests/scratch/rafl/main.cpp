@@ -1,32 +1,121 @@
 #if 0
-#include <Eigen/Dense>
+#include <vector>
+#include <iostream>
+#include <boost/shared_ptr.hpp>
 
-#include <rafl/RandomForest.h>
-#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
-using namespace rafl;
+#include <tvgutil/LimitedContainer.h>
+#include <tvgutil/Serialization.h>
 
-typedef int Label;
-typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef DecisionTree<Label> DT;
-typedef RandomForest<Label> RF;
-typedef boost::shared_ptr<DT::Settings> Settings_Ptr;
-
-Descriptor_CPtr make_descriptor(float *arr)
-{
-  Descriptor_Ptr d(new Descriptor(10));
-  for(int i = 0; i < 10; ++i)
-  {
-    (*d)[i] = arr[i];
-  }
-  return d;
+namespace ex {
+class Example;
 }
 
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const ex::Example *example, const unsigned int file_version);
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, ex::Example *example, const unsigned int file_version);
+}}
+
+
+namespace ex {
+
+class Example
+{
+private:
+  int m_label;
+  boost::shared_ptr<std::vector<float>> m_values;
+
+public:
+Example(boost::shared_ptr<std::vector<float>> values, int label)
+: m_label(label), m_values(values)
+{
+  std::cout << "Constructing an example with:\n";
+  std::cout << tvgutil::make_limited_container(*values,20) << '\n';
+  std::cout << label << '\n';
+  std::cout << tvgutil::make_limited_container(*m_values,20) << '\n';
+  std::cout << m_label << '\n';
+}
+
+void print() const
+{
+  std::cout << "label = " << m_label << ", vec = ";
+  for(size_t i = 0, iend = m_values->size(); i < iend; ++i)
+  {
+    std::cout << m_values->at(i) << ", ";
+  }
+  std::cout << "\n\n";
+}
+
+friend class boost::serialization::access;
+template<typename Archive>
+void serialize(Archive& ar, const unsigned int version)
+{
+  /* Note this has been left empty on purpose. */
+}
+
+template<class Archive>
+friend void boost::serialization::save_construct_data(Archive& ar, const Example *example, const unsigned int file_version);
+
+template<class Archive>
+friend void boost::serialization::load_construct_data(Archive& ar, Example *example, const unsigned int file_version);
+};
+
+} // end namespace
+
+
+namespace boost { namespace serialization {
+
+template<class Archive>
+inline void save_construct_data(Archive& ar, const ex::Example *example, const unsigned int file_version)
+{
+  std::cout << "saving the data\n";
+  ar << example->m_label;
+  ar << example->m_values;
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, ex::Example *example, const unsigned int file_version)
+{
+  std::cout << "loading the data\n";
+
+  int label;
+  ar >> label;
+
+  boost::shared_ptr<std::vector<float>> values;
+  ar >> values;
+
+  ::new(example)ex::Example(values, label);
+}
+
+}}
+
+using namespace ex;
 int main()
 {
+  boost::shared_ptr<std::vector<float>> vecPtr(new std::vector<float>);
+  vecPtr->push_back(3.4);
+  vecPtr->push_back(3.2);
+  vecPtr->push_back(7.6);
+
+  Example myexample(vecPtr, 1);
+  myexample.print();
+  tvgutil::boost_serial_save<Example>("./myexample.ex", &myexample);
+
+  boost::shared_ptr<std::vector<float>> vecPtr2(new std::vector<float>);
+  vecPtr2->push_back(5.4);
+  vecPtr2->push_back(3.5);
+  vecPtr2->push_back(5.6);
+
+  Example *myexample2Ptr( new Example(vecPtr2, 30));
+  myexample2Ptr->print();
+
+  tvgutil::boost_serial_load<Example>("./myexample.ex", &myexample2Ptr);
+  myexample2Ptr->print();
 
   return 0;
 }
-
 #endif
 
 //###
@@ -45,32 +134,72 @@ using namespace tvgutil;
 
 typedef Histogram<int> HistogramS32;
 
+Descriptor_CPtr make_descriptor(float *arr)
+{
+  Descriptor_Ptr d(new Descriptor(10));
+  for(int i = 0; i < 10; ++i)
+  {
+    (*d)[i] = arr[i];
+  }
+  return d;
+}
+
 int main()
 {
+#if 0
+  // Histogram Serialization.
   HistogramS32 hist;
   for(int i=0; i<5; ++i) hist.add(23);
   for(int i=0; i<5; ++i) hist.add(9);
   for(int i=0; i<5; ++i) hist.add(84);
   for(int i=0; i<500; ++i) hist.add(24);
+  std::cout << hist << std::endl;
 
   std::string path = "./myhistogram.hist";
   boost_serial_save<HistogramS32>(path, &hist);
 
-  HistogramS32 hist2;
-  boost_serial_load<HistogramS32>(path, &hist2);
+  HistogramS32 *hist2Ptr;
+  boost_serial_load<HistogramS32>(path, &hist2Ptr);
+  std::cout << *hist2Ptr << std::endl;
 
-  ProbabilityMassFunction<int> pmf(hist2);
+  ProbabilityMassFunction<int> pmf(*hist2Ptr);
   std::cout << pmf << '\n';
   std::cout << "Entropy=" << pmf.calculate_entropy() << '\n';
+#endif
 
+#if 0
+  // Random number generator.
   RandomNumberGenerator rng(12345);
   boost_serial_save<tvgutil::RandomNumberGenerator>("./rng.rng", &rng);
 
-  RandomNumberGenerator rng2(1);
+  RandomNumberGenerator *rng2(new RandomNumberGenerator(1));
   boost_serial_load("./rng.rng", &rng2);
+#endif
 
-  ExampleReservoir<int> res1;
-  boost_serial_save<ExampleReservoir<int>>("./examplereservoir.res", &res1);
+#if 0
+  // Descriptor.
+  Descriptor_Ptr descriptor = boost::shared_ptr<Descriptor>(new Descriptor);
+  descriptor->push_back(1.2);
+  descriptor->push_back(2);
+  descriptor->push_back(5.4);
+  Example<int> example(descriptor, 5);
+  std::cout << example << std::endl;
+  boost_serial_save<Example<int> >("./example.ex", &example);
+
+  Descriptor_Ptr descriptor2 = boost::shared_ptr<Descriptor>(new Descriptor);
+  descriptor2->push_back(10.5);
+  descriptor2->push_back(1.9);
+  descriptor2->push_back(8.1);
+  Example<int> *examplePtr(new Example<int>(descriptor2, 3));
+  std::cout << *examplePtr << std::endl;
+
+  boost_serial_load<Example<int> >("./example.ex", &examplePtr);
+  std::cout << *examplePtr << std::endl;
+#endif
+
+#if 1
+  // Example Reservoir.
+#endif
 
   return 0;
 }

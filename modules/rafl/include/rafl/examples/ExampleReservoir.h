@@ -212,10 +212,10 @@ private:
   void serialize(Archive& ar, const unsigned int version)
   {
     ar & m_curSize;
-    //ar & m_examples;
+    ar & m_examples;
     ar & m_histogram;
     ar & m_maxClassSize;
-    //ar & m_randomNumberGenerator;
+    ar & m_randomNumberGenerator;
     ar & m_seenExamples;
   }
 

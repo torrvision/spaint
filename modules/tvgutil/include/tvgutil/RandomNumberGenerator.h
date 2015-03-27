@@ -12,6 +12,19 @@
 #include "Serialization.h"
 
 namespace tvgutil {
+class RandomNumberGenerator;
+}
+
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
+}}
+
+
+namespace tvgutil {
 
 /**
  * \brief An instance of this class represents a thread-safe random number generator.
@@ -82,13 +95,17 @@ public:
   }
 
   //#################### SERIALIZATION #################### 
-private:
+public:
   friend class boost::serialization::access;
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
-  {
-    ar & m_seed;
-  }
+  {}
+
+  template<class Archive>
+  friend void boost::serialization::save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
+
+  template<class Archive>
+  friend void boost::serialization::load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
 };
 
 //#################### TYPEDEFS ####################
@@ -97,26 +114,24 @@ typedef boost::shared_ptr<RandomNumberGenerator> RandomNumberGenerator_Ptr;
 
 }
 
-#if 1
 namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
-    {
-      // Save the data required to construct instance.
-      ar << rng->m_seed;
-    }
+{
+  // Save the data required to construct instance.
+  ar << rng->m_seed;
+}
+
 template<class Archive>
 inline void load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
 {
   // Retrieve data from archive required to construct new instance.
-  unsigned int m_seed;
-  ar >> m_seed;
+  unsigned int seed;
+  ar >> seed;
 
   // Invoke inplace constructor to initialise instance of class.
-  ::new(rng)tvgutil::RandomNumberGenerator(m_seed);
+  ::new(rng)tvgutil::RandomNumberGenerator(seed);
 }
 }}
-#endif
-
 
 #endif

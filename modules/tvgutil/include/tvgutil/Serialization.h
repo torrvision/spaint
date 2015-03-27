@@ -21,27 +21,26 @@
 #define H_TVGUTIL_SERIALIZATION
 
 namespace tvgutil {
+/**
+ * \brief A function which allows saving a type to a binary file.
+ */
+template <typename T>
+inline void boost_serial_save(const std::string& path, const T *type)
+{
+  std::ofstream ofs(path);
+  boost::archive::text_oarchive oa(ofs);
+  oa << type;
+}
 
 /**
  * \brief A function which allows loading of type from a binary file.
  */
 template <typename T>
-inline void boost_serial_load(const std::string& path, T *type)
+inline void boost_serial_load(const std::string& path, T **type)
 {
   std::ifstream ifs(path);
-  boost::archive::binary_iarchive ia(ifs);
+  boost::archive::text_iarchive ia(ifs);
   ia >> *type;
-}
-
-/**
- * \brief A function which allows saving a type to a binary file.
- */
-template <typename T>
-inline void boost_serial_save(const std::string& path, T *type)
-{
-  std::ofstream ofs(path);
-  boost::archive::binary_oarchive oa(ofs);
-  oa << *type;
 }
 
 }
