@@ -198,7 +198,40 @@ int main()
 #endif
 
 #if 1
+  typedef boost::shared_ptr<const Example<int> > Example_CPtr;
+  typedef boost::shared_ptr<Example<int> > Example_Ptr;
+
+  //Map from Labels to example vectors.
+  Descriptor_Ptr descriptor = boost::shared_ptr<Descriptor>(new Descriptor);
+  descriptor->push_back(1.2);
+  descriptor->push_back(2);
+  descriptor->push_back(5.4);
+  Example_Ptr example = Example_Ptr(new Example<int>(descriptor, 5));
+
+  std::vector<Example_CPtr> examples;
+  examples.push_back(example);
+
+  std::map<int,std::vector<Example_CPtr> > exampleMap;
+  exampleMap.insert(std::make_pair(5, examples));
+
+  boost_serial_save<std::map<int,std::vector<Example_CPtr> > >("./exampleMap.em", &exampleMap);
+  
+  std::map<int,std::vector<Example_Ptr> > *exampleMapPtr;
+  boost_serial_load<std::map<int,std::vector<Example_Ptr> > >("./exampleMap.em", &exampleMapPtr);
+
+#endif
+
+#if 0
   // Example Reservoir.
+  const size_t maxClassSize = 1000;
+  RandomNumberGenerator_Ptr rngPtr = RandomNumberGenerator_Ptr(new RandomNumberGenerator(1)); 
+  ExampleReservoir<int> reservoir(maxClassSize, rngPtr);
+  std::cout << "Current size = " << reservoir.current_size() << std::endl;
+  boost_serial_save<ExampleReservoir<int>>("./examplereservoir.er", &reservoir);
+
+  ExampleReservoir<int> *reservoir2(new ExampleReservoir<int>(maxClassSize, rngPtr));
+  boost_serial_load<ExampleReservoir<int>>("./examplereservoir.er", &reservoir2);
+  std::cout << "Current size = " << reservoir2->current_size() << std::endl;
 #endif
 
   return 0;

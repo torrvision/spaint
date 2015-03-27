@@ -53,8 +53,7 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  ExampleReservoir(){}
-
+  ExampleReservoir(){};
   /**
    * \brief Constructs a reservoir that can store at most the specified number of examples of each class.
    *
@@ -219,8 +218,41 @@ private:
     ar & m_seenExamples;
   }
 
+/*  template<class Archive>
+  friend void boost::serialization::save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);
+
+  template<class Archive>
+  friend void boost::serialization::load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);*/
 };
 
 }
+
+/*
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
+{
+  ar << exampleReservoir->m_curSize;
+  ar << exampleReservoir->m_examples;
+  ar << exampleReservoir->m_histogram;
+  ar << exampleReservoir->m_maxClassSize;
+  ar << exampleReservoir->m_randomNumberGenerator;
+  ar << exampleReservoir->m_seenExamples;
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
+{
+  //Retrieve data from archive required to construct new instance.
+  rafl::Descriptor_Ptr descriptor;
+  ar >> descriptor;
+
+  int label;
+  ar >> label;
+
+  ::new(example)rafl::ExampleReservoir<int>(descriptor, label);
+}
+}}
+*/
 
 #endif
