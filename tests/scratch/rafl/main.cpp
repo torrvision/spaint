@@ -197,7 +197,7 @@ int main()
   std::cout << *examplePtr << std::endl;
 #endif
 
-#if 1
+#if 0
   typedef boost::shared_ptr<const Example<int> > Example_CPtr;
   typedef boost::shared_ptr<Example<int> > Example_Ptr;
 
@@ -221,7 +221,7 @@ int main()
 
 #endif
 
-#if 0
+#if 1
   // Example Reservoir.
   const size_t maxClassSize = 1000;
   RandomNumberGenerator_Ptr rngPtr = RandomNumberGenerator_Ptr(new RandomNumberGenerator(1)); 

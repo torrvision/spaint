@@ -53,7 +53,6 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  ExampleReservoir(){};
   /**
    * \brief Constructs a reservoir that can store at most the specified number of examples of each class.
    *
@@ -67,6 +66,9 @@ public:
   : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
+  ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, size_t curSize, std::map<Label,std::vector<boost::shared_ptr<Example<int> > > > examples, const Histogram_Ptr& histogram, size_t seenExamples) 
+  : m_curSize(curSize), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
+  {}
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -210,24 +212,23 @@ private:
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    ar & m_curSize;
+    /*ar & m_curSize;
     ar & m_examples;
     ar & m_histogram;
     ar & m_maxClassSize;
     ar & m_randomNumberGenerator;
-    ar & m_seenExamples;
+    ar & m_seenExamples;*/
   }
 
-/*  template<class Archive>
+  template<class Archive>
   friend void boost::serialization::save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);
 
   template<class Archive>
-  friend void boost::serialization::load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);*/
+  friend void boost::serialization::load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);
 };
 
 }
 
-/*
 namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
@@ -244,15 +245,26 @@ template<class Archive>
 inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
 {
   //Retrieve data from archive required to construct new instance.
-  rafl::Descriptor_Ptr descriptor;
-  ar >> descriptor;
+  size_t curSize;
+  ar >> curSize;
 
-  int label;
-  ar >> label;
+  std::map<int, std::vector<boost::shared_ptr<rafl::Example<int> > > >examples;
+  ar >> examples;
 
-  ::new(example)rafl::ExampleReservoir<int>(descriptor, label);
+  boost::shared_ptr<rafl::Histogram<int> > histogram;
+  ar >> histogram;
+
+  size_t maxClassSize;
+  ar >> maxClassSize;
+
+  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
+  ar >> randomNumberGenerator;
+
+  size_t seenExamples;
+  ar >> seenExamples;
+
+  ::new(exampleReservoir)rafl::ExampleReservoir<int>(maxClassSize, randomNumberGenerator, curSize, examples, histogram, seenExamples);
 }
 }}
-*/
 
 #endif
