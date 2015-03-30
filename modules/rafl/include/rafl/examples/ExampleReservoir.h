@@ -66,8 +66,8 @@ public:
   : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
-  ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, size_t curSize, std::map<Label,std::vector<boost::shared_ptr<Example<int> > > > examples, const Histogram_Ptr& histogram, size_t seenExamples) 
-  : m_curSize(curSize), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
+  ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, size_t curSize, const std::map<Label,std::vector<boost::shared_ptr<const Example<int> > > >& examples, const Histogram_Ptr& histogram, size_t seenExamples) 
+  : m_curSize(curSize), m_examples(examples), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
   {}
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -263,7 +263,19 @@ inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampl
   size_t seenExamples;
   ar >> seenExamples;
 
-  ::new(exampleReservoir)rafl::ExampleReservoir<int>(maxClassSize, randomNumberGenerator, curSize, examples, histogram, seenExamples);
+  typedef rafl::Example<int> IExample;
+  typedef boost::shared_ptr<IExample> IExample_Ptr;
+  typedef boost::shared_ptr<const IExample> IExample_CPtr;
+  typedef std::map<int,std::vector<IExample_Ptr> > ExampleMap;
+  typedef std::map<int,std::vector<IExample_CPtr> > ExampleCMap;
+  ExampleCMap constExamples;
+  for(ExampleMap::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
+  {
+    std::vector<IExample_CPtr> v(it->second.begin(), it->second.end());
+    constExamples.insert(std::make_pair(it->first, v));
+  }
+
+  ::new(exampleReservoir)rafl::ExampleReservoir<int>(maxClassSize, randomNumberGenerator, curSize, constExamples, histogram, seenExamples);
 }
 }}
 
