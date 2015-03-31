@@ -42,6 +42,10 @@ public:
     }
   }
 
+  RandomForest(const std::vector<DT_Ptr>& trees)
+  : m_trees(trees)
+  {}
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -140,8 +144,43 @@ public:
       (*it)->train(splitBudget);
     }
   }
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    // Intentionally left empty.
+  }
+
+  template<class Archive>
+  friend void boost::serialization::save_construct_data(Archive& ar, const RandomForest<int> *randomForest, const unsigned int file_version);
+
+  template<class Archive>
+  friend void boost::serialization::load_construct_data(Archive& ar, RandomForest<int> *randomForest, const unsigned int file_version);
 };
 
 }
+
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const rafl::RandomForest<int> *randomForest, const unsigned int file_version)
+{
+  std::cout << "<RF<";
+  ar << randomForest->m_trees;
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, rafl::RandomForest<int> *randomForest, const unsigned int file_version)
+{
+  std::cout << ">RF>";
+  typedef boost::shared_ptr<rafl::DecisionTree<int> > DT_Ptr;
+  std::vector<DT_Ptr> trees;
+  ar >> trees;
+
+  ::new(randomForest)rafl::RandomForest<int>(trees);
+}
+}}
 
 #endif

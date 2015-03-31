@@ -250,6 +250,10 @@ public:
     if(m_settings.usePMFReweighting) m_inverseClassWeights = std::map<Label,float>();
   }
 
+  DecisionTree(const Settings& settings, const std::set<int> dirtyNodes, const std::vector<Node_Ptr> nodes, int rootIndex, const SplittabilityQueue& splittabilityQueue)
+  : m_dirtyNodes(dirtyNodes), m_nodes(nodes), m_rootIndex(rootIndex), m_settings(settings), m_splittabilityQueue(splittabilityQueue)
+  {}
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -690,12 +694,37 @@ template<class Archive>
 inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
 {
   std::cout << "<DT<";
+
+  ar << decisionTree->m_dirtyNodes;
+  ar << decisionTree->m_nodes;
+  ar << decisionTree->m_rootIndex;
+  ar << decisionTree->m_settings;
+  ar << decisionTree->m_splittabilityQueue;
 }
 
 template<class Archive>
 inline void load_construct_data(Archive& ar, rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
 {
+  typedef rafl::DecisionTree<int> DT;
+
   std::cout << ">DT>";
+
+  std::set<int> dirtyNodes;
+  ar >> dirtyNodes;
+
+  std::vector<DT::Node_Ptr> nodes;
+  ar >> nodes;
+
+  int rootIndex;
+  ar >> rootIndex;
+
+  DT::Settings settings;
+  ar >> settings;
+
+  DT::SplittabilityQueue splittabilityQueue;
+  ar >> splittabilityQueue;
+
+  ::new(decisionTree)DT(settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
 }
 }}
 

@@ -130,6 +130,7 @@ using boost::assign::list_of;
 #include <rafl/examples/ExampleReservoir.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunction.h>
 #include <rafl/DecisionTree.h>
+#include <rafl/RandomForest.h>
 
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 
@@ -289,11 +290,61 @@ int main()
   std::cout << emptySettings->candidateCount << '\n';
 #endif
 
-#if 1
-  typedef tvgutil::PriorityQueue<int,float,void*,std::greater<float> > SplittabilityQueue;
+#if 0
+  typedef tvgutil::PriorityQueue<int,float,signed char,std::greater<float> > SplittabilityQueue;
   SplittabilityQueue myqueue;
   boost_serial_save<SplittabilityQueue>("./queue.pq", &myqueue);
+
+  SplittabilityQueue *myqueuePtr;
+  boost_serial_load<SplittabilityQueue>("./queue.pq", &myqueuePtr);
 #endif
+
+#if 0
+  // DecisionTree.
+  typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
+  std::vector<ParamSet> params = evaluation::CartesianProductParameterSetGenerator()
+    .add_param("candidateCount", list_of<int>(256))
+    .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
+    .add_param("gainThreshold", list_of<float>(0.0f))
+    .add_param("maxClassSize", list_of<size_t>(10000))
+    .add_param("maxTreeHeight", list_of<size_t>(20))
+    .add_param("randomSeed", list_of<unsigned int>(1234))
+    .add_param("seenExamplesThreshold", list_of<size_t>(50))
+    .add_param("splittabilityThreshold", list_of<float>(0.5f))
+    .generate_param_sets();
+
+  DecisionTree<int>::Settings settings1(params[0]);
+  DecisionTree<int> mytree(settings1);
+
+  boost_serial_save<DecisionTree<int> >("./mytree.dt", &mytree);
+
+  DecisionTree<int> *mytreePtr(new DecisionTree<int>(settings1));
+  boost_serial_load<DecisionTree<int> >("./mytree.dt", &mytreePtr);
+#endif
+
+#if 1
+  typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
+  std::vector<ParamSet> params = evaluation::CartesianProductParameterSetGenerator()
+    .add_param("candidateCount", list_of<int>(256))
+    .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
+    .add_param("gainThreshold", list_of<float>(0.0f))
+    .add_param("maxClassSize", list_of<size_t>(10000))
+    .add_param("maxTreeHeight", list_of<size_t>(20))
+    .add_param("randomSeed", list_of<unsigned int>(1234))
+    .add_param("seenExamplesThreshold", list_of<size_t>(50))
+    .add_param("splittabilityThreshold", list_of<float>(0.5f))
+    .generate_param_sets();
+
+  DecisionTree<int>::Settings settings1(params[0]);
+  const int numTrees = 10;
+  RandomForest<int> myRF(numTrees, settings1);
+  boost_serial_save<RandomForest<int> >("./myforest.rf", &myRF);
+
+  RandomForest<int> *myRFPtr(new RandomForest<int>(numTrees, settings1));
+  boost_serial_load<RandomForest<int> >("./myforest.rf", &myRFPtr);
+
+#endif
+
   return 0;
 }
 
