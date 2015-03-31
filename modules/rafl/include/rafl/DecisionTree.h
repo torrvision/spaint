@@ -165,7 +165,7 @@ public:
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef boost::shared_ptr<Node> Node_Ptr;
-  typedef tvgutil::PriorityQueue<int,float,void*,std::greater<float> > SplittabilityQueue;
+  typedef tvgutil::PriorityQueue<int,float,signed char,std::greater<float> > SplittabilityQueue;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -330,7 +330,8 @@ private:
   {
     m_nodes.push_back(Node_Ptr(new Node(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
     int id = static_cast<int>(m_nodes.size()) - 1;
-    m_splittabilityQueue.insert(id, 0.0f, NULL);
+    const signed char nullData = -1;
+    m_splittabilityQueue.insert(id, 0.0f, nullData);
     return id;
   }
 
