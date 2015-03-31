@@ -8,6 +8,8 @@
 #include <set>
 #include <stdexcept>
 
+#include <boost/lexical_cast.hpp>
+
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 #include <tvgutil/Serialization.h>
@@ -25,7 +27,8 @@ template <typename Label>
 class DecisionTree
 {
   //#################### NESTED TYPES ####################
-private:
+//private:
+public:
   /**
    * \brief An instance of this struct represents a node in the tree.
    */
@@ -49,7 +52,6 @@ private:
     DecisionFunction_Ptr m_splitter;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-
     /**
      * \brief Constructs a node.
      *
@@ -61,18 +63,25 @@ private:
     : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
 
+    Node(size_t depth, const ExampleReservoir<Label>& reservoir, int leftChildIndex, int rightChildIndex, const DecisionFunction_Ptr& splitter)
+    : m_depth(depth), m_leftChildIndex(leftChildIndex), m_reservoir(reservoir), m_rightChildIndex(rightChildIndex), m_splitter(splitter)
+    {}
+
     //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
 
     friend class boost::serialization::access;
     template<typename Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
-      ar & m_depth;
-      ar & m_leftChildIndex;
-      ar & m_reservoir;
-      ar & m_rightChildIndex;
-      ar & m_splitter;
+      // This is intentionally empty.
     }
+
+    template<class Archive>
+    friend void boost::serialization::save_construct_data(Archive& ar, const Node *node, const unsigned int file_version);
+
+    template<class Archive>
+    friend void boost::serialization::load_construct_data(Archive& ar, Node *node, const unsigned int file_version);
+
   };
 
 public:
@@ -113,6 +122,8 @@ public:
 
     /** Whether or not to enable PMF reweighting to better handle a class imbalance in the training data. */
     bool usePMFReweighting;
+    std::string decisionFunctionGeneratorType;
+    unsigned int randomSeed;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
   public:
@@ -155,8 +166,8 @@ public:
      */
     void initialise(const std::map<std::string,std::string>& properties)
     {
-      std::string decisionFunctionGeneratorType;
-      unsigned int randomSeed = 0;
+      //std::string decisionFunctionGeneratorType;
+      //unsigned int randomSeed = 0;
 
       #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
         GET_SETTING(candidateCount);
@@ -173,6 +184,21 @@ public:
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
       decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
     }
+
+    //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
+    
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      // Intentionally left empty.
+    }
+
+    template<class Archive>
+    friend void boost::serialization::save_construct_data(Archive& ar, const Settings *settings, const unsigned int file_version);
+
+    template<class Archive>
+    friend void boost::serialization::load_construct_data(Archive& ar, Settings *settings, const unsigned int file_version);
   };
 
   //#################### PUBLIC TYPEDEFS ####################
@@ -576,8 +602,101 @@ private:
       (*m_inverseClassWeights)[it->first] = count / it->second;
     }
   }
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    // Intentionally left empty.
+  }
+
+  template<class Archive>
+  friend void boost::serialization::save_construct_data(Archive& ar, const DecisionTree<int> *decisionTree, const unsigned int file_version);
+
+  template<class Archive>
+  friend void boost::serialization::load_construct_data(Archive& ar, DecisionTree<int> *decisionTree, const unsigned int file_version);
 };
 
 }
+
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive&ar, const rafl::DecisionTree<int>::Node *node, const unsigned int file_version)
+{
+  std::cout << "<N<";
+  ar << node->m_depth;
+  ar << node->m_leftChildIndex;
+  ar << node->m_reservoir;
+  ar << node->m_rightChildIndex;
+  ar << node->m_splitter;
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Node *node, const unsigned int file_version)
+{
+  std::cout << ">N>";
+  size_t depth;
+  ar >> depth;
+
+  int leftChildIndex;
+  ar >> leftChildIndex;
+
+  rafl::ExampleReservoir<int> reservoir;
+  ar >> reservoir;
+
+  int rightChildIndex;
+  ar >> rightChildIndex;
+
+  rafl::DecisionFunction_Ptr splitter;
+  ar >> splitter;
+
+  ::new(node)rafl::DecisionTree<int>::Node(depth, reservoir, leftChildIndex, rightChildIndex, splitter);
+}
+}}
+
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
+{
+  std::cout << "<S<";
+  std::map<std::string,std::string> parameterSet;
+#define INSERT_STRING_PAIR(param) parameterSet.insert(std::make_pair(#param, boost::lexical_cast<std::string>(settings->param)))
+  INSERT_STRING_PAIR(candidateCount);
+  INSERT_STRING_PAIR(decisionFunctionGeneratorType);
+  INSERT_STRING_PAIR(gainThreshold);
+  INSERT_STRING_PAIR(maxClassSize);
+  INSERT_STRING_PAIR(maxTreeHeight);
+  INSERT_STRING_PAIR(randomSeed);
+  INSERT_STRING_PAIR(seenExamplesThreshold);
+  INSERT_STRING_PAIR(splittabilityThreshold);
+#undef INSERT_STRING_PAIR
+  ar << parameterSet;
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
+{
+  std::cout << ">S>";
+  std::map<std::string,std::string> parameterSet;
+  ar >> parameterSet;
+
+  ::new(settings)rafl::DecisionTree<int>::Settings(parameterSet);
+}
+}}
+
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
+{
+  std::cout << "<DT<";
+}
+
+template<class Archive>
+inline void load_construct_data(Archive& ar, rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
+{
+  std::cout << ">DT>";
+}
+}}
 
 #endif

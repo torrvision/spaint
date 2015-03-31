@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "Serialization.h"
+
 namespace tvgutil {
 
 /**
@@ -54,6 +56,15 @@ public:
     const Key& key() const  { return m_key; }
 
     friend class PriorityQueue;
+
+    friend class boost::serialization::access;
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & m_id;
+      ar & m_key;
+      ar & m_data;
+    }
   };
 
   //#################### TYPEDEFS ####################
@@ -280,6 +291,17 @@ private:
       m_heap[i].m_key = key;
       heapify(i);
     }
+  }
+
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_dictionary;
+    ar & m_heap;
   }
 };
 

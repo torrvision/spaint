@@ -123,11 +123,19 @@ int main()
 
 #include <iostream>
 
+#include <boost/assign/list_of.hpp>
+using boost::assign::list_of;
+
 #include <rafl/base/ProbabilityMassFunction.h>
 #include <rafl/examples/ExampleReservoir.h>
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunction.h>
+#include <rafl/DecisionTree.h>
+
+#include <evaluation/util/CartesianProductParameterSetGenerator.h>
 
 #include <tvgutil/RandomNumberGenerator.h>
 #include <tvgutil/Serialization.h>
+#include <tvgutil/PriorityQueue.h>
 
 using namespace rafl;
 using namespace tvgutil;
@@ -221,7 +229,7 @@ int main()
 
 #endif
 
-#if 1
+#if 0
   // Example Reservoir.
   const size_t maxClassSize = 1000;
   RandomNumberGenerator_Ptr rngPtr = RandomNumberGenerator_Ptr(new RandomNumberGenerator(1)); 
@@ -234,6 +242,58 @@ int main()
   std::cout << "Current size = " << reservoir2->current_size() << std::endl;
 #endif
 
+#if 0
+  // DecisionFunction.
+  boost::shared_ptr<FeatureThresholdingDecisionFunction> decisionf( new FeatureThresholdingDecisionFunction(5, 0.3));
+  boost_serial_save<boost::shared_ptr<FeatureThresholdingDecisionFunction> >("./ftdf.df", &decisionf);
+  //std::cout << "featureIndex=" << decisionf->m_featureIndex << '\n';
+
+  boost::shared_ptr<FeatureThresholdingDecisionFunction> *decisionf2;
+  decisionf2->reset(new FeatureThresholdingDecisionFunction(7, 0.5));
+  //std::cout << "featureIndex=" << decisionf2->get()->m_featureIndex << '\n';
+  boost_serial_load<boost::shared_ptr<FeatureThresholdingDecisionFunction> >("./ftdf.df", &decisionf2);
+  //std::cout << "featureIndex=" << decisionf2->get()->m_featureIndex << '\n';
+#endif
+
+#if 0
+  //Node.
+  RandomNumberGenerator_Ptr rngPtr = RandomNumberGenerator_Ptr(new RandomNumberGenerator(1)); 
+  DecisionTree<int>::Node node1(5, 100, rngPtr);
+  boost_serial_save<DecisionTree<int>::Node>("./node1.n", &node1);
+
+  DecisionTree<int>::Node *node2( new DecisionTree<int>::Node(2, 10, rngPtr));
+  boost_serial_load<DecisionTree<int>::Node>("./node1.n", &node2);
+#endif
+
+#if 0
+  typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
+  //Settings.
+  std::vector<ParamSet> params = evaluation::CartesianProductParameterSetGenerator()
+    .add_param("candidateCount", list_of<int>(256))
+    .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
+    .add_param("gainThreshold", list_of<float>(0.0f))
+    .add_param("maxClassSize", list_of<size_t>(10000))
+    .add_param("maxTreeHeight", list_of<size_t>(20))
+    .add_param("randomSeed", list_of<unsigned int>(1234))
+    .add_param("seenExamplesThreshold", list_of<size_t>(50))
+    .add_param("splittabilityThreshold", list_of<float>(0.5f))
+    .generate_param_sets();
+
+  DecisionTree<int>::Settings settings1(params[0]);
+
+  boost_serial_save<DecisionTree<int>::Settings>("./settings1.rs", &settings1);
+  std::cout << settings1.candidateCount << '\n';
+
+  DecisionTree<int>::Settings *emptySettings;
+  boost_serial_load<DecisionTree<int>::Settings>("./settings1.rs", &emptySettings);
+  std::cout << emptySettings->candidateCount << '\n';
+#endif
+
+#if 1
+  typedef tvgutil::PriorityQueue<int,float,void*,std::greater<float> > SplittabilityQueue;
+  SplittabilityQueue myqueue;
+  boost_serial_save<SplittabilityQueue>("./queue.pq", &myqueue);
+#endif
   return 0;
 }
 

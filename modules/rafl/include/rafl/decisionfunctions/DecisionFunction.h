@@ -9,6 +9,8 @@
 
 #include "../base/Descriptor.h"
 
+#include <tvgutil/Serialization.h>
+
 namespace rafl {
 
 /**
@@ -51,6 +53,15 @@ public:
    * \param os  The stream.
    */
   virtual void output(std::ostream& os) const = 0;
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    // Nothing to serialize here.
+  }
 };
 
 //#################### STREAM OPERATORS ####################

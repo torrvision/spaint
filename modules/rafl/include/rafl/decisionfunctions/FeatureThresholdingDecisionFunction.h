@@ -24,6 +24,8 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
+  FeatureThresholdingDecisionFunction(){};
+
   /**
    * \brief Constructs a feature thresholding decision function.
    *
@@ -39,6 +41,17 @@ public:
 
   /** Override */
   virtual void output(std::ostream& os) const;
+
+  //#################### SERIALIZATION #################### 
+private:
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & boost::serialization::base_object<DecisionFunction>(*this);
+    ar & m_featureIndex;
+    ar & m_threshold;
+  }
 };
 
 }

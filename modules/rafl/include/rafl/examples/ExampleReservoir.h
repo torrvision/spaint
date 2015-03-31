@@ -69,6 +69,8 @@ public:
   ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, size_t curSize, const std::map<Label,std::vector<boost::shared_ptr<const Example<int> > > >& examples, const Histogram_Ptr& histogram, size_t seenExamples) 
   : m_curSize(curSize), m_examples(examples), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
   {}
+
+  ExampleReservoir(){}
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
