@@ -10,24 +10,25 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_mark_voxels(const Vector3s *voxelLocations, unsigned char label, int voxelCount,
+__global__ void ck_mark_voxels(const Vector3s *voxelLocations, unsigned char label, int voxelCount, unsigned char *oldVoxelLabels,
                                SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  if(tid < voxelCount) mark_voxel(voxelLocations[tid], label, voxelData, voxelIndex);
+  if(tid < voxelCount) mark_voxel(voxelLocations[tid], label, oldVoxelLabels ? &oldVoxelLabels[tid] : NULL, voxelData, voxelIndex);
 }
 
 __global__ void ck_mark_voxels(const Vector3s *voxelLocations, const unsigned char *voxelLabels, int voxelCount,
                                SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  if(tid < voxelCount) mark_voxel(voxelLocations[tid], voxelLabels[tid], voxelData, voxelIndex);
+  if(tid < voxelCount) mark_voxel(voxelLocations[tid], voxelLabels[tid], NULL, voxelData, voxelIndex);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
-                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                   ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const
 {
   int voxelCount = voxelLocationsMB.dataSize;
 
@@ -38,6 +39,7 @@ void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLo
     voxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
     label,
     voxelCount,
+    oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CUDA) : NULL,
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData()
   );
