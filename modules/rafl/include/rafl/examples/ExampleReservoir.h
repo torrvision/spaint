@@ -70,7 +70,12 @@ public:
   : m_curSize(curSize), m_examples(examples), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
   {}
 
-  ExampleReservoir(){}
+  ExampleReservoir(){};
+  /*ExampleReservoir(size_t maxClassSize)
+  : m_curSize(maxClassSize), m_histogram(new Histogram<Label>), m_maxClassSize(0), m_seenExamples(0)
+  {
+    std::cout << "Initialised an empty ExampleReservoir!\n";
+  }*/
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -214,12 +219,7 @@ private:
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    /*ar & m_curSize;
-    ar & m_examples;
-    ar & m_histogram;
-    ar & m_maxClassSize;
-    ar & m_randomNumberGenerator;
-    ar & m_seenExamples;*/
+    // Intentionally left empty.
   }
 
   template<class Archive>
@@ -235,6 +235,7 @@ namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
 {
+  std::cout << "Saving an ExampleReservoir\n";
   ar << exampleReservoir->m_curSize;
   ar << exampleReservoir->m_examples;
   ar << exampleReservoir->m_histogram;
@@ -246,6 +247,7 @@ inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *
 template<class Archive>
 inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
 {
+  std::cout << "Loading an ExampleReservoir\n";
   //Retrieve data from archive required to construct new instance.
   size_t curSize;
   ar >> curSize;

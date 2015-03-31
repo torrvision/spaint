@@ -245,14 +245,14 @@ int main()
 
 #if 0
   // DecisionFunction.
-  boost::shared_ptr<FeatureThresholdingDecisionFunction> decisionf( new FeatureThresholdingDecisionFunction(5, 0.3));
-  boost_serial_save<boost::shared_ptr<FeatureThresholdingDecisionFunction> >("./ftdf.df", &decisionf);
+  boost::shared_ptr<DecisionFunction> decisionf( new FeatureThresholdingDecisionFunction(5, 0.3));
+  boost_serial_save<boost::shared_ptr<DecisionFunction> >("./ftdf.df", &decisionf);
   //std::cout << "featureIndex=" << decisionf->m_featureIndex << '\n';
 
-  boost::shared_ptr<FeatureThresholdingDecisionFunction> *decisionf2;
-  decisionf2->reset(new FeatureThresholdingDecisionFunction(7, 0.5));
+  boost::shared_ptr<DecisionFunction> *decisionf2;
+  //decisionf2->reset(new FeatureThresholdingDecisionFunction(7, 0.5));
   //std::cout << "featureIndex=" << decisionf2->get()->m_featureIndex << '\n';
-  boost_serial_load<boost::shared_ptr<FeatureThresholdingDecisionFunction> >("./ftdf.df", &decisionf2);
+  boost_serial_load<boost::shared_ptr<DecisionFunction> >("./ftdf.df", &decisionf2);
   //std::cout << "featureIndex=" << decisionf2->get()->m_featureIndex << '\n';
 #endif
 
@@ -322,7 +322,7 @@ int main()
   boost_serial_load<DecisionTree<int> >("./mytree.dt", &mytreePtr);
 #endif
 
-#if 1
+#if 0
   typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
   std::vector<ParamSet> params = evaluation::CartesianProductParameterSetGenerator()
     .add_param("candidateCount", list_of<int>(256))

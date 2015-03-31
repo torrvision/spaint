@@ -99,7 +99,9 @@ public:
   friend class boost::serialization::access;
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
-  {}
+  {
+    // Intentionally left empty.
+  }
 
   template<class Archive>
   friend void boost::serialization::save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
@@ -118,6 +120,7 @@ namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
 {
+  std::cout << "Saving RandomNumberGenerator\n";
   // Save the data required to construct instance.
   ar << rng->m_seed;
 }
@@ -125,6 +128,7 @@ inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerato
 template<class Archive>
 inline void load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
 {
+  std::cout << "Loading RandomNumberGenerator\n";
   // Retrieve data from archive required to construct new instance.
   unsigned int seed;
   ar >> seed;

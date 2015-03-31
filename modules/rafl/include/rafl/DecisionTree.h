@@ -628,10 +628,11 @@ namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive&ar, const rafl::DecisionTree<int>::Node *node, const unsigned int file_version)
 {
-  std::cout << "<N<";
+  std::cout << "Saving Node\n";
   ar << node->m_depth;
   ar << node->m_leftChildIndex;
-  ar << node->m_reservoir;
+  const rafl::ExampleReservoir<int> *constReservoir = &node->m_reservoir;
+  ar << constReservoir;
   ar << node->m_rightChildIndex;
   ar << node->m_splitter;
 }
@@ -639,14 +640,14 @@ inline void save_construct_data(Archive&ar, const rafl::DecisionTree<int>::Node 
 template<class Archive>
 inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Node *node, const unsigned int file_version)
 {
-  std::cout << ">N>";
+  std::cout << "Loading Node\n";
   size_t depth;
   ar >> depth;
 
   int leftChildIndex;
   ar >> leftChildIndex;
 
-  rafl::ExampleReservoir<int> reservoir;
+  rafl::ExampleReservoir<int> *reservoir(new rafl::ExampleReservoir<int>);
   ar >> reservoir;
 
   int rightChildIndex;
@@ -655,7 +656,7 @@ inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Node *node
   rafl::DecisionFunction_Ptr splitter;
   ar >> splitter;
 
-  ::new(node)rafl::DecisionTree<int>::Node(depth, reservoir, leftChildIndex, rightChildIndex, splitter);
+  ::new(node)rafl::DecisionTree<int>::Node(depth, *reservoir, leftChildIndex, rightChildIndex, splitter);
 }
 }}
 
@@ -663,7 +664,7 @@ namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
 {
-  std::cout << "<S<";
+  std::cout << "Saving Settings\n";
   std::map<std::string,std::string> parameterSet;
 #define INSERT_STRING_PAIR(param) parameterSet.insert(std::make_pair(#param, boost::lexical_cast<std::string>(settings->param)))
   INSERT_STRING_PAIR(candidateCount);
@@ -681,7 +682,7 @@ inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int>::Sett
 template<class Archive>
 inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
 {
-  std::cout << ">S>";
+  std::cout << "Loading Settings\n";
   std::map<std::string,std::string> parameterSet;
   ar >> parameterSet;
 
@@ -693,21 +694,21 @@ namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
 {
-  std::cout << "<DT<";
+  std::cout << "Saving DecisionTree\n";
 
   ar << decisionTree->m_dirtyNodes;
   ar << decisionTree->m_nodes;
   ar << decisionTree->m_rootIndex;
-  ar << decisionTree->m_settings;
+  const rafl::DecisionTree<int>::Settings *constSettings = &decisionTree->m_settings;
+  ar << constSettings;
   ar << decisionTree->m_splittabilityQueue;
 }
 
 template<class Archive>
 inline void load_construct_data(Archive& ar, rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
 {
+  std::cout << "Loading DecisionTree\n";
   typedef rafl::DecisionTree<int> DT;
-
-  std::cout << ">DT>";
 
   std::set<int> dirtyNodes;
   ar >> dirtyNodes;
@@ -718,13 +719,13 @@ inline void load_construct_data(Archive& ar, rafl::DecisionTree<int> *decisionTr
   int rootIndex;
   ar >> rootIndex;
 
-  DT::Settings settings;
+  DT::Settings *settings;
   ar >> settings;
 
   DT::SplittabilityQueue splittabilityQueue;
   ar >> splittabilityQueue;
 
-  ::new(decisionTree)DT(settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
+  ::new(decisionTree)DT(*settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
 }
 }}
 

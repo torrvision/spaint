@@ -27,3 +27,5 @@ void FeatureThresholdingDecisionFunction::output(std::ostream& os) const
 }
 
 }
+
+BOOST_CLASS_EXPORT(rafl::FeatureThresholdingDecisionFunction)

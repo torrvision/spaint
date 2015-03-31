@@ -37,6 +37,8 @@ public:
    */
   virtual ~DecisionFunction() {}
 
+  DecisionFunction(){}
+
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
