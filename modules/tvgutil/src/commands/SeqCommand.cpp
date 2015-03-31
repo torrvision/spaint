@@ -4,6 +4,8 @@
 
 #include "commands/SeqCommand.h"
 
+#include <stdexcept>
+
 namespace tvgutil {
 
 //#################### CONSTRUCTORS ####################
