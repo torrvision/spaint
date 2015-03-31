@@ -165,6 +165,21 @@ void Application::process_camera_input()
   }
 }
 
+void Application::process_command_input()
+{
+  if(m_inputState.key_down(SDLK_LCTRL))
+  {
+    if(m_inputState.key_down(SDLK_z) && m_commandManager.can_undo())
+    {
+      m_commandManager.undo();
+    }
+    else if(m_inputState.key_down(SDLK_y) && m_commandManager.can_redo())
+    {
+      m_commandManager.redo();
+    }
+  }
+}
+
 bool Application::process_events()
 {
   SDL_Event event;
@@ -201,6 +216,7 @@ bool Application::process_events()
 void Application::process_input()
 {
   process_camera_input();
+  process_command_input();
   process_labelling_input();
   process_renderer_input();
 }
