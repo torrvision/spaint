@@ -6,6 +6,9 @@
 
 #include <stdexcept>
 
+#include <boost/assign/list_of.hpp>
+using boost::assign::map_list_of;
+
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
@@ -170,16 +173,30 @@ void Application::process_camera_input()
 
 void Application::process_command_input()
 {
+  static bool blockRedo = false;
+  static bool blockUndo = false;
+
   if(m_inputState.key_down(SDLK_LCTRL))
   {
-    if(m_inputState.key_down(SDLK_z) && m_commandManager.can_undo())
+    if(m_inputState.key_down(SDLK_z))
     {
-      m_commandManager.undo();
+      if(!blockUndo && m_commandManager.can_undo())
+      {
+        m_commandManager.undo();
+        blockUndo = true;
+      }
     }
-    else if(m_inputState.key_down(SDLK_y) && m_commandManager.can_redo())
+    else blockUndo = false;
+
+    if(m_inputState.key_down(SDLK_y))
     {
-      m_commandManager.redo();
+      if(!blockRedo && m_commandManager.can_redo())
+      {
+        m_commandManager.redo();
+        blockRedo = true;
+      }
     }
+    else blockRedo = false;
   }
 }
 
@@ -268,6 +285,9 @@ void Application::process_labelling_input()
   // Update the current selector.
   interactor->update_selector(m_inputState, renderState);
 
+  // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
+  static bool currentlyMarking = false;
+
   // If the current selector is active:
   if(interactor->selector_is_active())
   {
@@ -278,9 +298,22 @@ void Application::process_labelling_input()
     if(selection)
     {
       const bool useUndo = true;
-      if(useUndo) m_commandManager.execute_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)));
+      if(useUndo)
+      {
+        if(!currentlyMarking)
+        {
+          m_commandManager.execute_command(Command_CPtr(new Command("Begin Mark Voxels")));
+          currentlyMarking = true;
+        }
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), map_list_of("Begin Mark Voxels","Mark Voxels")("Mark Voxels","Mark Voxels"));
+      }
       else interactor->mark_voxels(selection, semanticLabel);
     }
+  }
+  else if(currentlyMarking)
+  {
+    m_commandManager.execute_compressible_command(Command_CPtr(new Command("End Mark Voxels")), map_list_of("Begin Mark Voxels","Atomically Mark Voxels")("Mark Voxels","Atomically Mark Voxels"));
+    currentlyMarking = false;
   }
 }
 
