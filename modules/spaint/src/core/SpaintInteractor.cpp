@@ -71,9 +71,14 @@ unsigned char SpaintInteractor::get_semantic_label() const
   return m_semanticLabel;
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, unsigned char label)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, unsigned char label, Labels_Ptr oldLabels)
 {
-  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get());
+  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels ? oldLabels.get() : NULL);
+}
+
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, Labels_CPtr labels)
+{
+  m_voxelMarker->mark_voxels(*selection, *labels, m_model->get_scene().get());
 }
 
 bool SpaintInteractor::selector_is_active() const

@@ -17,6 +17,9 @@ using namespace spaint;
 #endif
 #include "WindowedRenderer.h"
 
+#include "commands/MarkVoxelsCommand.h"
+using namespace tvgutil;
+
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
@@ -272,7 +275,12 @@ void Application::process_labelling_input()
     Selector::Selection_CPtr selection = interactor->get_selection();
 
     // If there are selected voxels, mark the voxels with the current semantic label.
-    if(selection) interactor->mark_voxels(selection, semanticLabel);
+    if(selection)
+    {
+      const bool useUndo = true;
+      if(useUndo) m_commandManager.execute_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)));
+      else interactor->mark_voxels(selection, semanticLabel);
+    }
   }
 }
 

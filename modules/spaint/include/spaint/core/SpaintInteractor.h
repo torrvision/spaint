@@ -21,6 +21,8 @@ class SpaintInteractor
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ORUtils::MemoryBlock<unsigned char> > Labels_Ptr;
+  typedef boost::shared_ptr<const ORUtils::MemoryBlock<unsigned char> > Labels_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
@@ -90,8 +92,17 @@ public:
    *
    * \param selection The selection of voxels.
    * \param label     The semantic label with which to mark the voxels.
+   * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  void mark_voxels(const Selection_CPtr& selection, unsigned char label);
+  void mark_voxels(const Selection_CPtr& selection, unsigned char label, Labels_Ptr oldLabels = Labels_Ptr());
+
+  /**
+   * \brief Marks a selection of voxels in the scene with the specified semantic labels.
+   *
+   * \param selection The selection of voxels.
+   * \param labels    The semantic labels with which to mark the voxels (one per voxel).
+   */
+  void mark_voxels(const Selection_CPtr& selection, Labels_CPtr labels);
 
   /**
    * \brief Gets whether or not the current selector is active.
