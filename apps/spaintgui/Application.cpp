@@ -288,6 +288,9 @@ void Application::process_labelling_input()
   // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
   static bool currentlyMarking = false;
 
+  // Specify the precursors map for compressible commands.
+  static std::map<std::string,std::string> precursors = map_list_of("Begin Mark Voxels","Mark Voxels")("Mark Voxels","Mark Voxels");
+
   // If the current selector is active:
   if(interactor->selector_is_active())
   {
@@ -305,14 +308,14 @@ void Application::process_labelling_input()
           m_commandManager.execute_command(Command_CPtr(new Command("Begin Mark Voxels")));
           currentlyMarking = true;
         }
-        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), map_list_of("Begin Mark Voxels","Mark Voxels")("Mark Voxels","Mark Voxels"));
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), precursors);
       }
       else interactor->mark_voxels(selection, semanticLabel);
     }
   }
   else if(currentlyMarking)
   {
-    m_commandManager.execute_compressible_command(Command_CPtr(new Command("End Mark Voxels")), map_list_of("Begin Mark Voxels","Atomically Mark Voxels")("Mark Voxels","Atomically Mark Voxels"));
+    m_commandManager.execute_compressible_command(Command_CPtr(new Command("End Mark Voxels")), precursors);
     currentlyMarking = false;
   }
 }
