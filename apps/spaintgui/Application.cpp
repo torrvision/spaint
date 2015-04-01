@@ -26,7 +26,7 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
-: m_spaintPipeline(spaintPipeline)
+: m_commandManager(10), m_spaintPipeline(spaintPipeline)
 {
   const Vector2i& imgSize = spaintPipeline->get_model()->get_depth_image_size();
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
