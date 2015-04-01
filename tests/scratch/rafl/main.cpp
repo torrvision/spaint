@@ -185,7 +185,7 @@ int main()
   boost_serial_load("./rng.rng", &rng2);
 #endif
 
-#if 1
+#if 0
   // Descriptor.
   Descriptor_Ptr descriptor = boost::shared_ptr<Descriptor>(new Descriptor);
   descriptor->push_back(1.2);
@@ -299,7 +299,7 @@ int main()
   boost_serial_load<SplittabilityQueue>("./queue.pq", &myqueuePtr);
 #endif
 
-#if 0
+#if 1
   // DecisionTree.
   typedef evaluation::CartesianProductParameterSetGenerator::ParamSet ParamSet;
   std::vector<ParamSet> params = evaluation::CartesianProductParameterSetGenerator()

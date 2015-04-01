@@ -71,11 +71,7 @@ public:
   {}
 
   ExampleReservoir(){};
-  /*ExampleReservoir(size_t maxClassSize)
-  : m_curSize(maxClassSize), m_histogram(new Histogram<Label>), m_maxClassSize(0), m_seenExamples(0)
-  {
-    std::cout << "Initialised an empty ExampleReservoir!\n";
-  }*/
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -222,18 +218,18 @@ private:
     // Intentionally left empty.
   }
 
-  template<class Archive>
-  friend void boost::serialization::save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::save_construct_data(Archive& ar, const rafl::ExampleReservoir<Dtype> *exampleReservoir, const unsigned int file_version);
 
-  template<class Archive>
-  friend void boost::serialization::load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version);
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::load_construct_data(Archive& ar, rafl::ExampleReservoir<Dtype> *exampleReservoir, const unsigned int file_version);
 };
 
 }
 
 namespace boost { namespace serialization {
-template<class Archive>
-inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
+template<typename Archive, typename Label>
+inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
 {
   std::cout << "Saving an ExampleReservoir\n";
   ar << exampleReservoir->m_curSize;
@@ -244,18 +240,25 @@ inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<int> *
   ar << exampleReservoir->m_seenExamples;
 }
 
-template<class Archive>
-inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampleReservoir, const unsigned int file_version)
+template<typename Archive, typename Label>
+inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
 {
   std::cout << "Loading an ExampleReservoir\n";
+
+  typedef rafl::Example<Label> IExample;
+  typedef boost::shared_ptr<IExample> IExample_Ptr;
+  typedef boost::shared_ptr<const IExample> IExample_CPtr;
+  typedef std::map<Label,std::vector<IExample_Ptr> > ExampleMap;
+  typedef std::map<Label,std::vector<IExample_CPtr> > ExampleCMap;
+
   //Retrieve data from archive required to construct new instance.
   size_t curSize;
   ar >> curSize;
 
-  std::map<int, std::vector<boost::shared_ptr<rafl::Example<int> > > >examples;
+  std::map<Label, std::vector<boost::shared_ptr<rafl::Example<Label> > > >examples;
   ar >> examples;
 
-  boost::shared_ptr<rafl::Histogram<int> > histogram;
+  boost::shared_ptr<rafl::Histogram<Label> > histogram;
   ar >> histogram;
 
   size_t maxClassSize;
@@ -267,19 +270,14 @@ inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<int> *exampl
   size_t seenExamples;
   ar >> seenExamples;
 
-  typedef rafl::Example<int> IExample;
-  typedef boost::shared_ptr<IExample> IExample_Ptr;
-  typedef boost::shared_ptr<const IExample> IExample_CPtr;
-  typedef std::map<int,std::vector<IExample_Ptr> > ExampleMap;
-  typedef std::map<int,std::vector<IExample_CPtr> > ExampleCMap;
   ExampleCMap constExamples;
-  for(ExampleMap::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
+  for(typename ExampleMap::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
   {
     std::vector<IExample_CPtr> v(it->second.begin(), it->second.end());
     constExamples.insert(std::make_pair(it->first, v));
   }
 
-  ::new(exampleReservoir)rafl::ExampleReservoir<int>(maxClassSize, randomNumberGenerator, curSize, constExamples, histogram, seenExamples);
+  ::new(exampleReservoir)rafl::ExampleReservoir<Label>(maxClassSize, randomNumberGenerator, curSize, constExamples, histogram, seenExamples);
 }
 }}
 

@@ -32,8 +32,9 @@ public:
   /**
    * \brief An instance of this struct represents a node in the tree.
    */
-  struct Node
+  class Node
   {
+  public:
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
     /** The depth of the node in the tree. */
@@ -68,7 +69,7 @@ public:
     {}
 
     //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
-
+  private:
     friend class boost::serialization::access;
     template<typename Archive>
     void serialize(Archive& ar, const unsigned int version)
@@ -76,10 +77,10 @@ public:
       // This is intentionally empty.
     }
 
-    template<class Archive>
+    template<typename Archive>
     friend void boost::serialization::save_construct_data(Archive& ar, const Node *node, const unsigned int file_version);
 
-    template<class Archive>
+    template<typename Archive>
     friend void boost::serialization::load_construct_data(Archive& ar, Node *node, const unsigned int file_version);
 
   };
@@ -194,10 +195,12 @@ public:
       // Intentionally left empty.
     }
 
-    template<class Archive>
+    //template<typename Archive, typename Dtype>
+    template<typename Archive>
     friend void boost::serialization::save_construct_data(Archive& ar, const Settings *settings, const unsigned int file_version);
 
-    template<class Archive>
+    //template<typename Archive, typename Dtype>
+    template<typename Archive>
     friend void boost::serialization::load_construct_data(Archive& ar, Settings *settings, const unsigned int file_version);
   };
 
@@ -615,17 +618,17 @@ private:
     // Intentionally left empty.
   }
 
-  template<class Archive>
-  friend void boost::serialization::save_construct_data(Archive& ar, const DecisionTree<int> *decisionTree, const unsigned int file_version);
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::save_construct_data(Archive& ar, const DecisionTree<Dtype> *decisionTree, const unsigned int file_version);
 
-  template<class Archive>
-  friend void boost::serialization::load_construct_data(Archive& ar, DecisionTree<int> *decisionTree, const unsigned int file_version);
+  template<class Archive, typename Dtype>
+  friend void boost::serialization::load_construct_data(Archive& ar, DecisionTree<Dtype> *decisionTree, const unsigned int file_version);
 };
 
 }
 
 namespace boost { namespace serialization {
-template<class Archive>
+template<typename Archive>
 inline void save_construct_data(Archive&ar, const rafl::DecisionTree<int>::Node *node, const unsigned int file_version)
 {
   std::cout << "Saving Node\n";
@@ -661,8 +664,9 @@ inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Node *node
 }}
 
 namespace boost { namespace serialization {
-template<class Archive>
-inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
+//template<typename Archive, typename Dtype>
+template<typename Archive>
+inline void save_construct_data(Archive& ar, const typename rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
 {
   std::cout << "Saving Settings\n";
   std::map<std::string,std::string> parameterSet;
@@ -679,50 +683,52 @@ inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int>::Sett
   ar << parameterSet;
 }
 
-template<class Archive>
-inline void load_construct_data(Archive& ar, rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
+//template<typename Archive, typename Dtype>
+template<typename Archive>
+inline void load_construct_data(Archive& ar, typename rafl::DecisionTree<int>::Settings *settings, const unsigned int file_version)
 {
   std::cout << "Loading Settings\n";
   std::map<std::string,std::string> parameterSet;
   ar >> parameterSet;
 
-  ::new(settings)rafl::DecisionTree<int>::Settings(parameterSet);
+  ::new(settings)typename rafl::DecisionTree<int>::Settings(parameterSet);
 }
 }}
 
 namespace boost { namespace serialization {
-template<class Archive>
-inline void save_construct_data(Archive& ar, const rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
+template<typename Archive, typename Label>
+inline void save_construct_data(Archive& ar, const rafl::DecisionTree<Label> *decisionTree, const unsigned int file_version)
 {
   std::cout << "Saving DecisionTree\n";
+  typedef rafl::DecisionTree<Label> DT;
 
   ar << decisionTree->m_dirtyNodes;
   ar << decisionTree->m_nodes;
   ar << decisionTree->m_rootIndex;
-  const rafl::DecisionTree<int>::Settings *constSettings = &decisionTree->m_settings;
+  const typename DT::Settings *constSettings = &decisionTree->m_settings;
   ar << constSettings;
   ar << decisionTree->m_splittabilityQueue;
 }
 
-template<class Archive>
-inline void load_construct_data(Archive& ar, rafl::DecisionTree<int> *decisionTree, const unsigned int file_version)
+template<typename Archive, typename Label>
+inline void load_construct_data(Archive& ar, rafl::DecisionTree<Label> *decisionTree, const unsigned int file_version)
 {
   std::cout << "Loading DecisionTree\n";
-  typedef rafl::DecisionTree<int> DT;
+  typedef rafl::DecisionTree<Label> DT;
 
   std::set<int> dirtyNodes;
   ar >> dirtyNodes;
 
-  std::vector<DT::Node_Ptr> nodes;
+  std::vector<typename DT::Node_Ptr> nodes;
   ar >> nodes;
 
   int rootIndex;
   ar >> rootIndex;
 
-  DT::Settings *settings;
+  typename DT::Settings *settings;
   ar >> settings;
 
-  DT::SplittabilityQueue splittabilityQueue;
+  typename DT::SplittabilityQueue splittabilityQueue;
   ar >> splittabilityQueue;
 
   ::new(decisionTree)DT(*settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
