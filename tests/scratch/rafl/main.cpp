@@ -185,7 +185,7 @@ int main()
   boost_serial_load("./rng.rng", &rng2);
 #endif
 
-#if 0
+#if 1
   // Descriptor.
   Descriptor_Ptr descriptor = boost::shared_ptr<Descriptor>(new Descriptor);
   descriptor->push_back(1.2);
