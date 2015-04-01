@@ -22,8 +22,20 @@ private:
   /** A stack containing commands that have been executed and not undone. */
   std::deque<Command_CPtr> m_executed;
 
+  /** The maximum size of the command history (the maximum combined size of the two command stacks). */
+  size_t m_maxHistorySize;
+
   /** A stack containing commands that have been undone. */
   std::deque<Command_CPtr> m_undone;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a command manager.
+   *
+   * \param maxHistorySize  The maximum size of the command history (the maximum combined size of the two command stacks).
+   */
+  explicit CommandManager(size_t maxHistorySize = INT_MAX);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -92,6 +104,13 @@ public:
    * \return  The number of commands currently on the undone stack.
    */
   size_t undone_count() const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Makes space for a new command if the command history is full.
+   */
+  void make_space_for_command();
 };
 
 }

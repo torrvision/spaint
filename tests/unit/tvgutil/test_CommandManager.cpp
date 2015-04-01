@@ -150,6 +150,52 @@ BOOST_AUTO_TEST_CASE(error_test)
   BOOST_CHECK_NO_THROW(SeqCommand(list_of(c1)(c2)(c3), ""));
 }
 
+BOOST_AUTO_TEST_CASE(historysize_test)
+{
+  std::string output;
+
+  Command_CPtr c1(new TestCommand(output, "E1", "U1", ""));
+  Command_CPtr c2(new TestCommand(output, "E2", "U2", ""));
+  Command_CPtr c3(new TestCommand(output, "E3", "U3", ""));
+
+  BOOST_CHECK_THROW(CommandManager(0), std::runtime_error);
+
+  CommandManager cm1(1);
+  output = "";
+  cm1.execute_command(c1);
+    BOOST_CHECK_EQUAL(output, "E1");
+    BOOST_CHECK_EQUAL(cm1.executed_count(), 1);
+    BOOST_CHECK_EQUAL(cm1.undone_count(), 0);
+  cm1.execute_command(c2);
+    BOOST_CHECK_EQUAL(output, "E1E2");
+    BOOST_CHECK_EQUAL(cm1.executed_count(), 1);
+    BOOST_CHECK_EQUAL(cm1.undone_count(), 0);
+  cm1.undo();
+    BOOST_CHECK_EQUAL(output, "E1E2U2");
+    BOOST_CHECK_EQUAL(cm1.executed_count(), 0);
+    BOOST_CHECK_EQUAL(cm1.undone_count(), 1);
+
+  CommandManager cm2(2);
+  output = "";
+  cm2.execute_command(c1);
+  cm2.execute_command(c2);
+    BOOST_CHECK_EQUAL(output, "E1E2");
+    BOOST_CHECK_EQUAL(cm2.executed_count(), 2);
+    BOOST_CHECK_EQUAL(cm2.undone_count(), 0);
+  cm2.execute_command(c3);
+    BOOST_CHECK_EQUAL(output, "E1E2E3");
+    BOOST_CHECK_EQUAL(cm2.executed_count(), 2);
+    BOOST_CHECK_EQUAL(cm2.undone_count(), 0);
+  cm2.undo();
+    BOOST_CHECK_EQUAL(output, "E1E2E3U3");
+    BOOST_CHECK_EQUAL(cm2.executed_count(), 1);
+    BOOST_CHECK_EQUAL(cm2.undone_count(), 1);
+  cm2.undo();
+    BOOST_CHECK_EQUAL(output, "E1E2E3U3U2");
+    BOOST_CHECK_EQUAL(cm2.executed_count(), 0);
+    BOOST_CHECK_EQUAL(cm2.undone_count(), 2);
+}
+
 BOOST_AUTO_TEST_CASE(seq_test)
 {
   std::string output;
