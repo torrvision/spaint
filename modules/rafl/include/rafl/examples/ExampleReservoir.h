@@ -19,6 +19,17 @@
 
 namespace rafl {
 
+template <typename Label> class ExampleReservoir;
+
+}
+
+namespace boost { namespace serialization {
+template<typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version);
+template<typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version);
+}}
+
+namespace rafl {
+
 /**
  * \brief An instance of an instantiation of this class template represents a reservoir to store the examples for a node.
  */
@@ -229,7 +240,7 @@ private:
 
 namespace boost { namespace serialization {
 template<typename Archive, typename Label>
-inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
+void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
 {
   std::cout << "Saving an ExampleReservoir\n";
   ar << exampleReservoir->m_curSize;
@@ -241,7 +252,7 @@ inline void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label>
 }
 
 template<typename Archive, typename Label>
-inline void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
+void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
 {
   std::cout << "Loading an ExampleReservoir\n";
 
