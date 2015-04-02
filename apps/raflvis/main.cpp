@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 
   // Initialise the online random forest with the specified parameters.
   const size_t treeCount = 1;
-  DT::Settings settings(params[0]);
+  Settings<Label> settings(params[0]);
   RF_Ptr randomForest(new RF(treeCount, settings));
 
   // Generate the windows into which we will display the output of the random forest.

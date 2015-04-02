@@ -313,7 +313,7 @@ int main()
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_param_sets();
 
-  DecisionTree<int>::Settings settings1(params[0]);
+  rafl::Settings<int> settings1(params[0]);
   DecisionTree<int> mytree(settings1);
 
   boost_serial_save<DecisionTree<int> >("./mytree.dt", &mytree);

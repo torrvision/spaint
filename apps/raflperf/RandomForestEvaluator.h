@@ -33,7 +33,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The settings to use for decision trees in the random forest. */
-  typename DecisionTree::Settings m_decisionTreeSettings;
+  Settings<Label> m_decisionTreeSettings;
 
   /** The maximum number of nodes per tree that may be split in each training step. */
   size_t m_splitBudget;

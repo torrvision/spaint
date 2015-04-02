@@ -20,238 +20,300 @@
 
 namespace rafl {
 
+template <typename Label> class Node;
+
+}
+
+namespace boost { namespace serialization {
+template <typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::Node<Label> *node, const unsigned int file_version);
+template <typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::Node<Label> *node, const unsigned int file_version);
+}}
+
+namespace rafl {
+
+/**
+ * \brief An instance of this struct represents a node in the tree.
+ */
+template <typename Label>
+class Node
+{
+  public:
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+  /** The depth of the node in the tree. */
+  size_t m_depth;
+
+  /** The index of the node's left child in the tree's node array. */
+  int m_leftChildIndex;
+
+  /** The reservoir of examples currently stored in the node. */
+  ExampleReservoir<Label> m_reservoir;
+
+  /** The index of the node's right child in the tree's node array. */
+  int m_rightChildIndex;
+
+  /** The split function for the node. */
+  DecisionFunction_Ptr m_splitter;
+
+  //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+  /**
+   * \brief Constructs a node.
+   *
+   * \param depth                 The depth of the node in the tree.
+   * \param maxClassSize          The maximum number of examples of each class allowed in the node's reservoir at any one time.
+   * \param randomNumberGenerator A random number generator.
+   */
+  Node(size_t depth, size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
+  {}
+
+  Node(size_t depth, const ExampleReservoir<Label>& reservoir, int leftChildIndex, int rightChildIndex, const DecisionFunction_Ptr& splitter)
+  : m_depth(depth), m_leftChildIndex(leftChildIndex), m_reservoir(reservoir), m_rightChildIndex(rightChildIndex), m_splitter(splitter)
+  {}
+
+  //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
+
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    // This is intentionally empty.
+  }
+
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::save_construct_data(Archive& ar, const Node<Dtype> *node, const unsigned int file_version);
+
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::load_construct_data(Archive& ar, Node<Dtype> *node, const unsigned int file_version);
+
+};
+
+}
+
+namespace boost { namespace serialization {
+template<typename Archive, typename Dtype>
+void save_construct_data(Archive&ar, const rafl::Node<Dtype> *node, const unsigned int file_version)
+{
+  std::cout << "Saving Node\n";
+  ar << node->m_depth;
+  ar << node->m_leftChildIndex;
+  const rafl::ExampleReservoir<Dtype> *constReservoir = &node->m_reservoir;
+  ar << constReservoir;
+  ar << node->m_rightChildIndex;
+  ar << node->m_splitter;
+}
+
+template<typename Archive, typename Dtype>
+void load_construct_data(Archive& ar, typename rafl::Node<Dtype> *node, const unsigned int file_version)
+{
+  std::cout << "Loading Node\n";
+  size_t depth;
+  ar >> depth;
+
+  int leftChildIndex;
+  ar >> leftChildIndex;
+
+  rafl::ExampleReservoir<Dtype> *reservoir(new rafl::ExampleReservoir<Dtype>);
+  ar >> reservoir;
+
+  int rightChildIndex;
+  ar >> rightChildIndex;
+
+  rafl::DecisionFunction_Ptr splitter;
+  ar >> splitter;
+
+  ::new (node) rafl::Node<Dtype>(depth, *reservoir, leftChildIndex, rightChildIndex, splitter);
+}
+}}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace rafl {
+
+template <typename Label> class Settings;
+
+}
+
+namespace boost { namespace serialization {
+template <typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::Settings<Label> *settings, const unsigned int file_version);
+template <typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::Settings<Label> *settings, const unsigned int file_version);
+}}
+
+namespace rafl {
+/**
+ * \brief An instance of this class can be used to provide the settings needed to configure a decision tree.
+ */
+template <typename Label>
+class Settings
+{
+  //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
+private:
+  typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
+
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+public:
+  /** The number of different decision functions to consider when splitting a node. */
+  int candidateCount;
+
+  /** A generator that can be used to pick appropriate decision functions for nodes. */
+  DecisionFunctionGenerator_CPtr decisionFunctionGenerator;
+
+  /** The minimum information gain required for a node split to be acceptable. */
+  float gainThreshold;
+
+  /** The maximum number of examples of each class allowed in a node's reservoir at any one time. */
+  size_t maxClassSize;
+
+  /** The maximum height allowed for a tree. */
+  size_t maxTreeHeight;
+
+  /** A random number generator. */
+  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
+
+  /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
+  size_t seenExamplesThreshold;
+
+  /** A threshold splittability below which nodes should not be split (must be > 0). */
+  float splittabilityThreshold;
+
+  std::string decisionFunctionGeneratorType;
+  unsigned int randomSeed;
+
+  //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+public:
+  /**
+   * \brief Default constructor.
+   */
+  Settings()
+  {}
+
+  /**
+   * \brief Attempts to load settings from the specified XML file.
+   *
+   * This will throw if the settings cannot be successfully loaded.
+   *
+   * \param filename The name of the file.
+   */
+  explicit Settings(const std::string& filename)
+  {
+    using tvgutil::PropertyUtil;
+    boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
+    initialise(PropertyUtil::make_property_map(tree));
+  }
+
+  /**
+   * \brief Loads settings from a property map.
+   *
+   * \param properties  The property map.
+   */
+  explicit Settings(const std::map<std::string,std::string>& properties)
+  {
+    initialise(properties);
+  }
+
+  //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
+private:
+  /**
+   * \brief Loads settings from a property map.
+   *
+   * \param properties  The property map.
+   */
+  void initialise(const std::map<std::string,std::string>& properties)
+  {
+    //std::string decisionFunctionGeneratorType;
+    //unsigned int randomSeed = 0;
+
+    #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
+      GET_SETTING(candidateCount);
+      GET_SETTING(decisionFunctionGeneratorType);
+      GET_SETTING(gainThreshold);
+      GET_SETTING(maxClassSize);
+      GET_SETTING(maxTreeHeight);
+      GET_SETTING(randomSeed);
+      GET_SETTING(seenExamplesThreshold);
+      GET_SETTING(splittabilityThreshold);
+    #undef GET_SETTING
+
+    randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
+    decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
+  }
+
+  //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
+private:
+  friend class boost::serialization::access;
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    // Intentionally left empty.
+  }
+
+  template<class Archive, typename Dtype>
+  friend void boost::serialization::save_construct_data(Archive& ar, const Settings<Dtype> *settings, const unsigned int file_version);
+
+  template<class Archive, typename Dtype>
+  friend void boost::serialization::load_construct_data(Archive& ar, Settings<Dtype> *settings, const unsigned int file_version);
+};
+
+}
+
+namespace boost { namespace serialization {
+template<typename Archive, typename Dtype>
+inline void save_construct_data(Archive& ar, const rafl::Settings<Dtype> *settings, const unsigned int file_version)
+{
+  std::cout << "Saving Settings\n";
+  std::map<std::string,std::string> parameterSet;
+#define INSERT_STRING_PAIR(param) parameterSet.insert(std::make_pair(#param, boost::lexical_cast<std::string>(settings->param)))
+  INSERT_STRING_PAIR(candidateCount);
+  INSERT_STRING_PAIR(decisionFunctionGeneratorType);
+  INSERT_STRING_PAIR(gainThreshold);
+  INSERT_STRING_PAIR(maxClassSize);
+  INSERT_STRING_PAIR(maxTreeHeight);
+  INSERT_STRING_PAIR(randomSeed);
+  INSERT_STRING_PAIR(seenExamplesThreshold);
+  INSERT_STRING_PAIR(splittabilityThreshold);
+  INSERT_STRING_PAIR(usePMFReweighting);
+#undef INSERT_STRING_PAIR
+  ar << parameterSet;
+}
+
+template<class Archive, typename Dtype>
+inline void load_construct_data(Archive& ar, rafl::Settings<Dtype> *settings, const unsigned int file_version)
+{
+  std::cout << "Loading Settings\n";
+  std::map<std::string,std::string> parameterSet;
+  ar >> parameterSet;
+
+  ::new(settings)rafl::Settings<Dtype>(parameterSet);
+}
+}}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace rafl {
+
+template <typename Label> class DecisionTree;
+
+}
+
+namespace boost { namespace serialization {
+template <typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::DecisionTree<Label> *decisionTree, const unsigned int file_version);
+template <typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::DecisionTree<Label> *decisionTree, const unsigned int file_version);
+
+}}
+
+namespace rafl {
+
 /**
  * \brief An instance of an instantiation of this class template represents a tree suitable for use within a random forest.
  */
 template <typename Label>
 class DecisionTree
 {
-  //#################### NESTED TYPES ####################
-//private:
-public:
-  /**
-   * \brief An instance of this struct represents a node in the tree.
-   */
-  class Node
-  {
-  public:
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-
-    /** The depth of the node in the tree. */
-    size_t m_depth;
-
-    /** The index of the node's left child in the tree's node array. */
-    int m_leftChildIndex;
-
-    /** The reservoir of examples currently stored in the node. */
-    ExampleReservoir<Label> m_reservoir;
-
-    /** The index of the node's right child in the tree's node array. */
-    int m_rightChildIndex;
-
-    /** The split function for the node. */
-    DecisionFunction_Ptr m_splitter;
-
-    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-    /**
-     * \brief Constructs a node.
-     *
-     * \param depth                 The depth of the node in the tree.
-     * \param maxClassSize          The maximum number of examples of each class allowed in the node's reservoir at any one time.
-     * \param randomNumberGenerator A random number generator.
-     */
-    Node(size_t depth, size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-    : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
-    {}
-
-    Node(size_t depth, const ExampleReservoir<Label>& reservoir, int leftChildIndex, int rightChildIndex, const DecisionFunction_Ptr& splitter)
-    : m_depth(depth), m_leftChildIndex(leftChildIndex), m_reservoir(reservoir), m_rightChildIndex(rightChildIndex), m_splitter(splitter)
-    {}
-
-    //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
-  private:
-    friend class boost::serialization::access;
-    template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      // This is intentionally empty.
-    }
-
-    template<typename Archive>
-    friend void boost::serialization::save_construct_data(Archive& ar, const Node *node, const unsigned int file_version)
-    {
-      std::cout << "Saving Node\n";
-      ar << node->m_depth;
-      ar << node->m_leftChildIndex;
-      const rafl::ExampleReservoir<Label> *constReservoir = &node->m_reservoir;
-      ar << constReservoir;
-      ar << node->m_rightChildIndex;
-      ar << node->m_splitter;
-    }
-
-    template<typename Archive>
-    friend void boost::serialization::load_construct_data(Archive& ar, Node *node, const unsigned int file_version)
-    {
-      std::cout << "Loading Node\n";
-      size_t depth;
-      ar >> depth;
-
-      int leftChildIndex;
-      ar >> leftChildIndex;
-
-      rafl::ExampleReservoir<Label> *reservoir(new rafl::ExampleReservoir<Label>);
-      ar >> reservoir;
-
-      int rightChildIndex;
-      ar >> rightChildIndex;
-
-      rafl::DecisionFunction_Ptr splitter;
-      ar >> splitter;
-
-      ::new(node)Node(depth, *reservoir, leftChildIndex, rightChildIndex, splitter);
-    }
-
-  };
-
-public:
-  /**
-   * \brief An instance of this class can be used to provide the settings needed to configure a decision tree.
-   */
-  class Settings
-  {
-    //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
-  private:
-    typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
-
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-  public:
-    /** The number of different decision functions to consider when splitting a node. */
-    int candidateCount;
-
-    /** A generator that can be used to pick appropriate decision functions for nodes. */
-    DecisionFunctionGenerator_CPtr decisionFunctionGenerator;
-
-    /** The minimum information gain required for a node split to be acceptable. */
-    float gainThreshold;
-
-    /** The maximum number of examples of each class allowed in a node's reservoir at any one time. */
-    size_t maxClassSize;
-
-    /** The maximum height allowed for a tree. */
-    size_t maxTreeHeight;
-
-    /** A random number generator. */
-    tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
-
-    /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
-    size_t seenExamplesThreshold;
-
-    /** A threshold splittability below which nodes should not be split (must be > 0). */
-    float splittabilityThreshold;
-
-    /** Whether or not to enable PMF reweighting to better handle a class imbalance in the training data. */
-    bool usePMFReweighting;
-    std::string decisionFunctionGeneratorType;
-    unsigned int randomSeed;
-
-    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-  public:
-    /**
-     * \brief Default constructor.
-     */
-    Settings()
-    {}
-
-    /**
-     * \brief Attempts to load settings from the specified XML file.
-     *
-     * This will throw if the settings cannot be successfully loaded.
-     *
-     * \param filename The name of the file.
-     */
-    explicit Settings(const std::string& filename)
-    {
-      using tvgutil::PropertyUtil;
-      boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
-      initialise(PropertyUtil::make_property_map(tree));
-    }
-
-    /**
-     * \brief Loads settings from a property map.
-     *
-     * \param properties  The property map.
-     */
-    explicit Settings(const std::map<std::string,std::string>& properties)
-    {
-      initialise(properties);
-    }
-
-    //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
-  private:
-    /**
-     * \brief Loads settings from a property map.
-     *
-     * \param properties  The property map.
-     */
-    void initialise(const std::map<std::string,std::string>& properties)
-    {
-      //std::string decisionFunctionGeneratorType;
-      //unsigned int randomSeed = 0;
-
-      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
-        GET_SETTING(candidateCount);
-        GET_SETTING(decisionFunctionGeneratorType);
-        GET_SETTING(gainThreshold);
-        GET_SETTING(maxClassSize);
-        GET_SETTING(maxTreeHeight);
-        GET_SETTING(randomSeed);
-        GET_SETTING(seenExamplesThreshold);
-        GET_SETTING(splittabilityThreshold);
-        GET_SETTING(usePMFReweighting);
-      #undef GET_SETTING
-
-      randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
-    }
-
-    //~~~~~~~~~~~~~~~~~~~~ SERIALISATION ~~~~~~~~~~~~~~~~~~~~
-    
-    friend class boost::serialization::access;
-    template<typename Archive>
-    void serialize(Archive& ar, const unsigned int version)
-    {
-      // Intentionally left empty.
-    }
-
-    template<typename Archive>
-    friend void boost::serialization::save_construct_data(Archive& ar, const Settings *settings, const unsigned int file_version)
-    {
-      std::cout << "Saving Settings\n";
-      std::map<std::string,std::string> parameterSet;
-#define INSERT_STRING_PAIR(param) parameterSet.insert(std::make_pair(#param, boost::lexical_cast<std::string>(settings->param)))
-      INSERT_STRING_PAIR(candidateCount);
-      INSERT_STRING_PAIR(decisionFunctionGeneratorType);
-      INSERT_STRING_PAIR(gainThreshold);
-      INSERT_STRING_PAIR(maxClassSize);
-      INSERT_STRING_PAIR(maxTreeHeight);
-      INSERT_STRING_PAIR(randomSeed);
-      INSERT_STRING_PAIR(seenExamplesThreshold);
-      INSERT_STRING_PAIR(splittabilityThreshold);
-#undef INSERT_STRING_PAIR
-      ar << parameterSet;
-    }
-
-    template<typename Archive>
-    friend void boost::serialization::load_construct_data(Archive& ar, Settings *settings, const unsigned int file_version)
-    {
-      std::cout << "Loading Settings\n";
-      std::map<std::string,std::string> parameterSet;
-      ar >> parameterSet;
-
-      ::new(settings)Settings(parameterSet);
-    }
-  };
-
   //#################### PUBLIC TYPEDEFS ####################
 public:
   typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
@@ -259,7 +321,7 @@ public:
   //#################### PRIVATE TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-  typedef boost::shared_ptr<Node> Node_Ptr;
+  typedef boost::shared_ptr<Node<Label> > Node_Ptr;
   typedef tvgutil::PriorityQueue<int,float,signed char,std::greater<float> > SplittabilityQueue;
 
   //#################### PRIVATE VARIABLES ####################
@@ -280,7 +342,7 @@ private:
   int m_rootIndex;
 
   /** The settings needed to configure the decision tree. */
-  Settings m_settings;
+  Settings<Label> m_settings;
 
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
@@ -292,7 +354,7 @@ public:
    *
    * \param settings  The settings needed to configure the decision tree.
    */
-  explicit DecisionTree(const Settings& settings)
+  explicit DecisionTree(const Settings<Label>& settings)
   : m_settings(settings)
   {
     m_rootIndex = add_node(0);
@@ -301,7 +363,7 @@ public:
     if(m_settings.usePMFReweighting) m_inverseClassWeights = std::map<Label,float>();
   }
 
-  DecisionTree(const Settings& settings, const std::set<int> dirtyNodes, const std::vector<Node_Ptr> nodes, int rootIndex, const SplittabilityQueue& splittabilityQueue)
+  DecisionTree(const Settings<Label>& settings, const std::set<int> dirtyNodes, const std::vector<Node_Ptr> nodes, int rootIndex, const SplittabilityQueue& splittabilityQueue)
   : m_dirtyNodes(dirtyNodes), m_nodes(nodes), m_rootIndex(rootIndex), m_settings(settings), m_splittabilityQueue(splittabilityQueue)
   {}
 
@@ -444,7 +506,7 @@ private:
    */
   int add_node(size_t depth)
   {
-    m_nodes.push_back(Node_Ptr(new Node(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
+    m_nodes.push_back(Node_Ptr(new Node<Label>(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
     int id = static_cast<int>(m_nodes.size()) - 1;
     const signed char nullData = -1;
     m_splittabilityQueue.insert(id, 0.0f, nullData);
@@ -580,7 +642,7 @@ private:
    */
   bool split_node(int nodeIndex)
   {
-    Node& n = *m_nodes[nodeIndex];
+    Node<Label>& n = *m_nodes[nodeIndex];
     typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold, m_inverseClassWeights);
     if(!split) return false;
 
@@ -666,43 +728,52 @@ private:
     // Intentionally left empty.
   }
 
-  template<typename Archive>
-  friend void boost::serialization::save_construct_data(Archive& ar, const DecisionTree<Label> *decisionTree, const unsigned int file_version)
-  {
-    std::cout << "Saving DecisionTree\n";
-
-    ar << decisionTree->m_dirtyNodes;
-    ar << decisionTree->m_nodes;
-    ar << decisionTree->m_rootIndex;
-    const Settings *constSettings = &decisionTree->m_settings;
-    ar << constSettings;
-    ar << decisionTree->m_splittabilityQueue;
-  }
+  template<class Archive, typename Dtype>
+  friend void boost::serialization::save_construct_data(Archive& ar, const DecisionTree<Dtype> *decisionTree, const unsigned int file_version);
 
   template<class Archive, typename Dtype>
-  friend void boost::serialization::load_construct_data(Archive& ar, DecisionTree<Dtype> *decisionTree, const unsigned int file_version)
-  {
-    std::cout << "Loading DecisionTree\n";
-
-    std::set<int> dirtyNodes;
-    ar >> dirtyNodes;
-
-    std::vector<Node_Ptr> nodes;
-    ar >> nodes;
-
-    int rootIndex;
-    ar >> rootIndex;
-
-    Settings *settings;
-    ar >> settings;
-
-    SplittabilityQueue splittabilityQueue;
-    ar >> splittabilityQueue;
-
-    ::new(decisionTree)DecisionTree<Label>(*settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
-  }
+  friend void boost::serialization::load_construct_data(Archive& ar, DecisionTree<Dtype> *decisionTree, const unsigned int file_version);
 };
 
 }
+
+namespace boost { namespace serialization {
+template<typename Archive, typename Dtype>
+inline void save_construct_data(Archive& ar, const rafl::DecisionTree<Dtype> *decisionTree, const unsigned int file_version)
+{
+  std::cout << "Saving DecisionTree\n";
+
+  ar << decisionTree->m_dirtyNodes;
+  ar << decisionTree->m_nodes;
+  ar << decisionTree->m_rootIndex;
+  const rafl::Settings<Dtype> *constSettings = &decisionTree->m_settings;
+  ar << constSettings;
+  ar << decisionTree->m_splittabilityQueue;
+}
+
+template<typename Archive, typename Dtype>
+inline void load_construct_data(Archive& ar, rafl::DecisionTree<Dtype> *decisionTree, const unsigned int file_version)
+{
+  std::cout << "Loading DecisionTree\n";
+  typedef rafl::DecisionTree<Dtype> DT;
+
+  std::set<int> dirtyNodes;
+  ar >> dirtyNodes;
+
+  std::vector<typename DT::Node_Ptr> nodes;
+  ar >> nodes;
+
+  int rootIndex;
+  ar >> rootIndex;
+
+  rafl::Settings<Dtype> *settings;
+  ar >> settings;
+
+  typename DT::SplittabilityQueue splittabilityQueue;
+  ar >> splittabilityQueue;
+
+  ::new(decisionTree)DT(*settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
+}
+}}
 
 #endif
