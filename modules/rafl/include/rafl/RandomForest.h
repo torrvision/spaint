@@ -9,6 +9,17 @@
 
 namespace rafl {
 
+template <typename Label> class RandomForest;
+
+}
+
+namespace boost { namespace serialization {
+template<typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::RandomForest<Label> *randomForest, const unsigned int file_version);
+template<typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::RandomForest<Label> *randomForest, const unsigned int file_version);
+}}
+
+namespace rafl {
+
 /**
  * \brief An instance of an instantiation of this class template represents a random forest.
  */
@@ -154,32 +165,32 @@ private:
     // Intentionally left empty.
   }
 
-  template<class Archive>
-  friend void boost::serialization::save_construct_data(Archive& ar, const RandomForest<int> *randomForest, const unsigned int file_version);
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::save_construct_data(Archive& ar, const RandomForest<Dtype> *randomForest, const unsigned int file_version);
 
-  template<class Archive>
-  friend void boost::serialization::load_construct_data(Archive& ar, RandomForest<int> *randomForest, const unsigned int file_version);
+  template<typename Archive, typename Dtype>
+  friend void boost::serialization::load_construct_data(Archive& ar, RandomForest<Dtype> *randomForest, const unsigned int file_version);
 };
 
 }
 
 namespace boost { namespace serialization {
-template<class Archive>
-inline void save_construct_data(Archive& ar, const rafl::RandomForest<int> *randomForest, const unsigned int file_version)
+template<typename Archive, typename Dtype>
+inline void save_construct_data(Archive& ar, const rafl::RandomForest<Dtype> *randomForest, const unsigned int file_version)
 {
   std::cout << "<RF<";
   ar << randomForest->m_trees;
 }
 
-template<class Archive>
-inline void load_construct_data(Archive& ar, rafl::RandomForest<int> *randomForest, const unsigned int file_version)
+template<typename Archive, typename Dtype>
+inline void load_construct_data(Archive& ar, rafl::RandomForest<Dtype> *randomForest, const unsigned int file_version)
 {
   std::cout << ">RF>";
-  typedef boost::shared_ptr<rafl::DecisionTree<int> > DT_Ptr;
+  typedef boost::shared_ptr<rafl::DecisionTree<Dtype> > DT_Ptr;
   std::vector<DT_Ptr> trees;
   ar >> trees;
 
-  ::new(randomForest)rafl::RandomForest<int>(trees);
+  ::new(randomForest)rafl::RandomForest<Dtype>(trees);
 }
 }}
 
