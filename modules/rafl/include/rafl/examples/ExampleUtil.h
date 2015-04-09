@@ -41,6 +41,20 @@ public:
    * \brief Calculates the entropy of a label distribution represented by the specified histogram.
    *
    * \param histogram The histogram.
+   * \param multipliers Optional per-class ratios that can be used to scale the probabilities for the different labels.
+   * \return          The entropy of the label distribution represented by the histogram.
+   */
+  template <typename Label>
+  static float calculate_entropy(const Histogram<Label>& histogram, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
+  {
+    return histogram.empty() ? 0.0f : ProbabilityMassFunction<Label>(histogram, multipliers).calculate_entropy();
+  }
+
+#if 0  
+  /**
+   * \brief Calculates the entropy of a label distribution represented by the specified histogram.
+   *
+   * \param histogram The histogram.
    * \return          The entropy of the label distribution represented by the histogram.
    */
   template <typename Label>
@@ -48,6 +62,7 @@ public:
   {
     return histogram.empty() ? 0.0f : ProbabilityMassFunction<Label>(histogram).calculate_entropy();
   }
+#endif
 
   /**
    * \brief Loads a set of examples from the specified file.

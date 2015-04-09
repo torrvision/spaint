@@ -74,9 +74,9 @@ public:
    * \param gainThreshold   The minimum information gain that must be obtained from a split to make it worthwhile.
    * \return                The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, const std::map<Label,float> weights, int candidateCount, float gainThreshold) const
   {
-    float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
+    float initialEntropy = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), weights);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
 #if 0
@@ -109,7 +109,7 @@ public:
       }
 
       // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
+      float gain = calculate_information_gain(reservoir, weights, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
       if(gain < FLT_MIN || gain < gainThreshold) splitCandidate.reset();
 
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
@@ -131,11 +131,27 @@ private:
    * \param rightExamples   The examples that end up in the right half of the split.
    * \return                The information gain resulting from the split.
    */
-  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
+  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, const std::map<Label,float> weights, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
   {
+    std::cout << "\n\nCalculating information gain\n";
+    std::map<Label,float> combinedMultipliers;
     float exampleCount = static_cast<float>(reservoir.current_size());
-    float leftEntropy = ExampleUtil::calculate_entropy<Label>(leftExamples, reservoir.get_class_multipliers());
-    float rightEntropy = ExampleUtil::calculate_entropy<Label>(rightExamples, reservoir.get_class_multipliers());
+    const std::map<Label,float>& multipliers = reservoir.get_class_multipliers();
+    for(typename std::map<Label,float>::const_iterator it = weights.begin(), iend = weights.end(); it != iend; ++it)
+    {
+      Label label = it->first;
+      float weight = it->second;
+      typename std::map<Label,float>::const_iterator jt = multipliers.find(label);
+      if(jt != multipliers.end()){
+        weight *= jt->second;
+      }
+      std::cout << "Label=" << label << " weight=" << weight << std::endl;
+      combinedMultipliers.insert(std::make_pair(label, weight));
+    }
+    
+
+    float leftEntropy = ExampleUtil::calculate_entropy<Label>(leftExamples, combinedMultipliers);
+    float rightEntropy = ExampleUtil::calculate_entropy<Label>(rightExamples, combinedMultipliers);
     float leftWeight = leftExamples.size() / exampleCount;
     float rightWeight = rightExamples.size() / exampleCount;
 
