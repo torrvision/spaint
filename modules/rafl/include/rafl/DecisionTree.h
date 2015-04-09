@@ -164,6 +164,7 @@ public:
   //#################### PRIVATE TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+  typedef boost::shared_ptr<Histogram<Label> > Histogram_Ptr;
   typedef boost::shared_ptr<Node> Node_Ptr;
   typedef tvgutil::PriorityQueue<int,float,signed char,std::greater<float> > SplittabilityQueue;
 
@@ -174,6 +175,9 @@ private:
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
+
+  /** The histogram holding the class frequencies observed in the training data. */
+  Histogram_Ptr m_histogram;
 
   /** The root node's index in the node array. */
   int m_rootIndex;
@@ -192,7 +196,7 @@ public:
    * \param settings  The settings needed to configure the decision tree.
    */
   explicit DecisionTree(const Settings& settings)
-  : m_settings(settings)
+  : m_histogram(new Histogram<Label>), m_settings(settings)
   {
     m_rootIndex = add_node(0);
   }
@@ -309,6 +313,9 @@ private:
    */
   void add_example(const Example_CPtr& example)
   {
+    // Add the example to the global histogram.
+    m_histogram->add(example->get_label());
+
     // Find the leaf to which to add the new example.
     int leafIndex = find_leaf(*example->get_descriptor());
 
@@ -411,7 +418,15 @@ private:
    */
   ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
   {
-    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
+    std::map<Label,float> multipliers;
+    const std::map<Label,size_t>& bins = m_histogram->get_bins();
+    typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
+    for(; it != iend; ++it)
+    {
+      multipliers.insert(std::make_pair(it->first, 1.0f / static_cast<float>(it->second)));
+    }
+
+    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), multipliers);
   }
 
   /**

@@ -132,7 +132,7 @@ static float evaluate_forest_accuracy(const RF_Ptr& forest, const std::vector<Ex
   }
 
   Eigen::MatrixXf confusionMatrix = ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
-  return ConfusionMatrixUtil::calculate_accuracy(confusionMatrix);
+  return ConfusionMatrixUtil::calculate_accuracy(ConfusionMatrixUtil::normalise_rows_L1(confusionMatrix));
 }
 
 int main(int argc, char *argv[])
@@ -141,17 +141,15 @@ int main(int argc, char *argv[])
   const unsigned int seed = 1234;
 
   // Generate a set of labels.
-  const int labelCount = 20;
+  const int labelCount = 3;
   std::set<Label> classLabels;
   for(int i = 0; i < labelCount; ++i) classLabels.insert(i);
 
-  // Initialise the set sampler.
-  SetSampler<Label> classLabelSampler(seed);
-
   // Generate a subset of the labels that are currently observable.
-  const int currentLabelCount = 2;
-  std::set<Label> currentClassLabels;
-  for(int i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
+  std::set<Label> unbiasedClassLabels;
+  for(int i = 0; i < (labelCount - 1); ++i) unbiasedClassLabels.insert(i);
+  std::set<Label> biasedClassLabels;
+  biasedClassLabels.insert(labelCount - 1);
 
   // Generate the palettes.
   std::map<std::string,cv::Scalar> basicPalette = PaletteGenerator::generate_basic_rgba_palette();
@@ -164,7 +162,7 @@ int main(int argc, char *argv[])
 
   // Generate the parameter set with which to train the random forest (note that we're using the parameter set generator for convenience only).
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
-    .add_param("candidateCount", list_of<int>(256))
+    .add_param("candidateCount", list_of<int>(128))
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
     .add_param("maxClassSize", list_of<size_t>(10000))
@@ -202,11 +200,11 @@ int main(int argc, char *argv[])
   const size_t maxLearningRounds = 500;
   for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
   {
-    // Add an additional current class label after every 20 rounds of training.
-    if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
-
     // Generate a set of examples from each current class around the unit circle.
-    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(currentClassLabels, 50);
+    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 3000);
+    std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 30);
+
+    currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
 
     // Draw the generated points in the feature space plot.
     for(size_t i = 1, iend = currentExamples.size(); i < iend; ++i)
@@ -253,9 +251,6 @@ int main(int argc, char *argv[])
     // Clear the relevant plots.
     featureSpacePlot.clear_figure();
     accuracyPlot.clear_figure();
-
-    // Remove a current class label after every 40 rounds of training.
-    if(roundCount % 40 == 0) currentClassLabels.erase(classLabelSampler.get_sample(classLabels));
   }
 
   return 0;
