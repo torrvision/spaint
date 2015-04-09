@@ -47,21 +47,9 @@ public:
   {
     assert(!masses.empty());
 
-    // Calculate the sum of all the masses (we will divide by this to normalise the PMF).
-    float sum = 0.0f;
-    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      assert(it->second >= 0.0f);
-      sum += it->second;
-    }
+    normalize();
 
-    if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
-
-    // Normalise the PMF by dividing each mass by the sum.
-    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      it->second /= sum;
-    }
+    check_pmf();
   }
 
   /**
@@ -78,6 +66,7 @@ public:
     if(count == 0) throw std::runtime_error("Cannot make a probability mass function from an empty histogram");
     for(typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end(); it != iend; ++it)
     {
+      assert(it->second >= 0.0f);
       float mass = static_cast<float>(it->second) / count;
 
       // Scale the mass by the relevant multiplier for the corresponding class (if supplied).
@@ -85,6 +74,7 @@ public:
       {
         typename std::map<Label,float>::const_iterator jt = multipliers->find(it->first);
         if(jt != multipliers->end()) mass *= jt->second;
+        if(jt->second != 1.0f) std::cout << jt->second;
       }
 
       // Our implementation is dependent on the masses never becoming too small. If this assumption turns out not to be ok,
@@ -93,6 +83,10 @@ public:
 
       m_masses.insert(std::make_pair(it->first, mass));
     }
+
+    if(multipliers) normalize();
+
+    check_pmf();
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -150,6 +144,60 @@ public:
   const std::map<Label,float>& get_masses() const
   {
     return m_masses;
+  }
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO.
+   */
+  bool approximately_equal(float a, float b, float tolerance)
+  {
+    float absoluteError = fabs(a - b);
+    return absoluteError < tolerance;
+  }
+
+  float get_sum()
+  {
+    // Calculate the sum of all the masses (we will divide by this to normalise the PMF).
+    float sum = 0.0f;
+    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      assert(it->second >= 0.0f);
+      sum += it->second;
+    }
+    return sum;
+  }
+
+  /**
+   * \brief TODO.
+   */
+  void check_pmf()
+  {
+    const float MAX_TOLERANCE = 1e-5;
+    float sum = 0.0f;
+    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      sum += it->second;
+    }
+
+    if(!approximately_equal(sum, 1.0f, MAX_TOLERANCE))
+    {
+      std::cout << "Difference=" << fabs(sum - 1.0f) << '\n' << std::flush;
+      throw std::runtime_error("The pmf is not valid\n");
+    }
+  }
+
+  void normalize()
+  {
+    float sum = get_sum();
+    if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
+ 
+    // Normalise the PMF by dividing each mass by the sum.
+    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      it->second /= sum;
+    }
   }
 };
 
