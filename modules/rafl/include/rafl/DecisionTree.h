@@ -188,6 +188,9 @@ private:
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
 
+  /** The weights holding the inverse frequencies observed in the training data. */
+  std::map<Label,float> m_weights;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -233,6 +236,7 @@ public:
       add_example(examples.at(indices[i]));
     }
 
+    update_weights();
     update_dirty_nodes();
   }
 
@@ -418,15 +422,8 @@ private:
    */
   ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
   {
-    std::map<Label,float> multipliers;
-    const std::map<Label,size_t>& bins = m_histogram->get_bins();
-    typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
-    for(; it != iend; ++it)
-    {
-      multipliers.insert(std::make_pair(it->first, 1.0f / static_cast<float>(it->second)));
-    }
-
-    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), multipliers);
+    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), m_weights);
+    //return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
   }
 
   /**
@@ -480,7 +477,7 @@ private:
   bool split_node(int nodeIndex)
   {
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_weights, m_settings.candidateCount, m_settings.gainThreshold);
     if(!split) return false;
 
     // Set the decision function of the node to be split.
@@ -530,7 +527,7 @@ private:
     float splittability;
     if(m_nodes[nodeIndex]->m_depth + 1 < m_settings.maxTreeHeight && reservoir.seen_examples() >= m_settings.seenExamplesThreshold)
     {
-      splittability = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
+      splittability = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), m_weights);
     }
     else
     {
@@ -539,6 +536,22 @@ private:
 
     // Update the splittability queue to reflect the node's new splittability.
     m_splittabilityQueue.update_key(nodeIndex, splittability);
+  }
+
+  /**
+   * \brief Update the inverse class frequency weights.
+   */
+  void update_weights()
+  {
+    size_t count = m_histogram->get_count();
+    m_weights.clear();
+    const std::map<Label,size_t>& bins = m_histogram->get_bins();
+    typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
+    for(; it != iend; ++it)
+    {
+      m_weights.insert(std::make_pair(it->first, 1.0f / (static_cast<float>(it->second) / count)));
+      std::cout << "Label=" << it->first << " Count=" << it->second << std::endl;
+    }
   }
 };
 

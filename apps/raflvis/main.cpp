@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
     .add_param("candidateCount", list_of<int>(128))
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
-    .add_param("maxClassSize", list_of<size_t>(10000))
+    .add_param("maxClassSize", list_of<size_t>(1000))
     .add_param("maxTreeHeight", list_of<size_t>(20))
     .add_param("randomSeed", list_of<unsigned int>(seed))
     .add_param("seenExamplesThreshold", list_of<size_t>(50))
@@ -201,8 +201,8 @@ int main(int argc, char *argv[])
   for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
   {
     // Generate a set of examples from each current class around the unit circle.
-    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 3000);
-    std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 30);
+    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 30);
+    std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 3000);
 
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
 
