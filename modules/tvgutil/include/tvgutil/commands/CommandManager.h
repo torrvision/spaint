@@ -5,6 +5,7 @@
 #ifndef H_TVGUTIL_COMMANDMANAGER
 #define H_TVGUTIL_COMMANDMANAGER
 
+#include <climits>
 #include <deque>
 #include <map>
 
