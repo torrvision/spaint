@@ -30,8 +30,20 @@ void RiftTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *vi
 
 void RiftTracker::UpdateInitialPose(ITMTrackingState *trackingState)
 {
-  // Keep trying to update the tracking state until we succeed (the Rift takes some time to start up).
-  while(!try_update_tracking_state(trackingState));
+  const int maxTries = 100000000; // empirically-determined
+
+  // Repeatedly try to update the tracking state (this gives the Rift some time to start up).
+  int tries = 0;
+  while(tries < maxTries && !try_update_tracking_state(trackingState))
+  {
+    ++tries;
+  }
+
+  // If we exceed the maximum number of tries, throw.
+  if(tries == maxTries)
+  {
+    throw std::runtime_error("[spaint] Failed to read initial pose information from the Rift!");
+  }
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
