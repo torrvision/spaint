@@ -20,6 +20,19 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 #############################
 
 ##
+SET(commands_sources
+src/commands/Command.cpp
+src/commands/CommandManager.cpp
+src/commands/SeqCommand.cpp
+)
+
+SET(commands_headers
+include/tvgutil/commands/Command.h
+include/tvgutil/commands/CommandManager.h
+include/tvgutil/commands/SeqCommand.h
+)
+
+##
 SET(timers_headers
 include/tvgutil/timers/AverageTimer.h
 include/tvgutil/timers/Timer.h
@@ -47,10 +60,12 @@ include/tvgutil/RandomNumberGenerator.h
 #################################################################
 
 SET(sources
+${commands_sources}
 ${toplevel_sources}
 )
 
 SET(headers
+${commands_headers}
 ${timers_headers}
 ${toplevel_headers}
 )
@@ -60,6 +75,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(timers FILES ${timers_headers})
 
 ##########################################
