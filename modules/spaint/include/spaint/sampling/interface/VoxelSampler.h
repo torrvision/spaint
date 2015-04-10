@@ -5,9 +5,19 @@
 #ifndef H_SPAINT_VOXELSAMPLER
 #define H_SPAINT_VOXELSAMPLER
 
+#include <boost/shared_ptr.hpp>
+
 #include <ITMLib/Objects/ITMScene.h>
 
 #include "../../util/SpaintVoxel.h"
+
+namespace tvgutil {
+
+//#################### FORWARD DECLARATIONS ####################
+
+class RandomNumberGenerator;
+
+}
 
 namespace spaint {
 
@@ -32,6 +42,9 @@ protected:
 
   /** The size of the raycast result (in pixels). */
   const int m_raycastResultSize;
+
+  /** A random number generator. */
+  boost::shared_ptr<tvgutil::RandomNumberGenerator> m_rng;
 
   /**
    * A memory block in which to store the prefix sums for the voxel masks. These are used to determine the locations in the

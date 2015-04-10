@@ -6,15 +6,6 @@
 
 #include <tvgutil/RandomNumberGenerator.h>
 
-namespace {
-
-//#################### LOCAL VARIABLES ####################
-
-/** The random number generator. */
-tvgutil::RandomNumberGenerator rng(12345);
-
-}
-
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -25,6 +16,7 @@ VoxelSampler::VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastRes
   m_labelCount(labelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
+  m_rng(new tvgutil::RandomNumberGenerator(12345)),
   m_voxelMaskPrefixSumsMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/),
   m_voxelMasksMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/)
 {}
@@ -61,7 +53,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   {
     for(int i = 0; i < m_maxVoxelsPerLabel; ++i)
     {
-      candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = i < voxelCountsForLabels[k] ? rng.generate_int_from_uniform(0, voxelCountsForLabels[k] - 1) : -1;
+      candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = i < voxelCountsForLabels[k] ? m_rng->generate_int_from_uniform(0, voxelCountsForLabels[k] - 1) : -1;
     }
   }
   m_candidateVoxelIndicesMB.UpdateDeviceFromHost();
