@@ -9,6 +9,7 @@
 #include <cmath>
 #include <stdexcept>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
 #include "Histogram.h"
@@ -21,6 +22,8 @@ const float SMALL_EPSILON = 1e-9f;
 
 /**
  * \brief An instance of an instantiation of this class template represents a probability mass function (PMF).
+ *
+ * Datatype Invariant: The masses in the PMF must sum to 1.
  */
 template <typename Label>
 class ProbabilityMassFunction
@@ -46,10 +49,8 @@ public:
   : m_masses(masses)
   {
     assert(!masses.empty());
-
-    normalize();
-
-    check_pmf();
+    normalise();
+    ensure_invariant();
   }
 
   /**
@@ -66,7 +67,6 @@ public:
     if(count == 0) throw std::runtime_error("Cannot make a probability mass function from an empty histogram");
     for(typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end(); it != iend; ++it)
     {
-      assert(it->second >= 0.0f);
       float mass = static_cast<float>(it->second) / count;
 
       // Scale the mass by the relevant multiplier for the corresponding class (if supplied).
@@ -74,7 +74,6 @@ public:
       {
         typename std::map<Label,float>::const_iterator jt = multipliers->find(it->first);
         if(jt != multipliers->end()) mass *= jt->second;
-        if(jt->second != 1.0f) std::cout << jt->second;
       }
 
       // Our implementation is dependent on the masses never becoming too small. If this assumption turns out not to be ok,
@@ -84,9 +83,9 @@ public:
       m_masses.insert(std::make_pair(it->first, mass));
     }
 
-    if(multipliers) normalize();
+    if(multipliers) normalise();
 
-    check_pmf();
+    ensure_invariant();
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -149,42 +148,12 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Calculate whether two floating point numbers are approximately equal.
+   * \brief Calculates the sum of the masses in the PMF.
    *
-   * \param a           The first number.
-   * \param b           The second number.
-   * \param tolerance   The specified tolerance.
-   * \return            True if the difference between the numbers a and b is smaller than the tolerance.
+   * \return  The sum of the masses in the PMF.
    */
-  bool approximately_equal(float a, float b, float tolerance)
+  float calculate_sum()
   {
-    float absoluteError = fabs(a - b);
-    return absoluteError < tolerance;
-  }
-
-  /**
-   * \brief Checks whether the probability mass function is valid, i.e the sum of the elements is equal to one.
-   */
-  void check_pmf()
-  {
-    const float MAX_TOLERANCE = 1e-5;
-    float sum = get_sum();
-
-    if(!approximately_equal(sum, 1.0f, MAX_TOLERANCE))
-    {
-      std::cout << "Difference=" << fabs(sum - 1.0f) << '\n' << std::flush;
-      throw std::runtime_error("The pmf is not valid\n");
-    }
-  }
-
-  /**
-   * \brief Gets the sum of the masses in the pmf.
-   *
-   * \return  The sum of the pmf masses.
-   */
-  float get_sum()
-  {
-    // Calculate the sum of all the masses (we will divide by this to normalise the PMF).
     float sum = 0.0f;
     for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
     {
@@ -195,11 +164,25 @@ private:
   }
 
   /**
-   * \brief Normalises the pmf by the sum of it's elements so that it has unit length.
+   * \brief Ensures that the datatype invariant for the PMF is satisfied, i.e. that its masses sum to 1.
    */
-  void normalize()
+  void ensure_invariant()
   {
-    float sum = get_sum();
+    const float MAX_TOLERANCE = 1e-5f;
+    float sum = calculate_sum();
+    if(fabs(sum - 1.0f) >= MAX_TOLERANCE)
+    {
+      throw std::runtime_error("The masses in the PMF should sum to 1, but they sum to " + boost::lexical_cast<std::string>(sum));
+    }
+  }
+
+  /**
+   * \brief Normalises the PMF by dividing by the sum of its masses.
+   */
+  void normalise()
+  {
+    // Calculate the sum of the masses in the PMF.
+    float sum = calculate_sum();
     if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
 
     // Normalise the PMF by dividing each mass by the sum.
