@@ -66,10 +66,9 @@ protected:
    * \param labelCount        The number of semantic labels that are in use.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result (in pixels).
-   * \param memoryDeviceType  The type of memory device on which to allocate the internal memory blocks (i.e. CPU or CUDA).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, MemoryDeviceType memoryDeviceType, unsigned int seed);
+  VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### DESTRUCTOR ####################
 public:

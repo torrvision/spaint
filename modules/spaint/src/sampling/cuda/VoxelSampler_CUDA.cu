@@ -56,7 +56,7 @@ __global__ void ck_write_sampled_voxel_locations(int labelCount, int maxVoxelsPe
 //#################### CONSTRUCTORS ####################
 
 VoxelSampler_CUDA::VoxelSampler_CUDA(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
-: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, MEMORYDEVICE_CUDA, seed)
+: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, seed)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

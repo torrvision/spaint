@@ -10,15 +10,15 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, MemoryDeviceType memoryDeviceType, unsigned int seed)
+VoxelSampler::VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
 : m_candidateVoxelIndicesMB(labelCount * maxVoxelsPerLabel, true, true),
-  m_candidateVoxelLocationsMB(labelCount * raycastResultSize, true, true/*memoryDeviceType*/),
+  m_candidateVoxelLocationsMB(labelCount * raycastResultSize, true, true),
   m_labelCount(labelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
   m_rng(new tvgutil::RandomNumberGenerator(seed)),
-  m_voxelMaskPrefixSumsMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/),
-  m_voxelMasksMB(m_labelCount * (raycastResultSize + 1), true, true/*memoryDeviceType*/)
+  m_voxelMaskPrefixSumsMB(m_labelCount * (raycastResultSize + 1), true, true),
+  m_voxelMasksMB(m_labelCount * (raycastResultSize + 1), true, true)
 {}
 
 //#################### DESTRUCTOR ####################
