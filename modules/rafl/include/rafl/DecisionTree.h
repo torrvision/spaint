@@ -10,7 +10,6 @@
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
-#include <tvgutil/LimitedContainer.h>
 
 #include "decisionfunctions/DecisionFunctionGeneratorFactory.h"
 #include "examples/ExampleReservoir.h"
@@ -92,7 +91,7 @@ public:
     /** A random number generator. */
     tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
 
-    /** A flat to re-weight the PMFs. */
+    /** A flag to enable/disable re-weight the PMFs. */
     bool reweight;
 
     /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
@@ -178,11 +177,11 @@ private:
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
 
-  /** The nodes in the tree. */
-  std::vector<Node_Ptr> m_nodes;
-
   /** The histogram holding the class frequencies observed in the training data. */
   Histogram_Ptr m_histogram;
+
+  /** The nodes in the tree. */
+  std::vector<Node_Ptr> m_nodes;
 
   /** The root node's index in the node array. */
   int m_rootIndex;
@@ -428,7 +427,6 @@ private:
   ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
   {
     return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), m_weights);
-    //return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram());
   }
 
   /**
@@ -533,9 +531,6 @@ private:
     if(m_nodes[nodeIndex]->m_depth + 1 < m_settings.maxTreeHeight && reservoir.seen_examples() >= m_settings.seenExamplesThreshold)
     {
       splittability = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), m_weights);
-      const std::map<Label,size_t>& bins = reservoir.get_histogram()->get_bins();
-      std::cout << "histogram=" << tvgutil::make_limited_container<std::map<Label,size_t> >(bins, 10) << '\n';
-      std::cout << "weights=" << tvgutil::make_limited_container<std::map<Label,float> >(m_weights, 10) << '\n';
     }
     else
     {
@@ -555,14 +550,14 @@ private:
 
     if(m_settings.reweight)
     {
-    size_t count = m_histogram->get_count();
-    const std::map<Label,size_t>& bins = m_histogram->get_bins();
-    typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
-    for(; it != iend; ++it)
-    {
-      m_weights.insert(std::make_pair(it->first, 1.0f / (static_cast<float>(it->second) / count)));
-      std::cout << "Label=" << it->first << " Count=" << it->second << std::endl;
-    }
+      size_t count = m_histogram->get_count();
+      const std::map<Label,size_t>& bins = m_histogram->get_bins();
+      typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
+      for(; it != iend; ++it)
+      {
+        m_weights.insert(std::make_pair(it->first, 1.0f / (static_cast<float>(it->second) / count)));
+        std::cout << "Label=" << it->first << " Count=" << it->second << std::endl;
+      }
     }
   }
 };

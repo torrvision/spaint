@@ -133,7 +133,6 @@ private:
    */
   static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, const std::map<Label,float> weights, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
   {
-    std::cout << "\n\nCalculating information gain\n";
     std::map<Label,float> combinedMultipliers;
     float exampleCount = static_cast<float>(reservoir.current_size());
     const std::map<Label,float>& multipliers = reservoir.get_class_multipliers();
@@ -148,7 +147,6 @@ private:
       std::cout << "Label=" << label << " weight=" << weight << std::endl;
       combinedMultipliers.insert(std::make_pair(label, weight));
     }
-    
 
     float leftEntropy = ExampleUtil::calculate_entropy<Label>(leftExamples, combinedMultipliers);
     float rightEntropy = ExampleUtil::calculate_entropy<Label>(rightExamples, combinedMultipliers);
