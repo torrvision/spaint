@@ -22,8 +22,9 @@ public:
    * \param labelCount        The number of semantic labels that are in use.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
+   * \param seed              The seed for the random number generator.
    */
-  VoxelSampler_CPU(int labelCount, int maxVoxelsPerLabel, int raycastResultSize);
+  VoxelSampler_CPU(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

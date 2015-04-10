@@ -189,7 +189,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
     // FIXME: These values shouldn't be hard-coded here ultimately.
     const int maxVoxelsPerLabel = 1024;
-    m_voxelSampler.reset(new VoxelSampler_CUDA(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height));
+    const unsigned int seed = 12345;
+    m_voxelSampler.reset(new VoxelSampler_CUDA(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -204,7 +205,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
     // FIXME: These values shouldn't be hard-coded here ultimately.
     const int maxVoxelsPerLabel = 1024;
-    m_voxelSampler.reset(new VoxelSampler_CPU(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height));
+    const unsigned int seed = 12345;
+    m_voxelSampler.reset(new VoxelSampler_CPU(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed));
   }
 
   // Set up the live render state.
