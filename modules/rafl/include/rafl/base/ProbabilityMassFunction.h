@@ -118,7 +118,7 @@ public:
 
   /**
    * \brief Calculates the entropy of the PMF using the definition H(X) = -sum_{i} P(x_i) log2(P(x_i)).
-   * 
+   *
    * \return The entropy of the PMF. When outcomes are equally likely, the entropy will be high; when the outcome is predictable, the entropy wil be low.
    */
   float calculate_entropy() const
@@ -149,7 +149,12 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO.
+   * \brief Calculate whether two floating point numbers are approximately equal.
+   *
+   * \param a           The first number.
+   * \param b           The second number.
+   * \param tolerance   The specified tolerance.
+   * \return            True if the difference between the numbers a and b is smaller than the tolerance.
    */
   bool approximately_equal(float a, float b, float tolerance)
   {
@@ -157,6 +162,26 @@ private:
     return absoluteError < tolerance;
   }
 
+  /**
+   * \brief Checks whether the probability mass function is valid, i.e the sum of the elements is equal to one.
+   */
+  void check_pmf()
+  {
+    const float MAX_TOLERANCE = 1e-5;
+    float sum = get_sum();
+
+    if(!approximately_equal(sum, 1.0f, MAX_TOLERANCE))
+    {
+      std::cout << "Difference=" << fabs(sum - 1.0f) << '\n' << std::flush;
+      throw std::runtime_error("The pmf is not valid\n");
+    }
+  }
+
+  /**
+   * \brief Gets the sum of the masses in the pmf.
+   *
+   * \return  The sum of the pmf masses.
+   */
   float get_sum()
   {
     // Calculate the sum of all the masses (we will divide by this to normalise the PMF).
@@ -170,29 +195,13 @@ private:
   }
 
   /**
-   * \brief TODO.
+   * \brief Normalises the pmf by the sum of it's elements so that it has unit length.
    */
-  void check_pmf()
-  {
-    const float MAX_TOLERANCE = 1e-5;
-    float sum = 0.0f;
-    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      sum += it->second;
-    }
-
-    if(!approximately_equal(sum, 1.0f, MAX_TOLERANCE))
-    {
-      std::cout << "Difference=" << fabs(sum - 1.0f) << '\n' << std::flush;
-      throw std::runtime_error("The pmf is not valid\n");
-    }
-  }
-
   void normalize()
   {
     float sum = get_sum();
     if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
- 
+
     // Normalise the PMF by dividing each mass by the sum.
     for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
     {
