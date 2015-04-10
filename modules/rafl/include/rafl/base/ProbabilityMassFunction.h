@@ -9,6 +9,7 @@
 #include <cmath>
 #include <stdexcept>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
 #include "Histogram.h"
@@ -21,6 +22,8 @@ const float SMALL_EPSILON = 1e-9f;
 
 /**
  * \brief An instance of an instantiation of this class template represents a probability mass function (PMF).
+ *
+ * Datatype Invariant: The masses in the PMF must sum to 1.
  */
 template <typename Label>
 class ProbabilityMassFunction
@@ -46,22 +49,8 @@ public:
   : m_masses(masses)
   {
     assert(!masses.empty());
-
-    // Calculate the sum of all the masses (we will divide by this to normalise the PMF).
-    float sum = 0.0f;
-    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      assert(it->second >= 0.0f);
-      sum += it->second;
-    }
-
-    if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
-
-    // Normalise the PMF by dividing each mass by the sum.
-    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      it->second /= sum;
-    }
+    normalise();
+    ensure_invariant();
   }
 
   /**
@@ -93,6 +82,10 @@ public:
 
       m_masses.insert(std::make_pair(it->first, mass));
     }
+
+    if(multipliers) normalise();
+
+    ensure_invariant();
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -124,7 +117,7 @@ public:
 
   /**
    * \brief Calculates the entropy of the PMF using the definition H(X) = -sum_{i} P(x_i) log2(P(x_i)).
-   * 
+   *
    * \return The entropy of the PMF. When outcomes are equally likely, the entropy will be high; when the outcome is predictable, the entropy wil be low.
    */
   float calculate_entropy() const
@@ -150,6 +143,53 @@ public:
   const std::map<Label,float>& get_masses() const
   {
     return m_masses;
+  }
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Calculates the sum of the masses in the PMF.
+   *
+   * \return  The sum of the masses in the PMF.
+   */
+  float calculate_sum()
+  {
+    float sum = 0.0f;
+    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      assert(it->second >= 0.0f);
+      sum += it->second;
+    }
+    return sum;
+  }
+
+  /**
+   * \brief Ensures that the datatype invariant for the PMF is satisfied, i.e. that its masses sum to 1.
+   */
+  void ensure_invariant()
+  {
+    const float MAX_TOLERANCE = 1e-5f;
+    float sum = calculate_sum();
+    if(fabs(sum - 1.0f) >= MAX_TOLERANCE)
+    {
+      throw std::runtime_error("The masses in the PMF should sum to 1, but they sum to " + boost::lexical_cast<std::string>(sum));
+    }
+  }
+
+  /**
+   * \brief Normalises the PMF by dividing by the sum of its masses.
+   */
+  void normalise()
+  {
+    // Calculate the sum of the masses in the PMF.
+    float sum = calculate_sum();
+    if(fabs(sum) < SMALL_EPSILON) throw std::runtime_error("Cannot normalise the probability mass function: denominator too small");
+
+    // Normalise the PMF by dividing each mass by the sum.
+    for(typename std::map<Label,float>::iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
+    {
+      it->second /= sum;
+    }
   }
 };
 

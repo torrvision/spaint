@@ -14,6 +14,7 @@ SET(suitename tvgutil)
 
 SET(testnames
 ArgUtil
+CommandManager
 LimitedContainer
 PriorityQueue
 RandomNumberGenerator
