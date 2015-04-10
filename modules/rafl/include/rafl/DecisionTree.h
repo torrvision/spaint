@@ -10,6 +10,7 @@
 
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
+#include <tvgutil/LimitedContainer.h>
 
 #include "decisionfunctions/DecisionFunctionGeneratorFactory.h"
 #include "examples/ExampleReservoir.h"
@@ -91,6 +92,9 @@ public:
     /** A random number generator. */
     tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
 
+    /** A flat to re-weight the PMFs. */
+    bool reweight;
+
     /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
     size_t seenExamplesThreshold;
 
@@ -148,6 +152,7 @@ public:
         GET_SETTING(maxClassSize);
         GET_SETTING(maxTreeHeight);
         GET_SETTING(randomSeed);
+        GET_SETTING(reweight);
         GET_SETTING(seenExamplesThreshold);
         GET_SETTING(splittabilityThreshold);
       #undef GET_SETTING
@@ -528,6 +533,9 @@ private:
     if(m_nodes[nodeIndex]->m_depth + 1 < m_settings.maxTreeHeight && reservoir.seen_examples() >= m_settings.seenExamplesThreshold)
     {
       splittability = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), m_weights);
+      const std::map<Label,size_t>& bins = reservoir.get_histogram()->get_bins();
+      std::cout << "histogram=" << tvgutil::make_limited_container<std::map<Label,size_t> >(bins, 10) << '\n';
+      std::cout << "weights=" << tvgutil::make_limited_container<std::map<Label,float> >(m_weights, 10) << '\n';
     }
     else
     {
@@ -543,14 +551,18 @@ private:
    */
   void update_weights()
   {
-    size_t count = m_histogram->get_count();
     m_weights.clear();
+
+    if(m_settings.reweight)
+    {
+    size_t count = m_histogram->get_count();
     const std::map<Label,size_t>& bins = m_histogram->get_bins();
     typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
     for(; it != iend; ++it)
     {
       m_weights.insert(std::make_pair(it->first, 1.0f / (static_cast<float>(it->second) / count)));
       std::cout << "Label=" << it->first << " Count=" << it->second << std::endl;
+    }
     }
   }
 };

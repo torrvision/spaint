@@ -168,6 +168,7 @@ int main(int argc, char *argv[])
     .add_param("maxClassSize", list_of<size_t>(1000))
     .add_param("maxTreeHeight", list_of<size_t>(20))
     .add_param("randomSeed", list_of<unsigned int>(seed))
+    .add_param("reweight", list_of<bool>(false))
     .add_param("seenExamplesThreshold", list_of<size_t>(50))
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .generate_param_sets();
