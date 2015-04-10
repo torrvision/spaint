@@ -28,7 +28,7 @@ VoxelSampler::~VoxelSampler() {}
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                 ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+                                 ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   // Calculate the voxel masks for the various labels (these indicate which voxels could serve as examples of each label).
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
@@ -58,8 +58,8 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   }
   m_candidateVoxelIndicesMB.UpdateDeviceFromHost();
 
-  // Write the sampled voxel locations into the voxel locations array.
-  write_sampled_voxel_locations(voxelLocationsMB);
+  // Write the sampled voxel locations into the sampled voxel locations array.
+  write_sampled_voxel_locations(sampledVoxelLocationsMB);
 
   // Update the voxel counts for the different labels to reflect the number of voxels sampled.
   for(int k = 0; k < m_labelCount; ++k)

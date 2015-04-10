@@ -53,19 +53,27 @@ inline void write_candidate_voxel_count(int label, int raycastResultSize, const 
 
 /**
  * \brief TODO
+ *
+ * \param voxelIndex              TODO
+ * \param labelCount              The number of semantic labels that are in use.
+ * \param maxVoxelsPerLabel       The maximum number of voxels to sample for each label.
+ * \param raycastResultSize       The size of the raycast result image (in pixels).
+ * \param candidateVoxelLocations An array containing the locations of the candidate voxels (grouped by semantic class).
+ * \param candidateVoxelIndices   An array specifying which candidate voxels should be sampled for each class.
+ * \param sampledVoxelLocations   An array into which to write the locations of the sampled voxels.
  */
 _CPU_AND_GPU_CODE_
 inline void write_sampled_voxel_location(int voxelIndex, int labelCount, int maxVoxelsPerLabel, int raycastResultSize,
-                                         const Vector3s *voxelLocationsByClass, const int *randomVoxelIndices,
+                                         const Vector3s *candidateVoxelLocations, const int *candidateVoxelIndices,
                                          Vector3s *sampledVoxelLocations)
 {
   // For each label:
   for(int k = 0; k < labelCount; ++k)
   {
-    int randomVoxelIndex = randomVoxelIndices[k * maxVoxelsPerLabel + voxelIndex];
-    if(randomVoxelIndex != -1)
+    int candidateVoxelIndex = candidateVoxelIndices[k * maxVoxelsPerLabel + voxelIndex];
+    if(candidateVoxelIndex != -1)
     {
-      sampledVoxelLocations[k * maxVoxelsPerLabel + voxelIndex] = voxelLocationsByClass[k * raycastResultSize + randomVoxelIndex];
+      sampledVoxelLocations[k * maxVoxelsPerLabel + voxelIndex] = candidateVoxelLocations[k * raycastResultSize + candidateVoxelIndex];
     }
   }
 }
