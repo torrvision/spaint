@@ -17,6 +17,7 @@ namespace spaint {
  * \param raycastResultSize The size of the raycast result image (in pixels).
  * \param voxelData         The scene's voxel data.
  * \param indexData         The scene's index data.
+ * \param labelCount        The number of semantic labels that are in use.
  * \param voxelMasks        An array into which to write the voxel masks indicating which voxels may be used as examples of which semantic labels.
  */
 _CPU_AND_GPU_CODE_
@@ -70,12 +71,18 @@ inline void write_sampled_voxel_location(int voxelIndex, int labelCount, int max
 }
 
 /**
- * \brief Attempts to write the location of the specified candidate voxel to the segment of the candidate voxel
+ * \brief Writes the location of the specified candidate voxel to the segment of the candidate voxel
  *        locations array corresponding to the label (if any) for which it is a candidate sample.
  *
  * Note: If the voxel cannot serve as a sample for any label, nothing is written.
  *
- * \param voxelIndex  TODO
+ * \param voxelIndex              The index of the voxel whose location might be written.
+ * \param raycastResult           The current raycast result image.
+ * \param raycastResultSize       The size of the raycast result image (in pixels).
+ * \param voxelMasks              An array containing the voxel masks indicating which voxels may be used as examples of which semantic labels.
+ * \param voxelMaskPrefixSums     The prefix sums for the voxel masks.
+ * \param labelCount              The number of semantic labels that are in use.
+ * \param candidateVoxelLocations An array into which to write the locations of the candidate voxels.
  */
 _CPU_AND_GPU_CODE_
 inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,

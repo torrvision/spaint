@@ -58,7 +58,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   }
   m_candidateVoxelIndicesMB.UpdateDeviceFromHost();
 
-  // Write the sampled voxel locations into the sampled voxel locations array.
+  // Write the sampled voxel locations into the voxel locations array.
   write_sampled_voxel_locations(voxelLocationsMB);
 
   // Update the voxel counts for the different labels to reflect the number of voxels sampled.

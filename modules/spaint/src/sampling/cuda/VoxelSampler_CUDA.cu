@@ -9,6 +9,8 @@
 
 #include "sampling/shared/VoxelSampler_Shared.h"
 
+#define DEBUGGING 1
+
 namespace spaint {
 
 //#################### CUDA KERNELS ####################
@@ -82,8 +84,7 @@ void VoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBl
     );
   }
 
-#if 1
-  // FOR DEBUGGING
+#if DEBUGGING
   voxelMaskPrefixSumsMB.UpdateHostFromDevice();
 #endif
 }
@@ -104,8 +105,7 @@ void VoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *raycastResul
     voxelMasksMB.GetData(MEMORYDEVICE_CUDA)
   );
 
-#if 1
-  // FOR DEBUGGING
+#if DEBUGGING
   voxelMasksMB.UpdateHostFromDevice();
 #endif
 }
@@ -135,8 +135,7 @@ void VoxelSampler_CUDA::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vecto
     sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
   );
 
-#if 1
-  // FOR DEBUGGING
+#if DEBUGGING
   sampledVoxelLocationsMB.UpdateHostFromDevice();
 #endif
 }
@@ -157,8 +156,7 @@ void VoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *ra
     candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
   );
 
-#if 1
-  // FOR DEBUGGING
+#if DEBUGGING
   candidateVoxelLocationsMB.UpdateHostFromDevice();
 #endif
 }

@@ -44,7 +44,7 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
   unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int voxelIndex = 0; voxelIndex < m_raycastResultSize; ++voxelIndex)
   {
@@ -68,7 +68,7 @@ void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<u
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int k = 0; k < m_labelCount; ++k)
   {
@@ -86,7 +86,7 @@ void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *ray
   Vector3s *candidateVoxelLocations = candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int voxelIndex = 0; voxelIndex < m_raycastResultSize; ++voxelIndex)
   {
@@ -109,7 +109,7 @@ void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector
   Vector3s *sampledVoxelLocations = sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int voxelIndex = 0; voxelIndex < m_maxVoxelsPerLabel; ++voxelIndex)
   {
