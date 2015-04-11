@@ -193,31 +193,27 @@ void Application::process_camera_input()
 
 void Application::process_command_input()
 {
-  static bool blockRedo = false;
   static bool blockUndo = false;
-
-  if(m_inputState.key_down(SDLK_LCTRL))
+  if(m_inputState.key_down(SDLK_LCTRL) && m_inputState.key_down(SDLK_z))
   {
-    if(m_inputState.key_down(SDLK_z))
+    if(!blockUndo && m_commandManager.can_undo())
     {
-      if(!blockUndo && m_commandManager.can_undo())
-      {
-        m_commandManager.undo();
-        blockUndo = true;
-      }
+      m_commandManager.undo();
+      blockUndo = true;
     }
-    else blockUndo = false;
-
-    if(m_inputState.key_down(SDLK_y))
-    {
-      if(!blockRedo && m_commandManager.can_redo())
-      {
-        m_commandManager.redo();
-        blockRedo = true;
-      }
-    }
-    else blockRedo = false;
   }
+  else blockUndo = false;
+
+  static bool blockRedo = false;
+  if(m_inputState.key_down(SDLK_LCTRL) && m_inputState.key_down(SDLK_y))
+  {
+    if(!blockRedo && m_commandManager.can_redo())
+    {
+      m_commandManager.redo();
+      blockRedo = true;
+    }
+  }
+  else blockRedo = false;
 }
 
 bool Application::process_events()
