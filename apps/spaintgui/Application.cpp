@@ -291,7 +291,9 @@ void Application::process_labelling_input()
   static bool currentlyMarking = false;
 
   // Specify the precursors map for compressible commands.
-  static std::map<std::string,std::string> precursors = map_list_of("Begin Mark Voxels","Mark Voxels")("Mark Voxels","Mark Voxels");
+  static const std::string beginMarkVoxelsDesc = "Begin Mark Voxels";
+  static const std::string markVoxelsDesc = MarkVoxelsCommand::get_static_description();
+  static std::map<std::string,std::string> precursors = map_list_of(beginMarkVoxelsDesc,markVoxelsDesc)(markVoxelsDesc,markVoxelsDesc);
 
   // If the current selector is active:
   if(interactor->selector_is_active())
@@ -307,7 +309,7 @@ void Application::process_labelling_input()
       {
         if(!currentlyMarking)
         {
-          m_commandManager.execute_command(Command_CPtr(new NoOpCommand("Begin Mark Voxels")));
+          m_commandManager.execute_command(Command_CPtr(new NoOpCommand(beginMarkVoxelsDesc)));
           currentlyMarking = true;
         }
         m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), precursors);

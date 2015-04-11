@@ -47,6 +47,15 @@ public:
 
   /** Override */
   virtual void undo() const;
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets a short description of what the command does.
+   *
+   * \return  A short description of what the command does.
+   */
+  static std::string get_static_description();
 };
 
 #endif
