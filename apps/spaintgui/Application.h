@@ -27,6 +27,7 @@ class Application
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
+  typedef Renderer::RenderState_CPtr RenderState_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -60,6 +61,15 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Gets the current monocular render state (if any).
+   *
+   * This will only exist if we're currently rendering in mono rather than stereo.
+   *
+   * \return  The current monocular render state, if any, or null otherwise.
+   */
+  Renderer::RenderState_CPtr get_monocular_render_state() const;
+
   /**
    * \brief Handle key down events.
    *
