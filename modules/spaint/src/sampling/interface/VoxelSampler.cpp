@@ -45,7 +45,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   // Write the candidate voxel counts for the different labels into the voxel counts array.
   write_candidate_voxel_counts(m_voxelMaskPrefixSumsMB, voxelCountsForLabelsMB);
 
-  // Randomly choose candidate voxel locations to sample from each class.
+  // Randomly choose candidate voxel locations to sample for each label.
   // FIXME: It might be a good idea to implement this on both the CPU and GPU to avoid the memory transfer.
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
   int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);

@@ -10,7 +10,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to sample voxels for which features should be calculated using the CPU.
+ * \brief An instance of this class can be used to sample voxels from a scene using the CPU.
  */
 class VoxelSampler_CPU : public VoxelSampler
 {
