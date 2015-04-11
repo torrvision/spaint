@@ -26,9 +26,8 @@ void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlo
   const int stride = m_raycastResultSize + 1;
   for(int k = 0; k < m_labelCount; ++k)
   {
-    // Calculate the prefix sum of the voxel mask (this can be used to determine the locations in the voxel array for this label into which voxels should be written).
+    // Calculate the prefix sum of the voxel mask.
     voxelMaskPrefixSums[k * stride] = 0;
-
     for(int i = 1; i < stride; ++i)
     {
       voxelMaskPrefixSums[k * stride + i] = voxelMaskPrefixSums[k * stride + (i-1)] + voxelMasks[k * stride + (i-1)];

@@ -9,7 +9,7 @@
 
 #include "sampling/shared/VoxelSampler_Shared.h"
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 namespace spaint {
 
@@ -73,7 +73,7 @@ void VoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBl
   const int stride = m_raycastResultSize + 1;
   for(int k = 0; k < m_labelCount; ++k)
   {
-    // Calculate the prefix sum of the voxel mask (this can be used to determine the locations in the voxel array for this label into which voxels should be written).
+    // Calculate the prefix sum of the voxel mask.
     thrust::device_ptr<const unsigned char> voxelMask(voxelMasks + k * stride);
     thrust::device_ptr<unsigned int> voxelMaskPrefixSum(voxelMaskPrefixSums + k * stride);
 
