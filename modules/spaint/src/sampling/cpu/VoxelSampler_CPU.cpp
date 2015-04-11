@@ -113,7 +113,7 @@ void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector
 #endif
   for(int voxelIndex = 0; voxelIndex < m_maxVoxelsPerLabel; ++voxelIndex)
   {
-    write_sampled_voxel_location(
+    copy_sampled_voxel_locations(
       voxelIndex,
       m_labelCount,
       m_maxVoxelsPerLabel,

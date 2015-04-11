@@ -26,6 +26,18 @@ __global__ void ck_calculate_voxel_masks(const Vector4f *raycastResult, int rayc
   }
 }
 
+__global__ void ck_copy_sampled_voxel_locations(int labelCount, int maxVoxelsPerLabel, int raycastResultSize,
+                                                const Vector3s *voxelLocationsByClass,
+                                                const int *randomVoxelIndices,
+                                                Vector3s *sampledVoxelLocations)
+{
+  int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
+  if(voxelIndex < maxVoxelsPerLabel)
+  {
+    copy_sampled_voxel_locations(voxelIndex, labelCount, maxVoxelsPerLabel, raycastResultSize, voxelLocationsByClass, randomVoxelIndices, sampledVoxelLocations);
+  }
+}
+
 __global__ void ck_write_candidate_voxel_counts(int raycastResultSize, const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
 {
   int label = threadIdx.x + blockDim.x * blockIdx.x;
@@ -40,18 +52,6 @@ __global__ void ck_write_candidate_voxel_locations(const Vector4f *raycastResult
   if(voxelIndex < raycastResultSize)
   {
     write_candidate_voxel_location(voxelIndex, raycastResult, raycastResultSize, voxelMasks, voxelMaskPrefixSums, labelCount, voxelLocations);
-  }
-}
-
-__global__ void ck_write_sampled_voxel_locations(int labelCount, int maxVoxelsPerLabel, int raycastResultSize,
-                                                 const Vector3s *voxelLocationsByClass,
-                                                 const int *randomVoxelIndices,
-                                                 Vector3s *sampledVoxelLocations)
-{
-  int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
-  if(voxelIndex < maxVoxelsPerLabel)
-  {
-    write_sampled_voxel_location(voxelIndex, labelCount, maxVoxelsPerLabel, raycastResultSize, voxelLocationsByClass, randomVoxelIndices, sampledVoxelLocations);
   }
 }
 
@@ -122,24 +122,6 @@ void VoxelSampler_CUDA::write_candidate_voxel_counts(const ORUtils::MemoryBlock<
   voxelCountsForLabelsMB.UpdateHostFromDevice();
 }
 
-void VoxelSampler_CUDA::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
-{
-  int threadsPerBlock = 256;
-  int numBlocks = (m_maxVoxelsPerLabel + threadsPerBlock - 1) / threadsPerBlock;
-  ck_write_sampled_voxel_locations<<<numBlocks,threadsPerBlock>>>(
-    m_labelCount,
-    m_maxVoxelsPerLabel,
-    m_raycastResultSize,
-    m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
-    m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CUDA),
-    sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
-  );
-
-#if DEBUGGING
-  sampledVoxelLocationsMB.UpdateHostFromDevice();
-#endif
-}
-
 void VoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
                                                         const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
                                                         const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
@@ -158,6 +140,24 @@ void VoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *ra
 
 #if DEBUGGING
   candidateVoxelLocationsMB.UpdateHostFromDevice();
+#endif
+}
+
+void VoxelSampler_CUDA::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
+{
+  int threadsPerBlock = 256;
+  int numBlocks = (m_maxVoxelsPerLabel + threadsPerBlock - 1) / threadsPerBlock;
+  ck_copy_sampled_voxel_locations<<<numBlocks,threadsPerBlock>>>(
+    m_labelCount,
+    m_maxVoxelsPerLabel,
+    m_raycastResultSize,
+    m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
+    m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CUDA),
+    sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
+  );
+
+#if DEBUGGING
+  sampledVoxelLocationsMB.UpdateHostFromDevice();
 #endif
 }
 
