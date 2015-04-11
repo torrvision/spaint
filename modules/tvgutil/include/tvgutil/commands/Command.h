@@ -22,7 +22,7 @@ private:
   std::string m_description;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief Constructs a command.
    *
@@ -37,24 +37,26 @@ public:
    */
   virtual ~Command();
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Executes the command.
    */
-  virtual void execute() const;
+  virtual void execute() const = 0;
 
+  /**
+   * \brief Undoes the command.
+   */
+  virtual void undo() const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Gets a short description of what the command does.
    *
    * \return  A short description of what the command does.
    */
   const std::string& get_description() const;
-
-  /**
-   * \brief Undoes the command.
-   */
-  virtual void undo() const;
 };
 
 //#################### TYPEDEFS ####################

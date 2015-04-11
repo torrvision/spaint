@@ -15,13 +15,15 @@ using namespace rigging;
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
+#include <tvgutil/commands/NoOpCommand.h>
+using namespace tvgutil;
+
 #ifdef WITH_OVR
 #include "RiftRenderer.h"
 #endif
 #include "WindowedRenderer.h"
 
 #include "commands/MarkVoxelsCommand.h"
-using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
@@ -305,7 +307,7 @@ void Application::process_labelling_input()
       {
         if(!currentlyMarking)
         {
-          m_commandManager.execute_command(Command_CPtr(new Command("Begin Mark Voxels")));
+          m_commandManager.execute_command(Command_CPtr(new NoOpCommand("Begin Mark Voxels")));
           currentlyMarking = true;
         }
         m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), precursors);
@@ -315,7 +317,7 @@ void Application::process_labelling_input()
   }
   else if(currentlyMarking)
   {
-    m_commandManager.execute_compressible_command(Command_CPtr(new Command("End Mark Voxels")), precursors);
+    m_commandManager.execute_compressible_command(Command_CPtr(new NoOpCommand("End Mark Voxels")), precursors);
     currentlyMarking = false;
   }
 }
