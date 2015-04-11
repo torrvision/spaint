@@ -10,6 +10,17 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount) const
+{
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < voxelCount; ++i)
+  {
+    voxels[i].label = 0;
+  }
+}
+
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                   ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const
