@@ -10,7 +10,7 @@
 #include <tvgutil/commands/Command.h>
 
 /**
- * \brief An instance of this class represents that can be used to mark voxels in the scene.
+ * \brief An instance of this class represents a command that can be used to mark voxels in the scene.
  */
 class MarkVoxelsCommand : public tvgutil::Command
 {
