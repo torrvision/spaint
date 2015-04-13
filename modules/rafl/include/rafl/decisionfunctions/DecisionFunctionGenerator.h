@@ -135,24 +135,11 @@ private:
    */
   static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const std::map<Label,float>& inverseClassWeights)
   {
-    std::map<Label,float> combinedMultipliers;
     float exampleCount = static_cast<float>(reservoir.current_size());
-    const std::map<Label,float>& multipliers = reservoir.get_class_multipliers();
-    for(typename std::map<Label,float>::const_iterator it = inverseClassWeights.begin(), iend = inverseClassWeights.end(); it != iend; ++it)
-    {
-      Label label = it->first;
-      float weight = it->second;
+    std::map<Label,float> multipliers = combine_multipliers(reservoir.get_class_multipliers(), inverseClassWeights);
 
-      //FIXME Implement without the need for a find.
-      typename std::map<Label,float>::const_iterator jt = multipliers.find(label);
-      if(jt != multipliers.end()){
-        weight *= jt->second;
-      }
-      combinedMultipliers.insert(std::make_pair(label, weight));
-    }
-
-    float leftEntropy = ExampleUtil::calculate_entropy(leftExamples, combinedMultipliers);
-    float rightEntropy = ExampleUtil::calculate_entropy(rightExamples, combinedMultipliers);
+    float leftEntropy = ExampleUtil::calculate_entropy(leftExamples, multipliers);
+    float rightEntropy = ExampleUtil::calculate_entropy(rightExamples, multipliers);
     float leftWeight = leftExamples.size() / exampleCount;
     float rightWeight = rightExamples.size() / exampleCount;
 
@@ -168,6 +155,35 @@ private:
 #endif
 
     return gain;
+  }
+
+  /**
+   * \brief Multiplies together two sets of multipliers that share some labels in common.
+   *
+   * Multipliers that only appear in one of the two input sets will not be included in the result.
+   * For example, combine_multipliers({a => 0.1, b => 0.2}, {b => 0.5, c => 0.3}) = {b => 0.2 * 0.5 = 0.1}.
+   *
+   * \param multipliers1  The first set of multipliers.
+   * \param multipliers2  The second set of multipliers.
+   * \return              The combined multipliers.
+   */
+  static std::map<Label,float> combine_multipliers(const std::map<Label,float>& multipliers1, const std::map<Label,float>& multipliers2)
+  {
+    std::map<Label,float> result;
+
+    std::map<Label,float>::const_iterator it = multipliers1.begin(), iend = multipliers1.end(), jt = multipliers2.begin(), jend = multipliers2.end();
+    while(it != iend && jt != jend)
+    {
+      if(it->first == jt->first)
+      {
+        result.insert(std::make_pair(it->first, it->second * jt->second));
+        ++it, ++jt;
+      }
+      else if(it->first < jt->first) ++it;
+      else ++jt;
+    }
+
+    return result;
   }
 };
 
