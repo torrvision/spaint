@@ -148,7 +148,6 @@ private:
       if(jt != multipliers.end()){
         weight *= jt->second;
       }
-      std::cout << "Label=" << label << " weight=" << weight << std::endl;
       combinedMultipliers.insert(std::make_pair(label, weight));
     }
 
