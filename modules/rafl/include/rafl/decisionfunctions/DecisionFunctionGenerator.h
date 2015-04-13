@@ -77,7 +77,7 @@ public:
    */
   Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const std::map<Label,float>& inverseClassWeights) const
   {
-    float initialEntropy = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), inverseClassWeights);
+    float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
 #if 0
@@ -151,8 +151,8 @@ private:
       combinedMultipliers.insert(std::make_pair(label, weight));
     }
 
-    float leftEntropy = ExampleUtil::calculate_entropy<Label>(leftExamples, combinedMultipliers);
-    float rightEntropy = ExampleUtil::calculate_entropy<Label>(rightExamples, combinedMultipliers);
+    float leftEntropy = ExampleUtil::calculate_entropy(leftExamples, combinedMultipliers);
+    float rightEntropy = ExampleUtil::calculate_entropy(rightExamples, combinedMultipliers);
     float leftWeight = leftExamples.size() / exampleCount;
     float rightWeight = rightExamples.size() / exampleCount;
 
