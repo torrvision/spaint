@@ -156,15 +156,13 @@ int main(int argc, char *argv[])
   SetSampler<Label> classLabelSampler(seed);
 #endif
 
-#ifdef CLASS_IMBALANCE_TEST
   // Generate a subset of the labels that are currently observable.
+#ifdef CLASS_IMBALANCE_TEST
   std::set<Label> unbiasedClassLabels;
-  for(int i = 0; i < (labelCount - 1); ++i) unbiasedClassLabels.insert(i);
+  for(int i = 0; i < labelCount - 1; ++i) unbiasedClassLabels.insert(i);
   std::set<Label> biasedClassLabels;
   biasedClassLabels.insert(labelCount - 1);
-
 #else
-  // Generate a subset of the labels that are currently observable.
   const int currentLabelCount = 2;
   std::set<Label> currentClassLabels;
   for(int i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
@@ -224,9 +222,7 @@ int main(int argc, char *argv[])
     // Generate a set of examples with an unbalanced number of class labels.
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 30);
     std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 3000);
-
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
-
 #else
     // Add an additional current class label after every 20 rounds of training.
     if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
@@ -288,6 +284,6 @@ int main(int argc, char *argv[])
   }
 
 #undef CLASS_IMBALANCE_TEST
+
   return 0;
 }
-
