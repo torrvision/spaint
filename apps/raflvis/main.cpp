@@ -137,21 +137,36 @@ static float evaluate_forest_accuracy(const RF_Ptr& forest, const std::vector<Ex
 
 int main(int argc, char *argv[])
 {
+#define CLASS_IMBALANCE_TEST
+
   // The seed for the random number generator.
   const unsigned int seed = 1234;
 
   // Generate a set of labels.
+#ifdef CLASS_IMBALANCE_TEST
+  const int labelCount = 3;
+#else
   const int labelCount = 20;
+#endif
   std::set<Label> classLabels;
   for(int i = 0; i < labelCount; ++i) classLabels.insert(i);
 
+#ifndef CLASS_IMBALANCE_TEST
   // Initialise the set sampler.
   SetSampler<Label> classLabelSampler(seed);
+#endif
 
   // Generate a subset of the labels that are currently observable.
+#ifdef CLASS_IMBALANCE_TEST
+  std::set<Label> unbiasedClassLabels;
+  for(int i = 0; i < labelCount - 1; ++i) unbiasedClassLabels.insert(i);
+  std::set<Label> biasedClassLabels;
+  biasedClassLabels.insert(labelCount - 1);
+#else
   const int currentLabelCount = 2;
   std::set<Label> currentClassLabels;
   for(int i = 0; i < currentLabelCount; ++i) currentClassLabels.insert(i);
+#endif
 
   // Generate the palettes.
   std::map<std::string,cv::Scalar> basicPalette = PaletteGenerator::generate_basic_rgba_palette();
@@ -172,6 +187,7 @@ int main(int argc, char *argv[])
     .add_param("randomSeed", list_of<unsigned int>(seed))
     .add_param("seenExamplesThreshold", list_of<size_t>(50))
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
+    .add_param("usePMFReweighting", list_of<bool>(true))
     .generate_param_sets();
 
   // Initialise the online random forest with the specified parameters.
@@ -202,11 +218,18 @@ int main(int argc, char *argv[])
   const size_t maxLearningRounds = 500;
   for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
   {
+#ifdef CLASS_IMBALANCE_TEST
+    // Generate a set of examples with an unbalanced number of class labels.
+    std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 30);
+    std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 3000);
+    currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
+#else
     // Add an additional current class label after every 20 rounds of training.
     if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
 
     // Generate a set of examples from each current class around the unit circle.
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(currentClassLabels, 50);
+#endif
 
     // Draw the generated points in the feature space plot.
     for(size_t i = 1, iend = currentExamples.size(); i < iend; ++i)
@@ -254,9 +277,13 @@ int main(int argc, char *argv[])
     featureSpacePlot.clear_figure();
     accuracyPlot.clear_figure();
 
+#ifndef CLASS_IMBALANCE_TEST
     // Remove a current class label after every 40 rounds of training.
     if(roundCount % 40 == 0) currentClassLabels.erase(classLabelSampler.get_sample(classLabels));
+#endif
   }
+
+#undef CLASS_IMBALANCE_TEST
 
   return 0;
 }

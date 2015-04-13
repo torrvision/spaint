@@ -32,7 +32,8 @@ public:
    * \return            The entropy of the examples' label distribution.
    */
   template <typename Label>
-  static float calculate_entropy(const std::vector<boost::shared_ptr<const Example<Label> > >& examples, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
+  static float calculate_entropy(const std::vector<boost::shared_ptr<const Example<Label> > >& examples,
+                                 const typename boost::mpl::identity<boost::optional<std::map<Label,float> > >::type& multipliers = boost::none)
   {
     return examples.empty() ? 0.0f : make_pmf(examples, multipliers).calculate_entropy();
   }
@@ -40,13 +41,15 @@ public:
   /**
    * \brief Calculates the entropy of a label distribution represented by the specified histogram.
    *
-   * \param histogram The histogram.
-   * \return          The entropy of the label distribution represented by the histogram.
+   * \param histogram   The histogram.
+   * \param multipliers Optional per-class ratios that can be used to scale the probabilities for the different labels.
+   * \return            The entropy of the label distribution represented by the histogram.
    */
   template <typename Label>
-  static float calculate_entropy(const Histogram<Label>& histogram)
+  static float calculate_entropy(const Histogram<Label>& histogram,
+                                 const typename boost::mpl::identity<boost::optional<std::map<Label,float> > >::type& multipliers = boost::none)
   {
-    return histogram.empty() ? 0.0f : ProbabilityMassFunction<Label>(histogram).calculate_entropy();
+    return histogram.empty() ? 0.0f : ProbabilityMassFunction<Label>(histogram, multipliers).calculate_entropy();
   }
 
   /**

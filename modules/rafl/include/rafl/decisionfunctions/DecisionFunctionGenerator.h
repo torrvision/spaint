@@ -69,14 +69,15 @@ public:
   /**
    * \brief Tries to pick an appropriate way in which to split the specified reservoir of examples.
    *
-   * \param reservoir       The reservoir of examples to split.
-   * \param candidateCount  The number of candidates to evaluate.
-   * \param gainThreshold   The minimum information gain that must be obtained from a split to make it worthwhile.
-   * \return                The chosen split, if one was suitable, or NULL otherwise.
+   * \param reservoir             The reservoir of examples to split.
+   * \param candidateCount        The number of candidates to evaluate.
+   * \param gainThreshold         The minimum information gain that must be obtained from a split to make it worthwhile.
+   * \param inverseClassWeights   The inverses of the L1-normalised class frequencies observed in the training data.
+   * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const std::map<Label,float>& inverseClassWeights) const
   {
-    float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram());
+    float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
 #if 0
@@ -109,7 +110,7 @@ public:
       }
 
       // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
+      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples, inverseClassWeights);
       if(gain < FLT_MIN || gain < gainThreshold) splitCandidate.reset();
 
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
@@ -125,17 +126,20 @@ private:
   /**
    * \brief Calculates the information gain that results from splitting an example reservoir in a particular way.
    *
-   * \param reservoir       The reservoir.
-   * \param initialEntropy  The entropy of the example set before the split.
-   * \param leftExamples    The examples that end up in the left half of the split.
-   * \param rightExamples   The examples that end up in the right half of the split.
-   * \return                The information gain resulting from the split.
+   * \param reservoir           The reservoir.
+   * \param initialEntropy      The entropy of the example set before the split.
+   * \param leftExamples        The examples that end up in the left half of the split.
+   * \param rightExamples       The examples that end up in the right half of the split.
+   * \param inverseClassWeights The inverses of the L1-normalised class frequencies observed in the training data.
+   * \return                    The information gain resulting from the split.
    */
-  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
+  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const std::map<Label,float>& inverseClassWeights)
   {
     float exampleCount = static_cast<float>(reservoir.current_size());
-    float leftEntropy = ExampleUtil::calculate_entropy<Label>(leftExamples, reservoir.get_class_multipliers());
-    float rightEntropy = ExampleUtil::calculate_entropy<Label>(rightExamples, reservoir.get_class_multipliers());
+    std::map<Label,float> multipliers = combine_multipliers(reservoir.get_class_multipliers(), inverseClassWeights);
+
+    float leftEntropy = ExampleUtil::calculate_entropy(leftExamples, multipliers);
+    float rightEntropy = ExampleUtil::calculate_entropy(rightExamples, multipliers);
     float leftWeight = leftExamples.size() / exampleCount;
     float rightWeight = rightExamples.size() / exampleCount;
 
@@ -151,6 +155,35 @@ private:
 #endif
 
     return gain;
+  }
+
+  /**
+   * \brief Multiplies together two sets of multipliers that share some labels in common.
+   *
+   * Multipliers that only appear in one of the two input sets will not be included in the result,
+   * e.g. combine_multipliers({a => 0.1, b => 0.2}, {b => 0.5, c => 0.3}) = {b => 0.2 * 0.5 = 0.1}.
+   *
+   * \param multipliers1  The first set of multipliers.
+   * \param multipliers2  The second set of multipliers.
+   * \return              The combined multipliers.
+   */
+  static std::map<Label,float> combine_multipliers(const std::map<Label,float>& multipliers1, const std::map<Label,float>& multipliers2)
+  {
+    std::map<Label,float> result;
+
+    typename std::map<Label,float>::const_iterator it = multipliers1.begin(), iend = multipliers1.end(), jt = multipliers2.begin(), jend = multipliers2.end();
+    while(it != iend && jt != jend)
+    {
+      if(it->first == jt->first)
+      {
+        result.insert(std::make_pair(it->first, it->second * jt->second));
+        ++it, ++jt;
+      }
+      else if(it->first < jt->first) ++it;
+      else ++jt;
+    }
+
+    return result;
   }
 };
 
