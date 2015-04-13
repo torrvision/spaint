@@ -151,9 +151,9 @@ public:
         GET_SETTING(maxClassSize);
         GET_SETTING(maxTreeHeight);
         GET_SETTING(randomSeed);
-        GET_SETTING(usePMFReweighting);
         GET_SETTING(seenExamplesThreshold);
         GET_SETTING(splittabilityThreshold);
+        GET_SETTING(usePMFReweighting);
       #undef GET_SETTING
 
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
@@ -179,7 +179,7 @@ private:
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
 
-  /** The inverse of the class frequencies observed in the training data (L1-normalised). */
+  /** The inverses of the L1-normalised class frequencies observed in the training data. */
   std::map<Label,float> m_inverseClassWeights;
 
   /** The nodes in the tree. */
@@ -239,7 +239,11 @@ public:
       add_example(examples.at(indices[i]));
     }
 
-    update_weights();
+    // Update the inverse class weights (note that this must be done before updating the dirty nodes,
+    // since the splittability calculations for the dirty nodes depend on the new weights).
+    update_inverse_class_weights();
+
+    // Recalculate the splittabilities of nodes to which examples have been added.
     update_dirty_nodes();
   }
 
@@ -529,7 +533,7 @@ private:
     float splittability;
     if(m_nodes[nodeIndex]->m_depth + 1 < m_settings.maxTreeHeight && reservoir.seen_examples() >= m_settings.seenExamplesThreshold)
     {
-      splittability = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), m_inverseClassWeights);
+      splittability = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), m_inverseClassWeights);
     }
     else
     {
@@ -541,9 +545,9 @@ private:
   }
 
   /**
-   * \brief Update the inverse class frequency weights.
+   * \brief Updates the inverse class weights.
    */
-  void update_weights()
+  void update_inverse_class_weights()
   {
     if(!m_settings.usePMFReweighting) return;
 

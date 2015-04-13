@@ -72,7 +72,7 @@ public:
    * \param reservoir             The reservoir of examples to split.
    * \param candidateCount        The number of candidates to evaluate.
    * \param gainThreshold         The minimum information gain that must be obtained from a split to make it worthwhile.
-   * \param inverseClassWeights   The weights holding the inverse frequencies observed in the training data (L1-normalised). 
+   * \param inverseClassWeights   The inverses of the L1-normalised class frequencies observed in the training data.
    * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
   Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const std::map<Label,float>& inverseClassWeights) const
@@ -130,7 +130,7 @@ private:
    * \param initialEntropy      The entropy of the example set before the split.
    * \param leftExamples        The examples that end up in the left half of the split.
    * \param rightExamples       The examples that end up in the right half of the split.
-   * \param inverseClassWeights The weights holding the inverse frequencies observed in the training data (L1-normalised). 
+   * \param inverseClassWeights The inverses of the L1-normalised class frequencies observed in the training data.
    * \return                    The information gain resulting from the split.
    */
   static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const std::map<Label,float>& inverseClassWeights)
@@ -160,8 +160,8 @@ private:
   /**
    * \brief Multiplies together two sets of multipliers that share some labels in common.
    *
-   * Multipliers that only appear in one of the two input sets will not be included in the result.
-   * For example, combine_multipliers({a => 0.1, b => 0.2}, {b => 0.5, c => 0.3}) = {b => 0.2 * 0.5 = 0.1}.
+   * Multipliers that only appear in one of the two input sets will not be included in the result,
+   * e.g. combine_multipliers({a => 0.1, b => 0.2}, {b => 0.5, c => 0.3}) = {b => 0.2 * 0.5 = 0.1}.
    *
    * \param multipliers1  The first set of multipliers.
    * \param multipliers2  The second set of multipliers.
