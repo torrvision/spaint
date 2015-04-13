@@ -171,7 +171,7 @@ private:
   {
     std::map<Label,float> result;
 
-    std::map<Label,float>::const_iterator it = multipliers1.begin(), iend = multipliers1.end(), jt = multipliers2.begin(), jend = multipliers2.end();
+    typename std::map<Label,float>::const_iterator it = multipliers1.begin(), iend = multipliers1.end(), jt = multipliers2.begin(), jend = multipliers2.end();
     while(it != iend && jt != jend)
     {
       if(it->first == jt->first)
