@@ -179,6 +179,9 @@ public:
   /** A threshold splittability below which nodes should not be split (must be > 0). */
   float splittabilityThreshold;
 
+  /** Whether or not to enable PMF reweighting to better handle a class imbalance in the training data. */
+  bool usePMFReweighting;
+
   std::string decisionFunctionGeneratorType;
   unsigned int randomSeed;
 
@@ -235,6 +238,7 @@ private:
       GET_SETTING(randomSeed);
       GET_SETTING(seenExamplesThreshold);
       GET_SETTING(splittabilityThreshold);
+      GET_SETTING(usePMFReweighting);
     #undef GET_SETTING
 
     randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
@@ -363,8 +367,8 @@ public:
     if(m_settings.usePMFReweighting) m_inverseClassWeights = std::map<Label,float>();
   }
 
-  DecisionTree(const Settings<Label>& settings, const std::set<int> dirtyNodes, const std::vector<Node_Ptr> nodes, int rootIndex, const SplittabilityQueue& splittabilityQueue)
-  : m_dirtyNodes(dirtyNodes), m_nodes(nodes), m_rootIndex(rootIndex), m_settings(settings), m_splittabilityQueue(splittabilityQueue)
+  DecisionTree(const Settings<Label>& settings, const Histogram<Label>& classFrequencies, const std::set<int> dirtyNodes, const std::map<Label,float> inverseClassWeights, const std::vector<Node_Ptr> nodes, int rootIndex, const SplittabilityQueue& splittabilityQueue)
+  : m_classFrequencies(classFrequencies), m_dirtyNodes(dirtyNodes), m_inverseClassWeights(inverseClassWeights), m_nodes(nodes), m_rootIndex(rootIndex), m_settings(settings), m_splittabilityQueue(splittabilityQueue)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -743,7 +747,9 @@ inline void save_construct_data(Archive& ar, const rafl::DecisionTree<Dtype> *de
 {
   std::cout << "Saving DecisionTree\n";
 
+  ar << decisionTree->m_classFrequencies;
   ar << decisionTree->m_dirtyNodes;
+  ar << decisionTree->m_inverseClassWeights;
   ar << decisionTree->m_nodes;
   ar << decisionTree->m_rootIndex;
   const rafl::Settings<Dtype> *constSettings = &decisionTree->m_settings;
@@ -757,8 +763,14 @@ inline void load_construct_data(Archive& ar, rafl::DecisionTree<Dtype> *decision
   std::cout << "Loading DecisionTree\n";
   typedef rafl::DecisionTree<Dtype> DT;
 
+  rafl::Histogram<Dtype> classFrequencies;
+  ar >> classFrequencies;
+
   std::set<int> dirtyNodes;
   ar >> dirtyNodes;
+
+  std::map<Dtype,float> inverseClassWeights;
+  ar >> inverseClassWeights;
 
   std::vector<typename DT::Node_Ptr> nodes;
   ar >> nodes;
@@ -772,7 +784,7 @@ inline void load_construct_data(Archive& ar, rafl::DecisionTree<Dtype> *decision
   typename DT::SplittabilityQueue splittabilityQueue;
   ar >> splittabilityQueue;
 
-  ::new(decisionTree)DT(*settings, dirtyNodes, nodes, rootIndex, splittabilityQueue);
+  ::new(decisionTree)DT(*settings, classFrequencies, dirtyNodes, inverseClassWeights, nodes, rootIndex, splittabilityQueue);
 }
 }}
 
