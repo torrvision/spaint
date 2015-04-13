@@ -2,6 +2,8 @@
  * raflvis: main.cpp
  */
 
+#if 1
+
 #include <boost/assign/list_of.hpp>
 #include <boost/format.hpp>
 using boost::assign::list_of;
@@ -256,3 +258,4 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+#endif

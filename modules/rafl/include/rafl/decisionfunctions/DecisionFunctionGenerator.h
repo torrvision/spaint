@@ -69,14 +69,15 @@ public:
   /**
    * \brief Tries to pick an appropriate way in which to split the specified reservoir of examples.
    *
-   * \param reservoir       The reservoir of examples to split.
-   * \param candidateCount  The number of candidates to evaluate.
-   * \param gainThreshold   The minimum information gain that must be obtained from a split to make it worthwhile.
-   * \return                The chosen split, if one was suitable, or NULL otherwise.
+   * \param reservoir             The reservoir of examples to split.
+   * \param candidateCount        The number of candidates to evaluate.
+   * \param gainThreshold         The minimum information gain that must be obtained from a split to make it worthwhile.
+   * \param inverseClassWeights   The weights holding the inverse frequencies observed in the training data (L1-normalised). 
+   * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, const std::map<Label,float> weights, int candidateCount, float gainThreshold) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const std::map<Label,float>& inverseClassWeights) const
   {
-    float initialEntropy = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), weights);
+    float initialEntropy = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), inverseClassWeights);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
 
 #if 0
@@ -109,7 +110,7 @@ public:
       }
 
       // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(reservoir, weights, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples);
+      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples, inverseClassWeights);
       if(gain < FLT_MIN || gain < gainThreshold) splitCandidate.reset();
 
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
@@ -125,21 +126,24 @@ private:
   /**
    * \brief Calculates the information gain that results from splitting an example reservoir in a particular way.
    *
-   * \param reservoir       The reservoir.
-   * \param initialEntropy  The entropy of the example set before the split.
-   * \param leftExamples    The examples that end up in the left half of the split.
-   * \param rightExamples   The examples that end up in the right half of the split.
-   * \return                The information gain resulting from the split.
+   * \param reservoir           The reservoir.
+   * \param initialEntropy      The entropy of the example set before the split.
+   * \param leftExamples        The examples that end up in the left half of the split.
+   * \param rightExamples       The examples that end up in the right half of the split.
+   * \param inverseClassWeights The weights holding the inverse frequencies observed in the training data (L1-normalised). 
+   * \return                    The information gain resulting from the split.
    */
-  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, const std::map<Label,float> weights, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples)
+  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const std::map<Label,float>& inverseClassWeights)
   {
     std::map<Label,float> combinedMultipliers;
     float exampleCount = static_cast<float>(reservoir.current_size());
     const std::map<Label,float>& multipliers = reservoir.get_class_multipliers();
-    for(typename std::map<Label,float>::const_iterator it = weights.begin(), iend = weights.end(); it != iend; ++it)
+    for(typename std::map<Label,float>::const_iterator it = inverseClassWeights.begin(), iend = inverseClassWeights.end(); it != iend; ++it)
     {
       Label label = it->first;
       float weight = it->second;
+
+      //FIXME Implement without the need for a find.
       typename std::map<Label,float>::const_iterator jt = multipliers.find(label);
       if(jt != multipliers.end()){
         weight *= jt->second;

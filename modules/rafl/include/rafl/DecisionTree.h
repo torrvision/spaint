@@ -91,14 +91,14 @@ public:
     /** A random number generator. */
     tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
 
-    /** A flag to enable/disable re-weight the PMFs. */
-    bool reweight;
-
     /** The minimum number of examples that must have been added to an example reservoir before its containing node can be split. */
     size_t seenExamplesThreshold;
 
     /** A threshold splittability below which nodes should not be split (must be > 0). */
     float splittabilityThreshold;
+
+    /** Whether or not to enable PMF reweighting to better handle a class imbalance in the training data. */
+    bool usePMFReweighting;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
   public:
@@ -151,7 +151,7 @@ public:
         GET_SETTING(maxClassSize);
         GET_SETTING(maxTreeHeight);
         GET_SETTING(randomSeed);
-        GET_SETTING(reweight);
+        GET_SETTING(usePMFReweighting);
         GET_SETTING(seenExamplesThreshold);
         GET_SETTING(splittabilityThreshold);
       #undef GET_SETTING
@@ -168,17 +168,19 @@ public:
   //#################### PRIVATE TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-  typedef boost::shared_ptr<Histogram<Label> > Histogram_Ptr;
   typedef boost::shared_ptr<Node> Node_Ptr;
   typedef tvgutil::PriorityQueue<int,float,signed char,std::greater<float> > SplittabilityQueue;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The histogram holding the class frequencies observed in the training data. */
+  Histogram<Label> m_classFrequencies;
+
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
 
-  /** The histogram holding the class frequencies observed in the training data. */
-  Histogram_Ptr m_histogram;
+  /** The inverse of the class frequencies observed in the training data (L1-normalised). */
+  std::map<Label,float> m_inverseClassWeights;
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
@@ -192,9 +194,6 @@ private:
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
 
-  /** The weights holding the inverse frequencies observed in the training data. */
-  std::map<Label,float> m_weights;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -203,7 +202,7 @@ public:
    * \param settings  The settings needed to configure the decision tree.
    */
   explicit DecisionTree(const Settings& settings)
-  : m_histogram(new Histogram<Label>), m_settings(settings)
+  : m_settings(settings)
   {
     m_rootIndex = add_node(0);
   }
@@ -321,9 +320,6 @@ private:
    */
   void add_example(const Example_CPtr& example)
   {
-    // Add the example to the global histogram.
-    m_histogram->add(example->get_label());
-
     // Find the leaf to which to add the new example.
     int leafIndex = find_leaf(*example->get_descriptor());
 
@@ -332,6 +328,9 @@ private:
 
     // Mark the leaf as dirty to ensure that its splittability is properly recalculated once all of the examples have been added.
     m_dirtyNodes.insert(leafIndex);
+
+    // Update the class frequency histogram.
+    m_classFrequencies.add(example->get_label());
   }
 
   /**
@@ -426,7 +425,7 @@ private:
    */
   ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
   {
-    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), m_weights);
+    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), m_inverseClassWeights);
   }
 
   /**
@@ -480,7 +479,7 @@ private:
   bool split_node(int nodeIndex)
   {
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_weights, m_settings.candidateCount, m_settings.gainThreshold);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold, m_inverseClassWeights);
     if(!split) return false;
 
     // Set the decision function of the node to be split.
@@ -530,7 +529,7 @@ private:
     float splittability;
     if(m_nodes[nodeIndex]->m_depth + 1 < m_settings.maxTreeHeight && reservoir.seen_examples() >= m_settings.seenExamplesThreshold)
     {
-      splittability = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), m_weights);
+      splittability = ExampleUtil::calculate_entropy<Label>(*reservoir.get_histogram(), m_inverseClassWeights);
     }
     else
     {
@@ -546,18 +545,14 @@ private:
    */
   void update_weights()
   {
-    m_weights.clear();
+    if(!m_settings.usePMFReweighting) return;
 
-    if(m_settings.reweight)
+    float count = static_cast<float>(m_classFrequencies.get_count());
+
+    const std::map<Label,size_t>& bins = m_classFrequencies.get_bins();
+    for(typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end(); it != iend; ++it)
     {
-      size_t count = m_histogram->get_count();
-      const std::map<Label,size_t>& bins = m_histogram->get_bins();
-      typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end();
-      for(; it != iend; ++it)
-      {
-        m_weights.insert(std::make_pair(it->first, 1.0f / (static_cast<float>(it->second) / count)));
-        std::cout << "Label=" << it->first << " Count=" << it->second << std::endl;
-      }
+      m_inverseClassWeights[it->first] = count / it->second;
     }
   }
 };
