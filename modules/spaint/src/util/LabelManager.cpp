@@ -62,7 +62,7 @@ bool LabelManager::add_label(const std::string& name)
   if(has_label(name)) return false;
 
   // Make sure that we're not trying to exceed the maximum number of labels.
-  if(label_count() == max_label_count()) return false;
+  if(get_label_count() == get_max_label_count()) return false;
 
   // Add the new label.
   SpaintVoxel::LabelType label = static_cast<SpaintVoxel::LabelType>(m_labelAllocator.allocate());
@@ -87,9 +87,19 @@ const std::vector<Vector3u>& LabelManager::get_label_colours() const
   return colours;
 }
 
+size_t LabelManager::get_label_count() const
+{
+  return m_labelAllocator.used_count();
+}
+
 std::string LabelManager::get_label_name(SpaintVoxel::LabelType label) const
 {
   return MapUtil::lookup(m_labelProperties, label).first;
+}
+
+size_t LabelManager::get_max_label_count() const
+{
+  return m_maxLabelCount;
 }
 
 SpaintVoxel::LabelType LabelManager::get_next_label(SpaintVoxel::LabelType label) const
@@ -114,16 +124,6 @@ bool LabelManager::has_label(SpaintVoxel::LabelType label) const
 bool LabelManager::has_label(const std::string& name) const
 {
   return m_labelsByName.find(name) != m_labelsByName.end();
-}
-
-size_t LabelManager::label_count() const
-{
-  return m_labelAllocator.used_count();
-}
-
-size_t LabelManager::max_label_count() const
-{
-  return m_maxLabelCount;
 }
 
 }

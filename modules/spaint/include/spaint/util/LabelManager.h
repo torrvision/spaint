@@ -84,6 +84,13 @@ public:
   const std::vector<Vector3u>& get_label_colours() const;
 
   /**
+   * \brief Gets the number of labels that are currently allocated.
+   *
+   * \return  The number of labels that are currently allocated.
+   */
+  size_t get_label_count() const;
+
+  /**
    * \brief Gets the name of the specified label.
    *
    * \param label               The label whose name we want to get.
@@ -91,6 +98,13 @@ public:
    * \throws std::runtime_error If the manager does not contain the specified label.
    */
   std::string get_label_name(SpaintVoxel::LabelType label) const;
+
+  /**
+   * \brief Gets the maximum number of labels that the manager is allowed to allocate.
+   *
+   * \return  The maximum number of labels that the manager is allowed to allocate.
+   */
+  size_t get_max_label_count() const;
 
   /**
    * \brief Gets the label directly succeeding the specified label in the label order (if any).
@@ -123,20 +137,6 @@ public:
    * \return      true, if the manager contains a label with the specified name, or false otherwise.
    */
   bool has_label(const std::string& name) const;
-
-  /**
-   * \brief Gets the number of labels that are currently allocated.
-   *
-   * \return  The number of labels that are currently allocated.
-   */
-  size_t label_count() const;
-
-  /**
-   * \brief Gets the maximum number of labels that the manager is allowed to allocate.
-   *
-   * \return  The maximum number of labels that the manager is allowed to allocate.
-   */
-  size_t max_label_count() const;
 };
 
 }

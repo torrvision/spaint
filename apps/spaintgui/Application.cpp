@@ -6,6 +6,8 @@
 
 #include <stdexcept>
 
+#include <boost/lexical_cast.hpp>
+
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
@@ -28,9 +30,10 @@ Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
   // Set up the semantic labels.
   LabelManager& labelManager = m_spaintPipeline->get_model()->get_label_manager();
   labelManager.add_label("Background");
-  labelManager.add_label("1");
-  labelManager.add_label("2");
-  labelManager.add_label("3");
+  for(size_t i = 1, count = labelManager.get_max_label_count(); i < count; ++i)
+  {
+    labelManager.add_label(boost::lexical_cast<std::string>(i));
+  }
 
   // Set the initial semantic label to use for painting.
   m_spaintPipeline->get_interactor()->set_semantic_label(1);
