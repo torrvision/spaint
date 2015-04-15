@@ -58,6 +58,9 @@ LabelManager::LabelManager(size_t maxLabelCount)
 
 bool LabelManager::add_label(const std::string& name)
 {
+  // Make sure that a label with the specified name does not already exist.
+  if(has_label(name)) return false;
+
   // Make sure that we're not trying to exceed the maximum number of labels.
   if(label_count() == max_label_count()) return false;
 
@@ -67,16 +70,6 @@ bool LabelManager::add_label(const std::string& name)
   m_labelsByName.insert(std::make_pair(name, label));
 
   return true;
-}
-
-void LabelManager::delete_label(SpaintVoxel::LabelType label)
-{
-  std::map<SpaintVoxel::LabelType,std::pair<std::string,Vector3u> >::iterator it = m_labelProperties.find(label);
-  if(it == m_labelProperties.end()) throw std::runtime_error("Cannot delete unknown label '" + boost::lexical_cast<std::string>(label) + "'");
-
-  m_labelAllocator.deallocate(static_cast<int>(label));
-  m_labelsByName.erase(it->second.first);
-  m_labelProperties.erase(it);
 }
 
 SpaintVoxel::LabelType LabelManager::get_label(const std::string& name) const

@@ -50,20 +50,13 @@ public:
   /**
    * \brief Attempts to add a label with the specified name.
    *
-   * A label will only be added if we have not yet reached the maximum label count.
+   * A label will only be added if a label with the specified name does not
+   * already exist and we have not yet reached the maximum label count.
    *
    * \param name  The name of the label we want to add.
    * \return      true, if we successfully added the label, or false otherwise.
    */
   bool add_label(const std::string& name);
-
-  /**
-   * \brief Deletes the specified label.
-   *
-   * \param label               The label to delete.
-   * \throws std::runtime_error If the manager does not contain the specified label.
-   */
-  void delete_label(SpaintVoxel::LabelType label);
 
   /**
    * \brief Gets the label with the specified name.
