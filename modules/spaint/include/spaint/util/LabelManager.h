@@ -5,6 +5,7 @@
 #ifndef H_SPAINT_LABELMANAGER
 #define H_SPAINT_LABELMANAGER
 
+#include <map>
 #include <string>
 
 #include <tvgutil/IDAllocator.h>
@@ -23,6 +24,12 @@ private:
   /** The ID allocator used to allocate labels. */
   tvgutil::IDAllocator m_labelAllocator;
 
+  /** A map from label names to labels. */
+  std::map<std::string,SpaintVoxel::LabelType> m_labelsByName;
+
+  /** A map from labels to their properties (names and colours). */
+  std::map<SpaintVoxel::LabelType,std::pair<std::string,Vector3u> > m_labelProperties;
+
   /** The maximum number of labels that the manager is allowed to allocate. */
   size_t m_maxLabelCount;
 
@@ -38,19 +45,22 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Adds a label with the specified name.
+   * \brief Attempts to add a label with the specified name.
+   *
+   * A label will only be added if we have not yet reached the maximum label count.
    *
    * \param name  The name of the label we want to add.
+   * \return      true, if we successfully added the label, or false otherwise.
    */
-  void add_label(const std::string& name);
+  bool add_label(const std::string& name);
 
   /**
-   * \brief Deletes the label with the specified name.
+   * \brief Deletes the specified label.
    *
-   * \param name                The name of the label to delete.
-   * \throws std::runtime_error If the manager does not contain a label with the specified name.
+   * \param label               The label to delete.
+   * \throws std::runtime_error If the manager does not contain the specified label.
    */
-  void delete_label(const std::string& name);
+  void delete_label(SpaintVoxel::LabelType label);
 
   /**
    * \brief Gets the label with the specified name.
@@ -62,13 +72,13 @@ public:
   SpaintVoxel::LabelType get_label(const std::string& name) const;
 
   /**
-   * \brief Gets the colour of the label with the specified name.
+   * \brief Gets the colour of the specified label.
    *
-   * \param name                The name of the label whose colour we want to get.
-   * \return                    The colour of the label with the specified name.
-   * \throws std::runtime_error If the manager does not contain a label with the specified name.
+   * \param label               The label whose colour we want to get.
+   * \return                    The colour of the specified label.
+   * \throws std::runtime_error If the manager does not contain the specified label.
    */
-  void /* Colour */ get_label_colour(const std::string& name) const;
+  Vector3u get_label_colour(SpaintVoxel::LabelType label) const;
 
   /**
    * \brief Gets the name of the specified label.
