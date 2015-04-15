@@ -80,6 +80,14 @@ public:
   std::string get_label_name(SpaintVoxel::LabelType label) const;
 
   /**
+   * \brief Gets whether or not the manager contains the specified label.
+   *
+   * \param name  The label we want to check.
+   * \return      true, if the manager contains the specified label, or false otherwise.
+   */
+  bool has_label(SpaintVoxel::LabelType label) const;
+
+  /**
    * \brief Gets whether or not the manager contains a label with the specified name.
    *
    * \param name  The name of the label we want to check.
