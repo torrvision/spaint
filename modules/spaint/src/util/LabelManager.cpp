@@ -6,6 +6,9 @@
 
 #include <algorithm>
 
+#include <boost/assign/list_of.hpp>
+using boost::assign::list_of;
+
 #include <tvgutil/MapUtil.h>
 using namespace tvgutil;
 
@@ -16,34 +19,30 @@ namespace {
 /**
  * Kelly's colours of maximum contrast (see https://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf), excluding black.
  */
-const Vector3u colours[] = {
-  Vector3u(255, 255, 255),
-  Vector3u(255, 179, 0),
-  Vector3u(128, 62, 117),
-  Vector3u(255, 104, 0),
-  Vector3u(166, 189, 215),
-  Vector3u(193, 0, 32),
-  Vector3u(206, 162, 98),
-  Vector3u(129, 112, 102),
+const std::vector<Vector3u> colours = list_of
+  (Vector3u(255, 255, 255))
+  (Vector3u(255, 179, 0))
+  (Vector3u(128, 62, 117))
+  (Vector3u(255, 104, 0))
+  (Vector3u(166, 189, 215))
+  (Vector3u(193, 0, 32))
+  (Vector3u(206, 162, 98))
+  (Vector3u(129, 112, 102))
 
   // The remaining colours aren't good for people with defective colour vision:
-  Vector3u(0, 125, 52),
-  Vector3u(246, 118, 142),
-  Vector3u(0, 83, 138),
-  Vector3u(255, 122, 92),
-  Vector3u(83, 55, 122),
-  Vector3u(255, 142, 0),
-  Vector3u(179, 40, 81),
-  Vector3u(244, 200, 0),
-  Vector3u(127, 24, 13),
-  Vector3u(147, 170, 0),
-  Vector3u(89, 51, 21),
-  Vector3u(241, 58, 19),
-  Vector3u(35, 44, 22)
-};
-
-/** The number of available colours. */
-const size_t AVAILABLE_COLOUR_COUNT = sizeof(colours) / sizeof(Vector3u);
+  (Vector3u(0, 125, 52))
+  (Vector3u(246, 118, 142))
+  (Vector3u(0, 83, 138))
+  (Vector3u(255, 122, 92))
+  (Vector3u(83, 55, 122))
+  (Vector3u(255, 142, 0))
+  (Vector3u(179, 40, 81))
+  (Vector3u(244, 200, 0))
+  (Vector3u(127, 24, 13))
+  (Vector3u(147, 170, 0))
+  (Vector3u(89, 51, 21))
+  (Vector3u(241, 58, 19))
+  (Vector3u(35, 44, 22));
 
 }
 
@@ -52,7 +51,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 LabelManager::LabelManager(size_t maxLabelCount)
-: m_maxLabelCount(std::min<size_t>(maxLabelCount, AVAILABLE_COLOUR_COUNT))
+: m_maxLabelCount(std::min<size_t>(maxLabelCount, colours.size()))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -88,6 +87,11 @@ SpaintVoxel::LabelType LabelManager::get_label(const std::string& name) const
 Vector3u LabelManager::get_label_colour(SpaintVoxel::LabelType label) const
 {
   return MapUtil::lookup(m_labelProperties, label).second;
+}
+
+const std::vector<Vector3u>& LabelManager::get_label_colours() const
+{
+  return colours;
 }
 
 std::string LabelManager::get_label_name(SpaintVoxel::LabelType label) const

@@ -7,6 +7,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <tvgutil/IDAllocator.h>
 
@@ -81,6 +82,13 @@ public:
    * \throws std::runtime_error If the manager does not contain the specified label.
    */
   Vector3u get_label_colour(SpaintVoxel::LabelType label) const;
+
+  /**
+   * \brief Gets all of the available label colours.
+   *
+   * \return  The available label colours.
+   */
+  const std::vector<Vector3u>& get_label_colours() const;
 
   /**
    * \brief Gets the name of the specified label.

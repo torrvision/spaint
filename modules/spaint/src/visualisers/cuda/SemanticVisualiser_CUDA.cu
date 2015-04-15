@@ -27,15 +27,15 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
                                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
                                      const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const
 {
-  // Set up the label colours.
-  // FIXME: These should ultimately be passed in from elsewhere.
-  ORUtils::MemoryBlock<Vector3u> labelColours(4, true, true);
-  Vector3u *labelColoursData = labelColours.GetData(MEMORYDEVICE_CPU);
-  labelColoursData[0] = Vector3u(255, 255, 255);
-  labelColoursData[1] = Vector3u(255, 0, 0);
-  labelColoursData[2] = Vector3u(0, 255, 0);
-  labelColoursData[3] = Vector3u(0, 0, 255);
-  labelColours.UpdateDeviceFromHost();
+  // Copy the label colours into a memory block.
+  const std::vector<Vector3u>& labelColours = labelManager->get_label_colours();
+  ORUtils::MemoryBlock<Vector3u> labelColoursMB(static_cast<int>(labelColours.size()), true, true);
+  Vector3u *labelColoursData = labelColoursMB.GetData(MEMORYDEVICE_CPU);
+  for(size_t i = 0, size = labelColours.size(); i < size; ++i)
+  {
+    labelColoursData[i] = labelColours[i];
+  }
+  labelColoursMB.UpdateDeviceFromHost();
 
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;
@@ -54,7 +54,7 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     imgSize,
-    labelColours.GetData(MEMORYDEVICE_CUDA),
+    labelColoursMB.GetData(MEMORYDEVICE_CUDA),
     viewerPos,
     lightPos,
     usePhong

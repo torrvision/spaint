@@ -14,16 +14,6 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
                                     const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const
 {
-  // Set up the label colours.
-  // FIXME: These should ultimately be passed in from elsewhere.
-  Vector3u labelColours[] =
-  {
-    Vector3u(255, 255, 255),
-    Vector3u(255, 0, 0),
-    Vector3u(0, 255, 0),
-    Vector3u(0, 0, 255)
-  };
-
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;
   Vector3f lightPos = Vector3f(0.0f, -10.0f, -10.0f) / voxelSize;
@@ -35,6 +25,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
   const Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CPU);
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
+  const Vector3u *labelColours = &labelManager->get_label_colours()[0];
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
