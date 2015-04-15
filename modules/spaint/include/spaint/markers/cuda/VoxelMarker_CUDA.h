@@ -18,7 +18,14 @@ class VoxelMarker_CUDA : public VoxelMarker
 public:
   /** Override */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
-                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
+                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                           ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const;
+
+  /** Override */
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                           const ORUtils::MemoryBlock<unsigned char>& voxelLabelsMB,
+                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                           ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const;
 };
 
 }
