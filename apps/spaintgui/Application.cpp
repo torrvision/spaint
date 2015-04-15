@@ -228,7 +228,7 @@ void Application::process_labelling_input()
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
   const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
-  unsigned char semanticLabel = interactor->get_semantic_label();
+  SpaintVoxel::LabelType semanticLabel = interactor->get_semantic_label();
 
   if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
   {

@@ -20,7 +20,7 @@ namespace spaint {
  * \param voxelIndex  The scene's voxel index.
  */
 _CPU_AND_GPU_CODE_
-inline void mark_voxel(const Vector3s& loc, unsigned char label, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
+inline void mark_voxel(const Vector3s& loc, SpaintVoxel::LabelType label, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
   bool isFound;
   int voxelAddress = findVoxel(voxelIndex, loc.toInt(), isFound);

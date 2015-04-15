@@ -17,7 +17,7 @@ class VoxelMarker_CUDA : public VoxelMarker
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 };
 

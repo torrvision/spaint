@@ -41,7 +41,7 @@ private:
   Selector_Ptr m_selector;
 
   /** The semantic label to use for manually labelling the scene. */
-  unsigned char m_semanticLabel;
+  SpaintVoxel::LabelType m_semanticLabel;
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   VoxelMarker_CPtr m_voxelMarker;
@@ -83,7 +83,7 @@ public:
    *
    * \return  The semantic label that is being used for manually labelling the scene.
    */
-  unsigned char get_semantic_label() const;
+  SpaintVoxel::LabelType get_semantic_label() const;
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.
@@ -91,7 +91,7 @@ public:
    * \param selection The selection of voxels.
    * \param label     The semantic label with which to mark the voxels.
    */
-  void mark_voxels(const Selection_CPtr& selection, unsigned char label);
+  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::LabelType label);
 
   /**
    * \brief Gets whether or not the current selector is active.
@@ -105,7 +105,7 @@ public:
    *
    * \param semanticLabel The semantic label to use for manually labelling the scene.
    */
-  void set_semantic_label(unsigned char semanticLabel);
+  void set_semantic_label(SpaintVoxel::LabelType semanticLabel);
 
   /**
    * \brief Allows the user to change selector or update the current selector.
