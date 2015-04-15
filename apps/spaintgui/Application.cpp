@@ -81,17 +81,17 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
-  // If the K key is pressed, clear the semantic labels of all the voxels in the scene and reset the command manager.
-  if(keysym.sym == SDLK_k)
-  {
-    m_spaintPipeline->get_interactor()->clear_labels();
-    m_commandManager.reset();
-  }
-
   // If the P key is pressed, toggle whether or not Phong lighting is enabled.
   if(keysym.sym == SDLK_p)
   {
     m_renderer->set_phong_enabled(!m_renderer->get_phong_enabled());
+  }
+
+  // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene and reset the command manager.
+  if(keysym.sym == SDLK_BACKSPACE)
+  {
+    m_spaintPipeline->get_interactor()->clear_labels();
+    m_commandManager.reset();
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
@@ -105,7 +105,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Q = Move Up\n"
               << "E = Move Down\n"
               << "F = Toggle Fusion\n"
-              << "K = Clear Semantic Labels\n"
               << "P = Toggle Phong Lighting\n"
               << "Up = Look Down\n"
               << "Down = Look Up\n"
@@ -122,7 +121,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "[ = Decrease Picking Selection Radius\n"
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
-              << "RShift + ] = To Next Semantic Label\n";
+              << "RShift + ] = To Next Semantic Label\n"
+              << "Backspace = Clear Semantic Labels\n";
   }
 }
 
