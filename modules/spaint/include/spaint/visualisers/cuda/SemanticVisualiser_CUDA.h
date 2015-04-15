@@ -19,7 +19,7 @@ public:
   /** Override */
   virtual void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                       const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                      bool usePhong, ITMUChar4Image *outputImage) const;
+                      const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const;
 };
 
 }

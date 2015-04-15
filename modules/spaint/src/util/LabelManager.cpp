@@ -14,10 +14,10 @@ namespace {
 //#################### LOCAL CONSTANTS ####################
 
 /**
- * Kelly's colours of maximum contrast (see https://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf),
- * excluding white and black.
+ * Kelly's colours of maximum contrast (see https://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf), excluding black.
  */
 const Vector3u colours[] = {
+  Vector3u(255, 255, 255),
   Vector3u(255, 179, 0),
   Vector3u(128, 62, 117),
   Vector3u(255, 104, 0),

@@ -25,7 +25,7 @@ __global__ void ck_render_semantic(Vector4u *outRendering, const Vector4f *ptsRa
 
 void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                     bool usePhong, ITMUChar4Image *outputImage) const
+                                     const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const
 {
   // Set up the label colours.
   // FIXME: These should ultimately be passed in from elsewhere.

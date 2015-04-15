@@ -71,7 +71,7 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     case RT_SEMANTICPHONG:
     {
       m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), raycastType == RT_SEMANTICPHONG, renderState->raycastImage);
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), &m_model->get_label_manager(), raycastType == RT_SEMANTICPHONG, renderState->raycastImage);
       break;
     }
     default:
