@@ -111,7 +111,7 @@ public:
 
       // Calculate the information gain we would obtain from this split.
       float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples, inverseClassWeights);
-      if(gain < FLT_MIN || gain < gainThreshold) splitCandidate.reset();
+      if(gain < gainThreshold || splitCandidate->m_leftExamples.empty() || splitCandidate->m_rightExamples.empty()) splitCandidate.reset();
 
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
       gainToCandidateMap.insert(std::make_pair(gain, splitCandidate));
