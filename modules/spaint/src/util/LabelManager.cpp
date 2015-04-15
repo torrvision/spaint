@@ -4,15 +4,55 @@
 
 #include "util/LabelManager.h"
 
+#include <algorithm>
+
 #include <tvgutil/MapUtil.h>
 using namespace tvgutil;
+
+namespace {
+
+//#################### LOCAL CONSTANTS ####################
+
+/**
+ * Kelly's colours of maximum contrast (see https://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf),
+ * excluding white and black.
+ */
+const Vector3u colours[] = {
+  Vector3u(255, 179, 0),
+  Vector3u(128, 62, 117),
+  Vector3u(255, 104, 0),
+  Vector3u(166, 189, 215),
+  Vector3u(193, 0, 32),
+  Vector3u(206, 162, 98),
+  Vector3u(129, 112, 102),
+
+  // The remaining colours aren't good for people with defective colour vision:
+  Vector3u(0, 125, 52),
+  Vector3u(246, 118, 142),
+  Vector3u(0, 83, 138),
+  Vector3u(255, 122, 92),
+  Vector3u(83, 55, 122),
+  Vector3u(255, 142, 0),
+  Vector3u(179, 40, 81),
+  Vector3u(244, 200, 0),
+  Vector3u(127, 24, 13),
+  Vector3u(147, 170, 0),
+  Vector3u(89, 51, 21),
+  Vector3u(241, 58, 19),
+  Vector3u(35, 44, 22)
+};
+
+/** The number of available colours. */
+const size_t AVAILABLE_COLOUR_COUNT = sizeof(colours) / sizeof(Vector3u);
+
+}
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 LabelManager::LabelManager(size_t maxLabelCount)
-: m_maxLabelCount(maxLabelCount)
+: m_maxLabelCount(std::min<size_t>(maxLabelCount, AVAILABLE_COLOUR_COUNT))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -24,9 +64,10 @@ bool LabelManager::add_label(const std::string& name)
 
   // Add the new label.
   SpaintVoxel::LabelType label = static_cast<SpaintVoxel::LabelType>(m_labelAllocator.allocate());
-  Vector3u colour; // TODO
-  m_labelProperties.insert(std::make_pair(label, std::make_pair(name, colour)));
+  m_labelProperties.insert(std::make_pair(label, std::make_pair(name, colours[label])));
   m_labelsByName.insert(std::make_pair(name, label));
+
+  return true;
 }
 
 void LabelManager::delete_label(SpaintVoxel::LabelType label)

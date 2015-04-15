@@ -38,6 +38,8 @@ public:
   /**
    * \brief Constructs a label manager.
    *
+   * Note: The maximum number of labels that can be specified is limited by the number of available colours (currently 20).
+   *
    * \param maxLabelCount The maximum number of labels that the manager is allowed to allocate.
    */
   explicit LabelManager(size_t maxLabelCount);
