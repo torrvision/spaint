@@ -21,7 +21,7 @@ class SpaintInteractor
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<SelectionTransformer> SelectionTransformer_Ptr;
