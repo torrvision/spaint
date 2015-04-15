@@ -97,7 +97,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} rigging spaint)
+TARGET_LINK_LIBRARIES(${targetname} rigging spaint tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)

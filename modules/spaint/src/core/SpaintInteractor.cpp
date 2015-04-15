@@ -24,7 +24,7 @@ namespace spaint {
 SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 : m_model(model),
   m_selector(new NullSelector(model->get_settings())),
-  m_semanticLabel(1)
+  m_semanticLabel(0)
 {
   // Set up the selection transformer.
   const int initialSelectionRadius = 2;

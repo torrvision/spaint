@@ -92,6 +92,22 @@ public:
   std::string get_label_name(SpaintVoxel::LabelType label) const;
 
   /**
+   * \brief Gets the label directly succeeding the specified label in the label order (if any).
+   *
+   * \param label The label whose successor we want to get.
+   * \return      The label directly succeeding the specified label in the label order (if any), or the specified label if it's the last label.
+   */
+  SpaintVoxel::LabelType get_next_label(SpaintVoxel::LabelType label) const;
+
+  /**
+   * \brief Gets the label directly preceding the specified label in the label order (if any).
+   *
+   * \param label The label whose predecessor we want to get.
+   * \return      The label directly preceding the specified label in the label order (if any), or the specified label if it's the first label.
+   */
+  SpaintVoxel::LabelType get_previous_label(SpaintVoxel::LabelType label) const;
+
+  /**
    * \brief Gets whether or not the manager contains the specified label.
    *
    * \param name  The label we want to check.

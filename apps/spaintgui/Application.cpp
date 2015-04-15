@@ -24,6 +24,16 @@ Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 {
   const Vector2i& imgSize = spaintPipeline->get_model()->get_depth_image_size();
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
+
+  // Set up the semantic labels.
+  LabelManager& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+  labelManager.add_label("Background");
+  labelManager.add_label("1");
+  labelManager.add_label("2");
+  labelManager.add_label("3");
+
+  // Set the initial semantic label to use for painting.
+  m_spaintPipeline->get_interactor()->set_semantic_label(1);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -228,18 +238,17 @@ void Application::process_labelling_input()
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
   const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
+  const LabelManager& labelManager = m_spaintPipeline->get_model()->get_label_manager();
   SpaintVoxel::LabelType semanticLabel = interactor->get_semantic_label();
 
   if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
   {
-    // FIXME: The maximum semantic label shouldn't be hard-coded like this.
-    if(canChangeLabel && semanticLabel < 3) ++semanticLabel;
+    if(canChangeLabel) semanticLabel = labelManager.get_next_label(semanticLabel);
     canChangeLabel = false;
   }
   else if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_LEFTBRACKET))
   {
-    // FIXME: The minimum semantic label shouldn't be hard-coded like this.
-    if(canChangeLabel && semanticLabel > 0) --semanticLabel;
+    if(canChangeLabel) semanticLabel = labelManager.get_previous_label(semanticLabel);
     canChangeLabel = false;
   }
   else canChangeLabel = true;

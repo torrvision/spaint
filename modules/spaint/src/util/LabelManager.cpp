@@ -95,6 +95,20 @@ std::string LabelManager::get_label_name(SpaintVoxel::LabelType label) const
   return MapUtil::lookup(m_labelProperties, label).first;
 }
 
+SpaintVoxel::LabelType LabelManager::get_next_label(SpaintVoxel::LabelType label) const
+{
+  const std::set<int>& used = m_labelAllocator.used();
+  std::set<int>::const_iterator it = used.upper_bound(static_cast<int>(label));
+  return it != used.end() ? static_cast<SpaintVoxel::LabelType>(*it) : label;
+}
+
+SpaintVoxel::LabelType LabelManager::get_previous_label(SpaintVoxel::LabelType label) const
+{
+  const std::set<int>& used = m_labelAllocator.used();
+  std::set<int>::const_iterator it = used.find(static_cast<int>(label));
+  return it != used.begin() ? static_cast<SpaintVoxel::LabelType>(*--it) : label;
+}
+
 bool LabelManager::has_label(SpaintVoxel::LabelType label) const
 {
   return m_labelProperties.find(label) != m_labelProperties.end();
