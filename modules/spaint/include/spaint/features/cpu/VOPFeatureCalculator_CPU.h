@@ -9,7 +9,7 @@
 
 namespace spaint {
 /**
- * \brief An instance of a class deriving from this one can be used to calculate VOP feature descriptors for voxels sampled from a scene on the CPU.
+ * \brief An instance of a class deriving from this one can be used to calculate VOP feature descriptors for voxels sampled from a scene using the CPU.
  */
 class VOPFeatureCalculator_CPU : public VOPFeatureCalculator
 {
