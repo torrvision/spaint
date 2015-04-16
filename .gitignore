@@ -1,4 +1,4 @@
-build*
+build*/
 docs/
 install/
 libraries/boost_1_56_0/
