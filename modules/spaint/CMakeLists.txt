@@ -46,6 +46,38 @@ include/spaint/core/SpaintRaycaster.h
 )
 
 ##
+SET(features_cpu_sources
+src/features/cpu/VOPFeatureCalculator_CPU.cpp
+)
+
+SET(features_cpu_headers
+include/spaint/features/cpu/VOPFeatureCalculator_CPU.h
+)
+
+##
+SET(features_cuda_sources
+src/features/cuda/VOPFeatureCalculator_CUDA.cu
+)
+
+SET(features_cuda_headers
+include/spaint/features/cuda/VOPFeatureCalculator_CUDA.h
+)
+
+##
+SET(features_interface_sources
+src/features/interface/VOPFeatureCalculator.cpp
+)
+
+SET(features_interface_headers
+include/spaint/features/interface/VOPFeatureCalculator.h
+)
+
+##
+SET(features_shared_headers
+include/spaint/features/shared/VOPFeatureCalculator_Shared.h
+)
+
+##
 SET(input_sources
 src/input/InputState.cpp
 )
@@ -355,6 +387,8 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 
 SET(sources
 ${core_sources}
+${features_cpu_sources}
+${features_interface_sources}
 ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
@@ -374,6 +408,9 @@ ${visualisers_interface_sources}
 
 SET(headers
 ${core_headers}
+${features_cpu_headers}
+${features_interface_headers}
+${features_shared_headers}
 ${input_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
@@ -414,6 +451,7 @@ ENDIF()
 
 IF(WITH_CUDA)
   SET(sources ${sources}
+    ${features_cuda_sources}
     ${markers_cuda_sources}
     ${picking_cuda_sources}
     ${sampling_cuda_sources}
@@ -422,6 +460,7 @@ IF(WITH_CUDA)
   )
 
   SET(headers ${headers}
+    ${features_cuda_headers}
     ${markers_cuda_headers}
     ${picking_cuda_headers}
     ${sampling_cuda_headers}
@@ -445,6 +484,10 @@ ENDIF()
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
+SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
+SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
+SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
 SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
