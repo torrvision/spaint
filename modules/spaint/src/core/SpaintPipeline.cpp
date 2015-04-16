@@ -13,7 +13,12 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#include "features/cpu/VOPFeatureCalculator_CPU.h"
 #include "sampling/VoxelSamplerFactory.h"
+
+#ifdef WITH_CUDA
+#include "features/cuda/VOPFeatureCalculator_CUDA.h"
+#endif
 
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
@@ -268,6 +273,14 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
   m_interactor->mark_voxels(m_sampledVoxelsMB, 0);
+
+  // TEMPORARY
+  const int maxVoxelsPerLabel = 128;
+  VOPFeatureCalculator_CUDA featureCalculator(maxLabelCount, maxVoxelsPerLabel);
+  //VOPFeatureCalculator_CPU featureCalculator(maxLabelCount, maxVoxelsPerLabel);
+  const int dummy = 12345; // TEMPORARY
+  ORUtils::MemoryBlock<float> featuresMB(dummy, true, true);
+  featureCalculator.calculate_features(*m_sampledVoxelsMB, *m_sampledVoxelCountsMB, 13, 10.0f, m_model->get_scene().get(), featuresMB);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)

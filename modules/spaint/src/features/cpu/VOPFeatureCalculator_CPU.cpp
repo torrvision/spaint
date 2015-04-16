@@ -10,6 +10,12 @@
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(int maxLabelCount, int maxVoxelsPerLabel)
+: VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel)
+{}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,

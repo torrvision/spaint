@@ -13,6 +13,16 @@ namespace spaint {
  */
 class VOPFeatureCalculator_CPU : public VOPFeatureCalculator
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a CPU-based VOP feature calculator.
+   *
+   * \param maxLabelCount     The maximum number of labels that can be allocated by the label manager.
+   * \param maxVoxelsPerLabel The maximum number of voxels that will be sampled for each label.
+   */
+  VOPFeatureCalculator_CPU(int maxLabelCount, int maxVoxelsPerLabel);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */

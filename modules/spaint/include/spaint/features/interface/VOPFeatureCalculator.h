@@ -31,7 +31,7 @@ protected:
   mutable ORUtils::MemoryBlock<Vector3f> m_surfaceNormalsMB;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief Constructs a VOP feature calculator.
    *

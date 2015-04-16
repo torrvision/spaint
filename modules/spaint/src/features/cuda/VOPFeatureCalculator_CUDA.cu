@@ -8,6 +8,8 @@
 
 #include "features/shared/VOPFeatureCalculator_Shared.h"
 
+#define DEBUGGING 1
+
 namespace spaint {
 
 //#################### CUDA KERNELS ####################
@@ -23,6 +25,12 @@ __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, con
     write_surface_normal(voxelLocationIndex, voxelLocations, voxelCountsForLabels, voxelData, indexData, maxVoxelsPerLabel, surfaceNormals);
   }
 }
+
+//#################### CONSTRUCTORS ####################
+
+VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(int maxLabelCount, int maxVoxelsPerLabel)
+: VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel)
+{}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
@@ -43,6 +51,10 @@ void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryB
     m_maxVoxelsPerLabel,
     m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA)
   );
+
+#if DEBUGGING
+  m_surfaceNormalsMB.UpdateHostFromDevice();
+#endif
 }
 
 }
