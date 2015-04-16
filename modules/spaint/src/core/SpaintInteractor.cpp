@@ -50,6 +50,12 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void SpaintInteractor::clear_labels()
+{
+  ITMLocalVBA<SpaintVoxel>& localVBA = m_model->get_scene()->localVBA;
+  m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize);
+}
+
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
 {
   Selection_CPtr selection = m_selector->get_selection();

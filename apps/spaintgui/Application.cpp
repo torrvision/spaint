@@ -87,6 +87,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_phong_enabled(!m_renderer->get_phong_enabled());
   }
 
+  // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene and reset the command manager.
+  if(keysym.sym == SDLK_BACKSPACE)
+  {
+    m_spaintPipeline->get_interactor()->clear_labels();
+    m_commandManager.reset();
+  }
+
   // If the H key is pressed, print out a list of keyboard controls.
   if(keysym.sym == SDLK_h)
   {
@@ -114,7 +121,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "[ = Decrease Picking Selection Radius\n"
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
-              << "RShift + ] = To Next Semantic Label\n";
+              << "RShift + ] = To Next Semantic Label\n"
+              << "Backspace = Clear Semantic Labels\n";
   }
 }
 

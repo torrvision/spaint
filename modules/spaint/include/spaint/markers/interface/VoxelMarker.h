@@ -26,6 +26,14 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Clears the labels of the specified voxels.
+   *
+   * \param voxels      The voxels whose labels are to be cleared.
+   * \param voxelCount  The number of voxels.
+   */
+  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount) const = 0;
+
+  /**
    * \brief Marks a set of voxels in the scene with the specified semantic label.
    *
    * \param voxelLocationsMB  A memory block containing the locations of the voxels in the scene.

@@ -10,6 +10,12 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
+__global__ void ck_clear_labels(SpaintVoxel *voxels, int voxelCount)
+{
+  int tid = blockDim.x * blockIdx.x + threadIdx.x;
+  if(tid < voxelCount) voxels[tid].label = 0;
+}
+
 __global__ void ck_mark_voxels(const Vector3s *voxelLocations, unsigned char label, int voxelCount, unsigned char *oldVoxelLabels,
                                SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
@@ -25,6 +31,14 @@ __global__ void ck_mark_voxels(const Vector3s *voxelLocations, const unsigned ch
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void VoxelMarker_CUDA::clear_labels(SpaintVoxel *voxels, int voxelCount) const
+{
+  int threadsPerBlock = 256;
+  int numBlocks = (voxelCount + threadsPerBlock - 1) / threadsPerBlock;
+
+  ck_clear_labels<<<numBlocks,threadsPerBlock>>>(voxels, voxelCount);
+}
 
 void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
