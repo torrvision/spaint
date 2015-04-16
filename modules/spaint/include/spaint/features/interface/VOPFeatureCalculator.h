@@ -30,6 +30,12 @@ protected:
   /** The surface normals at the voxel locations. */
   mutable ORUtils::MemoryBlock<Vector3f> m_surfaceNormalsMB;
 
+  /** The x axes of the coordinate systems in the tangent planes to the surfaces at the voxel locations. */
+  mutable ORUtils::MemoryBlock<Vector3f> m_xAxesMB;
+
+  /** The y axes of the coordinate systems in the tangent planes to the surfaces at the voxel locations. */
+  mutable ORUtils::MemoryBlock<Vector3f> m_yAxesMB;
+
   //#################### CONSTRUCTORS ####################
 protected:
   /**
@@ -59,6 +65,13 @@ private:
    */
   virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
                                          const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const = 0;
+
+  /**
+   * \brief Generates corodinate systems in the tangent planes to the surfaces at the voxel locations.
+   *
+   * \param voxelCountsForLabelsMB  A memory block containing the numbers of voxels for each label.
+   */
+  virtual void generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -26,6 +26,11 @@ __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, con
   }
 }
 
+__global__ void ck_generate_coordinate_systems()
+{
+  // TODO
+}
+
 //#################### CONSTRUCTORS ####################
 
 VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(int maxLabelCount, int maxVoxelsPerLabel)
@@ -55,6 +60,18 @@ void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryB
 #if DEBUGGING
   m_surfaceNormalsMB.UpdateHostFromDevice();
 #endif
+}
+
+void VOPFeatureCalculator_CUDA::generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+{
+  const int voxelLocationCount = m_surfaceNormalsMB.dataSize;
+
+  int threadsPerBlock = 256;
+  int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
+
+  ck_generate_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
+    // TODO
+  );
 }
 
 }

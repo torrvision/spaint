@@ -35,4 +35,29 @@ void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBl
   }
 }
 
+void VOPFeatureCalculator_CPU::generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+{
+  const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
+  const int voxelLocationCount = m_surfaceNormalsMB.dataSize;
+  Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
+  Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
+  {
+    unsigned int label = voxelLocationIndex / m_maxVoxelsPerLabel;
+    unsigned int offset = voxelLocationIndex % m_maxVoxelsPerLabel;
+    if(offset < voxelCountsForLabels[label])
+    {
+      Vector3f n = surfaceNormals[voxelLocationIndex];
+      Vector3f xAxis = generate_arbitrary_coplanar_unit_vector(n);
+      xAxes[voxelLocationIndex] = xAxis;
+      yAxes[voxelLocationIndex] = cross(xAxis, n);
+    }
+  }
+}
+
 }

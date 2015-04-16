@@ -28,6 +28,9 @@ private:
   /** Override */
   virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
                                          const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const;
+
+  /** Override */
+  virtual void generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 };
 
 }

@@ -11,7 +11,9 @@ namespace spaint {
 VOPFeatureCalculator::VOPFeatureCalculator(int maxLabelCount, int maxVoxelsPerLabel)
 : m_maxLabelCount(maxLabelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
-  m_surfaceNormalsMB(maxLabelCount * maxVoxelsPerLabel, true, true)
+  m_surfaceNormalsMB(maxLabelCount * maxVoxelsPerLabel, true, true),
+  m_xAxesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
+  m_yAxesMB(maxLabelCount * maxVoxelsPerLabel, true, true)
 {}
 
 //#################### DESTRUCTOR ####################
