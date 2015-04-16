@@ -141,7 +141,7 @@ void SpaintPipeline::process_frame()
 
     VoxelMarker_CUDA marker;
     //VoxelMarker_CPU marker;
-    marker.mark_voxels(voxelLocationsMB, 2, scene.get());
+    marker.mark_voxels(voxelLocationsMB, 2, scene.get(), NULL);
   }
 }
 
