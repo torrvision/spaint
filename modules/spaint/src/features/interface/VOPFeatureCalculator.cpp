@@ -34,6 +34,8 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   calculate_surface_normals(voxelLocationsMB, voxelCountsForLabelsMB, voxelData, indexData);
 
   // Construct a coordinate system in the tangent plane to the surface at each voxel location.
+  generate_coordinate_systems(voxelCountsForLabelsMB);
+
   // TODO
 }
 

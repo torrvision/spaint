@@ -26,9 +26,15 @@ __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, con
   }
 }
 
-__global__ void ck_generate_coordinate_systems()
+__global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, const unsigned int *voxelCountsForLabels,
+                                               const int voxelLocationCount, const int maxVoxelsPerLabel,
+                                               Vector3f *xAxes, Vector3f *yAxes)
 {
-  // TODO
+  int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
+  if(voxelLocationIndex < voxelLocationCount)
+  {
+    generate_coordinate_system(voxelLocationIndex, surfaceNormals, voxelCountsForLabels, maxVoxelsPerLabel, xAxes, yAxes);
+  }
 }
 
 //#################### CONSTRUCTORS ####################
@@ -70,8 +76,18 @@ void VOPFeatureCalculator_CUDA::generate_coordinate_systems(const ORUtils::Memor
   int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_generate_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
-    // TODO
+    m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA),
+    voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CUDA),
+    voxelLocationCount,
+    m_maxVoxelsPerLabel,
+    m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
+    m_yAxesMB.GetData(MEMORYDEVICE_CUDA)
   );
+
+#if DEBUGGING
+  m_xAxesMB.UpdateHostFromDevice();
+  m_yAxesMB.UpdateHostFromDevice();
+#endif
 }
 
 }

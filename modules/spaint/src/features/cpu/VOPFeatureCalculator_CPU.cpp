@@ -48,15 +48,7 @@ void VOPFeatureCalculator_CPU::generate_coordinate_systems(const ORUtils::Memory
 #endif
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {
-    unsigned int label = voxelLocationIndex / m_maxVoxelsPerLabel;
-    unsigned int offset = voxelLocationIndex % m_maxVoxelsPerLabel;
-    if(offset < voxelCountsForLabels[label])
-    {
-      Vector3f n = surfaceNormals[voxelLocationIndex];
-      Vector3f xAxis = generate_arbitrary_coplanar_unit_vector(n);
-      xAxes[voxelLocationIndex] = xAxis;
-      yAxes[voxelLocationIndex] = cross(xAxis, n);
-    }
+    generate_coordinate_system(voxelLocationIndex, surfaceNormals, voxelCountsForLabels, m_maxVoxelsPerLabel, xAxes, yAxes);
   }
 }
 

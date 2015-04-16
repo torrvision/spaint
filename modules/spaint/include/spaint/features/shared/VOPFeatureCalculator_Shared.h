@@ -46,6 +46,24 @@ inline Vector3f generate_arbitrary_coplanar_unit_vector(const Vector3f& n)
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
+inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *surfaceNormals, const unsigned int *voxelCountsForLabels,
+                                       const int maxVoxelsPerLabel, Vector3f *xAxes, Vector3f *yAxes)
+{
+  unsigned int label = voxelLocationIndex / maxVoxelsPerLabel;
+  unsigned int offset = voxelLocationIndex % maxVoxelsPerLabel;
+  if(offset < voxelCountsForLabels[label])
+  {
+    Vector3f n = surfaceNormals[voxelLocationIndex];
+    Vector3f xAxis = generate_arbitrary_coplanar_unit_vector(n);
+    xAxes[voxelLocationIndex] = xAxis;
+    yAxes[voxelLocationIndex] = cross(xAxis, n);
+  }
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
 inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const unsigned int *voxelCountsForLabels,
                                  const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, const int maxVoxelsPerLabel,
                                  Vector3f *surfaceNormals)
