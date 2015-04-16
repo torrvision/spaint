@@ -21,12 +21,26 @@ namespace spaint {
  */
 class SemanticVisualiser
 {
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** A memory block in which to store the colours to use for the semantic labels. */
+  mutable ORUtils::MemoryBlock<Vector3u> m_labelColoursMB;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a semantic visualiser.
+   *
+   * \param labelColours  The colours to use for the semantic labels.
+   */
+  explicit SemanticVisualiser(const std::vector<Vector3u>& labelColours);
+
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the semantic visualiser.
    */
-  virtual ~SemanticVisualiser() {}
+  virtual ~SemanticVisualiser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -37,13 +51,12 @@ public:
    * \param pose          The camera pose.
    * \param intrinsics    The intrinsic parameters of the camera.
    * \param renderState   The render state corresponding to the specified camera pose.
-   * \param labelManager  The label manager.
    * \param usePhong      Whether or not to use Phong lighting.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
   virtual void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                       const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                      const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const = 0;
+                      bool usePhong, ITMUChar4Image *outputImage) const = 0;
 };
 
 }

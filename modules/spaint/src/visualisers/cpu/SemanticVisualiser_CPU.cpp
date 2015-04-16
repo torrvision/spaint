@@ -8,11 +8,17 @@
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+SemanticVisualiser_CPU::SemanticVisualiser_CPU(const std::vector<Vector3u>& labelColours)
+: SemanticVisualiser(labelColours)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                    const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const
+                                    bool usePhong, ITMUChar4Image *outputImage) const
 {
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;
@@ -25,7 +31,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
   const Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CPU);
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
-  const Vector3u *labelColours = &labelManager->get_label_colours()[0];
+  const Vector3u *labelColours = m_labelColoursMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for

@@ -21,22 +21,18 @@ __global__ void ck_render_semantic(Vector4u *outRendering, const Vector4f *ptsRa
   shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos, usePhong);
 }
 
+//#################### CONSTRUCTORS ####################
+
+SemanticVisualiser_CUDA::SemanticVisualiser_CUDA(const std::vector<Vector3u>& labelColours)
+: SemanticVisualiser(labelColours)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                     const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const
+                                     bool usePhong, ITMUChar4Image *outputImage) const
 {
-  // Copy the label colours into a memory block.
-  const std::vector<Vector3u>& labelColours = labelManager->get_label_colours();
-  ORUtils::MemoryBlock<Vector3u> labelColoursMB(static_cast<int>(labelColours.size()), true, true);
-  Vector3u *labelColoursData = labelColoursMB.GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0, size = labelColours.size(); i < size; ++i)
-  {
-    labelColoursData[i] = labelColours[i];
-  }
-  labelColoursMB.UpdateDeviceFromHost();
-
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;
   Vector3f lightPos = Vector3f(0.0f, -10.0f, -10.0f) / voxelSize;
@@ -54,7 +50,7 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     imgSize,
-    labelColoursMB.GetData(MEMORYDEVICE_CUDA),
+    m_labelColoursMB.GetData(MEMORYDEVICE_CUDA),
     viewerPos,
     lightPos,
     usePhong

@@ -14,12 +14,21 @@ namespace spaint {
  */
 class SemanticVisualiser_CUDA : public SemanticVisualiser
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a CUDA-based semantic visualiser.
+   *
+   * \param labelColours  The colours to use for the semantic labels.
+   */
+  explicit SemanticVisualiser_CUDA(const std::vector<Vector3u>& labelColours);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
   virtual void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                       const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                      const LabelManager *labelManager, bool usePhong, ITMUChar4Image *outputImage) const;
+                      bool usePhong, ITMUChar4Image *outputImage) const;
 };
 
 }
