@@ -38,7 +38,7 @@ protected:
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 public:
-  typedef boost::shared_ptr<ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
 
   //#################### PROTECTED VARIABLES ####################
 protected:

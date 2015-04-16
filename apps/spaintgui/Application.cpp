@@ -7,6 +7,8 @@
 #include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/assign/list_of.hpp>
+using boost::assign::map_list_of;
 
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
@@ -14,15 +16,20 @@ using namespace rigging;
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
+#include <tvgutil/commands/NoOpCommand.h>
+using namespace tvgutil;
+
 #ifdef WITH_OVR
 #include "RiftRenderer.h"
 #endif
 #include "WindowedRenderer.h"
 
+#include "commands/MarkVoxelsCommand.h"
+
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
-: m_spaintPipeline(spaintPipeline)
+: m_commandManager(10), m_spaintPipeline(spaintPipeline)
 {
   const Vector2i& imgSize = spaintPipeline->get_model()->get_depth_image_size();
   m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
@@ -58,6 +65,24 @@ void Application::run()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+Application::RenderState_CPtr Application::get_monocular_render_state() const
+{
+  // If we're rendering in stereo (e.g. on the Rift), return a null render state.
+  if(!m_renderer->get_monocular_render_state()) return RenderState_CPtr();
+
+  // Otherwise, return the monocular render state corresponding to the current camera mode.
+  switch(m_renderer->get_camera_mode())
+  {
+    case Renderer::CM_FOLLOW:
+      return m_spaintPipeline->get_raycaster()->get_live_render_state();
+    case Renderer::CM_FREE:
+      return m_renderer->get_monocular_render_state();
+    default:
+      // This should never happen.
+      throw std::runtime_error("Unknown camera mode");
+  }
+}
+
 void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(keysym.sym);
@@ -72,6 +97,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == SDLK_p)
   {
     m_renderer->set_phong_enabled(!m_renderer->get_phong_enabled());
+  }
+
+  // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene and reset the command manager.
+  if(keysym.sym == SDLK_BACKSPACE)
+  {
+    m_spaintPipeline->get_interactor()->clear_labels();
+    m_commandManager.reset();
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
@@ -101,7 +133,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "[ = Decrease Picking Selection Radius\n"
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
-              << "RShift + ] = To Next Semantic Label\n";
+              << "RShift + ] = To Next Semantic Label\n"
+              << "Backspace = Clear Semantic Labels\n";
   }
 }
 
@@ -178,6 +211,31 @@ void Application::process_camera_input()
   }
 }
 
+void Application::process_command_input()
+{
+  static bool blockUndo = false;
+  if(m_inputState.key_down(SDLK_LCTRL) && m_inputState.key_down(SDLK_z))
+  {
+    if(!blockUndo && m_commandManager.can_undo())
+    {
+      m_commandManager.undo();
+      blockUndo = true;
+    }
+  }
+  else blockUndo = false;
+
+  static bool blockRedo = false;
+  if(m_inputState.key_down(SDLK_LCTRL) && m_inputState.key_down(SDLK_y))
+  {
+    if(!blockRedo && m_commandManager.can_redo())
+    {
+      m_commandManager.redo();
+      blockRedo = true;
+    }
+  }
+  else blockRedo = false;
+}
+
 bool Application::process_events()
 {
   SDL_Event event;
@@ -214,29 +272,16 @@ bool Application::process_events()
 void Application::process_input()
 {
   process_camera_input();
+  process_command_input();
   process_labelling_input();
   process_renderer_input();
 }
 
 void Application::process_labelling_input()
 {
-  // If we're rendering in stereo (e.g. on the Rift), early out.
-  if(!m_renderer->get_monocular_render_state()) return;
-
-  // Otherwise, get an appropriate render state for the current camera mode.
-  Renderer::RenderState_CPtr renderState;
-  switch(m_renderer->get_camera_mode())
-  {
-    case Renderer::CM_FOLLOW:
-      renderState = m_spaintPipeline->get_raycaster()->get_live_render_state();
-      break;
-    case Renderer::CM_FREE:
-      renderState = m_renderer->get_monocular_render_state();
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("Unknown camera mode");
-  }
+  // Get the current monocular render state, if any. If we're not currently rendering in mono, early out.
+  RenderState_CPtr renderState = get_monocular_render_state();
+  if(!renderState) return;
 
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
@@ -261,6 +306,14 @@ void Application::process_labelling_input()
   // Update the current selector.
   interactor->update_selector(m_inputState, renderState);
 
+  // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
+  static bool currentlyMarking = false;
+
+  // Specify the precursors map for compressible commands.
+  static const std::string beginMarkVoxelsDesc = "Begin Mark Voxels";
+  static const std::string markVoxelsDesc = MarkVoxelsCommand::get_static_description();
+  static std::map<std::string,std::string> precursors = map_list_of(beginMarkVoxelsDesc,markVoxelsDesc)(markVoxelsDesc,markVoxelsDesc);
+
   // If the current selector is active:
   if(interactor->selector_is_active())
   {
@@ -268,7 +321,25 @@ void Application::process_labelling_input()
     Selector::Selection_CPtr selection = interactor->get_selection();
 
     // If there are selected voxels, mark the voxels with the current semantic label.
-    if(selection) interactor->mark_voxels(selection, semanticLabel);
+    if(selection)
+    {
+      const bool useUndo = true;
+      if(useUndo)
+      {
+        if(!currentlyMarking)
+        {
+          m_commandManager.execute_command(Command_CPtr(new NoOpCommand(beginMarkVoxelsDesc)));
+          currentlyMarking = true;
+        }
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), precursors);
+      }
+      else interactor->mark_voxels(selection, semanticLabel);
+    }
+  }
+  else if(currentlyMarking)
+  {
+    m_commandManager.execute_compressible_command(Command_CPtr(new NoOpCommand("End Mark Voxels")), precursors);
+    currentlyMarking = false;
   }
 }
 

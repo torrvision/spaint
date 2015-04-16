@@ -23,12 +23,14 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 SET(commands_sources
 src/commands/Command.cpp
 src/commands/CommandManager.cpp
+src/commands/NoOpCommand.cpp
 src/commands/SeqCommand.cpp
 )
 
 SET(commands_headers
 include/tvgutil/commands/Command.h
 include/tvgutil/commands/CommandManager.h
+include/tvgutil/commands/NoOpCommand.h
 include/tvgutil/commands/SeqCommand.h
 )
 

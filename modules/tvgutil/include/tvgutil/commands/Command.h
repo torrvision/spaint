@@ -12,7 +12,7 @@
 namespace tvgutil {
 
 /**
- * \brief An instance of a class deriving from this can be used to represent a command that can be executed/undone/redone.
+ * \brief An instance of a class deriving from this one can be used to represent a command that can be executed/undone/redone.
  */
 class Command
 {

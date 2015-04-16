@@ -17,8 +17,18 @@ class VoxelMarker_CPU : public VoxelMarker
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount) const;
+
+  /** Override */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
-                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
+                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                           ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const;
+
+  /** Override */
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                           const ORUtils::MemoryBlock<SpaintVoxel::LabelType>& voxelLabelsMB,
+                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                           ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const;
 };
 
 }

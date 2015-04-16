@@ -29,55 +29,58 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 #############################
 
 ##
-SET(base_sources
+SET(commands_sources
+commands/MarkVoxelsCommand.cpp
+)
+
+SET(commands_headers
+commands/MarkVoxelsCommand.h
+)
+
+##
+SET(toplevel_sources
 main.cpp
 Application.cpp
 CPUInstantiations.cpp
 WindowedRenderer.cpp
 )
 
-IF(WITH_CUDA)
-  SET(cuda_sources CUDAInstantiations.cu)
-ELSE()
-  SET(cuda_sources)
-ENDIF()
-
-IF(WITH_OVR)
-  SET(ovr_sources RiftRenderer.cpp)
-ELSE()
-  SET(ovr_sources)
-ENDIF()
-
-SET(sources
-${base_sources}
-${cuda_sources}
-${ovr_sources}
-)
-
-##
-SET(base_headers
+SET(toplevel_headers
 Application.h
 Renderer.h
 WindowedRenderer.h
 )
 
-IF(WITH_OVR)
-  SET(ovr_headers RiftRenderer.h)
-ELSE()
-  SET(ovr_headers)
+IF(WITH_CUDA)
+  SET(toplevel_sources ${toplevel_sources} CUDAInstantiations.cu)
 ENDIF()
 
+IF(WITH_OVR)
+  SET(toplevel_sources ${toplevel_sources} RiftRenderer.cpp)
+  SET(toplevel_headers ${toplevel_headers} RiftRenderer.h)
+ENDIF()
+
+#################################################################
+# Collect the project files into sources, headers and templates #
+#################################################################
+
+SET(sources
+${commands_sources}
+${toplevel_sources}
+)
+
 SET(headers
-${base_headers}
-${ovr_headers}
+${commands_headers}
+${toplevel_headers}
 )
 
 #############################
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(sources FILES ${sources})
-SOURCE_GROUP(headers FILES ${headers})
+SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
+SOURCE_GROUP(headers FILES ${toplevel_headers})
+SOURCE_GROUP(sources FILES ${toplevel_sources})
 
 ##########################################
 # Specify additional include directories #

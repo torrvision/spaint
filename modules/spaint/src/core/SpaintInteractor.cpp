@@ -50,6 +50,12 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+void SpaintInteractor::clear_labels()
+{
+  ITMLocalVBA<SpaintVoxel>& localVBA = m_model->get_scene()->localVBA;
+  m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize);
+}
+
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
 {
   Selection_CPtr selection = m_selector->get_selection();
@@ -71,9 +77,14 @@ SpaintVoxel::LabelType SpaintInteractor::get_semantic_label() const
   return m_semanticLabel;
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::LabelType label)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::LabelType label, const Labels_Ptr& oldLabels)
 {
-  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get());
+  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get());
+}
+
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, const Labels_CPtr& labels)
+{
+  m_voxelMarker->mark_voxels(*selection, *labels, m_model->get_scene().get());
 }
 
 bool SpaintInteractor::selector_is_active() const
