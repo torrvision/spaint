@@ -29,7 +29,7 @@ class TouchDetector
 private:
   typedef boost::shared_ptr<af::array> AFImage_Ptr;
   typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
-  typedef boost::shared_ptr<ITMLib::Objects::ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
 
 #ifdef DEBUG_TOUCH_DISPLAY
   //#################### PRIVATE DEBUGGING VARIABLES ####################
@@ -105,7 +105,7 @@ public:
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth);
+  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth);
 
   /**
    * \brief Gets the touch state.

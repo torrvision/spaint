@@ -55,7 +55,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-void TouchDetector::run_touch_detector_on_frame(const RenderState_Ptr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth)
+void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth)
 {
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(m_raycastedDepthResult.get(),
