@@ -34,12 +34,12 @@ ENDIF()
 ADD_SUBDIRECTORY(modules)
 
 OPTION(BUILD_APPS "Build the applications?" ON)
+OPTION(BUILD_EVALUATION " Build the evaluation module?" ON)
+OPTION(BUILD_TESTS "Build the tests?" ON)
 
 IF(BUILD_APPS)
   ADD_SUBDIRECTORY(apps)
 ENDIF(BUILD_APPS)
-
-OPTION(BUILD_TESTS "Build the tests?" ON)
 
 IF(BUILD_TESTS)
   ENABLE_TESTING()
