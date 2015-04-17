@@ -1,5 +1,5 @@
 /**
- * spaint: ImageProcessing_Shared.h
+ * spaint: ImageProcessor_Shared.h
  */
 
 #ifndef H_SPAINT_IMAGEPROCESSING_SHARED

@@ -57,30 +57,30 @@ include/spaint/input/MouseButton.h
 
 ##
 SET(imageprocessing_cpu_sources
-src/imageprocessing/cpu/ImageProcessing_CPU.cpp
+src/imageprocessing/cpu/ImageProcessor_CPU.cpp
 )
 
 SET(imageprocessing_cpu_headers
-include/spaint/imageprocessing/cpu/ImageProcessing_CPU.h
+include/spaint/imageprocessing/cpu/ImageProcessor_CPU.h
 )
 
 ##
 SET(imageprocessing_cuda_sources
-src/imageprocessing/cuda/ImageProcessing_CUDA.cu
+src/imageprocessing/cuda/ImageProcessor_CUDA.cu
 )
 
 SET(imageprocessing_cuda_headers
-include/spaint/imageprocessing/cuda/ImageProcessing_CUDA.h
+include/spaint/imageprocessing/cuda/ImageProcessor_CUDA.h
 )
 
 ##
 SET(imageprocessing_interface_headers
-include/spaint/imageprocessing/interface/ImageProcessing.h
+include/spaint/imageprocessing/interface/ImageProcessor.h
 )
 
 ##
 SET(imageprocessing_shared_headers
-include/spaint/imageprocessing/shared/ImageProcessing_Shared.h
+include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
 )
 
 ##

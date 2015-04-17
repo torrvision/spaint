@@ -11,7 +11,7 @@
 
 #include <rigging/SimpleCamera.h>
 
-#include "../imageprocessing/interface/ImageProcessing.h"
+#include "../imageprocessing/interface/ImageProcessor.h"
 #include "../visualisers/interface/DepthCalculator.h"
 #include "TouchState.h"
 
@@ -65,7 +65,7 @@ private:
   AFImage_Ptr m_diffRawRaycast;
 
   /** Multiplatform image processing tools. */
-  boost::shared_ptr<const ImageProcessing> m_imageProcessor;
+  boost::shared_ptr<const ImageProcessor> m_imageProcessor;
 
   /** The minimum image area required for an image region to be considered as a touch candidate (in number of pixels). */
   int m_minimumAreaThreshold;

@@ -6,10 +6,10 @@
 
 #include <iostream>
 
-#include "imageprocessing/cpu/ImageProcessing_CPU.h"
+#include "imageprocessing/cpu/ImageProcessor_CPU.h"
 #include "visualisers/cpu/DepthCalculator_CPU.h"
 #ifdef WITH_CUDA
-#include "imageprocessing/cuda/ImageProcessing_CUDA.h"
+#include "imageprocessing/cuda/ImageProcessor_CUDA.h"
 #include "visualisers/cuda/DepthCalculator_CUDA.h"
 #endif
 
@@ -37,12 +37,12 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
   m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, true));
 
   m_depthCalculator.reset(new DepthCalculator_CUDA);
-  m_imageProcessor.reset(new ImageProcessing_CUDA);
+  m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
   m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, false));
 
   m_depthCalculator.reset(new DepthCalculator_CPU);
-  m_imageProcessor.reset(new ImageProcessing_CPU);
+  m_imageProcessor.reset(new ImageProcessor_CPU);
 #endif
 
   // The minimum area threshold is set to a percentage of the total image area.

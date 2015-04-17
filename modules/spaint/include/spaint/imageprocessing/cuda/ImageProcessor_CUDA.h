@@ -1,18 +1,18 @@
 /**
- * spaint: ImageProcessing_CUDA.h
+ * spaint: ImageProcessor_CUDA.h
  */
 
 #ifndef H_SPAINT_IMAGEPROCESSING_CUDA
 #define H_SPAINT_IMAGEPROCESSING_CUDA
 
-#include "../interface/ImageProcessing.h"
+#include "../interface/ImageProcessor.h"
 
 namespace spaint {
 
 /**
  * \brief An instance of this class may be used to apply image processing algorithms to images with CUDA.
  */
-class ImageProcessing_CUDA : public ImageProcessing
+class ImageProcessor_CUDA : public ImageProcessor
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

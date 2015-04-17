@@ -1,10 +1,10 @@
 /**
- * spaint: ImageProcessing_CUDA.cu
+ * spaint: ImageProcessor_CUDA.cu
  */
 
-#include "imageprocessing/cuda/ImageProcessing_CUDA.h"
+#include "imageprocessing/cuda/ImageProcessor_CUDA.h"
 
-#include "imageprocessing/shared/ImageProcessing_Shared.h"
+#include "imageprocessing/shared/ImageProcessor_Shared.h"
 
 namespace spaint {
 
@@ -31,10 +31,10 @@ __global__ void ck_absolute_difference_calculator_cmrmrm(float *outputImage, flo
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessing_CUDA::absolute_difference_calculator(ITMFloatImage *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
+void ImageProcessor_CUDA::absolute_difference_calculator(ITMFloatImage *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
 {
-  ImageProcessing::check_image_size_equal(outputImage, firstInputImage);
-  ImageProcessing::check_image_size_equal(secondInputImage, firstInputImage);
+  ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
+  ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
 
   Vector2i imgSize = outputImage->noDims;
 
@@ -48,10 +48,10 @@ void ImageProcessing_CUDA::absolute_difference_calculator(ITMFloatImage *outputI
   );
 }
 
-void ImageProcessing_CUDA::absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
+void ImageProcessor_CUDA::absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
 {
-  ImageProcessing::check_image_size_equal(outputImage, firstInputImage);
-  ImageProcessing::check_image_size_equal(secondInputImage, firstInputImage);
+  ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
+  ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
 
   Vector2i imgSize;
   imgSize.y = outputImage->dims(0);

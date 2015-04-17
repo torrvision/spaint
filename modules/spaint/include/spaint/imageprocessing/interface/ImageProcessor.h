@@ -1,5 +1,5 @@
 /**
- * spaint: ImageProcessing.h
+ * spaint: ImageProcessor.h
  */
 
 #ifndef H_SPAINT_IMAGEPROCESSING
@@ -16,14 +16,14 @@ namespace spaint {
  * \brief An instance of a class deriving from this one can be used to apply image processing algorithms to images.
  *
  */
-class ImageProcessing
+class ImageProcessor
 {
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the image processor.
    */
-  virtual ~ImageProcessing() {}
+  virtual ~ImageProcessor() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
