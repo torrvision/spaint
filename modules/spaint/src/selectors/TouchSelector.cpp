@@ -85,7 +85,7 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
 void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
   // Get camera.
-  static boost::shared_ptr<SimpleCamera> camera;
+  static boost::shared_ptr<MoveableCamera> camera;
   camera.reset( new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
 
   // Get voxel size.

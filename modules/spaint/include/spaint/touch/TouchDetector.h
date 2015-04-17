@@ -105,7 +105,7 @@ public:
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::SimpleCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth);
+  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth);
 
   /**
    * \brief Gets the touch state.
