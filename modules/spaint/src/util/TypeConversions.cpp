@@ -6,7 +6,7 @@
 
 namespace spaint {
 
-Vector3f TypeConversions::EigV3f_to_ITMV3f(const Eigen::Vector3f& v)
+Vector3f TypeConversions::to_itm(const Eigen::Vector3f& v)
 {
   Vector3f itmv;
   itmv.x = v[0];

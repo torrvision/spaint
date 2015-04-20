@@ -27,12 +27,6 @@ private:
   /** The touch positions. */
   TouchPositions_CPtr m_touchPositions;
 
-  /** The x touch positions. */
-  std::vector<int> m_position_x;
-
-  /** The y touch positions. */
-  std::vector<int> m_position_y;
-
   /** A flag indicating whether the surface is being touched. */
   bool m_touchingSurface;
 

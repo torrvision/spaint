@@ -30,13 +30,13 @@ TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_
   m_pickPointFloatMB.reset(new ORUtils::MemoryBlock<Vector3f>(m_maximumValidPickPoints, true, true));
   m_pickPointShortMB.reset(new ORUtils::MemoryBlock<Vector3s>(m_maximumValidPickPoints, true, true));
 
-  //Make the picker.
+  // Make the picker.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_picker.reset(new Picker_CUDA);
 #else
-    //This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
@@ -61,7 +61,7 @@ std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
   int nPickPoints = std::min(m_numberOfValidPickPoints, m_maximumValidPickPoints);
   std::vector<Eigen::Vector3f> pickPoints(nPickPoints);
 
-  // If the pick point is onthe GPU, copy it across to the CPU.
+  // If the pick point is on the GPU, copy it across to the CPU.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointFloatMB->UpdateHostFromDevice();
 
   // Convert the pick points from voxel coordinates into scene coordinates and return it.
@@ -136,27 +136,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   {
     m_pickPointValid = true;
     m_pickPointFloatMB->UpdateDeviceFromHost();
-/*    {
-      Vector3f *tmp = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
-      int size = m_pickPointFloatMB->dataSize;
-      for(int i = 0; i < size; ++i)
-      {
-        std::cout << "x=" << tmp[i].x << " y=" << tmp[i].y << " z=" << tmp[i].z << '\n';
-      }
-    }
-*/
     m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
-
-/*    m_pickPointShortMB->UpdateHostFromDevice();
-    {
-      Vector3s *tmp = m_pickPointShortMB->GetData(MEMORYDEVICE_CPU);
-      int size = m_pickPointShortMB->dataSize;
-      for(int i = 0; i < size; ++i)
-      {
-        std::cout << "x=" << tmp[i].x << " y=" << tmp[i].y << " z=" << tmp[i].z << '\n';
-      }
-    }
-*/
   }
   else
   {

@@ -19,7 +19,7 @@ public:
    * \param v  The Eigen vector.
    * \return   The InfiniTAM vector.
    */
-  static Vector3f EigV3f_to_ITMV3f(const Eigen::Vector3f& v);
+  static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 }

@@ -20,8 +20,7 @@ __global__ void ck_get_pick_point(int x, int y, int width, const Vector4f *image
 __global__ void ck_to_short(const Vector3f *pickPointFloat, Vector3s *pickPointShort, int size)
 {
   int tid = blockIdx.x;
-  if(tid < size)
-    pickPointShort[tid] = pickPointFloat[tid].toShortRound();
+  if(tid < size) pickPointShort[tid] = pickPointFloat[tid].toShortRound();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -43,7 +42,9 @@ bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rend
 void Picker_CUDA::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const
 {
   if(pickPointFloatMB.dataSize != pickPointShortMB.dataSize)
-    throw std::runtime_error("The two memory blocks must have the same size.");
+  {
+    throw std::runtime_error("The two memory blocks must have the same size");
+  }
 
   const Vector3f *floatData = pickPointFloatMB.GetData(MEMORYDEVICE_CUDA);
   Vector3s *shortData = pickPointShortMB.GetData(MEMORYDEVICE_CUDA);

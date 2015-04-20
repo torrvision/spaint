@@ -85,7 +85,7 @@ private:
   /** An instance of the current touch state. */
   TouchState m_touchState;
 
-  /** An image used to interface with infiniTAM images. */
+  /** An image used to interface with InfiniTAM images. */
   AFImage_Ptr m_workspace;
 
   //#################### CONSTRUCTORS ####################
@@ -93,7 +93,7 @@ public:
   /**
    * \brief An instance of this class may be used to identify those pixels which are touching a surface.
    */
-  TouchDetector(const Vector2i& imgSize);
+  explicit TouchDetector(const Vector2i& imgSize);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

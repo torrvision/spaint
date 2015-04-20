@@ -60,8 +60,8 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(m_raycastedDepthResult.get(),
       renderState.get(),
-      TypeConversions::EigV3f_to_ITMV3f(camera->p()),
-      TypeConversions::EigV3f_to_ITMV3f(camera->n()),
+      TypeConversions::to_itm(camera->p()),
+      TypeConversions::to_itm(camera->n()),
       voxelSize,
       DepthVisualiser::DT_ORTHOGRAPHIC);
 

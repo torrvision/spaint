@@ -17,7 +17,9 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to select a cube of voxels in the scene using touch.
+ * \brief An instance of this class can be used to select voxels in the scene based on what theuser is touching in the real world.
+ *
+ * This is achieved by analysing the differences between the live depth input and a depth raycast of the scene.
  */
 class TouchSelector : public Selector
 {
@@ -73,9 +75,9 @@ public:
   virtual void accept(const SelectorVisitor& visitor) const;
 
   /**
-   * \brief Gets the position of the selector (if known).
+   * \brief Gets the positions of the touch points (if known).
    *
-   * \return The position of the selector (if known), or boost::none otherwise.
+   * \return The positions of the touch points (if known), or boost::none otherwise.
    */
   std::vector<Eigen::Vector3f> get_positions() const;
 

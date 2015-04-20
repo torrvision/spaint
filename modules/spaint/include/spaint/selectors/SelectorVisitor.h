@@ -57,7 +57,7 @@ public:
 
 #ifdef WITH_ARRAYFIRE
   /**
-   * \brief Visits a Touch selector.
+   * \brief Visits a touch selector.
    *
    * \param selector  The selector to visit.
    */
