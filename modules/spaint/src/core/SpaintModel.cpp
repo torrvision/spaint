@@ -10,7 +10,12 @@ namespace spaint {
 
 SpaintModel::SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
                          const Settings_CPtr& settings)
-: m_depthImageSize(depthImageSize), m_rgbImageSize(rgbImageSize), m_scene(scene), m_settings(settings), m_trackingState(trackingState)
+: m_depthImageSize(depthImageSize),
+  m_labelManager(21),
+  m_rgbImageSize(rgbImageSize),
+  m_scene(scene),
+  m_settings(settings),
+  m_trackingState(trackingState)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -23,6 +28,16 @@ const Vector2i& SpaintModel::get_depth_image_size() const
 const ITMIntrinsics& SpaintModel::get_intrinsics() const
 {
   return m_view->calib->intrinsics_d;
+}
+
+LabelManager& SpaintModel::get_label_manager()
+{
+  return m_labelManager;
+}
+
+const LabelManager& SpaintModel::get_label_manager() const
+{
+  return m_labelManager;
 }
 
 const ITMPose& SpaintModel::get_pose() const

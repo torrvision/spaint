@@ -41,9 +41,9 @@ public:
    * \param scene             The scene.
    * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                           ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB = NULL) const = 0;
+                           ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB = NULL) const = 0;
 
   /**
    * \brief Marks a set of voxels in the scene with the specified semantic labels.
@@ -54,9 +54,9 @@ public:
    * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                           const ORUtils::MemoryBlock<unsigned char>& voxelLabelsMB,
+                           const ORUtils::MemoryBlock<SpaintVoxel::LabelType>& voxelLabelsMB,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                           ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB = NULL) const = 0;
+                           ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB = NULL) const = 0;
 };
 
 }

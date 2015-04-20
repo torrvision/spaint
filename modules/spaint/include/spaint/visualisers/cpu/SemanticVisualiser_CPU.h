@@ -14,6 +14,15 @@ namespace spaint {
  */
 class SemanticVisualiser_CPU : public SemanticVisualiser
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a CPU-based semantic visualiser.
+   *
+   * \param labelColours  The colours to use for the semantic labels.
+   */
+  explicit SemanticVisualiser_CPU(const std::vector<Vector3u>& labelColours);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */

@@ -21,9 +21,9 @@ void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount) const
   }
 }
 
-void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
+void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const
+                                  ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   unsigned char *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
@@ -42,9 +42,9 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
 }
 
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                  const ORUtils::MemoryBlock<unsigned char>& voxelLabelsMB,
+                                  const ORUtils::MemoryBlock<SpaintVoxel::LabelType>& voxelLabelsMB,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const
+                                  ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const unsigned char *voxelLabels = voxelLabelsMB.GetData(MEMORYDEVICE_CPU);

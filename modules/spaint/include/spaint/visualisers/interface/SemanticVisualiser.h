@@ -10,7 +10,7 @@
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "../../util/SpaintVoxel.h"
+#include "../../util/LabelManager.h"
 
 namespace spaint {
 
@@ -21,12 +21,26 @@ namespace spaint {
  */
 class SemanticVisualiser
 {
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** A memory block in which to store the colours to use for the semantic labels. */
+  mutable ORUtils::MemoryBlock<Vector3u> m_labelColoursMB;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a semantic visualiser.
+   *
+   * \param labelColours  The colours to use for the semantic labels.
+   */
+  explicit SemanticVisualiser(const std::vector<Vector3u>& labelColours);
+
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the semantic visualiser.
    */
-  virtual ~SemanticVisualiser() {}
+  virtual ~SemanticVisualiser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

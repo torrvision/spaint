@@ -16,14 +16,14 @@ __global__ void ck_clear_labels(SpaintVoxel *voxels, int voxelCount)
   if(tid < voxelCount) voxels[tid].label = 0;
 }
 
-__global__ void ck_mark_voxels(const Vector3s *voxelLocations, unsigned char label, int voxelCount, unsigned char *oldVoxelLabels,
+__global__ void ck_mark_voxels(const Vector3s *voxelLocations, SpaintVoxel::LabelType label, int voxelCount, SpaintVoxel::LabelType *oldVoxelLabels,
                                SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
   if(tid < voxelCount) mark_voxel(voxelLocations[tid], label, oldVoxelLabels ? &oldVoxelLabels[tid] : NULL, voxelData, voxelIndex);
 }
 
-__global__ void ck_mark_voxels(const Vector3s *voxelLocations, const unsigned char *voxelLabels, int voxelCount, unsigned char *oldVoxelLabels,
+__global__ void ck_mark_voxels(const Vector3s *voxelLocations, const SpaintVoxel::LabelType *voxelLabels, int voxelCount, SpaintVoxel::LabelType *oldVoxelLabels,
                                SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
@@ -40,9 +40,9 @@ void VoxelMarker_CUDA::clear_labels(SpaintVoxel *voxels, int voxelCount) const
   ck_clear_labels<<<numBlocks,threadsPerBlock>>>(voxels, voxelCount);
 }
 
-void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, unsigned char label,
+void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                   ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const
+                                   ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
 {
   int voxelCount = voxelLocationsMB.dataSize;
 
@@ -60,9 +60,9 @@ void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLo
 }
 
 void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                   const ORUtils::MemoryBlock<unsigned char>& voxelLabelsMB,
+                                   const ORUtils::MemoryBlock<SpaintVoxel::LabelType>& voxelLabelsMB,
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                   ORUtils::MemoryBlock<unsigned char> *oldVoxelLabelsMB) const
+                                   ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
 {
   int voxelCount = voxelLocationsMB.dataSize;
 

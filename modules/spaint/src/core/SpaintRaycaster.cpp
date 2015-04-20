@@ -22,11 +22,12 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
 : m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
+  const std::vector<Vector3u>& labelColours = m_model->get_label_manager().get_label_colours();
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     // Use the CUDA implementations.
-    m_semanticVisualiser.reset(new SemanticVisualiser_CUDA);
+    m_semanticVisualiser.reset(new SemanticVisualiser_CUDA(labelColours));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -35,7 +36,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
   else
   {
     // Use the CPU implementations.
-    m_semanticVisualiser.reset(new SemanticVisualiser_CPU);
+    m_semanticVisualiser.reset(new SemanticVisualiser_CPU(labelColours));
   }
 }
 

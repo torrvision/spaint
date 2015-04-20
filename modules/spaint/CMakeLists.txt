@@ -195,10 +195,12 @@ ENDIF()
 ##
 SET(util_sources
 src/util/CameraPoseConverter.cpp
+src/util/LabelManager.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
+include/spaint/util/LabelManager.h
 include/spaint/util/SpaintVoxel.h
 )
 
@@ -221,6 +223,10 @@ include/spaint/visualisers/cuda/SemanticVisualiser_CUDA.h
 )
 
 ##
+SET(visualisers_interface_sources
+src/visualisers/interface/SemanticVisualiser.cpp
+)
+
 SET(visualisers_interface_headers
 include/spaint/visualisers/interface/SemanticVisualiser.h
 )
@@ -247,7 +253,7 @@ ${selectors_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
-${visualisers_sources}
+${visualisers_interface_sources}
 )
 
 SET(headers
@@ -313,7 +319,7 @@ SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
 SOURCE_GROUP(visualisers\\cuda FILES ${visualisers_cuda_sources} ${visualisers_cuda_headers})
-SOURCE_GROUP(visualisers\\interface FILES ${visualisers_interface_headers})
+SOURCE_GROUP(visualisers\\interface FILES ${visualisers_interface_sources} ${visualisers_interface_headers})
 SOURCE_GROUP(visualisers\\shared FILES ${visualisers_shared_headers})
 
 ##########################################

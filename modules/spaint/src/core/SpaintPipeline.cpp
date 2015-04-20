@@ -53,6 +53,11 @@ const SpaintInteractor_Ptr& SpaintPipeline::get_interactor()
   return m_interactor;
 }
 
+const SpaintModel_Ptr& SpaintPipeline::get_model()
+{
+  return m_model;
+}
+
 SpaintModel_CPtr SpaintPipeline::get_model() const
 {
   return m_model;

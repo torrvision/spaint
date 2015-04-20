@@ -14,6 +14,15 @@ namespace spaint {
  */
 class SemanticVisualiser_CUDA : public SemanticVisualiser
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a CUDA-based semantic visualiser.
+   *
+   * \param labelColours  The colours to use for the semantic labels.
+   */
+  explicit SemanticVisualiser_CUDA(const std::vector<Vector3u>& labelColours);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */

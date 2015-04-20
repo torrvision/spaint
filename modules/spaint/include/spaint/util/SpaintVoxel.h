@@ -14,6 +14,8 @@ namespace spaint {
  */
 struct SpaintVoxel
 {
+  typedef uchar LabelType;
+
   _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
   _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
   _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
@@ -25,7 +27,7 @@ struct SpaintVoxel
   /** Number of fused observations that make up @p sdf. */
   uchar w_depth;
   /** Semantic label. */
-  uchar label;
+  LabelType label;
 
   _CPU_AND_GPU_CODE_ SpaintVoxel()
   {
