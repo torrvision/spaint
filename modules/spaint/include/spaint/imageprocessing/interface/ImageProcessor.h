@@ -18,6 +18,16 @@ namespace spaint {
  */
 class ImageProcessor
 {
+public: 
+  /**
+   * \brief Comparison Operators.
+   */
+  enum ComparisonOperator
+  {
+    GREATER,
+    LESS
+  };
+
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -43,7 +53,25 @@ public:
    * \param firstInputImage  The first image.
    * \param secondInputImage The second image.
    */
- virtual void absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const = 0;
+  virtual void absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const = 0;
+
+  /**
+   * \brief Sets invalid image regions to some constant value.
+   *
+   * \param image   The image holding the result of the calculation.
+   * \param value   The value to which to set invalid image regions.
+   */
+  virtual void set_invalid_regions(ITMFloatImage *image, float value) const = 0;
+
+  /**
+   * \brief Sets pixels to a specified value if a condition is satisfied.
+   *
+   * \param output     The output image.
+   * \param input      The input image.
+   * \param comparator The value to compare the pixel value to.
+   * \param value      The value to set the pixel to if the comparison is true.
+   */
+  virtual void pixel_setter(ITMFloatImage *output, ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const = 0;
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:

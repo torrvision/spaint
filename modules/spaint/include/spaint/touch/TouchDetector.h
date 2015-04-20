@@ -16,7 +16,7 @@
 #include "TouchState.h"
 
 //#define DEBUG_TOUCH_VERBOSE
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
@@ -72,6 +72,9 @@ private:
 
   /** The size of the square morphological operator. */
   int m_morphKernelSize;
+
+  /** A copy of the raw depth captured from Kinect. */
+  FloatImage_Ptr m_rawDepthCopy;
 
   /** An image into which to store the depth of the currently visible scene from the camera. */
   FloatImage_Ptr m_raycastedDepthResult;

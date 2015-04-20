@@ -34,11 +34,13 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
   m_thresholded(imgSize.y, imgSize.x)
 {
 #ifdef WITH_CUDA
+  m_rawDepthCopy.reset(new ITMFloatImage(imgSize, true, true));
   m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, true));
 
   m_depthCalculator.reset(new DepthVisualiser_CUDA);
   m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
+  m_rawDepthCopy.reset(new ITMFloatImage(imgSize, true, false));
   m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, false));
 
   m_depthCalculator.reset(new DepthVisualiser_CPU);
@@ -57,6 +59,13 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth)
 {
+  // The camera is assumed to be positioned close to the user. 
+  // This allows a threshold on the maximum depth that a touch interaction may occur.
+  // For example the user's hand or leg cannot extend more than 2 meters away from the camera.
+  // This turns out to be crucial since there may be large areas of the scene far away that are picked up by the Kinect but which are not integrated into the scene (InfiniTAM has a
+  // depth threshold hard coded into its scene settings).
+  m_imageProcessor->pixel_setter(m_rawDepthCopy.get(), rawDepth, 2.0f, ImageProcessor::GREATER, -1.0f);
+
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(m_raycastedDepthResult.get(),
       renderState.get(),
@@ -65,26 +74,17 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
       voxelSize,
       DepthVisualiser::DT_ORTHOGRAPHIC);
 
+  // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).
+  // In this case 100.0f meters.
+  m_imageProcessor->pixel_setter(m_raycastedDepthResult.get(), m_raycastedDepthResult.get(), 0.0f, ImageProcessor::LESS, 100.0f); 
+
   // Calculate the difference between the raw depth and the raycasted depth.
-  m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());
+  m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), m_rawDepthCopy.get(), m_raycastedDepthResult.get());
 
-#if 0
-  // Display the raw depth and the raycasted depth.
-  OpenCVExtra::display_image_and_scale(rawDepth, 100.0f, "Current raw depth from camera in millimeters");
-  OpenCVExtra::display_image_and_scale(m_raycastedDepthResult.get(), 100.0f, "Current depth raycast in millimeters");
-
-  // Display the absolute difference between the raw and raycasted depth.
-  static af::array tmp;
-  tmp = *m_diffRawRaycast * 1000.0f;
-  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
-
-  cv::waitKey(100);
-#endif
+  // Threshold the difference image - if there is a difference, there is something in the image!
+  m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;
 
 #if 1
-  // Threshold the difference image.
-  m_thresholded = (*m_diffRawRaycast > m_depthLowerThreshold) && (*m_diffRawRaycast < m_depthUpperThreshold);
-
   // Perform morphological operations on the image to get rid of small segments.
   static af::array morphKernel;
 #ifdef DEBUG_TOUCH_DISPLAY
@@ -143,7 +143,13 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
     diffCopyMillimeters32F = ((*m_diffRawRaycast) * 1000.0f);
 
     // Truncate any values outside the range [0-255], before converting to unsigned 8-bit.
-    diffCopyMillimeters32F = diffCopyMillimeters32F - ((diffCopyMillimeters32F > 255.0f) | (diffCopyMillimeters32F < 0)) * diffCopyMillimeters32F;
+    diffCopyMillimeters32F(af::where(diffCopyMillimeters32F < 0.0f)) = 0;
+    static af::array lowmask;
+    static af::array highmask;
+    lowmask = diffCopyMillimeters32F < 0.0f;
+    highmask = diffCopyMillimeters32F > 255.0f;
+    diffCopyMillimeters32F = diffCopyMillimeters32F - lowmask * diffCopyMillimeters32F;
+    diffCopyMillimeters32F = diffCopyMillimeters32F - (highmask * diffCopyMillimeters32F) + (255 * highmask);
     diffCopyMillimetersU8 = diffCopyMillimeters32F.as(u8);
 
     // If there are several good candidate then select the one which is closest to a surface.
@@ -196,22 +202,9 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
 
       for(int i = 0; i < numberOfTouchPoints; ++i)
       {
-        /*static float quantizationRows = 0.006 * m_rows;
-        static float quantizationCols = 0.006 * m_cols;
-
-        int column = touchIndices[i] / m_rows;
-        int row = touchIndices[i] % m_rows;
-        int qcolumn = (int)(column / quantizationCols) * quantizationCols;
-        int qrow = (int)(row / quantizationRows) * quantizationRows;
-
-        pointsx.push_back(qcolumn); // Column.
-        pointsy.push_back(qrow); // Row.
-        */
         Eigen::Vector2i point((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)), (touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
 
         points->push_back(point);
-        //pointsx.push_back((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
-        //pointsy.push_back((touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
       }
 
       m_touchState.set_touch_state(points, true, true);
@@ -244,13 +237,15 @@ void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::arr
   static bool initialised = false;
 
   // Display the raw depth and the raycasted depth.
-  OpenCVExtra::display_image_scale_to_range(rawDepth, "Current raw depth from camera in millimeters");
-  OpenCVExtra::display_image_scale_to_range(m_raycastedDepthResult.get(), "Current depth raycast in millimeters");
+  OpenCVExtra::display_image_and_scale(m_rawDepthCopy.get(), 100.0f, "Current raw depth from camera in centimeters");
+  OpenCVExtra::display_image_and_scale(m_raycastedDepthResult.get(), 100.0f, "Current depth raycast in centimeters");
 
   // Display the absolute difference between the raw and raycasted depth.
   static af::array tmp;
-  tmp = *m_diffRawRaycast * 1000.0f;
-  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+  tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
+  tmp(af::where(tmp < 0.0f)) = 0;
+  tmp(af::where(tmp > 255.0f)) = 255;
+  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
 
   // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)

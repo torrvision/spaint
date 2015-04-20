@@ -58,7 +58,8 @@ public:
       for(int x = 0; x < width; ++x)
       {
         float intensity = OpenCVExtra::get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * scaleFactor;
-        if((intensity < 0) || (intensity > 255)) intensity = 0;
+        if(intensity < 0) intensity = 0;
+        if(intensity > 255) intensity = 255;
         set_ocv_mat_8UC1(OCVImageDataPtr, x, y, width, static_cast<int8_t>(intensity));
       }
 

@@ -65,7 +65,7 @@ public:
    *
    * \param settings       The settings to use for InfiniTAM which contains the voxel size.
    * \param trachingState  The InfiniTAM tracking state which contains the pose5of the camera.
-   * \param view           The InfiniTAM view which contains the raw depth imag5.
+   * \param view           The InfiniTAM view which contains the raw depth image.
    */
   explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view);
 
