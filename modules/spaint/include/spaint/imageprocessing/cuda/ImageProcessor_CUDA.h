@@ -2,8 +2,8 @@
  * spaint: ImageProcessor_CUDA.h
  */
 
-#ifndef H_SPAINT_IMAGEPROCESSING_CUDA
-#define H_SPAINT_IMAGEPROCESSING_CUDA
+#ifndef H_SPAINT_IMAGEPROCESSOR_CUDA
+#define H_SPAINT_IMAGEPROCESSOR_CUDA
 
 #include "../interface/ImageProcessor.h"
 

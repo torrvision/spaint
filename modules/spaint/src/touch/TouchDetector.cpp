@@ -7,10 +7,10 @@
 #include <iostream>
 
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
-#include "visualisers/cpu/DepthCalculator_CPU.h"
+#include "visualisers/cpu/DepthVisualiser_CPU.h"
 #ifdef WITH_CUDA
 #include "imageprocessing/cuda/ImageProcessor_CUDA.h"
-#include "visualisers/cuda/DepthCalculator_CUDA.h"
+#include "visualisers/cuda/DepthVisualiser_CUDA.h"
 #endif
 
 #ifdef WITH_OPENCV
@@ -36,12 +36,12 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 #ifdef WITH_CUDA
   m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, true));
 
-  m_depthCalculator.reset(new DepthCalculator_CUDA);
+  m_depthCalculator.reset(new DepthVisualiser_CUDA);
   m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
   m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, false));
 
-  m_depthCalculator.reset(new DepthCalculator_CPU);
+  m_depthCalculator.reset(new DepthVisualiser_CPU);
   m_imageProcessor.reset(new ImageProcessor_CPU);
 #endif
 
@@ -63,7 +63,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
       TypeConversions::EigV3f_to_ITMV3f(camera->p()),
       TypeConversions::EigV3f_to_ITMV3f(camera->n()),
       voxelSize,
-      DepthCalculator::DT_ORTHOGRAPHIC);
+      DepthVisualiser::DT_ORTHOGRAPHIC);
 
   // Calculate the difference between the raw depth and the raycasted depth.
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), rawDepth, m_raycastedDepthResult.get());

@@ -1,9 +1,9 @@
 /**
- * spaint: DepthCalculator_Shared.h
+ * spaint: DepthVisualiser_Shared.h
  */
 
-#ifndef H_SPAINT_DEPTHCALCULATOR_SHARED
-#define H_SPAINT_DEPTHCALCULATOR_SHARED
+#ifndef H_SPAINT_DEPTHVISUALISER_SHARED
+#define H_SPAINT_DEPTHVISUALISER_SHARED
 
 #include <cstdlib>
 
@@ -22,16 +22,16 @@ namespace spaint {
  * \param foundPoint  A flag indicating whether of not any point was actually hit by the ray (true if yes; false if no).
  */
 _CPU_AND_GPU_CODE_
-inline void shade_pixel_depth(float& dest, const Vector3f& cameraPoint, const Vector3f& cameraLookVector, const Vector3f& worldPoint, float voxelSize, bool foundPoint, DepthCalculator::DepthType depthType)
+inline void shade_pixel_depth(float& dest, const Vector3f& cameraPoint, const Vector3f& cameraLookVector, const Vector3f& worldPoint, float voxelSize, bool foundPoint, DepthVisualiser::DepthType depthType)
 {
   dest = -1.0f;
   if(foundPoint)
   {
-    if(depthType == DepthCalculator::DT_ORTHOGRAPHIC)
+    if(depthType == DepthVisualiser::DT_ORTHOGRAPHIC)
     {
       dest = (ORUtils::dot(worldPoint, cameraLookVector) - ORUtils::dot(cameraPoint, cameraLookVector));
     }
-    else if(depthType == DepthCalculator::DT_EUCLIDEAN)
+    else if(depthType == DepthVisualiser::DT_EUCLIDEAN)
     {
       float dx = abs(cameraPoint.x - worldPoint.x);
       float dy = abs(cameraPoint.y - worldPoint.y);

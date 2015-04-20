@@ -2,8 +2,8 @@
  * spaint: ImageProcessor.h
  */
 
-#ifndef H_SPAINT_IMAGEPROCESSING
-#define H_SPAINT_IMAGEPROCESSING
+#ifndef H_SPAINT_IMAGEPROCESSOR
+#define H_SPAINT_IMAGEPROCESSOR
 
 #include <stdexcept>
 

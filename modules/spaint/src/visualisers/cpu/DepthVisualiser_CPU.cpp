@@ -1,16 +1,16 @@
 /**
- * spaint: DepthCalculator_CPU.cpp
+ * spaint: DepthVisualiser_CPU.cpp
  */
 
-#include "visualisers/cpu/DepthCalculator_CPU.h"
+#include "visualisers/cpu/DepthVisualiser_CPU.h"
 
-#include "visualisers/shared/DepthCalculator_Shared.h"
+#include "visualisers/shared/DepthVisualiser_Shared.h"
 
 namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void DepthCalculator_CPU::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
+void DepthVisualiser_CPU::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
 {
   int imgSize = outputImage->noDims.x * outputImage->noDims.y;
 

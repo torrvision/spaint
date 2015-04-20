@@ -1,18 +1,18 @@
 /**
- * spaint: DepthCalculator_CUDA.h
+ * spaint: DepthVisualiser_CUDA.h
  */
 
-#ifndef H_SPAINT_DEPTHCALCULATOR_CUDA
-#define H_SPAINT_DEPTHCALCULATOR_CUDA
+#ifndef H_SPAINT_DEPTHVISUALISER_CUDA
+#define H_SPAINT_DEPTHVISUALISER_CUDA
 
-#include "../interface/DepthCalculator.h"
+#include "../interface/DepthVisualiser.h"
 
 namespace spaint {
 
 /**
  * \brief An instance of this class can be used to render a depth visualisation of an InfiniTAM scene using CUDA.
  */
-class DepthCalculator_CUDA : public DepthCalculator
+class DepthVisualiser_CUDA : public DepthVisualiser
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

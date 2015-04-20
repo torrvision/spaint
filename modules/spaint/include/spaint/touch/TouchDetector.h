@@ -12,7 +12,7 @@
 #include <rigging/SimpleCamera.h>
 
 #include "../imageprocessing/interface/ImageProcessor.h"
-#include "../visualisers/interface/DepthCalculator.h"
+#include "../visualisers/interface/DepthVisualiser.h"
 #include "TouchState.h"
 
 //#define DEBUG_TOUCH_VERBOSE
@@ -53,7 +53,7 @@ private:
   af::array m_connectedComponents;
 
   /** The depth calculator. */
-  boost::shared_ptr<const DepthCalculator> m_depthCalculator;
+  boost::shared_ptr<const DepthVisualiser> m_depthCalculator;
 
   /** The threshold below which the raw and raycasted depth is assumed to be equal. */
   float m_depthLowerThreshold;

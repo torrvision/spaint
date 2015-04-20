@@ -2,8 +2,8 @@
  * spaint: ImageProcessor_Shared.h
  */
 
-#ifndef H_SPAINT_IMAGEPROCESSING_SHARED
-#define H_SPAINT_IMAGEPROCESSING_SHARED
+#ifndef H_SPAINT_IMAGEPROCESSOR_SHARED
+#define H_SPAINT_IMAGEPROCESSOR_SHARED
 
 namespace spaint {
 

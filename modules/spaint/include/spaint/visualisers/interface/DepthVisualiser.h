@@ -1,5 +1,5 @@
 /**
- * spaint: DepthCalculator.h
+ * spaint: DepthVisualiser.h
  */
 
 #ifndef H_SPAINT_DEPTHVISUALISER
@@ -15,7 +15,7 @@ namespace spaint {
 /**
  * \brief An instance of a class deriving from this one can be used to render a depth visualisation of an InfiniTAM scene.
  */
-class DepthCalculator
+class DepthVisualiser
 {
   //#################### ENUMERATIONS ####################
 public:
@@ -33,7 +33,7 @@ public:
   /**
    * \brief Destroys the semantic visualiser.
    */
-  virtual ~DepthCalculator() {}
+  virtual ~DepthVisualiser() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

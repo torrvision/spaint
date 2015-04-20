@@ -315,23 +315,23 @@ include/spaint/util/TypeConversions.h
 
 ##
 SET(visualisers_cpu_sources
-src/visualisers/cpu/DepthCalculator_CPU.cpp
+src/visualisers/cpu/DepthVisualiser_CPU.cpp
 src/visualisers/cpu/SemanticVisualiser_CPU.cpp
 )
 
 SET(visualisers_cpu_headers
-include/spaint/visualisers/cpu/DepthCalculator_CPU.h
+include/spaint/visualisers/cpu/DepthVisualiser_CPU.h
 include/spaint/visualisers/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
 SET(visualisers_cuda_sources
-src/visualisers/cuda/DepthCalculator_CUDA.cu
+src/visualisers/cuda/DepthVisualiser_CUDA.cu
 src/visualisers/cuda/SemanticVisualiser_CUDA.cu
 )
 
 SET(visualisers_cuda_headers
-include/spaint/visualisers/cuda/DepthCalculator_CUDA.h
+include/spaint/visualisers/cuda/DepthVisualiser_CUDA.h
 include/spaint/visualisers/cuda/SemanticVisualiser_CUDA.h
 )
 
@@ -341,13 +341,13 @@ src/visualisers/interface/SemanticVisualiser.cpp
 )
 
 SET(visualisers_interface_headers
-include/spaint/visualisers/interface/DepthCalculator.h
+include/spaint/visualisers/interface/DepthVisualiser.h
 include/spaint/visualisers/interface/SemanticVisualiser.h
 )
 
 ##
 SET(visualisers_shared_headers
-include/spaint/visualisers/shared/DepthCalculator_Shared.h
+include/spaint/visualisers/shared/DepthVisualiser_Shared.h
 include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 )
 

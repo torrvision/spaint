@@ -1,16 +1,16 @@
 /**
- * spaint: DepthCalculator_CUDA.cu
+ * spaint: DepthVisualiser_CUDA.cu
  */
 
-#include "visualisers/cuda/DepthCalculator_CUDA.h"
+#include "visualisers/cuda/DepthVisualiser_CUDA.h"
 
-#include "visualisers/shared/DepthCalculator_Shared.h"
+#include "visualisers/shared/DepthVisualiser_Shared.h"
 
 namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Vector3f cameraLookVector, const Vector4f *ptsRay, Vector2i imgSize, float voxelSize, DepthCalculator::DepthType depthType)
+__global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Vector3f cameraLookVector, const Vector4f *ptsRay, Vector2i imgSize, float voxelSize, DepthVisualiser::DepthType depthType)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if(x >= imgSize.x || y >= imgSize.y) return;
@@ -22,7 +22,7 @@ __global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Ve
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void DepthCalculator_CUDA::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
+void DepthVisualiser_CUDA::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
 {
   Vector2i imgSize = outputImage->noDims;
 
