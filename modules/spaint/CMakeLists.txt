@@ -74,6 +74,10 @@ include/spaint/imageprocessing/cuda/ImageProcessor_CUDA.h
 )
 
 ##
+SET(imageprocessing_interface_sources
+src/imageprocessing/interface/ImageProcessor.cpp
+)
+
 SET(imageprocessing_interface_headers
 include/spaint/imageprocessing/interface/ImageProcessor.h
 )
@@ -403,7 +407,7 @@ ${visualisers_shared_headers}
 )
 
 IF(WITH_ARRAYFIRE)
-  SET(sources ${sources} ${imageprocessing_cpu_sources})
+  SET(sources ${sources} ${imageprocessing_cpu_sources} ${imageprocessing_interface_sources})
   SET(headers ${headers} ${imageprocessing_cpu_headers} ${imageprocessing_interface_headers} ${imageprocessing_shared_headers})
 ENDIF()
 

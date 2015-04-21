@@ -16,7 +16,7 @@
 #include "TouchState.h"
 
 //#define DEBUG_TOUCH_VERBOSE
-//#define DEBUG_TOUCH_DISPLAY
+#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
@@ -108,7 +108,7 @@ public:
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth);
+  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth);
 
   /**
    * \brief Gets the touch state.
@@ -126,7 +126,7 @@ private:
    * \param rawDepth             The raw depth image from the camera.
    * \param temporaryCandidate   The region which represents the touch interaction.
    */
-  void run_debugging_display(ITMFloatImage *rawDepth, const af::array& temporaryCandidate);
+  void run_debugging_display(const af::array& temporaryCandidate);
 #endif
 };
 

@@ -37,7 +37,7 @@ public:
    * \brief Displays an image and scales the pixel values by a specified scaling factor.
    *
    * \param infiniTAMImage  The InfiniTAM image.
-   * \param scaleFactor     The facotr by which to scale the image pixels.
+   * \param scaleFactor     The factor by which to scale the image pixels.
    * \param windowName      The name of the window in which to display the resulting image.
    */
   static void display_image_and_scale(ITMFloatImage *infiniTAMImage, float scaleFactor, const std::string& windowName)
@@ -47,24 +47,24 @@ public:
 
     // Get the infiniTAM image pointer.
     infiniTAMImage->UpdateHostFromDevice();
-    float *ITMImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
+    float *itmImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
 
-    //Create an OpenCV image and get the data pointer.
-    cv::Mat OCVImage = cv::Mat::zeros(height, width, CV_8UC1);
-    int8_t *OCVImageDataPtr = (int8_t*)OCVImage.data;
+    // Create an OpenCV image and get the data pointer.
+    cv::Mat ocvImage = cv::Mat::zeros(height, width, CV_8UC1);
+    unsigned char *ocvImageDataPtr = ocvImage.data;
 
-    //Inner loop to set the OpenCV Image Pixes.
+    // Inner loop to set the OpenCV Image Pixes.
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
       {
-        float intensity = OpenCVExtra::get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * scaleFactor;
+        float intensity = OpenCVExtra::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) * scaleFactor;
         if(intensity < 0) intensity = 0;
         if(intensity > 255) intensity = 255;
-        set_ocv_mat_8UC1(OCVImageDataPtr, x, y, width, static_cast<int8_t>(intensity));
+        set_ocv_mat_8UC1(ocvImageDataPtr, x, y, width, static_cast<unsigned char>(intensity));
       }
 
     // Display the image.
-    cv::imshow(windowName, OCVImage);
+    cv::imshow(windowName, ocvImage);
   }
 
   /*
@@ -80,28 +80,27 @@ public:
 
     // Get the minimum and maximum values in the infiniTAM image.
     infiniTAMImage->UpdateHostFromDevice();
-    float *ITMImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
-    std::pair<float, float> minAndMax = itm_mat_32SC1_min_max_calculator(ITMImageDataPtr, width, height);
+    float *itmImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
+    std::pair<float, float> minAndMax = itm_mat_32SC1_min_max_calculator(itmImageDataPtr, width, height);
 
     // Calculate the mapping to image values between 0 and 255.
     float range = minAndMax.second - minAndMax.first;
-    float alpha = 255.0 / range;
-    float beta = -minAndMax.first * 255.0 / range;
+    float scale = 255.0 / range;
 
     // Create an OpenCV image and get the data pointer.
-    cv::Mat OCVImage = cv::Mat::zeros(height, width, CV_8UC1);
-    int8_t *OCVImageDataPtr = (int8_t*)OCVImage.data;
+    cv::Mat ocvImage = cv::Mat::zeros(height, width, CV_8UC1);
+    unsigned char *ocvImageDataPtr = ocvImage.data;
 
     // Inner loop to set the OpenCV Image Pixels.
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
       {
-        float intensity = OpenCVExtra::get_itm_mat_32SC1(ITMImageDataPtr, x, y, width) * alpha + beta;
-        set_ocv_mat_8UC1(OCVImageDataPtr, x, y, width, static_cast<int8_t>(intensity));
+        float intensity = (OpenCVExtra::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) - minAndMax.first) * scale;
+        set_ocv_mat_8UC1(ocvImageDataPtr, x, y, width, static_cast<unsigned char>(intensity));
       }
 
     // Display the image.
-    cv::imshow(windowName, OCVImage);
+    cv::imshow(windowName, ocvImage);
   }
 
   /**
@@ -133,30 +132,30 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Sets an opencv image pixel.
+   * \brief Sets an OpenCV image pixel.
    *
-   * \param OCVImageDataPtr   The pointer to the first element in the image.
+   * \param ocvImageDataPtr   The pointer to the first element in the image.
    * \param x                 The x position in the image.
    * \param y                 The y position in wht image.
    * \param width             The width of the image.
    * \param value             The pixel value to assign to the specified image pixel.
    */
-  static void set_ocv_mat_8UC1(int8_t *OCVImageDataPtr, int x, int y, int width, int8_t value)
+  static void set_ocv_mat_8UC1(unsigned char *ocvImageDataPtr, int x, int y, int width, unsigned char value)
   {
-    OCVImageDataPtr[y * width + x] = value;
+    ocvImageDataPtr[y * width + x] = value;
   }
 
   /**
-   * \brief Calculate the minimum and maximum values in an InfiniTAM image.
+   * \brief Calculates the minimum and maximum values in an InfiniTAM image.
    *
-   * \param ITMImageDataPtr   The InfiniTAM image data pointer.
+   * \param itmImageDataPtr   The InfiniTAM image data pointer.
    * \param width             The width of the image.
    * \param height            The height of the image.
    * \return                  A pair of values indicating the minimum and maximum values found.
    */
-  static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *ITMImageDataPtr, int width, int height)
+  static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *itmImageDataPtr, int width, int height)
   {
-    std::vector<float> tmpImgVector(ITMImageDataPtr, ITMImageDataPtr + width * height);
+    std::vector<float> tmpImgVector(itmImageDataPtr, itmImageDataPtr + width * height);
     float minElement = *std::min_element(tmpImgVector.begin(), tmpImgVector.end());
     float maxElement = *std::max_element(tmpImgVector.begin(), tmpImgVector.end());
     return std::make_pair(minElement, maxElement);
@@ -165,15 +164,15 @@ private:
   /**
    * \brief Gets the value contained at a specified position in an InfiniTAM image.
    *
-   * \param InfiniTAMImageDataPtr   The pointer to the first element in the InfiniTAM image.
+   * \param itmImageDataPtr   The pointer to the first element in the InfiniTAM image.
    * \param x                       The x position in the image.
    * \param y                       The y position in the image.
    * \param width                   The width of the image.
    * \return                        The value contained at the specified location.
    */
-  static float get_itm_mat_32SC1(float *InfiniTAMImageDataPtr, int x, int y, int width)
+  static float get_itm_mat_32SC1(float *itmImageDataPtr, int x, int y, int width)
   {
-    return InfiniTAMImageDataPtr[y * width + x];
+    return itmImageDataPtr[y * width + x];
   }
 };
 

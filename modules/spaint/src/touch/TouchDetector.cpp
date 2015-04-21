@@ -57,7 +57,8 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_Ptr camera, float voxelSize, ITMFloatImage *rawDepth)
+
+void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth)
 {
   // The camera is assumed to be positioned close to the user. 
   // This allows a threshold on the maximum depth that a touch interaction may occur.
@@ -220,7 +221,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
 #endif
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-    run_debugging_display(rawDepth, temporaryCandidate);
+    run_debugging_display(temporaryCandidate);
 #endif
 }
 
@@ -232,7 +233,7 @@ const TouchState& TouchDetector::get_touch_state() const
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-void TouchDetector::run_debugging_display(ITMFloatImage *rawDepth, const af::array& temporaryCandidate)
+void TouchDetector::run_debugging_display(const af::array& temporaryCandidate)
 {
   static bool initialised = false;
 

@@ -10,15 +10,15 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessor_CPU::absolute_difference_calculator(ITMFloatImage *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
+void ImageProcessor_CPU::absolute_difference_calculator(ITMFloatImage *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const
 {
   ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
   ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
 
   int imgSize = outputImage->noDims.x * outputImage->noDims.y;
   float *output = outputImage->GetData(MEMORYDEVICE_CPU);
-  float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
-  float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
+  const float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
+  const float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -29,7 +29,7 @@ void ImageProcessor_CPU::absolute_difference_calculator(ITMFloatImage *outputIma
   }
 }
 
-void ImageProcessor_CPU::absolute_difference_calculator(af::array *outputImage, ITMFloatImage *firstInputImage, ITMFloatImage *secondInputImage) const
+void ImageProcessor_CPU::absolute_difference_calculator(af::array *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const
 {
   ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
   ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
@@ -38,8 +38,8 @@ void ImageProcessor_CPU::absolute_difference_calculator(af::array *outputImage, 
   int width = outputImage->dims(1);
   int imgSize = height * width;
   float *output = outputImage->device<float>(); // Selecing host pointer does not work.
-  float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
-  float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
+  const float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
+  const float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -51,12 +51,12 @@ void ImageProcessor_CPU::absolute_difference_calculator(af::array *outputImage, 
   }
 }
 
-void ImageProcessor_CPU::pixel_setter(ITMFloatImage *output, ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const
+void ImageProcessor_CPU::pixel_setter(ITMFloatImage *output, const ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const
 {
   ImageProcessor::check_image_size_equal(output, input);
   int imgSize = input->noDims.x * input->noDims.y;
   float *outputData = output->GetData(MEMORYDEVICE_CPU);
-  float *inputData = input->GetData(MEMORYDEVICE_CPU);
+  const float *inputData = input->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -64,20 +64,6 @@ void ImageProcessor_CPU::pixel_setter(ITMFloatImage *output, ITMFloatImage *inpu
   for(int locId = 0; locId < imgSize; ++locId)
   {
     shade_pixel_on_comparison(&outputData[locId], inputData[locId], comparator, comparisonOperator, value);
-  }
-}
-
-void ImageProcessor_CPU::set_invalid_regions(ITMFloatImage *image, float value) const
-{
-  int imgSize = image->noDims.x * image->noDims.y;
-  float *imageData = image->GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int locId = 0; locId < imgSize; ++locId)
-  {
-    shade_invalid_pixels(&imageData[locId], value);
   }
 }
 
