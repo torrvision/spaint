@@ -32,7 +32,7 @@ template <typename Archive, typename Label> void save_construct_data(Archive& ar
 namespace rafl {
 
 /**
- * \brief An instance of this struct represents a node in the tree.
+ * \brief An instance of this class template represents a node in a decision tree.
  */
 template <typename Label>
 class Node

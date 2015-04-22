@@ -64,6 +64,9 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
+  ExampleReservoir()
+  {}
+
   /**
    * \brief Constructs a reservoir that can store at most the specified number of examples of each class.
    *
@@ -80,8 +83,6 @@ public:
   ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, size_t curSize, const std::map<Label,std::vector<boost::shared_ptr<const Example<int> > > >& examples, const Histogram_Ptr& histogram, size_t seenExamples) 
   : m_curSize(curSize), m_examples(examples), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
   {}
-
-  ExampleReservoir(){};
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -242,7 +243,6 @@ namespace boost { namespace serialization {
 template<typename Archive, typename Label>
 void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
 {
-  std::cout << "Saving an ExampleReservoir\n";
   ar << exampleReservoir->m_curSize;
   ar << exampleReservoir->m_examples;
   ar << exampleReservoir->m_histogram;
@@ -254,8 +254,6 @@ void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *examp
 template<typename Archive, typename Label>
 void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
 {
-  std::cout << "Loading an ExampleReservoir\n";
-
   typedef rafl::Example<Label> IExample;
   typedef boost::shared_ptr<IExample> IExample_Ptr;
   typedef boost::shared_ptr<const IExample> IExample_CPtr;

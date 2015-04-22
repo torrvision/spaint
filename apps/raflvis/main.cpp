@@ -287,11 +287,11 @@ int main(int argc, char *argv[])
 
     if(roundCount % 50 == 0)
     {
-      boost_serial_save<boost::shared_ptr<RandomForest<int> > >("./randomForest" + std::to_string(roundCount) + ".rf", &randomForest);
+      boost_serial_save<boost::shared_ptr<RandomForest<int> > >("./randomForest" + boost::lexical_cast<std::string>(roundCount) + ".rf", &randomForest);
 
       RF_Ptr newRandomForest(new RF(treeCount, settings));
       RF_Ptr *newRandomForestPtr = &newRandomForest;
-      boost_serial_load<boost::shared_ptr<RandomForest<int> > >("./randomForest" + std::to_string(roundCount) + ".rf", &newRandomForestPtr);
+      boost_serial_load<boost::shared_ptr<RandomForest<int> > >("./randomForest" + boost::lexical_cast<std::string>(roundCount) + ".rf", &newRandomForestPtr);
       randomForest = *newRandomForestPtr;
     }
   }
