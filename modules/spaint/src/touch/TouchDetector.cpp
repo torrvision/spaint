@@ -60,7 +60,61 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 
 void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth)
 {
-  // The camera is assumed to be positioned close to the user. 
+  calculate_binary_difference_image(renderState, camera, voxelSize, rawDepth);
+
+  filter_binary_image();
+
+  // Calculate the connected components.
+  m_connectedComponents = af::regions(m_thresholded);
+
+  af::array goodCandidates = select_good_connected_components();
+
+  // Post-process the good candidates to identify the region which is most likely to be touching a surface.
+  if(goodCandidates.elements() > 0)
+  {
+    static af::array diffCopyMillimetersU8(m_rows, m_cols, u8);
+
+    // Convert the difference between raw and raycasted depth to millimeters.
+    diffCopyMillimetersU8 = truncate_to_unsigned_char((*m_diffRawRaycast) * 1000.0f);
+
+    int bestConnectedComponent = find_best_connected_component(goodCandidates, diffCopyMillimetersU8);
+
+    Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
+
+    if(touchPoints->size() > 0) m_touchState.set_touch_state(touchPoints, true, true);
+    else m_touchState.set_touch_state(touchPoints, false, false);
+  }
+  else{
+    m_touchState.set_touch_state(Points_CPtr(new Points), false, false);
+  }
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the touch points.
+  cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
+  const Points_CPtr& touchPoints = m_touchState.get_positions();
+  for(size_t i = 0, iend = touchPoints->size(); i < iend; ++i)
+  {
+    const Eigen::Vector2i& v = touchPoints->at(i);
+    cv::circle(touchPointImage, cv::Point(v[0], v[1]), 5, cv::Scalar(255), 2);
+  }
+  cv::imshow("touchPointImage", touchPointImage);
+#endif
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  cv::waitKey(m_debugDelayms);
+#endif
+}
+
+const TouchState& TouchDetector::get_touch_state() const
+{
+  return m_touchState;
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth)
+{
+  // The camera is assumed to be positioned close to the user.
   // This allows a threshold on the maximum depth that a touch interaction may occur.
   // For example the user's hand or leg cannot extend more than 2 meters away from the camera.
   // This turns out to be crucial since there may be large areas of the scene far away that are picked up by the Kinect but which are not integrated into the scene (InfiniTAM has a
@@ -77,7 +131,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
 
   // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).
   // In this case 100.0f meters.
-  m_imageProcessor->pixel_setter(m_raycastedDepthResult.get(), m_raycastedDepthResult.get(), 0.0f, ImageProcessor::LESS, 100.0f); 
+  m_imageProcessor->pixel_setter(m_raycastedDepthResult.get(), m_raycastedDepthResult.get(), 0.0f, ImageProcessor::LESS, 100.0f);
 
   // Calculate the difference between the raw depth and the raycasted depth.
   m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), m_rawDepthCopy.get(), m_raycastedDepthResult.get());
@@ -85,10 +139,49 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   // Threshold the difference image - if there is a difference, there is something in the image!
   m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;
 
-#if 1
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the raw depth and the raycasted depth.
+  OpenCVExtra::display_image_and_scale(m_rawDepthCopy.get(), 100.0f, "Current raw depth from camera in centimeters");
+  OpenCVExtra::display_image_and_scale(m_raycastedDepthResult.get(), 100.0f, "Current depth raycast in centimeters");
+
+  // Display the absolute difference between the raw and raycasted depth.
+  static af::array tmp;
+  tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
+  tmp(af::where(tmp < 0.0f)) = 0;
+  tmp(af::where(tmp > 255.0f)) = 255;
+  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+
+  static bool initialised = false;
+
+  // Initialise the OpenCV Trackbar if it's the first iteration.
+  if(!initialised)
+  {
+    cv::namedWindow("DebuggingOutputWindow", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("depthThresholdmm", "DebuggingOutputWindow", &m_depthLowerThresholdmm, 50);
+    cv::createTrackbar("debugDelaymx", "DebuggingOutputWindow", &m_debugDelayms, 3000);
+  }
+  // Get the values from the trackBars
+  m_depthLowerThresholdmm = cv::getTrackbarPos("depthThresholdmm", "DebuggingOutputWindow");
+  m_debugDelayms = cv::getTrackbarPos("debugDelaymx", "DebuggingOutputWindow");
+
+  // Update the current depth Threshold in meters;
+  m_depthLowerThreshold = m_depthLowerThresholdmm / 1000.0f;
+
+  // Display the thresholded image.
+  static af::array thresholdedDisplay;
+  thresholdedDisplay = m_thresholded * 255.0f;
+  OpenCVExtra::ocvfig("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+
+  initialised = true;
+#endif
+}
+
+void TouchDetector::filter_binary_image()
+{
   // Perform morphological operations on the image to get rid of small segments.
   static af::array morphKernel;
-#ifdef DEBUG_TOUCH_DISPLAY
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   m_morphKernelSize = (m_morphKernelSize < 3) ? 3 : m_morphKernelSize;
 
   // Keep the morphological kernel size odd;
@@ -103,8 +196,27 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   m_thresholded = af::erode(m_thresholded, morphKernel);
   m_thresholded = af::dilate(m_thresholded, morphKernel);
 
-  // Calculate the connected components.
-  m_connectedComponents = af::regions(m_thresholded);
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  static bool initialised = false;
+
+  if(!initialised)
+  {
+    cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("KernelSize", "MorphologicalOperatorWindow", &m_morphKernelSize, 15);
+  }
+  m_morphKernelSize = cv::getTrackbarPos("KernelSize", "MorphologicalOperatorWindow");
+
+  // Display the threholded image after applying morphological operations.
+  static af::array morphDisplay;
+  morphDisplay = m_thresholded * 255.0f;
+  OpenCVExtra::ocvfig("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+
+  initialised = true;
+#endif
+}
+
+af::array TouchDetector::select_good_connected_components()
+{
   int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
 
   // Create a histogram of the connected components to identify the size of each region.
@@ -116,188 +228,129 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
 
 #ifdef DEBUG_TOUCH_VERBOSE
   af::print("Histogram of connected component image", histogram);
-#endif
-
-  // The good candidates are those whose area is greater than some specified threshold.
-  af::array goodCandidates = af::where(histogram > m_minimumAreaThreshold);
-
-#ifdef DEBUG_TOUCH_VERBOSE
-  if(goodCandidates.elements() > 0) af::print("goodCandidates", goodCandidates);
-#endif
-
-  // Post-process the good candidates to identify the region which is most likely to be touching a surface.
-  static af::array temporaryCandidate(m_rows, m_cols, u8);
-  static boost::shared_ptr<std::vector<Eigen::Vector2i> > points;
-  points.reset(new std::vector<Eigen::Vector2i>());
-
-  if(goodCandidates.elements() > 0)
-  {
-    int numberOfGoodCandidates = goodCandidates.dims(0);
-    int bestCandidate;
-    int *candidateIds = goodCandidates.as(s32).host<int>();
-
-    static af::array mask(m_rows, m_cols, u8);
-    static af::array diffCopyMillimeters32F(m_rows, m_cols, f32);
-    static af::array diffCopyMillimetersU8(m_rows, m_cols, u8);
-
-    // Convert the difference between raw and raycasted depth to millimeters.
-    diffCopyMillimeters32F = ((*m_diffRawRaycast) * 1000.0f);
-
-    // Truncate any values outside the range [0-255], before converting to unsigned 8-bit.
-    diffCopyMillimeters32F(af::where(diffCopyMillimeters32F < 0.0f)) = 0;
-    static af::array lowmask;
-    static af::array highmask;
-    lowmask = diffCopyMillimeters32F < 0.0f;
-    highmask = diffCopyMillimeters32F > 255.0f;
-    diffCopyMillimeters32F = diffCopyMillimeters32F - lowmask * diffCopyMillimeters32F;
-    diffCopyMillimeters32F = diffCopyMillimeters32F - (highmask * diffCopyMillimeters32F) + (255 * highmask);
-    diffCopyMillimetersU8 = diffCopyMillimeters32F.as(u8);
-
-    // If there are several good candidate then select the one which is closest to a surface.
-    if(numberOfGoodCandidates > 1)
-    {
-      std::vector<float> means(numberOfGoodCandidates);
-      int minElement;
-      for(int i = 0; i < numberOfGoodCandidates; ++i)
-      {
-        mask = m_connectedComponents == candidateIds[i];
-        temporaryCandidate = diffCopyMillimetersU8 * mask;
-        means[i] = af::mean<float>(temporaryCandidate);
-      }
-      minElement = *std::min_element(means.begin(), means.end());
-      bestCandidate = candidateIds[minElement];
-    }
-    else
-    {
-      bestCandidate = candidateIds[0];
-    }
-
-    // Binary mask identifying the region with the best candidate.
-    mask = m_connectedComponents == bestCandidate;
-
-    // Get the diff values corresponding to the best candidate region.
-    temporaryCandidate = diffCopyMillimetersU8 * mask;
-
-    // Quantize the intensity levels to 32 levels from 256.
-    temporaryCandidate = (temporaryCandidate / 8).as(u8) * 8;
-
-    // Filter the best candidate region prior to calculating the histogram.
-    af::medfilt(temporaryCandidate, 5, 5);
-
-    // Find the array positions which are within a narrow range close to a surface.
-    static float depthLowerThresholdMillimeters = m_depthLowerThreshold * 1000.0f;
-    static float depthUpperThresholdMillimeters = depthLowerThresholdMillimeters + 10.0f;
-
-    static float scaleFactor = 0.5f;
-    af::array goodPixelPositions = af::where(af::resize(scaleFactor, (temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters)));
-
-    static float touchAreaLowerThreshold = 0.0001 * m_cols * m_rows;
-    if(goodPixelPositions.elements() > touchAreaLowerThreshold)
-    {
-#ifdef DEBUG_TOUCH_VERBOSE
-      af::print("goodPixelPositions", goodPixelPositions);
-#endif
-
-      int numberOfTouchPoints = goodPixelPositions.dims(0);
-      int *touchIndices = goodPixelPositions.as(s32).host<int>();
-
-      for(int i = 0; i < numberOfTouchPoints; ++i)
-      {
-        Eigen::Vector2i point((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)), (touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
-
-        points->push_back(point);
-      }
-
-      m_touchState.set_touch_state(points, true, true);
-    }
-    else
-    {
-      m_touchState.set_touch_state(points, false, false);
-    }
-  }
-  else{
-    m_touchState.set_touch_state(points, false, false);
-  }
+  if(goodCandidates.elements() > 0) af::print("goodCandidates", af::where(histogram > m_minimumAreaThreshold));
 #endif
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-    run_debugging_display(temporaryCandidate);
-#endif
-}
-
-const TouchState& TouchDetector::get_touch_state() const
-{
-  return m_touchState;
-}
-
-//#################### PRIVATE MEMBER FUNCTIONS ####################
-
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-void TouchDetector::run_debugging_display(const af::array& temporaryCandidate)
-{
   static bool initialised = false;
-
-  // Display the raw depth and the raycasted depth.
-  OpenCVExtra::display_image_and_scale(m_rawDepthCopy.get(), 100.0f, "Current raw depth from camera in centimeters");
-  OpenCVExtra::display_image_and_scale(m_raycastedDepthResult.get(), 100.0f, "Current depth raycast in centimeters");
-
-  // Display the absolute difference between the raw and raycasted depth.
-  static af::array tmp;
-  tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
-  tmp(af::where(tmp < 0.0f)) = 0;
-  tmp(af::where(tmp > 255.0f)) = 255;
-  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
 
   // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)
   {
-    cv::namedWindow("DebuggingOutputWindow", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("depthThresholdmm", "DebuggingOutputWindow", &m_depthLowerThresholdmm, 50);
-    cv::createTrackbar("debugDelaymx", "DebuggingOutputWindow", &m_debugDelayms, 3000);
     cv::createTrackbar("areaThreshold", "DebuggingOutputWindow", &m_minimumAreaThreshold, m_rows * m_cols);
   }
+  m_minimumAreaThreshold = cv::getTrackbarPos("areaThreshold", "DebuggingOutputWindow");
 
-  // Update the current depth Threshold in meters;
-  m_depthLowerThreshold = m_depthLowerThresholdmm / 1000.0f;
+  initialised = true;
+#endif
 
-  // Display the thresholded image.
-  static af::array thresholdedDisplay;
-  thresholdedDisplay = m_thresholded * 255.0f;
-  OpenCVExtra::ocvfig("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+  // The good candidates are those whose area is greater than some specified threshold.
+  return af::where(histogram > m_minimumAreaThreshold);
+}
 
-#if 1
-  // Initialise the OpenCV Trackbar for the morphological kernel size.
-  if(!initialised)
+TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8)
+{
+  Points_Ptr touchPoints(new Points);
+
+  // Binary mask identifying the region with the best candidate.
+  static af::array mask;
+  mask = m_connectedComponents == bestConnectedComponent;
+
+  // Get the diff values corresponding to the best candidate region.
+  static af::array temporaryCandidate;
+  temporaryCandidate = diffCopyMillimetersU8 * mask;
+
+  // Quantize the intensity levels to 32 levels from 256.
+  temporaryCandidate = (temporaryCandidate / 8).as(u8) * 8;
+
+  // Filter the best candidate region prior to calculating the histogram.
+  af::medfilt(temporaryCandidate, 5, 5);
+
+  // Find the array positions which are within a narrow range close to a surface.
+  static float depthLowerThresholdMillimeters = m_depthLowerThreshold * 1000.0f;
+  static float depthUpperThresholdMillimeters = depthLowerThresholdMillimeters + 10.0f;
+
+  static float scaleFactor = 0.5f;
+  af::array goodPixelPositions = af::where(af::resize(scaleFactor, (temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters)));
+
+  static float touchAreaLowerThreshold = 0.0001 * m_cols * m_rows;
+  if(goodPixelPositions.elements() > touchAreaLowerThreshold)
   {
-    cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("KernelSize", "MorphologicalOperatorWindow", &m_morphKernelSize, 15);
+#ifdef DEBUG_TOUCH_VERBOSE
+    af::print("goodPixelPositions", goodPixelPositions);
+#endif
+
+    int numberOfTouchPoints = goodPixelPositions.dims(0);
+    int *touchIndices = goodPixelPositions.as(s32).host<int>();
+
+    for(int i = 0; i < numberOfTouchPoints; ++i)
+    {
+      Eigen::Vector2i point((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)), (touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
+
+      touchPoints->push_back(point);
+    }
   }
 
-  // Display the threholded image after applying morphological operations.
-  static af::array morphDisplay;
-  morphDisplay = m_thresholded * 255.0f;
-  OpenCVExtra::ocvfig("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+  return touchPoints;
+}
+
+af::array TouchDetector::truncate_to_unsigned_char(const af::array& array)
+{
+  // Truncate any values outside the range [0-255], before converting to unsigned 8-bit.
+  static af::array lowmask;
+  lowmask = array < 0.0f;
+
+  static af::array arrayCopy;
+  arrayCopy = array - lowmask * array;
+
+  static af::array highmask;
+  highmask = arrayCopy > 255.0f;
+  arrayCopy = arrayCopy - (highmask * arrayCopy) + (255 * highmask);
+
+  return arrayCopy.as(u8);
+}
+
+int TouchDetector::find_best_connected_component(const af::array& goodCandidates, const af::array& diffCopyMillimetersU8)
+{
+  int numberOfGoodCandidates = goodCandidates.dims(0);
+  int *candidateIds = goodCandidates.as(s32).host<int>();
+  int bestConnectedComponent = -1;
+
+  static af::array temporaryCandidate(m_rows, m_cols, u8);
+  static af::array mask(m_rows, m_cols, u8);
+
+  // If there are several good candidate then select the one which is closest to a surface.
+  if(numberOfGoodCandidates > 1)
+  {
+    std::vector<float> means(numberOfGoodCandidates);
+    int minElement;
+    for(int i = 0; i < numberOfGoodCandidates; ++i)
+    {
+
+      mask = m_connectedComponents == candidateIds[i];
+      temporaryCandidate = diffCopyMillimetersU8 * mask;
+      means[i] = af::mean<float>(temporaryCandidate);
+    }
+    minElement = *std::min_element(means.begin(), means.end());
+    bestConnectedComponent = candidateIds[minElement];
+  }
+  else
+  {
+    bestConnectedComponent = candidateIds[0];
+  }
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  mask = m_connectedComponents == bestConnectedComponent;
+  temporaryCandidate = diffCopyMillimetersU8 * mask;
 
   // Display the best candidate's difference image.
   static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
   temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVExtra::ocvfig("bestCandidate", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
-
-  // Display the touch points.
-  cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
-  const boost::shared_ptr<const std::vector<Eigen::Vector2i> >& points = m_touchState.get_positions();
-  for(size_t i = 0, iend = points->size(); i < iend; ++i)
-  {
-    const Eigen::Vector2i v = points->at(i);
-    cv::circle(touchPointImage, cv::Point(v[0], v[1]), 5, cv::Scalar(255), 2);
-  }
-  cv::imshow("touchPointImage", touchPointImage);
+  OpenCVExtra::ocvfig("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 #endif
 
-  cv::waitKey(m_debugDelayms);
-  initialised = true;
+  return bestConnectedComponent;
 }
-#endif
 
 }
 

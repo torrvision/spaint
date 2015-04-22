@@ -30,6 +30,9 @@ private:
   typedef boost::shared_ptr<af::array> AFImage_Ptr;
   typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
+  typedef std::vector<Eigen::Vector2i> Points;
+  typedef boost::shared_ptr<Points> Points_Ptr;
+  typedef boost::shared_ptr<const Points> Points_CPtr;
 
 #ifdef DEBUG_TOUCH_DISPLAY
   //#################### PRIVATE DEBUGGING VARIABLES ####################
@@ -117,17 +120,53 @@ public:
    */
   const TouchState& get_touch_state() const;
 
-#ifdef DEBUG_TOUCH_DISPLAY
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Display various debugging information.
+   * \brief Find image regions which differ from the raw and raycasted depth images.
    *
-   * \param rawDepth             The raw depth image from the camera.
-   * \param temporaryCandidate   The region which represents the touch interaction.
+   * \param renderState   The render state.
+   * \param camera        The camera.
+   * \param voxelSize     The scene voxel size.
+   * \param rawDepth      The raw depth image from the camera.
    */
-  void run_debugging_display(const af::array& temporaryCandidate);
-#endif
+  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth);
+
+  /**
+   * \brief Filter a binary image to remove small and spurious regions.
+   */
+  void filter_binary_image();
+
+  /**
+   * \brief Select the best candidate amongst the good candidates.
+   *
+   * \param goodCandidates         Image regions which are promising touch regions.
+   * \param diffCopyMillimetersU8  A copy of the difference image in millimeters and as an unsigned char.
+   * \return                       The best candidate region.
+   */
+  int find_best_connected_component(const af::array& goodCandidates, const af::array& diffCopyMillimetersU8);
+
+  /**
+   * \brief Get the touch points from the best connected component.
+   *
+   * \param bestCandidate          The id of the best connected component.
+   * \param diffCopyMillimetersU8  The diff in millimeters unsigned char.
+   * \return                       The touch points.
+   */
+  Points_CPtr get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8);
+
+  /**
+   * \brief Select good connected components.
+   */
+  af::array select_good_connected_components();
+
+  /**
+   * \brief Convert an array to unsigned char truncating values outside the range 0-255.
+   *
+   * \param array   The input array.
+   * \return        The truncated and converted array.
+   */
+  af::array truncate_to_unsigned_char(const af::array& array);
 };
 
 }
