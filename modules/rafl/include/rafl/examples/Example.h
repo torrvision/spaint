@@ -7,10 +7,13 @@
 
 #include <ostream>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <tvgutil/LimitedContainer.h>
-#include <tvgutil/Serialization.h>
 
 #include "../base/Descriptor.h"
+
+//#################### FORWARD DECLARATIONS ####################
 
 namespace rafl {
 
@@ -19,9 +22,13 @@ template <typename Label> class Example;
 }
 
 namespace boost { namespace serialization {
-template<typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::Example<Label> *example, const unsigned int file_version);
-template<typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::Example<Label> *example, const unsigned int file_version);
+
+template<typename Archive, typename LabelType> void load_construct_data(Archive&, rafl::Example<LabelType>*, const unsigned int);
+template<typename Archive, typename LabelType> void save_construct_data(Archive&, const rafl::Example<LabelType>*, const unsigned int);
+
 }}
+
+//#################### MAIN CLASS TEMPLATE ####################
 
 namespace rafl {
 
@@ -73,20 +80,21 @@ public:
     return m_label;
   }
 
-  //#################### SERIALIZATIONN ####################  
+  //#################### SERIALIZATION ####################
 private:
-  friend class boost::serialization::access;
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
     // Intentionally left empty.
   }
 
-  template<typename Archive, typename Dtype>
-  friend void boost::serialization::save_construct_data(Archive& ar, const Example<Dtype> *example, const unsigned int file_version);
+  friend class boost::serialization::access;
 
-  template<typename Archive, typename Dtype>
-  friend void boost::serialization::load_construct_data(Archive& ar, Example<Dtype> *example, const unsigned int file_version);
+  template<typename Archive, typename LabelType>
+  friend void boost::serialization::load_construct_data(Archive&, Example<LabelType>*, const unsigned int);
+
+  template<typename Archive, typename LabelType>
+  friend void boost::serialization::save_construct_data(Archive&, const Example<LabelType>*, const unsigned int);
 };
 
 //#################### STREAM OPERATORS ####################
@@ -108,26 +116,41 @@ std::ostream& operator<<(std::ostream& os, const Example<Label>& rhs)
 
 }
 
+//#################### SERIALIZATION ####################
+
 namespace boost { namespace serialization {
 
-template<typename Archive, typename Dtype>
-void save_construct_data(Archive& ar, const rafl::Example<Dtype> *example, const unsigned int file_version)
+/**
+ * \brief Loads an example from an archive.
+ *
+ * \param ar      The archive.
+ * \param rhs     A pointer to some memory into which to load the example.
+ * \param version The file format version number.
+ */
+template<typename Archive, typename LabelType>
+void load_construct_data(Archive& ar, rafl::Example<LabelType> *rhs, const unsigned int version)
 {
-  ar << example->m_descriptor;
-  ar << example->m_label;
-}
-
-template<typename Archive, typename Dtype>
-void load_construct_data(Archive& ar, rafl::Example<Dtype> *example, const unsigned int file_version)
-{
-  //Retrieve data from archive required to construct new instance.
   rafl::Descriptor_Ptr descriptor;
-  ar >> descriptor;
-
   int label;
+
+  ar >> descriptor;
   ar >> label;
 
-  ::new (example) rafl::Example<Dtype>(descriptor, label);
+  ::new (rhs) rafl::Example<LabelType>(descriptor, label);
+}
+
+/**
+ * \brief Saves an example to an archive.
+ *
+ * \param ar      The archive.
+ * \param rhs     The example to save.
+ * \param version The file format version number.
+ */
+template<typename Archive, typename LabelType>
+void save_construct_data(Archive& ar, const rafl::Example<LabelType> *rhs, const unsigned int version)
+{
+  ar << rhs->m_descriptor;
+  ar << rhs->m_label;
 }
 
 }}
