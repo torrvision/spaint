@@ -149,7 +149,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
   tmp(af::where(tmp < 0.0f)) = 0;
   tmp(af::where(tmp > 255.0f)) = 255;
-  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::Order::COL_MAJOR);
+  OpenCVExtra::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 
   static bool initialised = false;
 
