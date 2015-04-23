@@ -40,7 +40,7 @@ std::string get_iso_timestamp()
 
 int main(int argc, char *argv[])
 {
-  const unsigned int seed = 1234;
+  const unsigned int seed = 12345;
 
   if(argc != 1 && argc != 4)
   {
@@ -89,11 +89,11 @@ int main(int argc, char *argv[])
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
     .add_param("gainThreshold", list_of<float>(0.0f))
     .add_param("maxClassSize", list_of<size_t>(10000))
-    .add_param("maxTreeHeight", list_of<size_t>(50))
+    .add_param("maxTreeHeight", list_of<size_t>(20))
     .add_param("randomSeed", list_of<unsigned int>(seed))
-    .add_param("seenExamplesThreshold", list_of<size_t>(256))
+    .add_param("seenExamplesThreshold", list_of<size_t>(512))
     .add_param("splittabilityThreshold", list_of<float>(0.8f))
-    .add_param("usePMFReweighting", list_of<bool>(true))
+    .add_param("usePMFReweighting", list_of<bool>(true)(false))
     .generate_param_sets();
 
   // Construct the split generator.
