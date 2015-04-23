@@ -42,6 +42,6 @@ else
 fi
 
 echo "[spaint] ...Running build..."
-cmd //c "b2 -j2 --libdir=..\boost_1_56_0\lib --includedir=..\boost_1_56_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-test --with-thread --build-type=complete --layout=tagged toolset=$1 architecture=x86 address-model=64 install >> $LOG"
+cmd //c "b2 -j2 --libdir=..\boost_1_56_0\lib --includedir=..\boost_1_56_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-regex --with-serialization --with-test --with-thread --build-type=complete --layout=tagged toolset=$1 architecture=x86 address-model=64 install >> $LOG"
 
 echo "[spaint] ...Finished building Boost 1.56.0."
