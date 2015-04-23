@@ -2,9 +2,13 @@
 # Flags.cmake #
 ###############
 
-# If on Mac OS X, make sure that C++11 warnings are disabled.
+# If on Mac OS X:
 IF(${CMAKE_SYSTEM} MATCHES "Darwin")
+  # Make sure that C++11 warnings are disabled.
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++11-extensions")
+
+  # Make sure that the template depth is sufficient.
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-depth=512")
 ENDIF()
 
 # If on Mac OS X 10.9 (Mavericks), make sure everything compiles and links using the correct C++ Standard Library.
