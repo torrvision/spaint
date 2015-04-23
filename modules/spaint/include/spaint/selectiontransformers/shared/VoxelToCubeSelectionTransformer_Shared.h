@@ -26,10 +26,13 @@ inline void write_voxel_to_output_selection(int outputVoxelIndex, int cubeSideLe
   int inputVoxelIndex = outputVoxelIndex / cubeSize;
   const Vector3s& inputVoxel = inputSelection[inputVoxelIndex];
 
-  // Calculate the components of the 3D offset of this output voxel from the position of the input voxel.
-  int xOffset = outputVoxelIndex % cubeSideLength - radius;
-  int yOffset = outputVoxelIndex % (cubeSideLength * cubeSideLength) / cubeSideLength - radius;
-  int zOffset = outputVoxelIndex / (cubeSideLength * cubeSideLength) - radius;
+  // Calculate the linear offset of the output voxel within its cube.
+  int offset = outputVoxelIndex % cubeSize;
+
+  // Use this linear offset to calculate the 3D offset of the output voxel from the position of the input voxel.
+  int xOffset = offset % cubeSideLength - radius;
+  int yOffset = offset % (cubeSideLength * cubeSideLength) / cubeSideLength - radius;
+  int zOffset = offset / (cubeSideLength * cubeSideLength) - radius;
 
   // Write the output voxel to the output selection.
   outputSelection[outputVoxelIndex] = Vector3s(inputVoxel.x + xOffset, inputVoxel.y + yOffset, inputVoxel.z + zOffset);
