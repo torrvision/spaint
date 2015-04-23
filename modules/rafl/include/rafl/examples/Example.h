@@ -82,6 +82,12 @@ public:
 
   //#################### SERIALIZATION ####################
 private:
+  /**
+   * \brief Serializes the example to an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
