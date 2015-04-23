@@ -29,7 +29,7 @@ namespace tvgutil {
 template <typename T>
 inline void boost_serial_save(const std::string& path, const T *type)
 {
-  std::ofstream ofs(path);
+  std::ofstream ofs(path.c_str());
   boost::archive::text_oarchive oa(ofs);
   oa << type;
 }
@@ -40,7 +40,7 @@ inline void boost_serial_save(const std::string& path, const T *type)
 template <typename T>
 inline void boost_serial_load(const std::string& path, T **type)
 {
-  std::ifstream ifs(path);
+  std::ifstream ifs(path.c_str());
   boost::archive::text_iarchive ia(ifs);
   ia >> *type;
 }
