@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     .add_param("randomSeed", list_of<unsigned int>(seed))
     .add_param("seenExamplesThreshold", list_of<size_t>(512))
     .add_param("splittabilityThreshold", list_of<float>(0.8f))
-    .add_param("usePMFReweighting", list_of<bool>(true)(false))
+    .add_param("usePMFReweighting", list_of<bool>(false))
     .generate_param_sets();
 
   // Construct the split generator.
