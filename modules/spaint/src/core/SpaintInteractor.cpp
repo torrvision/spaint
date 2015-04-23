@@ -126,7 +126,8 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
 #ifdef WITH_ARRAYFIRE
     else if(inputState.key_down(SDLK_4)){
       m_selector.reset(new TouchSelector(settings, m_model->get_tracking_state(), m_model->get_view()));
-      m_selectionTransformer.reset();
+      //m_selectionTransformer.reset();
+      m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_model->get_settings()->deviceType);
     }
 #endif
   }
