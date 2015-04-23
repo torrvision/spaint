@@ -7,9 +7,9 @@
 
 #include <iosfwd>
 
-#include "../base/Descriptor.h"
+#include <boost/serialization/serialization.hpp>
 
-#include <tvgutil/Serialization.h>
+#include "../base/Descriptor.h"
 
 namespace rafl {
 
@@ -37,8 +37,6 @@ public:
    */
   virtual ~DecisionFunction() {}
 
-  DecisionFunction(){}
-
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
@@ -58,12 +56,19 @@ public:
 
   //#################### SERIALIZATION #################### 
 private:
-  friend class boost::serialization::access;
+  /**
+   * \brief Serializes the decision function to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
   template<class Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    // Nothing to serialize here.
+    // No-op
   }
+
+  friend class boost::serialization::access;
 };
 
 //#################### STREAM OPERATORS ####################

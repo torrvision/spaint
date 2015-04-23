@@ -83,7 +83,7 @@ public:
   //#################### SERIALIZATION #################### 
 private:
   /**
-   * \brief Serializes the histogram to an archive.
+   * \brief Serializes the histogram to/from an archive.
    *
    * \param ar      The archive.
    * \param version The file format version number.

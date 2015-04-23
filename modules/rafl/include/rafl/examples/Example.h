@@ -83,7 +83,7 @@ public:
   //#################### SERIALIZATION ####################
 private:
   /**
-   * \brief Serializes the example to an archive.
+   * \brief Serializes the example to/from an archive.
    *
    * \param ar      The archive.
    * \param version The file format version number.
@@ -91,7 +91,7 @@ private:
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    // Intentionally left empty.
+    // No-op
   }
 
   friend class boost::serialization::access;

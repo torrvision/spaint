@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <boost/serialization/export.hpp>
+
 namespace rafl {
 
 //#################### CONSTRUCTORS ####################
