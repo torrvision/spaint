@@ -59,6 +59,26 @@ private:
     Node(size_t depth, size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
     : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
+
+    //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
+
+    /**
+     * \brief Serializes the node to/from an archive.
+     *
+     * \param ar      The archive.
+     * \param version The file format version number.
+     */
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & m_depth;
+      ar & m_leftChildIndex;
+      ar & m_reservoir;
+      ar & m_rightChildIndex;
+      ar & m_splitter;
+    }
+
+    friend class boost::serialization::access;
   };
 
 public:
@@ -612,6 +632,28 @@ private:
       (*m_inverseClassWeights)[it->first] = count / it->second;
     }
   }
+
+  //#################### SERIALIZATION ####################
+private:
+  /**
+   * \brief Serializes the decision tree to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_classFrequencies;
+    ar & m_dirtyNodes;
+    ar & m_inverseClassWeights;
+    ar & m_nodes;
+    ar & m_rootIndex;
+    ar & m_settings;
+    ar & m_splittabilityQueue;
+  }
+
+  friend class boost::serialization::access;
 };
 
 }
