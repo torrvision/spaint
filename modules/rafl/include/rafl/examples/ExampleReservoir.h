@@ -66,7 +66,6 @@ public:
   : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
-private:
   /**
    * \brief Constructs an example reservoir.
    *

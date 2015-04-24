@@ -1,4 +1,5 @@
 #if 0
+#if 0
 #include <vector>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -455,3 +456,126 @@ int main(int argc, char *argv[])
 }
 
 #endif
+#endif
+
+#include <rafl/DecisionTree.h>
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunction.h>
+#include <rafl/examples/ExampleReservoir.h>
+using namespace rafl;
+
+#include <tvgutil/PriorityQueue.h>
+#include <tvgutil/Serialization.h>
+using namespace tvgutil;
+
+Descriptor_CPtr make_descriptor(float *arr)
+{
+  Descriptor_Ptr d(new Descriptor(10));
+  for(int i = 0; i < 10; ++i)
+  {
+    (*d)[i] = arr[i];
+  }
+  return d;
+}
+
+int main()
+{
+  const std::string path = "C:/bar/huzzah.txt";
+  float arr[] = {23.0f, 9.0f};
+#if 0
+  {
+    FeatureThresholdingDecisionFunction f(23, 9.0f);
+    boost_serial_save(path, f);
+  }
+  {
+    FeatureThresholdingDecisionFunction *p;
+    boost_serial_load(path, p);
+    int x;
+    x = 23;
+  }
+#endif
+#if 0
+  Descriptor_CPtr descriptor = make_descriptor(arr);
+  {
+    Example<int> e(descriptor, 84);
+    boost_serial_save(path, e);
+  }
+  {
+    Example<int> *p;
+    boost_serial_load(path, p);
+    int x;
+    x = 23;
+  }
+#endif
+#if 0
+  {
+    RandomNumberGenerator_Ptr rng(new RandomNumberGenerator(12345));
+    ExampleReservoir<int> r(10, rng);
+
+    typedef boost::shared_ptr<Example<int> > Example_Ptr;
+    typedef boost::shared_ptr<const Example<int> > Example_CPtr;
+
+    r.add_example(Example_CPtr(new Example<int>(make_descriptor(arr), 84)));
+    r.add_example(Example_CPtr(new Example<int>(make_descriptor(arr), 51)));
+
+    boost_serial_save(path, r);
+  }
+  {
+    ExampleReservoir<int> *p;
+    boost_serial_load(path, p);
+    int x;
+    x = 23;
+  }
+#endif
+#if 0
+  {
+    RandomNumberGenerator rng(12345);
+    boost_serial_save(path, rng);
+  }
+  {
+    RandomNumberGenerator *p;
+    boost_serial_load(path, p);
+    int x;
+    x = 23;
+  }
+#endif
+#if 0
+  {
+    PriorityQueue<std::string,float,int> pq;
+    pq.insert("Foo", 23.0f, -1);
+    pq.insert("Bar", 23.0f, -1);
+    pq.insert("Baz", 9.0f, -1);
+    boost_serial_save(path, pq);
+  }
+  {
+    PriorityQueue<std::string,float,int> *p;
+    boost_serial_load(path, p);
+    int x;
+    x = 23;
+  }
+#endif
+#if 1
+  {
+    unsigned int seed = 12345;
+    RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
+    DecisionTree<int>::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<int>(randomNumberGenerator));
+    DecisionTree<int>::Settings settings;
+    settings.candidateCount = 256;
+    settings.decisionFunctionGenerator = decisionFunctionGenerator;
+    settings.gainThreshold = 0.0f;
+    settings.maxClassSize = 10000;
+    settings.maxTreeHeight = 15;
+    settings.randomNumberGenerator = randomNumberGenerator;
+    settings.seenExamplesThreshold = 30;
+    settings.splittabilityThreshold = 0.5f;
+    settings.usePMFReweighting = false;
+    boost_serial_save(path, settings);
+  }
+  {
+    DecisionTree<int>::Settings *p;
+    boost_serial_load(path, p);
+    int x;
+    x = 23;
+  }
+#endif
+  return 0;
+}

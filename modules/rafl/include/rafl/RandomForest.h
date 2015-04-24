@@ -9,17 +9,6 @@
 
 namespace rafl {
 
-template <typename Label> class RandomForest;
-
-}
-
-namespace boost { namespace serialization {
-template<typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::RandomForest<Label> *randomForest, const unsigned int file_version);
-template<typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::RandomForest<Label> *randomForest, const unsigned int file_version);
-}}
-
-namespace rafl {
-
 /**
  * \brief An instance of an instantiation of this class template represents a random forest.
  */
@@ -45,7 +34,7 @@ public:
    * \param treeCount The number of decision trees to use in the random forest.
    * \param settings  The settings needed to configure the decision trees.
    */
-  RandomForest(size_t treeCount, const Settings<Label>& settings)
+  RandomForest(size_t treeCount, const typename DT::Settings& settings)
   {
     for(size_t i = 0; i < treeCount; ++i)
     {
@@ -53,9 +42,13 @@ public:
     }
   }
 
-  RandomForest(const std::vector<DT_Ptr>& trees)
-  : m_trees(trees)
-  {}
+private:
+  /**
+   * \brief Constructs a random forest.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  RandomForest() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -156,42 +149,23 @@ public:
     }
   }
 
-  //#################### SERIALIZATION #################### 
+  //#################### SERIALIZATION ####################
 private:
-  friend class boost::serialization::access;
-  template<typename Archive>
+  /**
+   * \brief Serializes the random forest to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    // Intentionally left empty.
+    ar & m_trees;
   }
 
-  template<typename Archive, typename Dtype>
-  friend void boost::serialization::save_construct_data(Archive& ar, const RandomForest<Dtype> *randomForest, const unsigned int file_version);
-
-  template<typename Archive, typename Dtype>
-  friend void boost::serialization::load_construct_data(Archive& ar, RandomForest<Dtype> *randomForest, const unsigned int file_version);
+  friend class boost::serialization::access;
 };
 
 }
-
-namespace boost { namespace serialization {
-template<typename Archive, typename Dtype>
-inline void save_construct_data(Archive& ar, const rafl::RandomForest<Dtype> *randomForest, const unsigned int file_version)
-{
-  std::cout << "<RF<";
-  ar << randomForest->m_trees;
-}
-
-template<typename Archive, typename Dtype>
-inline void load_construct_data(Archive& ar, rafl::RandomForest<Dtype> *randomForest, const unsigned int file_version)
-{
-  std::cout << ">RF>";
-  typedef boost::shared_ptr<rafl::DecisionTree<Dtype> > DT_Ptr;
-  std::vector<DT_Ptr> trees;
-  ar >> trees;
-
-  ::new(randomForest)rafl::RandomForest<Dtype>(trees);
-}
-}}
 
 #endif

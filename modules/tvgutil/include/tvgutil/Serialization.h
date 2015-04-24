@@ -31,24 +31,25 @@ namespace tvgutil {
  * \param ptr   A pointer to some memory into which to load the object.
  */
 template <typename T>
-inline void boost_serial_load(const std::string& path, T **ptr)
+inline void boost_serial_load(const std::string& path, T*& ptr)
 {
   std::ifstream fs(path.c_str());
   boost::archive::text_iarchive ar(fs);
-  ar >> *ptr;
+  ar >> ptr;
 }
 
 /**
  * \brief Saves an object to a file.
  *
  * \param path  The path to the file.
- * \param ptr   A pointer to the object to save.
+ * \param obj   The object to save.
  */
 template <typename T>
-inline void boost_serial_save(const std::string& path, const T *ptr)
+inline void boost_serial_save(const std::string& path, const T& obj)
 {
   std::ofstream fs(path.c_str());
   boost::archive::text_oarchive ar(fs);
+  const T *ptr = &obj;
   ar << ptr;
 }
 

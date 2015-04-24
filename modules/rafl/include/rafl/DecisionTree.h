@@ -26,12 +26,12 @@ class DecisionTree
   //#################### NESTED TYPES ####################
 private:
   /**
-   * \brief An instance of this struct represents a node in the tree.
+   * \brief An instance of this class represents a node in the tree.
    */
-  struct Node
+  class Node
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-
+  public:
     /** The depth of the node in the tree. */
     size_t m_depth;
 
@@ -48,7 +48,7 @@ private:
     DecisionFunction_Ptr m_splitter;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-
+  public:
     /**
      * \brief Constructs a node.
      *
@@ -60,8 +60,16 @@ private:
     : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
 
-    //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
+  private:
+    /**
+     * \brief Constructs a node.
+     *
+     * Note: This constructor is needed for serialization and should not be used otherwise.
+     */
+    Node() {}
 
+    //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
+  private:
     /**
      * \brief Serializes the node to/from an archive.
      *
@@ -279,6 +287,13 @@ public:
     // Initialise the inverse class weights to empty if the use of PMF reweighting is desired.
     if(m_settings.usePMFReweighting) m_inverseClassWeights = std::map<Label,float>();
   }
+
+  /**
+   * \brief Constructs a decision tree.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  DecisionTree() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
