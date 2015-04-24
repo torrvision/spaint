@@ -100,7 +100,7 @@ public:
   template <typename Archive>
   void load(Archive& ar, const unsigned int version)
   {
-    ar >> m_seed;
+    ar & m_seed;
     m_gen.reset(new boost::mt19937(m_seed));
   }
 
@@ -113,7 +113,7 @@ public:
   template <typename Archive>
   void save(Archive& ar, const unsigned int version) const
   {
-    ar << m_seed;
+    ar & m_seed;
   }
 
   BOOST_SERIALIZATION_SPLIT_MEMBER()
