@@ -37,7 +37,7 @@ private:
   DecisionFunctionGeneratorFactory()
   {
     // Register the makers for the various different types of decision function generator.
-    m_makers.insert(std::make_pair("FeatureThresholding", &feature_thresholding_maker));
+    m_makers.insert(std::make_pair(FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(), &feature_thresholding_maker));
   }
 
 public:

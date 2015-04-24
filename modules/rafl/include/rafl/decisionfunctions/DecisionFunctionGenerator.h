@@ -54,6 +54,15 @@ public:
    */
   virtual ~DecisionFunctionGenerator() {}
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the type of the decision function generator.
+   *
+   * \return  The type of the decision function generator.
+   */
+  virtual std::string get_type() const = 0;
+
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**

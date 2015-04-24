@@ -124,6 +124,7 @@ public:
 //#################### TYPEDEFS ####################
 
 typedef boost::shared_ptr<RandomNumberGenerator> RandomNumberGenerator_Ptr;
+typedef boost::shared_ptr<const RandomNumberGenerator> RandomNumberGenerator_CPtr;
 
 }
 
