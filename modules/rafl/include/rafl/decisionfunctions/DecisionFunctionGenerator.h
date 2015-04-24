@@ -72,10 +72,10 @@ public:
    * \param reservoir             The reservoir of examples to split.
    * \param candidateCount        The number of candidates to evaluate.
    * \param gainThreshold         The minimum information gain that must be obtained from a split to make it worthwhile.
-   * \param inverseClassWeights   The inverses of the L1-normalised class frequencies observed in the training data.
+   * \param inverseClassWeights   The (optional) inverses of the L1-normalised class frequencies observed in the training data.
    * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const std::map<Label,float>& inverseClassWeights) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
@@ -130,13 +130,14 @@ private:
    * \param initialEntropy      The entropy of the example set before the split.
    * \param leftExamples        The examples that end up in the left half of the split.
    * \param rightExamples       The examples that end up in the right half of the split.
-   * \param inverseClassWeights The inverses of the L1-normalised class frequencies observed in the training data.
+   * \param inverseClassWeights The (optional) inverses of the L1-normalised class frequencies observed in the training data.
    * \return                    The information gain resulting from the split.
    */
-  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const std::map<Label,float>& inverseClassWeights)
+  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const boost::optional<std::map<Label,float> >& inverseClassWeights)
   {
     float exampleCount = static_cast<float>(reservoir.current_size());
-    std::map<Label,float> multipliers = combine_multipliers(reservoir.get_class_multipliers(), inverseClassWeights);
+    std::map<Label,float> multipliers = reservoir.get_class_multipliers();
+    if(inverseClassWeights) multipliers = combine_multipliers(multipliers, *inverseClassWeights);
 
     float leftEntropy = ExampleUtil::calculate_entropy(leftExamples, multipliers);
     float rightEntropy = ExampleUtil::calculate_entropy(rightExamples, multipliers);

@@ -132,7 +132,7 @@ static float evaluate_forest_accuracy(const RF_Ptr& forest, const std::vector<Ex
   }
 
   Eigen::MatrixXf confusionMatrix = ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
-  return ConfusionMatrixUtil::calculate_accuracy(confusionMatrix);
+  return ConfusionMatrixUtil::calculate_accuracy(ConfusionMatrixUtil::normalise_rows_L1(confusionMatrix));
 }
 
 int main(int argc, char *argv[])
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
   // Generate a set of labels.
 #ifdef CLASS_IMBALANCE_TEST
-  const int labelCount = 3;
+  const int labelCount = 5;
 #else
   const int labelCount = 20;
 #endif

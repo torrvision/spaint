@@ -40,7 +40,7 @@ std::string get_iso_timestamp()
 
 int main(int argc, char *argv[])
 {
-  const unsigned int seed = 1234;
+  const unsigned int seed = 12345;
 
   if(argc != 1 && argc != 4)
   {
@@ -49,10 +49,13 @@ int main(int argc, char *argv[])
   }
 
   std::vector<Example_CPtr> examples;
+  std::vector<ParamSet> params;
   std::string outputResultPath;
 
   if(argc == 1)
   {
+#define CLASS_IMBALANCE_TEST
+
     // Generate a set of labels.
     std::set<Label> classLabels;
     classLabels.insert(1);
@@ -62,7 +65,36 @@ int main(int argc, char *argv[])
 
     // Generate examples around the unit circle.
     UnitCircleExampleGenerator<Label> uceg(classLabels, seed);
+
+#ifdef CLASS_IMBALANCE_TEST
+    const int biasedClass = 7;
+    std::set<Label> biasedClassLabels;
+    biasedClassLabels.insert(biasedClass);
+
+    std::set<Label> unbiasedClassLabels = classLabels;
+    unbiasedClassLabels.erase(biasedClass);
+
+    examples = uceg.generate_examples(unbiasedClassLabels, 100);
+    std::vector<Example_CPtr> biasedExamples = uceg.generate_examples(biasedClassLabels, 10000);
+    examples.insert(examples.end(), biasedExamples.begin(), biasedExamples.end());
+#else
     examples = uceg.generate_examples(classLabels, 100);
+#endif
+
+    params = CartesianProductParameterSetGenerator()
+      .add_param("treeCount", list_of<size_t>(2))
+      .add_param("splitBudget", list_of<size_t>(1048576/2))
+      .add_param("candidateCount", list_of<int>(256))
+      .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
+      .add_param("gainThreshold", list_of<float>(0.0f))
+      .add_param("maxClassSize", list_of<size_t>(1000))
+      .add_param("maxTreeHeight", list_of<size_t>(20))
+      .add_param("randomSeed", list_of<unsigned int>(seed))
+      .add_param("seenExamplesThreshold", list_of<size_t>(50))
+      .add_param("splittabilityThreshold", list_of<float>(0.8f))
+      .add_param("usePMFReweighting", list_of<bool>(false)(true))
+      .generate_param_sets();
+
     outputResultPath = "UnitCircleExampleGenerator-Results.txt";
   }
   else if(argc == 4)
@@ -79,22 +111,23 @@ int main(int argc, char *argv[])
 
     examples.insert(examples.end(), testingExamples.begin(), testingExamples.end());
     std::cout << "Number of examples = " << examples.size() << '\n';
+
+    // Generate the parameter sets with which to test the random forest.
+    params = CartesianProductParameterSetGenerator()
+      .add_param("treeCount", list_of<size_t>(8))
+      .add_param("splitBudget", list_of<size_t>(1048576/2))
+      .add_param("candidateCount", list_of<int>(256))
+      .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
+      .add_param("gainThreshold", list_of<float>(0.0f))
+      .add_param("maxClassSize", list_of<size_t>(100000))
+      .add_param("maxTreeHeight", list_of<size_t>(1e6))
+      .add_param("randomSeed", list_of<unsigned int>(seed))
+      .add_param("seenExamplesThreshold", list_of<size_t>(512))
+      .add_param("splittabilityThreshold", list_of<float>(0.8f))
+      .add_param("usePMFReweighting", list_of<bool>(false)(true))
+      .generate_param_sets();
   }
-
-  // Generate the parameter sets with which to test the random forest.
-  std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
-    .add_param("treeCount", list_of<size_t>(1)(5)(9)(13))
-    .add_param("splitBudget", list_of<size_t>(1024)(1048576))
-    .add_param("candidateCount", list_of<int>(256))
-    .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
-    .add_param("gainThreshold", list_of<float>(0.0f))
-    .add_param("maxClassSize", list_of<size_t>(10000))
-    .add_param("maxTreeHeight", list_of<size_t>(20))
-    .add_param("randomSeed", list_of<unsigned int>(seed))
-    .add_param("seenExamplesThreshold", list_of<size_t>(50))
-    .add_param("splittabilityThreshold", list_of<float>(0.5f))
-    .generate_param_sets();
-
+  
   // Construct the split generator.
 #if 0
   const size_t foldCount = 2;
