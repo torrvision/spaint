@@ -288,6 +288,7 @@ public:
     if(m_settings.usePMFReweighting) m_inverseClassWeights = std::map<Label,float>();
   }
 
+private:
   /**
    * \brief Constructs a decision tree.
    *
