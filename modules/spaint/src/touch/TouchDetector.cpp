@@ -25,7 +25,7 @@ namespace spaint {
 TouchDetector::TouchDetector(const Vector2i& imgSize)
 : m_areaPercentageThreshold(1), // 1%.
   m_cols(imgSize.x),
-  m_connectedComponents(imgSize.y, imgSize.x),
+  m_connectedComponents(imgSize.y, imgSize.x, u32),
   m_depthLowerThreshold(0.010f),
   m_depthUpperThreshold(0.255f),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
@@ -68,12 +68,13 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   m_connectedComponents = af::regions(m_thresholded);
 
   af::array goodCandidates = select_good_connected_components();
+
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the connected components.
   static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
   int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
   connectedComponentsDisplay = m_connectedComponents * (255/numberOfConnectedComponents);
-  OpenCVExtra::ocvfig("bestConnectedComponent", connectedComponentsDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+  OpenCVExtra::ocvfig("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 #endif
 
   // Post-process the good candidates to identify the region which is most likely to be touching a surface.
@@ -325,7 +326,7 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   int bestConnectedComponent = -1;
 
   static af::array temporaryCandidate(m_rows, m_cols, u8);
-  static af::array mask(m_rows, m_cols, u8);
+  static af::array mask(m_rows, m_cols, b8);
 
   // If there are several good candidate then select the one which is closest to a surface.
   if(numberOfGoodCandidates > 1)
@@ -334,8 +335,7 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
     int minElement;
     for(int i = 0; i < numberOfGoodCandidates; ++i)
     {
-
-      mask = m_connectedComponents == candidateIds[i];
+      mask = (m_connectedComponents == candidateIds[i]);
       temporaryCandidate = diffCopyMillimetersU8 * mask;
       means[i] = af::mean<float>(temporaryCandidate);
     }
@@ -347,14 +347,20 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
     bestConnectedComponent = candidateIds[0];
   }
 
+//DEBUGGING HERE!
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  mask = m_connectedComponents == bestConnectedComponent;
+  mask = (m_connectedComponents == bestConnectedComponent);
+  //af::print("m_connectedComponents", m_connectedComponents);
   temporaryCandidate = diffCopyMillimetersU8 * mask;
 
   // Display the best candidate's difference image.
   static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
   temporaryCandidateDisplay = temporaryCandidate;
   OpenCVExtra::ocvfig("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+
+  static af::array maskDisplay(m_rows, m_cols, u8);
+  maskDisplay = mask * 255;
+  OpenCVExtra::ocvfig("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 #endif
 
   return bestConnectedComponent;
