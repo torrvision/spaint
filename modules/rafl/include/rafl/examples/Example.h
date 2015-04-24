@@ -30,14 +30,6 @@ private:
   Label m_label;
 
   //#################### CONSTRUCTORS ####################
-private:
-  /**
-   * \brief Constructs an example.
-   *
-   * Note: This constructor is needed for serialization and should not be used otherwise.
-   */
-  Example() {}
-
 public:
   /**
    * \brief Constructs an example.
@@ -48,6 +40,14 @@ public:
   Example(const Descriptor_CPtr& descriptor, const Label& label)
   : m_descriptor(descriptor), m_label(label)
   {}
+
+private:
+  /**
+   * \brief Constructs an example.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  Example() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

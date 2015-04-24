@@ -24,8 +24,6 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  FeatureThresholdingDecisionFunction(){};
-
   /**
    * \brief Constructs a feature thresholding decision function.
    *
@@ -33,6 +31,14 @@ public:
    * \param threshold     The threshold against which to compare it.
    */
   FeatureThresholdingDecisionFunction(size_t featureIndex, float threshold);
+
+private:
+  /**
+   * \brief Constructs a feature thresholding decision function.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  FeatureThresholdingDecisionFunction() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -44,7 +50,12 @@ public:
 
   //#################### SERIALIZATION #################### 
 private:
-  friend class boost::serialization::access;
+  /**
+   * \brief Serializes the decision function to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
   template<class Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
@@ -52,6 +63,8 @@ private:
     ar & m_featureIndex;
     ar & m_threshold;
   }
+
+  friend class boost::serialization::access;
 };
 
 }
