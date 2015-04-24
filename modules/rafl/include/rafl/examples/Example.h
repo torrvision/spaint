@@ -82,13 +82,8 @@ private:
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    // Note: The way in which this works is actually quite subtle, since the same code has to work for both saving and loading.
-    Descriptor_Ptr descriptor = boost::const_pointer_cast<Descriptor>(m_descriptor);
-
-    ar & descriptor;
+    ar & m_descriptor;
     ar & m_label;
-
-    m_descriptor = descriptor;
   }
 
   friend class boost::serialization::access;

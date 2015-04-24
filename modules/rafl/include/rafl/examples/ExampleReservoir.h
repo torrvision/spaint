@@ -19,17 +19,6 @@
 
 namespace rafl {
 
-template <typename Label> class ExampleReservoir;
-
-}
-
-namespace boost { namespace serialization {
-template<typename Archive, typename Label> void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version);
-template<typename Archive, typename Label> void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version);
-}}
-
-namespace rafl {
-
 /**
  * \brief An instance of an instantiation of this class template represents a reservoir to store the examples for a node.
  */
@@ -64,9 +53,6 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  ExampleReservoir()
-  {}
-
   /**
    * \brief Constructs a reservoir that can store at most the specified number of examples of each class.
    *
@@ -80,9 +66,13 @@ public:
   : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
-  ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator, size_t curSize, const std::map<Label,std::vector<boost::shared_ptr<const Example<int> > > >& examples, const Histogram_Ptr& histogram, size_t seenExamples) 
-  : m_curSize(curSize), m_examples(examples), m_histogram(histogram), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(seenExamples)
-  {}
+private:
+  /**
+   * \brief Constructs an example reservoir.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  ExampleReservoir() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -223,71 +213,26 @@ public:
 
   //#################### SERIALIZATION #################### 
 private:
-  friend class boost::serialization::access;
+  /**
+   * \brief Serializes the example reservoir to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    // Intentionally left empty.
+    ar & m_curSize;
+    ar & m_examples;
+    ar & m_histogram;
+    ar & m_maxClassSize;
+    ar & m_randomNumberGenerator;
+    ar & m_seenExamples;
   }
 
-  template<typename Archive, typename Dtype>
-  friend void boost::serialization::save_construct_data(Archive& ar, const rafl::ExampleReservoir<Dtype> *exampleReservoir, const unsigned int file_version);
-
-  template<typename Archive, typename Dtype>
-  friend void boost::serialization::load_construct_data(Archive& ar, rafl::ExampleReservoir<Dtype> *exampleReservoir, const unsigned int file_version);
+  friend class boost::serialization::access;
 };
 
 }
-
-namespace boost { namespace serialization {
-template<typename Archive, typename Label>
-void save_construct_data(Archive& ar, const rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
-{
-  ar << exampleReservoir->m_curSize;
-  ar << exampleReservoir->m_examples;
-  ar << exampleReservoir->m_histogram;
-  ar << exampleReservoir->m_maxClassSize;
-  ar << exampleReservoir->m_randomNumberGenerator;
-  ar << exampleReservoir->m_seenExamples;
-}
-
-template<typename Archive, typename Label>
-void load_construct_data(Archive& ar, rafl::ExampleReservoir<Label> *exampleReservoir, const unsigned int file_version)
-{
-  typedef rafl::Example<Label> IExample;
-  typedef boost::shared_ptr<IExample> IExample_Ptr;
-  typedef boost::shared_ptr<const IExample> IExample_CPtr;
-  typedef std::map<Label,std::vector<IExample_Ptr> > ExampleMap;
-  typedef std::map<Label,std::vector<IExample_CPtr> > ExampleCMap;
-
-  //Retrieve data from archive required to construct new instance.
-  size_t curSize;
-  ar >> curSize;
-
-  std::map<Label, std::vector<boost::shared_ptr<rafl::Example<Label> > > >examples;
-  ar >> examples;
-
-  boost::shared_ptr<rafl::Histogram<Label> > histogram;
-  ar >> histogram;
-
-  size_t maxClassSize;
-  ar >> maxClassSize;
-
-  tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator;
-  ar >> randomNumberGenerator;
-
-  size_t seenExamples;
-  ar >> seenExamples;
-
-  ExampleCMap constExamples;
-  for(typename ExampleMap::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
-  {
-    std::vector<IExample_CPtr> v(it->second.begin(), it->second.end());
-    constExamples.insert(std::make_pair(it->first, v));
-  }
-
-  ::new(exampleReservoir)rafl::ExampleReservoir<Label>(maxClassSize, randomNumberGenerator, curSize, constExamples, histogram, seenExamples);
-}
-}}
 
 #endif
