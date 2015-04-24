@@ -205,6 +205,12 @@ public:
   : m_settings(settings)
   {
     m_rootIndex = add_node(0);
+
+    //Initialise the inverse class weights to empty if the use of PMF reweighting is desired.
+    if(m_settings.usePMFReweighting)
+    {
+      m_inverseClassWeights = std::map<Label,float>();
+    }
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

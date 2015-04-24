@@ -132,7 +132,7 @@ static float evaluate_forest_accuracy(const RF_Ptr& forest, const std::vector<Ex
   }
 
   Eigen::MatrixXf confusionMatrix = ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
-  return ConfusionMatrixUtil::calculate_accuracy(confusionMatrix);
+  return ConfusionMatrixUtil::calculate_accuracy(ConfusionMatrixUtil::normalise_rows_L1(confusionMatrix));
 }
 
 int main(int argc, char *argv[])
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     .add_param("randomSeed", list_of<unsigned int>(seed))
     .add_param("seenExamplesThreshold", list_of<size_t>(50))
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
-    .add_param("usePMFReweighting", list_of<bool>(true))
+    .add_param("usePMFReweighting", list_of<bool>(false))
     .generate_param_sets();
 
   // Initialise the online random forest with the specified parameters.
