@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
       .add_param("usePMFReweighting", list_of<bool>(false)(true))
       .generate_param_sets();
   }
-  
+
   // Construct the split generator.
 #if 0
   const size_t foldCount = 2;
