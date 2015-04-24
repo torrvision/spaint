@@ -15,7 +15,7 @@
 #include "../visualisers/interface/DepthVisualiser.h"
 #include "TouchState.h"
 
-//#define DEBUG_TOUCH_VERBOSE
+#define DEBUG_TOUCH_VERBOSE
 #define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {

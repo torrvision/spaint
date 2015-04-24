@@ -68,6 +68,13 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   m_connectedComponents = af::regions(m_thresholded);
 
   af::array goodCandidates = select_good_connected_components();
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the connected components.
+  static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
+  int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
+  connectedComponentsDisplay = m_connectedComponents * (255/numberOfConnectedComponents);
+  OpenCVExtra::ocvfig("bestConnectedComponent", connectedComponentsDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
+#endif
 
   // Post-process the good candidates to identify the region which is most likely to be touching a surface.
   if(goodCandidates.elements() > 0)
@@ -226,9 +233,10 @@ af::array TouchDetector::select_good_connected_components()
   // Set the first element to zero as this corresponds to the background.
   histogram(0) = 0;
 
+  af::array goodCandidates = af::where(histogram > m_minimumAreaThreshold);
 #ifdef DEBUG_TOUCH_VERBOSE
   af::print("Histogram of connected component image", histogram);
-  if(goodCandidates.elements() > 0) af::print("goodCandidates", af::where(histogram > m_minimumAreaThreshold));
+  if(goodCandidates.elements() > 0) af::print("goodCandidates", goodCandidates);
 #endif
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -245,7 +253,7 @@ af::array TouchDetector::select_good_connected_components()
 #endif
 
   // The good candidates are those whose area is greater than some specified threshold.
-  return af::where(histogram > m_minimumAreaThreshold);
+  return goodCandidates;
 }
 
 TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8)
