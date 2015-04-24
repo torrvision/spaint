@@ -13,23 +13,6 @@
 
 #include "../base/Descriptor.h"
 
-//#################### FORWARD DECLARATIONS ####################
-
-namespace rafl {
-
-template <typename Label> class Example;
-
-}
-
-namespace boost { namespace serialization {
-
-template<typename Archive, typename LabelType> void load_construct_data(Archive&, rafl::Example<LabelType>*, const unsigned int);
-template<typename Archive, typename LabelType> void save_construct_data(Archive&, const rafl::Example<LabelType>*, const unsigned int);
-
-}}
-
-//#################### MAIN CLASS TEMPLATE ####################
-
 namespace rafl {
 
 /**
@@ -47,6 +30,14 @@ private:
   Label m_label;
 
   //#################### CONSTRUCTORS ####################
+private:
+  /**
+   * \brief Constructs an example.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  Example() {}
+
 public:
   /**
    * \brief Constructs an example.
@@ -91,16 +82,16 @@ private:
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
-    // No-op
+    // Note: The way in which this works is actually quite subtle, since the same code has to work for both saving and loading.
+    Descriptor_Ptr descriptor = boost::const_pointer_cast<Descriptor>(m_descriptor);
+
+    ar & descriptor;
+    ar & m_label;
+
+    m_descriptor = descriptor;
   }
 
   friend class boost::serialization::access;
-
-  template<typename Archive, typename LabelType>
-  friend void boost::serialization::load_construct_data(Archive&, Example<LabelType>*, const unsigned int);
-
-  template<typename Archive, typename LabelType>
-  friend void boost::serialization::save_construct_data(Archive&, const Example<LabelType>*, const unsigned int);
 };
 
 //#################### STREAM OPERATORS ####################
@@ -121,44 +112,5 @@ std::ostream& operator<<(std::ostream& os, const Example<Label>& rhs)
 }
 
 }
-
-//#################### SERIALIZATION ####################
-
-namespace boost { namespace serialization {
-
-/**
- * \brief Loads an example from an archive.
- *
- * \param ar      The archive.
- * \param rhs     A pointer to some memory into which to load the example.
- * \param version The file format version number.
- */
-template<typename Archive, typename LabelType>
-void load_construct_data(Archive& ar, rafl::Example<LabelType> *rhs, const unsigned int version)
-{
-  rafl::Descriptor_Ptr descriptor;
-  int label;
-
-  ar >> descriptor;
-  ar >> label;
-
-  ::new (rhs) rafl::Example<LabelType>(descriptor, label);
-}
-
-/**
- * \brief Saves an example to an archive.
- *
- * \param ar      The archive.
- * \param rhs     The example to save.
- * \param version The file format version number.
- */
-template<typename Archive, typename LabelType>
-void save_construct_data(Archive& ar, const rafl::Example<LabelType> *rhs, const unsigned int version)
-{
-  ar << rhs->m_descriptor;
-  ar << rhs->m_label;
-}
-
-}}
 
 #endif
