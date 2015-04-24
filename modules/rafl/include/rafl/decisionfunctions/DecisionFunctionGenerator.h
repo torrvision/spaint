@@ -75,7 +75,7 @@ public:
    * \param inverseClassWeights   The inverses of the L1-normalised class frequencies observed in the training data.
    * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights = boost::none) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
     std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
@@ -133,18 +133,11 @@ private:
    * \param inverseClassWeights The inverses of the L1-normalised class frequencies observed in the training data.
    * \return                    The information gain resulting from the split.
    */
-  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const boost::optional<std::map<Label,float> >& inverseClassWeights = boost::none)
+  static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const boost::optional<std::map<Label,float> >& inverseClassWeights)
   {
     float exampleCount = static_cast<float>(reservoir.current_size());
-    std::map<Label,float> multipliers;
-    if(inverseClassWeights)
-    {
-      multipliers = combine_multipliers(reservoir.get_class_multipliers(), *inverseClassWeights);
-    }
-    else
-    {
-      multipliers = reservoir.get_class_multipliers();
-    }
+    std::map<Label,float> multipliers = reservoir.get_class_multipliers();
+    if(inverseClassWeights) multipliers = combine_multipliers(multipliers, *inverseClassWeights);
 
     float leftEntropy = ExampleUtil::calculate_entropy(leftExamples, multipliers);
     float rightEntropy = ExampleUtil::calculate_entropy(rightExamples, multipliers);
