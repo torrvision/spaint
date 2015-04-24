@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "Serialization.h"
+#include <boost/serialization/serialization.hpp>
 
 namespace tvgutil {
 
@@ -57,19 +57,22 @@ public:
 
     friend class PriorityQueue;
 
-    friend class boost::serialization::access;
-    template<typename Archive>
+    //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
+
+    template <typename Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
       ar & m_id;
       ar & m_key;
       ar & m_data;
     }
+
+    friend class boost::serialization::access;
   };
 
   //#################### TYPEDEFS ####################
 private:
-  typedef std::map<ID,size_t> Dictionary;		// maps IDs to their current position in the heap
+  typedef std::map<ID,size_t> Dictionary; // maps IDs to their current position in the heap
   typedef std::vector<Element> Heap;
 
   //#################### PRIVATE VARIABLES ####################
@@ -94,7 +97,7 @@ public:
   /**
    * \brief Returns whether or not the priority queue contains an element with the specified ID.
    *
-   * \param[in]	id  The ID
+   * \param[in] id  The ID
    * \return        true, if it does contain such an element, or false otherwise
    */
   bool contains(ID id) const
@@ -296,13 +299,20 @@ private:
 
   //#################### SERIALIZATION #################### 
 private:
-  friend class boost::serialization::access;
-  template<typename Archive>
+  /**
+   * \brief Serializes the priority queue to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
     ar & m_dictionary;
     ar & m_heap;
   }
+
+  friend class boost::serialization::access;
 };
 
 }
