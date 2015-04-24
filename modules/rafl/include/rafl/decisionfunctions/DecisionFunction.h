@@ -62,7 +62,7 @@ private:
    * \param ar      The archive.
    * \param version The file format version number.
    */
-  template<class Archive>
+  template <typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
     // No-op

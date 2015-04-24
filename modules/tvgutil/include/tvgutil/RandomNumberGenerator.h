@@ -9,20 +9,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-#include "Serialization.h"
-
-namespace tvgutil {
-class RandomNumberGenerator;
-}
-
-namespace boost { namespace serialization {
-template<class Archive>
-inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
-
-template<class Archive>
-inline void load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
-}}
-
+#include <boost/serialization/split_member.hpp>
 
 namespace tvgutil {
 
@@ -34,7 +21,7 @@ class RandomNumberGenerator
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The generation engine. */
-  boost::mt19937 m_gen;
+  boost::shared_ptr<boost::mt19937> m_gen;
 
   /** The mutex used to synchronise access to the random number generator. */
   boost::mutex m_mutex;
@@ -51,6 +38,14 @@ public:
    */
   explicit RandomNumberGenerator(unsigned int seed);
 
+private:
+  /**
+   * \brief Constructs a random number generator.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  RandomNumberGenerator();
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -65,7 +60,7 @@ public:
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
     boost::random::normal_distribution<T> dist(mean, sigma);
-    return dist(m_gen);
+    return dist(*m_gen);
   }
 
   /**
@@ -91,23 +86,39 @@ public:
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
     boost::random::uniform_real_distribution<T> dist(lower, upper);
-    return dist(m_gen);
+    return dist(*m_gen);
   }
 
   //#################### SERIALIZATION #################### 
 public:
-  friend class boost::serialization::access;
-  template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version)
+  /**
+   * \brief Loads the random number generator from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void load(Archive& ar, const unsigned int version)
   {
-    // Intentionally left empty.
+    ar >> m_seed;
+    m_gen.reset(new boost::mt19937(m_seed));
   }
 
-  template<class Archive>
-  friend void boost::serialization::save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
+  /**
+   * \brief Saves the random number generator to an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void save(Archive& ar, const unsigned int version) const
+  {
+    ar << m_seed;
+  }
 
-  template<class Archive>
-  friend void boost::serialization::load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version);
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+  friend class boost::serialization::access;
 };
 
 //#################### TYPEDEFS ####################
@@ -115,27 +126,5 @@ public:
 typedef boost::shared_ptr<RandomNumberGenerator> RandomNumberGenerator_Ptr;
 
 }
-
-namespace boost { namespace serialization {
-template<class Archive>
-inline void save_construct_data(Archive& ar, const tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
-{
-  std::cout << "Saving RandomNumberGenerator\n";
-  // Save the data required to construct instance.
-  ar << rng->m_seed;
-}
-
-template<class Archive>
-inline void load_construct_data(Archive& ar, tvgutil::RandomNumberGenerator *rng, const unsigned int file_version)
-{
-  std::cout << "Loading RandomNumberGenerator\n";
-  // Retrieve data from archive required to construct new instance.
-  unsigned int seed;
-  ar >> seed;
-
-  // Invoke inplace constructor to initialise instance of class.
-  ::new(rng)tvgutil::RandomNumberGenerator(seed);
-}
-}}
 
 #endif
