@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
   // Generate a set of labels.
 #ifdef CLASS_IMBALANCE_TEST
-  const int labelCount = 3;
+  const int labelCount = 5;
 #else
   const int labelCount = 20;
 #endif
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     .add_param("randomSeed", list_of<unsigned int>(seed))
     .add_param("seenExamplesThreshold", list_of<size_t>(50))
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
-    .add_param("usePMFReweighting", list_of<bool>(false))
+    .add_param("usePMFReweighting", list_of<bool>(true))
     .generate_param_sets();
 
   // Initialise the online random forest with the specified parameters.
