@@ -180,7 +180,7 @@ private:
   std::set<int> m_dirtyNodes;
 
   /** The inverses of the L1-normalised class frequencies observed in the training data. */
-  std::map<Label,float> m_inverseClassWeights;
+  boost::optional<std::map<Label,float> > m_inverseClassWeights;
 
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
@@ -556,7 +556,7 @@ private:
     const std::map<Label,size_t>& bins = m_classFrequencies.get_bins();
     for(typename std::map<Label,size_t>::const_iterator it = bins.begin(), iend = bins.end(); it != iend; ++it)
     {
-      m_inverseClassWeights[it->first] = count / it->second;
+      (*m_inverseClassWeights)[it->first] = count / it->second;
     }
   }
 };
