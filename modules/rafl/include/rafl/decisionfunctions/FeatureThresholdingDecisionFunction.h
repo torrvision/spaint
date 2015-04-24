@@ -5,6 +5,8 @@
 #ifndef H_RAFL_FEATURETHRESHOLDINGDECISIONFUNCTION
 #define H_RAFL_FEATURETHRESHOLDINGDECISIONFUNCTION
 
+#include <boost/serialization/base_object.hpp>
+
 #include "DecisionFunction.h"
 
 namespace rafl {
