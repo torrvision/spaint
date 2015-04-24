@@ -124,7 +124,7 @@ private:
     }
 
     Eigen::MatrixXf confusionMatrix = ConfusionMatrixUtil::make_confusion_matrix(classLabels, expectedLabels, predictedLabels);
-    return boost::assign::map_list_of("Accuracy", ConfusionMatrixUtil::calculate_accuracy(confusionMatrix));
+    return boost::assign::map_list_of("Accuracy", ConfusionMatrixUtil::calculate_accuracy(ConfusionMatrixUtil::normalise_rows_L1(confusionMatrix)));
   }
 };
 
