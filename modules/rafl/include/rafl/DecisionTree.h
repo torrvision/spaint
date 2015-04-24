@@ -225,8 +225,10 @@ public:
     template <typename Archive>
     void save(Archive& ar, const unsigned int version) const
     {
+      std::string decisionFunctionGeneratorType = decisionFunctionGenerator->get_type();
+
       ar & candidateCount;
-      ar & decisionFunctionGenerator->get_type();
+      ar & decisionFunctionGeneratorType;
       ar & gainThreshold;
       ar & maxClassSize;
       ar & maxTreeHeight;
