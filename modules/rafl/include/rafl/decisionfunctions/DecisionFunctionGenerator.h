@@ -72,7 +72,7 @@ public:
    * \param reservoir             The reservoir of examples to split.
    * \param candidateCount        The number of candidates to evaluate.
    * \param gainThreshold         The minimum information gain that must be obtained from a split to make it worthwhile.
-   * \param inverseClassWeights   The inverses of the L1-normalised class frequencies observed in the training data.
+   * \param inverseClassWeights   The (optional) inverses of the L1-normalised class frequencies observed in the training data.
    * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
   Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
@@ -130,7 +130,7 @@ private:
    * \param initialEntropy      The entropy of the example set before the split.
    * \param leftExamples        The examples that end up in the left half of the split.
    * \param rightExamples       The examples that end up in the right half of the split.
-   * \param inverseClassWeights The inverses of the L1-normalised class frequencies observed in the training data.
+   * \param inverseClassWeights The (optional) inverses of the L1-normalised class frequencies observed in the training data.
    * \return                    The information gain resulting from the split.
    */
   static float calculate_information_gain(const ExampleReservoir<Label>& reservoir, float initialEntropy, const std::vector<Example_CPtr>& leftExamples, const std::vector<Example_CPtr>& rightExamples, const boost::optional<std::map<Label,float> >& inverseClassWeights)

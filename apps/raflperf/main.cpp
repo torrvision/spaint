@@ -126,9 +126,7 @@ int main(int argc, char *argv[])
       .add_param("splittabilityThreshold", list_of<float>(0.8f))
       .add_param("usePMFReweighting", list_of<bool>(false)(true))
       .generate_param_sets();
-
   }
-
   
   // Construct the split generator.
 #if 0
