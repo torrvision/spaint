@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
 using namespace rafl;
 
 #include <tvgutil/PriorityQueue.h>
-#include <tvgutil/Serialization.h>
+#include <tvgutil/SerializationUtil.h>
 using namespace tvgutil;
 
 Descriptor_CPtr make_descriptor(float *arr)
@@ -568,11 +568,11 @@ int main()
     settings.seenExamplesThreshold = 30;
     settings.splittabilityThreshold = 0.5f;
     settings.usePMFReweighting = false;
-    boost_serial_save(path, settings);
+    SerializationUtil::save_text(path, settings);
   }
   {
     DecisionTree<int>::Settings *p;
-    boost_serial_load(path, p);
+    SerializationUtil::load_text(path, p);
     int x;
     x = 23;
   }

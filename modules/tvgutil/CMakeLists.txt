@@ -55,7 +55,7 @@ include/tvgutil/MapUtil.h
 include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
-include/tvgutil/Serialization.h
+include/tvgutil/SerializationUtil.h
 )
 
 #################################################################
