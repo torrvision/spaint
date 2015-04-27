@@ -32,6 +32,20 @@ struct SerializationUtil
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
+   * \brief Loads an object from a file.
+   *
+   * \param path  The path to the file.
+   * \param ptr   A pointer to some memory into which to load the object.
+   */
+  template <typename Archive, typename T>
+  static inline void load(const std::string& path, T*& ptr)
+  {
+    std::ifstream fs(path.c_str());
+    Archive ar(fs);
+    ar >> ptr;
+  }
+
+  /**
    * \brief Loads an object from a file in binary format.
    *
    * \param path  The path to the file.
@@ -40,9 +54,7 @@ struct SerializationUtil
   template <typename T>
   static inline void load_binary(const std::string& path, T*& ptr)
   {
-    std::ifstream fs(path.c_str());
-    boost::archive::binary_iarchive ar(fs);
-    ar >> ptr;
+    load<boost::archive::binary_iarchive>(path, ptr);
   }
 
   /**
@@ -54,9 +66,22 @@ struct SerializationUtil
   template <typename T>
   static inline void load_text(const std::string& path, T*& ptr)
   {
-    std::ifstream fs(path.c_str());
-    boost::archive::text_iarchive ar(fs);
-    ar >> ptr;
+    load<boost::archive::text_iarchive>(path, ptr);
+  }
+
+  /**
+   * \brief Saves an object to a file.
+   *
+   * \param path  The path to the file.
+   * \param obj   The object to save.
+   */
+  template <typename Archive, typename T>
+  static inline void save(const std::string& path, const T& obj)
+  {
+    std::ofstream fs(path.c_str());
+    Archive ar(fs);
+    const T *ptr = &obj;
+    ar << ptr;
   }
 
   /**
@@ -68,10 +93,7 @@ struct SerializationUtil
   template <typename T>
   static inline void save_binary(const std::string& path, const T& obj)
   {
-    std::ofstream fs(path.c_str());
-    boost::archive::binary_oarchive ar(fs);
-    const T *ptr = &obj;
-    ar << ptr;
+    save<boost::archive::binary_oarchive>(path, obj);
   }
 
   /**
@@ -83,10 +105,7 @@ struct SerializationUtil
   template <typename T>
   static inline void save_text(const std::string& path, const T& obj)
   {
-    std::ofstream fs(path.c_str());
-    boost::archive::text_oarchive ar(fs);
-    const T *ptr = &obj;
-    ar << ptr;
+    save<boost::archive::text_oarchive>(path, obj);
   }
 };
 
