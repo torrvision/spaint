@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include <tvgutil/IDAllocator.h>
 
 #include "SpaintVoxel.h"
@@ -138,6 +140,11 @@ public:
    */
   bool has_label(const std::string& name) const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<LabelManager> LabelManager_Ptr;
+typedef boost::shared_ptr<const LabelManager> LabelManager_CPtr;
 
 }
 

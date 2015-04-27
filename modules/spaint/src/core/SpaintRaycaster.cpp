@@ -22,7 +22,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
 : m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
-  const std::vector<Vector3u>& labelColours = m_model->get_label_manager().get_label_colours();
+  const std::vector<Vector3u>& labelColours = m_model->get_label_manager()->get_label_colours();
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA

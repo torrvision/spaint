@@ -11,7 +11,7 @@ namespace spaint {
 SpaintModel::SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
                          const Settings_CPtr& settings)
 : m_depthImageSize(depthImageSize),
-  m_labelManager(21),
+  m_labelManager(new LabelManager(21)),
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),
   m_settings(settings),
@@ -30,12 +30,12 @@ const ITMIntrinsics& SpaintModel::get_intrinsics() const
   return m_view->calib->intrinsics_d;
 }
 
-LabelManager& SpaintModel::get_label_manager()
+const LabelManager_Ptr& SpaintModel::get_label_manager()
 {
   return m_labelManager;
 }
 
-const LabelManager& SpaintModel::get_label_manager() const
+LabelManager_CPtr SpaintModel::get_label_manager() const
 {
   return m_labelManager;
 }

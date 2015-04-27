@@ -251,7 +251,7 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const SpaintI
       glEnd();
 
       // Render the current selector to show how we're interacting with the scene.
-      Vector3u labelColour = m_model->get_label_manager().get_label_colour(interactor->get_semantic_label());
+      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(interactor->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
       SpaintInteractor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
