@@ -287,8 +287,9 @@ int main(int argc, char *argv[])
 
     if(roundCount % 50 == 0)
     {
-      SerializationUtil::save_text("./randomForest" + boost::lexical_cast<std::string>(roundCount) + ".rf", *randomForest);
-      randomForest = SerializationUtil::load_text("./randomForest" + boost::lexical_cast<std::string>(roundCount) + ".rf", randomForest);
+      const std::string path = "./randomForest" + boost::lexical_cast<std::string>(roundCount) + ".rf";
+      SerializationUtil::save_text(path, *randomForest);
+      randomForest = SerializationUtil::load_text(path, randomForest);
     }
   }
 
