@@ -8,8 +8,6 @@
 #include <set>
 #include <stdexcept>
 
-#include <boost/serialization/optional.hpp>
-
 #include <tvgutil/PriorityQueue.h>
 #include <tvgutil/PropertyUtil.h>
 
