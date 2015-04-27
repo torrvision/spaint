@@ -5,6 +5,8 @@
 #ifndef H_RAFL_FEATURETHRESHOLDINGDECISIONFUNCTION
 #define H_RAFL_FEATURETHRESHOLDINGDECISIONFUNCTION
 
+#include <boost/serialization/base_object.hpp>
+
 #include "DecisionFunction.h"
 
 namespace rafl {
@@ -32,6 +34,14 @@ public:
    */
   FeatureThresholdingDecisionFunction(size_t featureIndex, float threshold);
 
+private:
+  /**
+   * \brief Constructs a feature thresholding decision function.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  FeatureThresholdingDecisionFunction() {}
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
@@ -39,6 +49,24 @@ public:
 
   /** Override */
   virtual void output(std::ostream& os) const;
+
+  //#################### SERIALIZATION #################### 
+private:
+  /**
+   * \brief Serializes the decision function to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & boost::serialization::base_object<DecisionFunction>(*this);
+    ar & m_featureIndex;
+    ar & m_threshold;
+  }
+
+  friend class boost::serialization::access;
 };
 
 }

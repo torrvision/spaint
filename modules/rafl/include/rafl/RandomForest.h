@@ -42,6 +42,14 @@ public:
     }
   }
 
+private:
+  /**
+   * \brief Constructs a random forest.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  RandomForest() {}
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -140,6 +148,22 @@ public:
       (*it)->train(splitBudget);
     }
   }
+
+  //#################### SERIALIZATION ####################
+private:
+  /**
+   * \brief Serializes the random forest to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_trees;
+  }
+
+  friend class boost::serialization::access;
 };
 
 }

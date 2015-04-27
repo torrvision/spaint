@@ -26,12 +26,12 @@ class DecisionTree
   //#################### NESTED TYPES ####################
 private:
   /**
-   * \brief An instance of this struct represents a node in the tree.
+   * \brief An instance of this class represents a node in the tree.
    */
-  struct Node
+  class Node
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-
+  public:
     /** The depth of the node in the tree. */
     size_t m_depth;
 
@@ -48,7 +48,7 @@ private:
     DecisionFunction_Ptr m_splitter;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-
+  public:
     /**
      * \brief Constructs a node.
      *
@@ -59,6 +59,34 @@ private:
     Node(size_t depth, size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
     : m_depth(depth), m_leftChildIndex(-1), m_reservoir(maxClassSize, randomNumberGenerator), m_rightChildIndex(-1)
     {}
+
+  private:
+    /**
+     * \brief Constructs a node.
+     *
+     * Note: This constructor is needed for serialization and should not be used otherwise.
+     */
+    Node() {}
+
+    //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
+  private:
+    /**
+     * \brief Serializes the node to/from an archive.
+     *
+     * \param ar      The archive.
+     * \param version The file format version number.
+     */
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & m_depth;
+      ar & m_leftChildIndex;
+      ar & m_reservoir;
+      ar & m_rightChildIndex;
+      ar & m_splitter;
+    }
+
+    friend class boost::serialization::access;
   };
 
 public:
@@ -132,7 +160,7 @@ public:
       initialise(properties);
     }
 
-    //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUCNTIONS ~~~~~~~~~~~~~~~~~~~~
+    //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
   private:
     /**
      * \brief Loads settings from a property map.
@@ -159,6 +187,63 @@ public:
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
       decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
     }
+
+    //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
+  private:
+    /**
+     * \brief Loads the settings from an archive.
+     *
+     * \param ar      The archive.
+     * \param version The file format version number.
+     */
+    template <typename Archive>
+    void load(Archive& ar, const unsigned int version)
+    {
+      serialize_common(ar);
+
+      std::string decisionFunctionGeneratorType;
+      ar & decisionFunctionGeneratorType;
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
+    }
+
+    /**
+     * \brief Saves the settings to an archive.
+     *
+     * \param ar      The archive.
+     * \param version The file format version number.
+     */
+    template <typename Archive>
+    void save(Archive& ar, const unsigned int version) const
+    {
+      const_cast<Settings*>(this)->serialize_common(ar);
+
+      std::string decisionFunctionGeneratorType = decisionFunctionGenerator->get_type();
+      ar & decisionFunctionGeneratorType;
+    }
+
+    /**
+     * \brief Serializes the "normal" settings to/from an archive.
+     *
+     * Settings that require special handling are dealt with in the save() and load() functions.
+     *
+     * \param ar  The archive.
+     */
+    template <typename Archive>
+    void serialize_common(Archive& ar)
+    {
+      ar & candidateCount;
+      ar & gainThreshold;
+      ar & maxClassSize;
+      ar & maxTreeHeight;
+      ar & randomNumberGenerator;
+      ar & seenExamplesThreshold;
+      ar & splittabilityThreshold;
+      ar & usePMFReweighting;
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    friend class boost::serialization::access;
   };
 
   //#################### PUBLIC TYPEDEFS ####################
@@ -209,6 +294,14 @@ public:
     // Initialise the inverse class weights to empty if the use of PMF reweighting is desired.
     if(m_settings.usePMFReweighting) m_inverseClassWeights = std::map<Label,float>();
   }
+
+private:
+  /**
+   * \brief Constructs a decision tree.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  DecisionTree() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -562,6 +655,28 @@ private:
       (*m_inverseClassWeights)[it->first] = count / it->second;
     }
   }
+
+  //#################### SERIALIZATION ####################
+private:
+  /**
+   * \brief Serializes the decision tree to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_classFrequencies;
+    ar & m_dirtyNodes;
+    ar & m_inverseClassWeights;
+    ar & m_nodes;
+    ar & m_rootIndex;
+    ar & m_settings;
+    ar & m_splittabilityQueue;
+  }
+
+  friend class boost::serialization::access;
 };
 
 }

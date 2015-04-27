@@ -40,6 +40,24 @@ public:
   : m_randomNumberGenerator(randomNumberGenerator)
   {}
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the type of the decision function generator.
+   *
+   * \return  The type of the decision function generator.
+   */
+  static std::string get_static_type()
+  {
+    return "FeatureThresholding";
+  }
+
+  /** Override */
+  virtual std::string get_type() const
+  {
+    return get_static_type();
+  }
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */

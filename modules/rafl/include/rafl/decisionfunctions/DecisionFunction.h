@@ -7,6 +7,8 @@
 
 #include <iosfwd>
 
+#include <boost/serialization/serialization.hpp>
+
 #include "../base/Descriptor.h"
 
 namespace rafl {
@@ -51,6 +53,22 @@ public:
    * \param os  The stream.
    */
   virtual void output(std::ostream& os) const = 0;
+
+  //#################### SERIALIZATION #################### 
+private:
+  /**
+   * \brief Serializes the decision function to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    // No-op
+  }
+
+  friend class boost::serialization::access;
 };
 
 //#################### STREAM OPERATORS ####################

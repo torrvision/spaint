@@ -9,6 +9,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
+#include <boost/serialization/split_member.hpp>
+
 namespace tvgutil {
 
 /**
@@ -19,10 +21,13 @@ class RandomNumberGenerator
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The generation engine. */
-  boost::mt19937 m_gen;
+  boost::shared_ptr<boost::mt19937> m_gen;
 
   /** The mutex used to synchronise access to the random number generator. */
   boost::mutex m_mutex;
+
+  /** The seed of the random number generator. */
+  unsigned int m_seed;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -32,6 +37,14 @@ public:
    * \param seed  The seed with which to initialise the generation engine.
    */
   explicit RandomNumberGenerator(unsigned int seed);
+
+private:
+  /**
+   * \brief Constructs a random number generator.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  RandomNumberGenerator();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -47,7 +60,7 @@ public:
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
     boost::random::normal_distribution<T> dist(mean, sigma);
-    return dist(m_gen);
+    return dist(*m_gen);
   }
 
   /**
@@ -73,13 +86,45 @@ public:
   {
     boost::lock_guard<boost::mutex> lock(m_mutex);
     boost::random::uniform_real_distribution<T> dist(lower, upper);
-    return dist(m_gen);
+    return dist(*m_gen);
   }
+
+  //#################### SERIALIZATION #################### 
+public:
+  /**
+   * \brief Loads the random number generator from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void load(Archive& ar, const unsigned int version)
+  {
+    ar & m_seed;
+    m_gen.reset(new boost::mt19937(m_seed));
+  }
+
+  /**
+   * \brief Saves the random number generator to an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void save(Archive& ar, const unsigned int version) const
+  {
+    ar & m_seed;
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+  friend class boost::serialization::access;
 };
 
 //#################### TYPEDEFS ####################
 
 typedef boost::shared_ptr<RandomNumberGenerator> RandomNumberGenerator_Ptr;
+typedef boost::shared_ptr<const RandomNumberGenerator> RandomNumberGenerator_CPtr;
 
 }
 

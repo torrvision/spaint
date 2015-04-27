@@ -6,6 +6,9 @@
 #include <boost/format.hpp>
 using boost::assign::list_of;
 
+#include <tvgutil/SerializationUtil.h>
+using namespace tvgutil;
+
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
 #include <evaluation/core/PerformanceMeasure.h>
@@ -281,6 +284,13 @@ int main(int argc, char *argv[])
     // Remove a current class label after every 40 rounds of training.
     if(roundCount % 40 == 0) currentClassLabels.erase(classLabelSampler.get_sample(classLabels));
 #endif
+
+    if(roundCount % 50 == 0)
+    {
+      const std::string path = "./randomForest" + boost::lexical_cast<std::string>(roundCount) + ".rf";
+      SerializationUtil::save_text(path, *randomForest);
+      randomForest = SerializationUtil::load_text(path, randomForest);
+    }
   }
 
 #undef CLASS_IMBALANCE_TEST

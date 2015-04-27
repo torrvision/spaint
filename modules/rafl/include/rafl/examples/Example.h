@@ -7,6 +7,8 @@
 
 #include <ostream>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <tvgutil/LimitedContainer.h>
 
 #include "../base/Descriptor.h"
@@ -39,6 +41,14 @@ public:
   : m_descriptor(descriptor), m_label(label)
   {}
 
+private:
+  /**
+   * \brief Constructs an example.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  Example() {}
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -60,6 +70,23 @@ public:
   {
     return m_label;
   }
+
+  //#################### SERIALIZATION ####################
+private:
+  /**
+   * \brief Serializes the example to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_descriptor;
+    ar & m_label;
+  }
+
+  friend class boost::serialization::access;
 };
 
 //#################### STREAM OPERATORS ####################

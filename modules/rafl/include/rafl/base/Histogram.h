@@ -8,6 +8,8 @@
 #include <map>
 #include <stdexcept>
 
+#include <boost/serialization/serialization.hpp>
+
 #include <tvgutil/LimitedContainer.h>
 
 namespace rafl {
@@ -77,6 +79,23 @@ public:
   {
     return m_count;
   }
+
+  //#################### SERIALIZATION #################### 
+private:
+  /**
+   * \brief Serializes the histogram to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template<typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_bins;
+    ar & m_count;
+  }
+
+  friend class boost::serialization::access;
 };
 
 //#################### STREAM OPERATORS ####################

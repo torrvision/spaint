@@ -66,6 +66,13 @@ public:
   : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
+  /**
+   * \brief Constructs an example reservoir.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
+   */
+  ExampleReservoir() {}
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -202,6 +209,27 @@ public:
 
     return os;
   }
+
+  //#################### SERIALIZATION #################### 
+private:
+  /**
+   * \brief Serializes the example reservoir to/from an archive.
+   *
+   * \param ar      The archive.
+   * \param version The file format version number.
+   */
+  template <typename Archive>
+  void serialize(Archive& ar, const unsigned int version)
+  {
+    ar & m_curSize;
+    ar & m_examples;
+    ar & m_histogram;
+    ar & m_maxClassSize;
+    ar & m_randomNumberGenerator;
+    ar & m_seenExamples;
+  }
+
+  friend class boost::serialization::access;
 };
 
 }
