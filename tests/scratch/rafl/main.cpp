@@ -571,8 +571,8 @@ int main()
     SerializationUtil::save_text(path, settings);
   }
   {
-    DecisionTree<int>::Settings *p;
-    SerializationUtil::load_text(path, p);
+    boost::shared_ptr<DecisionTree<int>::Settings> p;
+    p = SerializationUtil::load_text(path, p);
     int x;
     x = 23;
   }

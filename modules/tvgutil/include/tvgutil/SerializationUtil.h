@@ -7,6 +7,8 @@
 
 #include <fstream>
 
+#include <boost/shared_ptr.hpp>
+
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -35,38 +37,43 @@ struct SerializationUtil
    * \brief Loads an object from a file.
    *
    * \param path  The path to the file.
-   * \param ptr   A pointer to some memory into which to load the object.
+   * \param dummy A dummy parameter that can be used for type inference.
+   * \return      A pointer to the loaded object.
    */
   template <typename Archive, typename T>
-  static inline void load(const std::string& path, T*& ptr)
+  static inline boost::shared_ptr<T> load(const std::string& path, const boost::shared_ptr<T>& dummy = boost::shared_ptr<T>())
   {
     std::ifstream fs(path.c_str());
     Archive ar(fs);
+    T *ptr;
     ar >> ptr;
+    return boost::shared_ptr<T>(ptr);
   }
 
   /**
    * \brief Loads an object from a file in binary format.
    *
    * \param path  The path to the file.
-   * \param ptr   A pointer to some memory into which to load the object.
+   * \param dummy A dummy parameter that can be used for type inference.
+   * \return      A pointer to the loaded object.
    */
   template <typename T>
-  static inline void load_binary(const std::string& path, T*& ptr)
+  static inline boost::shared_ptr<T> load_binary(const std::string& path, const boost::shared_ptr<T>& dummy = boost::shared_ptr<T>())
   {
-    load<boost::archive::binary_iarchive>(path, ptr);
+    return load<boost::archive::binary_iarchive,T>(path);
   }
 
   /**
    * \brief Loads an object from a file in text format.
    *
    * \param path  The path to the file.
-   * \param ptr   A pointer to some memory into which to load the object.
+   * \param dummy A dummy parameter that can be used for type inference.
+   * \return      A pointer to the loaded object.
    */
   template <typename T>
-  static inline void load_text(const std::string& path, T*& ptr)
+  static inline boost::shared_ptr<T> load_text(const std::string& path, const boost::shared_ptr<T>& dummy = boost::shared_ptr<T>())
   {
-    load<boost::archive::text_iarchive>(path, ptr);
+    return load<boost::archive::text_iarchive,T>(path);
   }
 
   /**
