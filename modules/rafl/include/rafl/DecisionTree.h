@@ -201,18 +201,10 @@ public:
     template <typename Archive>
     void load(Archive& ar, const unsigned int version)
     {
+      serialize_common(ar);
+
       std::string decisionFunctionGeneratorType;
-
-      ar & candidateCount;
       ar & decisionFunctionGeneratorType;
-      ar & gainThreshold;
-      ar & maxClassSize;
-      ar & maxTreeHeight;
-      ar & randomNumberGenerator;
-      ar & seenExamplesThreshold;
-      ar & splittabilityThreshold;
-      ar & usePMFReweighting;
-
       decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
     }
 
@@ -225,10 +217,23 @@ public:
     template <typename Archive>
     void save(Archive& ar, const unsigned int version) const
     {
-      std::string decisionFunctionGeneratorType = decisionFunctionGenerator->get_type();
+      const_cast<Settings*>(this)->serialize_common(ar);
 
-      ar & candidateCount;
+      std::string decisionFunctionGeneratorType = decisionFunctionGenerator->get_type();
       ar & decisionFunctionGeneratorType;
+    }
+
+    /**
+     * \brief Serializes the "normal" settings to/from an archive.
+     *
+     * Settings that require special handling are dealt with in the save() and load() functions.
+     *
+     * \param ar  The archive.
+     */
+    template <typename Archive>
+    void serialize_common(Archive& ar)
+    {
+      ar & candidateCount;
       ar & gainThreshold;
       ar & maxClassSize;
       ar & maxTreeHeight;
