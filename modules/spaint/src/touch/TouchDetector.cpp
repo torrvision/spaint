@@ -230,11 +230,17 @@ af::array TouchDetector::select_good_connected_components()
   // Create a histogram of the connected components to identify the size of each region.
   static af::array histogram;
   histogram = af::histogram(m_connectedComponents, numberOfConnectedComponents);
+  af::print("Histogram of connected component image", histogram);
 
   // Set the first element to zero as this corresponds to the background.
-  histogram(0) = 0;
+  //histogram(0) = 0;
 
-  af::array goodCandidates = af::where(histogram > m_minimumAreaThreshold);
+  // Remove connected components which are too small or too large.
+  const float m_maximumAreaThreshold = 0.25 * m_cols * m_rows; 
+  histogram = histogram - (histogram < m_minimumAreaThreshold) * histogram;
+  histogram = histogram - (histogram > m_maximumAreaThreshold) * histogram;
+  //af::array goodCandidates = af::where((histogram > m_minimumAreaThreshold) && (histogram < m_maximumAreaThreshold));
+  af::array goodCandidates = af::where(histogram);
 #ifdef DEBUG_TOUCH_VERBOSE
   af::print("Histogram of connected component image", histogram);
   if(goodCandidates.elements() > 0) af::print("goodCandidates", goodCandidates);
@@ -332,7 +338,7 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   if(numberOfGoodCandidates > 1)
   {
     std::vector<float> means(numberOfGoodCandidates);
-    int minElement;
+    int minElement = -1;
     for(int i = 0; i < numberOfGoodCandidates; ++i)
     {
       mask = (m_connectedComponents == candidateIds[i]);
@@ -349,7 +355,7 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
 
 //DEBUGGING HERE!
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  mask = (m_connectedComponents == bestConnectedComponent);
+  mask = (m_connectedComponents.as(u32) == bestConnectedComponent);
   //af::print("m_connectedComponents", m_connectedComponents);
   temporaryCandidate = diffCopyMillimetersU8 * mask;
 
