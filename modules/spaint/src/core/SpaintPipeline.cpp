@@ -125,12 +125,21 @@ void SpaintPipeline::process_frame()
   if(true /* We're in training mode. */)
   {
     // FIXME: These shouldn't be hard-coded here ultimately.
-    const int labelCount = 2;
+    const int maxLabelCount = m_model->get_label_manager()->get_max_label_count();
     const int maxVoxelsPerLabel = 1024;
 
+    // Calculate a mask indicating which labels are currently in use.
+    ORUtils::MemoryBlock<bool> labelMaskMB(maxLabelCount, true, true/*memoryDeviceType*/);
+    bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
+    for(int i = 0; i < maxLabelCount; ++i)
+    {
+      labelMask[i] = m_model->get_label_manager()->has_label(static_cast<SpaintVoxel::LabelType>(i));
+    }
+    labelMaskMB.UpdateDeviceFromHost();
+
     // Sample voxels from the scene to use for training the random forest.
-    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(labelCount * maxVoxelsPerLabel, true, true/*memoryDeviceType*/);
-    ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(labelCount, true, true);
+    ORUtils::MemoryBlock<Vector3s> voxelLocationsMB(maxLabelCount * maxVoxelsPerLabel, true, true/*memoryDeviceType*/);
+    ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(maxLabelCount, true, true);
     m_voxelSampler->sample_voxels(
       m_raycaster->get_live_render_state()->raycastResult,
       scene.get(),

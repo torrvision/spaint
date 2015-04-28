@@ -14,7 +14,6 @@ VoxelSampler::VoxelSampler(const LabelManager_CPtr& labelManager, int maxVoxelsP
 : m_candidateVoxelIndicesMB(labelManager->get_max_label_count() * maxVoxelsPerLabel, true, true),
   m_candidateVoxelLocationsMB(labelManager->get_max_label_count() * raycastResultSize, true, true),
   m_labelManager(labelManager),
-  m_labelMaskMB(labelManager->get_max_label_count(), true, true),
   m_maxLabelCount(labelManager->get_max_label_count()),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
@@ -32,14 +31,6 @@ VoxelSampler::~VoxelSampler() {}
 void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                  ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
-  // Calculate a mask indicating which labels are currently in use.
-  bool *labelMask = m_labelMaskMB.GetData(MEMORYDEVICE_CPU);
-  for(int i = 0; i < m_maxLabelCount; ++i)
-  {
-    labelMask[i] = m_labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
-  }
-  m_labelMaskMB.UpdateDeviceFromHost();
-
   // Calculate the voxel masks for the various labels (these indicate which voxels could serve as examples of each label).
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();

@@ -37,9 +37,6 @@ protected:
   /** The label manager. */
   LabelManager_CPtr m_labelManager;
 
-  /** A memory block in which to store a mask indicating which labels are currently in use. */
-  mutable ORUtils::MemoryBlock<bool> m_labelMaskMB;
-
   /** The maximum number of labels that can be in use. */
   const int m_maxLabelCount;
 
