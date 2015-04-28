@@ -10,15 +10,16 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
-: m_candidateVoxelIndicesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
-  m_candidateVoxelLocationsMB(maxLabelCount * raycastResultSize, true, true),
-  m_maxLabelCount(maxLabelCount),
+VoxelSampler::VoxelSampler(const LabelManager_CPtr& labelManager, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+: m_candidateVoxelIndicesMB(labelManager->get_max_label_count() * maxVoxelsPerLabel, true, true),
+  m_candidateVoxelLocationsMB(labelManager->get_max_label_count() * raycastResultSize, true, true),
+  m_labelManager(labelManager),
+  m_maxLabelCount(labelManager->get_max_label_count()),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
   m_rng(new tvgutil::RandomNumberGenerator(seed)),
-  m_voxelMaskPrefixSumsMB(maxLabelCount * (raycastResultSize + 1), true, true),
-  m_voxelMasksMB(maxLabelCount * (raycastResultSize + 1), true, true)
+  m_voxelMaskPrefixSumsMB(labelManager->get_max_label_count() * (raycastResultSize + 1), true, true),
+  m_voxelMasksMB(labelManager->get_max_label_count() * (raycastResultSize + 1), true, true)
 {}
 
 //#################### DESTRUCTOR ####################

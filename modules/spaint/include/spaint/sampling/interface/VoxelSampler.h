@@ -9,7 +9,7 @@
 
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "../../util/SpaintVoxel.h"
+#include "../../util/LabelManager.h"
 
 namespace tvgutil {
 
@@ -33,6 +33,9 @@ protected:
 
   /** A memory block in which to store the locations of candidate voxels in the raycast result, grouped by semantic label. */
   mutable ORUtils::MemoryBlock<Vector3s> m_candidateVoxelLocationsMB;
+
+  /** The label manager. */
+  LabelManager_CPtr m_labelManager;
 
   /** The maximum number of labels that can be in use. */
   const int m_maxLabelCount;
@@ -63,12 +66,12 @@ protected:
   /**
    * \brief Constructs a voxel sampler.
    *
-   * \param maxLabelCount     The maximum number of labels that can be in use.
+   * \param labelManager      The label manager.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  VoxelSampler(const LabelManager_CPtr& labelManager, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### DESTRUCTOR ####################
 public:

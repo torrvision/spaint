@@ -217,7 +217,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const int maxVoxelsPerLabel = 1024;
   const unsigned int seed = 12345;
-  m_voxelSampler = VoxelSamplerFactory::make(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
+  m_voxelSampler = VoxelSamplerFactory::make(m_model->get_label_manager(), maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
   m_fusionEnabled = true;
   m_reconstructionStarted = false;

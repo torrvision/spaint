@@ -57,8 +57,8 @@ __global__ void ck_write_candidate_voxel_locations(const Vector4f *raycastResult
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CUDA::VoxelSampler_CUDA(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
-: VoxelSampler(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed)
+VoxelSampler_CUDA::VoxelSampler_CUDA(const LabelManager_CPtr& labelManager, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+: VoxelSampler(labelManager, maxVoxelsPerLabel, raycastResultSize, seed)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
