@@ -124,11 +124,15 @@ public:
    *
    * \param raycastResult           The current raycast result.
    * \param scene                   The scene.
+   * \param labelMaskMB             A memory block containing a mask specifying which labels are currently in use.
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    * \param voxelCountsForLabelsMB  A memory block into which to write the numbers of voxels sampled for each label.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                     ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+  void sample_voxels(const ITMFloat4Image *raycastResult,
+                     const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                     const ORUtils::MemoryBlock<bool>& labelMaskMB,
+                     ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
+                     ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 };
 
 //#################### TYPEDEFS ####################

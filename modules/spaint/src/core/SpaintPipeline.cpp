@@ -143,6 +143,7 @@ void SpaintPipeline::process_frame()
     m_voxelSampler->sample_voxels(
       m_raycaster->get_live_render_state()->raycastResult,
       scene.get(),
+      labelMaskMB,
       voxelLocationsMB,
       voxelCountsForLabelsMB
     );
