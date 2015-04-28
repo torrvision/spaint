@@ -124,8 +124,10 @@ void SpaintPipeline::process_frame()
 
   if(true /* We're in training mode. */)
   {
+    LabelManager_CPtr labelManager = m_model->get_label_manager();
+
     // FIXME: These shouldn't be hard-coded here ultimately.
-    const int maxLabelCount = m_model->get_label_manager()->get_max_label_count();
+    const int maxLabelCount = static_cast<int>(labelManager->get_max_label_count());
     const int maxVoxelsPerLabel = 1024;
 
     // Calculate a mask indicating which labels are currently in use.
@@ -133,7 +135,7 @@ void SpaintPipeline::process_frame()
     bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
     for(int i = 0; i < maxLabelCount; ++i)
     {
-      labelMask[i] = m_model->get_label_manager()->has_label(static_cast<SpaintVoxel::LabelType>(i));
+      labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
     }
     labelMaskMB.UpdateDeviceFromHost();
 
