@@ -16,15 +16,19 @@ VoxelSampler_CPU::VoxelSampler_CPU(const LabelManager_CPtr& labelManager, int ma
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums() const
+void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlock<bool>& labelMaskMB) const
 {
+  const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   const unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
   unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
 
-  // For each label:
+  // For each possible label:
   const int stride = m_raycastResultSize + 1;
   for(int k = 0; k < m_maxLabelCount; ++k)
   {
+    // If the label is not currently in use, continue.
+    if(!labelMask[k]) continue;
+
     // Calculate the prefix sum of the voxel mask.
     voxelMaskPrefixSums[k * stride] = 0;
     for(int i = 1; i < stride; ++i)
@@ -58,8 +62,9 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
   }
 }
 
-void VoxelSampler_CPU::write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
+  const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   const unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
 
@@ -68,7 +73,7 @@ void VoxelSampler_CPU::write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigne
 #endif
   for(int k = 0; k < m_maxLabelCount; ++k)
   {
-    write_candidate_voxel_count(k, m_raycastResultSize, voxelMaskPrefixSums, voxelCountsForLabels);
+    write_candidate_voxel_count(k, m_raycastResultSize, labelMask, voxelMaskPrefixSums, voxelCountsForLabels);
   }
 }
 
@@ -95,10 +100,11 @@ void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *ray
   }
 }
 
-void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
+void VoxelSampler_CPU::write_sampled_voxel_locations(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   const Vector3s *candidateVoxelLocations = m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   Vector3s *sampledVoxelLocations = sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -108,6 +114,7 @@ void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector
   {
     copy_sampled_voxel_locations(
       voxelIndex,
+      labelMask,
       m_maxLabelCount,
       m_maxVoxelsPerLabel,
       m_raycastResultSize,

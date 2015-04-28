@@ -17,6 +17,7 @@ namespace spaint {
  *         A candidate voxel index of -1 indicates that no voxel location has been sampled for a given label and voxel index.
  *
  * \param voxelIndex              The index of the voxel currently being processed for each label (each thread processes one voxel per label).
+ * \param labelMask               A mask indicating which labels are currently in use.
  * \param maxLabelCount           The maximum number of labels that can be in use.
  * \param maxVoxelsPerLabel       The maximum number of voxels to sample for each label.
  * \param raycastResultSize       The size of the raycast result image (in pixels).
@@ -25,16 +26,18 @@ namespace spaint {
  * \param sampledVoxelLocations   An array into which to write the locations of the sampled voxels.
  */
 _CPU_AND_GPU_CODE_
-inline void copy_sampled_voxel_locations(int voxelIndex, int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize,
-                                         const Vector3s *candidateVoxelLocations, const int *candidateVoxelIndices,
-                                         Vector3s *sampledVoxelLocations)
+inline void copy_sampled_voxel_locations(int voxelIndex, const bool *labelMask, int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize,
+                                         const Vector3s *candidateVoxelLocations, const int *candidateVoxelIndices, Vector3s *sampledVoxelLocations)
 {
   for(int k = 0; k < maxLabelCount; ++k)
   {
-    int candidateVoxelIndex = candidateVoxelIndices[k * maxVoxelsPerLabel + voxelIndex];
-    if(candidateVoxelIndex != -1)
+    if(labelMask[k])
     {
-      sampledVoxelLocations[k * maxVoxelsPerLabel + voxelIndex] = candidateVoxelLocations[k * raycastResultSize + candidateVoxelIndex];
+      int candidateVoxelIndex = candidateVoxelIndices[k * maxVoxelsPerLabel + voxelIndex];
+      if(candidateVoxelIndex != -1)
+      {
+        sampledVoxelLocations[k * maxVoxelsPerLabel + voxelIndex] = candidateVoxelLocations[k * raycastResultSize + candidateVoxelIndex];
+      }
     }
   }
 }
@@ -55,12 +58,14 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
                                    const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                    int maxLabelCount, unsigned char *voxelMasks)
 {
+  // Note: We do not need to explicitly use the label mask in this function, since no voxel will ever be marked with an unused label.
+
   Vector3i loc = raycastResult[voxelIndex].toVector3().toIntRound();
   bool isFound;
   int voxelAddress = findVoxel(indexData, loc, isFound);
   const SpaintVoxel *voxel = isFound ? &voxelData[voxelAddress] : NULL;
 
-  // Update the voxel masks for the various labels.
+  // Update the voxel masks for the various labels (even the ones that are not currently active).
   for(int k = 0; k < maxLabelCount; ++k)
   {
     voxelMasks[k * (raycastResultSize+1) + voxelIndex] = voxel && voxel->label == k ? 1 : 0;
@@ -73,12 +78,17 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
  * \param label                 The label for which to store the number of available candidate voxels.
  * \param raycastResultSize     The size of the raycast result image (in pixels).
  * \param voxelMaskPrefixSums   The prefix sums for the voxel masks.
+ * \param labelMask             A mask indicating which labels are currently in use.
  * \param voxelCountsForLabels  An array into which to write the numbers of candidate voxels that are available for each label.
  */
 _CPU_AND_GPU_CODE_
-inline void write_candidate_voxel_count(int label, int raycastResultSize, const unsigned int *voxelMaskPrefixSums, unsigned int *voxelCountsForLabels)
+inline void write_candidate_voxel_count(int label, int raycastResultSize, const bool *labelMask, const unsigned int *voxelMaskPrefixSums,
+                                        unsigned int *voxelCountsForLabels)
 {
-  voxelCountsForLabels[label] += voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
+  if(labelMask[label])
+  {
+    voxelCountsForLabels[label] += voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
+  }
 }
 
 /**
@@ -100,7 +110,9 @@ inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *rayca
                                            const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
                                            int maxLabelCount, Vector3s *candidateVoxelLocations)
 {
-  // For each label:
+  // Note: We do not need to explicitly use the label mask in this function, since there will never be any candidates for unused labels.
+
+  // For each possible label:
   for(int k = 0; k < maxLabelCount; ++k)
   {
     // If the voxel we're processing is a candidate for this label:

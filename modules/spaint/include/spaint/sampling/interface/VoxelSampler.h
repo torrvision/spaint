@@ -84,8 +84,10 @@ public:
 private:
   /**
    * \brief Calculates the prefix sums for the voxel masks.
+   *
+   * \param labelMaskMB A memory block containing a mask specifying which labels are currently in use.
    */
-  virtual void calculate_voxel_mask_prefix_sums() const = 0;
+  virtual void calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlock<bool>& labelMaskMB) const = 0;
 
   /**
    * \brief Calculates the voxel masks.
@@ -99,9 +101,10 @@ private:
   /**
    * \brief Writes the number of candidate voxels that are available for each label into the voxel counts for labels memory block.
    *
+   * \param labelMaskMB             A memory block containing a mask specifying which labels are currently in use.
    * \param voxelCountsForLabelsMB  A memory block into which to write voxel counts for each label.
    */
-  virtual void write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
+  virtual void write_candidate_voxel_counts(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
 
   /**
    * \brief Writes the locations of the candidate voxels into the candidate voxel locations memory block.
@@ -113,9 +116,10 @@ private:
   /**
    * \brief Writes the locations of the sampled voxels into the sampled voxel locations memory block.
    *
+   * \param labelMaskMB             A memory block containing a mask specifying which labels are currently in use.
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    */
-  virtual void write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
+  virtual void write_sampled_voxel_locations(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
