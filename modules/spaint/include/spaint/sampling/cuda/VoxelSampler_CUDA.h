@@ -19,12 +19,12 @@ public:
   /**
    * \brief Constructs a CUDA-based voxel sampler.
    *
-   * \param labelManager      The label manager.
+   * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler_CUDA(const LabelManager_CPtr& labelManager, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  VoxelSampler_CUDA(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
