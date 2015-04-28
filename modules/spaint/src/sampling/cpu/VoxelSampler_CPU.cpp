@@ -16,11 +16,10 @@ VoxelSampler_CPU::VoxelSampler_CPU(const LabelManager_CPtr& labelManager, int ma
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                                        ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB) const
+void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums() const
 {
-  const unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CPU);
-  unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
+  unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
 
   // For each label:
   const int stride = m_raycastResultSize + 1;
@@ -37,10 +36,9 @@ void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlo
 
 void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult,
                                              const SpaintVoxel *voxelData,
-                                             const ITMVoxelIndex::IndexData *indexData,
-                                             ORUtils::MemoryBlock<unsigned char>& voxelMasksMB) const
+                                             const ITMVoxelIndex::IndexData *indexData) const
 {
-  unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CPU);
+  unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -60,10 +58,9 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
   }
 }
 
-void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                                    ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+void VoxelSampler_CPU::write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
-  const unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -75,14 +72,11 @@ void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<u
   }
 }
 
-void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
-                                                       const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                                       const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                                       ORUtils::MemoryBlock<Vector3s>& candidateVoxelLocationsMB) const
+void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const
 {
-  const unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CPU);
-  const unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
-  Vector3s *candidateVoxelLocations = candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
+  Vector3s *candidateVoxelLocations = m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for

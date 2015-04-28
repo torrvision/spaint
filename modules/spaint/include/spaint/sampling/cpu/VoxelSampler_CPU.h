@@ -29,24 +29,16 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                                ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB) const;
+  virtual void calculate_voxel_mask_prefix_sums() const;
 
   /** Override */
-  virtual void calculate_voxel_masks(const ITMFloat4Image *raycastResult,
-                                     const SpaintVoxel *voxelData,
-                                     const ITMVoxelIndex::IndexData *indexData,
-                                     ORUtils::MemoryBlock<unsigned char>& voxelMasksMB) const;
+  virtual void calculate_voxel_masks(const ITMFloat4Image *raycastResult, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const;
 
   /** Override */
-  virtual void write_candidate_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                            ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+  virtual void write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 
   /** Override */
-  virtual void write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
-                                               const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                               const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                               ORUtils::MemoryBlock<Vector3s>& candidateVoxelLocationsMB) const;
+  virtual void write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const;
 
   /** Override */
   virtual void write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;

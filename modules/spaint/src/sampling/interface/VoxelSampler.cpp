@@ -34,17 +34,17 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   // Calculate the voxel masks for the various labels (these indicate which voxels could serve as examples of each label).
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
-  calculate_voxel_masks(raycastResult, voxelData, indexData, m_voxelMasksMB);
+  calculate_voxel_masks(raycastResult, voxelData, indexData);
 
   // Calculate the prefix sums of the voxel masks (these can be used to determine the locations in the candidate voxel locations array
   // into which candidate voxels should be written).
-  calculate_voxel_mask_prefix_sums(m_voxelMasksMB, m_voxelMaskPrefixSumsMB);
+  calculate_voxel_mask_prefix_sums();
 
   // Based on the voxel masks and the prefix sums, write the candidate voxel locations into the candidate voxel locations array.
-  write_candidate_voxel_locations(raycastResult, m_voxelMasksMB, m_voxelMaskPrefixSumsMB, m_candidateVoxelLocationsMB);
+  write_candidate_voxel_locations(raycastResult);
 
   // Write the candidate voxel counts for the different labels into the voxel counts array.
-  write_candidate_voxel_counts(m_voxelMaskPrefixSumsMB, voxelCountsForLabelsMB);
+  write_candidate_voxel_counts(voxelCountsForLabelsMB);
 
   // Randomly choose candidate voxel locations to sample for each label.
   // FIXME: It might be a good idea to implement this on both the CPU and GPU to avoid the memory transfer.

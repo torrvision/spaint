@@ -63,11 +63,10 @@ VoxelSampler_CUDA::VoxelSampler_CUDA(const LabelManager_CPtr& labelManager, int 
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                                         ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB) const
+void VoxelSampler_CUDA::calculate_voxel_mask_prefix_sums() const
 {
-  const unsigned char *voxelMasks = voxelMasksMB.GetData(MEMORYDEVICE_CUDA);
-  unsigned int *voxelMaskPrefixSums = voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA);
+  const unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CUDA);
+  unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA);
 
   // For each label:
   const int stride = m_raycastResultSize + 1;
@@ -85,14 +84,13 @@ void VoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBl
   }
 
 #if DEBUGGING
-  voxelMaskPrefixSumsMB.UpdateHostFromDevice();
+  m_voxelMaskPrefixSumsMB.UpdateHostFromDevice();
 #endif
 }
 
 void VoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *raycastResult,
                                               const SpaintVoxel *voxelData,
-                                              const ITMVoxelIndex::IndexData *indexData,
-                                              ORUtils::MemoryBlock<unsigned char>& voxelMasksMB) const
+                                              const ITMVoxelIndex::IndexData *indexData) const
 {
   int threadsPerBlock = 256;
   int numBlocks = (m_raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
@@ -102,44 +100,40 @@ void VoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *raycastResul
     voxelData,
     indexData,
     m_maxLabelCount,
-    voxelMasksMB.GetData(MEMORYDEVICE_CUDA)
+    m_voxelMasksMB.GetData(MEMORYDEVICE_CUDA)
   );
 
 #if DEBUGGING
-  voxelMasksMB.UpdateHostFromDevice();
+  m_voxelMasksMB.UpdateHostFromDevice();
 #endif
 }
 
-void VoxelSampler_CUDA::write_candidate_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                                     ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+void VoxelSampler_CUDA::write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   ck_write_candidate_voxel_counts<<<1,m_maxLabelCount>>>(
     m_raycastResultSize,
-    voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
+    m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
     voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CUDA)
   );
 
   voxelCountsForLabelsMB.UpdateHostFromDevice();
 }
 
-void VoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
-                                                        const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                                        const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                                        ORUtils::MemoryBlock<Vector3s>& candidateVoxelLocationsMB) const
+void VoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const
 {
   int threadsPerBlock = 256;
   int numBlocks = (m_raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
   ck_write_candidate_voxel_locations<<<numBlocks,threadsPerBlock>>>(
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     m_raycastResultSize,
-    voxelMasksMB.GetData(MEMORYDEVICE_CUDA),
-    voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
+    m_voxelMasksMB.GetData(MEMORYDEVICE_CUDA),
+    m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
     m_maxLabelCount,
-    candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
+    m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
   );
 
 #if DEBUGGING
-  candidateVoxelLocationsMB.UpdateHostFromDevice();
+  m_candidateVoxelLocationsMB.UpdateHostFromDevice();
 #endif
 }
 

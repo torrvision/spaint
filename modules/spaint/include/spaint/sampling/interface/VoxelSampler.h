@@ -84,12 +84,8 @@ public:
 private:
   /**
    * \brief Calculates the prefix sums for the voxel masks.
-   *
-   * \param voxelMasksMB          A memory block containing the voxel masks indicating which voxels may be used as examples of which semantic labels.
-   * \param voxelMaskPrefixSumsMB A memory block into which to write the prefix sums for the voxel masks.
    */
-  virtual void calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                                ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB) const = 0;
+  virtual void calculate_voxel_mask_prefix_sums() const = 0;
 
   /**
    * \brief Calculates the voxel masks.
@@ -97,34 +93,22 @@ private:
    * \param raycastResult The current raycast result.
    * \param voxelData     The scene's voxel data.
    * \param indexData     The scene's index data.
-   * \param voxelMasksMB  A memory block into which to write the voxel masks indicating which voxels may be used as examples of which semantic labels.
    */
-  virtual void calculate_voxel_masks(const ITMFloat4Image *raycastResult,
-                                     const SpaintVoxel *voxelData,
-                                     const ITMVoxelIndex::IndexData *indexData,
-                                     ORUtils::MemoryBlock<unsigned char>& voxelMasksMB) const = 0;
+  virtual void calculate_voxel_masks(const ITMFloat4Image *raycastResult, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const = 0;
 
   /**
    * \brief Writes the number of candidate voxels that are available for each label into the voxel counts for labels memory block.
    *
-   * \param voxelMaskPrefixSumsMB   A memory block containing the prefix sums for the voxel masks.
    * \param voxelCountsForLabelsMB  A memory block into which to write voxel counts for each label.
    */
-  virtual void write_candidate_voxel_counts(const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                            ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
+  virtual void write_candidate_voxel_counts(ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
 
   /**
    * \brief Writes the locations of the candidate voxels into the candidate voxel locations memory block.
    *
-   * \param raycastRaycast            The current raycast result.
-   * \param voxelMasksMB              A memory block containing the voxel masks indicating which voxels may be used as examples of which semantic labels.
-   * \param voxelMaskPrefixSumsMB     A memory block containing the prefix sums for the voxel masks.
-   * \param candidateVoxelLocationsMB A memory block into which to write the locations of the candidate voxels.
+   * \param raycastResult The current raycast result.
    */
-  virtual void write_candidate_voxel_locations(const ITMFloat4Image *raycastResult,
-                                               const ORUtils::MemoryBlock<unsigned char>& voxelMasksMB,
-                                               const ORUtils::MemoryBlock<unsigned int>& voxelMaskPrefixSumsMB,
-                                               ORUtils::MemoryBlock<Vector3s>& candidateVoxelLocationsMB) const = 0;
+  virtual void write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const = 0;
 
   /**
    * \brief Writes the locations of the sampled voxels into the sampled voxel locations memory block.
