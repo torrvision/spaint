@@ -14,11 +14,10 @@
 using namespace InfiniTAM::Engine;
 
 #include "markers/cpu/VoxelMarker_CPU.h"
-#include "sampling/cpu/VoxelSampler_CPU.h"
+#include "sampling/VoxelSamplerFactory.h"
 
 #ifdef WITH_CUDA
 #include "markers/cuda/VoxelMarker_CUDA.h"
-#include "sampling/cuda/VoxelSampler_CUDA.h"
 #endif
 
 namespace spaint {
@@ -186,11 +185,6 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
     m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib));
     visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>(scene.get()));
-
-    // FIXME: These values shouldn't be hard-coded here ultimately.
-    const int maxVoxelsPerLabel = 1024;
-    const unsigned int seed = 12345;
-    m_voxelSampler.reset(new VoxelSampler_CUDA(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -202,11 +196,6 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
     m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
     visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>(scene.get()));
-
-    // FIXME: These values shouldn't be hard-coded here ultimately.
-    const int maxVoxelsPerLabel = 1024;
-    const unsigned int seed = 12345;
-    m_voxelSampler.reset(new VoxelSampler_CPU(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed));
   }
 
   // Set up the live render state.
@@ -223,6 +212,12 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
+
+  // Set up the voxel sampler.
+  // FIXME: These values shouldn't be hard-coded here ultimately.
+  const int maxVoxelsPerLabel = 1024;
+  const unsigned int seed = 12345;
+  m_voxelSampler = VoxelSamplerFactory::make(2, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
   m_fusionEnabled = true;
   m_reconstructionStarted = false;

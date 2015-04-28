@@ -39,7 +39,6 @@ private:
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
-  typedef boost::shared_ptr<const VoxelSampler> VoxelSampler_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

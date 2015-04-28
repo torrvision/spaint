@@ -144,6 +144,10 @@ public:
                      ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const VoxelSampler> VoxelSampler_CPtr;
+
 }
 
 #endif
