@@ -134,6 +134,16 @@ public:
                      const ORUtils::MemoryBlock<bool>& labelMaskMB,
                      ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
                      ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Randomly chooses candidate voxel locations to sample for each used label.
+   *
+   * \param labelMaskMB             A memory block containing a mask specifying which labels are currently in use.
+   * \param voxelCountsForLabelsMB  A memory block containing the numbers of candidate voxels for each label.
+   */
+  void choose_candidate_voxel_indices(const ORUtils::MemoryBlock<bool>& labelMaskMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
 };
 
 //#################### TYPEDEFS ####################

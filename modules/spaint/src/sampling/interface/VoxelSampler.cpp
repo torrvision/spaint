@@ -52,25 +52,15 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
   write_candidate_voxel_counts(labelMaskMB, voxelCountsForLabelsMB);
 
   // Randomly choose candidate voxel locations to sample for each used label.
-  // FIXME: It might be a good idea to implement this on both the CPU and GPU to avoid the memory transfer.
-  const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
-  unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
-  int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
-  for(int k = 0; k < m_maxLabelCount; ++k)
-  {
-    if(!labelMask[k]) continue;
-
-    for(int i = 0; i < m_maxVoxelsPerLabel; ++i)
-    {
-      candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = i < voxelCountsForLabels[k] ? m_rng->generate_int_from_uniform(0, voxelCountsForLabels[k] - 1) : -1;
-    }
-  }
-  m_candidateVoxelIndicesMB.UpdateDeviceFromHost();
+  // TODO: It might be a good idea to implement this on both the CPU and GPU to avoid the memory transfer.
+  choose_candidate_voxel_indices(labelMaskMB, voxelCountsForLabelsMB);
 
   // Write the sampled voxel locations into the sampled voxel locations array.
   write_sampled_voxel_locations(labelMaskMB, sampledVoxelLocationsMB);
 
   // Update the voxel counts for the different labels to reflect the number of voxels sampled.
+  const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
+  unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
   for(int k = 0; k < m_maxLabelCount; ++k)
   {
     if(labelMask[k])
@@ -80,6 +70,46 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
     else voxelCountsForLabels[k] = 0;
   }
   voxelCountsForLabelsMB.UpdateDeviceFromHost();
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void VoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<bool>& labelMaskMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+{
+  const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
+  const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
+  int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+
+  // For each possible label:
+  for(int k = 0; k < m_maxLabelCount; ++k)
+  {
+    // If the label is not currently in use, continue.
+    if(!labelMask[k]) continue;
+
+    if(voxelCountsForLabels[k] < m_maxVoxelsPerLabel)
+    {
+      // If we don't have enough candidate voxels for this label, just use all of the ones we do have.
+      for(int i = 0; i < voxelCountsForLabels[k]; ++i)
+      {
+        candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = i;
+      }
+
+      for(int i = voxelCountsForLabels[k]; i < m_maxVoxelsPerLabel; ++i)
+      {
+        candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = -1;
+      }
+    }
+    else
+    {
+      // If we do have enough candidate voxels for this label, sample the maximum possible number of voxels from the candidates.
+      for(int i = 0; i < m_maxVoxelsPerLabel; ++i)
+      {
+        candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = m_rng->generate_int_from_uniform(0, voxelCountsForLabels[k] - 1);
+      }
+    }
+  }
+
+  m_candidateVoxelIndicesMB.UpdateDeviceFromHost();
 }
 
 }
