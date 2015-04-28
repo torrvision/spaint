@@ -87,7 +87,7 @@ inline void write_candidate_voxel_count(int label, int raycastResultSize, const 
 {
   if(labelMask[label])
   {
-    voxelCountsForLabels[label] += voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
+    voxelCountsForLabels[label] = voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
   }
 }
 
