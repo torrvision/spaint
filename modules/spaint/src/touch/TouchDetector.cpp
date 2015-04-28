@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
+#include "tvgutil/ArgUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
 #ifdef WITH_CUDA
 #include "imageprocessing/cuda/ImageProcessor_CUDA.h"
@@ -236,7 +237,7 @@ af::array TouchDetector::select_good_connected_components()
   //histogram(0) = 0;
 
   // Remove connected components which are too small or too large.
-  const float m_maximumAreaThreshold = 0.25 * m_cols * m_rows; 
+  const float m_maximumAreaThreshold = 0.25 * m_cols * m_rows;
   histogram = histogram - (histogram < m_minimumAreaThreshold) * histogram;
   histogram = histogram - (histogram > m_maximumAreaThreshold) * histogram;
   //af::array goodCandidates = af::where((histogram > m_minimumAreaThreshold) && (histogram < m_maximumAreaThreshold));
@@ -338,15 +339,16 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   if(numberOfGoodCandidates > 1)
   {
     std::vector<float> means(numberOfGoodCandidates);
-    int minElement = -1;
+    int minIndex = -1;
     for(int i = 0; i < numberOfGoodCandidates; ++i)
     {
       mask = (m_connectedComponents == candidateIds[i]);
       temporaryCandidate = diffCopyMillimetersU8 * mask;
       means[i] = af::mean<float>(temporaryCandidate);
     }
-    minElement = *std::min_element(means.begin(), means.end());
-    bestConnectedComponent = candidateIds[minElement];
+    minIndex = tvgutil::ArgUtil::argmin(means);
+    if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
+    bestConnectedComponent = candidateIds[minIndex];
   }
   else
   {
