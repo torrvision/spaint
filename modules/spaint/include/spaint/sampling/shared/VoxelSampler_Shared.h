@@ -17,7 +17,7 @@ namespace spaint {
  *         A candidate voxel index of -1 indicates that no voxel location has been sampled for a given label and voxel index.
  *
  * \param voxelIndex              The index of the voxel currently being processed for each label (each thread processes one voxel per label).
- * \param labelCount              The number of semantic labels that are in use.
+ * \param maxLabelCount           The maximum number of labels that can be in use.
  * \param maxVoxelsPerLabel       The maximum number of voxels to sample for each label.
  * \param raycastResultSize       The size of the raycast result image (in pixels).
  * \param candidateVoxelLocations An array containing the locations of the candidate voxels (grouped by semantic label).
@@ -25,11 +25,11 @@ namespace spaint {
  * \param sampledVoxelLocations   An array into which to write the locations of the sampled voxels.
  */
 _CPU_AND_GPU_CODE_
-inline void copy_sampled_voxel_locations(int voxelIndex, int labelCount, int maxVoxelsPerLabel, int raycastResultSize,
+inline void copy_sampled_voxel_locations(int voxelIndex, int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize,
                                          const Vector3s *candidateVoxelLocations, const int *candidateVoxelIndices,
                                          Vector3s *sampledVoxelLocations)
 {
-  for(int k = 0; k < labelCount; ++k)
+  for(int k = 0; k < maxLabelCount; ++k)
   {
     int candidateVoxelIndex = candidateVoxelIndices[k * maxVoxelsPerLabel + voxelIndex];
     if(candidateVoxelIndex != -1)
@@ -47,13 +47,13 @@ inline void copy_sampled_voxel_locations(int voxelIndex, int labelCount, int max
  * \param raycastResultSize The size of the raycast result image (in pixels).
  * \param voxelData         The scene's voxel data.
  * \param indexData         The scene's index data.
- * \param labelCount        The number of semantic labels that are in use.
+ * \param maxLabelCount     The maximum number of labels that can be in use.
  * \param voxelMasks        An array into which to write the voxel masks indicating which voxels may be used as examples of which semantic labels.
  */
 _CPU_AND_GPU_CODE_
 inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
                                    const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                   int labelCount, unsigned char *voxelMasks)
+                                   int maxLabelCount, unsigned char *voxelMasks)
 {
   Vector3i loc = raycastResult[voxelIndex].toVector3().toIntRound();
   bool isFound;
@@ -61,7 +61,7 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
   const SpaintVoxel *voxel = isFound ? &voxelData[voxelAddress] : NULL;
 
   // Update the voxel masks for the various labels.
-  for(int k = 0; k < labelCount; ++k)
+  for(int k = 0; k < maxLabelCount; ++k)
   {
     voxelMasks[k * (raycastResultSize+1) + voxelIndex] = voxel && voxel->label == k ? 1 : 0;
   }
@@ -92,16 +92,16 @@ inline void write_candidate_voxel_count(int label, int raycastResultSize, const 
  * \param raycastResultSize       The size of the raycast result image (in pixels).
  * \param voxelMasks              An array containing the voxel masks indicating which voxels may be used as examples of which semantic labels.
  * \param voxelMaskPrefixSums     The prefix sums for the voxel masks.
- * \param labelCount              The number of semantic labels that are in use.
+ * \param maxLabelCount           The maximum number of labels that can be in use.
  * \param candidateVoxelLocations An array into which to write the locations of the candidate voxels.
  */
 _CPU_AND_GPU_CODE_
 inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
                                            const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
-                                           int labelCount, Vector3s *candidateVoxelLocations)
+                                           int maxLabelCount, Vector3s *candidateVoxelLocations)
 {
   // For each label:
-  for(int k = 0; k < labelCount; ++k)
+  for(int k = 0; k < maxLabelCount; ++k)
   {
     // If the voxel we're processing is a candidate for this label:
     if(voxelMasks[k * (raycastResultSize+1) + voxelIndex])

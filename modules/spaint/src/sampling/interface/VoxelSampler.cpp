@@ -10,15 +10,15 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
-: m_candidateVoxelIndicesMB(labelCount * maxVoxelsPerLabel, true, true),
-  m_candidateVoxelLocationsMB(labelCount * raycastResultSize, true, true),
-  m_labelCount(labelCount),
+VoxelSampler::VoxelSampler(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+: m_candidateVoxelIndicesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
+  m_candidateVoxelLocationsMB(maxLabelCount * raycastResultSize, true, true),
+  m_maxLabelCount(maxLabelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
   m_rng(new tvgutil::RandomNumberGenerator(seed)),
-  m_voxelMaskPrefixSumsMB(m_labelCount * (raycastResultSize + 1), true, true),
-  m_voxelMasksMB(m_labelCount * (raycastResultSize + 1), true, true)
+  m_voxelMaskPrefixSumsMB(maxLabelCount * (raycastResultSize + 1), true, true),
+  m_voxelMasksMB(maxLabelCount * (raycastResultSize + 1), true, true)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -49,7 +49,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   // FIXME: It might be a good idea to implement this on both the CPU and GPU to avoid the memory transfer.
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
   int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
-  for(int k = 0; k < m_labelCount; ++k)
+  for(int k = 0; k < m_maxLabelCount; ++k)
   {
     for(int i = 0; i < m_maxVoxelsPerLabel; ++i)
     {
@@ -62,7 +62,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const ITML
   write_sampled_voxel_locations(sampledVoxelLocationsMB);
 
   // Update the voxel counts for the different labels to reflect the number of voxels sampled.
-  for(int k = 0; k < m_labelCount; ++k)
+  for(int k = 0; k < m_maxLabelCount; ++k)
   {
     if(voxelCountsForLabels[k] > m_maxVoxelsPerLabel) voxelCountsForLabels[k] = m_maxVoxelsPerLabel;
   }

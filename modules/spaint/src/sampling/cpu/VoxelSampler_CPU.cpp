@@ -10,8 +10,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CPU::VoxelSampler_CPU(int labelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
-: VoxelSampler(labelCount, maxVoxelsPerLabel, raycastResultSize, seed)
+VoxelSampler_CPU::VoxelSampler_CPU(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+: VoxelSampler(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -24,7 +24,7 @@ void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlo
 
   // For each label:
   const int stride = m_raycastResultSize + 1;
-  for(int k = 0; k < m_labelCount; ++k)
+  for(int k = 0; k < m_maxLabelCount; ++k)
   {
     // Calculate the prefix sum of the voxel mask.
     voxelMaskPrefixSums[k * stride] = 0;
@@ -54,7 +54,7 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
       m_raycastResultSize,
       voxelData,
       indexData,
-      m_labelCount,
+      m_maxLabelCount,
       voxelMasks
     );
   }
@@ -69,7 +69,7 @@ void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<u
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int k = 0; k < m_labelCount; ++k)
+  for(int k = 0; k < m_maxLabelCount; ++k)
   {
     write_candidate_voxel_count(k, m_raycastResultSize, voxelMaskPrefixSums, voxelCountsForLabels);
   }
@@ -95,7 +95,7 @@ void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *ray
       m_raycastResultSize,
       voxelMasks,
       voxelMaskPrefixSums,
-      m_labelCount,
+      m_maxLabelCount,
       candidateVoxelLocations
     );
   }
@@ -114,7 +114,7 @@ void VoxelSampler_CPU::write_sampled_voxel_locations(ORUtils::MemoryBlock<Vector
   {
     copy_sampled_voxel_locations(
       voxelIndex,
-      m_labelCount,
+      m_maxLabelCount,
       m_maxVoxelsPerLabel,
       m_raycastResultSize,
       candidateVoxelLocations,
