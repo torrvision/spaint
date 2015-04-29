@@ -210,14 +210,9 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the voxel sampler.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   m_maxVoxelsPerLabel = 128;
+  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   const unsigned int seed = 12345;
-  m_voxelSampler = VoxelSamplerFactory::make(
-    m_model->get_label_manager()->get_max_label_count(),
-    m_maxVoxelsPerLabel,
-    depthImageSize.width * depthImageSize.height,
-    seed,
-    settings->deviceType
-  );
+  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, m_maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
   m_mode = MODE_NORMAL;
   m_fusionEnabled = true;
@@ -240,15 +235,10 @@ void SpaintPipeline::run_training()
   labelMaskMB.UpdateDeviceFromHost();
 
   // Sample voxels from the scene to use for training the random forest.
+  const ORUtils::Image<Vector4f> *raycastResult = m_raycaster->get_live_render_state()->raycastResult;
   Selector::Selection_Ptr voxelSelection(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
   ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(maxLabelCount, true, true);
-  m_voxelSampler->sample_voxels(
-    m_raycaster->get_live_render_state()->raycastResult,
-    scene.get(),
-    labelMaskMB,
-    *voxelSelection,
-    voxelCountsForLabelsMB
-  );
+  m_voxelSampler->sample_voxels(raycastResult, scene.get(), labelMaskMB, *voxelSelection, voxelCountsForLabelsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
   for(int i = 0; i < voxelCountsForLabelsMB.dataSize; ++i)
