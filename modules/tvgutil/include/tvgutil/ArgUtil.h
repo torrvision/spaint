@@ -49,6 +49,21 @@ public:
   }
 
   /**
+   * \brief Calculates argmax_k m[k].
+   *
+   * This function finds the index in the vector whose corresponding value is largest (using std::greater).
+   * If there are several keys with the largest value, of them is returned deterministically.
+   *
+   * \param v The vector over which to perform the argmax.
+   * \return  An index in the vector with the largest corresponding value.
+   */
+  template <typename T>
+  static size_t argmax(const std::vector<T>& v)
+  {
+    return std::distance(v.begin(), std::min_element(v.begin(), v.end(), std::greater<T>()));
+  }
+
+  /**
    * \brief Calculates argmin_k m[k].
    *
    * This function finds a key in the map whose corresponding value is smallest (using std::less).
@@ -61,6 +76,21 @@ public:
   static const K& argmin(const std::map<K,V>& m)
   {
     return std::min_element(m.begin(), m.end(), SndPred<K,V,std::less<V> >())->first;
+  }
+
+  /**
+   * \brief Calculates argmin_k m[k].
+   *
+   * This function finds the index in the vector whose corresponding value is smallest (using std::less).
+   * If there are several keys with the smallest value, one of them is returned deterministically.
+   *
+   * \param v The vector over which to perform the argmin.
+   * \return  An index in the vector with the smallest corresponding value.
+   */
+  template <typename T>
+  static size_t argmin(const std::vector<T>& v)
+  {
+    return std::distance(v.begin(), std::min_element(v.begin(), v.end(), std::less<T>()));
   }
 };
 
