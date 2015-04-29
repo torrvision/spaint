@@ -93,6 +93,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
+  // TEMPORARY
+  if(keysym.sym == SDLK_m)
+  {
+    m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
+  }
+  // END TEMPORARY
+
   // If the P key is pressed, toggle whether or not Phong lighting is enabled.
   if(keysym.sym == SDLK_p)
   {

@@ -40,6 +40,23 @@ private:
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration specify the different modes in which the pipeline can be running.
+   */
+  enum Mode
+  {
+    /** In normal mode, the user can reconstruct and manually label the scene. */
+    MODE_NORMAL,
+
+    /** In prediction mode, the model is used to predict labels for previously-unseen voxels. */
+    MODE_PREDICTION,
+
+    /** In training mode, a model is trained using voxels sampled from the current raycast. */
+    MODE_TRAINING
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The dense mapper. */
@@ -65,6 +82,9 @@ private:
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
+
+  /** The mode in which the pipeline is currently running. */
+  Mode m_mode;
 
   /** The spaint model. */
   SpaintModel_Ptr m_model;
@@ -147,6 +167,13 @@ public:
   const SpaintInteractor_Ptr& get_interactor();
 
   /**
+   * \brief Gets the mode in which the pipeline is currently running.
+   *
+   * \return  The mode in which the pipeline is currently running.
+   */
+  Mode get_mode() const;
+
+  /**
    * \brief Gets the spaint model.
    *
    * \return  The spaint model.
@@ -186,6 +213,13 @@ public:
    */
   void set_fusion_enabled(bool fusionEnabled);
 
+  /**
+   * \brief Sets the mode in which the pipeline should now run.
+   *
+   * \param mode  The mode in which the pipeline should now run.
+   */
+  void set_mode(Mode mode);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -194,6 +228,11 @@ private:
    * \param settings  The settings to use for InfiniTAM.
    */
   void initialise(const Settings_Ptr& settings);
+
+  /**
+   * \brief Runs the training part of the pipeline.
+   */
+  void run_training();
 
   /**
    * \brief Sets up the tracker.
