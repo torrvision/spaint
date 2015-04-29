@@ -255,13 +255,14 @@ void SpaintPipeline::run_training()
     voxelCountsForLabelsMB
   );
 
-  const unsigned int *p = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
+  // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
   for(int i = 0; i < voxelCountsForLabelsMB.dataSize; ++i)
   {
-    std::cout << p[i] << ' ';
+    std::cout << voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU)[i] << ' ';
   }
   std::cout << '\n';
 
+  // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
   m_interactor->mark_voxels(voxelSelection, 0);
 }
 
