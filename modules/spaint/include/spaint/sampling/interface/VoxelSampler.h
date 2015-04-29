@@ -22,16 +22,16 @@ class RandomNumberGenerator;
 namespace spaint {
 
 /**
- * \brief An instance of a class deriving from this one can be used to sample voxels from a scene.
+ * \brief An instance of a class deriving from this one can be used to sample voxels for each currently-used label from a scene.
  */
 class VoxelSampler
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** A memory block in which to store random indices when sampling from the candidate voxels for each class. */
+  /** A memory block in which to store random indices when sampling from the candidate voxels for each label. */
   mutable ORUtils::MemoryBlock<int> m_candidateVoxelIndicesMB;
 
-  /** A memory block in which to store the locations of candidate voxels in the raycast result, grouped by semantic label. */
+  /** A memory block in which to store the locations of candidate voxels in the raycast result, grouped by label. */
   mutable ORUtils::MemoryBlock<Vector3s> m_candidateVoxelLocationsMB;
 
   /** The maximum number of labels that can be in use. */

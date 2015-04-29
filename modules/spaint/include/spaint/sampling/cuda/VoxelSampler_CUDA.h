@@ -10,7 +10,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to sample voxels from a scene using CUDA.
+ * \brief An instance of this class can be used to sample voxels for each currently-used label from a scene using CUDA.
  */
 class VoxelSampler_CUDA : public VoxelSampler
 {

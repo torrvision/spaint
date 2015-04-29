@@ -187,7 +187,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   SpaintModel::Scene_Ptr scene(new SpaintModel::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
-  // Set up the platform-specific components.
+  // Set up the InfiniTAM engines and view builder.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
   VisualisationEngine_Ptr visualisationEngine;
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)

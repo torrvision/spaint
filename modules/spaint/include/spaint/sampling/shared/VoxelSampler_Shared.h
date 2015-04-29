@@ -46,12 +46,12 @@ inline void copy_sampled_voxel_locations(int voxelIndex, const bool *labelMask, 
  * \brief Updates the voxel masks for the various labels based on the contents of the specified voxel (if it exists).
  *
  * \param voxelIndex        The index of the voxel whose entries in the mask should be updated.
- * \param raycastResult     The current raycast result image.
- * \param raycastResultSize The size of the raycast result image (in pixels).
+ * \param raycastResult     The current raycast result.
+ * \param raycastResultSize The size of the raycast result (in pixels).
  * \param voxelData         The scene's voxel data.
  * \param indexData         The scene's index data.
  * \param maxLabelCount     The maximum number of labels that can be in use.
- * \param voxelMasks        An array into which to write the voxel masks indicating which voxels may be used as examples of which semantic labels.
+ * \param voxelMasks        An array into which to write the voxel masks indicating which voxels may be used as examples of which labels.
  */
 _CPU_AND_GPU_CODE_
 inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
@@ -68,7 +68,7 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
   // Update the voxel masks for the various labels (even the ones that are not currently active).
   for(int k = 0; k < maxLabelCount; ++k)
   {
-    voxelMasks[k * (raycastResultSize+1) + voxelIndex] = voxel && voxel->label == k ? 1 : 0;
+    voxelMasks[k * (raycastResultSize + 1) + voxelIndex] = voxel && voxel->label == k ? 1 : 0;
   }
 }
 
@@ -85,10 +85,7 @@ _CPU_AND_GPU_CODE_
 inline void write_candidate_voxel_count(int label, int raycastResultSize, const bool *labelMask, const unsigned int *voxelMaskPrefixSums,
                                         unsigned int *voxelCountsForLabels)
 {
-  if(labelMask[label])
-  {
-    voxelCountsForLabels[label] = voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize];
-  }
+  voxelCountsForLabels[label] = labelMask[label] ? voxelMaskPrefixSums[label * (raycastResultSize+1) + raycastResultSize] : 0;
 }
 
 /**

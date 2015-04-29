@@ -83,7 +83,7 @@ void VoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<boo
   // For each possible label:
   for(int k = 0; k < m_maxLabelCount; ++k)
   {
-    // If the label is not currently in use, continue.
+    // If the label is not currently in use, ignore it.
     if(!labelMask[k]) continue;
 
     if(voxelCountsForLabels[k] < m_maxVoxelsPerLabel)

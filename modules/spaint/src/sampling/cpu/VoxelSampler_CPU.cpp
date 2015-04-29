@@ -42,6 +42,7 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
                                              const SpaintVoxel *voxelData,
                                              const ITMVoxelIndex::IndexData *indexData) const
 {
+  const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
   unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -52,7 +53,7 @@ void VoxelSampler_CPU::calculate_voxel_masks(const ITMFloat4Image *raycastResult
     // Update the voxel masks based on the contents of the voxel.
     update_masks_for_voxel(
       voxelIndex,
-      raycastResult->GetData(MEMORYDEVICE_CPU),
+      raycastResultData,
       m_raycastResultSize,
       voxelData,
       indexData,
