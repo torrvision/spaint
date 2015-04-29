@@ -19,7 +19,15 @@ VoxelSampler::VoxelSampler(int maxLabelCount, int maxVoxelsPerLabel, int raycast
   m_rng(new tvgutil::RandomNumberGenerator(seed)),
   m_voxelMaskPrefixSumsMB(maxLabelCount * (raycastResultSize + 1), true, true),
   m_voxelMasksMB(maxLabelCount * (raycastResultSize + 1), true, true)
-{}
+{
+  // Make sure that the dummy elements at the end of the voxel masks for the various labels are properly initialised.
+  unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
+  for(int k = 1; k <= maxLabelCount; ++k)
+  {
+    voxelMasks[k * (raycastResultSize + 1) - 1] = 0;
+  }
+  m_voxelMasksMB.UpdateDeviceFromHost();
+}
 
 //#################### DESTRUCTOR ####################
 
