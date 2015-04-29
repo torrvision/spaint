@@ -24,12 +24,13 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 TouchDetector::TouchDetector(const Vector2i& imgSize)
-: m_areaPercentageThreshold(1), // 1%.
-  m_cols(imgSize.x),
+: m_cols(imgSize.x),
   m_connectedComponents(imgSize.y, imgSize.x, u32),
   m_depthLowerThreshold(0.010f),
   m_depthUpperThreshold(0.255f),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
+  m_maximumConnectedComponentAreaPercentage(20),
+  m_minimumConnectedComponentAreaPercentage(1), // 1%.
   m_morphKernelSize(5),
   m_rows(imgSize.y),
   m_thresholded(imgSize.y, imgSize.x)
@@ -49,7 +50,10 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 #endif
 
   // The minimum area threshold is set to a percentage of the total image area.
-  m_minimumAreaThreshold = (m_areaPercentageThreshold / 100.0f) * (m_rows * m_cols);
+  m_minimumConnectedComponentAreaThreshold = (m_minimumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols);
+
+  // The maximum are threshold is set to a precentage of the total image area.
+  m_maximumConnectedComponentAreaThreshold = (m_maximumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols);
 
 #ifdef DEBUG_TOUCH_DISPLAY
   m_debugDelayms = 30;
@@ -86,8 +90,10 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
     // Convert the difference between raw and raycasted depth to millimeters.
     diffCopyMillimetersU8 = truncate_to_unsigned_char((*m_diffRawRaycast) * 1000.0f);
 
+    // Find the connected component most likely to be a touch iteractor.
     int bestConnectedComponent = find_best_connected_component(goodCandidates, diffCopyMillimetersU8);
 
+    // Get the touchPoints, will return empty if the best connected component is not touching the scene.
     Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
 
     if(touchPoints->size() > 0) m_touchState.set_touch_state(touchPoints, true, true);
@@ -224,44 +230,51 @@ void TouchDetector::filter_binary_image()
 #endif
 }
 
-af::array TouchDetector::select_good_connected_components()
+int TouchDetector::find_best_connected_component(const af::array& goodCandidates, const af::array& diffCopyMillimetersU8)
 {
-  int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
+  int numberOfGoodCandidates = goodCandidates.dims(0);
+  int *candidateIds = goodCandidates.as(s32).host<int>();
+  int bestConnectedComponent = -1;
 
-  // Create a histogram of the connected components to identify the size of each region.
-  static af::array histogram;
-  histogram = af::histogram(m_connectedComponents, numberOfConnectedComponents);
-  af::print("Histogram of connected component image", histogram);
+  static af::array temporaryCandidate(m_rows, m_cols, u8);
+  static af::array mask(m_rows, m_cols, b8);
 
-  // Set the first element to zero as this corresponds to the background.
-  //histogram(0) = 0;
-
-  // Remove connected components which are too small or too large.
-  const float m_maximumAreaThreshold = 0.25 * m_cols * m_rows;
-  histogram = histogram - (histogram < m_minimumAreaThreshold) * histogram;
-  histogram = histogram - (histogram > m_maximumAreaThreshold) * histogram;
-  //af::array goodCandidates = af::where((histogram > m_minimumAreaThreshold) && (histogram < m_maximumAreaThreshold));
-  af::array goodCandidates = af::where(histogram);
-#ifdef DEBUG_TOUCH_VERBOSE
-  af::print("Histogram of connected component image", histogram);
-  if(goodCandidates.elements() > 0) af::print("goodCandidates", goodCandidates);
-#endif
+  // If there are several good candidate then select the one which is closest to a surface.
+  if(numberOfGoodCandidates > 1)
+  {
+    std::vector<float> means(numberOfGoodCandidates);
+    int minIndex = -1;
+    for(int i = 0; i < numberOfGoodCandidates; ++i)
+    {
+      mask = (m_connectedComponents == candidateIds[i]);
+      temporaryCandidate = diffCopyMillimetersU8 * mask;
+      means[i] = af::mean<float>(temporaryCandidate);
+    }
+    minIndex = tvgutil::ArgUtil::argmin(means);
+    if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
+    bestConnectedComponent = candidateIds[minIndex];
+  }
+  else
+  {
+    bestConnectedComponent = candidateIds[0];
+  }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  static bool initialised = false;
+  mask = (m_connectedComponents.as(u32) == bestConnectedComponent);
+  //af::print("m_connectedComponents", m_connectedComponents);
+  temporaryCandidate = diffCopyMillimetersU8 * mask;
 
-  // Initialise the OpenCV Trackbar if it's the first iteration.
-  if(!initialised)
-  {
-    cv::createTrackbar("areaThreshold", "DebuggingOutputWindow", &m_minimumAreaThreshold, m_rows * m_cols);
-  }
-  m_minimumAreaThreshold = cv::getTrackbarPos("areaThreshold", "DebuggingOutputWindow");
+  // Display the best candidate's difference image.
+  static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
+  temporaryCandidateDisplay = temporaryCandidate;
+  OpenCVExtra::ocvfig("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 
-  initialised = true;
+  static af::array maskDisplay(m_rows, m_cols, u8);
+  maskDisplay = mask * 255;
+  OpenCVExtra::ocvfig("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
 #endif
 
-  // The good candidates are those whose area is greater than some specified threshold.
-  return goodCandidates;
+  return bestConnectedComponent;
 }
 
 TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8)
@@ -310,6 +323,42 @@ TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComp
   return touchPoints;
 }
 
+af::array TouchDetector::select_good_connected_components()
+{
+  int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
+
+  // Create a histogram of the connected components to identify the size of each region.
+  static af::array histogram;
+  histogram = af::histogram(m_connectedComponents, numberOfConnectedComponents);
+
+  // Remove connected components which are too small or too large.
+  histogram = histogram - (histogram < m_minimumConnectedComponentAreaThreshold) * histogram;
+  histogram = histogram - (histogram > m_maximumConnectedComponentAreaThreshold) * histogram;
+  af::array goodCandidates = af::where(histogram);
+#ifdef DEBUG_TOUCH_VERBOSE
+  af::print("Histogram of connected component image", histogram);
+  if(goodCandidates.elements() > 0) af::print("goodCandidates", goodCandidates);
+#endif
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  static bool initialised = false;
+
+  // Initialise the OpenCV Trackbar if it's the first iteration.
+  if(!initialised)
+  {
+    cv::createTrackbar("minimumAreaThreshold", "DebuggingOutputWindow", &m_minimumConnectedComponentAreaThreshold, m_rows * m_cols);
+    cv::createTrackbar("maximumAreaThreshold", "DebuggingOutputWindow", &m_maximumConnectedComponentAreaThreshold, m_rows * m_cols);
+  }
+  m_minimumConnectedComponentAreaThreshold = cv::getTrackbarPos("minimumAreaThreshold", "DebuggingOutputWindow");
+  m_maximumConnectedComponentAreaThreshold = cv::getTrackbarPos("maximumAreaThreshold", "DebuggingOutputWindow");
+
+  initialised = true;
+#endif
+
+  // The good candidates are those whose area is greater than some specified threshold.
+  return goodCandidates;
+}
+
 af::array TouchDetector::truncate_to_unsigned_char(const af::array& array)
 {
   // Truncate any values outside the range [0-255], before converting to unsigned 8-bit.
@@ -324,54 +373,6 @@ af::array TouchDetector::truncate_to_unsigned_char(const af::array& array)
   arrayCopy = arrayCopy - (highmask * arrayCopy) + (255 * highmask);
 
   return arrayCopy.as(u8);
-}
-
-int TouchDetector::find_best_connected_component(const af::array& goodCandidates, const af::array& diffCopyMillimetersU8)
-{
-  int numberOfGoodCandidates = goodCandidates.dims(0);
-  int *candidateIds = goodCandidates.as(s32).host<int>();
-  int bestConnectedComponent = -1;
-
-  static af::array temporaryCandidate(m_rows, m_cols, u8);
-  static af::array mask(m_rows, m_cols, b8);
-
-  // If there are several good candidate then select the one which is closest to a surface.
-  if(numberOfGoodCandidates > 1)
-  {
-    std::vector<float> means(numberOfGoodCandidates);
-    int minIndex = -1;
-    for(int i = 0; i < numberOfGoodCandidates; ++i)
-    {
-      mask = (m_connectedComponents == candidateIds[i]);
-      temporaryCandidate = diffCopyMillimetersU8 * mask;
-      means[i] = af::mean<float>(temporaryCandidate);
-    }
-    minIndex = tvgutil::ArgUtil::argmin(means);
-    if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
-    bestConnectedComponent = candidateIds[minIndex];
-  }
-  else
-  {
-    bestConnectedComponent = candidateIds[0];
-  }
-
-//DEBUGGING HERE!
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  mask = (m_connectedComponents.as(u32) == bestConnectedComponent);
-  //af::print("m_connectedComponents", m_connectedComponents);
-  temporaryCandidate = diffCopyMillimetersU8 * mask;
-
-  // Display the best candidate's difference image.
-  static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
-  temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVExtra::ocvfig("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
-
-  static af::array maskDisplay(m_rows, m_cols, u8);
-  maskDisplay = mask * 255;
-  OpenCVExtra::ocvfig("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVExtra::COL_MAJOR);
-#endif
-
-  return bestConnectedComponent;
 }
 
 }

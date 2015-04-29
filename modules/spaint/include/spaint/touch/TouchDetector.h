@@ -15,8 +15,8 @@
 #include "../visualisers/interface/DepthVisualiser.h"
 #include "TouchState.h"
 
-#define DEBUG_TOUCH_VERBOSE
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_VERBOSE
+//#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
@@ -46,9 +46,6 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The minimum image area a candidate touch region must have, expressed as a percentage of the number of pixels in the image. */
-  float m_areaPercentageThreshold;
-
   /** The number of columns in the image matrix, (width). */
   int m_cols;
 
@@ -70,8 +67,17 @@ private:
   /** Multiplatform image processing tools. */
   boost::shared_ptr<const ImageProcessor> m_imageProcessor;
 
-  /** The minimum image area required for an image region to be considered as a touch candidate (in number of pixels). */
-  int m_minimumAreaThreshold;
+  /** The maximum image area a connected component region can take, expressed as a percentage of the number of pixels in the image. */
+  float m_maximumConnectedComponentAreaPercentage;
+
+  /** The maximum image area a connected component region can take, expressed in square-pixels. */
+  int m_maximumConnectedComponentAreaThreshold;
+
+  /** The minimum image area a connected component region can take, expressed as a percentage of the number of pixels in the image. */
+  float m_minimumConnectedComponentAreaPercentage;
+
+  /** The minimum image area a connected component region can take, expressed in square-pixels. */
+  int m_minimumConnectedComponentAreaThreshold;
 
   /** The size of the square morphological operator. */
   int m_morphKernelSize;
@@ -90,9 +96,6 @@ private:
 
   /** An instance of the current touch state. */
   TouchState m_touchState;
-
-  /** An image used to interface with InfiniTAM images. */
-  AFImage_Ptr m_workspace;
 
   //#################### CONSTRUCTORS ####################
 public:
