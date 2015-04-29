@@ -214,11 +214,11 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the voxel sampler.
   // FIXME: These values shouldn't be hard-coded here ultimately.
-  const int maxVoxelsPerLabel = 1024;
+  m_maxVoxelsPerLabel = 128;
   const unsigned int seed = 12345;
   m_voxelSampler = VoxelSamplerFactory::make(
     m_model->get_label_manager()->get_max_label_count(),
-    maxVoxelsPerLabel,
+    m_maxVoxelsPerLabel,
     depthImageSize.width * depthImageSize.height,
     seed,
     settings->deviceType
@@ -234,11 +234,8 @@ void SpaintPipeline::run_training()
   LabelManager_CPtr labelManager = m_model->get_label_manager();
   const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
 
-  // FIXME: These shouldn't be hard-coded here ultimately.
-  const int maxLabelCount = static_cast<int>(labelManager->get_max_label_count());
-  const int maxVoxelsPerLabel = 1024;
-
   // Calculate a mask indicating which labels are currently in use.
+  const int maxLabelCount = static_cast<int>(labelManager->get_max_label_count());
   ORUtils::MemoryBlock<bool> labelMaskMB(maxLabelCount, true, true);
   bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   for(int i = 0; i < maxLabelCount; ++i)
@@ -248,7 +245,7 @@ void SpaintPipeline::run_training()
   labelMaskMB.UpdateDeviceFromHost();
 
   // Sample voxels from the scene to use for training the random forest.
-  Selector::Selection_Ptr voxelSelection(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
+  Selector::Selection_Ptr voxelSelection(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
   ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(maxLabelCount, true, true);
   m_voxelSampler->sample_voxels(
     m_raycaster->get_live_render_state()->raycastResult,
@@ -257,6 +254,13 @@ void SpaintPipeline::run_training()
     *voxelSelection,
     voxelCountsForLabelsMB
   );
+
+  const unsigned int *p = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
+  for(int i = 0; i < voxelCountsForLabelsMB.dataSize; ++i)
+  {
+    std::cout << p[i] << ' ';
+  }
+  std::cout << '\n';
 
   m_interactor->mark_voxels(voxelSelection, 0);
 }

@@ -83,6 +83,9 @@ private:
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
+  /** The maximum number of voxels to sample for each label. */
+  int m_maxVoxelsPerLabel;
+
   /** The mode in which the pipeline is currently running. */
   Mode m_mode;
 
