@@ -30,10 +30,11 @@ void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlo
     if(!labelMask[k]) continue;
 
     // Calculate the prefix sum of the voxel mask.
-    voxelMaskPrefixSums[k * stride] = 0;
+    const int offset = k * stride;
+    voxelMaskPrefixSums[offset] = 0;
     for(int i = 1; i < stride; ++i)
     {
-      voxelMaskPrefixSums[k * stride + i] = voxelMaskPrefixSums[k * stride + (i-1)] + voxelMasks[k * stride + (i-1)];
+      voxelMaskPrefixSums[offset + i] = voxelMaskPrefixSums[offset + (i - 1)] + voxelMasks[offset + (i - 1)];
     }
   }
 }
@@ -80,6 +81,7 @@ void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<b
 
 void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *raycastResult) const
 {
+  const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
   const unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
   const unsigned int *voxelMaskPrefixSums = m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CPU);
   Vector3s *candidateVoxelLocations = m_candidateVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
@@ -91,7 +93,7 @@ void VoxelSampler_CPU::write_candidate_voxel_locations(const ITMFloat4Image *ray
   {
     write_candidate_voxel_location(
       voxelIndex,
-      raycastResult->GetData(MEMORYDEVICE_CPU),
+      raycastResultData,
       m_raycastResultSize,
       voxelMasks,
       voxelMaskPrefixSums,

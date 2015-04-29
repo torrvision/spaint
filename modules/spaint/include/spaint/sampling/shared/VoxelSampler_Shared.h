@@ -20,8 +20,8 @@ namespace spaint {
  * \param labelMask               A mask indicating which labels are currently in use.
  * \param maxLabelCount           The maximum number of labels that can be in use.
  * \param maxVoxelsPerLabel       The maximum number of voxels to sample for each label.
- * \param raycastResultSize       The size of the raycast result image (in pixels).
- * \param candidateVoxelLocations An array containing the locations of the candidate voxels (grouped by semantic label).
+ * \param raycastResultSize       The size of the raycast result (in pixels).
+ * \param candidateVoxelLocations An array containing the locations of the candidate voxels (grouped by label).
  * \param candidateVoxelIndices   An array specifying which candidate voxels should be sampled for each label.
  * \param sampledVoxelLocations   An array into which to write the locations of the sampled voxels.
  */
@@ -76,7 +76,7 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
  * \brief Writes the number of candidate voxels that are available for the specified label into the voxel counts array.
  *
  * \param label                 The label for which to store the number of available candidate voxels.
- * \param raycastResultSize     The size of the raycast result image (in pixels).
+ * \param raycastResultSize     The size of the raycast result (in pixels).
  * \param voxelMaskPrefixSums   The prefix sums for the voxel masks.
  * \param labelMask             A mask indicating which labels are currently in use.
  * \param voxelCountsForLabels  An array into which to write the numbers of candidate voxels that are available for each label.
@@ -95,9 +95,9 @@ inline void write_candidate_voxel_count(int label, int raycastResultSize, const 
  * Note: If the voxel cannot serve as a sample for any label, nothing is written.
  *
  * \param voxelIndex              The index of the voxel whose location might be written.
- * \param raycastResult           The current raycast result image.
- * \param raycastResultSize       The size of the raycast result image (in pixels).
- * \param voxelMasks              An array containing the voxel masks indicating which voxels may be used as examples of which semantic labels.
+ * \param raycastResult           The current raycast result.
+ * \param raycastResultSize       The size of the raycast result (in pixels).
+ * \param voxelMasks              An array containing the voxel masks indicating which voxels may be used as examples of which labels.
  * \param voxelMaskPrefixSums     The prefix sums for the voxel masks.
  * \param maxLabelCount           The maximum number of labels that can be in use.
  * \param candidateVoxelLocations An array into which to write the locations of the candidate voxels.
@@ -112,14 +112,16 @@ inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *rayca
   // For each possible label:
   for(int k = 0; k < maxLabelCount; ++k)
   {
+    const int maskOffset = k * (raycastResultSize + 1) + voxelIndex;
+
     // If the voxel we're processing is a candidate for this label:
-    if(voxelMasks[k * (raycastResultSize+1) + voxelIndex])
+    if(voxelMasks[maskOffset])
     {
       // Calculate its location.
       Vector3s loc = raycastResult[voxelIndex].toVector3().toShortRound();
 
       // Determine the index to which it should be written in the segment of the candidate voxel location array that corresponds to this label.
-      unsigned int i = voxelMaskPrefixSums[k * (raycastResultSize+1) + voxelIndex];
+      unsigned int i = voxelMaskPrefixSums[maskOffset];
 
       // Write the candidate voxel's location to the candidate voxel locations array.
       candidateVoxelLocations[k * raycastResultSize + i] = loc;

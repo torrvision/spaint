@@ -4,6 +4,8 @@
 
 #include "sampling/cuda/VoxelSampler_CUDA.h"
 
+#include <cassert>
+
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
@@ -115,6 +117,9 @@ void VoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *raycastResul
 
 void VoxelSampler_CUDA::write_candidate_voxel_counts(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
+  // If the label count starts getting too large, we should consider splitting this into multiple thread blocks.
+  assert(m_maxLabelCount <= 256);
+
   ck_write_candidate_voxel_counts<<<1,m_maxLabelCount>>>(
     m_raycastResultSize,
     labelMaskMB.GetData(MEMORYDEVICE_CUDA),
