@@ -93,13 +93,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
-  // TEMPORARY
-  if(keysym.sym == SDLK_m)
-  {
-    m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
-  }
-  // END TEMPORARY
-
   // If the P key is pressed, toggle whether or not Phong lighting is enabled.
   if(keysym.sym == SDLK_p)
   {
@@ -132,6 +125,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
+              << "M + 1 = To Normal Mode\n"
+              << "M + 2 = To Training Mode\n"
+              << "M + 3 = To Prediction Mode\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
               << "R + 3 = To Rift Renderer (Fullscreen)\n"
@@ -281,6 +277,7 @@ void Application::process_input()
   process_camera_input();
   process_command_input();
   process_labelling_input();
+  process_mode_input();
   process_renderer_input();
 }
 
@@ -348,6 +345,18 @@ void Application::process_labelling_input()
     m_commandManager.execute_compressible_command(Command_CPtr(new NoOpCommand("End Mark Voxels")), precursors);
     currentlyMarking = false;
   }
+}
+
+void Application::process_mode_input()
+{
+  SpaintPipeline::Mode mode = m_spaintPipeline->get_mode();
+  if(m_inputState.key_down(SDLK_m))
+  {
+    if(m_inputState.key_down(SDLK_1))      mode = SpaintPipeline::MODE_NORMAL;
+    else if(m_inputState.key_down(SDLK_2)) mode = SpaintPipeline::MODE_TRAINING;
+    else if(m_inputState.key_down(SDLK_3)) mode = SpaintPipeline::MODE_PREDICTION;
+  }
+  m_spaintPipeline->set_mode(mode);
 }
 
 void Application::process_renderer_input()
