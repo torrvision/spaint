@@ -13,12 +13,7 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
-#include "markers/cpu/VoxelMarker_CPU.h"
 #include "sampling/VoxelSamplerFactory.h"
-
-#ifdef WITH_CUDA
-#include "markers/cuda/VoxelMarker_CUDA.h"
-#endif
 
 namespace spaint {
 
