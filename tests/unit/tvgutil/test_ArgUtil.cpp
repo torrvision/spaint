@@ -37,16 +37,16 @@ BOOST_AUTO_TEST_CASE(argmax_map_test)
   BOOST_CHECK_EQUAL(ArgUtil::argmax(m), "Wibble");
 }
 
-BOOST_AUTO_TEST_CASE(argmin_map_test)
-{
-  std::map<std::string,int> m = make_test_map();
-  BOOST_CHECK_EQUAL(ArgUtil::argmin(m), "Bar");
-}
-
 BOOST_AUTO_TEST_CASE(argmax_vector_test)
 {
   std::vector<float> v = make_test_vector();
   BOOST_CHECK_EQUAL(ArgUtil::argmax(v), 1);
+}
+
+BOOST_AUTO_TEST_CASE(argmin_map_test)
+{
+  std::map<std::string,int> m = make_test_map();
+  BOOST_CHECK_EQUAL(ArgUtil::argmin(m), "Bar");
 }
 
 BOOST_AUTO_TEST_CASE(argmin_vector_test)
