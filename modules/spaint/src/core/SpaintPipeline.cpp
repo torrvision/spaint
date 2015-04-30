@@ -80,7 +80,7 @@ SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
   return m_raycaster;
 }
 
-void SpaintPipeline::process_frame()
+void SpaintPipeline::run_main()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
@@ -121,12 +121,17 @@ void SpaintPipeline::process_frame()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
+}
 
-  // Run additional parts of the pipeline as necessary based on the current mode.
+void SpaintPipeline::run_mode_specific(const RenderState_CPtr& samplingRenderState)
+{
   switch(m_mode)
   {
+    case MODE_PREDICTION:
+      // TODO
+      break;
     case MODE_TRAINING:
-      run_training();
+      run_training_mode(samplingRenderState);
       break;
     default:
       break;
@@ -219,12 +224,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_reconstructionStarted = false;
 }
 
-void SpaintPipeline::run_training()
+void SpaintPipeline::run_training_mode(const RenderState_CPtr& samplingRenderState)
 {
-  LabelManager_CPtr labelManager = m_model->get_label_manager();
-  const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
+  // If we haven't been provided with a camera position from which to sample, early out.
+  if(!samplingRenderState) return;
 
   // Calculate a mask indicating which labels are currently in use.
+  LabelManager_CPtr labelManager = m_model->get_label_manager();
   const int maxLabelCount = static_cast<int>(labelManager->get_max_label_count());
   ORUtils::MemoryBlock<bool> labelMaskMB(maxLabelCount, true, true);
   bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
@@ -235,10 +241,10 @@ void SpaintPipeline::run_training()
   labelMaskMB.UpdateDeviceFromHost();
 
   // Sample voxels from the scene to use for training the random forest.
-  const ORUtils::Image<Vector4f> *raycastResult = m_raycaster->get_live_render_state()->raycastResult;
+  const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
   Selector::Selection_Ptr voxelSelection(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
   ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(maxLabelCount, true, true);
-  m_voxelSampler->sample_voxels(raycastResult, scene.get(), labelMaskMB, *voxelSelection, voxelCountsForLabelsMB);
+  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), labelMaskMB, *voxelSelection, voxelCountsForLabelsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
   for(int i = 0; i < voxelCountsForLabelsMB.dataSize; ++i)

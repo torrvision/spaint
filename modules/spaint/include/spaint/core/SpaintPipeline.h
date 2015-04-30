@@ -33,6 +33,7 @@ private:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
   typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
@@ -205,9 +206,18 @@ public:
   SpaintRaycaster_CPtr get_raycaster() const;
 
   /**
-   * \brief Processes the next frame from the image source engine.
+   * \brief Runs the main part of the pipeline.
+   *
+   * This involves processing the next frame from the image source engine.
    */
-  void process_frame();
+  void run_main();
+
+  /**
+   * \brief Runs the mode-specific part of the pipeline.
+   *
+   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_mode_specific(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets whether or not fusion should be run as part of the pipeline.
@@ -233,9 +243,11 @@ private:
   void initialise(const Settings_Ptr& settings);
 
   /**
-   * \brief Runs the training part of the pipeline.
+   * \brief Runs the part of the pipeline associated with training mode.
+   *
+   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
    */
-  void run_training();
+  void run_training_mode(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets up the tracker.
