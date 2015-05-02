@@ -58,11 +58,11 @@ void Application::run()
     process_input();
 
     // Process and render the next frame.
-    m_spaintPipeline->run_main();
+    m_spaintPipeline->run_main_section();
     m_renderer->render(m_spaintPipeline->get_interactor());
 
-    // Run the mode-specific part of the pipeline.
-    m_spaintPipeline->run_mode_specific(get_monocular_render_state());
+    // Run the mode-specific section of the pipeline.
+    m_spaintPipeline->run_mode_specific_section(get_monocular_render_state());
   }
 }
 

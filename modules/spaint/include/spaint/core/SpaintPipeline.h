@@ -206,18 +206,18 @@ public:
   SpaintRaycaster_CPtr get_raycaster() const;
 
   /**
-   * \brief Runs the main part of the pipeline.
+   * \brief Runs the main section of the pipeline.
    *
    * This involves processing the next frame from the image source engine.
    */
-  void run_main();
+  void run_main_section();
 
   /**
-   * \brief Runs the mode-specific part of the pipeline.
+   * \brief Runs the mode-specific section of the pipeline.
    *
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
    */
-  void run_mode_specific(const RenderState_CPtr& samplingRenderState);
+  void run_mode_specific_section(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets whether or not fusion should be run as part of the pipeline.
@@ -243,11 +243,11 @@ private:
   void initialise(const Settings_Ptr& settings);
 
   /**
-   * \brief Runs the part of the pipeline associated with training mode.
+   * \brief Runs the section of the pipeline associated with training mode.
    *
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
    */
-  void run_training_mode(const RenderState_CPtr& samplingRenderState);
+  void run_training_section(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets up the tracker.

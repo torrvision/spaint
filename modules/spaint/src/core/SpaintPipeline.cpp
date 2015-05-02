@@ -80,7 +80,7 @@ SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
   return m_raycaster;
 }
 
-void SpaintPipeline::run_main()
+void SpaintPipeline::run_main_section()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
@@ -123,7 +123,7 @@ void SpaintPipeline::run_main()
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
 }
 
-void SpaintPipeline::run_mode_specific(const RenderState_CPtr& samplingRenderState)
+void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& samplingRenderState)
 {
   switch(m_mode)
   {
@@ -131,7 +131,7 @@ void SpaintPipeline::run_mode_specific(const RenderState_CPtr& samplingRenderSta
       // TODO
       break;
     case MODE_TRAINING:
-      run_training_mode(samplingRenderState);
+      run_training_section(samplingRenderState);
       break;
     default:
       break;
@@ -224,7 +224,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_reconstructionStarted = false;
 }
 
-void SpaintPipeline::run_training_mode(const RenderState_CPtr& samplingRenderState)
+void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
