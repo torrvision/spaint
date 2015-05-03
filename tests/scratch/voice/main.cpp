@@ -8,9 +8,16 @@ int main()
   ip::tcp::iostream s("localhost", "23984");
 
   std::string line;
-  while(std::getline(s, line))
+  while(s)
   {
-    std::cout << line << '\n';
+    size_t availableBytes;
+    while((availableBytes = s.rdbuf()->available()) > 0)
+    {
+      std::cout << availableBytes << '\n';
+      std::getline(s, line);
+      std::cout << line << '\n';
+    }
   }
+
   return 0;
 }

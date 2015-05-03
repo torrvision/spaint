@@ -29,7 +29,9 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
-: m_commandManager(10), m_spaintPipeline(spaintPipeline)
+: m_commandManager(10),
+  m_spaintPipeline(spaintPipeline),
+  m_voiceCommandStream("localhost", "23984")
 {
   m_renderer.reset(new WindowedRenderer("Semantic Paint", spaintPipeline->get_model(), spaintPipeline->get_raycaster()));
 
@@ -276,6 +278,7 @@ void Application::process_input()
   process_labelling_input();
   process_mode_input();
   process_renderer_input();
+  process_voice_input();
 }
 
 void Application::process_labelling_input()
@@ -397,5 +400,26 @@ void Application::process_renderer_input()
     if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
     else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICPHONG);
     else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICCOLOUR);
+  }
+}
+
+void Application::process_voice_input()
+{
+  if(!m_voiceCommandStream) return;
+
+  size_t availableBytes;
+  while((availableBytes = m_voiceCommandStream.rdbuf()->available()) > 0)
+  {
+    std::string command;
+    std::getline(m_voiceCommandStream, command);
+
+    std::cout << "Voice Command: " << command << '\n';
+
+    // TEMPORARY
+    int label = -1;
+    if(command == "label chair")      label = 1;
+    else if(command == "label floor") label = 2;
+    else if(command == "label table") label = 3;
+    if(label != -1) m_spaintPipeline->get_interactor()->set_semantic_label(SpaintVoxel::LabelType(label));
   }
 }

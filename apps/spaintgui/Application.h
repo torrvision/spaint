@@ -5,6 +5,8 @@
 #ifndef H_SPAINTGUI_APPLICATION
 #define H_SPAINTGUI_APPLICATION
 
+#include <boost/asio.hpp>
+
 #include <SDL.h>
 
 // Suppress the definition of M_PI provided by SDL - we want the one in <cmath>.
@@ -42,6 +44,9 @@ private:
 
   /** The spaint pipeline that the application should use. */
   spaint::SpaintPipeline_Ptr m_spaintPipeline;
+
+  /** The stream of commands being sent from the voice command server. */
+  boost::asio::ip::tcp::iostream m_voiceCommandStream;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -134,6 +139,11 @@ private:
    * \brief Processes user input that deals with switching the renderer or raycast type.
    */
   void process_renderer_input();
+
+  /**
+   * \brief Processes voice input from the user.
+   */
+  void process_voice_input();
 };
 
 #endif
