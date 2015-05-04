@@ -6,8 +6,14 @@
 
 #include <cassert>
 
+// Suppress some compiler warnings that are produced when including the Thrust headers.
+#pragma warning(disable:4267)
+
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
+
+// Reenable the suppressed warnings for the rest of the translation unit.
+#pragma warning(default:4267)
 
 #include "sampling/shared/VoxelSampler_Shared.h"
 
