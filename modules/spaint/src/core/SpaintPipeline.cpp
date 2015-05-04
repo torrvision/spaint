@@ -219,10 +219,12 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const unsigned int seed = 12345;
   m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, m_maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
-  m_mode = MODE_NORMAL;
-  m_fusionEnabled = true;
   m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
+  m_fusionEnabled = true;
+  m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
+  m_sampledVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
+  m_sampledVoxelsMB.reset(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
@@ -242,19 +244,17 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  Selector::Selection_Ptr voxelSelection(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
-  ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(maxLabelCount, true, true);
-  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *voxelSelection, voxelCountsForLabelsMB);
+  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelsMB, *m_sampledVoxelCountsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
-  for(int i = 0; i < voxelCountsForLabelsMB.dataSize; ++i)
+  for(int i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)
   {
-    std::cout << voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU)[i] << ' ';
+    std::cout << m_sampledVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
   }
   std::cout << '\n';
 
   // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
-  m_interactor->mark_voxels(voxelSelection, 0);
+  m_interactor->mark_voxels(m_sampledVoxelsMB, 0);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)

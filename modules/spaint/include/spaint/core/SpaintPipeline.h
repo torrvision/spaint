@@ -102,6 +102,12 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
+  /** A memory block in which to store the number of voxels sampled for each label. */
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_sampledVoxelCountsMB;
+
+  /** A memory block in which to store the voxels sampled for each label. */
+  Selector::Selection_Ptr m_sampledVoxelsMB;
+
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
