@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
 
@@ -412,6 +413,9 @@ void Application::process_voice_input()
   {
     std::string command;
     std::getline(m_voiceCommandStream, command);
+
+    // Trim the command to get rid of any trailing carriage return character.
+    boost::trim(command);
 
     std::cout << "Voice Command: " << command << '\n';
 

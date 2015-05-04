@@ -5,7 +5,13 @@
 #ifndef H_SPAINTGUI_APPLICATION
 #define H_SPAINTGUI_APPLICATION
 
+// Suppress the compiler warnings that are produced by boost/asio.hpp.
+#pragma warning(disable:4267)
+
 #include <boost/asio.hpp>
+
+// Re-enable the compiler warnings for the rest of the code.
+#pragma warning(default:4267)
 
 #include <SDL.h>
 

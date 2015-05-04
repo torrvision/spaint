@@ -6,6 +6,9 @@
 #include <iostream>
 #include <string>
 
+// Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
+#include "Application.h"
+
 #ifdef WITH_ARRAYFIRE
   #include <arrayfire.h>
 #endif
@@ -14,16 +17,12 @@
 using namespace InfiniTAM::Engine;
 
 #ifdef WITH_OVR
-#include <OVR_CAPI.h>
+  #include <OVR_CAPI.h>
 #endif
-
-#include <SDL.h>
 
 #include <spaint/core/SpaintPipeline.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
-
-#include "Application.h"
 
 //#################### FUNCTIONS ####################
 
