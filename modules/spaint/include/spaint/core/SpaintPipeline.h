@@ -81,6 +81,9 @@ private:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   SpaintInteractor_Ptr m_interactor;
 
+  /** A memory block in which to store a mask indicating which labels are currently in use. */
+  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_labelMaskMB;
+
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 

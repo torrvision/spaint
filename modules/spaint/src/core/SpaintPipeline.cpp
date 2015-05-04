@@ -221,6 +221,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   m_mode = MODE_NORMAL;
   m_fusionEnabled = true;
+  m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_reconstructionStarted = false;
 }
 
@@ -232,19 +233,18 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   // Calculate a mask indicating which labels are currently in use.
   LabelManager_CPtr labelManager = m_model->get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
-  ORUtils::MemoryBlock<bool> labelMaskMB(maxLabelCount, true, true);
-  bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
+  bool *labelMask = m_labelMaskMB->GetData(MEMORYDEVICE_CPU);
   for(int i = 0; i < maxLabelCount; ++i)
   {
     labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
   }
-  labelMaskMB.UpdateDeviceFromHost();
+  m_labelMaskMB->UpdateDeviceFromHost();
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
   Selector::Selection_Ptr voxelSelection(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
   ORUtils::MemoryBlock<unsigned int> voxelCountsForLabelsMB(maxLabelCount, true, true);
-  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), labelMaskMB, *voxelSelection, voxelCountsForLabelsMB);
+  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *voxelSelection, voxelCountsForLabelsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
   for(int i = 0; i < voxelCountsForLabelsMB.dataSize; ++i)
