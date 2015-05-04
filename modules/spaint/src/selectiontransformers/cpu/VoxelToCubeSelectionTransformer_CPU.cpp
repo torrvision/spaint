@@ -22,7 +22,7 @@ void VoxelToCubeSelectionTransformer_CPU::transform_selection(const Selection& i
   const int cubeSize = cube_size();
   const Vector3s *inputSelection = inputSelectionMB.GetData(MEMORYDEVICE_CPU);
   Vector3s *outputSelection = outputSelectionMB.GetData(MEMORYDEVICE_CPU);
-  int outputVoxelCount = outputSelectionMB.dataSize;
+  int outputVoxelCount = static_cast<int>(outputSelectionMB.dataSize);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for

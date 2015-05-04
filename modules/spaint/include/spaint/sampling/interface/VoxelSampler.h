@@ -35,10 +35,10 @@ protected:
   mutable ORUtils::MemoryBlock<Vector3s> m_candidateVoxelLocationsMB;
 
   /** The maximum number of labels that can be in use. */
-  const int m_maxLabelCount;
+  const size_t m_maxLabelCount;
 
   /** The maximum number of voxels to sample for each label. */
-  const int m_maxVoxelsPerLabel;
+  const size_t m_maxVoxelsPerLabel;
 
   /** The size of the raycast result (in pixels). */
   const int m_raycastResultSize;
@@ -68,7 +68,7 @@ protected:
    * \param raycastResultSize The size of the raycast result (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  VoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### DESTRUCTOR ####################
 public:

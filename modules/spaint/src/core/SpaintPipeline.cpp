@@ -231,7 +231,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Calculate a mask indicating which labels are currently in use.
   LabelManager_CPtr labelManager = m_model->get_label_manager();
-  const int maxLabelCount = static_cast<int>(labelManager->get_max_label_count());
+  const size_t maxLabelCount = labelManager->get_max_label_count();
   ORUtils::MemoryBlock<bool> labelMaskMB(maxLabelCount, true, true);
   bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   for(int i = 0; i < maxLabelCount; ++i)

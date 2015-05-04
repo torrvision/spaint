@@ -24,7 +24,7 @@ public:
    * \param raycastResultSize The size of the raycast result image (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler_CUDA(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  VoxelSampler_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

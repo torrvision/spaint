@@ -26,7 +26,7 @@ namespace spaint {
  * \param sampledVoxelLocations   An array into which to write the locations of the sampled voxels.
  */
 _CPU_AND_GPU_CODE_
-inline void copy_sampled_voxel_locations(int voxelIndex, const bool *labelMask, int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize,
+inline void copy_sampled_voxel_locations(int voxelIndex, const bool *labelMask, size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize,
                                          const Vector3s *candidateVoxelLocations, const int *candidateVoxelIndices, Vector3s *sampledVoxelLocations)
 {
   for(int k = 0; k < maxLabelCount; ++k)
@@ -56,7 +56,7 @@ inline void copy_sampled_voxel_locations(int voxelIndex, const bool *labelMask, 
 _CPU_AND_GPU_CODE_
 inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
                                    const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                   int maxLabelCount, unsigned char *voxelMasks)
+                                   size_t maxLabelCount, unsigned char *voxelMasks)
 {
   // Note: We do not need to explicitly use the label mask in this function, since no voxel will ever be marked with an unused label.
 
@@ -105,7 +105,7 @@ inline void write_candidate_voxel_count(int label, int raycastResultSize, const 
 _CPU_AND_GPU_CODE_
 inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *raycastResult, int raycastResultSize,
                                            const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
-                                           int maxLabelCount, Vector3s *candidateVoxelLocations)
+                                           size_t maxLabelCount, Vector3s *candidateVoxelLocations)
 {
   // Note: We do not need to explicitly use the label mask in this function, since there will never be any candidates for unused labels.
 

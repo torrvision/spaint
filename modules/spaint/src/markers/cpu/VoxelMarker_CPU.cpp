@@ -27,7 +27,7 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   unsigned char *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
-  int voxelCount = voxelLocationsMB.dataSize;
+  int voxelCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
@@ -49,7 +49,7 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const unsigned char *voxelLabels = voxelLabelsMB.GetData(MEMORYDEVICE_CPU);
   unsigned char *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
-  int voxelCount = voxelLocationsMB.dataSize;
+  int voxelCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();

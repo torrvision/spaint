@@ -28,7 +28,7 @@ public:
    * \param deviceType        The device on which the sampler should operate.
    * \return                  The voxel sampler.
    */
-  static VoxelSampler_CPtr make(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed, ITMLibSettings::DeviceType deviceType);
+  static VoxelSampler_CPtr make(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed, ITMLibSettings::DeviceType deviceType);
 };
 
 }

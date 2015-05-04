@@ -10,7 +10,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+VoxelSampler::VoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
 : m_candidateVoxelIndicesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
   m_candidateVoxelLocationsMB(maxLabelCount * raycastResultSize, true, true),
   m_maxLabelCount(maxLabelCount),
@@ -73,7 +73,10 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
   {
     if(labelMask[k])
     {
-      if(voxelCountsForLabels[k] > m_maxVoxelsPerLabel) voxelCountsForLabels[k] = m_maxVoxelsPerLabel;
+      if(voxelCountsForLabels[k] > m_maxVoxelsPerLabel)
+      {
+        voxelCountsForLabels[k] = static_cast<unsigned int>(m_maxVoxelsPerLabel);
+      }
     }
     else voxelCountsForLabels[k] = 0;
   }
@@ -97,12 +100,12 @@ void VoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<boo
     if(voxelCountsForLabels[k] < m_maxVoxelsPerLabel)
     {
       // If we don't have enough candidate voxels for this label, just use all of the ones we do have.
-      for(int i = 0; i < voxelCountsForLabels[k]; ++i)
+      for(size_t i = 0; i < voxelCountsForLabels[k]; ++i)
       {
-        candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = i;
+        candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = static_cast<int>(i);
       }
 
-      for(int i = voxelCountsForLabels[k]; i < m_maxVoxelsPerLabel; ++i)
+      for(size_t i = voxelCountsForLabels[k]; i < m_maxVoxelsPerLabel; ++i)
       {
         candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = -1;
       }
@@ -110,7 +113,7 @@ void VoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<boo
     else
     {
       // If we do have enough candidate voxels for this label, sample the maximum possible number of voxels from the candidates.
-      for(int i = 0; i < m_maxVoxelsPerLabel; ++i)
+      for(size_t i = 0; i < m_maxVoxelsPerLabel; ++i)
       {
         candidateVoxelIndices[k * m_maxVoxelsPerLabel + i] = m_rng->generate_int_from_uniform(0, voxelCountsForLabels[k] - 1);
       }

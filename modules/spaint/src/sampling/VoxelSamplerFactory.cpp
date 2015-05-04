@@ -14,7 +14,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-VoxelSampler_CPtr VoxelSamplerFactory::make(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed, ITMLibSettings::DeviceType deviceType)
+VoxelSampler_CPtr VoxelSamplerFactory::make(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed, ITMLibSettings::DeviceType deviceType)
 {
   VoxelSampler_CPtr sampler;
 

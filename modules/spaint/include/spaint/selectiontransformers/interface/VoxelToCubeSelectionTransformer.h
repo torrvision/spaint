@@ -35,7 +35,7 @@ public:
   virtual void accept(const SelectionTransformerVisitor& visitor) const;
 
   /** Override */
-  virtual int compute_output_selection_size(const Selection& inputSelectionMB) const;
+  virtual size_t compute_output_selection_size(const Selection& inputSelectionMB) const;
 
   /**
    * \brief Gets the (Manhattan) radius (in voxels) to select around each initial voxel.

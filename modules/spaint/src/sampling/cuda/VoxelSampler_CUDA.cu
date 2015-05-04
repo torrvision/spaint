@@ -19,7 +19,7 @@ namespace spaint {
 
 __global__ void ck_calculate_voxel_masks(const Vector4f *raycastResult, int raycastResultSize,
                                          const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                         int maxLabelCount, unsigned char *voxelMasks)
+                                         size_t maxLabelCount, unsigned char *voxelMasks)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
@@ -28,7 +28,7 @@ __global__ void ck_calculate_voxel_masks(const Vector4f *raycastResult, int rayc
   }
 }
 
-__global__ void ck_copy_sampled_voxel_locations(const bool *labelMask, int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize,
+__global__ void ck_copy_sampled_voxel_locations(const bool *labelMask, size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize,
                                                 const Vector3s *voxelLocationsByClass, const int *randomVoxelIndices,
                                                 Vector3s *sampledVoxelLocations)
 {
@@ -49,7 +49,7 @@ __global__ void ck_write_candidate_voxel_counts(int raycastResultSize, const boo
 
 __global__ void ck_write_candidate_voxel_locations(const Vector4f *raycastResult, int raycastResultSize,
                                                    const unsigned char *voxelMasks, const unsigned int *voxelMaskPrefixSums,
-                                                   int maxLabelCount, Vector3s *voxelLocations)
+                                                   size_t maxLabelCount, Vector3s *voxelLocations)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
@@ -60,7 +60,7 @@ __global__ void ck_write_candidate_voxel_locations(const Vector4f *raycastResult
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler_CUDA::VoxelSampler_CUDA(int maxLabelCount, int maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+VoxelSampler_CUDA::VoxelSampler_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
 : VoxelSampler(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed)
 {}
 
@@ -118,9 +118,10 @@ void VoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *raycastResul
 void VoxelSampler_CUDA::write_candidate_voxel_counts(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   // If the label count starts getting too large, we should consider splitting this into multiple thread blocks.
-  assert(m_maxLabelCount <= 256);
+  int maxLabelCount = static_cast<int>(m_maxLabelCount);
+  assert(maxLabelCount <= 256);
 
-  ck_write_candidate_voxel_counts<<<1,m_maxLabelCount>>>(
+  ck_write_candidate_voxel_counts<<<1,maxLabelCount>>>(
     m_raycastResultSize,
     labelMaskMB.GetData(MEMORYDEVICE_CUDA),
     m_voxelMaskPrefixSumsMB.GetData(MEMORYDEVICE_CUDA),
@@ -151,7 +152,7 @@ void VoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4Image *ra
 void VoxelSampler_CUDA::write_sampled_voxel_locations(const ORUtils::MemoryBlock<bool>& labelMaskMB, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   int threadsPerBlock = 256;
-  int numBlocks = (m_maxVoxelsPerLabel + threadsPerBlock - 1) / threadsPerBlock;
+  int numBlocks = (static_cast<int>(m_maxVoxelsPerLabel) + threadsPerBlock - 1) / threadsPerBlock;
   ck_copy_sampled_voxel_locations<<<numBlocks,threadsPerBlock>>>(
     labelMaskMB.GetData(MEMORYDEVICE_CUDA),
     m_maxLabelCount,
