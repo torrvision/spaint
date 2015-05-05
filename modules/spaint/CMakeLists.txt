@@ -46,6 +46,15 @@ include/spaint/core/SpaintRaycaster.h
 )
 
 ##
+SET(features_sources
+src/features/FeatureCalculatorFactory.cpp
+)
+
+SET(features_headers
+include/spaint/features/FeatureCalculatorFactory.h
+)
+
+##
 SET(features_cpu_sources
 src/features/cpu/VOPFeatureCalculator_CPU.cpp
 )
@@ -387,6 +396,7 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 
 SET(sources
 ${core_sources}
+${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
 ${input_sources}
@@ -408,6 +418,7 @@ ${visualisers_interface_sources}
 
 SET(headers
 ${core_headers}
+${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
@@ -484,6 +495,7 @@ ENDIF()
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
