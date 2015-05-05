@@ -126,6 +126,11 @@ private:
   void process_labelling_input();
 
   /**
+   * \brief Processes user input that deals with switching pipeline mode.
+   */
+  void process_mode_input();
+
+  /**
    * \brief Processes user input that deals with switching renderers.
    */
   void process_renderer_input();

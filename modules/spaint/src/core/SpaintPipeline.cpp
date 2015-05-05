@@ -13,6 +13,8 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#include "sampling/VoxelSamplerFactory.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -53,6 +55,11 @@ const SpaintInteractor_Ptr& SpaintPipeline::get_interactor()
   return m_interactor;
 }
 
+SpaintPipeline::Mode SpaintPipeline::get_mode() const
+{
+  return m_mode;
+}
+
 const SpaintModel_Ptr& SpaintPipeline::get_model()
 {
   return m_model;
@@ -73,7 +80,7 @@ SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
   return m_raycaster;
 }
 
-void SpaintPipeline::process_frame()
+void SpaintPipeline::run_main_section()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
@@ -104,6 +111,7 @@ void SpaintPipeline::process_frame()
   {
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_reconstructionStarted = true;
   }
   else
   {
@@ -113,13 +121,31 @@ void SpaintPipeline::process_frame()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
+}
 
-  m_reconstructionStarted = true;
+void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& samplingRenderState)
+{
+  switch(m_mode)
+  {
+    case MODE_PREDICTION:
+      // TODO
+      break;
+    case MODE_TRAINING:
+      run_training_section(samplingRenderState);
+      break;
+    default:
+      break;
+  }
 }
 
 void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
 {
   m_fusionEnabled = fusionEnabled;
+}
+
+void SpaintPipeline::set_mode(Mode mode)
+{
+  m_mode = mode;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -186,8 +212,49 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
 
+  // Set up the voxel sampler.
+  // FIXME: These values shouldn't be hard-coded here ultimately.
+  const size_t maxVoxelsPerLabel = 128;
+  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
+  const unsigned int seed = 12345;
+  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
+
+  m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_fusionEnabled = true;
+  m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
+  m_sampledVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
+  m_sampledVoxelsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
+}
+
+void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
+{
+  // If we haven't been provided with a camera position from which to sample, early out.
+  if(!samplingRenderState) return;
+
+  // Calculate a mask indicating which labels are currently in use.
+  LabelManager_CPtr labelManager = m_model->get_label_manager();
+  const size_t maxLabelCount = labelManager->get_max_label_count();
+  bool *labelMask = m_labelMaskMB->GetData(MEMORYDEVICE_CPU);
+  for(int i = 0; i < maxLabelCount; ++i)
+  {
+    labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
+  }
+  m_labelMaskMB->UpdateDeviceFromHost();
+
+  // Sample voxels from the scene to use for training the random forest.
+  const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
+  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelsMB, *m_sampledVoxelCountsMB);
+
+  // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
+  for(int i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)
+  {
+    std::cout << m_sampledVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
+  }
+  std::cout << '\n';
+
+  // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
+  m_interactor->mark_voxels(m_sampledVoxelsMB, 0);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)

@@ -44,7 +44,7 @@ void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLo
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                    ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
 {
-  int voxelCount = voxelLocationsMB.dataSize;
+  int voxelCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   int threadsPerBlock = 256;
   int numBlocks = (voxelCount + threadsPerBlock - 1) / threadsPerBlock;
@@ -64,7 +64,7 @@ void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLo
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                    ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
 {
-  int voxelCount = voxelLocationsMB.dataSize;
+  int voxelCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   int threadsPerBlock = 256;
   int numBlocks = (voxelCount + threadsPerBlock - 1) / threadsPerBlock;

@@ -38,7 +38,7 @@ private:
   Vector2i m_depthImageSize;
 
   /** The label manager. */
-  LabelManager m_labelManager;
+  LabelManager_Ptr m_labelManager;
 
   /** The dimensions of the RGB images from which the scene is being reconstructed. */
   Vector2i m_rgbImageSize;
@@ -90,14 +90,14 @@ public:
    *
    * \return  The label manager.
    */
-  LabelManager& get_label_manager();
+  const LabelManager_Ptr& get_label_manager();
 
   /**
    * \brief Gets the label manager.
    *
    * \return  The label manager.
    */
-  const LabelManager& get_label_manager() const;
+  LabelManager_CPtr get_label_manager() const;
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.

@@ -11,6 +11,8 @@
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
+#include "../sampling/interface/VoxelSampler.h"
+
 #ifdef WITH_VICON
 #include "../trackers/ViconTracker.h"
 #endif
@@ -31,12 +33,30 @@ private:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
   typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration specify the different modes in which the pipeline can be running.
+   */
+  enum Mode
+  {
+    /** In normal mode, the user can reconstruct and manually label the scene. */
+    MODE_NORMAL,
+
+    /** In prediction mode, the model is used to predict labels for previously-unseen voxels. */
+    MODE_PREDICTION,
+
+    /** In training mode, a model is trained using voxels sampled from the current raycast. */
+    MODE_TRAINING
+  };
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -61,8 +81,14 @@ private:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   SpaintInteractor_Ptr m_interactor;
 
+  /** A memory block in which to store a mask indicating which labels are currently in use. */
+  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_labelMaskMB;
+
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
+
+  /** The mode in which the pipeline is currently running. */
+  Mode m_mode;
 
   /** The spaint model. */
   SpaintModel_Ptr m_model;
@@ -72,6 +98,12 @@ private:
 
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
+
+  /** A memory block in which to store the number of voxels sampled for each label. */
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_sampledVoxelCountsMB;
+
+  /** A memory block in which to store the voxels sampled for each label. */
+  Selector::Selection_Ptr m_sampledVoxelsMB;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
@@ -89,6 +121,9 @@ private:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
+
+  /** The voxel sampler. */
+  VoxelSampler_CPtr m_voxelSampler;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -142,6 +177,13 @@ public:
   const SpaintInteractor_Ptr& get_interactor();
 
   /**
+   * \brief Gets the mode in which the pipeline is currently running.
+   *
+   * \return  The mode in which the pipeline is currently running.
+   */
+  Mode get_mode() const;
+
+  /**
    * \brief Gets the spaint model.
    *
    * \return  The spaint model.
@@ -170,9 +212,18 @@ public:
   SpaintRaycaster_CPtr get_raycaster() const;
 
   /**
-   * \brief Processes the next frame from the image source engine.
+   * \brief Runs the main section of the pipeline.
+   *
+   * This involves processing the next frame from the image source engine.
    */
-  void process_frame();
+  void run_main_section();
+
+  /**
+   * \brief Runs the mode-specific section of the pipeline.
+   *
+   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_mode_specific_section(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets whether or not fusion should be run as part of the pipeline.
@@ -180,6 +231,13 @@ public:
    * \param fusionEnabled Whether or not fusion should be run as part of the pipeline.
    */
   void set_fusion_enabled(bool fusionEnabled);
+
+  /**
+   * \brief Sets the mode in which the pipeline should now run.
+   *
+   * \param mode  The mode in which the pipeline should now run.
+   */
+  void set_mode(Mode mode);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -189,6 +247,13 @@ private:
    * \param settings  The settings to use for InfiniTAM.
    */
   void initialise(const Settings_Ptr& settings);
+
+  /**
+   * \brief Runs the section of the pipeline associated with training mode.
+   *
+   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_training_section(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets up the tracker.

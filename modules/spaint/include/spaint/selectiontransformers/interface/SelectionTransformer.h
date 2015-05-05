@@ -58,7 +58,7 @@ public:
    * \param inputSelectionMB  A memory block containing the input selection of voxels.
    * \return                  The size of the output selection of voxels corresponding to the specified input selection.
    */
-  virtual int compute_output_selection_size(const Selection& inputSelectionMB) const = 0;
+  virtual size_t compute_output_selection_size(const Selection& inputSelectionMB) const = 0;
 
   /**
    * \brief Transforms one selection of voxels in the scene into another.

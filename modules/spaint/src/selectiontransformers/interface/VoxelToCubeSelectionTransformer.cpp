@@ -20,7 +20,7 @@ void VoxelToCubeSelectionTransformer::accept(const SelectionTransformerVisitor& 
   visitor.visit(*this);
 }
 
-int VoxelToCubeSelectionTransformer::compute_output_selection_size(const Selection& inputSelectionMB) const
+size_t VoxelToCubeSelectionTransformer::compute_output_selection_size(const Selection& inputSelectionMB) const
 {
   // We create one cube for each initial voxel.
   return inputSelectionMB.dataSize * cube_size();

@@ -26,7 +26,7 @@ VoxelToCubeSelectionTransformer_CUDA::VoxelToCubeSelectionTransformer_CUDA(int r
 
 void VoxelToCubeSelectionTransformer_CUDA::transform_selection(const Selection& inputSelectionMB, Selection& outputSelectionMB) const
 {
-  int outputVoxelCount = outputSelectionMB.dataSize;
+  int outputVoxelCount = static_cast<int>(outputSelectionMB.dataSize);
 
   int threadsPerBlock = 256;
   int numBlocks = (outputVoxelCount + threadsPerBlock - 1) / threadsPerBlock;
