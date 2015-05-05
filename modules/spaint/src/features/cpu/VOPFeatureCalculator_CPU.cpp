@@ -12,7 +12,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(int maxLabelCount, int maxVoxelsPerLabel)
+VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(size_t maxLabelCount, size_t maxVoxelsPerLabel)
 : VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel)
 {}
 

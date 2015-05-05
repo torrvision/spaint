@@ -18,10 +18,10 @@ public:
   /**
    * \brief Constructs a CPU-based VOP feature calculator.
    *
-   * \param maxLabelCount     The maximum number of labels that can be allocated by the label manager.
+   * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param maxVoxelsPerLabel The maximum number of voxels that will be sampled for each label.
    */
-  VOPFeatureCalculator_CPU(int maxLabelCount, int maxVoxelsPerLabel);
+  VOPFeatureCalculator_CPU(size_t maxLabelCount, size_t maxVoxelsPerLabel);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

@@ -21,11 +21,11 @@ protected:
   /** A memory block into which to store the initial patches used during feature calculation (packed sequentially). */
   //mutable ORUtils::MemoryBlock<float> m_initialPatchesMB;
 
-  /** The maximum number of labels that can be allocated by the label manager. */
-  int m_maxLabelCount;
+  /** The maximum number of labels that can be in use. */
+  size_t m_maxLabelCount;
 
-  /** The maximum number of voxels that will be sampled for each label. */
-  int m_maxVoxelsPerLabel;
+  /** The maximum number of voxels that have been sampled for each label. */
+  size_t m_maxVoxelsPerLabel;
 
   /** The surface normals at the voxel locations. */
   mutable ORUtils::MemoryBlock<Vector3f> m_surfaceNormalsMB;
@@ -41,10 +41,10 @@ protected:
   /**
    * \brief Constructs a VOP feature calculator.
    *
-   * \param maxLabelCount     The maximum number of labels that can be allocated by the label manager.
-   * \param maxVoxelsPerLabel The maximum number of voxels that will be sampled for each label.
+   * \param maxLabelCount     The maximum number of labels that can be in use.
+   * \param maxVoxelsPerLabel The maximum number of voxels that have been sampled for each label.
    */
-  VOPFeatureCalculator(int maxLabelCount, int maxVoxelsPerLabel);
+  VOPFeatureCalculator(size_t maxLabelCount, size_t maxVoxelsPerLabel);
 
   //#################### DESTRUCTOR ####################
 public:

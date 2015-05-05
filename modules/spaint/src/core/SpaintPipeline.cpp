@@ -221,8 +221,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const unsigned int seed = 12345;
   m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
-  m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_fusionEnabled = true;
+  m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
   m_sampledVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));

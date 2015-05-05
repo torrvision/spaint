@@ -8,7 +8,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator::VOPFeatureCalculator(int maxLabelCount, int maxVoxelsPerLabel)
+VOPFeatureCalculator::VOPFeatureCalculator(size_t maxLabelCount, size_t maxVoxelsPerLabel)
 : m_maxLabelCount(maxLabelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_surfaceNormalsMB(maxLabelCount * maxVoxelsPerLabel, true, true),

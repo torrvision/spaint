@@ -47,7 +47,7 @@ inline Vector3f generate_arbitrary_coplanar_unit_vector(const Vector3f& n)
  */
 _CPU_AND_GPU_CODE_
 inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *surfaceNormals, const unsigned int *voxelCountsForLabels,
-                                       const int maxVoxelsPerLabel, Vector3f *xAxes, Vector3f *yAxes)
+                                       const size_t maxVoxelsPerLabel, Vector3f *xAxes, Vector3f *yAxes)
 {
   unsigned int label = voxelLocationIndex / maxVoxelsPerLabel;
   unsigned int offset = voxelLocationIndex % maxVoxelsPerLabel;
@@ -65,7 +65,7 @@ inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *s
  */
 _CPU_AND_GPU_CODE_
 inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const unsigned int *voxelCountsForLabels,
-                                 const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, const int maxVoxelsPerLabel,
+                                 const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, const size_t maxVoxelsPerLabel,
                                  Vector3f *surfaceNormals)
 {
   unsigned int label = voxelLocationIndex / maxVoxelsPerLabel;

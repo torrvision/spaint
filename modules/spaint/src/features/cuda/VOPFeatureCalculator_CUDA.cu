@@ -16,7 +16,7 @@ namespace spaint {
 
 __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, const unsigned int *voxelCountsForLabels,
                                              const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                             const int voxelLocationCount, const int maxVoxelsPerLabel,
+                                             const int voxelLocationCount, const size_t maxVoxelsPerLabel,
                                              Vector3f *surfaceNormals)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
@@ -27,7 +27,7 @@ __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, con
 }
 
 __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, const unsigned int *voxelCountsForLabels,
-                                               const int voxelLocationCount, const int maxVoxelsPerLabel,
+                                               const int voxelLocationCount, const size_t maxVoxelsPerLabel,
                                                Vector3f *xAxes, Vector3f *yAxes)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
@@ -39,16 +39,17 @@ __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, c
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(int maxLabelCount, int maxVoxelsPerLabel)
+VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel)
 : VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
+void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                                                          const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
                                                           const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const
 {
-  const int voxelLocationCount = voxelLocationsMB.dataSize;
+  const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   int threadsPerBlock = 256;
   int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
@@ -70,7 +71,7 @@ void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryB
 
 void VOPFeatureCalculator_CUDA::generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
-  const int voxelLocationCount = m_surfaceNormalsMB.dataSize;
+  const int voxelLocationCount = static_cast<int>(m_surfaceNormalsMB.dataSize);
 
   int threadsPerBlock = 256;
   int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
