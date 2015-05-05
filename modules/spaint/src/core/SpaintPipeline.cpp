@@ -214,17 +214,17 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the voxel sampler.
   // FIXME: These values shouldn't be hard-coded here ultimately.
-  m_maxVoxelsPerLabel = 128;
+  const size_t maxVoxelsPerLabel = 128;
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   const unsigned int seed = 12345;
-  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, m_maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
+  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
   m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_fusionEnabled = true;
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
   m_sampledVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
-  m_sampledVoxelsMB.reset(new Selector::Selection(maxLabelCount * m_maxVoxelsPerLabel, true, true));
+  m_sampledVoxelsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
