@@ -95,6 +95,7 @@ public:
 #endif
 
     std::vector<Example_CPtr> examples = reservoir.get_examples();
+#pragma omp parallel for
     for(int i = 0; i < candidateCount; ++i)
     {
       Split_Ptr splitCandidate(new Split);
@@ -121,8 +122,15 @@ public:
 
       // Calculate the information gain we would obtain from this split.
       float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples, inverseClassWeights);
-      if(gain < gainThreshold || splitCandidate->m_leftExamples.empty() || splitCandidate->m_rightExamples.empty()) splitCandidate.reset();
 
+#pragma critical
+      {
+#pragma flush (best)
+     if (gain > best)
+       best= gain; bestcandidate = curCandidate;
+
+      if(gain < gainThreshold || splitCandidate->m_leftExamples.empty() || splitCandidate->m_rightExamples.empty()) splitCandidate.reset();
+      }
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
       gainToCandidateMap.insert(std::make_pair(gain, splitCandidate));
     }
