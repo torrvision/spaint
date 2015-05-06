@@ -85,7 +85,7 @@ public:
 
     // Calculate the mapping to image values between 0 and 255.
     float range = minAndMax.second - minAndMax.first;
-    float scale = 255.0 / range;
+    float scale = 255.0f / range;
 
     // Create an OpenCV image and get the data pointer.
     cv::Mat ocvImage = cv::Mat::zeros(height, width, CV_8UC1);

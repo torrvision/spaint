@@ -10,7 +10,8 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void DepthVisualiser_CPU::render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType) const
+void DepthVisualiser_CPU::render_depth(const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType,
+                                       ITMFloatImage *outputImage) const
 {
   int imgSize = outputImage->noDims.x * outputImage->noDims.y;
 

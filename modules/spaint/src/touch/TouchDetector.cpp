@@ -137,12 +137,14 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   m_imageProcessor->pixel_setter(m_rawDepthCopy.get(), rawDepth, 2.0f, ImageProcessor::GREATER, -1.0f);
 
   // Calculate the depth raycast from the current scene, this is in metres.
-  m_depthCalculator->render_depth(m_raycastedDepthResult.get(),
-      renderState.get(),
-      TypeConversions::to_itm(camera->p()),
-      TypeConversions::to_itm(camera->n()),
-      voxelSize,
-      DepthVisualiser::DT_ORTHOGRAPHIC);
+  m_depthCalculator->render_depth(
+    renderState.get(),
+    TypeConversions::to_itm(camera->p()),
+    TypeConversions::to_itm(camera->n()),
+    voxelSize,
+    DepthVisualiser::DT_ORTHOGRAPHIC,
+    m_raycastedDepthResult.get()
+  );
 
   // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).
   // In this case 100.0f meters.
@@ -242,14 +244,13 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   if(numberOfGoodCandidates > 1)
   {
     std::vector<float> means(numberOfGoodCandidates);
-    int minIndex = -1;
     for(int i = 0; i < numberOfGoodCandidates; ++i)
     {
       mask = (m_connectedComponents == candidateIds[i]);
       temporaryCandidate = diffCopyMillimetersU8 * mask;
       means[i] = af::mean<float>(temporaryCandidate);
     }
-    minIndex = tvgutil::ArgUtil::argmin(means);
+    size_t minIndex = tvgutil::ArgUtil::argmin(means);
     if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
     bestConnectedComponent = candidateIds[minIndex];
   }
@@ -301,7 +302,7 @@ TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComp
   static float scaleFactor = 0.5f;
   af::array goodPixelPositions = af::where(af::resize(scaleFactor, (temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters)));
 
-  static float touchAreaLowerThreshold = 0.0001 * m_cols * m_rows;
+  static float touchAreaLowerThreshold = 0.0001f * m_cols * m_rows;
   if(goodPixelPositions.elements() > touchAreaLowerThreshold)
   {
 #ifdef DEBUG_TOUCH_VERBOSE

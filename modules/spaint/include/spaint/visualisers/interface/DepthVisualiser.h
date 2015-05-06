@@ -20,7 +20,7 @@ class DepthVisualiser
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief An enumeration specifying the different typesof depth calculation that is supported.
+   * \brief An enumeration specifying the different types of depth calculation that are supported.
    */
   enum DepthType
   {
@@ -40,14 +40,15 @@ public:
   /**
    * \brief Renders a depth view of the specified scene from the specified camera pose.
    *
-   * \param outputImage       The image into which to write the depth calculation.
    * \param renderState       The render state.
    * \param cameraPosition    The camera translation from the origin of the world coordinate system.
    * \param cameraLookVector  The the camera look vector.
    * \param voxelSize         The size of an InfiniTAM voxel.
    * \param depthType         The type of depth calculation.
+   * \param outputImage       The image into which to write the depth visualisation of the scene.
    */
-  virtual void render_depth(ITMFloatImage *outputImage, const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType = DT_ORTHOGRAPHIC) const = 0;
+  virtual void render_depth(const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType,
+                            ITMFloatImage *outputImage) const = 0;
 };
 
 }
