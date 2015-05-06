@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 
+#include <arrayfire.h>
+
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
 
@@ -32,6 +34,12 @@ try
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
     quit("Error: Failed to initialise SDL.");
+  }
+
+  // Choose a device for ArrayFire.
+  if(af::getDeviceCount() > 1)
+  {
+    af::setDevice(1);
   }
 
   // Parse the command-line arguments.
