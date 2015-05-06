@@ -226,7 +226,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
   m_sampledVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
-  m_sampledVoxelsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
+  m_sampledVoxelLocationsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
 }
 
 ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
@@ -262,7 +262,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelsMB, *m_sampledVoxelCountsMB);
+  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
   for(size_t i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)
@@ -272,15 +272,17 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   std::cout << '\n';
 
   // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
-  m_interactor->mark_voxels(m_sampledVoxelsMB, 0);
+  m_interactor->mark_voxels(m_sampledVoxelLocationsMB, 0);
 
   // TEMPORARY
-  const int maxVoxelsPerLabel = 128;
-  VOPFeatureCalculator_CUDA featureCalculator(maxLabelCount, maxVoxelsPerLabel);
-  //VOPFeatureCalculator_CPU featureCalculator(maxLabelCount, maxVoxelsPerLabel);
+  const size_t maxVoxelsPerLabel = 128;
+  const size_t patchSize = 13;
+  const float patchSpacing = 10.0f;
+  VOPFeatureCalculator_CUDA featureCalculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing);
+  //VOPFeatureCalculator_CPU featureCalculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing);
   const int dummy = 12345; // TEMPORARY
   ORUtils::MemoryBlock<float> featuresMB(dummy, true, true);
-  featureCalculator.calculate_features(*m_sampledVoxelsMB, *m_sampledVoxelCountsMB, 13, 10.0f, m_model->get_scene().get(), featuresMB);
+  featureCalculator.calculate_features(*m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB, m_model->get_scene().get(), featuresMB);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)

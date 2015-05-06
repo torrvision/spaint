@@ -12,8 +12,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(size_t maxLabelCount, size_t maxVoxelsPerLabel)
-: VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel)
+VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(size_t maxLabelCount, size_t maxVoxelsPerLabel, size_t patchSize, float patchSpacing)
+: VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

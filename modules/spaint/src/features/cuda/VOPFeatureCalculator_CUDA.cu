@@ -39,8 +39,8 @@ __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, c
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel)
-: VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel)
+VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, size_t patchSize, float patchSpacing)
+: VOPFeatureCalculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

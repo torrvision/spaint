@@ -112,8 +112,8 @@ private:
   /** A memory block in which to store the number of voxels sampled for each label. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_sampledVoxelCountsMB;
 
-  /** A memory block in which to store the voxels sampled for each label. */
-  Selector::Selection_Ptr m_sampledVoxelsMB;
+  /** A memory block in which to store the locations of the voxels sampled for each label. */
+  Selector::Selection_Ptr m_sampledVoxelLocationsMB;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;

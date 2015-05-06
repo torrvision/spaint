@@ -20,8 +20,10 @@ public:
    *
    * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param maxVoxelsPerLabel The maximum number of voxels that will be sampled for each label.
+   * \param patchSize         The side length of a VOP patch (must be odd).
+   * \param patchSpacing      The spacing in the scene between individual pixels in a patch.
    */
-  VOPFeatureCalculator_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel);
+  VOPFeatureCalculator_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, size_t patchSize, float patchSpacing);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

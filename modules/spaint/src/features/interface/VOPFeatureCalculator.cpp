@@ -8,9 +8,11 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator::VOPFeatureCalculator(size_t maxLabelCount, size_t maxVoxelsPerLabel)
+VOPFeatureCalculator::VOPFeatureCalculator(size_t maxLabelCount, size_t maxVoxelsPerLabel, size_t patchSize, float patchSpacing)
 : m_maxLabelCount(maxLabelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
+  m_patchSize(patchSize),
+  m_patchSpacing(patchSpacing),
   m_surfaceNormalsMB(maxLabelCount * maxVoxelsPerLabel, true, true),
   m_xAxesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
   m_yAxesMB(maxLabelCount * maxVoxelsPerLabel, true, true)
@@ -24,7 +26,6 @@ VOPFeatureCalculator::~VOPFeatureCalculator() {}
 
 void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                                               const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
-                                              int patchSize, float patchSpacing,
                                               const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                               ORUtils::MemoryBlock<float>& featuresMB) const
 {
@@ -41,7 +42,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-int VOPFeatureCalculator::compute_feature_count(int patchSize)
+size_t VOPFeatureCalculator::get_feature_count()
 {
   // TODO
   return 1;
