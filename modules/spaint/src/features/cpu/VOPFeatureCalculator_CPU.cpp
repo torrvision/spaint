@@ -35,6 +35,11 @@ void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBl
   }
 }
 
+void VOPFeatureCalculator_CPU::convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  // TODO
+}
+
 void VOPFeatureCalculator_CPU::generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
@@ -50,6 +55,14 @@ void VOPFeatureCalculator_CPU::generate_coordinate_systems(const ORUtils::Memory
   {
     generate_coordinate_system(voxelLocationIndex, surfaceNormals, voxelCountsForLabels, m_maxVoxelsPerLabel, xAxes, yAxes);
   }
+}
+
+void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                                                    const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
+                                                    const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                                    ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  // TODO
 }
 
 }

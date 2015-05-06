@@ -34,22 +34,22 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_coordinate_systems(voxelCountsForLabelsMB);
 
   // Read an RGB patch around each voxel location.
-  // TODO
+  generate_rgb_patches(voxelLocationsMB, voxelCountsForLabelsMB, voxelData, indexData, featuresMB);
 
   // Convert the RGB patches to the CIELab colour space.
-  // TODO
+  convert_patches_to_lab(featuresMB);
 
   // Compute a histogram of intensity gradients for each patch.
   // TODO
 
-  // Determine the dominant orientation for each patch.
+  // Determine the dominant orientation for each patch and update the coordinate systems accordingly.
   // TODO
 
   // Read a new RGB patch around each voxel location that is oriented based on the dominant orientation.
-  // TODO
+  generate_rgb_patches(voxelLocationsMB, voxelCountsForLabelsMB, voxelData, indexData, featuresMB);
 
   // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
-  // TODO
+  convert_patches_to_lab(featuresMB);
 
   // For each feature vector, fill in the signed distance to the dominant horizontal surface present in the scene as an extra feature.
   // TODO

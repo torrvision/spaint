@@ -69,6 +69,11 @@ void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryB
 #endif
 }
 
+void VOPFeatureCalculator_CUDA::convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  // TODO
+}
+
 void VOPFeatureCalculator_CUDA::generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   const int voxelLocationCount = static_cast<int>(m_surfaceNormalsMB.dataSize);
@@ -89,6 +94,14 @@ void VOPFeatureCalculator_CUDA::generate_coordinate_systems(const ORUtils::Memor
   m_xAxesMB.UpdateHostFromDevice();
   m_yAxesMB.UpdateHostFromDevice();
 #endif
+}
+
+void VOPFeatureCalculator_CUDA::generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                                                     const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
+                                                     const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                                     ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  // TODO
 }
 
 }

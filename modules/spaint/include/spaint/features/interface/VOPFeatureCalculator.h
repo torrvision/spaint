@@ -59,8 +59,14 @@ private:
    * \param voxelData               The scene's voxel data.
    * \param indexData               The scene's index data.
    */
-  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
+  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                                         const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
                                          const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
    * \brief Generates corodinate systems in the tangent planes to the surfaces at the voxel locations.
@@ -68,6 +74,14 @@ private:
    * \param voxelCountsForLabelsMB  A memory block containing the numbers of voxels for each label.
    */
   virtual void generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                                    const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
+                                    const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                    ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

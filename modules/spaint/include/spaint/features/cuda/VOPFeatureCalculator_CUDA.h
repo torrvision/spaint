@@ -32,7 +32,16 @@ private:
                                          const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const;
 
   /** Override */
+  virtual void convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const;
+
+  /** Override */
   virtual void generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+
+  /** Override */
+  virtual void generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
+                                    const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
+                                    const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                    ORUtils::MemoryBlock<float>& featuresMB) const;
 };
 
 }
