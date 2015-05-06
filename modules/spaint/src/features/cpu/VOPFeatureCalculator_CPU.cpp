@@ -24,7 +24,7 @@ void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBl
   Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
   const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
-  const int voxelLocationCount = voxelLocationsMB.dataSize;
+  const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -39,7 +39,7 @@ void VOPFeatureCalculator_CPU::generate_coordinate_systems(const ORUtils::Memory
 {
   const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
   const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
-  const int voxelLocationCount = m_surfaceNormalsMB.dataSize;
+  const int voxelLocationCount = static_cast<int>(m_surfaceNormalsMB.dataSize);
   Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
   Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
 
