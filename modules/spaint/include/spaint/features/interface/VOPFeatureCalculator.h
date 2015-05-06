@@ -17,7 +17,7 @@ class VOPFeatureCalculator : public FeatureCalculator
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** A memory block into which to store the initial patches used during feature calculation (packed sequentially). */
-  //mutable ORUtils::MemoryBlock<float> m_initialPatchesMB;
+  mutable ORUtils::MemoryBlock<Vector3f> m_initialPatchesMB;
 
   /** The maximum number of labels that can be in use. */
   size_t m_maxLabelCount;
