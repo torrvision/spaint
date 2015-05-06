@@ -11,6 +11,7 @@
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
+#include "../features/interface/FeatureCalculator.h"
 #include "../sampling/interface/VoxelSampler.h"
 
 #ifdef WITH_VICON
@@ -72,6 +73,9 @@ public:
 private:
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
+
+  /** The feature calculator. */
+  FeatureCalculator_CPtr m_featureCalculator;
 
   /** Whether or not fusion should be run as part of the pipeline. */
   bool m_fusionEnabled;

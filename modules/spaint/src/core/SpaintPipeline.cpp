@@ -13,12 +13,8 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
-#include "features/cpu/VOPFeatureCalculator_CPU.h"
+#include "features/FeatureCalculatorFactory.h"
 #include "sampling/VoxelSamplerFactory.h"
-
-#ifdef WITH_CUDA
-#include "features/cuda/VOPFeatureCalculator_CUDA.h"
-#endif
 
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
@@ -221,6 +217,12 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const unsigned int seed = 12345;
   m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
 
+  // Set up the feature calculator.
+  // FIXME: These values shouldn't be hard-coded here ultimately.
+  const size_t patchSize = 13;
+  const float patchSpacing = 10.0f;
+  m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing, settings->deviceType);
+
   m_fusionEnabled = true;
   m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_mode = MODE_NORMAL;
@@ -275,14 +277,9 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   m_interactor->mark_voxels(m_sampledVoxelLocationsMB, 0);
 
   // TEMPORARY
-  const size_t maxVoxelsPerLabel = 128;
-  const size_t patchSize = 13;
-  const float patchSpacing = 10.0f;
-  VOPFeatureCalculator_CUDA featureCalculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing);
-  //VOPFeatureCalculator_CPU featureCalculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing);
   const int dummy = 12345; // TEMPORARY
   ORUtils::MemoryBlock<float> featuresMB(dummy, true, true);
-  featureCalculator.calculate_features(*m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB, m_model->get_scene().get(), featuresMB);
+  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB, m_model->get_scene().get(), featuresMB);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)

@@ -78,6 +78,7 @@ src/features/interface/VOPFeatureCalculator.cpp
 )
 
 SET(features_interface_headers
+include/spaint/features/interface/FeatureCalculator.h
 include/spaint/features/interface/VOPFeatureCalculator.h
 )
 

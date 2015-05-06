@@ -18,10 +18,6 @@ VOPFeatureCalculator::VOPFeatureCalculator(size_t maxLabelCount, size_t maxVoxel
   m_yAxesMB(maxLabelCount * maxVoxelsPerLabel, true, true)
 {}
 
-//#################### DESTRUCTOR ####################
-
-VOPFeatureCalculator::~VOPFeatureCalculator() {}
-
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
@@ -40,9 +36,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   // TODO
 }
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-size_t VOPFeatureCalculator::get_feature_count()
+size_t VOPFeatureCalculator::get_feature_count() const
 {
   // TODO
   return 1;
