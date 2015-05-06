@@ -9,8 +9,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 VOPFeatureCalculator::VOPFeatureCalculator(size_t maxLabelCount, size_t maxVoxelsPerLabel, size_t patchSize, float patchSpacing)
-: m_initialPatchesMB(maxLabelCount * maxVoxelsPerLabel * patchSize * patchSize, true, true),
-  m_maxLabelCount(maxLabelCount),
+: m_maxLabelCount(maxLabelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_patchSize(patchSize),
   m_patchSpacing(patchSpacing),
@@ -58,8 +57,8 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
 
 size_t VOPFeatureCalculator::get_feature_count() const
 {
-  // TODO
-  return 1;
+  // A feature vector consists of a patch of CIELab colour values and the signed distance to the dominant horizontal surface present in the scene.
+  return m_patchSize * m_patchSize * 3 + 1;
 }
 
 }

@@ -77,6 +77,9 @@ private:
   /** The feature calculator. */
   FeatureCalculator_CPtr m_featureCalculator;
 
+  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_featuresMB;
+
   /** Whether or not fusion should be run as part of the pipeline. */
   bool m_fusionEnabled;
 
