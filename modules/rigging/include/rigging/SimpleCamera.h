@@ -72,13 +72,6 @@ public:
   Eigen::Vector3f v() const;
 };
 
-#if 0
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<SimpleCamera> SimpleCamera_Ptr;
-typedef boost::shared_ptr<const SimpleCamera> SimpleCamera_CPtr;
-#endif
-
 }
 
 #endif
