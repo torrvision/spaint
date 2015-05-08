@@ -6,7 +6,9 @@
 #include <iostream>
 #include <string>
 
-#include <arrayfire.h>
+#ifdef WITH_ARRAYFIRE
+  #include <arrayfire.h>
+#endif
 
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;

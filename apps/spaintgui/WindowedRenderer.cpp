@@ -81,10 +81,7 @@ public:
     boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 
-    glColor3f(m_colour.r, m_colour.g, m_colour.b);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    QuadricRenderer::render_sphere(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    render_coloured_sphere(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
   }
 
   /** Override */
@@ -97,19 +94,32 @@ public:
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
-    static int selectionRadius = 1;
+    const int selectionRadius = 1;
     std::vector<Eigen::Vector3f> pickPoints = selector.get_positions();
-    if(pickPoints.empty()) return;
 
-    for(int i = 0, iend = pickPoints.size(); i < iend; ++i)
+    for(size_t i = 0, size = pickPoints.size(); i < size; ++i)
     {
-      glColor3f(1.0f, 0.0f, 1.0f);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      QuadricRenderer::render_sphere(pickPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      render_coloured_sphere(pickPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
     }
   }
 #endif
+
+  //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+  /**
+   * \brief  Renders a sphere of the specified colour, radius and position.
+   *
+   * \param centre    The position of the centre of the sphere.
+   * \param radius    The radius of the sphere.
+   * \param slices    The number of subdivisions of the sphere around its vertical axis (similar to lines of lingitude).
+   * \param stacks    The number of subdividions of the sphere along its vertical axis (similar to lines of latitude).
+   */
+  void render_coloured_sphere(const Eigen::Vector3f& centre, double radius, int slices, int stacks) const
+  {
+    glColor3f(m_colour.r, m_colour.g, m_colour.b);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    QuadricRenderer::render_sphere(centre, radius, slices, stacks);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
 };
 
 //#################### CONSTRUCTORS ####################
