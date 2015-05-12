@@ -5,6 +5,18 @@ PLATFORM=`../detect-platform.sh`
 
 echo "[spaint] Building OpenCV 2.4.9"
 
+if [ $PLATFORM != "mac" ]
+then
+  pkg="libgtk2.0-dev"
+  if dpkg --get-selections | grep -q "^$pkg[[:space:]]*install$" >/dev/null;
+  then
+    echo "[spaint] ...Checking if $pkg is installed... OK..."
+  else
+    echo "[spaint] $pkg is not installed... Exiting. Please type 'sudo apt-get install $pkg' and re-run this script."
+    exit 1
+  fi
+fi
+
 if [ -d opencv-2.4.9 ]
 then
   echo "[spaint] ...Skipping archive extraction (already extracted)"
