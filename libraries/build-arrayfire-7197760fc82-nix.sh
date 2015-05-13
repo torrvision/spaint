@@ -3,7 +3,8 @@
 LOG=../../build-arrayfire-7197760fc82.log
 PLATFORM=`../detect-platform.sh`
 
-echo "[spaint] BUilding Arrayfire 7197760fc82"
+echo "[spaint] Building Arrayfire 7197760fc82"
+./install-dependencies-nix.sh libatlas3gf-base libatlas-dev libfftw3-dev
 
 if [ -d arrayfire-7197760fc82 ]
 then
