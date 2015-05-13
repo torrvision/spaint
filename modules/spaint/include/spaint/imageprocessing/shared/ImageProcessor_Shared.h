@@ -25,9 +25,8 @@ inline void shade_pixel_absolute_difference(float *destination, float firstInput
 /**
  * \brief Shades a pixel on comparison.
  */
-template <typename T>
 _CPU_AND_GPU_CODE_
-inline void shade_pixel_on_comparison(float *output, float input, float comparator, T comparisonOperator, float value)
+inline void shade_pixel_on_comparison(float *output, float input, float comparator, ImageProcessor::ComparisonOperator comparisonOperator, float value)
 {
   switch(comparisonOperator)
   {
@@ -51,31 +50,6 @@ inline void shade_pixel_on_comparison(float *output, float input, float comparat
       break;
     }
   }
-}
-
-/*
-template <ImageProcessor::ComparisonOperator T>
-_CPU_AND_GPU_CODE_
-inline void shade_pixel_on_comparison(float *output, float input, float comparator, float value)
-{}
-
-template<>
-_CPU_AND_GPU_CODE_
-inline void shade_pixel_on_comparison<ImageProcessor::GREATER>(float *output, float input, float comparator, float value)
-{
-  if(input > comparator) *output = value;
-  else *output = input;
-}
-*/
-
-
-/**
- * \brief Shades invalid pixels (one with a value of less than zero) with a specified value.
- */
-_CPU_AND_GPU_CODE_
-inline void shade_invalid_pixels(float *destination, float value)
-{
-  if(*destination < 0) *destination = value;
 }
 
 }
