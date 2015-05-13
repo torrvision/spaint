@@ -5,6 +5,10 @@
 #ifndef H_RAFL_DECISIONFUNCTIONGENERATOR
 #define H_RAFL_DECISIONFUNCTIONGENERATOR
 
+#ifdef WITH_OPENMP
+#include <omp.h>
+#endif
+
 #include <utility>
 
 #include "../base/ProbabilityMassFunction.h"
@@ -88,14 +92,17 @@ public:
   Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
-    std::multimap<float,Split_Ptr,std::greater<float> > gainToCandidateMap;
+    Split_Ptr bestSplitCandidate(new Split);
+    float bestGain = -1;
 
 #if 0
     std::cout << "\nP: " << *reservoir.get_histogram() << ' ' << initialEntropy << '\n';
 #endif
 
     std::vector<Example_CPtr> examples = reservoir.get_examples();
+#ifdef WITH_OPENMP
 #pragma omp parallel for
+#endif
     for(int i = 0; i < candidateCount; ++i)
     {
       Split_Ptr splitCandidate(new Split);
@@ -123,20 +130,25 @@ public:
       // Calculate the information gain we would obtain from this split.
       float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples, inverseClassWeights);
 
-#pragma critical
+#ifdef WITH_OPENMP
+#pragma omp critical
+#endif
       {
-#pragma flush (best)
-     if (gain > best)
-       best= gain; bestcandidate = curCandidate;
+//#ifdef WITH_OPENMP
+//#pragma omp flush (bestGain)
+//#endif
+        if(gain > bestGain && !(gain < gainThreshold || splitCandidate->m_leftExamples.empty() || splitCandidate->m_rightExamples.empty()))
+        {
+          bestGain = gain;
+          bestSplitCandidate = splitCandidate;
+        }
 
-      if(gain < gainThreshold || splitCandidate->m_leftExamples.empty() || splitCandidate->m_rightExamples.empty()) splitCandidate.reset();
       }
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
-      gainToCandidateMap.insert(std::make_pair(gain, splitCandidate));
     }
 
     // Return a split candidate that had maximum gain (note that this may be NULL if no split had a high enough gain).
-    return gainToCandidateMap.begin()->second;
+    return bestSplitCandidate;
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################

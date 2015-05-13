@@ -15,6 +15,7 @@ SET(targetname raflvis)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
 # Specify the project files #
