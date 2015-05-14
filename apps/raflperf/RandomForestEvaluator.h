@@ -115,11 +115,17 @@ private:
     size_t indicesSize = indices.size();
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
 
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
     for(size_t i = 0; i < indicesSize; ++i)
     {
       const Example_CPtr& example = examples[indices[i]];
       predictedLabels[i] = randomForest->predict(example->get_descriptor());
       expectedLabels[i] = example->get_label();
+#ifdef WITH_OPENMP
+#pragma omp critical
+#endif
       classLabels.insert(expectedLabels[i]);
     }
 
