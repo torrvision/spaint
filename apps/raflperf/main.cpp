@@ -17,6 +17,8 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
+#include <tvgutil/timers/Timer.h>
+
 #include "RandomForestEvaluator.h"
 
 //#################### TYPEDEFS ####################
@@ -40,6 +42,10 @@ std::string get_iso_timestamp()
 
 int main(int argc, char *argv[])
 {
+#if WITH_OPENMP
+  omp_set_nested(1);
+#endif
+
   const unsigned int seed = 12345;
 
   if(argc != 1 && argc != 4)
@@ -138,6 +144,9 @@ int main(int argc, char *argv[])
   SplitGenerator_Ptr splitGenerator(new RandomPermutationAndDivisionSplitGenerator(seed, splitCount, ratio));
 #endif
 
+  // Time the random forest
+  tvgutil::Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
+
   // Evaluate the random forest on the various different parameter sets.
   PerformanceTable results(list_of("Accuracy"));
   boost::shared_ptr<RandomForestEvaluator<Label> > evaluator;
@@ -147,6 +156,9 @@ int main(int argc, char *argv[])
     std::map<std::string,PerformanceMeasure> result = evaluator->evaluate(examples);
     results.record_performance(params[n], result);
   }
+
+  timer.stop();
+  std::cout << timer << '\n';
 
   // Output the performance table to the screen.
   results.output(std::cout);

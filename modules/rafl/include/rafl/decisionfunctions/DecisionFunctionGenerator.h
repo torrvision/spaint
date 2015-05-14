@@ -105,6 +105,11 @@ public:
 #endif
     for(int i = 0; i < candidateCount; ++i)
     {
+#if 0 && WITH_OPENMP 
+      int threadId = omp_get_thread_num();
+      int nThreads = omp_get_num_threads();
+      std::cout << "threadId=" << threadId << " nThreads=" << nThreads << '\n';
+#endif
       Split_Ptr splitCandidate(new Split);
 
       // Generate a decision function for the split candidate.
