@@ -92,7 +92,7 @@ public:
   Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
-    Split_Ptr bestSplitCandidate(new Split);
+    Split_Ptr bestSplitCandidate;
     float bestGain = -1;
 
 #if 0
@@ -134,13 +134,13 @@ public:
 #pragma omp critical
 #endif
       {
-//#ifdef WITH_OPENMP
-//#pragma omp flush (bestGain)
-//#endif
-        if(gain > bestGain && !(gain < gainThreshold || splitCandidate->m_leftExamples.empty() || splitCandidate->m_rightExamples.empty()))
+        if(gain > bestGain)
         {
-          bestGain = gain;
-          bestSplitCandidate = splitCandidate;
+          if(gain > gainThreshold && !splitCandidate->m_leftExamples.empty() && !splitCandidate->m_rightExamples.empty())
+          {
+            bestGain = gain;
+            bestSplitCandidate = splitCandidate;
+          }
         }
 
       }
