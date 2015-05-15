@@ -15,7 +15,7 @@
 namespace rafl {
 
 /**
- * \brief TODO.
+ * \brief An instance of an instantiation of this class template can be used to pick an appropriate decision function to split a set of examples.
  */
 template <typename Label>
 class PairwiseOperationAndThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
@@ -32,7 +32,9 @@ private:
   //#################### CONSTRUCTORS #################### 
 public:
   /**
-   * \brief TODO.
+   * \brief Constructs a decision function generator that can randomly generate pairwise operator and thresholding decision functions.
+   *
+   * \param randomNumberGenerator A random number generator.
    */
   explicit PairwiseOperationAndThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
   : m_randomNumberGenerator(randomNumberGenerator)

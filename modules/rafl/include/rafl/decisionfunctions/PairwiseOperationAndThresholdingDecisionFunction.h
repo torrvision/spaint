@@ -12,14 +12,14 @@
 namespace rafl {
 
 /**
- * \brief TODO.
+ * \brief An instance of this class represents a decision function that combines two features with an operation and tests the result against a threshold.
  */
 class PairwiseOperationAndThresholdingDecisionFunction : public DecisionFunction
 {
   //#################### PUBLIC ENUMS #################### 
 public:
   /**
-   * \brief TODO.
+   * \brief An enumeration specifying the different types of pairwise operations that are supported.
    */
   enum PairwiseOperation {
     PO_ADD,
@@ -43,13 +43,20 @@ private:
   //#################### CONSTRUCTORS #################### 
 public:
   /**
-   * \brief TODO.
+   * \brief Constructs a pairwise operation and thresholding decision function.
+   *
+   * \param firstFeatureIndex   The index of the first feature in a descriptor.
+   * \param secondFeatureIndex  The index of the second feature in a descriptor.
+   * \param pairwiseOperation   The specified pairwise operation.
+   * \param threshold           The threshold against which to compare the result of combining the two features with the specified pairwise operation.
    */
   PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex, PairwiseOperation pairwiseOperation, float threshold);
 
 private:
   /**
-   * \brief TODO.
+   * \brief Constructs a pairwise operation and thresholding decision function.
+   *
+   * Note: This constructor is needed for serialization and should not be used otherwise.
    */
   PairwiseOperationAndThresholdingDecisionFunction() {}
 
@@ -59,7 +66,10 @@ public:
   virtual DescriptorClassification classify_descriptor(const Descriptor& desctiptor) const;
 
   /**
-   * \brief TODO>
+   * \brief Get a string associated with each pairwise operation.
+   *
+   * \param pairwiseOperation  The specified pairwise operation.
+   * \return                   The string representing the pairwise operation.
    */
   std::string get_name(const PairwiseOperation& pairwiseOperation) const;
 
@@ -69,7 +79,10 @@ public:
   //#################### SERIALIZATION #################### 
 private:
   /**
-   * TODO.
+   * \brief Serializes the decision function to/from an archive.
+   *
+   * \param ar       The archive.
+   * \param version  The file format version number.
    */
   template <typename Archive>
   void serialize(Archive& ar, const unsigned int version)
