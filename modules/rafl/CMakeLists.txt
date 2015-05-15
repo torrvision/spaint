@@ -29,6 +29,7 @@ include/rafl/base/ProbabilityMassFunction.h
 ##
 SET(decisionfunctions_sources
 src/decisionfunctions/FeatureThresholdingDecisionFunction.cpp
+src/decisionfunctions/PairwiseOperationAndThresholdingDecisionFunction.cpp
 )
 
 SET(decisionfunctions_headers
@@ -37,6 +38,8 @@ include/rafl/decisionfunctions/DecisionFunctionGenerator.h
 include/rafl/decisionfunctions/DecisionFunctionGeneratorFactory.h
 include/rafl/decisionfunctions/FeatureThresholdingDecisionFunction.h
 include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
+include/rafl/decisionfunctions/PairwiseOperationAndThresholdingDecisionFunction.h
+include/rafl/decisionfunctions/PairwiseOperationAndThresholdingDecisionFunctionGenerator.h
 )
 
 ##
