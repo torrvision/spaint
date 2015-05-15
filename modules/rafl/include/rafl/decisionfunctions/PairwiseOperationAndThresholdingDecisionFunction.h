@@ -16,6 +16,8 @@ namespace rafl {
  */
 class PairwiseOperationAndThresholdingDecisionFunction : public DecisionFunction
 {
+  //#################### PUBLIC ENUMS #################### 
+public:
   /**
    * \brief TODO.
    */

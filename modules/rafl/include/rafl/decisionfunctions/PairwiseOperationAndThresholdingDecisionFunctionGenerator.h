@@ -1,16 +1,16 @@
 /**
- * rafl: PairwiseOperationAndThresholdingFunctionGenerator.h
+ * rafl: PairwiseOperationAndThresholdingDecisionFunctionGenerator.h
  */
 
-#ifndef H_RAFL_PAIRWISEOPERATIONANSTHRESHOLDINGFUNCTIONGENERATOR
-#define H_RAFL_PAIRWISEOPERATIONANSTHRESHOLDINGFUNCTIONGENERATOR
+#ifndef H_RAFL_PAIRWISEOPERATIONANDTHRESHOLDINGDECISIONFUNCTIONGENERATOR
+#define H_RAFL_PAIRWISEOPERATIONANDTHRESHOLDINGDECISIONFUNCTIONGENERATOR
 
 #include <cassert>
 
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "DecisionFunctionGenerator.h"
-#include "PairwiseOperationAndThresholdingFunctionGenerator.h"
+#include "PairwiseOperationAndThresholdingDecisionFunction.h"
 
 namespace rafl {
 
@@ -18,7 +18,7 @@ namespace rafl {
  * \brief TODO.
  */
 template <typename Label>
-class PairwiseOperationAndThresholdingFunctionGenerator : public DecisionFunctionGenerator<Label>
+class PairwiseOperationAndThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
 {
   //#################### USINGS ####################
 protected:
@@ -34,7 +34,7 @@ public:
   /**
    * \brief TODO.
    */
-  explicit PairwiseOperationAndThresholdingFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  explicit PairwiseOperationAndThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
   : m_randomNumberGenerator(randomNumberGenerator)
   {}
 
@@ -77,9 +77,9 @@ private:
     // Select an appropriate threshold by picking a random example and using
     // the value of the chosen feature form that example as the threshold.
     int exampleIndex = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(examples.size()) - 1);
-    float threshold = (*examples[exampleIndex]->get_descriptor())[featureIndex];
+    float threshold = (*examples[exampleIndex]->get_descriptor())[firstFeatureIndex];
 
-    return DecisionFunction_Ptr(new PairwiseOperationAndThresholdingFunctionGenerator(firstFeatureIndex, secondFeatureIndex, pairwiseOperation == 0 ? OP_SUBTRACT : OP_ADD, threshold));
+    return DecisionFunction_Ptr(new PairwiseOperationAndThresholdingDecisionFunction(firstFeatureIndex, secondFeatureIndex, pairwiseOperation == 0 ? PairwiseOperationAndThresholdingDecisionFunction::PO_SUBTRACT : PairwiseOperationAndThresholdingDecisionFunction::PO_ADD, threshold));
   }
 };
 
