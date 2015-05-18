@@ -15,24 +15,26 @@
 namespace rafl {
 
 /**
- * \brief An instance of an instantiation of this class template can be used to pick an appropriate decision function to split a set of examples.
+ * \brief An instance of an instantiation of this class template can be used to generate a pairwise operation and thresholding decision function
+ *        with which to split a set of examples.
  */
 template <typename Label>
 class PairwiseOperationAndThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
 {
-  //#################### USINGS ####################
-protected:
+  //#################### TYPEDEFS AND USINGS ####################
+private:
   using typename DecisionFunctionGenerator<Label>::Example_CPtr;
+  typedef PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperation PairwiseOperation;
 
-  //#################### PRIVATE VARIABLES #################### 
+  //#################### PRIVATE VARIABLES ####################
 private:
   /** A random number generator. */
   tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
 
-  //#################### CONSTRUCTORS #################### 
+  //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a decision function generator that can randomly generate pairwise operator and thresholding decision functions.
+   * \brief Constructs a decision function generator that can randomly generate pairwise operation and thresholding decision functions.
    *
    * \param randomNumberGenerator A random number generator.
    */
@@ -40,7 +42,7 @@ public:
   : m_randomNumberGenerator(randomNumberGenerator)
   {}
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Gets the type of the decision function generator.
@@ -58,7 +60,7 @@ public:
     return get_static_type();
   }
 
-  //#################### PRIVATE MEMBER FUNCTIONS #################### 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
   virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples) const
@@ -67,21 +69,26 @@ private:
 
     int descriptorSize = static_cast<int>(examples[0]->get_descriptor()->size());
 
-    //Pick the first random feature in the descriptor.
+    // Pick the first random feature in the descriptor.
     int firstFeatureIndex = m_randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
 
-    //Pick the second random feature int he descriptor.
+    // Pick the second random feature in the descriptor.
     int secondFeatureIndex = m_randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
 
-    //Pick the pairwise operation (0 = subtraction, 1 = addition).
-    bool pairwiseOperation = m_randomNumberGenerator->generate_int_from_uniform(0, 1);
+    // Pick the pairwise operation.
+    int op = m_randomNumberGenerator->generate_int_from_uniform(0, PairwiseOperationAndThresholdingDecisionFunction::PO_COUNT - 1);
 
     // Select an appropriate threshold by picking a random example and using
-    // the value of the chosen feature form that example as the threshold.
+    // the value of the chosen feature from that example as the threshold.
     int exampleIndex = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(examples.size()) - 1);
     float threshold = (*examples[exampleIndex]->get_descriptor())[firstFeatureIndex];
 
-    return DecisionFunction_Ptr(new PairwiseOperationAndThresholdingDecisionFunction(firstFeatureIndex, secondFeatureIndex, pairwiseOperation == 0 ? PairwiseOperationAndThresholdingDecisionFunction::PO_SUBTRACT : PairwiseOperationAndThresholdingDecisionFunction::PO_ADD, threshold));
+    return DecisionFunction_Ptr(new PairwiseOperationAndThresholdingDecisionFunction(
+      firstFeatureIndex,
+      secondFeatureIndex,
+      static_cast<PairwiseOperation>(op),
+      threshold
+    ));
   }
 };
 

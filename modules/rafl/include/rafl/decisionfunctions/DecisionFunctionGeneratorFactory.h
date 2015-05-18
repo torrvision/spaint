@@ -86,7 +86,7 @@ private:
    * \brief Makes a pairwise operation and thresholding decision function generator.
    *
    * \param randomNumberGenerator  The random number generator needed when generating decision functions.
-   * \return                       The pairwise operation and thresholding function generator.
+   * \return                       The decision function generator.
    */
   static DecisionFunctionGenerator_Ptr pairwise_operation_and_thresholding_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
   {

@@ -28,7 +28,10 @@ public:
     PO_ADD,
 
     /** The second feature should be subtracted from the first feature. */
-    PO_SUBTRACT
+    PO_SUBTRACT,
+
+    /** A dummy value denoting the number of possible pairwise operations. */
+    PO_COUNT
   };
 
   //#################### PRIVATE VARIABLES ####################
