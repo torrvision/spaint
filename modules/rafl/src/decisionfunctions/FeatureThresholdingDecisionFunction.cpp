@@ -6,14 +6,6 @@
 
 #include <iostream>
 
-// Note: It is CRUCIALLY IMPORTANT that the archive headers are included before the point at which we invoke BOOST_CLASS_EXPORT, or the export won't work.
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
-#include <boost/serialization/export.hpp>
-
 namespace rafl {
 
 //#################### CONSTRUCTORS ####################

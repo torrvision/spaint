@@ -53,9 +53,10 @@ public:
    * \param firstFeatureIndex   The index of the first feature in a descriptor.
    * \param secondFeatureIndex  The index of the second feature in a descriptor.
    * \param pairwiseOperation   The specified pairwise operation.
-   * \param threshold           The threshold against which to compare the result of combining the two features with the specified pairwise operation.
+   * \param threshold           The threshold against which to compare the result of the operation.
    */
-  PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex, PairwiseOperation pairwiseOperation, float threshold);
+  PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex,
+                                                   PairwiseOperation pairwiseOperation, float threshold);
 
 private:
   /**
