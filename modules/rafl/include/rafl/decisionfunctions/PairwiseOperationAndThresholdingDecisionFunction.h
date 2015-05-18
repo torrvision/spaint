@@ -12,21 +12,26 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class represents a decision function that combines two features with an operation and tests the result against a threshold.
+ * \brief An instance of this class represents a decision function that combines two features
+ *        using a pairwise operation and tests the result against a threshold.
  */
 class PairwiseOperationAndThresholdingDecisionFunction : public DecisionFunction
 {
-  //#################### PUBLIC ENUMS #################### 
+  //#################### ENUMERATIONS ####################
 public:
   /**
    * \brief An enumeration specifying the different types of pairwise operations that are supported.
    */
-  enum PairwiseOperation {
+  enum PairwiseOperation
+  {
+    /** The two features should be added together. */
     PO_ADD,
+
+    /** The second feature should be subtracted from the first feature. */
     PO_SUBTRACT
   };
 
-  //#################### PRIVATE VARIABLES #################### 
+  //#################### PRIVATE VARIABLES ####################
 private:
   /** The index of the first feature in a feature descriptor. */
   size_t m_firstFeatureIndex;
@@ -40,7 +45,7 @@ private:
   /** The threshold against which to compare the result of the operation. */
   float m_threshold;
 
-  //#################### CONSTRUCTORS #################### 
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a pairwise operation and thresholding decision function.
@@ -58,25 +63,27 @@ private:
    *
    * Note: This constructor is needed for serialization and should not be used otherwise.
    */
-  PairwiseOperationAndThresholdingDecisionFunction() {}
+  PairwiseOperationAndThresholdingDecisionFunction();
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual DescriptorClassification classify_descriptor(const Descriptor& desctiptor) const;
-
-  /**
-   * \brief Get a string associated with each pairwise operation.
-   *
-   * \param pairwiseOperation  The specified pairwise operation.
-   * \return                   The string representing the pairwise operation.
-   */
-  std::string get_name(const PairwiseOperation& pairwiseOperation) const;
+  virtual DescriptorClassification classify_descriptor(const Descriptor& descriptor) const;
 
   /** Override */
   virtual void output(std::ostream& os) const;
 
-  //#################### SERIALIZATION #################### 
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Gets a string representing the specified pairwise operation.
+   *
+   * \param op  A pairwise operation.
+   * \return    A string representing the pairwise operation.
+   */
+  static std::string to_string(PairwiseOperation op);
+
+  //#################### SERIALIZATION ####################
 private:
   /**
    * \brief Serializes the decision function to/from an archive.

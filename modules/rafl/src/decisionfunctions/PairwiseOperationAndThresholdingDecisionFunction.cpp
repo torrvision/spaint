@@ -18,8 +18,15 @@ namespace rafl {
 
 //#################### CONSTRUCTORS #################### 
 
-PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex, PairwiseOperation pairwiseOperation, float threshold)
-: m_firstFeatureIndex(firstFeatureIndex), m_pairwiseOperation(pairwiseOperation), m_secondFeatureIndex(secondFeatureIndex), m_threshold(threshold)
+PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex,
+                                                                                                   PairwiseOperation pairwiseOperation, float threshold)
+: m_firstFeatureIndex(firstFeatureIndex),
+  m_pairwiseOperation(pairwiseOperation),
+  m_secondFeatureIndex(secondFeatureIndex),
+  m_threshold(threshold)
+{}
+
+PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperationAndThresholdingDecisionFunction()
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
@@ -43,27 +50,21 @@ DecisionFunction::DescriptorClassification PairwiseOperationAndThresholdingDecis
   return pairwiseFeature < m_threshold ? DC_LEFT : DC_RIGHT;
 }
 
-std::string PairwiseOperationAndThresholdingDecisionFunction::get_name(const PairwiseOperation& pairwiseOperation) const
-{
-  std::string pairwiseOperationName;
-  switch (pairwiseOperation)
-  {
-    case PO_ADD:
-      pairwiseOperationName = "+";
-      break;
-    case PO_SUBTRACT:
-      pairwiseOperationName = "-";
-      break;
-    default:
-      throw std::runtime_error("The pairwise operation you selected is not recognised");
-      break;
-  }
-  return pairwiseOperationName;
-}
-
 void PairwiseOperationAndThresholdingDecisionFunction::output(std::ostream& os) const
 {
-  os << "First Feature " << m_firstFeatureIndex << " " << get_name(m_pairwiseOperation) << " Second Feature " << m_secondFeatureIndex << " < " << m_threshold;
+  os << "First Feature " << m_firstFeatureIndex << ' ' << to_string(m_pairwiseOperation) << " Second Feature " << m_secondFeatureIndex << " < " << m_threshold;
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+std::string PairwiseOperationAndThresholdingDecisionFunction::to_string(PairwiseOperation op)
+{
+  switch(op)
+  {
+    case PO_ADD:      return "+";
+    case PO_SUBTRACT: return "-";
+    default:          throw std::runtime_error("Unknown pairwise operation");
+  }
 }
 
 }
