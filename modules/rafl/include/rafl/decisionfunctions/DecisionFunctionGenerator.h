@@ -164,8 +164,7 @@ public:
     Split_Ptr bestSplitCandidate;
     if(bestId != -1)
     {
-      bestSplitCandidate.reset(new Split);
-      *bestSplitCandidate = m_splitCandidates[bestId];
+      bestSplitCandidate.reset(new Split(m_splitCandidates[bestId]));
     }
 
     // Return a split candidate that had maximum gain (note that this may be NULL if no split had a high enough gain).
