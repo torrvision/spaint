@@ -128,7 +128,10 @@ public:
 #if 0
       std::cout << *splitCandidate->m_decisionFunction << '\n';
 #endif
-      // Partition the examples using the decision function.
+      m_splitCandidates[i].m_rightExamples.clear();
+      m_splitCandidates[i].m_leftExamples.clear();
+
+     // Partition the examples using the decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
         if(m_splitCandidates[i].m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
