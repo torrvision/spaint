@@ -75,17 +75,23 @@ private:
     int secondFeatureIndex = m_randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
 
     // Pick the pairwise operation.
-    int op = m_randomNumberGenerator->generate_int_from_uniform(0, PairwiseOpAndThresholdDecisionFunction::PO_COUNT - 1);
+    int opInt = m_randomNumberGenerator->generate_int_from_uniform(0, PairwiseOpAndThresholdDecisionFunction::PO_COUNT - 1);
 
     // Select an appropriate threshold by picking a random example and using
     // the value of the chosen feature from that example as the threshold.
     int exampleIndex = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(examples.size()) - 1);
-    float threshold = (*examples[exampleIndex]->get_descriptor())[firstFeatureIndex];
+    const Descriptor& randomExample = (*examples[exampleIndex]->get_descriptor());
+    float firstThreshold = randomExample[firstFeatureIndex];
+    float secondThreshold = randomExample[secondFeatureIndex] ;
+
+    PairwiseOpAndThresholdDecisionFunction::Op op = static_cast<PairwiseOpAndThresholdDecisionFunction::Op>(opInt);
+
+    float threshold = PairwiseOpAndThresholdDecisionFunction::pairwise_calculator(firstThreshold, secondThreshold, op);
 
     return DecisionFunction_Ptr(new PairwiseOpAndThresholdDecisionFunction(
       firstFeatureIndex,
       secondFeatureIndex,
-      static_cast<PairwiseOpAndThresholdDecisionFunction::Op>(op),
+      op,
       threshold
     ));
   }

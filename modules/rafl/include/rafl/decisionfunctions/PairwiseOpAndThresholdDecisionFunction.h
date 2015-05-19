@@ -68,6 +68,18 @@ private:
    */
   PairwiseOpAndThresholdDecisionFunction();
 
+  //#################### STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Calculates the result of performing a 'op' b, where 'op' is a pre-defiend operation between two numeric values.
+   *
+   * \float a  The first number.
+   * \param b  The second number.
+   * \param op A pairwise operation.
+   * \return   The result of performing a 'op' b.
+   */
+  static float pairwise_calculator(float a, float b, Op op);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
