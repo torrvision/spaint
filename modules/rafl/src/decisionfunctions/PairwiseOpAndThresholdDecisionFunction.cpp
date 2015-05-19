@@ -1,8 +1,8 @@
 /**
- * rafl: PairwiseOperationAndThresholdingDecisionFunction.cpp
+ * rafl: PairwiseOpAndThresholdDecisionFunction.cpp
  */
 
-#include "decisionfunctions/PairwiseOperationAndThresholdingDecisionFunction.h"
+#include "decisionfunctions/PairwiseOpAndThresholdDecisionFunction.h"
 
 #include <iostream>
 
@@ -10,26 +10,25 @@ namespace rafl {
 
 //#################### CONSTRUCTORS #################### 
 
-PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex,
-                                                                                                   PairwiseOperation pairwiseOperation, float threshold)
+PairwiseOpAndThresholdDecisionFunction::PairwiseOpAndThresholdDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex, Op op, float threshold)
 : m_firstFeatureIndex(firstFeatureIndex),
-  m_pairwiseOperation(pairwiseOperation),
+  m_op(op),
   m_secondFeatureIndex(secondFeatureIndex),
   m_threshold(threshold)
 {}
 
-PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperationAndThresholdingDecisionFunction()
+PairwiseOpAndThresholdDecisionFunction::PairwiseOpAndThresholdDecisionFunction()
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
 
-DecisionFunction::DescriptorClassification PairwiseOperationAndThresholdingDecisionFunction::classify_descriptor(const Descriptor& descriptor) const
+DecisionFunction::DescriptorClassification PairwiseOpAndThresholdDecisionFunction::classify_descriptor(const Descriptor& descriptor) const
 {
   const float feature1 = descriptor[m_firstFeatureIndex];
   const float feature2 = descriptor[m_secondFeatureIndex];
 
   float pairwiseFeature;
-  switch(m_pairwiseOperation)
+  switch(m_op)
   {
     case PO_ADD:
       pairwiseFeature = feature1 + feature2;
@@ -45,17 +44,17 @@ DecisionFunction::DescriptorClassification PairwiseOperationAndThresholdingDecis
   return pairwiseFeature < m_threshold ? DC_LEFT : DC_RIGHT;
 }
 
-void PairwiseOperationAndThresholdingDecisionFunction::output(std::ostream& os) const
+void PairwiseOpAndThresholdDecisionFunction::output(std::ostream& os) const
 {
   os << "First Feature " << m_firstFeatureIndex << ' '
-     << to_string(m_pairwiseOperation)
+     << to_string(m_op)
      << " Second Feature " << m_secondFeatureIndex
      << " < " << m_threshold;
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-std::string PairwiseOperationAndThresholdingDecisionFunction::to_string(PairwiseOperation op)
+std::string PairwiseOpAndThresholdDecisionFunction::to_string(Op op)
 {
   switch(op)
   {
@@ -71,4 +70,4 @@ std::string PairwiseOperationAndThresholdingDecisionFunction::to_string(Pairwise
 
 }
 
-BOOST_CLASS_EXPORT(rafl::PairwiseOperationAndThresholdingDecisionFunction)
+BOOST_CLASS_EXPORT(rafl::PairwiseOpAndThresholdDecisionFunction)

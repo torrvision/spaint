@@ -1,9 +1,9 @@
 /**
- * rafl: PairwiseOperationAndThresholdingDecisionFunction.h
+ * rafl: PairwiseOpAndThresholdDecisionFunction.h
  */
 
-#ifndef H_RAFL_PAIRWISEOPERATIONANDTHRESHOLDINGDECISIONFUNCTION
-#define H_RAFL_PAIRWISEOPERATIONANDTHRESHOLDINGDECISIONFUNCTION
+#ifndef H_RAFL_PAIRWISEOPANDTHRESHOLDDECISIONFUNCTION
+#define H_RAFL_PAIRWISEOPANDTHRESHOLDDECISIONFUNCTION
 
 #include <boost/serialization/base_object.hpp>
 
@@ -15,14 +15,14 @@ namespace rafl {
  * \brief An instance of this class represents a decision function that combines two features
  *        using a pairwise operation and tests the result against a threshold.
  */
-class PairwiseOperationAndThresholdingDecisionFunction : public DecisionFunction
+class PairwiseOpAndThresholdDecisionFunction : public DecisionFunction
 {
   //#################### ENUMERATIONS ####################
 public:
   /**
    * \brief An enumeration specifying the different types of pairwise operations that are supported.
    */
-  enum PairwiseOperation
+  enum Op
   {
     /** The two features should be added together. */
     PO_ADD,
@@ -40,7 +40,7 @@ private:
   size_t m_firstFeatureIndex;
 
   /** The pairwise operation to apply to the features. */
-  PairwiseOperation m_pairwiseOperation;
+  Op m_op;
 
   /** The index of the second feature in a feature descriptor. */
   size_t m_secondFeatureIndex;
@@ -55,11 +55,10 @@ public:
    *
    * \param firstFeatureIndex   The index of the first feature in a descriptor.
    * \param secondFeatureIndex  The index of the second feature in a descriptor.
-   * \param pairwiseOperation   The specified pairwise operation.
+   * \param op                  The pairwise operation.
    * \param threshold           The threshold against which to compare the result of the operation.
    */
-  PairwiseOperationAndThresholdingDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex,
-                                                   PairwiseOperation pairwiseOperation, float threshold);
+  PairwiseOpAndThresholdDecisionFunction(size_t firstFeatureIndex, size_t secondFeatureIndex, Op op, float threshold);
 
 private:
   /**
@@ -67,7 +66,7 @@ private:
    *
    * Note: This constructor is needed for serialization and should not be used otherwise.
    */
-  PairwiseOperationAndThresholdingDecisionFunction();
+  PairwiseOpAndThresholdDecisionFunction();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -85,7 +84,7 @@ private:
    * \param op  A pairwise operation.
    * \return    A string representing the pairwise operation.
    */
-  static std::string to_string(PairwiseOperation op);
+  static std::string to_string(Op op);
 
   //#################### SERIALIZATION ####################
 private:
@@ -100,7 +99,7 @@ private:
   {
     ar & boost::serialization::base_object<DecisionFunction>(*this);
     ar & m_firstFeatureIndex;
-    ar & m_pairwiseOperation;
+    ar & m_op;
     ar & m_secondFeatureIndex;
     ar & m_threshold;
   }

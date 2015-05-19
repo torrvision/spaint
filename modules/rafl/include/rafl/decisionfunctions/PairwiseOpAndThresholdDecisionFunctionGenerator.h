@@ -1,16 +1,16 @@
 /**
- * rafl: PairwiseOperationAndThresholdingDecisionFunctionGenerator.h
+ * rafl: PairwiseOpAndThresholdDecisionFunctionGenerator.h
  */
 
-#ifndef H_RAFL_PAIRWISEOPERATIONANDTHRESHOLDINGDECISIONFUNCTIONGENERATOR
-#define H_RAFL_PAIRWISEOPERATIONANDTHRESHOLDINGDECISIONFUNCTIONGENERATOR
+#ifndef H_RAFL_PAIRWISEOPANDTHRESHOLDDECISIONFUNCTIONGENERATOR
+#define H_RAFL_PAIRWISEOPANDTHRESHOLDDECISIONFUNCTIONGENERATOR
 
 #include <cassert>
 
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "DecisionFunctionGenerator.h"
-#include "PairwiseOperationAndThresholdingDecisionFunction.h"
+#include "PairwiseOpAndThresholdDecisionFunction.h"
 
 namespace rafl {
 
@@ -19,12 +19,11 @@ namespace rafl {
  *        with which to split a set of examples.
  */
 template <typename Label>
-class PairwiseOperationAndThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
+class PairwiseOpAndThresholdDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
 {
   //#################### TYPEDEFS AND USINGS ####################
 private:
   using typename DecisionFunctionGenerator<Label>::Example_CPtr;
-  typedef PairwiseOperationAndThresholdingDecisionFunction::PairwiseOperation PairwiseOperation;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -38,7 +37,7 @@ public:
    *
    * \param randomNumberGenerator A random number generator.
    */
-  explicit PairwiseOperationAndThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  explicit PairwiseOpAndThresholdDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
   : m_randomNumberGenerator(randomNumberGenerator)
   {}
 
@@ -51,7 +50,7 @@ public:
    */
   static std::string get_static_type()
   {
-    return "PairwiseOperationAndThresholding";
+    return "PairwiseOpAndThreshold";
   }
 
   /** Override */
@@ -76,17 +75,17 @@ private:
     int secondFeatureIndex = m_randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
 
     // Pick the pairwise operation.
-    int op = m_randomNumberGenerator->generate_int_from_uniform(0, PairwiseOperationAndThresholdingDecisionFunction::PO_COUNT - 1);
+    int op = m_randomNumberGenerator->generate_int_from_uniform(0, PairwiseOpAndThresholdDecisionFunction::PO_COUNT - 1);
 
     // Select an appropriate threshold by picking a random example and using
     // the value of the chosen feature from that example as the threshold.
     int exampleIndex = m_randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(examples.size()) - 1);
     float threshold = (*examples[exampleIndex]->get_descriptor())[firstFeatureIndex];
 
-    return DecisionFunction_Ptr(new PairwiseOperationAndThresholdingDecisionFunction(
+    return DecisionFunction_Ptr(new PairwiseOpAndThresholdDecisionFunction(
       firstFeatureIndex,
       secondFeatureIndex,
-      static_cast<PairwiseOperation>(op),
+      static_cast<PairwiseOpAndThresholdDecisionFunction::Op>(op),
       threshold
     ));
   }
