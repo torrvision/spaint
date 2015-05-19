@@ -53,8 +53,8 @@ public:
   /**
    * \brief Constructs a pairwise operation and thresholding decision function.
    *
-   * \param firstFeatureIndex   The index of the first feature in a descriptor.
-   * \param secondFeatureIndex  The index of the second feature in a descriptor.
+   * \param firstFeatureIndex   The index of the first feature in a feature descriptor.
+   * \param secondFeatureIndex  The index of the second feature in a feature descriptor.
    * \param op                  The pairwise operation.
    * \param threshold           The threshold against which to compare the result of the operation.
    */
