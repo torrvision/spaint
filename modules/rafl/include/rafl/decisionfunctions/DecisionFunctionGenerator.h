@@ -92,8 +92,8 @@ public:
   Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
   {
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
-    Split_Ptr bestSplitCandidate;
     float bestGain = -1;
+    int bestId = -1;
 
 #if 0
     std::cout << "\nP: " << *reservoir.get_histogram() << ' ' << initialEntropy << '\n';
@@ -101,12 +101,11 @@ public:
 
     std::vector<Example_CPtr> examples = reservoir.get_examples();
 
-    std::vector<Split_Ptr> splitVector(candidateCount);
+    std::vector<Split> splitCandidates(candidateCount);
     for(int i = 0; i < candidateCount; ++i)
     {
-      splitVector[i].reset(new Split);
       // Generate a decision function for the split candidate.
-      splitVector[i]->m_decisionFunction = generate_candidate_decision_function(examples);
+      splitCandidates[i].m_decisionFunction = generate_candidate_decision_function(examples);
     }
 
 #ifdef WITH_OPENMP
@@ -126,18 +125,18 @@ public:
       // Partition the examples using the decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
-        if(splitVector[i]->m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
+        if(splitCandidates[i].m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
         {
-          splitVector[i]->m_leftExamples.push_back(examples[j]);
+          splitCandidates[i].m_leftExamples.push_back(examples[j]);
         }
         else
         {
-          splitVector[i]->m_rightExamples.push_back(examples[j]);
+          splitCandidates[i].m_rightExamples.push_back(examples[j]);
         }
       }
 
       // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(reservoir, initialEntropy, splitVector[i]->m_leftExamples, splitVector[i]->m_rightExamples, inverseClassWeights);
+      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidates[i].m_leftExamples, splitCandidates[i].m_rightExamples, inverseClassWeights);
 
 #ifdef WITH_OPENMP
 #pragma omp critical
@@ -145,15 +144,21 @@ public:
       {
         if(gain > bestGain)
         {
-          if(gain > gainThreshold && !splitVector[i]->m_leftExamples.empty() && !splitVector[i]->m_rightExamples.empty())
+          if(gain > gainThreshold && !splitCandidates[i].m_leftExamples.empty() && !splitCandidates[i].m_rightExamples.empty())
           {
             bestGain = gain;
-            bestSplitCandidate = splitVector[i];
+            bestId = i;
           }
         }
 
       }
       // Add the result to the gain -> candidate map so as to allow us to find a split with maximum gain.
+    }
+
+    Split_Ptr bestSplitCandidate(new Split);
+    if(bestId != -1)
+    {
+      *bestSplitCandidate = splitCandidates[bestId];
     }
 
     // Return a split candidate that had maximum gain (note that this may be NULL if no split had a high enough gain).

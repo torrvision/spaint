@@ -80,11 +80,11 @@ int main(int argc, char *argv[])
     std::set<Label> unbiasedClassLabels = classLabels;
     unbiasedClassLabels.erase(biasedClass);
 
-    examples = uceg.generate_examples(unbiasedClassLabels, 100);
-    std::vector<Example_CPtr> biasedExamples = uceg.generate_examples(biasedClassLabels, 10000);
+    examples = uceg.generate_examples(unbiasedClassLabels, 1000);
+    std::vector<Example_CPtr> biasedExamples = uceg.generate_examples(biasedClassLabels, 100000);
     examples.insert(examples.end(), biasedExamples.begin(), biasedExamples.end());
 #else
-    examples = uceg.generate_examples(classLabels, 100);
+    examples = uceg.generate_examples(classLabels, 1000);
 #endif
 
     params = CartesianProductParameterSetGenerator()
