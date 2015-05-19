@@ -100,6 +100,15 @@ public:
 #endif
 
     std::vector<Example_CPtr> examples = reservoir.get_examples();
+
+    std::vector<Split_Ptr> splitVector(candidateCount);
+    for(int i = 0; i < candidateCount; ++i)
+    {
+      splitVector[i].reset(new Split);
+      // Generate a decision function for the split candidate.
+      splitVector[i]->m_decisionFunction = generate_candidate_decision_function(examples);
+    }
+
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
@@ -110,30 +119,25 @@ public:
       int nThreads = omp_get_num_threads();
       std::cout << "threadId=" << threadId << " nThreads=" << nThreads << '\n';
 #endif
-      Split_Ptr splitCandidate(new Split);
-
-      // Generate a decision function for the split candidate.
-      splitCandidate->m_decisionFunction = generate_candidate_decision_function(examples);
 
 #if 0
       std::cout << *splitCandidate->m_decisionFunction << '\n';
 #endif
-
       // Partition the examples using the decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
-        if(splitCandidate->m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
+        if(splitVector[i]->m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
         {
-          splitCandidate->m_leftExamples.push_back(examples[j]);
+          splitVector[i]->m_leftExamples.push_back(examples[j]);
         }
         else
         {
-          splitCandidate->m_rightExamples.push_back(examples[j]);
+          splitVector[i]->m_rightExamples.push_back(examples[j]);
         }
       }
 
       // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(reservoir, initialEntropy, splitCandidate->m_leftExamples, splitCandidate->m_rightExamples, inverseClassWeights);
+      float gain = calculate_information_gain(reservoir, initialEntropy, splitVector[i]->m_leftExamples, splitVector[i]->m_rightExamples, inverseClassWeights);
 
 #ifdef WITH_OPENMP
 #pragma omp critical
@@ -141,10 +145,10 @@ public:
       {
         if(gain > bestGain)
         {
-          if(gain > gainThreshold && !splitCandidate->m_leftExamples.empty() && !splitCandidate->m_rightExamples.empty())
+          if(gain > gainThreshold && !splitVector[i]->m_leftExamples.empty() && !splitVector[i]->m_rightExamples.empty())
           {
             bestGain = gain;
-            bestSplitCandidate = splitCandidate;
+            bestSplitCandidate = splitVector[i];
           }
         }
 
