@@ -115,7 +115,7 @@ public:
     }
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for(int i = 0; i < candidateCount; ++i)
     {
@@ -128,27 +128,41 @@ public:
 #if 0
       std::cout << *splitCandidate->m_decisionFunction << '\n';
 #endif
-      m_splitCandidates[i].m_rightExamples.clear();
-      m_splitCandidates[i].m_leftExamples.clear();
 
-     // Partition the examples using the decision function.
-      for(size_t j = 0, size = examples.size(); j < size; ++j)
+#ifdef WITH_OPENMP
+  #pragma omp critical
+#endif
       {
-        if(m_splitCandidates[i].m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
+        m_splitCandidates[i].m_rightExamples.clear();
+        m_splitCandidates[i].m_leftExamples.clear();
+
+       // Partition the examples using the decision function.
+        for(size_t j = 0, size = examples.size(); j < size; ++j)
         {
-          m_splitCandidates[i].m_leftExamples.push_back(examples[j]);
-        }
-        else
-        {
-          m_splitCandidates[i].m_rightExamples.push_back(examples[j]);
+          if(m_splitCandidates[i].m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
+          {
+            m_splitCandidates[i].m_leftExamples.push_back(examples[j]);
+          }
+          else
+          {
+            m_splitCandidates[i].m_rightExamples.push_back(examples[j]);
+          }
         }
       }
 
-      // Calculate the information gain we would obtain from this split.
-      float gain = calculate_information_gain(reservoir, initialEntropy, m_splitCandidates[i].m_leftExamples, m_splitCandidates[i].m_rightExamples, inverseClassWeights);
-
+      float gain = -1;
+      if(m_splitCandidates[i].m_leftExamples.empty() || m_splitCandidates[i].m_rightExamples.empty())
+      {
+        //throw std::runtime_error("One of the reservoirs is empty");
+        gain = -1;
+      }
+      else
+      {
+        // Calculate the information gain we would obtain from this split.
+        gain = calculate_information_gain(reservoir, initialEntropy, m_splitCandidates[i].m_leftExamples, m_splitCandidates[i].m_rightExamples, inverseClassWeights);
+      }
 #ifdef WITH_OPENMP
-#pragma omp critical
+//#pragma omp critical
 #endif
       {
         if(gain > bestGain)
