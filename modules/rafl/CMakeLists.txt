@@ -34,6 +34,7 @@ src/decisionfunctions/PairwiseOpAndThresholdDecisionFunction.cpp
 )
 
 SET(decisionfunctions_headers
+include/rafl/decisionfunctions/CompositeDecisionFunctionGenerator.h
 include/rafl/decisionfunctions/DecisionFunction.h
 include/rafl/decisionfunctions/DecisionFunctionGenerator.h
 include/rafl/decisionfunctions/DecisionFunctionGeneratorFactory.h
