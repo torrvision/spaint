@@ -57,6 +57,22 @@ private:
   /* The split candidates. */
   mutable std::vector<Split> m_splitCandidates;
 
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** A random number generator. */
+  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs a decision function generator that can randomly generate decision functions.
+   *
+   * \param randomNumberGenerator A random number generator.
+   */
+  explicit DecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
+  : m_randomNumberGenerator(randomNumberGenerator)
+  {}
+
   //#################### DESTRUCTOR ####################
 public:
   /**

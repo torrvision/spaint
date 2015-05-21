@@ -25,11 +25,6 @@ class FeatureThresholdingDecisionFunctionGenerator : public DecisionFunctionGene
 protected:
   using typename DecisionFunctionGenerator<Label>::Example_CPtr;
 
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** A random number generator. */
-  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -38,7 +33,7 @@ public:
    * \param randomNumberGenerator A random number generator.
    */
   explicit FeatureThresholdingDecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-  : m_randomNumberGenerator(randomNumberGenerator)
+  : DecisionFunctionGenerator(randomNumberGenerator)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
