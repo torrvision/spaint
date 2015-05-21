@@ -57,22 +57,6 @@ private:
   /* The split candidates. */
   mutable std::vector<Split> m_splitCandidates;
 
-  //#################### PROTECTED VARIABLES ####################
-protected:
-  /** A random number generator. */
-  tvgutil::RandomNumberGenerator_Ptr m_randomNumberGenerator;
-
-  //#################### CONSTRUCTORS ####################
-protected:
-  /**
-   * \brief Constructs a decision function generator that can randomly generate decision functions.
-   *
-   * \param randomNumberGenerator A random number generator.
-   */
-  explicit DecisionFunctionGenerator(const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-  : m_randomNumberGenerator(randomNumberGenerator)
-  {}
-
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -94,10 +78,11 @@ private:
   /**
    * \brief Generates a candidate decision function to split the specified set of examples.
    *
-   * \param examples  The examples to split.
-   * \return          The candidate decision function.
+   * \param examples              The examples to split.
+   * \param randomNumberGenerator A random number generator.
+   * \return                      The candidate decision function.
    */
-  virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples) const = 0;
+  virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -108,10 +93,11 @@ public:
    * \param candidateCount        The number of candidates to evaluate.
    * \param gainThreshold         The minimum information gain that must be obtained from a split to make it worthwhile.
    * \param inverseClassWeights   The (optional) inverses of the L1-normalised class frequencies observed in the training data.
+   * \param randomNumberGenerator A random number generator.
    * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold,
-                            const boost::optional<std::map<Label,float> >& inverseClassWeights) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights,
+                            const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const
   {
     std::vector<Example_CPtr> examples = reservoir.get_examples();
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
@@ -124,7 +110,7 @@ public:
     if(m_splitCandidates.size() != candidateCount) m_splitCandidates.resize(candidateCount);
     for(int i = 0; i < candidateCount; ++i)
     {
-      m_splitCandidates[i].m_decisionFunction = generate_candidate_decision_function(examples);
+      m_splitCandidates[i].m_decisionFunction = generate_candidate_decision_function(examples, randomNumberGenerator);
     }
 
     // Pick the best split candidate and return it.

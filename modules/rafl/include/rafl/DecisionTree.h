@@ -185,7 +185,7 @@ public:
       #undef GET_SETTING
 
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType);
     }
 
     //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
@@ -203,7 +203,7 @@ public:
 
       std::string decisionFunctionGeneratorType;
       ar & decisionFunctionGeneratorType;
-      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType);
     }
 
     /**
@@ -579,7 +579,13 @@ private:
   bool split_node(int nodeIndex)
   {
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold, m_inverseClassWeights);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(
+      n.m_reservoir,
+      m_settings.candidateCount,
+      m_settings.gainThreshold,
+      m_inverseClassWeights,
+      m_settings.randomNumberGenerator
+    );
     if(!split) return false;
 
     // Set the decision function of the node to be split.

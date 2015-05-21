@@ -6,7 +6,6 @@
 #define H_RAFL_DECISIONFUNCTIONGENERATORFACTORY
 
 #include <tvgutil/MapUtil.h>
-#include <tvgutil/RandomNumberGenerator.h>
 
 #include "FeatureThresholdingDecisionFunctionGenerator.h"
 #include "PairwiseOpAndThresholdDecisionFunctionGenerator.h"
@@ -22,8 +21,7 @@ class DecisionFunctionGeneratorFactory
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_Ptr;
-  typedef tvgutil::RandomNumberGenerator_Ptr RandomNumberGenerator_Ptr;
-  typedef DecisionFunctionGenerator_Ptr (*Maker)(const RandomNumberGenerator_Ptr&);
+  typedef DecisionFunctionGenerator_Ptr (*Maker)();
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -59,14 +57,13 @@ public:
   /**
    * \brief Makes a decision function generator of the specified type.
    *
-   * \param type                  The type of decision function generator to make.
-   * \param randomNumberGenerator The random number generator needed by certain types of decision function generator.
-   * \return                      The decision function generator.
+   * \param type  The type of decision function generator to make.
+   * \return      The decision function generator.
    */
-  DecisionFunctionGenerator_Ptr make(const std::string& type, const RandomNumberGenerator_Ptr& randomNumberGenerator)
+  DecisionFunctionGenerator_Ptr make(const std::string& type)
   {
     const Maker& maker = tvgutil::MapUtil::lookup(m_makers, type);
-    return (*maker)(randomNumberGenerator);
+    return (*maker)();
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
@@ -74,23 +71,21 @@ private:
   /**
    * \brief Makes a feature thresholding decision function generator.
    *
-   * \param randomNumberGenerator The random number generator needed when generating decision functions.
-   * \return                      The decision function generator.
+   * \return  The decision function generator.
    */
-  static DecisionFunctionGenerator_Ptr feature_thresholding_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
+  static DecisionFunctionGenerator_Ptr feature_thresholding_maker()
   {
-    return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+    return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>);
   }
 
   /**
    * \brief Makes a pairwise operation and thresholding decision function generator.
    *
-   * \param randomNumberGenerator  The random number generator needed when generating decision functions.
-   * \return                       The decision function generator.
+   * \return  The decision function generator.
    */
-  static DecisionFunctionGenerator_Ptr pairwise_op_and_threshold_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
+  static DecisionFunctionGenerator_Ptr pairwise_op_and_threshold_maker()
   {
-    return DecisionFunctionGenerator_Ptr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(randomNumberGenerator));
+    return DecisionFunctionGenerator_Ptr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>);
   }
 };
 
