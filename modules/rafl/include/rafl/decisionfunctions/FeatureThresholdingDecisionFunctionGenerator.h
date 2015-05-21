@@ -15,7 +15,8 @@
 namespace rafl {
 
 /**
- * \brief An instance of an instantiation of this class template can be used to pick an appropriate decision function to split a set of examples.
+ * \brief An instance of an instantiation of this class template can be used to generate a feature thresholding decision function
+ *        with which split a set of examples.
  */
 template <typename Label>
 class FeatureThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>

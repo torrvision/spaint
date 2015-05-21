@@ -15,7 +15,8 @@
 namespace rafl {
 
 /**
- * \brief An instance of an instantiation of a class template deriving from this one can be used to pick an appropriate decision function to split a set of examples.
+ * \brief An instance of an instantiation of a class template deriving from this one can be used to generate a decision function
+ *        with which to split a set of examples.
  */
 template <typename Label>
 class DecisionFunctionGenerator

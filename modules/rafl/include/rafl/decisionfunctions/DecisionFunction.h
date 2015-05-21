@@ -7,6 +7,17 @@
 
 #include <iosfwd>
 
+/*
+Note: It is CRUCIALLY IMPORTANT that the archive headers are included before the points at which we invoke BOOST_CLASS_EXPORT
+for the subclasses of DecisionFunction, or the exports won't work. As a result, we put these includes in the DecisionFunction
+header to avoid inadvertent mistakes.
+*/
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+#include <boost/serialization/export.hpp>
 #include <boost/serialization/serialization.hpp>
 
 #include "../base/Descriptor.h"

@@ -9,6 +9,7 @@
 #include <tvgutil/RandomNumberGenerator.h>
 
 #include "FeatureThresholdingDecisionFunctionGenerator.h"
+#include "PairwiseOpAndThresholdDecisionFunctionGenerator.h"
 
 namespace rafl {
 
@@ -38,6 +39,7 @@ private:
   {
     // Register the makers for the various different types of decision function generator.
     m_makers.insert(std::make_pair(FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(), &feature_thresholding_maker));
+    m_makers.insert(std::make_pair(PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(), &pairwise_op_and_threshold_maker));
   }
 
 public:
@@ -78,6 +80,17 @@ private:
   static DecisionFunctionGenerator_Ptr feature_thresholding_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
   {
     return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+  }
+
+  /**
+   * \brief Makes a pairwise operation and thresholding decision function generator.
+   *
+   * \param randomNumberGenerator  The random number generator needed when generating decision functions.
+   * \return                       The decision function generator.
+   */
+  static DecisionFunctionGenerator_Ptr pairwise_op_and_threshold_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
+  {
+    return DecisionFunctionGenerator_Ptr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(randomNumberGenerator));
   }
 };
 
