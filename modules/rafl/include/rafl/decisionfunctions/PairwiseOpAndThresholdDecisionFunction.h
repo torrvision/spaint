@@ -84,7 +84,6 @@ public:
    * \param op  A pairwise operation.
    * \param a   The first operand.
    * \param b   The second operand.
-   *
    * \return    The result of performing a 'op' b.
    */
   static float apply_op(Op op, float a, float b);
