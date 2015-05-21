@@ -67,15 +67,6 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the type of the decision function generator.
-   *
-   * \return  The type of the decision function generator.
-   */
-  virtual std::string get_type() const = 0;
-
-  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
-private:
-  /**
    * \brief Generates a candidate decision function to split the specified set of examples.
    *
    * \param examples              The examples to split.
@@ -83,6 +74,13 @@ private:
    * \return                      The candidate decision function.
    */
   virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const = 0;
+
+  /**
+   * \brief Gets the type of the decision function generator.
+   *
+   * \return  The type of the decision function generator.
+   */
+  virtual std::string get_type() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

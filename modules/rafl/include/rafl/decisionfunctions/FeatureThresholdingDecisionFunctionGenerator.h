@@ -32,30 +32,12 @@ public:
    *
    * \param featureIndexRange An optional range of indices specifying the features that should be considered when generating decision functions.
    */
-  FeatureThresholdingDecisionFunctionGenerator(const boost::optional<std::pair<size_t,size_t> >& featureIndexRange = boost::none)
+  FeatureThresholdingDecisionFunctionGenerator(const boost::optional<std::pair<int,int> >& featureIndexRange = boost::none)
   : FeatureBasedDecisionFunctionGenerator(featureIndexRange)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets the type of the decision function generator.
-   *
-   * \return  The type of the decision function generator.
-   */
-  static std::string get_static_type()
-  {
-    return "FeatureThresholding";
-  }
-
-  /** Override */
-  virtual std::string get_type() const
-  {
-    return get_static_type();
-  }
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
   /** Override */
   virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const
   {
@@ -73,6 +55,22 @@ private:
     float threshold = (*examples[exampleIndex]->get_descriptor())[featureIndex];
 
     return DecisionFunction_Ptr(new FeatureThresholdingDecisionFunction(featureIndex, threshold));
+  }
+
+  /**
+   * \brief Gets the type of the decision function generator.
+   *
+   * \return  The type of the decision function generator.
+   */
+  static std::string get_static_type()
+  {
+    return "FeatureThresholding";
+  }
+
+  /** Override */
+  virtual std::string get_type() const
+  {
+    return get_static_type();
   }
 };
 

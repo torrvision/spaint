@@ -237,11 +237,13 @@ ENDIF()
 SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
+src/util/SpaintDecisionFunctionGenerator.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/LabelManager.h
+include/spaint/util/SpaintDecisionFunctionGenerator.h
 include/spaint/util/SpaintVoxel.h
 )
 
@@ -382,6 +384,7 @@ SOURCE_GROUP(visualisers\\shared FILES ${visualisers_shared_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/spaint)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 #INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)

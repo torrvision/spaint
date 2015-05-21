@@ -17,13 +17,23 @@ template <typename Label>
 class CompositeDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
 {
   //#################### TYPEDEFS ####################
-private:
+protected:
   typedef boost::shared_ptr<const DecisionFunctionGenerator> DecisionFunctionGenerator_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An array of subsidiary generators that can be used to generate candidate decision functions. */
   std::vector<DecisionFunctionGenerator_CPtr> m_generators;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const
+  {
+    // Pick a random subsidiary generator and return the candidate decision function it generates.
+    int generatorIndex = randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(m_generators.size()) - 1);
+    return m_generators[generatorIndex]->generate_candidate_decision_function(examples, randomNumberGenerator);
+  }
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -35,16 +45,6 @@ protected:
   void add_generator(const DecisionFunctionGenerator_CPtr& generator)
   {
     m_generators.push_back(generator);
-  }
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /** Override */
-  virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const
-  {
-    // Pick a random subsidiary generator and return the candidate decision function it generates.
-    int generatorIndex = randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(m_generators.size()) - 1);
-    return m_generators[generatorIndex]->generate_candidate_decision_function(examples, randomNumberGenerator);
   }
 };
 
