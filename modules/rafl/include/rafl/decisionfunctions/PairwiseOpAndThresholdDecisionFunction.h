@@ -68,18 +68,6 @@ private:
    */
   PairwiseOpAndThresholdDecisionFunction();
 
-  //#################### STATIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Calculates the result of performing a 'op' b, where 'op' is a pre-defiend operation between two numeric values.
-   *
-   * \float a  The first number.
-   * \param b  The second number.
-   * \param op A pairwise operation.
-   * \return   The result of performing a 'op' b.
-   */
-  static float pairwise_calculator(float a, float b, Op op);
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
@@ -87,6 +75,19 @@ public:
 
   /** Override */
   virtual void output(std::ostream& os) const;
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Calculates the result of performing a 'op' b.
+   *
+   * \param op  A pairwise operation.
+   * \param a   The first operand.
+   * \param b   The second operand.
+   *
+   * \return    The result of performing a 'op' b.
+   */
+  static float apply_op(Op op, float a, float b);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
