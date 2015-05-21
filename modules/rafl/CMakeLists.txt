@@ -38,6 +38,7 @@ include/rafl/decisionfunctions/CompositeDecisionFunctionGenerator.h
 include/rafl/decisionfunctions/DecisionFunction.h
 include/rafl/decisionfunctions/DecisionFunctionGenerator.h
 include/rafl/decisionfunctions/DecisionFunctionGeneratorFactory.h
+include/rafl/decisionfunctions/FeatureBasedDecisionFunctionGenerator.h
 include/rafl/decisionfunctions/FeatureThresholdingDecisionFunction.h
 include/rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h
 include/rafl/decisionfunctions/PairwiseOpAndThresholdDecisionFunction.h

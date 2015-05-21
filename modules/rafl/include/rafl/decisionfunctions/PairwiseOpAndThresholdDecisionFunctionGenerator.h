@@ -9,7 +9,7 @@
 
 #include <tvgutil/RandomNumberGenerator.h>
 
-#include "DecisionFunctionGenerator.h"
+#include "FeatureBasedDecisionFunctionGenerator.h"
 #include "PairwiseOpAndThresholdDecisionFunction.h"
 
 namespace rafl {
@@ -19,7 +19,7 @@ namespace rafl {
  *        with which to split a set of examples.
  */
 template <typename Label>
-class PairwiseOpAndThresholdDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
+class PairwiseOpAndThresholdDecisionFunctionGenerator : public FeatureBasedDecisionFunctionGenerator<Label>
 {
   //#################### TYPEDEFS AND USINGS ####################
 private:
@@ -29,8 +29,12 @@ private:
 public:
   /**
    * \brief Constructs a decision function generator that can randomly generate pairwise operation and thresholding decision functions.
+   *
+   * \param featureIndexRange An optional range of indices specifying the features that should be considered when generating decision functions.
    */
-  PairwiseOpAndThresholdDecisionFunctionGenerator() {}
+  PairwiseOpAndThresholdDecisionFunctionGenerator(const boost::optional<std::pair<size_t,size_t> >& featureIndexRange = boost::none)
+  : FeatureBasedDecisionFunctionGenerator(featureIndexRange)
+  {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -58,12 +62,13 @@ private:
     assert(!examples.empty());
 
     int descriptorSize = static_cast<int>(examples[0]->get_descriptor()->size());
+    std::pair<int,int> featureIndexRange = get_feature_index_range(descriptorSize);
 
     // Pick the first random feature in the descriptor.
-    int firstFeatureIndex = randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
+    int firstFeatureIndex = randomNumberGenerator->generate_int_from_uniform(featureIndexRange.first, featureIndexRange.second);
 
     // Pick the second random feature in the descriptor.
-    int secondFeatureIndex = randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
+    int secondFeatureIndex = randomNumberGenerator->generate_int_from_uniform(featureIndexRange.first, featureIndexRange.second);
 
     // Pick the pairwise operation.
     int opIndex = randomNumberGenerator->generate_int_from_uniform(0, PairwiseOpAndThresholdDecisionFunction::PO_COUNT - 1);

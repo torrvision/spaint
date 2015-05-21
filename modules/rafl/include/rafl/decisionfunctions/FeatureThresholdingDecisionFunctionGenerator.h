@@ -9,7 +9,7 @@
 
 #include <tvgutil/RandomNumberGenerator.h>
 
-#include "DecisionFunctionGenerator.h"
+#include "FeatureBasedDecisionFunctionGenerator.h"
 #include "FeatureThresholdingDecisionFunction.h"
 
 namespace rafl {
@@ -19,7 +19,7 @@ namespace rafl {
  *        with which split a set of examples.
  */
 template <typename Label>
-class FeatureThresholdingDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
+class FeatureThresholdingDecisionFunctionGenerator : public FeatureBasedDecisionFunctionGenerator<Label>
 {
   //#################### USINGS ####################
 protected:
@@ -29,8 +29,12 @@ protected:
 public:
   /**
    * \brief Constructs a decision function generator that can randomly generate feature thresholding decision functions.
+   *
+   * \param featureIndexRange An optional range of indices specifying the features that should be considered when generating decision functions.
    */
-  FeatureThresholdingDecisionFunctionGenerator() {}
+  FeatureThresholdingDecisionFunctionGenerator(const boost::optional<std::pair<size_t,size_t> >& featureIndexRange = boost::none)
+  : FeatureBasedDecisionFunctionGenerator(featureIndexRange)
+  {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -60,7 +64,8 @@ private:
     int descriptorSize = static_cast<int>(examples[0]->get_descriptor()->size());
 
     // Pick a random feature in the descriptor to threshold.
-    int featureIndex = randomNumberGenerator->generate_int_from_uniform(0, descriptorSize - 1);
+    std::pair<int,int> featureIndexRange = get_feature_index_range(descriptorSize);
+    int featureIndex = randomNumberGenerator->generate_int_from_uniform(featureIndexRange.first, featureIndexRange.second);
 
     // Select an appropriate threshold by picking a random example and using
     // the value of the chosen feature from that example as the threshold.
