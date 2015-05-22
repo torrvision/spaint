@@ -25,6 +25,15 @@ __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, con
   }
 }
 
+__global__ void ck_convert_patches_to_lab(const int voxelLocationCount, const size_t featureCount, float *features)
+{
+  int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
+  if(voxelLocationIndex < voxelLocationCount)
+  {
+    convert_patch_to_lab(voxelLocationIndex, featureCount, features);
+  }
+}
+
 __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, const int voxelLocationCount, Vector3f *xAxes, Vector3f *yAxes)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
@@ -76,9 +85,20 @@ void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryB
 #endif
 }
 
-void VOPFeatureCalculator_CUDA::convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const
+void VOPFeatureCalculator_CUDA::convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  // TODO
+  int threadsPerBlock = 256;
+  int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
+
+  ck_convert_patches_to_lab<<<numBlocks,threadsPerBlock>>>(
+    voxelLocationCount,
+    get_feature_count(),
+    featuresMB.GetData(MEMORYDEVICE_CUDA)
+  );
+
+#ifdef DEBUGGING
+  featuresMB.UpdateHostFromDevice();
+#endif
 }
 
 void VOPFeatureCalculator_CUDA::generate_coordinate_systems(int voxelLocationCount) const

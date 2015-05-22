@@ -34,9 +34,18 @@ void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBl
   }
 }
 
-void VOPFeatureCalculator_CPU::convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const
+void VOPFeatureCalculator_CPU::convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  // TODO
+  const size_t featureCount = get_feature_count();
+  float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
+  {
+    convert_patch_to_lab(voxelLocationIndex, featureCount, features);
+  }
 }
 
 void VOPFeatureCalculator_CPU::generate_coordinate_systems(int voxelLocationCount) const

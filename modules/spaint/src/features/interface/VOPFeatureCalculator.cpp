@@ -28,13 +28,14 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   calculate_surface_normals(voxelLocationsMB, voxelData, indexData);
 
   // Construct a coordinate system in the tangent plane to the surface at each voxel location.
-  generate_coordinate_systems(static_cast<int>(voxelLocationsMB.dataSize));
+  const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
+  generate_coordinate_systems(voxelLocationCount);
 
   // Read an RGB patch around each voxel location.
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
   // Convert the RGB patches to the CIELab colour space.
-  convert_patches_to_lab(featuresMB);
+  convert_patches_to_lab(voxelLocationCount, featuresMB);
 
   // Compute a histogram of intensity gradients for each patch.
   // TODO
@@ -46,7 +47,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
   // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
-  convert_patches_to_lab(featuresMB);
+  convert_patches_to_lab(voxelLocationCount, featuresMB);
 
   // For each feature vector, fill in the surface normal and the signed distance to the dominant horizontal surface present in the scene as extra features.
   // TODO

@@ -56,7 +56,7 @@ private:
   /**
    * \brief TODO
    */
-  virtual void convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const = 0;
+  virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
    * \brief Generates coordinate systems in the tangent planes to the surfaces at the voxel locations.

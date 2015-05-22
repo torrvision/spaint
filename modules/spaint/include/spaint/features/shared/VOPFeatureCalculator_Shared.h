@@ -12,6 +12,53 @@
 namespace spaint {
 
 /**
+ * \brief A helper function for the RGB to CIELab conversion.
+ */
+_CPU_AND_GPU_CODE_
+inline float rgb_to_lab_f(float t)
+{
+  return t > 0.008856f ? pow(t, 1.0f / 3.0f) : 7.787f * t + 16.0f / 116.0f;
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, float *features)
+{
+  // Convert each RGB colour in the VOP patch of a feature vector to the CIELab colour space.
+  for(size_t i = voxelLocationIndex * featureCount, end = i + featureCount - 4; i != end; i += 3)
+  {
+    // Equivalent Matlab code can be found at: https://www.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/code/Util/RGB2Lab.m
+    // See also: http://docs.opencv.org/modules/imgproc/doc/miscellaneous_transformations.html
+    float r = features[i] / 255.0f;
+    float g = features[i+1] / 255.0f;
+    float b = features[i+2] / 255.0f;
+
+    float x = 0.412453f * r + 0.357580f * g + 0.180423f * b;
+    float y = 0.212671f * r + 0.715160f * g + 0.072169f * b;
+    float z = 0.019334f * r + 0.119193f * g + 0.950227f * b;
+
+    x /= 0.950456f;
+    z /= 1.088754f;
+
+    float fx = rgb_to_lab_f(x);
+    float fy = rgb_to_lab_f(y);
+    float fz = rgb_to_lab_f(z);
+
+    float L = y > 0.008856f ? (116.0f * fy - 16.0f) : (903.3f * y);
+    float A = 500.0f * (fx - fy);
+    float B = 200.0f * (fy - fz);
+
+    //float AplusB = A + B;
+
+    features[i] = L;
+    features[i+1] = A/* / AplusB*/;
+    features[i+2] = B/* / AplusB*/;
+  }
+}
+
+/**
  * \brief Generates a unit vector that is perpendicular to the specified plane normal.
  *
  * The vector generated will be the normalised cross product of the specified plane normal and another vector
@@ -62,14 +109,12 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
                                const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, size_t patchSize, float patchSpacing,
                                size_t featureCount, float *features)
 {
-  // Check that the voxel exists. If it doesn't, early out.
+  // Get the location of the voxel at the centre of the patch.
   Vector3f centre = voxelLocations[voxelLocationIndex].toFloat();
-  bool isFound;
-  int voxelAddress = findVoxel(indexData, centre.toInt(), isFound);
-  if(!isFound) return;
 
   // Generate an RGB patch around the voxel on a patchSize * patchSize grid aligned with the voxel's x and y axes.
   int halfPatchSize = static_cast<int>(patchSize - 1) / 2;
+  bool isFound;
   Vector3f xAxis = xAxes[voxelLocationIndex] * patchSpacing;
   Vector3f yAxis = yAxes[voxelLocationIndex] * patchSpacing;
 
