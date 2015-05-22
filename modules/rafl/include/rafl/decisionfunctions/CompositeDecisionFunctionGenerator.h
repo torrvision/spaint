@@ -30,7 +30,7 @@ public:
   /** Override */
   virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const
   {
-    // Pick a random subsidiary generator and return the candidate decision function it generates.
+    // Pick a random subsidiary generator and use it to generate a candidate decision function.
     int generatorIndex = randomNumberGenerator->generate_int_from_uniform(0, static_cast<int>(m_generators.size()) - 1);
     return m_generators[generatorIndex]->generate_candidate_decision_function(examples, randomNumberGenerator);
   }
