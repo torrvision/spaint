@@ -69,24 +69,26 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
   if(!isFound) return;
 
   // Generate an RGB patch around the voxel on a patchSize * patchSize grid aligned with the voxel's x and y axes.
-  int halfPatchSize = static_cast<int>(patchSize) / 2;
+  int halfPatchSize = static_cast<int>(patchSize - 1) / 2;
   Vector3f xAxis = xAxes[voxelLocationIndex] * patchSpacing;
   Vector3f yAxis = yAxes[voxelLocationIndex] * patchSpacing;
 
+  // For each pixel in the patch:
   for(int y = -halfPatchSize; y <= halfPatchSize; ++y)
   {
     Vector3f yLoc = centre + static_cast<float>(y) * yAxis;
     for(int x = -halfPatchSize; x <= halfPatchSize; ++x)
     {
+      // Compute the location of the pixel in world space.
       Vector3i loc = (yLoc + static_cast<float>(x) * xAxis).toIntRound();
-      voxelAddress = findVoxel(indexData, loc, isFound);
-      unsigned char r = 0, g = 0, b = 0;
-      if(isFound)
-      {
-        const SpaintVoxel& voxel = voxelData[voxelAddress];
-        // TODO
-      }
-      // TODO: Write the values into the features array.
+
+      // If there is a voxel at that location, get its colour; otherwise, default to black.
+      Vector3u clr(0, 0, 0);
+      SpaintVoxel voxel = readVoxel(voxelData, indexData, loc, isFound);
+      if(isFound) clr = voxel.clr;
+
+      // Write the colour values into the relevant places in the features array.
+      // TODO
     }
   }
 }
