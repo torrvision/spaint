@@ -7,6 +7,8 @@
 
 #include <boost/optional.hpp>
 
+#include <rafl/RandomForest.h>
+
 #include "SpaintInteractor.h"
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
@@ -33,6 +35,7 @@ private:
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::LabelType> > RandomForest_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
@@ -52,10 +55,10 @@ public:
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
 
-    /** In prediction mode, the model is used to predict labels for previously-unseen voxels. */
+    /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
     MODE_PREDICTION,
 
-    /** In training mode, a model is trained using voxels sampled from the current raycast. */
+    /** In training mode, a random forest is trained using voxels sampled from the current raycast. */
     MODE_TRAINING
   };
 
@@ -79,6 +82,9 @@ private:
 
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_featuresMB;
+
+  /** The random forest. */
+  RandomForest_Ptr m_forest;
 
   /** Whether or not fusion should be run as part of the pipeline. */
   bool m_fusionEnabled;

@@ -90,6 +90,7 @@ SOURCE_GROUP(sources FILES ${toplevel_sources})
 # Specify additional include directories #
 ##########################################
 
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
@@ -104,7 +105,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} rigging spaint tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} rafl rigging spaint tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)

@@ -3,6 +3,7 @@
  */
 
 #include "core/SpaintPipeline.h"
+using namespace rafl;
 
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
@@ -15,6 +16,7 @@ using namespace InfiniTAM::Engine;
 
 #include "features/FeatureCalculatorFactory.h"
 #include "sampling/VoxelSamplerFactory.h"
+#include "util/SpaintDecisionFunctionGenerator.h"
 
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
@@ -223,6 +225,15 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
   const size_t maxVoxelLocationCount = maxLabelCount * maxVoxelsPerLabel;
   m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(maxVoxelLocationCount, patchSize, patchSpacing, settings->deviceType);
+
+  // Set up the random forest.
+  // FIXME: These settings shouldn't be hard-coded here ultimately.
+  const size_t treeCount = 1;
+  DecisionTree<SpaintVoxel::LabelType>::Settings dtSettings;
+  dtSettings.candidateCount = 256;
+  dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(patchSize));
+  // TODO
+  m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
 
   m_featuresMB.reset(new ORUtils::MemoryBlock<float>(maxVoxelLocationCount * m_featureCalculator->get_feature_count(), true, true));
   m_fusionEnabled = true;
