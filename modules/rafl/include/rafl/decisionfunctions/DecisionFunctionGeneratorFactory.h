@@ -36,8 +36,8 @@ private:
   DecisionFunctionGeneratorFactory()
   {
     // Register the makers for the various different types of decision function generator.
-    m_makers.insert(std::make_pair(FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(), &feature_thresholding_maker));
-    m_makers.insert(std::make_pair(PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(), &pairwise_op_and_threshold_maker));
+    register_maker(FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(), &feature_thresholding_maker);
+    register_maker(PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(), &pairwise_op_and_threshold_maker);
   }
 
 public:
@@ -64,6 +64,17 @@ public:
   {
     const Maker& maker = tvgutil::MapUtil::lookup(m_makers, type);
     return (*maker)();
+  }
+
+  /**
+   * \brief Registers a maker function for a particular type of decision function generator.
+   *
+   * \param generatorType The type of decision function generator.
+   * \param maker         The maker function.
+   */
+  void register_maker(const std::string& generatorType, Maker maker)
+  {
+    m_makers.insert(std::make_pair(generatorType, maker));
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
