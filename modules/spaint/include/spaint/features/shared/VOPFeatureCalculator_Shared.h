@@ -60,7 +60,7 @@ inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *s
 _CPU_AND_GPU_CODE_
 inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLocations, const Vector3f *xAxes, const Vector3f *yAxes,
                                const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, size_t patchSize, float patchSpacing,
-                               float *features)
+                               size_t featureCount, float *features)
 {
   // Check that the voxel exists. If it doesn't, early out.
   Vector3f centre = voxelLocations[voxelLocationIndex].toFloat();
@@ -74,6 +74,7 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
   Vector3f yAxis = yAxes[voxelLocationIndex] * patchSpacing;
 
   // For each pixel in the patch:
+  size_t offset = voxelLocationIndex * featureCount;
   for(int y = -halfPatchSize; y <= halfPatchSize; ++y)
   {
     Vector3f yLoc = centre + static_cast<float>(y) * yAxis;
@@ -82,13 +83,15 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
       // Compute the location of the pixel in world space.
       Vector3i loc = (yLoc + static_cast<float>(x) * xAxis).toIntRound();
 
-      // If there is a voxel at that location, get its colour; otherwise, default to black.
-      Vector3u clr(0, 0, 0);
+      // If there is a voxel at that location, get its colour; otherwise, default to magenta.
+      Vector3u clr(255, 0, 255);
       SpaintVoxel voxel = readVoxel(voxelData, indexData, loc, isFound);
       if(isFound) clr = voxel.clr;
 
       // Write the colour values into the relevant places in the features array.
-      // TODO
+      features[offset++] = clr.r;
+      features[offset++] = clr.g;
+      features[offset++] = clr.b;
     }
   }
 }

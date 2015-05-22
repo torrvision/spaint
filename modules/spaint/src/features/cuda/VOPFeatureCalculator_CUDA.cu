@@ -34,6 +34,19 @@ __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, c
   }
 }
 
+__global__ void ck_generate_rgb_patches(const Vector3s *voxelLocations, const int voxelLocationCount,
+                                        const Vector3f *xAxes, const Vector3f *yAxes,
+                                        const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                        size_t patchSize, float patchSpacing, size_t featureCount,
+                                        float *features)
+{
+  int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
+  if(voxelLocationIndex < voxelLocationCount)
+  {
+    generate_rgb_patch(voxelLocationIndex, voxelLocations, xAxes, yAxes, voxelData, indexData, patchSize, patchSpacing, featureCount, features);
+  }
+}
+
 //#################### CONSTRUCTORS ####################
 
 VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
@@ -90,7 +103,27 @@ void VOPFeatureCalculator_CUDA::generate_rgb_patches(const ORUtils::MemoryBlock<
                                                      const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                                      ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  // TODO
+  const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
+
+  int threadsPerBlock = 256;
+  int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
+
+  ck_generate_rgb_patches<<<numBlocks,threadsPerBlock>>>(
+    voxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
+    voxelLocationCount,
+    m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
+    m_yAxesMB.GetData(MEMORYDEVICE_CUDA),
+    voxelData,
+    indexData,
+    m_patchSize,
+    m_patchSpacing,
+    get_feature_count(),
+    featuresMB.GetData(MEMORYDEVICE_CUDA)
+  );
+
+#if DEBUGGING
+  featuresMB.UpdateHostFromDevice();
+#endif
 }
 
 }

@@ -58,6 +58,7 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
                                                     const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                                     ORUtils::MemoryBlock<float>& featuresMB) const
 {
+  const size_t featureCount = get_feature_count();
   float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
   const Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
   const Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
@@ -65,11 +66,11 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
   const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {
-    generate_rgb_patch(voxelLocationIndex, voxelLocations, xAxes, yAxes, voxelData, indexData, m_patchSize, m_patchSpacing, features);
+    generate_rgb_patch(voxelLocationIndex, voxelLocations, xAxes, yAxes, voxelData, indexData, m_patchSize, m_patchSpacing, featureCount, features);
   }
 }
 

@@ -69,7 +69,6 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  settings->deviceType = ITMLibSettings::DEVICE_CPU;
   SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_INFINITAM;
   std::string trackerParams;
 
