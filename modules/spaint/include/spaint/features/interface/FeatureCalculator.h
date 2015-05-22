@@ -30,13 +30,11 @@ public:
   /**
    * \brief Calculates VOP feature descriptors for the specified voxels (grouped by label).
    *
-   * \param voxelLocationsMB        A memory block containing the locations of the voxels for which to calculate feature descriptors (grouped by label).
-   * \param voxelCountsForLabelsMB  A memory block containing the numbers of voxels for each label.
+   * \param voxelLocationsMB        A memory block containing the locations of the voxels for which to calculate feature descriptors.
    * \param scene                   The scene.
    * \param featuresMB              A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                  const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
                                   const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                   ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 

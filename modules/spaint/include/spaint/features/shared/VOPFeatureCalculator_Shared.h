@@ -46,34 +46,22 @@ inline Vector3f generate_arbitrary_coplanar_unit_vector(const Vector3f& n)
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *surfaceNormals, const unsigned int *voxelCountsForLabels,
-                                       const size_t maxVoxelsPerLabel, Vector3f *xAxes, Vector3f *yAxes)
+inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *surfaceNormals, Vector3f *xAxes, Vector3f *yAxes)
 {
-  size_t label = voxelLocationIndex / maxVoxelsPerLabel;
-  size_t offset = voxelLocationIndex % maxVoxelsPerLabel;
-  if(offset < voxelCountsForLabels[label])
-  {
-    Vector3f n = surfaceNormals[voxelLocationIndex];
-    Vector3f xAxis = generate_arbitrary_coplanar_unit_vector(n);
-    xAxes[voxelLocationIndex] = xAxis;
-    yAxes[voxelLocationIndex] = cross(xAxis, n);
-  }
+  Vector3f n = surfaceNormals[voxelLocationIndex];
+  Vector3f xAxis = generate_arbitrary_coplanar_unit_vector(n);
+  xAxes[voxelLocationIndex] = xAxis;
+  yAxes[voxelLocationIndex] = cross(xAxis, n);
 }
 
 /**
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const unsigned int *voxelCountsForLabels,
-                                 const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, const size_t maxVoxelsPerLabel,
+inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                  Vector3f *surfaceNormals)
 {
-  size_t label = voxelLocationIndex / maxVoxelsPerLabel;
-  size_t offset = voxelLocationIndex % maxVoxelsPerLabel;
-  if(offset < voxelCountsForLabels[label])
-  {
-    surfaceNormals[voxelLocationIndex] = computeSingleNormalFromSDF(voxelData, indexData, voxelLocations[voxelLocationIndex].toFloat());
-  }
+  surfaceNormals[voxelLocationIndex] = computeSingleNormalFromSDF(voxelData, indexData, voxelLocations[voxelLocationIndex].toFloat());
 }
 
 }

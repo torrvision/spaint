@@ -18,28 +18,25 @@ public:
   /**
    * \brief Constructs a CUDA-based VOP feature calculator.
    *
-   * \param maxLabelCount     The maximum number of labels that can be in use.
-   * \param maxVoxelsPerLabel The maximum number of voxels that will be sampled for each label.
-   * \param patchSize         The side length of a VOP patch (must be odd).
-   * \param patchSpacing      The spacing in the scene between individual pixels in a patch.
+   * \param maxVoxelLocationCount The maximum number of voxel locations for which we will be calculating features at any one time.
+   * \param patchSize             The side length of a VOP patch (must be odd).
+   * \param patchSpacing          The spacing in the scene between individual pixels in a patch.
    */
-  VOPFeatureCalculator_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, size_t patchSize, float patchSpacing);
+  VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
-                                         const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const;
+  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const;
 
   /** Override */
   virtual void convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */
-  virtual void generate_coordinate_systems(const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;
+  virtual void generate_coordinate_systems(size_t voxelLocationCount) const;
 
   /** Override */
   virtual void generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                    const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB,
                                     const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                     ORUtils::MemoryBlock<float>& featuresMB) const;
 };

@@ -221,9 +221,10 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t patchSize = 13;
   const float patchSpacing = 10.0f;
-  m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(maxLabelCount, maxVoxelsPerLabel, patchSize, patchSpacing, settings->deviceType);
+  const size_t maxVoxelLocationCount = maxLabelCount * maxVoxelsPerLabel;
+  m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(maxVoxelLocationCount, patchSize, patchSpacing, settings->deviceType);
 
-  m_featuresMB.reset(new ORUtils::MemoryBlock<float>(maxLabelCount * maxVoxelsPerLabel * m_featureCalculator->get_feature_count(), true, true));
+  m_featuresMB.reset(new ORUtils::MemoryBlock<float>(maxVoxelLocationCount * m_featureCalculator->get_feature_count(), true, true));
   m_fusionEnabled = true;
   m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_mode = MODE_NORMAL;
@@ -278,7 +279,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   m_interactor->mark_voxels(m_sampledVoxelLocationsMB, 0);
 
   // Compute feature vectors for the sampled voxels.
-  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB, m_model->get_scene().get(), *m_featuresMB);
+  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
