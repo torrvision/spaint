@@ -22,4 +22,16 @@ SpaintDecisionFunctionGenerator::SpaintDecisionFunctionGenerator(size_t patchSiz
   add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(std::make_pair(vopFeatureCount + 3, vopFeatureCount + 3))));
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+std::string SpaintDecisionFunctionGenerator::get_static_type()
+{
+  return "Spaint";
+}
+
+std::string SpaintDecisionFunctionGenerator::get_type() const
+{
+  return get_static_type();
+}
+
 }

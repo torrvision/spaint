@@ -24,6 +24,18 @@ public:
    * \param patchSize The side length of a VOP patch.
    */
   explicit SpaintDecisionFunctionGenerator(size_t patchSize);
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the type of the decision function generator.
+   *
+   * \return  The type of the decision function generator.
+   */
+  static std::string get_static_type();
+
+  /** Override */
+  virtual std::string get_type() const;
 };
 
 }
