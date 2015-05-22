@@ -58,6 +58,43 @@ inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *s
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
+inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLocations, const Vector3f *xAxes, const Vector3f *yAxes,
+                               const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, size_t patchSize, float patchSpacing,
+                               float *features)
+{
+  // Check that the voxel exists. If it doesn't, early out.
+  Vector3f centre = voxelLocations[voxelLocationIndex].toFloat();
+  bool isFound;
+  int voxelAddress = findVoxel(indexData, centre.toInt(), isFound);
+  if(!isFound) return;
+
+  // Generate an RGB patch around the voxel on a patchSize * patchSize grid aligned with the voxel's x and y axes.
+  int halfPatchSize = static_cast<int>(patchSize) / 2;
+  Vector3f xAxis = xAxes[voxelLocationIndex] * patchSpacing;
+  Vector3f yAxis = yAxes[voxelLocationIndex] * patchSpacing;
+
+  for(int y = -halfPatchSize; y <= halfPatchSize; ++y)
+  {
+    Vector3f yLoc = centre + static_cast<float>(y) * yAxis;
+    for(int x = -halfPatchSize; x <= halfPatchSize; ++x)
+    {
+      Vector3i loc = (yLoc + static_cast<float>(x) * xAxis).toIntRound();
+      voxelAddress = findVoxel(indexData, loc, isFound);
+      unsigned char r = 0, g = 0, b = 0;
+      if(isFound)
+      {
+        const SpaintVoxel& voxel = voxelData[voxelAddress];
+        // TODO
+      }
+      // TODO: Write the values into the features array.
+    }
+  }
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
 inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                  Vector3f *surfaceNormals)
 {

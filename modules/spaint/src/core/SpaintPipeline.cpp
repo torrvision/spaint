@@ -220,7 +220,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t patchSize = 13;
-  const float patchSpacing = 10.0f;
+  const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
   const size_t maxVoxelLocationCount = maxLabelCount * maxVoxelsPerLabel;
   m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(maxVoxelLocationCount, patchSize, patchSpacing, settings->deviceType);
 

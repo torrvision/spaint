@@ -16,9 +16,6 @@ class VOPFeatureCalculator : public FeatureCalculator
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** The maximum number of voxel locations for which we will be calculating features at any one time. */
-  size_t m_maxVoxelLocationCount;
-
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
 
@@ -41,7 +38,7 @@ protected:
    *
    * \param maxVoxelLocationCount The maximum number of voxel locations for which we will be calculating features at any one time.
    * \param patchSize             The side length of a VOP patch (must be odd).
-   * \param patchSpacing          The spacing in the scene between individual pixels in a patch.
+   * \param patchSpacing          The spacing in the scene (in voxels) between individual pixels in a patch.
    */
   VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing);
 
@@ -66,7 +63,7 @@ private:
    *
    * \param voxelLocationCount  The number of voxel locations for which we are calculating features.
    */
-  virtual void generate_coordinate_systems(size_t voxelLocationCount) const = 0;
+  virtual void generate_coordinate_systems(int voxelLocationCount) const = 0;
 
   /**
    * \brief TODO

@@ -9,8 +9,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
-: m_maxVoxelLocationCount(maxVoxelLocationCount),
-  m_patchSize(patchSize),
+: m_patchSize(patchSize),
   m_patchSpacing(patchSpacing),
   m_surfaceNormalsMB(maxVoxelLocationCount, true, true),
   m_xAxesMB(maxVoxelLocationCount, true, true),
@@ -29,7 +28,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   calculate_surface_normals(voxelLocationsMB, voxelData, indexData);
 
   // Construct a coordinate system in the tangent plane to the surface at each voxel location.
-  generate_coordinate_systems(voxelLocationsMB.dataSize);
+  generate_coordinate_systems(static_cast<int>(voxelLocationsMB.dataSize));
 
   // Read an RGB patch around each voxel location.
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);

@@ -14,7 +14,7 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, const size_t voxelLocationCount,
+__global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, const int voxelLocationCount,
                                              const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                              Vector3f *surfaceNormals)
 {
@@ -25,7 +25,7 @@ __global__ void ck_calculate_surface_normals(const Vector3s *voxelLocations, con
   }
 }
 
-__global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, const size_t voxelLocationCount, Vector3f *xAxes, Vector3f *yAxes)
+__global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, const int voxelLocationCount, Vector3f *xAxes, Vector3f *yAxes)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelLocationIndex < voxelLocationCount)
@@ -68,10 +68,10 @@ void VOPFeatureCalculator_CUDA::convert_patches_to_lab(ORUtils::MemoryBlock<floa
   // TODO
 }
 
-void VOPFeatureCalculator_CUDA::generate_coordinate_systems(size_t voxelLocationCount) const
+void VOPFeatureCalculator_CUDA::generate_coordinate_systems(int voxelLocationCount) const
 {
   int threadsPerBlock = 256;
-  int numBlocks = (static_cast<int>(voxelLocationCount) + threadsPerBlock - 1) / threadsPerBlock;
+  int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_generate_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
     m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA),

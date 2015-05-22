@@ -20,7 +20,7 @@ public:
    *
    * \param maxVoxelLocationCount The maximum number of voxel locations for which we will be calculating features at any one time.
    * \param patchSize             The side length of a VOP patch (must be odd).
-   * \param patchSpacing          The spacing in the scene between individual pixels in a patch.
+   * \param patchSpacing          The spacing in the scene (in voxels) between individual pixels in a patch.
    */
   VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing);
 
@@ -33,7 +33,7 @@ private:
   virtual void convert_patches_to_lab(ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */
-  virtual void generate_coordinate_systems(size_t voxelLocationCount) const;
+  virtual void generate_coordinate_systems(int voxelLocationCount) const;
 
   /** Override */
   virtual void generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,

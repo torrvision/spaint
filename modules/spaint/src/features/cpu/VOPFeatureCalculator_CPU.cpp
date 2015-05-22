@@ -39,7 +39,7 @@ void VOPFeatureCalculator_CPU::convert_patches_to_lab(ORUtils::MemoryBlock<float
   // TODO
 }
 
-void VOPFeatureCalculator_CPU::generate_coordinate_systems(size_t voxelLocationCount) const
+void VOPFeatureCalculator_CPU::generate_coordinate_systems(int voxelLocationCount) const
 {
   const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
   Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
@@ -58,7 +58,19 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
                                                     const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                                     ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  // TODO
+  float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
+  const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
+  {
+    generate_rgb_patch(voxelLocationIndex, voxelLocations, xAxes, yAxes, voxelData, indexData, m_patchSize, m_patchSpacing, features);
+  }
 }
 
 }
