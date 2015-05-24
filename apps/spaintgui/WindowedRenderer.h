@@ -22,9 +22,6 @@ private:
   /** The height of the window. */
   int m_height;
 
-  /** The image in which to store the visualisation each frame. */
-  ITMUChar4Image_Ptr m_image;
-
   /** The render state for the free camera view. */
   mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderState;
 

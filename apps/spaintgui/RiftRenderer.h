@@ -36,9 +36,6 @@ private:
   /** The camera from which to render the scene. */
   rigging::CompositeCamera_Ptr m_camera;
 
-  /** The images in which to store the eye textures each frame. */
-  ITMUChar4Image_Ptr m_eyeImages[ovrEye_Count];
-
   /** The eye texture IDs. */
   GLuint m_eyeTextureIDs[ovrEye_Count];
 
