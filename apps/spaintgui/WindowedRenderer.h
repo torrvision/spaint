@@ -76,18 +76,6 @@ private:
    * \param pose  The camera pose.
    */
   void render_reconstructed_scene(const ITMPose& pose) const;
-
-  /**
-   * \brief Renders a synthetic scene to augment what actually exists in the real world.
-   *
-   * \param pose        The camera pose.
-   * \param interactor  The interactor that is being used to interact with the scene.
-   */
-  void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
-
-  //#################### FRIENDS ####################
-
-  friend class SelectorRenderer;
 };
 
 #endif

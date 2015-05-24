@@ -157,6 +157,16 @@ protected:
   // FIXME: Make this private again in due course.
 protected:
   /**
+   * \brief Renders a synthetic scene to augment what actually exists in the real world.
+   *
+   * \param pose        The camera pose.
+   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param width       The width of the viewport.
+   * \param height      The height of the viewport.
+   */
+  void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, int width, int height) const;
+
+  /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
    *
    * \param intrinsics  The intrinsic camera parameters.
@@ -164,6 +174,10 @@ protected:
    * \param height      The height of the viewport.
    */
   static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
+
+  //#################### FRIENDS ####################
+
+  friend class SelectorRenderer;
 };
 
 #endif
