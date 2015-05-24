@@ -183,26 +183,14 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   // Raycast the scene.
   m_raycaster->generate_free_raycast(m_image, m_renderState, pose, m_phongEnabled ? SpaintRaycaster::RT_SEMANTICPHONG : SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
 
-  // Draw a quad textured with the raycasted scene.
-  begin_2d();
-    glEnable(GL_TEXTURE_2D);
-    {
-      glBindTexture(GL_TEXTURE_2D, m_textureID);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glColor3f(1.0f, 1.0f, 1.0f);
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f(0, 1); glVertex2f(0, 0);
-        glTexCoord2f(1, 1); glVertex2f(1, 0);
-        glTexCoord2f(1, 0); glVertex2f(1, 1);
-        glTexCoord2f(0, 0); glVertex2f(0, 1);
-      }
-      glEnd();
-    }
-    glDisable(GL_TEXTURE_2D);
-  end_2d();
+  // Copy the raycasted scene to a texture.
+  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  // Render a quad textured with the raycasted scene.
+  render_texture_to_buffer(m_textureID);
 }
 
 void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const

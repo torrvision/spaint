@@ -66,9 +66,34 @@ void Renderer::end_2d()
   glPopMatrix();
 }
 
-void Renderer::render_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID)
+void Renderer::render_scene_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID)
 {
   // TODO
+}
+
+void Renderer::render_texture_to_buffer(GLuint textureID, GLuint frameBufferID)
+{
+  glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
+
+  // Draw a quad textured with the specified texture.
+  begin_2d();
+    glEnable(GL_TEXTURE_2D);
+    {
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glColor3f(1.0f, 1.0f, 1.0f);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f(0, 1); glVertex2f(0, 0);
+        glTexCoord2f(1, 1); glVertex2f(1, 0);
+        glTexCoord2f(1, 0); glVertex2f(1, 1);
+        glTexCoord2f(0, 0); glVertex2f(0, 1);
+      }
+      glEnd();
+    }
+    glDisable(GL_TEXTURE_2D);
+  end_2d();
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

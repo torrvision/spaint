@@ -153,7 +153,15 @@ protected:
    * \param interactor    The interactor that is being used to interact with the scene.
    * \param frameBufferID The ID of the frame buffer into which to render (0 renders to the screen).
    */
-  void render_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID = 0);
+  void render_scene_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID = 0);
+
+  /**
+   * \brief Renders a quad textured with the specified texture into a frame buffer.
+   *
+   * \param textureID     The ID of the texture to apply to the quad.
+   * \param frameBufferID The ID of the frame buffer into which to render (0 renders to the screen).
+   */
+  static void render_texture_to_buffer(GLuint textureID, GLuint frameBufferID = 0);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
   // FIXME: Make this private again in due course.
