@@ -144,6 +144,18 @@ protected:
    * \param frameBufferID The ID of the frame buffer into which to render (0 renders to the screen).
    */
   void render_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID = 0);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+  // FIXME: Make this private again in due course.
+protected:
+  /**
+   * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
+   *
+   * \param intrinsics  The intrinsic camera parameters.
+   * \param width       The width of the viewport.
+   * \param height      The height of the viewport.
+   */
+  static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
 };
 
 #endif

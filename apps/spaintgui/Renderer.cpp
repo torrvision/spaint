@@ -45,3 +45,21 @@ void Renderer::render_to_buffer(const ITMPose& pose, const spaint::SpaintInterac
 {
   // TODO
 }
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void Renderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
+{
+  double nearVal = 0.1;
+  double farVal = 1000.0;
+
+  // To rederive these equations, use similar triangles. Note that fx = f / sx and fy = f / sy,
+  // where sx and sy are the dimensions of a pixel on the image plane.
+  double leftVal = -intrinsics.projectionParamsSimple.px * nearVal / intrinsics.projectionParamsSimple.fx;
+  double rightVal = (width - intrinsics.projectionParamsSimple.px) * nearVal / intrinsics.projectionParamsSimple.fx;
+  double bottomVal = -intrinsics.projectionParamsSimple.py * nearVal / intrinsics.projectionParamsSimple.fy;
+  double topVal = (height - intrinsics.projectionParamsSimple.py) * nearVal / intrinsics.projectionParamsSimple.fy;
+
+  glLoadIdentity();
+  glFrustum(leftVal, rightVal, bottomVal, topVal, nearVal, farVal);
+}

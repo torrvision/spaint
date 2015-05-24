@@ -95,15 +95,6 @@ private:
    */
   void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
 
-  /**
-   * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
-   *
-   * \param intrinsics  The intrinsic camera parameters.
-   * \param width       The width of the viewport.
-   * \param height      The height of the viewport.
-   */
-  static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
-
   //#################### FRIENDS ####################
 
   friend class SelectorRenderer;
