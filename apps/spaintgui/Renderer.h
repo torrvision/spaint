@@ -49,7 +49,7 @@ protected:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
-  /** A temporary image in which to store the visualisations each frame. */
+  /** An image in which to temporarily store visualisations of the scene. */
   ITMUChar4Image_Ptr m_image;
 
   /** The spaint model. */

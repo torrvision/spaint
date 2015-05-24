@@ -99,9 +99,6 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   // Set up the eye textures.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   glGenTextures(ovrEye_Count, m_eyeTextureIDs);
-
-  // TEMPORARY
-  m_image.reset(new ITMUChar4Image(depthImageSize, true, true));
 }
 
 //#################### DESTRUCTOR ####################

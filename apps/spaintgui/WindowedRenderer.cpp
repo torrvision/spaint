@@ -126,8 +126,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
-  // Set up the image and texture needed to render the reconstructed scene.
-  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
+  // Set up a texture in which to store the reconstructed scene.
   glGenTextures(1, &m_textureID);
 }
 

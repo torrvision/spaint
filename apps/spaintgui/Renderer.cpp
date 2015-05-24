@@ -8,7 +8,10 @@
 
 Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
 : m_cameraMode(CM_FOLLOW), m_model(model), m_phongEnabled(false), m_raycaster(raycaster)
-{}
+{
+  // Create an image into which to temporarily store visualisations of the scene.
+  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
+}
 
 //#################### DESTRUCTOR ####################
 
