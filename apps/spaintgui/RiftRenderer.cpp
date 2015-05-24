@@ -96,16 +96,18 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, 0.0f))));
   m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
 
-  // Set up the eye textures.
+  // Set up the eye frame buffers.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-  glGenTextures(ovrEye_Count, m_eyeTextureIDs);
+  for(int i = 0; i < ovrEye_Count; ++i)
+  {
+    m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
+  }
 }
 
 //#################### DESTRUCTOR ####################
 
 RiftRenderer::~RiftRenderer()
 {
-  glDeleteTextures(ovrEye_Count, m_eyeTextureIDs);
   ovrHmd_Destroy(m_hmd);
   ovr_Shutdown();
 }
@@ -150,7 +152,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     m_raycaster->generate_free_raycast(m_image, m_renderStates[i], poses[i]);
 
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, m_eyeTextureIDs[i]);
+    glBindTexture(GL_TEXTURE_2D, m_eyeFrameBuffers[i]->get_colour_buffer_id());
 
     // Invert the image (otherwise it would appear upside-down on the Rift).
     // FIXME: This can be made more efficient.
@@ -184,7 +186,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
     eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(m_image->noDims.x, m_image->noDims.y);
     eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(m_image->noDims.x, m_image->noDims.y));
-    eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
+    eyeTextures[i].OGL.TexId = m_eyeFrameBuffers[i]->get_colour_buffer_id();
   }
 
 #if 0

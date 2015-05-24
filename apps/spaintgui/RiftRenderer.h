@@ -11,7 +11,7 @@
 
 #include <rigging/CompositeCamera.h>
 
-#include <spaint/ogl/WrappedGL.h>
+#include <spaint/ogl/FrameBuffer.h>
 
 #include "Renderer.h"
 
@@ -36,8 +36,8 @@ private:
   /** The camera from which to render the scene. */
   rigging::CompositeCamera_Ptr m_camera;
 
-  /** The eye texture IDs. */
-  GLuint m_eyeTextureIDs[ovrEye_Count];
+  /** The eye frame buffers. */
+  spaint::FrameBuffer_CPtr m_eyeFrameBuffers[ovrEye_Count];
 
   /** The Rift handle. */
   ovrHmd m_hmd;
