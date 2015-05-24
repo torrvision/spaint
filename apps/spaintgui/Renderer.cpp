@@ -41,6 +41,31 @@ void Renderer::set_phong_enabled(bool phongEnabled)
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
+void Renderer::begin_2d()
+{
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+
+  glDepthMask(false);
+}
+
+void Renderer::end_2d()
+{
+  glDepthMask(true);
+
+  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
+  glPopMatrix();
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+}
+
 void Renderer::render_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID)
 {
   // TODO

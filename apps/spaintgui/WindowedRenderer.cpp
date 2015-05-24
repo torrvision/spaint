@@ -178,31 +178,6 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void WindowedRenderer::begin_2d()
-{
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-
-  glDepthMask(false);
-}
-
-void WindowedRenderer::end_2d()
-{
-  glDepthMask(true);
-
-  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
-  glPopMatrix();
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-}
-
 void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
 {
   // Raycast the scene.
@@ -240,7 +215,8 @@ void WindowedRenderer::render_synthetic_scene(const ITMPose& pose, const SpaintI
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     {
-      glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data()); // note: conveniently, data() returns the elements in column-major order (the order required by OpenGL)
+      // Note: Conveniently, data() returns the elements in column-major order (the order required by OpenGL).
+      glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data());
 
       // Render the axes.
       glBegin(GL_LINES);
