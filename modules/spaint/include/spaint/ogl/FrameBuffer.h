@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_FRAMEBUFFER
 #define H_SPAINT_FRAMEBUFFER
 
+#include <boost/shared_ptr.hpp>
+
 #include "WrappedGL.h"
 
 namespace spaint {
@@ -58,10 +60,16 @@ public:
   GLuint get_colour_buffer_id() const;
 
   /**
-   * \brief Makes the frame buffer the current rendering target.
+   * \brief Gets the ID of the frame buffer itself.
+   *
+   * \return  The ID of the frame buffer itself.
    */
-  void make_active();
+  GLuint get_id() const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const FrameBuffer> FrameBuffer_CPtr;
 
 }
 

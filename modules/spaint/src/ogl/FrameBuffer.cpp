@@ -56,9 +56,9 @@ GLuint FrameBuffer::get_colour_buffer_id() const
   return m_colourBufferID;
 }
 
-void FrameBuffer::make_active()
+GLuint FrameBuffer::get_id() const
 {
-  glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+  return m_id;
 }
 
 }
