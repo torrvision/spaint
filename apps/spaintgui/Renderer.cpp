@@ -35,3 +35,10 @@ void Renderer::set_phong_enabled(bool phongEnabled)
 {
   m_phongEnabled = phongEnabled;
 }
+
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+void Renderer::render_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID)
+{
+  // TODO
+}

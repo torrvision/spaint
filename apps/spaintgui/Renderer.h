@@ -12,6 +12,7 @@
 #include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
+#include <spaint/ogl/WrappedGL.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -129,6 +130,17 @@ public:
    * \param phongEnabled  true, if Phong lighting should be enabled, or false otherwise.
    */
   void set_phong_enabled(bool phongEnabled);
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Renders the scene into a frame buffer from the specified pose.
+   *
+   * \param pose          The camera pose.
+   * \param interactor    The interactor that is being used to interact with the scene.
+   * \param frameBufferID The ID of the frame buffer into which to render (0 renders to the screen).
+   */
+  void render_to_buffer(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, GLuint frameBufferID = 0);
 };
 
 #endif

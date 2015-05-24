@@ -7,8 +7,6 @@
 
 #include <string>
 
-#include <spaint/ogl/WrappedGL.h>
-
 #include "Renderer.h"
 
 /**
