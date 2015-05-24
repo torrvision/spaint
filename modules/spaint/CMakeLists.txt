@@ -83,10 +83,12 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 
 ##
 SET(ogl_sources
+src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
 )
