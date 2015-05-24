@@ -68,16 +68,14 @@ public:
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
-  : m_cameraMode(CM_FOLLOW), m_model(model), m_phongEnabled(false), m_raycaster(raycaster)
-  {}
+  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the renderer.
    */
-  virtual ~Renderer() {}
+  virtual ~Renderer();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -109,40 +107,28 @@ public:
    *
    * \return  The current camera mode.
    */
-  CameraMode get_camera_mode() const
-  {
-    return m_cameraMode;
-  }
+  CameraMode get_camera_mode() const;
 
   /**
    * \brief Gets whether or not Phong lighting is currently enabled.
    *
    * \return  true, if Phong lighting is currently enabled, or false otherwise.
    */
-  bool get_phong_enabled() const
-  {
-    return m_phongEnabled;
-  }
+  bool get_phong_enabled() const;
 
   /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
    */
-  void set_camera_mode(CameraMode cameraMode)
-  {
-    m_cameraMode = cameraMode;
-  }
+  void set_camera_mode(CameraMode cameraMode);
 
   /**
    * \brief Enables or disables Phong lighting.
    *
    * \param phongEnabled  true, if Phong lighting should be enabled, or false otherwise.
    */
-  void set_phong_enabled(bool phongEnabled)
-  {
-    m_phongEnabled = phongEnabled;
-  }
+  void set_phong_enabled(bool phongEnabled);
 };
 
 #endif

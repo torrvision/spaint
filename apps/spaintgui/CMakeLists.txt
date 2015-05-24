@@ -42,6 +42,7 @@ SET(toplevel_sources
 main.cpp
 Application.cpp
 CPUInstantiations.cpp
+Renderer.cpp
 WindowedRenderer.cpp
 )
 
