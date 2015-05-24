@@ -97,7 +97,7 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   SDL_GL_SwapWindow(m_window.get());
 }
 
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
 {
