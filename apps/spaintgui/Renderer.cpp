@@ -133,6 +133,8 @@ void Renderer::begin_2d()
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
+  glTranslated(0.0, 1.0, 0.0);
+  glScaled(1.0, -1.0, 1.0);
 
   glDepthMask(false);
 }
@@ -150,23 +152,20 @@ void Renderer::end_2d()
 
 void Renderer::render_textured_quad(GLuint textureID)
 {
-  // Draw a quad textured with the specified texture.
-  begin_2d();
-    glEnable(GL_TEXTURE_2D);
+  glEnable(GL_TEXTURE_2D);
+  {
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
     {
-      glBindTexture(GL_TEXTURE_2D, textureID);
-      glColor3f(1.0f, 1.0f, 1.0f);
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f(0, 1); glVertex2f(0, 0);
-        glTexCoord2f(1, 1); glVertex2f(1, 0);
-        glTexCoord2f(1, 0); glVertex2f(1, 1);
-        glTexCoord2f(0, 0); glVertex2f(0, 1);
-      }
-      glEnd();
+      glTexCoord2f(0, 0); glVertex2f(0, 0);
+      glTexCoord2f(1, 0); glVertex2f(1, 0);
+      glTexCoord2f(1, 1); glVertex2f(1, 1);
+      glTexCoord2f(0, 1); glVertex2f(0, 1);
     }
-    glDisable(GL_TEXTURE_2D);
-  end_2d();
+    glEnd();
+  }
+  glDisable(GL_TEXTURE_2D);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

@@ -111,5 +111,7 @@ void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
   // Render a quad textured with the raycasted scene.
-  render_textured_quad(m_textureID);
+  begin_2d();
+    render_textured_quad(m_textureID);
+  end_2d();
 }
