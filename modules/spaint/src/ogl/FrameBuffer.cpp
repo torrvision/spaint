@@ -15,14 +15,14 @@ FrameBuffer::FrameBuffer(int width, int height)
   // Set up the colour buffer.
   glGenTextures(1, &m_colourBufferID);
   glBindTexture(GL_TEXTURE_2D, m_colourBufferID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
   // Set up the depth buffer.
   glGenRenderbuffers(1, &m_depthBufferID);
   glBindRenderbuffer(GL_RENDERBUFFER, m_depthBufferID);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
 
   // Set up the frame buffer.
   glGenFramebuffers(1, &m_id);
