@@ -29,9 +29,6 @@ private:
   /** The render state for the free camera view. */
   mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderState;
 
-  /** The texture ID for the visualisation we're drawing. */
-  GLuint m_textureID;
-
   /** The width of the window. */
   int m_width;
 
@@ -71,15 +68,6 @@ public:
 
   /** Override */
   virtual void render(const spaint::SpaintInteractor_CPtr& interactor) const;
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Renders the reconstructed scene.
-   *
-   * \param pose  The camera pose.
-   */
-  void render_reconstructed_scene(const ITMPose& pose) const;
 };
 
 #endif

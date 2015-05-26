@@ -93,6 +93,9 @@ Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRa
 {
   // Create an image into which to temporarily store visualisations of the scene.
   m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
+
+  // Set up a texture in which to store the reconstructed scene.
+  glGenTextures(1, &m_textureID);
 }
 
 //#################### DESTRUCTOR ####################
@@ -169,6 +172,23 @@ void Renderer::render_textured_quad(GLuint textureID)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+{
+  // Raycast the scene.
+  m_raycaster->generate_free_raycast(m_image, renderState, pose, m_phongEnabled ? SpaintRaycaster::RT_SEMANTICPHONG : SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
+
+  // Copy the raycasted scene to a texture.
+  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  // Render a quad textured with the raycasted scene.
+  begin_2d();
+    render_textured_quad(m_textureID);
+  end_2d();
+}
 
 void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor, int width, int height) const
 {

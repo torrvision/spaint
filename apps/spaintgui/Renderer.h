@@ -61,6 +61,9 @@ protected:
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   spaint::SpaintRaycaster_CPtr m_raycaster;
 
+  /** The texture ID for the visualisation we're drawing. */
+  GLuint m_textureID;
+
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
 
@@ -156,6 +159,14 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
   // FIXME: Make this private again in due course.
 protected:
+  /**
+   * \brief Renders the reconstructed scene.
+   *
+   * \param pose        The camera pose.
+   * \param renderState The render state corresponding to the camera pose.
+   */
+  void render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
+
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *

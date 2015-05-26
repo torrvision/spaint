@@ -50,9 +50,6 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
-  // Set up a texture in which to store the reconstructed scene.
-  glGenTextures(1, &m_textureID);
-
   m_frameBuffer.reset(new FrameBuffer(width, height));
 }
 
@@ -99,7 +96,7 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   }
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
-  render_reconstructed_scene(pose);
+  render_reconstructed_scene(pose, m_renderState);
   render_synthetic_scene(pose, interactor, m_width, m_height);
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -110,23 +107,4 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   end_2d();
 
   SDL_GL_SwapWindow(m_window.get());
-}
-
-//#################### PRIVATE MEMBER FUNCTIONS ####################
-
-void WindowedRenderer::render_reconstructed_scene(const ITMPose& pose) const
-{
-  // Raycast the scene.
-  m_raycaster->generate_free_raycast(m_image, m_renderState, pose, m_phongEnabled ? SpaintRaycaster::RT_SEMANTICPHONG : SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
-
-  // Copy the raycasted scene to a texture.
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-  // Render a quad textured with the raycasted scene.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
 }
