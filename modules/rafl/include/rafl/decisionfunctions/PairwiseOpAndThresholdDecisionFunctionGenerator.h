@@ -33,7 +33,7 @@ public:
    * \param featureIndexRange An optional range of indices specifying the features that should be considered when generating decision functions.
    */
   PairwiseOpAndThresholdDecisionFunctionGenerator(const boost::optional<std::pair<int,int> >& featureIndexRange = boost::none)
-  : FeatureBasedDecisionFunctionGenerator<Label>::FeatureBasedDecisionFunctionGenerator(featureIndexRange)
+  : FeatureBasedDecisionFunctionGenerator<Label>(featureIndexRange)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -44,7 +44,7 @@ public:
     assert(!examples.empty());
 
     int descriptorSize = static_cast<int>(examples[0]->get_descriptor()->size());
-    std::pair<int,int> featureIndexRange = FeatureBasedDecisionFunctionGenerator<Label>::get_feature_index_range(descriptorSize);
+    std::pair<int,int> featureIndexRange = this->get_feature_index_range(descriptorSize);
 
     // Pick the first random feature in the descriptor.
     int firstFeatureIndex = randomNumberGenerator->generate_int_from_uniform(featureIndexRange.first, featureIndexRange.second);
