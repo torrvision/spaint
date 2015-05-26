@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
       // If the settings file can't be found or is invalid, use default settings.
       unsigned int seed = 12345;
       tvgutil::RandomNumberGenerator_Ptr randomNumberGenerator(new tvgutil::RandomNumberGenerator(seed));
-      DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+      DT::DecisionFunctionGenerator_CPtr decisionFunctionGenerator(new FeatureThresholdingDecisionFunctionGenerator<Label>());
 
       settings.reset(new DT::Settings);
       settings->candidateCount = 256;

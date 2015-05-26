@@ -18,7 +18,11 @@ class CompositeDecisionFunctionGenerator : public DecisionFunctionGenerator<Labe
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<const DecisionFunctionGenerator> DecisionFunctionGenerator_CPtr;
+  typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
+
+  //#################### USINGS ####################
+protected:
+  using typename DecisionFunctionGenerator<Label>::Example_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
