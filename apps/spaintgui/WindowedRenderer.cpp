@@ -14,13 +14,15 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
-                                   const std::string& title, int width, int height)
-: Renderer(model, raycaster), m_height(height), m_width(width)
+WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title)
+: Renderer(model, raycaster)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  int width = depthImageSize.width, height = depthImageSize.height;
 
   m_window.reset(
     SDL_CreateWindow(
@@ -49,13 +51,6 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-}
-
-//#################### DESTRUCTOR ####################
-
-WindowedRenderer::~WindowedRenderer()
-{
-  glDeleteTextures(1, &m_textureID);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -92,7 +87,7 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose, m_renderState);
-  render_synthetic_scene(pose, interactor, m_width, m_height);
+  render_synthetic_scene(pose, interactor);
 
   SDL_GL_SwapWindow(m_window.get());
 }

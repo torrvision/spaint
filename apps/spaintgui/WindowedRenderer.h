@@ -21,14 +21,8 @@ private:
   /** The camera from which to render the scene. */
   rigging::MoveableCamera_Ptr m_camera;
 
-  /** The height of the window. */
-  int m_height;
-
   /** The render state for the free camera view. */
   mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderState;
-
-  /** The width of the window. */
-  int m_width;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -38,17 +32,8 @@ public:
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    * \param title     The title of the window.
-   * \param width     The width of the window.
-   * \param height    The height of the window.
    */
-  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, int width, int height);
-
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys the renderer.
-   */
-  ~WindowedRenderer();
+  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title);
 
   //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
 private:

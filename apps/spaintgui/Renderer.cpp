@@ -100,7 +100,10 @@ Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRa
 
 //#################### DESTRUCTOR ####################
 
-Renderer::~Renderer() {}
+Renderer::~Renderer()
+{
+  glDeleteTextures(1, &m_textureID);
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -190,12 +193,13 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor, int width, int height) const
+void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    set_projection_matrix(m_model->get_intrinsics(), width, height);
+    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+    set_projection_matrix(m_model->get_intrinsics(), depthImageSize.width, depthImageSize.height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
