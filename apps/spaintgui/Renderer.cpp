@@ -90,20 +90,11 @@ public:
 
 Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
 : m_cameraMode(CM_FOLLOW), m_model(model), m_phongEnabled(false), m_raycaster(raycaster)
-{
-  // Create an image into which to temporarily store visualisations of the scene.
-  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
-
-  // Set up a texture in which to store the reconstructed scene.
-  glGenTextures(1, &m_textureID);
-}
+{}
 
 //#################### DESTRUCTOR ####################
 
-Renderer::~Renderer()
-{
-  glDeleteTextures(1, &m_textureID);
-}
+Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -145,6 +136,11 @@ void Renderer::begin_2d()
   glDepthMask(false);
 }
 
+void Renderer::destroy_common()
+{
+  glDeleteTextures(1, &m_textureID);
+}
+
 void Renderer::end_2d()
 {
   glDepthMask(true);
@@ -154,6 +150,15 @@ void Renderer::end_2d()
 
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
+}
+
+void Renderer::initialise_common()
+{
+  // Create an image into which to temporarily store visualisations of the scene.
+  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
+
+  // Set up a texture in which to store the reconstructed scene.
+  glGenTextures(1, &m_textureID);
 }
 
 void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const

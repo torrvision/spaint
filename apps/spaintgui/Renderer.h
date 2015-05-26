@@ -147,9 +147,19 @@ protected:
   static void begin_2d();
 
   /**
+   * \brief TODO
+   */
+  void destroy_common();
+
+  /**
    * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
    */
   static void end_2d();
+
+  /**
+   * \brief TODO
+   */
+  void initialise_common();
 
   /**
    * \brief Renders the scene.

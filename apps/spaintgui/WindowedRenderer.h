@@ -35,6 +35,13 @@ public:
    */
   WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title);
 
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys the renderer.
+   */
+  ~WindowedRenderer();
+
   //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
 private:
   // Deliberately private and unimplemented.

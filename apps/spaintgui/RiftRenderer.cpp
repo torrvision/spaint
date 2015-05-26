@@ -107,12 +107,15 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   {
     m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
   }
+
+  initialise_common();
 }
 
 //#################### DESTRUCTOR ####################
 
 RiftRenderer::~RiftRenderer()
 {
+  destroy_common();
   ovrHmd_Destroy(m_hmd);
   ovr_Shutdown();
 }

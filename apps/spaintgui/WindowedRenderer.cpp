@@ -53,6 +53,15 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+
+  initialise_common();
+}
+
+//#################### DESTRUCTOR ####################
+
+WindowedRenderer::~WindowedRenderer()
+{
+  destroy_common();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
