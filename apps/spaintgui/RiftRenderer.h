@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include <OVR.h>
+#include <OVR_CAPI.h>
 
 #include <rigging/CompositeCamera.h>
 

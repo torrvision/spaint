@@ -6,12 +6,14 @@
 
 #include <stdexcept>
 
-#include <OVR.h>
-#include <../Src/OVR_CAPI_GL.h>
-#include <../Src/Kernel/OVR_Math.h>
+#include <OVR_CAPI_GL.h>
 
 #ifdef __APPLE__
 #pragma GCC diagnostic ignored "-Wextern-c-compat"
+#endif
+
+#ifdef __linux
+  #include <GL/glx.h>
 #endif
 
 #include <SDL_syswm.h>
@@ -63,14 +65,17 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_C
   const int backBufferMultisample = 1;
   ovrGLConfig cfg;
   cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
-  cfg.OGL.Header.RTSize = OVR::Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
+  cfg.OGL.Header.BackBufferSize.w = m_hmd->Resolution.w;
+  cfg.OGL.Header.BackBufferSize.h = m_hmd->Resolution.h;
   cfg.OGL.Header.Multisample = backBufferMultisample;
 #ifdef _WIN32
   cfg.OGL.Window = wmInfo.info.win.window;
   cfg.OGL.DC = NULL;
+#else
+  cfg.OGL.Disp = glXGetCurrentDisplay();
 #endif
 
-  const unsigned int distortionCaps = ovrDistortionCap_Chromatic | ovrDistortionCap_Vignette | ovrDistortionCap_TimeWarp | ovrDistortionCap_Overdrive;
+  const unsigned int distortionCaps = ovrDistortionCap_Vignette | ovrDistortionCap_TimeWarp | ovrDistortionCap_Overdrive;
   ovrEyeRenderDesc eyeRenderDesc[2];
   if(!ovrHmd_ConfigureRendering(m_hmd, &cfg.Config, distortionCaps, m_hmd->DefaultEyeFov, eyeRenderDesc))
   {
@@ -168,9 +173,13 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(width, height);
-    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(width, height));
-    eyeTextures[i].OGL.TexId = m_eyeFrameBuffers[i]->get_colour_buffer_id();
+    eyeTextures[i].OGL.Header.TextureSize.w = m_eyeImages[i]->noDims.x;
+    eyeTextures[i].OGL.Header.TextureSize.h = m_eyeImages[i]->noDims.y;
+    eyeTextures[i].OGL.Header.RenderViewport.Pos.x = i == 0 ? 0 : m_eyeImages[i]->noDims.x;
+    eyeTextures[i].OGL.Header.RenderViewport.Pos.y = 0;
+    eyeTextures[i].OGL.Header.RenderViewport.Size.w = m_eyeImages[i]->noDims.x;
+    eyeTextures[i].OGL.Header.RenderViewport.Size.h = m_eyeImages[i]->noDims.y;
+    eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
   }
 
 #if 0
