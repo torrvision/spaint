@@ -175,7 +175,12 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
 
     delete[] invertedImageData;
 
+    glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
+    render_synthetic_scene(poses[i], interactor, m_image->noDims.x, m_image->noDims.y);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
   // Set up the eye poses and pass the eye textures to the Rift SDK.
