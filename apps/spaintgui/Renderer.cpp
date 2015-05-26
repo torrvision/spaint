@@ -167,24 +167,6 @@ void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_
   render_synthetic_scene(pose, interactor);
 }
 
-void Renderer::render_textured_quad(GLuint textureID)
-{
-  glEnable(GL_TEXTURE_2D);
-  {
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    {
-      glTexCoord2f(0, 0); glVertex2f(0, 0);
-      glTexCoord2f(1, 0); glVertex2f(1, 0);
-      glTexCoord2f(1, 1); glVertex2f(1, 1);
-      glTexCoord2f(0, 1); glVertex2f(0, 1);
-    }
-    glEnd();
-  }
-  glDisable(GL_TEXTURE_2D);
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
@@ -237,6 +219,24 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteracto
   }
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
+}
+
+void Renderer::render_textured_quad(GLuint textureID)
+{
+  glEnable(GL_TEXTURE_2D);
+  {
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2f(0, 0); glVertex2f(0, 0);
+      glTexCoord2f(1, 0); glVertex2f(1, 0);
+      glTexCoord2f(1, 1); glVertex2f(1, 1);
+      glTexCoord2f(0, 1); glVertex2f(0, 1);
+    }
+    glEnd();
+  }
+  glDisable(GL_TEXTURE_2D);
 }
 
 void Renderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)

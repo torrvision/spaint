@@ -160,16 +160,8 @@ protected:
    */
   void render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
 
-  /**
-   * \brief Renders a quad textured with the specified texture into a frame buffer.
-   *
-   * \param textureID The ID of the texture to apply to the quad.
-   */
-  static void render_textured_quad(GLuint textureID);
-
   //#################### PRIVATE MEMBER FUNCTIONS ####################
-  // FIXME: Make this private again in due course.
-protected:
+private:
   /**
    * \brief Renders the reconstructed scene.
    *
@@ -185,6 +177,13 @@ protected:
    * \param interactor  The interactor that is being used to interact with the scene.
    */
   void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
+
+  /**
+   * \brief Renders a quad textured with the specified texture into a frame buffer.
+   *
+   * \param textureID The ID of the texture to apply to the quad.
+   */
+  static void render_textured_quad(GLuint textureID);
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
