@@ -39,6 +39,9 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
     SDL_GL_DeleteContext
   );
 
+  GLenum err = glewInit();
+  if(err != GLEW_OK) throw std::runtime_error("Error: Could not initialise GLEW");
+
   glViewport(0, 0, width, height);
 
   glDepthFunc(GL_LEQUAL);
