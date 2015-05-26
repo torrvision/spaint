@@ -57,7 +57,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   // Get device-dependent information about the window.
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
-  SDL_GetWindowWMInfo(m_window.get(), &wmInfo);
+  SDL_GetWindowWMInfo(get_window(), &wmInfo);
 
   // Configure rendering via the Rift SDK.
   const int backBufferMultisample = 1;

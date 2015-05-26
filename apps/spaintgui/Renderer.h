@@ -55,6 +55,9 @@ private:
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
 
+  /** The window into which to render. */
+  SDL_Window_Ptr m_window;
+
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** The current camera mode. */
@@ -65,9 +68,6 @@ protected:
 
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
-
-  /** The window into which to render. */
-  SDL_Window_Ptr m_window;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -155,6 +155,11 @@ protected:
    * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
    */
   static void end_2d();
+
+  /**
+   * \brief TODO
+   */
+  SDL_Window *get_window() const;
 
   /**
    * \brief TODO

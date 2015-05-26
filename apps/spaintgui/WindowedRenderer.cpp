@@ -86,5 +86,5 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   // Render the scene from that camera pose.
   render_scene(pose, interactor, m_renderState);
 
-  SDL_GL_SwapWindow(m_window.get());
+  SDL_GL_SwapWindow(get_window());
 }

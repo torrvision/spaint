@@ -152,6 +152,11 @@ void Renderer::end_2d()
   glPopMatrix();
 }
 
+SDL_Window *Renderer::get_window() const
+{
+  return m_window.get();
+}
+
 void Renderer::initialise_common()
 {
   // Create an image into which to temporarily store visualisations of the scene.
