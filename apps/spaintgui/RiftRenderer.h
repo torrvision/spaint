@@ -45,6 +45,8 @@ private:
   /** The render states for the two eye views. */
   mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderStates[ovrEye_Count];
 
+  GLuint m_textureID;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**

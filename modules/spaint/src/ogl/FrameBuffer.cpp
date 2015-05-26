@@ -6,6 +6,9 @@
 
 #include <cstddef>
 
+// TEMPORARY
+#include <iostream>
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -22,7 +25,7 @@ FrameBuffer::FrameBuffer(int width, int height)
   // Set up the depth buffer.
   glGenRenderbuffers(1, &m_depthBufferID);
   glBindRenderbuffer(GL_RENDERBUFFER, m_depthBufferID);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
 
   // Set up the frame buffer.
   glGenFramebuffers(1, &m_id);
@@ -34,6 +37,12 @@ FrameBuffer::FrameBuffer(int width, int height)
   // Attach the depth buffer to the frame buffer.
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBufferID);
 
+  // Check that the frame buffer has been successfully set up.
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    throw std::runtime_error("Failed to set up the frame buffer");
+  }
+
   // Switch back to rendering to the normal display.
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -42,9 +51,18 @@ FrameBuffer::FrameBuffer(int width, int height)
 
 FrameBuffer::~FrameBuffer()
 {
+#if 0
+  glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+#if 0
   glDeleteRenderbuffers(1, &m_depthBufferID);
-  glDeleteTextures(1, &m_colourBufferID);
+  glDeleteTextures(1, &m_colourBufferID);  
   glDeleteFramebuffers(1, &m_id);
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -105,6 +105,8 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   {
     m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
   }
+
+  glGenTextures(1, &m_textureID);
 }
 
 //#################### DESTRUCTOR ####################
@@ -154,8 +156,14 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   {
     m_raycaster->generate_free_raycast(m_image, m_renderStates[i], poses[i]);
 
+    /*int texID;
+    glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texID);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    std::cout << texID << '\n';*/
+
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, m_eyeFrameBuffers[i]->get_colour_buffer_id());
+    glBindTexture(GL_TEXTURE_2D, m_textureID);
 
     // Invert the image (otherwise it would appear upside-down on the Rift).
     // FIXME: This can be made more efficient.
@@ -169,9 +177,9 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
       invertedImageData[n] = imageData[sy * m_image->noDims.x + x];
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, invertedImageData);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
     delete[] invertedImageData;
 
@@ -179,6 +187,15 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     glDisable(GL_TEXTURE_2D);
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
+    glUseProgram(0);
+    glViewport(0, 0, m_image->noDims.x, m_image->noDims.y);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    begin_2d();
+      //glScaled(1.0, -1.0, 1.0);
+      //glTranslated(0.0, -1.0, 0.0);
+      render_textured_quad(m_textureID);
+    end_2d();
     render_synthetic_scene(poses[i], interactor, m_image->noDims.x, m_image->noDims.y);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
