@@ -59,8 +59,10 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
     SDL_GL_DeleteContext
   );
 
+#ifdef WITH_GLEW
   GLenum err = glewInit();
   if(err != GLEW_OK) throw std::runtime_error("Error: Could not initialise GLEW");
+#endif
 
   // Get device-dependent information about the window.
   SDL_SysWMinfo wmInfo;

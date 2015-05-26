@@ -10,9 +10,13 @@
 #endif
 
 #ifndef __APPLE__
-  #include <GL/glew.h>
+  #include <GL/gl.h>
   #include <GL/glu.h>
 #else
   #include <OpenGL/gl.h>
   #include <OpenGL/glu.h>
+#endif
+
+#ifdef WITH_GLEW
+  #include <GL/glew.h>
 #endif

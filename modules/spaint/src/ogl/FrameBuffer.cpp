@@ -5,9 +5,7 @@
 #include "ogl/FrameBuffer.h"
 
 #include <cstddef>
-
-// TEMPORARY
-#include <iostream>
+#include <stdexcept>
 
 namespace spaint {
 
