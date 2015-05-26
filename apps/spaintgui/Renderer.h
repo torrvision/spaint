@@ -41,19 +41,10 @@ protected:
 public:
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
 
-  //#################### PROTECTED VARIABLES ####################
-protected:
-  /** The current camera mode. */
-  CameraMode m_cameraMode;
-
-  /** The OpenGL context for the window. */
-  SDL_GLContext_Ptr m_context;
-
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** An image in which to temporarily store visualisations of the scene. */
   ITMUChar4Image_Ptr m_image;
-
-  /** The spaint model. */
-  spaint::SpaintModel_CPtr m_model;
 
   /** Whether or not Phong lighting is currently enabled. */
   bool m_phongEnabled;
@@ -63,6 +54,17 @@ protected:
 
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
+
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** The current camera mode. */
+  CameraMode m_cameraMode;
+
+  /** The OpenGL context for the window. */
+  SDL_GLContext_Ptr m_context;
+
+  /** The spaint model. */
+  spaint::SpaintModel_CPtr m_model;
 
   /** The window into which to render. */
   SDL_Window_Ptr m_window;

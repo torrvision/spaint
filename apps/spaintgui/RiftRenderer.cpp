@@ -150,11 +150,13 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   };
 
   // Render the scene into OpenGL textures from the left and right eye poses.
+  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  int width = depthImageSize.width, height = depthImageSize.height;
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
     glUseProgram(0);
-    glViewport(0, 0, m_image->noDims.x, m_image->noDims.y);
+    glViewport(0, 0, width, height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -174,8 +176,8 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(m_image->noDims.x, m_image->noDims.y);
-    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(m_image->noDims.x, m_image->noDims.y));
+    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(width, height);
+    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(width, height));
     eyeTextures[i].OGL.TexId = m_eyeFrameBuffers[i]->get_colour_buffer_id();
   }
 
