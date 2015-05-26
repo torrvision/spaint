@@ -49,8 +49,6 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
 
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-
-  m_frameBuffer.reset(new FrameBuffer(width, height));
 }
 
 //#################### DESTRUCTOR ####################
@@ -58,7 +56,6 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
 WindowedRenderer::~WindowedRenderer()
 {
   glDeleteTextures(1, &m_textureID);
-  m_frameBuffer.reset();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -75,8 +72,6 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
 
 void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
-  glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer->get_id());
-
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -98,13 +93,6 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose, m_renderState);
   render_synthetic_scene(pose, interactor, m_width, m_height);
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  begin_2d();
-    glScaled(1.0, -1.0, 1.0);
-    glTranslated(0.0, -1.0, 0.0);
-    render_textured_quad(m_frameBuffer->get_colour_buffer_id());
-  end_2d();
 
   SDL_GL_SwapWindow(m_window.get());
 }

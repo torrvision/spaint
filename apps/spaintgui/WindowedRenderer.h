@@ -21,8 +21,6 @@ private:
   /** The camera from which to render the scene. */
   rigging::MoveableCamera_Ptr m_camera;
 
-  spaint::FrameBuffer_CPtr m_frameBuffer;
-
   /** The height of the window. */
   int m_height;
 
