@@ -22,7 +22,7 @@ fi
 cd glew-1.12.0/build/vc12
 
 echo "[spaint] ...Running build..."
-cmd //c "msbuild /p:Configuration=Release glew.sln >> $LOG 2>&1"
+cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 glew.sln >> $LOG 2>&1"
 
 cd ..
 

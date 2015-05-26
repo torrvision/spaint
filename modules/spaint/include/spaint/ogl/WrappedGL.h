@@ -7,6 +7,7 @@
     #define NOMINMAX  // prevent the min and max macros in windows.h being defined (they interfere with the Standard C++ equivalents)
   #endif
   #include <windows.h>
+  #include <GL/glew.h>
 #endif
 
 #ifndef __APPLE__
