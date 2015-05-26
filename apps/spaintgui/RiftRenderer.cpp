@@ -42,7 +42,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-  m_window.reset(
+  set_window(SDL_Window_Ptr(
     SDL_CreateWindow(
       title.c_str(),
       renderingMode == WINDOWED_MODE ? SDL_WINDOWPOS_UNDEFINED : SDL_WINDOWPOS_CENTERED_DISPLAY(1),
@@ -52,17 +52,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
       renderingMode == WINDOWED_MODE ? SDL_WINDOW_OPENGL : SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
     ),
     &SDL_DestroyWindow
-  );
-
-  m_context.reset(
-    SDL_GL_CreateContext(m_window.get()),
-    SDL_GL_DeleteContext
-  );
-
-#ifdef WITH_GLEW
-  GLenum err = glewInit();
-  if(err != GLEW_OK) throw std::runtime_error("Error: Could not initialise GLEW");
-#endif
+  ));
 
   // Get device-dependent information about the window.
   SDL_SysWMinfo wmInfo;

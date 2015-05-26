@@ -170,6 +170,11 @@ protected:
    */
   void render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
 
+  /**
+   * \brief TODO
+   */
+  void set_window(const SDL_Window_Ptr& window);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**

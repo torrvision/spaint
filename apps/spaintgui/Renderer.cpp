@@ -172,6 +172,23 @@ void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_
   render_synthetic_scene(pose, interactor);
 }
 
+void Renderer::set_window(const SDL_Window_Ptr& window)
+{
+  m_window = window;
+
+  // Create an OpenGL context for the window.
+  m_context.reset(
+    SDL_GL_CreateContext(m_window.get()),
+    SDL_GL_DeleteContext
+  );
+
+  // Initialise GLEW (if necessary).
+#ifdef WITH_GLEW
+  GLenum err = glewInit();
+  if(err != GLEW_OK) throw std::runtime_error("Error: Could not initialise GLEW");
+#endif
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const

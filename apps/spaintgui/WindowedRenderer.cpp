@@ -24,7 +24,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   int width = depthImageSize.width, height = depthImageSize.height;
 
-  m_window.reset(
+  set_window(SDL_Window_Ptr(
     SDL_CreateWindow(
       title.c_str(),
       SDL_WINDOWPOS_UNDEFINED,
@@ -34,17 +34,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
       SDL_WINDOW_OPENGL
     ),
     &SDL_DestroyWindow
-  );
-
-  m_context.reset(
-    SDL_GL_CreateContext(m_window.get()),
-    SDL_GL_DeleteContext
-  );
-
-#ifdef WITH_GLEW
-  GLenum err = glewInit();
-  if(err != GLEW_OK) throw std::runtime_error("Error: Could not initialise GLEW");
-#endif
+  ));
 
   glViewport(0, 0, width, height);
 
