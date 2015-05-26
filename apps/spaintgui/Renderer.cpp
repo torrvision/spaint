@@ -156,6 +156,17 @@ void Renderer::end_2d()
   glPopMatrix();
 }
 
+void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+{
+  // Clear the frame buffer.
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // Render the reconstructed scene, then render a synthetic scene over the top of it.
+  render_reconstructed_scene(pose, renderState);
+  render_synthetic_scene(pose, interactor);
+}
+
 void Renderer::render_textured_quad(GLuint textureID)
 {
   glEnable(GL_TEXTURE_2D);

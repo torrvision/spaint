@@ -70,7 +70,7 @@ protected:
   SDL_Window_Ptr m_window;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief Constructs a renderer.
    *
@@ -150,6 +150,15 @@ protected:
    * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
    */
   static void end_2d();
+
+  /**
+   * \brief Renders the scene.
+   *
+   * \param pose        The camera pose.
+   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param renderState The render state corresponding to the camera pose.
+   */
+  void render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Renders a quad textured with the specified texture into a frame buffer.

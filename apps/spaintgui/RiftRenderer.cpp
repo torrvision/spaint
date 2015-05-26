@@ -158,11 +158,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     glUseProgram(0);
     glViewport(0, 0, width, height);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    render_reconstructed_scene(poses[i], m_renderStates[i]);
-    render_synthetic_scene(poses[i], interactor);
+    render_scene(poses[i], interactor, m_renderStates[i]);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }

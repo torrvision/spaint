@@ -67,9 +67,6 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
 
 void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   // Determine the camera pose.
   ITMPose pose;
   switch(m_cameraMode)
@@ -85,9 +82,8 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
       throw std::runtime_error("Error: Unknown camera mode");
   }
 
-  // Render the reconstructed scene, then render a synthetic scene over the top of it.
-  render_reconstructed_scene(pose, m_renderState);
-  render_synthetic_scene(pose, interactor);
+  // Render the scene from that camera pose.
+  render_scene(pose, interactor, m_renderState);
 
   SDL_GL_SwapWindow(m_window.get());
 }
