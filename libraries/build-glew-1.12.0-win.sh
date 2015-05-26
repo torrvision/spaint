@@ -1,6 +1,6 @@
 #! /bin/bash -e
 
-LOG=../../build-glew-1.12.0.log
+LOG=../../../build-glew-1.12.0.log
 
 # Build glew.
 echo "[spaint] Building glew 1.12.0"
