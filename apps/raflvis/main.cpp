@@ -2,6 +2,8 @@
  * raflvis: main.cpp
  */
 
+#include "SpecialDecisionFunctionGenerator.h"
+
 #include <boost/assign/list_of.hpp>
 #include <boost/format.hpp>
 using boost::assign::list_of;
@@ -179,6 +181,9 @@ int main(int argc, char *argv[])
   const float lowerSTD = 0.05f;
   const float upperSTD = 0.18f;
   UnitCircleExampleGenerator<Label> uceg(classLabels, seed, lowerSTD, upperSTD);
+
+  //DecisionFunctionGeneratorFactory<Label>::instance().register_maker(MyDFG<Label::get_static_type(), &MyDFG<Label>::maker);
+  DecisionFunctionGeneratorFactory<Label>::instance().register_maker(SpecialDecisionFunctionGenerator<Label>::get_static_type(), &SpecialDecisionFunctionGenerator<Label>::maker);
 
   // Generate the parameter set with which to train the random forest (note that we're using the parameter set generator for convenience only).
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()

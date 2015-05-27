@@ -30,7 +30,7 @@ class SpaintDecisionFunctionGenerator : public rafl::CompositeDecisionFunctionGe
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an spaint decision function generator.
+   * \brief Constructs a spaint decision function generator.
    *
    * \param patchSize The side length of a VOP patch.
    */
