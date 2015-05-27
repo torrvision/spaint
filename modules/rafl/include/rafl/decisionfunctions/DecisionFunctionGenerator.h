@@ -120,7 +120,7 @@ public:
 #endif
     for(int i = 0; i < candidateCount; ++i)
     {
-#if 0 && WITH_OPENMP 
+#if 0 && WITH_OPENMP
       int threadID = omp_get_thread_num();
       int threadCount = omp_get_num_threads();
       std::cout << "threadID=" << threadID << " threadCount=" << threadCount << '\n';
@@ -130,10 +130,9 @@ public:
       std::cout << *splitCandidate->m_decisionFunction << '\n';
 #endif
 
+      // Partition the examples using the split candidate's decision function.
       m_splitCandidates[i].m_leftExamples.clear();
       m_splitCandidates[i].m_rightExamples.clear();
-
-      // Partition the examples using the split candidate's decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
         if(m_splitCandidates[i].m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
