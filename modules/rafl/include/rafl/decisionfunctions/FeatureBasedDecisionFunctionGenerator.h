@@ -5,6 +5,8 @@
 #ifndef H_RAFL_FEATUREBASEDDECISIONFUNCTIONGENERATOR
 #define H_RAFL_FEATUREBASEDDECISIONFUNCTIONGENERATOR
 
+#include <cassert>
+
 #include "DecisionFunctionGenerator.h"
 
 namespace rafl {
@@ -57,7 +59,7 @@ protected:
     if(m_featureIndexRange)
     {
       result = *m_featureIndexRange;
-      if(result.second >= descriptorSize) throw std::runtime_error("Invalid feature index range");
+      assert(result.second < descriptorSize);
     }
     return result;
   }
