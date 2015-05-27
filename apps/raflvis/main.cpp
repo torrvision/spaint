@@ -184,6 +184,7 @@ int main(int argc, char *argv[])
   // Generate the parameter set with which to train the random forest (note that we're using the parameter set generator for convenience only).
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
     .add_param("candidateCount", list_of<int>(256))
+    .add_param("decisionFunctionGeneratorParams", list_of<std::string>(""))
     .add_param("decisionFunctionGeneratorType", list_of<std::string>("Test"))
     .add_param("gainThreshold", list_of<float>(0.0f))
     .add_param("maxClassSize", list_of<size_t>(10000))
