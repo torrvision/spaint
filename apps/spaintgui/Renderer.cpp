@@ -174,13 +174,13 @@ void Renderer::initialise_common()
 
 void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
 {
-  // Clear the frame buffer.
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   // Set the viewport.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   glViewport(0, 0, depthImageSize.width, depthImageSize.height);
+
+  // Clear the frame buffer.
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose, renderState);

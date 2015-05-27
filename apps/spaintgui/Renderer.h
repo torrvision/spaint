@@ -101,7 +101,7 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const = 0;
 
   /**
-   * \brief Renders the scene from one or more camera poses.
+   * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
    * \param interactor  The interactor that is being used to interact with the scene.
    */
@@ -174,7 +174,7 @@ protected:
   void initialise_common();
 
   /**
-   * \brief Renders the scene from a single camera pose.
+   * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
    *
    * \param pose        The camera pose.
    * \param interactor  The interactor that is being used to interact with the scene.
@@ -208,7 +208,7 @@ private:
   void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
 
   /**
-   * \brief Renders a quad textured with the specified texture into a frame buffer.
+   * \brief Renders a quad textured with the specified texture.
    *
    * \param textureID The ID of the texture to apply to the quad.
    */
