@@ -2,8 +2,6 @@
  * raflvis: main.cpp
  */
 
-#include "SpecialDecisionFunctionGenerator.h"
-
 #include <boost/assign/list_of.hpp>
 #include <boost/format.hpp>
 using boost::assign::list_of;
@@ -23,6 +21,7 @@ using namespace rafl;
 
 #include "PaletteGenerator.h"
 #include "PlotWindow.h"
+#include "TestDecisionFunctionGenerator.h"
 
 //#################### TYPEDEFS ####################
 
@@ -182,12 +181,10 @@ int main(int argc, char *argv[])
   const float upperSTD = 0.18f;
   UnitCircleExampleGenerator<Label> uceg(classLabels, seed, lowerSTD, upperSTD);
 
-  DecisionFunctionGeneratorFactory<Label>::instance().register_maker(SpecialDecisionFunctionGenerator<Label>::get_static_type(), &SpecialDecisionFunctionGenerator<Label>::maker);
-
   // Generate the parameter set with which to train the random forest (note that we're using the parameter set generator for convenience only).
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
     .add_param("candidateCount", list_of<int>(256))
-    .add_param("decisionFunctionGeneratorType", list_of<std::string>("Special"))
+    .add_param("decisionFunctionGeneratorType", list_of<std::string>("Test"))
     .add_param("gainThreshold", list_of<float>(0.0f))
     .add_param("maxClassSize", list_of<size_t>(10000))
     .add_param("maxTreeHeight", list_of<size_t>(20))
@@ -196,6 +193,12 @@ int main(int argc, char *argv[])
     .add_param("splittabilityThreshold", list_of<float>(0.5f))
     .add_param("usePMFReweighting", list_of<bool>(true))
     .generate_param_sets();
+
+  // Register test decision function generators with the factory.
+  DecisionFunctionGeneratorFactory<Label>::instance().register_maker(
+    TestDecisionFunctionGenerator<Label>::get_static_type(),
+    &TestDecisionFunctionGenerator<Label>::maker
+  );
 
   // Initialise the online random forest with the specified parameters.
   const size_t treeCount = 1;

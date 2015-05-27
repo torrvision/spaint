@@ -31,6 +31,7 @@ PlotWindow.cpp
 SET(headers
 PaletteGenerator.h
 PlotWindow.h
+TestDecisionFunctionGenerator.h
 )
 
 #############################

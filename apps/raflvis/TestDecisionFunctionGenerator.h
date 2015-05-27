@@ -1,9 +1,9 @@
 /**
- * raflvis: SpecialDecisionFunctionGenerator.h
+ * raflvis: TestDecisionFunctionGenerator.h
  */
 
-#ifndef H_RAFLVIS_SPECIALDECISIONFUNCTIONGENERATOR
-#define H_RAFLVIS_SPECIALDECISIONFUNCTIONGENERATOR
+#ifndef H_RAFLVIS_TESTDECISIONFUNCTIONGENERATOR
+#define H_RAFLVIS_TESTDECISIONFUNCTIONGENERATOR
 
 #include <rafl/decisionfunctions/CompositeDecisionFunctionGenerator.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
@@ -14,7 +14,7 @@ using namespace rafl;
  * \brief An instance of this class can be used to generate a decision function with which to split a set of examples.
  */
 template <typename Label>
-class SpecialDecisionFunctionGenerator : public CompositeDecisionFunctionGenerator<Label>
+class TestDecisionFunctionGenerator : public CompositeDecisionFunctionGenerator<Label>
 {
   //#################### TYPEDEFS ####################
 private:
@@ -24,25 +24,25 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a special decision function generator.
+   * \brief Constructs a test decision function generator.
    */
-  SpecialDecisionFunctionGenerator()
+  TestDecisionFunctionGenerator()
   {
-    std::pair<int,int> specialFeatureIndexRange(0, 1);
-    this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(specialFeatureIndexRange)));
-    this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(specialFeatureIndexRange)));
+    std::pair<int,int> featureIndexRange(0, 1);
+    this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(featureIndexRange)));
+    this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(featureIndexRange)));
   }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Makes a special decision function generator.
+   * \brief Makes a test decision function generator.
    *
    * \return  The decision function generator.
    */
   static DecisionFunctionGenerator_Ptr maker()
   {
-    return DecisionFunctionGenerator_Ptr(new SpecialDecisionFunctionGenerator<Label>);
+    return DecisionFunctionGenerator_Ptr(new TestDecisionFunctionGenerator<Label>);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -54,7 +54,7 @@ public:
    */
   static std::string get_static_type()
   {
-    return "Special";
+    return "Test";
   }
 
   /** Override */
