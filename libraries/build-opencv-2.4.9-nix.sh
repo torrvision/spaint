@@ -5,6 +5,11 @@ PLATFORM=`../detect-platform.sh`
 
 echo "[spaint] Building OpenCV 2.4.9"
 
+if [ $PLATFORM != "mac" ]
+then
+  ./install-dependencies-nix.sh libgtk2.0-dev
+fi
+
 if [ -d opencv-2.4.9 ]
 then
   echo "[spaint] ...Skipping archive extraction (already extracted)"
