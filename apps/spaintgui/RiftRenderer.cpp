@@ -146,20 +146,20 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   };
 
   // Render the scene into OpenGL textures from the left and right eye poses.
-  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
-  int width = depthImageSize.width, height = depthImageSize.height;
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
     glUseProgram(0);
-    glViewport(0, 0, width, height);
 
     render_scene(poses[i], interactor, m_renderStates[i]);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
-  // Set up the eye poses and pass the eye textures to the Rift SDK.
+  // Set up the Rift eye poses and pass the eye textures to the Rift SDK.
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
+  int width = depthImageSize.width, height = depthImageSize.height;
+
   ovrPosef eyePoses[ovrEye_Count];
   ovrGLTexture eyeTextures[ovrEye_Count];
   for(int i = 0; i < ovrEye_Count; ++i)
