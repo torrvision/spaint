@@ -7,6 +7,7 @@
 
 #include <rafl/decisionfunctions/CompositeDecisionFunctionGenerator.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
+#include <rafl/decisionfunctions/PairwiseOpAndThresholdDecisionFunctionGenerator.h>
 using namespace rafl;
 
 /**
@@ -18,6 +19,7 @@ class SpecialDecisionFunctionGenerator : public CompositeDecisionFunctionGenerat
   //#################### TYPEDEFS #################### 
 private:
   typedef boost::shared_ptr<DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_Ptr;
+  typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
 
   //#################### CONSTRUCTORS #################### 
 public:
@@ -26,8 +28,9 @@ public:
    */
   SpecialDecisionFunctionGenerator()
   {
-    std::pair<int,int> specialFeatureIndexRange(0, 0);
+    std::pair<int,int> specialFeatureIndexRange(0, 1);
     this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(specialFeatureIndexRange)));
+    this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(specialFeatureIndexRange)));
   }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS #################### 
