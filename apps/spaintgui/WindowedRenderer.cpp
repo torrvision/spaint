@@ -21,7 +21,7 @@ WindowedRenderer::WindowedRenderer(const spaint::SpaintModel_CPtr& model, const 
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
   int width = depthImageSize.width, height = depthImageSize.height;
 
   set_window(SDL_Window_Ptr(
@@ -73,7 +73,7 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   switch(get_camera_mode())
   {
     case CM_FOLLOW:
-      pose = m_model->get_pose();
+      pose = get_model()->get_pose();
       break;
     case CM_FREE:
       pose = CameraPoseConverter::camera_to_pose(*m_camera);

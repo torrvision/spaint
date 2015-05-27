@@ -152,6 +152,11 @@ void Renderer::end_2d()
   glPopMatrix();
 }
 
+SpaintModel_CPtr Renderer::get_model() const
+{
+  return m_model;
+}
+
 SDL_Window *Renderer::get_window() const
 {
   return m_window.get();

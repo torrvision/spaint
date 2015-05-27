@@ -52,6 +52,9 @@ private:
   /** An image in which to temporarily store visualisations of the scene. */
   ITMUChar4Image_Ptr m_image;
 
+  /** The spaint model. */
+  spaint::SpaintModel_CPtr m_model;
+
   /** Whether or not Phong lighting is currently enabled. */
   bool m_phongEnabled;
 
@@ -63,11 +66,6 @@ private:
 
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
-
-  //#################### PROTECTED VARIABLES ####################
-protected:
-  /** The spaint model. */
-  spaint::SpaintModel_CPtr m_model;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -103,7 +101,7 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const = 0;
 
   /**
-   * \brief Renders the scene.
+   * \brief Renders the scene from one or more camera poses.
    *
    * \param interactor  The interactor that is being used to interact with the scene.
    */
@@ -157,7 +155,16 @@ protected:
   static void end_2d();
 
   /**
-   * \brief TODO
+   * \brief Gets the spaint model.
+   *
+   * \return  The spaint model.
+   */
+  spaint::SpaintModel_CPtr get_model() const;
+
+  /**
+   * \brief Gets the window into which to render.
+   *
+   * \return  The window into which to render.
    */
   SDL_Window *get_window() const;
 
@@ -167,7 +174,7 @@ protected:
   void initialise_common();
 
   /**
-   * \brief Renders the scene.
+   * \brief Renders the scene from a single camera pose.
    *
    * \param pose        The camera pose.
    * \param interactor  The interactor that is being used to interact with the scene.
@@ -176,7 +183,9 @@ protected:
   void render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
 
   /**
-   * \brief TODO
+   * \brief Sets the window into which to render.
+   *
+   * \param window  The window into which to render.
    */
   void set_window(const SDL_Window_Ptr& window);
 

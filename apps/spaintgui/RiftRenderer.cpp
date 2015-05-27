@@ -92,7 +92,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
 
   // Set up the eye frame buffers.
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
@@ -134,7 +134,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   // If we're following the reconstruction, update the position and orientation of the camera.
   if(get_camera_mode() == CM_FOLLOW)
   {
-    m_camera->set_from(CameraPoseConverter::pose_to_camera(m_model->get_pose()));
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose()));
   }
 
   // Calculate the left and right eye poses.
@@ -145,7 +145,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   };
 
   // Render the scene into OpenGL textures from the left and right eye poses.
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
   int width = depthImageSize.width, height = depthImageSize.height;
   for(int i = 0; i < ovrEye_Count; ++i)
   {
