@@ -16,12 +16,12 @@ using namespace rafl;
 template <typename Label>
 class SpecialDecisionFunctionGenerator : public CompositeDecisionFunctionGenerator<Label>
 {
-  //#################### TYPEDEFS #################### 
+  //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_Ptr;
   typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
 
-  //#################### CONSTRUCTORS #################### 
+  //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a special decision function generator.
@@ -33,7 +33,7 @@ public:
     this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(specialFeatureIndexRange)));
   }
 
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Makes a special decision function generator.
@@ -45,11 +45,11 @@ public:
     return DecisionFunctionGenerator_Ptr(new SpecialDecisionFunctionGenerator<Label>);
   }
 
-  //#################### PUBLIC MEMBER FUNCTIONS #################### 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Gets the type of the decision function generator.
-   * 
+   *
    * \return  The type of the decision function generator.
    */
   static std::string get_static_type()
