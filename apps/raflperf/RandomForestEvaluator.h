@@ -112,13 +112,13 @@ private:
   static ResultType do_evaluation(const RandomForest_Ptr& randomForest, const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
     std::set<Label> classLabels;
-    size_t indicesSize = indices.size();
+    int indicesSize = static_cast<int>(indices.size());
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
 
 #ifdef WITH_OPENMP
     #pragma omp parallel for
 #endif
-    for(size_t i = 0; i < indicesSize; ++i)
+    for(int i = 0; i < indicesSize; ++i)
     {
       const Example_CPtr& example = examples[indices[i]];
       predictedLabels[i] = randomForest->predict(example->get_descriptor());
