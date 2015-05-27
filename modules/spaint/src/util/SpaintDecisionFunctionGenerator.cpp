@@ -13,6 +13,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SpaintDecisionFunctionGenerator::SpaintDecisionFunctionGenerator(size_t patchSize)
+: m_patchSize(patchSize)
 {
   int vopFeatureCount = static_cast<int>(patchSize * patchSize * 3);
   std::pair<int,int> vopFeatureIndexRange(0, vopFeatureCount - 1);
@@ -24,16 +25,22 @@ SpaintDecisionFunctionGenerator::SpaintDecisionFunctionGenerator(size_t patchSiz
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-SpaintDecisionFunctionGenerator::DecisionFunctionGenerator_Ptr SpaintDecisionFunctionGenerator::maker(size_t patchSize)
+std::string SpaintDecisionFunctionGenerator::get_static_type()
 {
+  return "Spaint";
+}
+
+SpaintDecisionFunctionGenerator::DecisionFunctionGenerator_Ptr SpaintDecisionFunctionGenerator::maker(const std::string& params)
+{
+  size_t patchSize = boost::lexical_cast<size_t>(params);
   return DecisionFunctionGenerator_Ptr(new SpaintDecisionFunctionGenerator(patchSize));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::string SpaintDecisionFunctionGenerator::get_static_type()
+std::string SpaintDecisionFunctionGenerator::get_params() const
 {
-  return "Spaint";
+  return boost::lexical_cast<std::string>(m_patchSize);
 }
 
 std::string SpaintDecisionFunctionGenerator::get_type() const

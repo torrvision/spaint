@@ -38,15 +38,22 @@ public:
   /**
    * \brief Makes a test decision function generator.
    *
-   * \return  The decision function generator.
+   * \param params  The parameters to the decision function generator.
+   * \return        The decision function generator.
    */
-  static DecisionFunctionGenerator_Ptr maker()
+  static DecisionFunctionGenerator_Ptr maker(const std::string& params)
   {
     return DecisionFunctionGenerator_Ptr(new TestDecisionFunctionGenerator<Label>);
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /** Override */
+  virtual std::string get_params() const
+  {
+    return "";
+  }
+
   /**
    * \brief Gets the type of the decision function generator.
    *

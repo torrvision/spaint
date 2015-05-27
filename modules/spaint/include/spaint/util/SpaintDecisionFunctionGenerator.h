@@ -33,10 +33,15 @@ private:
   typedef boost::shared_ptr<DecisionFunctionGenerator<LabelType> > DecisionFunctionGenerator_Ptr;
   typedef boost::shared_ptr<const DecisionFunctionGenerator<LabelType> > DecisionFunctionGenerator_CPtr;
 
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The side length of a VOP patch. */
+  size_t m_patchSize;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a spaint decision function generator.
+   * \brief Constructs an spaint decision function generator.
    *
    * \param patchSize The side length of a VOP patch.
    */
@@ -45,20 +50,24 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Makes a spaint decision function generator.
-   *
-   * \return  The decision function generator.
-   */
-  static DecisionFunctionGenerator_Ptr maker(size_t patchSize);
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
    * \brief Gets the type of the decision function generator.
    *
    * \return  The type of the decision function generator.
    */
   static std::string get_static_type();
+
+  /**
+   * \brief Makes an spaint decision function generator.
+   *
+   * \param params  The parameters to the decision function generator (in this case, the side length of a VOP patch).
+   * \return        The decision function generator.
+   */
+  static DecisionFunctionGenerator_Ptr maker(const std::string& params);
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual std::string get_params() const;
 
   /** Override */
   virtual std::string get_type() const;

@@ -21,8 +21,9 @@ namespace rafl {
 template <typename Label>
 class FeatureThresholdingDecisionFunctionGenerator : public FeatureBasedDecisionFunctionGenerator<Label>
 {
-  //#################### USINGS ####################
+  //#################### TYPEDEFS AND USINGS ####################
 protected:
+  typedef boost::shared_ptr<DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_Ptr;
   using typename DecisionFunctionGenerator<Label>::Example_CPtr;
 
   //#################### CONSTRUCTORS ####################
@@ -35,6 +36,30 @@ public:
   FeatureThresholdingDecisionFunctionGenerator(const boost::optional<std::pair<int,int> >& featureIndexRange = boost::none)
   : FeatureBasedDecisionFunctionGenerator<Label>(featureIndexRange)
   {}
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the type of the decision function generator.
+   *
+   * \return  The type of the decision function generator.
+   */
+  static std::string get_static_type()
+  {
+    return "FeatureThresholding";
+  }
+
+  /**
+   * \brief Makes a feature thresholding decision function generator.
+   *
+   * \param params  The parameters to the decision function generator.
+   * \return        The decision function generator.
+   */
+  static DecisionFunctionGenerator_Ptr maker(const std::string& params)
+  {
+    // TODO: Parse the parameters.
+    return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>);
+  }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -55,16 +80,6 @@ public:
     float threshold = (*examples[exampleIndex]->get_descriptor())[featureIndex];
 
     return DecisionFunction_Ptr(new FeatureThresholdingDecisionFunction(featureIndex, threshold));
-  }
-
-  /**
-   * \brief Gets the type of the decision function generator.
-   *
-   * \return  The type of the decision function generator.
-   */
-  static std::string get_static_type()
-  {
-    return "FeatureThresholding";
   }
 
   /** Override */

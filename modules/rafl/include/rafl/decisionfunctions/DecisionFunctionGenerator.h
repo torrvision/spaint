@@ -76,6 +76,13 @@ public:
   virtual DecisionFunction_Ptr generate_candidate_decision_function(const std::vector<Example_CPtr>& examples, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator) const = 0;
 
   /**
+   * \brief Gets the parameters of the decision function generator as a string.
+   *
+   * \return  The parameters of the decision function generator as a string.
+   */
+  virtual std::string get_params() const = 0;
+
+  /**
    * \brief Gets the type of the decision function generator.
    *
    * \return  The type of the decision function generator.

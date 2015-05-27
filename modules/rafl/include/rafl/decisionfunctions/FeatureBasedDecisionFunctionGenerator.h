@@ -45,6 +45,18 @@ protected:
     }
   }
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual std::string get_params() const
+  {
+    if(m_featureIndexRange)
+    {
+      return boost::lexical_cast<std::string>(m_featureIndexRange->first) + " " + boost::lexical_cast<std::string>(m_featureIndexRange->second);
+    }
+    else return "";
+  }
+
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
