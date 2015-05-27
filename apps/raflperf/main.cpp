@@ -13,6 +13,7 @@ using boost::assign::map_list_of;
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
+#include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
@@ -136,6 +137,12 @@ int main(int argc, char *argv[])
       .generate_param_sets();
   }
 
+  // Register the relevant decision function generators with the factory.
+  DecisionFunctionGeneratorFactory<Label>::instance().register_maker(
+      FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(),
+      &FeatureThresholdingDecisionFunctionGenerator<Label>::maker
+  );
+
   // Construct the split generator.
 #if 0
   const size_t foldCount = 2;
@@ -146,7 +153,7 @@ int main(int argc, char *argv[])
   SplitGenerator_Ptr splitGenerator(new RandomPermutationAndDivisionSplitGenerator(seed, splitCount, ratio));
 #endif
 
-  // Time the random forest
+  // Time the random forest.
   tvgutil::Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
 
   // Evaluate the random forest on the various different parameter sets.

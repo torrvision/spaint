@@ -7,8 +7,7 @@
 
 #include <tvgutil/MapUtil.h>
 
-#include "FeatureThresholdingDecisionFunctionGenerator.h"
-#include "PairwiseOpAndThresholdDecisionFunctionGenerator.h"
+#include "DecisionFunctionGenerator.h"
 
 namespace rafl {
 
@@ -33,19 +32,7 @@ private:
   /**
    * \brief Constructs an instance of the factory.
    */
-  DecisionFunctionGeneratorFactory()
-  {
-    // Register the makers for the various different types of decision function generator.
-    register_maker(
-      FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(),
-      &FeatureThresholdingDecisionFunctionGenerator<Label>::maker
-    );
-
-    register_maker(
-      PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(),
-      &PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::maker
-    );
-  }
+  DecisionFunctionGeneratorFactory() {}
 
 public:
   /**

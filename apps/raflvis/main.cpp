@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
     .add_param("usePMFReweighting", list_of<bool>(true))
     .generate_param_sets();
 
-  // Register test decision function generators with the factory.
+  // Register the relevant decision function generators with the factory.
   DecisionFunctionGeneratorFactory<Label>::instance().register_maker(
     TestDecisionFunctionGenerator<Label>::get_static_type(),
     &TestDecisionFunctionGenerator<Label>::maker
