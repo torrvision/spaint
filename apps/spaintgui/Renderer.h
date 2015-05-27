@@ -43,6 +43,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The OpenGL context for the window. */
+  SDL_GLContext_Ptr m_context;
+
   /** An image in which to temporarily store visualisations of the scene. */
   ITMUChar4Image_Ptr m_image;
 
@@ -62,9 +65,6 @@ private:
 protected:
   /** The current camera mode. */
   CameraMode m_cameraMode;
-
-  /** The OpenGL context for the window. */
-  SDL_GLContext_Ptr m_context;
 
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
