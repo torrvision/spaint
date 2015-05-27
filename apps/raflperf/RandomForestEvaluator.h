@@ -32,8 +32,8 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The settings to use for decision trees in the random forest. */
-  typename DecisionTree::Settings m_decisionTreeSettings;
+  /** The settings to use for the random forest. */
+  std::map<std::string,std::string> m_settings;
 
   /** The maximum number of nodes per tree that may be split in each training step. */
   size_t m_splitBudget;
@@ -50,7 +50,7 @@ public:
    * \param settings        The settings to use for the random forest.
    */
   explicit RandomForestEvaluator(const evaluation::SplitGenerator_Ptr& splitGenerator, const std::map<std::string,std::string>& settings)
-  : Base(splitGenerator), m_decisionTreeSettings(settings)
+  : Base(splitGenerator), m_settings(settings)
   {
     #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(settings, #param, m_##param);
       GET_SETTING(splitBudget);
@@ -89,7 +89,7 @@ protected:
   virtual ResultType evaluate_on_split(const std::vector<Example_CPtr>& examples, const evaluation::SplitGenerator::Split& split) const
   {
     // Make a random forest using the specified settings and add the examples in the training set to it.
-    RandomForest_Ptr randomForest(new RandomForest(m_treeCount, m_decisionTreeSettings));
+    RandomForest_Ptr randomForest(new RandomForest(m_treeCount, typename DecisionTree::Settings(m_settings)));
     randomForest->add_examples(examples, split.first);
 
     // Train the forest.
@@ -112,14 +112,21 @@ private:
   static ResultType do_evaluation(const RandomForest_Ptr& randomForest, const std::vector<Example_CPtr>& examples, const std::vector<size_t>& indices)
   {
     std::set<Label> classLabels;
-    size_t indicesSize = indices.size();
+    int indicesSize = static_cast<int>(indices.size());
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
 
-    for(size_t i = 0; i < indicesSize; ++i)
+#ifdef WITH_OPENMP
+    #pragma omp parallel for
+#endif
+    for(int i = 0; i < indicesSize; ++i)
     {
       const Example_CPtr& example = examples[indices[i]];
       predictedLabels[i] = randomForest->predict(example->get_descriptor());
       expectedLabels[i] = example->get_label();
+
+#ifdef WITH_OPENMP
+      #pragma omp critical
+#endif
       classLabels.insert(expectedLabels[i]);
     }
 
