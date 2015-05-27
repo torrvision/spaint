@@ -1,6 +1,6 @@
 #! /bin/bash -e
 
-LOG=../../../build-glew-1.12.0.log
+LOG=../build-glew-1.12.0.log
 
 # Build glew.
 echo "[spaint] Building glew 1.12.0"
@@ -19,11 +19,11 @@ else
   rmdir tmp
 fi
 
-cd glew-1.12.0/build/vc12
+cd glew-1.12.0
 
 echo "[spaint] ...Running build..."
-cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 glew.sln >> $LOG 2>&1"
+make -j2 >> $LOG 2>&1
 
 cd ..
 
-echo "[spaint] ...Finished building glew-1.12.0."
+echo "[spaint] ...Finished building glew 1.12.0."
