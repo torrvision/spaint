@@ -32,7 +32,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The settings to use for decision trees in the random forest. */
+  /** The settings to use for the random forest. */
   std::map<std::string,std::string> m_settings;
 
   /** The maximum number of nodes per tree that may be split in each training step. */
@@ -116,15 +116,16 @@ private:
     std::vector<Label> expectedLabels(indicesSize), predictedLabels(indicesSize);
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+    #pragma omp parallel for
 #endif
     for(size_t i = 0; i < indicesSize; ++i)
     {
       const Example_CPtr& example = examples[indices[i]];
       predictedLabels[i] = randomForest->predict(example->get_descriptor());
       expectedLabels[i] = example->get_label();
+
 #ifdef WITH_OPENMP
-#pragma omp critical
+      #pragma omp critical
 #endif
       classLabels.insert(expectedLabels[i]);
     }

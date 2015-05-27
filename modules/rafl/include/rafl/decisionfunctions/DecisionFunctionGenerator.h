@@ -5,11 +5,11 @@
 #ifndef H_RAFL_DECISIONFUNCTIONGENERATOR
 #define H_RAFL_DECISIONFUNCTIONGENERATOR
 
+#include <utility>
+
 #ifdef WITH_OPENMP
 #include <omp.h>
 #endif
-
-#include <utility>
 
 #include "../base/ProbabilityMassFunction.h"
 #include "../examples/ExampleReservoir.h"
@@ -52,7 +52,7 @@ public:
   typedef boost::shared_ptr<Split> Split_Ptr;
   typedef boost::shared_ptr<const Split> Split_CPtr;
 
-  //#################### PRIVATE VERIABLES #################### 
+  //#################### PRIVATE VARIABLES ####################
 private:
   /* The split candidates. */
   mutable std::vector<Split> m_splitCandidates;
@@ -94,46 +94,46 @@ public:
    * \param inverseClassWeights   The (optional) inverses of the L1-normalised class frequencies observed in the training data.
    * \return                      The chosen split, if one was suitable, or NULL otherwise.
    */
-  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold, const boost::optional<std::map<Label,float> >& inverseClassWeights) const
+  Split_CPtr split_examples(const ExampleReservoir<Label>& reservoir, int candidateCount, float gainThreshold,
+                            const boost::optional<std::map<Label,float> >& inverseClassWeights) const
   {
-    if(m_splitCandidates.size() != candidateCount) m_splitCandidates.resize(candidateCount);
-
+    std::vector<Example_CPtr> examples = reservoir.get_examples();
     float initialEntropy = ExampleUtil::calculate_entropy(*reservoir.get_histogram(), inverseClassWeights);
-    float bestGain = -1;
-    int bestId = -1;
 
 #if 0
     std::cout << "\nP: " << *reservoir.get_histogram() << ' ' << initialEntropy << '\n';
 #endif
 
-    std::vector<Example_CPtr> examples = reservoir.get_examples();
-
-    //std::vector<Split> splitCandidates(candidateCount);
+    // Generate the split candidates.
+    if(m_splitCandidates.size() != candidateCount) m_splitCandidates.resize(candidateCount);
     for(int i = 0; i < candidateCount; ++i)
     {
-      // Generate a decision function for the split candidate.
       m_splitCandidates[i].m_decisionFunction = generate_candidate_decision_function(examples);
     }
 
+    // Pick the best split candidate and return it.
+    float bestGain = static_cast<float>(INT_MIN);
+    int bestIndex = -1;
+
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+    #pragma omp parallel for
 #endif
     for(int i = 0; i < candidateCount; ++i)
     {
 #if 0 && WITH_OPENMP 
-      int threadId = omp_get_thread_num();
-      int nThreads = omp_get_num_threads();
-      std::cout << "threadId=" << threadId << " nThreads=" << nThreads << '\n';
+      int threadID = omp_get_thread_num();
+      int threadCount = omp_get_num_threads();
+      std::cout << "threadID=" << threadID << " threadCount=" << threadCount << '\n';
 #endif
 
 #if 0
       std::cout << *splitCandidate->m_decisionFunction << '\n';
 #endif
 
-      m_splitCandidates[i].m_rightExamples.clear();
       m_splitCandidates[i].m_leftExamples.clear();
+      m_splitCandidates[i].m_rightExamples.clear();
 
-     // Partition the examples using the decision function.
+      // Partition the examples using the split candidate's decision function.
       for(size_t j = 0, size = examples.size(); j < size; ++j)
       {
         if(m_splitCandidates[i].m_decisionFunction->classify_descriptor(*examples[j]->get_descriptor()) == DecisionFunction::DC_LEFT)
@@ -150,7 +150,7 @@ public:
       float gain = calculate_information_gain(reservoir, initialEntropy, m_splitCandidates[i].m_leftExamples, m_splitCandidates[i].m_rightExamples, inverseClassWeights);
 
 #ifdef WITH_OPENMP
-#pragma omp critical
+      #pragma omp critical
 #endif
       {
         if(gain > bestGain)
@@ -158,17 +158,14 @@ public:
           if(gain > gainThreshold && !m_splitCandidates[i].m_leftExamples.empty() && !m_splitCandidates[i].m_rightExamples.empty())
           {
             bestGain = gain;
-            bestId = i;
+            bestIndex = i;
           }
         }
       }
     }
 
     Split_Ptr bestSplitCandidate;
-    if(bestId != -1)
-    {
-      bestSplitCandidate.reset(new Split(m_splitCandidates[bestId]));
-    }
+    if(bestIndex != -1) bestSplitCandidate.reset(new Split(m_splitCandidates[bestIndex]));
 
     // Return a split candidate that had maximum gain (note that this may be NULL if no split had a high enough gain).
     return bestSplitCandidate;
