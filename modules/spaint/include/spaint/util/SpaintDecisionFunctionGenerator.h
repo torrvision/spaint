@@ -27,6 +27,12 @@ namespace spaint {
  */
 class SpaintDecisionFunctionGenerator : public rafl::CompositeDecisionFunctionGenerator<SpaintVoxel::LabelType>
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef SpaintVoxel::LabelType LabelType;
+  typedef boost::shared_ptr<DecisionFunctionGenerator<LabelType> > DecisionFunctionGenerator_Ptr;
+  typedef boost::shared_ptr<const DecisionFunctionGenerator<LabelType> > DecisionFunctionGenerator_CPtr;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -35,6 +41,15 @@ public:
    * \param patchSize The side length of a VOP patch.
    */
   explicit SpaintDecisionFunctionGenerator(size_t patchSize);
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Makes a spaint decision function generator.
+   *
+   * \return  The decision function generator.
+   */
+  static DecisionFunctionGenerator_Ptr maker(size_t patchSize);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
