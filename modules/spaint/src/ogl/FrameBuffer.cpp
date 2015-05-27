@@ -4,7 +4,6 @@
 
 #include "ogl/FrameBuffer.h"
 
-#include <cstddef>
 #include <stdexcept>
 
 namespace spaint {
@@ -38,7 +37,7 @@ FrameBuffer::FrameBuffer(int width, int height)
   // Check that the frame buffer has been successfully set up.
   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
-    throw std::runtime_error("Failed to set up the frame buffer");
+    throw std::runtime_error("Error: Failed to create the frame buffer");
   }
 
   // Switch back to rendering to the normal display.
@@ -49,13 +48,8 @@ FrameBuffer::FrameBuffer(int width, int height)
 
 FrameBuffer::~FrameBuffer()
 {
-#if 0
-  glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-
+  // FIXME: For some reason, deleting the frame buffer causes the program to crash when a new frame buffer is later created.
+  //        It would be good to figure out why and properly clean up after ourselves here.
 #if 0
   glDeleteRenderbuffers(1, &m_depthBufferID);
   glDeleteTextures(1, &m_colourBufferID);  
