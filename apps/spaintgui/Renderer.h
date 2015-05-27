@@ -145,7 +145,7 @@ protected:
   static void begin_2d();
 
   /**
-   * \brief TODO
+   * \brief Destroys the temporary image and texture used for visualising the scene.
    */
   void destroy_common();
 
@@ -169,7 +169,7 @@ protected:
   SDL_Window *get_window() const;
 
   /**
-   * \brief TODO
+   * \brief Initialises the temporary image and texture used for visualising the scene.
    */
   void initialise_common();
 

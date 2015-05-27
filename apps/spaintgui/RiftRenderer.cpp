@@ -98,6 +98,7 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_C
     m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
   }
 
+  // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();
 }
 

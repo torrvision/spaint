@@ -138,6 +138,7 @@ void Renderer::begin_2d()
 
 void Renderer::destroy_common()
 {
+  m_image.reset();
   glDeleteTextures(1, &m_textureID);
 }
 
@@ -176,6 +177,10 @@ void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_
   // Clear the frame buffer.
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // Set the viewport.
+  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  glViewport(0, 0, depthImageSize.width, depthImageSize.height);
 
   // Render the reconstructed scene, then render a synthetic scene over the top of it.
   render_reconstructed_scene(pose, renderState);
@@ -220,6 +225,9 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
 
 void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const
 {
+  glDepthFunc(GL_LEQUAL);
+  glEnable(GL_DEPTH_TEST);
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
@@ -251,6 +259,8 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteracto
   }
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
+
+  glDisable(GL_DEPTH_TEST);
 }
 
 void Renderer::render_textured_quad(GLuint textureID)

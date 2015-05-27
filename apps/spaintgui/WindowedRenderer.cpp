@@ -36,14 +36,10 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const spaint::Spain
     &SDL_DestroyWindow
   ));
 
-  glViewport(0, 0, width, height);
-
-  glDepthFunc(GL_LEQUAL);
-  glEnable(GL_DEPTH_TEST);
-
   // Set up the camera.
   m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 
+  // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();
 }
 
