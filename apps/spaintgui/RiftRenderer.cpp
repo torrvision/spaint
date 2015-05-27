@@ -132,7 +132,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   ovrHmd_BeginFrame(m_hmd, 0);
 
   // If we're following the reconstruction, update the position and orientation of the camera.
-  if(m_cameraMode == CM_FOLLOW)
+  if(get_camera_mode() == CM_FOLLOW)
   {
     m_camera->set_from(CameraPoseConverter::pose_to_camera(m_model->get_pose()));
   }

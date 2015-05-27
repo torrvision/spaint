@@ -70,7 +70,7 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
   // Determine the camera pose.
   ITMPose pose;
-  switch(m_cameraMode)
+  switch(get_camera_mode())
   {
     case CM_FOLLOW:
       pose = m_model->get_pose();

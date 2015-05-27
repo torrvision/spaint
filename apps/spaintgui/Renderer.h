@@ -43,6 +43,9 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The current camera mode. */
+  CameraMode m_cameraMode;
+
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
@@ -63,9 +66,6 @@ private:
 
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** The current camera mode. */
-  CameraMode m_cameraMode;
-
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
 
