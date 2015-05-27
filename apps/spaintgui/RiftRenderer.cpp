@@ -7,13 +7,12 @@
 #include <stdexcept>
 
 #include <OVR_CAPI_GL.h>
+#include <Extras/OVR_Math.h>
+#include <GL/glx.h> // Placing this header in WrappedGL causes a conflict Eigen/Core.
+// #error The preprocessor symbol 'Success' is defined, possibly by the X11 header file X.h
 
 #ifdef __APPLE__
 #pragma GCC diagnostic ignored "-Wextern-c-compat"
-#endif
-
-#ifdef __linux
-  #include <GL/glx.h>
 #endif
 
 #include <SDL_syswm.h>
@@ -65,8 +64,7 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_C
   const int backBufferMultisample = 1;
   ovrGLConfig cfg;
   cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
-  cfg.OGL.Header.BackBufferSize.w = m_hmd->Resolution.w;
-  cfg.OGL.Header.BackBufferSize.h = m_hmd->Resolution.h;
+  cfg.OGL.Header.BackBufferSize = OVR::Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
   cfg.OGL.Header.Multisample = backBufferMultisample;
 #ifdef _WIN32
   cfg.OGL.Window = wmInfo.info.win.window;
@@ -173,12 +171,8 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize.w = m_eyeImages[i]->noDims.x;
-    eyeTextures[i].OGL.Header.TextureSize.h = m_eyeImages[i]->noDims.y;
-    eyeTextures[i].OGL.Header.RenderViewport.Pos.x = i == 0 ? 0 : m_eyeImages[i]->noDims.x;
-    eyeTextures[i].OGL.Header.RenderViewport.Pos.y = 0;
-    eyeTextures[i].OGL.Header.RenderViewport.Size.w = m_eyeImages[i]->noDims.x;
-    eyeTextures[i].OGL.Header.RenderViewport.Size.h = m_eyeImages[i]->noDims.y;
+    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y);
+    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y));
     eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
   }
 
