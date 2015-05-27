@@ -31,7 +31,7 @@ using namespace tvgutil;
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 : m_commandManager(10), m_spaintPipeline(spaintPipeline)
 {
-  m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint"));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", spaintPipeline->get_model(), spaintPipeline->get_raycaster()));
 
   // Set up the semantic labels.
   const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
@@ -372,7 +372,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(SDLK_1))
       {
-        m_renderer.reset(new WindowedRenderer(m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster(), "Semantic Paint"));
+        m_renderer.reset(new WindowedRenderer("Semantic Paint", m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster()));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
@@ -381,9 +381,9 @@ void Application::process_renderer_input()
         try
         {
           m_renderer.reset(new RiftRenderer(
+            "Semantic Paint",
             m_spaintPipeline->get_model(),
             m_spaintPipeline->get_raycaster(),
-            "Semantic Paint",
             m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
           ));
           framesTillSwitchAllowed = SWITCH_DELAY;

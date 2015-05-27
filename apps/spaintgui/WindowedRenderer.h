@@ -7,8 +7,6 @@
 
 #include <string>
 
-#include <spaint/ogl/FrameBuffer.h>
-
 #include "Renderer.h"
 
 /**
@@ -29,11 +27,11 @@ public:
   /**
    * \brief Constructs a windowed renderer.
    *
+   * \param title     The title of the window.
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param title     The title of the window.
    */
-  WindowedRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title);
+  WindowedRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:
