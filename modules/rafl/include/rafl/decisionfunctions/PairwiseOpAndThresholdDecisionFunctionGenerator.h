@@ -57,8 +57,7 @@ public:
    */
   static DecisionFunctionGenerator_Ptr maker(const std::string& params)
   {
-    // TODO: Parse the parameters.
-    return DecisionFunctionGenerator_Ptr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>);
+    return DecisionFunctionGenerator_Ptr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(FeatureBasedDecisionFunctionGenerator<Label>::parse_params(params)));
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
