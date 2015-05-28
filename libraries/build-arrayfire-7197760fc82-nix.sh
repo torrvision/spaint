@@ -22,6 +22,21 @@ fi
 
 cd arrayfire-7197760fc82
 
+echo "[spaint] ...Patching Arrayfire to use [spaint] version of boost..."
+
+lineToInsert="SET(BOOST_ROOT \"\${PROJECT_SOURCE_DIR}/../boost_1_56_0\" CACHE FILEPATH \"The Boost root directory\")"
+export lineToInsert
+
+FILEPATHS="src/backend/opencl/CMakeLists.txt src/backend/cuda/CMakeLists.txt"
+
+for i in $FILEPATHS
+do
+  if [[ ! `grep -w "$lineToInsert" $i` ]]
+  then
+    perl -i -plne 'print $ENV{lineToInsert} if(/FIND_PACKAGE\(Boost /);' $i
+  fi
+done
+
 if [ -d build ]
 then
   echo "[spaint] ...Skipping build (already built)"
