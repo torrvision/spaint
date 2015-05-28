@@ -49,36 +49,6 @@ protected:
     }
   }
 
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-  /**
-   * \brief Parse the feature based decision function generator parameters.
-   *
-   * \param params  The parameters of the decision function generator as a string.
-   * \return        The optional parameters of the decision function generator as a pair of integers.
-   */
-  static boost::optional<std::pair<int,int> > parse_params(const std::string& params)
-  {
-    boost::optional<std::pair<int,int> > featureIndexRange;
-    std::string trimmedParams = params;
-    boost::algorithm::trim(trimmedParams);
-    if(!trimmedParams.empty())
-    {
-      boost::regex expression("(\\d+)\\s+(\\d+)");
-      boost::smatch what;
-      if(boost::regex_match(trimmedParams, what, expression))
-      {
-        int lower = boost::lexical_cast<int>(what[1]);
-        int upper = boost::lexical_cast<int>(what[2]);
-        featureIndexRange = std::make_pair(lower, upper);
-      }
-      else
-      {
-        throw std::runtime_error("The parameters supplied for the feature-based decision function generator are not in the expected format");
-      }
-    }
-    return featureIndexRange;
-  }
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
@@ -108,6 +78,29 @@ protected:
       assert(result.second < descriptorSize);
     }
     return result;
+  }
+
+  /**
+   * \brief Parses a string specifying the parameters to a feature-based decision function generator.
+   *
+   * \param params  A string specifying the parameters to a feature-based decision function generator.
+   * \return        The parsed parameters.
+   */
+  static boost::optional<std::pair<int,int> > parse_params(const std::string& params)
+  {
+    std::string trimmedParams = params;
+    boost::algorithm::trim(trimmedParams);
+    if(trimmedParams.empty()) return boost::none;
+
+    boost::regex expression("(\\d+)\\s+(\\d+)");
+    boost::smatch what;
+    if(boost::regex_match(trimmedParams, what, expression))
+    {
+      int lower = boost::lexical_cast<int>(what[1]);
+      int upper = boost::lexical_cast<int>(what[2]);
+      return std::make_pair(lower, upper);
+    }
+    else throw std::runtime_error("The parameters supplied for the feature-based decision function generator are not in the expected format");
   }
 };
 
