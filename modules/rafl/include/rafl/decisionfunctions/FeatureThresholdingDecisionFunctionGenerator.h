@@ -57,7 +57,8 @@ public:
    */
   static DecisionFunctionGenerator_Ptr maker(const std::string& params)
   {
-    return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>(FeatureBasedDecisionFunctionGenerator<Label>::parse_params(params)));
+    boost::optional<std::pair<int,int> > parsedParams = FeatureBasedDecisionFunctionGenerator<Label>::parse_params(params);
+    return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>(parsedParams));
   }
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
