@@ -6,7 +6,17 @@
 
 #include <stdexcept>
 
+#ifdef __APPLE__
+#define static_assert(x, y)
+using std::isnan;
+#endif
+
 #include <OVR_CAPI_GL.h>
+
+#ifdef __APPLE__
+#undef static_assert
+#endif
+
 #include <Extras/OVR_Math.h>
 
 #ifdef __linux__
@@ -69,10 +79,10 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_C
   cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
   cfg.OGL.Header.BackBufferSize = OVR::Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
   cfg.OGL.Header.Multisample = backBufferMultisample;
-#ifdef _WIN32
+#if defined(_WIN32)
   cfg.OGL.Window = wmInfo.info.win.window;
   cfg.OGL.DC = NULL;
-#else
+#elif defined(__linux__)
   cfg.OGL.Disp = glXGetCurrentDisplay();
 #endif
 
