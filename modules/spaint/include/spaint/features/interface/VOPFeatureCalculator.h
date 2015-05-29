@@ -72,6 +72,11 @@ private:
                                     const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                     ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
+  /**
+   * \brief TODO
+   */
+  virtual void update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const = 0;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */

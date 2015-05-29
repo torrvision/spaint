@@ -46,9 +46,6 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   }
 #endif
 
-  // Convert the RGB patches to the CIELab colour space.
-  convert_patches_to_lab(voxelLocationCount, featuresMB);
-
   // Compute a histogram of intensity gradients for each patch.
   // TODO
 

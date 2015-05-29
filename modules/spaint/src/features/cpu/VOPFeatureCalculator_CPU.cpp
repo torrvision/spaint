@@ -4,6 +4,9 @@
 
 #include "features/cpu/VOPFeatureCalculator_CPU.h"
 
+#include <cmath>
+#include <vector>
+
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 
 #include "features/shared/VOPFeatureCalculator_Shared.h"
@@ -80,6 +83,70 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {
     generate_rgb_patch(voxelLocationIndex, voxelLocations, xAxes, yAxes, voxelData, indexData, m_patchSize, m_patchSpacing, featureCount, features);
+  }
+}
+
+void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  const size_t binCount = 32;
+  const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
+  const size_t featureCount = get_feature_count();
+  const size_t patchArea = m_patchSize * m_patchSize;
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
+  {
+    const float *featuresForVoxel = features + voxelLocationIndex * featureCount;
+    std::vector<size_t> histogram(binCount);
+    std::vector<float> intensities(patchArea);
+
+    for(size_t i = 0; i < patchArea; ++i)
+    {
+      size_t y = i / m_patchSize;
+      size_t x = i % m_patchSize;
+      size_t offset = y * m_patchSize + x;
+      size_t featureOffset = offset * 3;
+
+      float r = featuresForVoxel[offset];
+      float g = featuresForVoxel[offset + 1];
+      float b = featuresForVoxel[offset + 2];
+
+      // TODO: Consider alternatives.
+      intensities[offset] = (r + g + b) / 3.0f;
+    }
+
+    for(size_t i = 0; i < patchArea; ++i)
+    {
+      size_t y = i / m_patchSize;
+      size_t x = i % m_patchSize;
+
+      if(x != 0 && y != 0 && x != m_patchSize - 1 && y != m_patchSize - 1)
+      {
+        size_t offset = y * m_patchSize + x;
+
+        // Compute the derivatives.
+        float xDeriv = intensities[offset + 1] - intensities[offset - 1];
+        float yDeriv = intensities[offset + m_patchSize] - intensities[offset - m_patchSize];
+
+        // Compute the orientation.
+        float ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
+
+        // Quantize the orientation and update the histogram.
+        int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
+        ++histogram[bin]; // note: this will need synchronisation on the GPU
+      }
+    }
+
+    // Calculate the orientation histogram.
+    // TODO
+
+    // Determine a dominant orientation.
+    // TODO
+
+    // Update the coordinate system.
+    // TODO
   }
 }
 

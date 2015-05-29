@@ -146,4 +146,9 @@ void VOPFeatureCalculator_CUDA::generate_rgb_patches(const ORUtils::MemoryBlock<
 #endif
 }
 
+void VOPFeatureCalculator_CUDA::update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  // TODO
+}
+
 }
