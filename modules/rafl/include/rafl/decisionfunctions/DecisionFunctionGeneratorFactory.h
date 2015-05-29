@@ -7,7 +7,8 @@
 
 #include <tvgutil/MapUtil.h>
 
-#include "DecisionFunctionGenerator.h"
+#include "FeatureThresholdingDecisionFunctionGenerator.h"
+#include "PairwiseOpAndThresholdDecisionFunctionGenerator.h"
 
 namespace rafl {
 
@@ -70,6 +71,22 @@ public:
   void register_maker(const std::string& generatorType, Maker maker)
   {
     m_makers.insert(std::make_pair(generatorType, maker));
+  }
+
+  /**
+   * \brief Registers maker function for the decision function generators in rafl itself.
+   */
+  void register_rafl_makers()
+  {
+    register_maker(
+      FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(),
+      &FeatureThresholdingDecisionFunctionGenerator<Label>::maker
+    );
+
+    register_maker(
+      PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(),
+      &PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::maker
+    );
   }
 };
 
