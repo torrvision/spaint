@@ -92,6 +92,8 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
   const size_t featureCount = get_feature_count();
   const size_t patchArea = m_patchSize * m_patchSize;
+  Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
+  Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   //#pragma omp parallel for
@@ -139,14 +141,29 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
       }
     }
 
-    // Calculate the orientation histogram.
-    // TODO
+    size_t dominantOrientationBin;
+    int highestCount = 0;
+    for(size_t i = 0; i < binCount; ++i)
+    {
+      int currentCount = histogram[i];
+      if(currentCount > highestCount)
+      {
+        highestCount = currentCount;
+        dominantOrientationBin = i;
+      }
+    }
 
-    // Determine a dominant orientation.
-    // TODO
+    float binAngle = 2 * M_PI / binCount;
+    float dominantOrientation = dominantOrientationBin * binAngle;
 
-    // Update the coordinate system.
-    // TODO
+    float c = cos(dominantOrientation);
+    float s = sin(dominantOrientation);
+
+    Vector3f xAxis = xAxes[voxelLocationIndex];
+    Vector3f yAxis = yAxes[voxelLocationIndex];
+
+    xAxes[voxelLocationIndex] = c * xAxis + s * yAxis;
+    yAxes[voxelLocationIndex] = c * yAxis - s * xAxis;
   }
 }
 
