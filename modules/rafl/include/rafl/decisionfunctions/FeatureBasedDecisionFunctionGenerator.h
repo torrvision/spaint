@@ -19,8 +19,8 @@ namespace rafl {
  * \brief An instance of an instantiation of a class template deriving from this one can be used to generate a feature-based decision function
  *        with which to split a set of examples.
  *
- * A "feature-based" generator is one that generates functions that base their decisions on the features in the examples' descriptors (as opposed
- * to e.g. sending all examples the same way or basing their decisions on the phase of the moon, etc.)
+ * A "feature-based" decision function is one that bases its decisions on the features in the examples' descriptors (as opposed to e.g. sending
+ * all examples the same way or basing its decisions on the phase of the moon, etc.)
  */
 template <typename Label>
 class FeatureBasedDecisionFunctionGenerator : public DecisionFunctionGenerator<Label>
