@@ -25,8 +25,8 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
-                           const std::string& title, RiftRenderingMode renderingMode)
+RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
+                           RiftRenderingMode renderingMode)
 : Renderer(model, raycaster)
 {
   // Initialise the Rift.
@@ -42,7 +42,7 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-  m_window.reset(
+  set_window(SDL_Window_Ptr(
     SDL_CreateWindow(
       title.c_str(),
       renderingMode == WINDOWED_MODE ? SDL_WINDOWPOS_UNDEFINED : SDL_WINDOWPOS_CENTERED_DISPLAY(1),
@@ -52,17 +52,12 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
       renderingMode == WINDOWED_MODE ? SDL_WINDOW_OPENGL : SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
     ),
     &SDL_DestroyWindow
-  );
-
-  m_context.reset(
-    SDL_GL_CreateContext(m_window.get()),
-    SDL_GL_DeleteContext
-  );
+  ));
 
   // Get device-dependent information about the window.
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
-  SDL_GetWindowWMInfo(m_window.get(), &wmInfo);
+  SDL_GetWindowWMInfo(get_window(), &wmInfo);
 
   // Configure rendering via the Rift SDK.
   const int backBufferMultisample = 1;
@@ -96,20 +91,22 @@ RiftRenderer::RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::
   m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, 0.0f))));
   m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
 
-  // Set up the eye images and eye textures.
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
+  // Set up the eye frame buffers.
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
   for(int i = 0; i < ovrEye_Count; ++i)
   {
-    m_eyeImages[i].reset(new ITMUChar4Image(depthImageSize, true, true));
+    m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
   }
-  glGenTextures(ovrEye_Count, m_eyeTextureIDs);
+
+  // Initialise the temporary image and texture used for visualising the scene.
+  initialise_common();
 }
 
 //#################### DESTRUCTOR ####################
 
 RiftRenderer::~RiftRenderer()
 {
-  glDeleteTextures(ovrEye_Count, m_eyeTextureIDs);
+  destroy_common();
   ovrHmd_Destroy(m_hmd);
   ovr_Shutdown();
 }
@@ -136,45 +133,33 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
   ovrHmd_BeginFrame(m_hmd, 0);
 
   // If we're following the reconstruction, update the position and orientation of the camera.
-  if(m_cameraMode == CM_FOLLOW)
+  if(get_camera_mode() == CM_FOLLOW)
   {
-    m_camera->set_from(CameraPoseConverter::pose_to_camera(m_model->get_pose()));
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose()));
   }
 
-  // Construct the left and right eye images.
-  ITMPose leftPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left"));
-  ITMPose rightPose = CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"));
-  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Left], m_renderStates[ovrEye_Left], leftPose);
-  m_raycaster->generate_free_raycast(m_eyeImages[ovrEye_Right], m_renderStates[ovrEye_Right], rightPose);
+  // Calculate the left and right eye poses.
+  ITMPose poses[] =
+  {
+    CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left")),
+    CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"))
+  };
 
-  // Copy the eye images into OpenGL textures.
+  // Render the scene into OpenGL textures from the left and right eye poses.
   for(int i = 0; i < ovrEye_Count; ++i)
   {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, m_eyeTextureIDs[i]);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
+    glUseProgram(0);
 
-    // Invert the image (otherwise it would appear upside-down on the Rift).
-    // FIXME: This can be made more efficient.
-    Vector4u *imageData = m_eyeImages[i]->GetData(MEMORYDEVICE_CPU);
-    Vector4u *invertedImageData = new Vector4u[m_eyeImages[i]->noDims.x * m_eyeImages[i]->noDims.y];
-    for(int n = 0; n < m_eyeImages[i]->noDims.x * m_eyeImages[i]->noDims.y; ++n)
-    {
-      int x = n % m_eyeImages[i]->noDims.x;
-      int dy = n / m_eyeImages[i]->noDims.x;
-      int sy = m_eyeImages[i]->noDims.y - 1 - dy;
-      invertedImageData[n] = imageData[sy * m_eyeImages[i]->noDims.x + x];
-    }
+    render_scene(poses[i], interactor, m_renderStates[i]);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, invertedImageData);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    delete[] invertedImageData;
-
-    glDisable(GL_TEXTURE_2D);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
-  // Set up the eye poses and pass the eye textures to the Rift SDK.
+  // Set up the Rift eye poses and pass the eye textures to the Rift SDK.
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
+  int width = depthImageSize.width, height = depthImageSize.height;
+
   ovrPosef eyePoses[ovrEye_Count];
   ovrGLTexture eyeTextures[ovrEye_Count];
   for(int i = 0; i < ovrEye_Count; ++i)
@@ -183,9 +168,9 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y);
-    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y));
-    eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
+    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(width, height);
+    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(width, height));
+    eyeTextures[i].OGL.TexId = m_eyeFrameBuffers[i]->get_colour_buffer_id();
   }
 
 #if 0

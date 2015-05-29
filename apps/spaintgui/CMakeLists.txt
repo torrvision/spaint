@@ -15,6 +15,7 @@ SET(targetname spaintgui)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
@@ -42,6 +43,7 @@ SET(toplevel_sources
 main.cpp
 Application.cpp
 CPUInstantiations.cpp
+Renderer.cpp
 WindowedRenderer.cpp
 )
 
@@ -103,6 +105,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 TARGET_LINK_LIBRARIES(${targetname} rigging spaint tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)

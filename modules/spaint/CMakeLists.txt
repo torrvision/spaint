@@ -15,6 +15,7 @@ SET(targetname spaint)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
@@ -83,10 +84,12 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 
 ##
 SET(ogl_sources
+src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
 )

@@ -12,6 +12,7 @@
 #include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
+#include <spaint/ogl/WrappedGL.h>
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -40,13 +41,16 @@ protected:
 public:
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
 
-  //#################### PROTECTED VARIABLES ####################
-protected:
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** The current camera mode. */
   CameraMode m_cameraMode;
 
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
+
+  /** An image in which to temporarily store visualisations of the scene. */
+  ITMUChar4Image_Ptr m_image;
 
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
@@ -57,27 +61,28 @@ protected:
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   spaint::SpaintRaycaster_CPtr m_raycaster;
 
+  /** The texture ID for the visualisation we're drawing. */
+  GLuint m_textureID;
+
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief Constructs a renderer.
    *
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
-  : m_cameraMode(CM_FOLLOW), m_model(model), m_phongEnabled(false), m_raycaster(raycaster)
-  {}
+  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the renderer.
    */
-  virtual ~Renderer() {}
+  virtual ~Renderer();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -96,7 +101,7 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const = 0;
 
   /**
-   * \brief Renders the scene.
+   * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
    * \param interactor  The interactor that is being used to interact with the scene.
    */
@@ -109,40 +114,118 @@ public:
    *
    * \return  The current camera mode.
    */
-  CameraMode get_camera_mode() const
-  {
-    return m_cameraMode;
-  }
+  CameraMode get_camera_mode() const;
 
   /**
    * \brief Gets whether or not Phong lighting is currently enabled.
    *
    * \return  true, if Phong lighting is currently enabled, or false otherwise.
    */
-  bool get_phong_enabled() const
-  {
-    return m_phongEnabled;
-  }
+  bool get_phong_enabled() const;
 
   /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
    */
-  void set_camera_mode(CameraMode cameraMode)
-  {
-    m_cameraMode = cameraMode;
-  }
+  void set_camera_mode(CameraMode cameraMode);
 
   /**
    * \brief Enables or disables Phong lighting.
    *
    * \param phongEnabled  true, if Phong lighting should be enabled, or false otherwise.
    */
-  void set_phong_enabled(bool phongEnabled)
-  {
-    m_phongEnabled = phongEnabled;
-  }
+  void set_phong_enabled(bool phongEnabled);
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Sets appropriate projection and model-view matrices for 2D rendering.
+   */
+  static void begin_2d();
+
+  /**
+   * \brief Destroys the temporary image and texture used for visualising the scene.
+   */
+  void destroy_common();
+
+  /**
+   * \brief Restores the projection and model-view matrices that were active prior to 2D rendering.
+   */
+  static void end_2d();
+
+  /**
+   * \brief Gets the spaint model.
+   *
+   * \return  The spaint model.
+   */
+  spaint::SpaintModel_CPtr get_model() const;
+
+  /**
+   * \brief Gets the window into which to render.
+   *
+   * \return  The window into which to render.
+   */
+  SDL_Window *get_window() const;
+
+  /**
+   * \brief Initialises the temporary image and texture used for visualising the scene.
+   */
+  void initialise_common();
+
+  /**
+   * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
+   *
+   * \param pose        The camera pose.
+   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param renderState The render state corresponding to the camera pose.
+   */
+  void render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
+
+  /**
+   * \brief Sets the window into which to render.
+   *
+   * \param window  The window into which to render.
+   */
+  void set_window(const SDL_Window_Ptr& window);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Renders the reconstructed scene.
+   *
+   * \param pose        The camera pose.
+   * \param renderState The render state corresponding to the camera pose.
+   */
+  void render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
+
+  /**
+   * \brief Renders a synthetic scene to augment what actually exists in the real world.
+   *
+   * \param pose        The camera pose.
+   * \param interactor  The interactor that is being used to interact with the scene.
+   */
+  void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
+
+  /**
+   * \brief Renders a quad textured with the specified texture.
+   *
+   * \param textureID The ID of the texture to apply to the quad.
+   */
+  static void render_textured_quad(GLuint textureID);
+
+  /**
+   * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
+   *
+   * \param intrinsics  The intrinsic camera parameters.
+   * \param width       The width of the viewport.
+   * \param height      The height of the viewport.
+   */
+  static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
+
+  //#################### FRIENDS ####################
+
+  friend class SelectorRenderer;
 };
 
 #endif
