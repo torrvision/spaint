@@ -171,9 +171,9 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
     eyePoses[i] = ovrHmd_GetHmdPosePerEye(m_hmd, eye);  // FIXME: Deprecated.
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
-    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y);
-    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(m_eyeImages[i]->noDims.x, m_eyeImages[i]->noDims.y));
-    eyeTextures[i].OGL.TexId = m_eyeTextureIDs[i];
+    eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(width, height);
+    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(width, height));
+    eyeTextures[i].OGL.TexId = m_eyeFrameBuffers[i]->get_colour_buffer_id();
   }
 
 #if 0
