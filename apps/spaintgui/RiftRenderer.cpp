@@ -6,26 +6,25 @@
 
 #include <stdexcept>
 
-#ifdef __APPLE__
-#define static_assert(x, y)
-using std::isnan;
-#endif
-
-#include <OVR_CAPI_GL.h>
-
-#ifdef __APPLE__
-#undef static_assert
-#endif
-
-#include <Extras/OVR_Math.h>
-
 #ifdef __linux__
 // Note: This header can't be included in WrappedGL.h because it causes a conflict with Eigen/Core.
 #include <GL/glx.h>
 #endif
 
 #ifdef __APPLE__
+// Disable an uninteresting warning.
 #pragma GCC diagnostic ignored "-Wextern-c-compat"
+
+// Make OVR work in the absence of C++11 support.
+#define static_assert(x, y)
+using std::isnan;
+#endif
+
+#include <OVR_CAPI_GL.h>
+#include <Extras/OVR_Math.h>
+
+#ifdef __APPLE__
+#undef static_assert
 #endif
 
 #include <SDL_syswm.h>
