@@ -46,11 +46,8 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   }
 #endif
 
-  // Compute a histogram of intensity gradients for each patch.
-  // TODO
-
   // Determine the dominant orientation for each patch and update the coordinate systems accordingly.
-  // TODO
+  update_coordinate_systems(voxelLocationCount, featuresMB);
 
   // Read a new RGB patch around each voxel location that is oriented based on the dominant orientation.
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);

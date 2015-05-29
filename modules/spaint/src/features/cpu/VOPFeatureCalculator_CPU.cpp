@@ -111,9 +111,9 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
       size_t offset = y * m_patchSize + x;
       size_t featureOffset = offset * 3;
 
-      float r = featuresForVoxel[offset];
-      float g = featuresForVoxel[offset + 1];
-      float b = featuresForVoxel[offset + 2];
+      float r = featuresForVoxel[featureOffset];
+      float g = featuresForVoxel[featureOffset + 1];
+      float b = featuresForVoxel[featureOffset + 2];
 
       // TODO: Consider alternatives.
       intensities[offset] = (r + g + b) / 3.0f;
@@ -133,7 +133,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
         float yDeriv = intensities[offset + m_patchSize] - intensities[offset - m_patchSize];
 
         // Compute the orientation.
-        float ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
+        double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
 
         // Quantize the orientation and update the histogram.
         int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
@@ -142,10 +142,10 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
     }
 
     size_t dominantOrientationBin;
-    int highestCount = 0;
+    size_t highestCount = 0;
     for(size_t i = 0; i < binCount; ++i)
     {
-      int currentCount = histogram[i];
+      size_t currentCount = histogram[i];
       if(currentCount > highestCount)
       {
         highestCount = currentCount;
@@ -153,7 +153,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
       }
     }
 
-    float binAngle = 2 * M_PI / binCount;
+    float binAngle = static_cast<float>(2 * M_PI) / binCount;
     float dominantOrientation = dominantOrientationBin * binAngle;
 
     float c = cos(dominantOrientation);
