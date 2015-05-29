@@ -11,7 +11,7 @@
 using namespace rafl;
 
 /**
- * \brief An instance of this class can be used to generate a decision function with which to split a set of examples.
+ * \brief An instance of this class can be used to test composite decision function generation.
  */
 template <typename Label>
 class TestDecisionFunctionGenerator : public CompositeDecisionFunctionGenerator<Label>
