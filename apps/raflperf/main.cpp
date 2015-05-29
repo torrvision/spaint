@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
       .add_param("treeCount", list_of<size_t>(2))
       .add_param("splitBudget", list_of<size_t>(1048576/2))
       .add_param("candidateCount", list_of<int>(256))
+      .add_param("decisionFunctionGeneratorParams", list_of<std::string>(""))
       .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
       .add_param("gainThreshold", list_of<float>(0.0f))
       .add_param("maxClassSize", list_of<size_t>(1000))
@@ -123,6 +124,7 @@ int main(int argc, char *argv[])
       .add_param("treeCount", list_of<size_t>(8))
       .add_param("splitBudget", list_of<size_t>(1048576/2))
       .add_param("candidateCount", list_of<int>(256))
+      .add_param("decisionFunctionGeneratorParams", list_of<std::string>(""))
       .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
       .add_param("gainThreshold", list_of<float>(0.0f))
       .add_param("maxClassSize", list_of<size_t>(100000))
@@ -134,6 +136,9 @@ int main(int argc, char *argv[])
       .generate_param_sets();
   }
 
+  // Register the relevant decision function generators with the factory.
+  DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
+
   // Construct the split generator.
 #if 0
   const size_t foldCount = 2;
@@ -144,7 +149,7 @@ int main(int argc, char *argv[])
   SplitGenerator_Ptr splitGenerator(new RandomPermutationAndDivisionSplitGenerator(seed, splitCount, ratio));
 #endif
 
-  // Time the random forest
+  // Time the random forest.
   tvgutil::Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
 
   // Evaluate the random forest on the various different parameter sets.

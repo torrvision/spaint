@@ -6,7 +6,6 @@
 #define H_RAFL_DECISIONFUNCTIONGENERATORFACTORY
 
 #include <tvgutil/MapUtil.h>
-#include <tvgutil/RandomNumberGenerator.h>
 
 #include "FeatureThresholdingDecisionFunctionGenerator.h"
 #include "PairwiseOpAndThresholdDecisionFunctionGenerator.h"
@@ -22,8 +21,7 @@ class DecisionFunctionGeneratorFactory
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_Ptr;
-  typedef tvgutil::RandomNumberGenerator_Ptr RandomNumberGenerator_Ptr;
-  typedef DecisionFunctionGenerator_Ptr (*Maker)(const RandomNumberGenerator_Ptr&);
+  typedef DecisionFunctionGenerator_Ptr (*Maker)(const std::string&);
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -35,12 +33,7 @@ private:
   /**
    * \brief Constructs an instance of the factory.
    */
-  DecisionFunctionGeneratorFactory()
-  {
-    // Register the makers for the various different types of decision function generator.
-    m_makers.insert(std::make_pair(FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(), &feature_thresholding_maker));
-    m_makers.insert(std::make_pair(PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(), &pairwise_op_and_threshold_maker));
-  }
+  DecisionFunctionGeneratorFactory() {}
 
 public:
   /**
@@ -59,38 +52,41 @@ public:
   /**
    * \brief Makes a decision function generator of the specified type.
    *
-   * \param type                  The type of decision function generator to make.
-   * \param randomNumberGenerator The random number generator needed by certain types of decision function generator.
-   * \return                      The decision function generator.
+   * \param type    The type of decision function generator to make.
+   * \param params  The parameters to the decision function generator.
+   * \return        The decision function generator.
    */
-  DecisionFunctionGenerator_Ptr make(const std::string& type, const RandomNumberGenerator_Ptr& randomNumberGenerator)
+  DecisionFunctionGenerator_Ptr make(const std::string& type, const std::string& params)
   {
     const Maker& maker = tvgutil::MapUtil::lookup(m_makers, type);
-    return (*maker)(randomNumberGenerator);
-  }
-
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Makes a feature thresholding decision function generator.
-   *
-   * \param randomNumberGenerator The random number generator needed when generating decision functions.
-   * \return                      The decision function generator.
-   */
-  static DecisionFunctionGenerator_Ptr feature_thresholding_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
-  {
-    return DecisionFunctionGenerator_Ptr(new FeatureThresholdingDecisionFunctionGenerator<Label>(randomNumberGenerator));
+    return (*maker)(params);
   }
 
   /**
-   * \brief Makes a pairwise operation and thresholding decision function generator.
+   * \brief Registers a maker function for a particular type of decision function generator.
    *
-   * \param randomNumberGenerator  The random number generator needed when generating decision functions.
-   * \return                       The decision function generator.
+   * \param generatorType The type of decision function generator.
+   * \param maker         The maker function.
    */
-  static DecisionFunctionGenerator_Ptr pairwise_op_and_threshold_maker(const RandomNumberGenerator_Ptr& randomNumberGenerator)
+  void register_maker(const std::string& generatorType, Maker maker)
   {
-    return DecisionFunctionGenerator_Ptr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(randomNumberGenerator));
+    m_makers.insert(std::make_pair(generatorType, maker));
+  }
+
+  /**
+   * \brief Registers maker function for the decision function generators in rafl itself.
+   */
+  void register_rafl_makers()
+  {
+    register_maker(
+      FeatureThresholdingDecisionFunctionGenerator<Label>::get_static_type(),
+      &FeatureThresholdingDecisionFunctionGenerator<Label>::maker
+    );
+
+    register_maker(
+      PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::get_static_type(),
+      &PairwiseOpAndThresholdDecisionFunctionGenerator<Label>::maker
+    );
   }
 };
 

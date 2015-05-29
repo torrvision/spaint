@@ -169,11 +169,13 @@ public:
      */
     void initialise(const std::map<std::string,std::string>& properties)
     {
+      std::string decisionFunctionGeneratorParams;
       std::string decisionFunctionGeneratorType;
       unsigned int randomSeed = 0;
 
       #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
         GET_SETTING(candidateCount);
+        GET_SETTING(decisionFunctionGeneratorParams);
         GET_SETTING(decisionFunctionGeneratorType);
         GET_SETTING(gainThreshold);
         GET_SETTING(maxClassSize);
@@ -185,7 +187,7 @@ public:
       #undef GET_SETTING
 
       randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(randomSeed));
-      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, decisionFunctionGeneratorParams);
     }
 
     //~~~~~~~~~~~~~~~~~~~~ SERIALIZATION ~~~~~~~~~~~~~~~~~~~~
@@ -201,9 +203,13 @@ public:
     {
       serialize_common(ar);
 
+      std::string decisionFunctionGeneratorParams;
       std::string decisionFunctionGeneratorType;
+
+      ar & decisionFunctionGeneratorParams;
       ar & decisionFunctionGeneratorType;
-      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, randomNumberGenerator);
+
+      decisionFunctionGenerator = DecisionFunctionGeneratorFactory<Label>::instance().make(decisionFunctionGeneratorType, decisionFunctionGeneratorParams);
     }
 
     /**
@@ -217,7 +223,10 @@ public:
     {
       const_cast<Settings*>(this)->serialize_common(ar);
 
+      std::string decisionFunctionGeneratorParams = decisionFunctionGenerator->get_params();
       std::string decisionFunctionGeneratorType = decisionFunctionGenerator->get_type();
+
+      ar & decisionFunctionGeneratorParams;
       ar & decisionFunctionGeneratorType;
     }
 
@@ -579,7 +588,13 @@ private:
   bool split_node(int nodeIndex)
   {
     Node& n = *m_nodes[nodeIndex];
-    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(n.m_reservoir, m_settings.candidateCount, m_settings.gainThreshold, m_inverseClassWeights);
+    typename DecisionFunctionGenerator<Label>::Split_CPtr split = m_settings.decisionFunctionGenerator->split_examples(
+      n.m_reservoir,
+      m_settings.candidateCount,
+      m_settings.gainThreshold,
+      m_inverseClassWeights,
+      m_settings.randomNumberGenerator
+    );
     if(!split) return false;
 
     // Set the decision function of the node to be split.
