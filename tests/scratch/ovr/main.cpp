@@ -5,8 +5,8 @@
   #undef static_assert
 #endif
 
-#include <OVR.h>
-#include <../Src/Kernel/OVR_Math.h>
+#include <OVR_CAPI.h>
+#include <Extras/OVR_Math.h>
 using namespace OVR;
 
 void quit(ovrHmd hmd)

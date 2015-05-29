@@ -388,7 +388,10 @@ void Application::process_renderer_input()
           ));
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
-        catch(std::runtime_error&) {}
+        catch(std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
 #endif
       }
     }

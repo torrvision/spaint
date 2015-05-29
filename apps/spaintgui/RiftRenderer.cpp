@@ -6,12 +6,25 @@
 
 #include <stdexcept>
 
-#include <OVR.h>
-#include <../Src/OVR_CAPI_GL.h>
-#include <../Src/Kernel/OVR_Math.h>
+#ifdef __linux__
+// Note: This header can't be included in WrappedGL.h because it causes a conflict with Eigen/Core.
+#include <GL/glx.h>
+#endif
 
 #ifdef __APPLE__
+// Disable an uninteresting warning.
 #pragma GCC diagnostic ignored "-Wextern-c-compat"
+
+// Make OVR work in the absence of C++11 support.
+#define static_assert(x, y)
+using std::isnan;
+#endif
+
+#include <OVR_CAPI_GL.h>
+#include <Extras/OVR_Math.h>
+
+#ifdef __APPLE__
+#undef static_assert
 #endif
 
 #include <SDL_syswm.h>
@@ -63,14 +76,16 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_C
   const int backBufferMultisample = 1;
   ovrGLConfig cfg;
   cfg.OGL.Header.API = ovrRenderAPI_OpenGL;
-  cfg.OGL.Header.RTSize = OVR::Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
+  cfg.OGL.Header.BackBufferSize = OVR::Sizei(m_hmd->Resolution.w, m_hmd->Resolution.h);
   cfg.OGL.Header.Multisample = backBufferMultisample;
-#ifdef _WIN32
+#if defined(_WIN32)
   cfg.OGL.Window = wmInfo.info.win.window;
   cfg.OGL.DC = NULL;
+#elif defined(__linux__)
+  cfg.OGL.Disp = glXGetCurrentDisplay();
 #endif
 
-  const unsigned int distortionCaps = ovrDistortionCap_Chromatic | ovrDistortionCap_Vignette | ovrDistortionCap_TimeWarp | ovrDistortionCap_Overdrive;
+  const unsigned int distortionCaps = ovrDistortionCap_Vignette | ovrDistortionCap_TimeWarp | ovrDistortionCap_Overdrive;
   ovrEyeRenderDesc eyeRenderDesc[2];
   if(!ovrHmd_ConfigureRendering(m_hmd, &cfg.Config, distortionCaps, m_hmd->DefaultEyeFov, eyeRenderDesc))
   {
