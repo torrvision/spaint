@@ -8,8 +8,11 @@
 
 #include <OVR_CAPI_GL.h>
 #include <Extras/OVR_Math.h>
-#include <GL/glx.h> // Placing this header in WrappedGL causes a conflict Eigen/Core.
-// #error The preprocessor symbol 'Success' is defined, possibly by the X11 header file X.h
+
+#ifdef __linux__
+// Note: This header can't be included in WrappedGL.h because it causes a conflict with Eigen/Core.
+#include <GL/glx.h>
+#endif
 
 #ifdef __APPLE__
 #pragma GCC diagnostic ignored "-Wextern-c-compat"
