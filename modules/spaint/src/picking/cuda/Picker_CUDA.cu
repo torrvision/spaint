@@ -17,10 +17,10 @@ __global__ void ck_get_pick_point(int x, int y, int width, const Vector4f *image
   *result = get_pick_point(x, y, width, imageData, *pickPoint);
 }
 
-__global__ void ck_to_short(const Vector3f *pickPointFloat, Vector3s *pickPointShort, int size)
+__global__ void ck_to_short(const Vector3f *pickPointsFloat, Vector3s *pickPointsShort, int pointCount)
 {
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
-  if(tid < size) pickPointShort[tid] = pickPointFloat[tid].toShortRound();
+  if(tid < pointCount) pickPointsShort[tid] = pickPointsFloat[tid].toShortRound();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -39,21 +39,20 @@ bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rend
   return *result.GetData(MEMORYDEVICE_CPU);
 }
 
-void Picker_CUDA::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const
+void Picker_CUDA::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointsFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointsShortMB) const
 {
-  if(pickPointFloatMB.dataSize != pickPointShortMB.dataSize)
+  if(pickPointsFloatMB.dataSize != pickPointsShortMB.dataSize)
   {
-    throw std::runtime_error("The two memory blocks must have the same size");
+    throw std::runtime_error("Error: The memory block into which to write the converted pick points must be of the right size");
   }
 
-  const Vector3f *floatData = pickPointFloatMB.GetData(MEMORYDEVICE_CUDA);
-  Vector3s *shortData = pickPointShortMB.GetData(MEMORYDEVICE_CUDA);
+  const Vector3f *pickPointsFloat = pickPointsFloatMB.GetData(MEMORYDEVICE_CUDA);
+  Vector3s *pickPointsShort = pickPointsShortMB.GetData(MEMORYDEVICE_CUDA);
+  int pointCount = static_cast<int>(pickPointsFloatMB.dataSize);
 
-  int size = pickPointFloatMB.dataSize;
   int threadsPerBlock = 256;
-  int numBlocks = (size + threadsPerBlock - 1) / threadsPerBlock;
-
-  ck_to_short<<<numBlocks,threadsPerBlock>>>(floatData, shortData, size);
+  int numBlocks = (pointCount + threadsPerBlock - 1) / threadsPerBlock;
+  ck_to_short<<<numBlocks,threadsPerBlock>>>(pickPointsFloat, pickPointsShort, pointCount);
 }
 
 }

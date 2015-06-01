@@ -36,12 +36,12 @@ public:
   virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const = 0;
 
   /**
-   * \brief Converts a pick point expressed as a Vector3f into a Vector3s.
+   * \brief Converts one or more pick points in Vector3f format into Vector3s format.
    *
-   * \param pickPointFloatMB  A memory block containing the pick point expressed as a Vector3f.
-   * \param pickPointShortMB  A memory block into which to write the pick point expressed as a Vector3s.
+   * \param pickPointsFloatMB A memory block containing the pick points in Vector3f format.
+   * \param pickPointsShortMB A memory block into which to write the pick points in Vector3s format.
    */
-  virtual void to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const = 0;
+  virtual void to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointsFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointsShortMB) const = 0;
 };
 
 }

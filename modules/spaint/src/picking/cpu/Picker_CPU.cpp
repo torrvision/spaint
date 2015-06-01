@@ -22,24 +22,23 @@ bool Picker_CPU::pick(int x, int y, const ITMLib::Objects::ITMRenderState *rende
   );
 }
 
-void Picker_CPU::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointShortMB) const
+void Picker_CPU::to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointsFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointsShortMB) const
 {
-  if(pickPointFloatMB.dataSize != pickPointShortMB.dataSize)
+  if(pickPointsFloatMB.dataSize != pickPointsShortMB.dataSize)
   {
-    throw std::runtime_error("The two memory blocks must have the same size");
+    throw std::runtime_error("Error: The memory block into which to write the converted pick points must be of the right size");
   }
 
-  const Vector3f *floatData = pickPointFloatMB.GetData(MEMORYDEVICE_CPU);
-  Vector3s *shortData = pickPointShortMB.GetData(MEMORYDEVICE_CPU);
-
-  int size = pickPointFloatMB.dataSize;
+  const Vector3f *pickPointsFloat = pickPointsFloatMB.GetData(MEMORYDEVICE_CPU);
+  Vector3s *pickPointsShort = pickPointsShortMB.GetData(MEMORYDEVICE_CPU);
+  int pointCount = static_cast<int>(pickPointsFloatMB.dataSize);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int i = 0; i < size; ++i)
+  for(int i = 0; i < pointCount; ++i)
   {
-    shortData[i] = floatData[i].toShortRound();
+    pickPointsShort[i] = pickPointsFloat[i].toShortRound();
   }
 }
 
