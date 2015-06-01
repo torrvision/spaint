@@ -28,7 +28,7 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
   for(int locId = 0; locId < imgSize; ++locId)
   {
     int locIdcm = ImageProcessor::column_major_index_from_row_major_index(locId, width, height);
-    shade_pixel_absolute_difference(&output[locIdcm], first[locId], second[locId]);
+    calculate_pixel_depth_difference(first[locId], second[locId], &output[locIdcm]);
   }
 }
 

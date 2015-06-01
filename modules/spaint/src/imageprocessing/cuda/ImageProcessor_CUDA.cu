@@ -10,26 +10,25 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_absolute_difference_calculator(float *outputImage, const float *firstInputImage, const float *secondInputImage, Vector2i imgSize)
-{
-  int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
-  if(x >= imgSize.x || y >= imgSize.y) return;
-
-  int locId = y * imgSize.x + x;
-  shade_pixel_absolute_difference(&outputImage[locId], firstInputImage[locId], secondInputImage[locId]);
-}
-
-__global__ void ck_absolute_difference_calculator_cmrmrm(float *outputImage, const float *firstInputImage, const float *secondInputImage, Vector2i imgSize)
+/**
+ * \brief Calculates the pixel-wise absolute difference between two depth images.
+ *
+ * \param firstInputImage   The first input image (in row-major format).
+ * \param secondInputImage  The second input image (in row-major format).
+ * \param imgSize           The size of the images.
+ * \param outputImage       The image in which to store the result of the calculation (in column-major format).
+ */
+__global__ void ck_calculate_depth_difference(const float *firstInputImage, const float *secondInputImage, Vector2i imgSize, float *outputImage)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if(x >= imgSize.x || y >= imgSize.y) return;
 
   int locIdcm = x * imgSize.y + y;
   int locIdrm = y * imgSize.x + x;
-  shade_pixel_absolute_difference(&outputImage[locIdcm], firstInputImage[locIdrm], secondInputImage[locIdrm]);
+  calculate_pixel_depth_difference(firstInputImage[locIdrm], secondInputImage[locIdrm], &outputImage[locIdcm]);
 }
 
-__global__ void ck_pixel_setter(float *output, const float *input, Vector2i imgSize, float comparator, ImageProcessor::ComparisonOperator comparisonOperator, float value)
+__global__ void ck_set_on_threshold(float *output, const float *input, Vector2i imgSize, float comparator, ImageProcessor::ComparisonOperator comparisonOperator, float value)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if(x >= imgSize.x || y >= imgSize.y) return;
@@ -51,11 +50,11 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
 
   dim3 cudaBlockSize(8, 8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
-  ck_absolute_difference_calculator_cmrmrm<<<gridSize,cudaBlockSize>>>(
-    outputImage->device<float>(),
+  ck_calculate_depth_difference<<<gridSize,cudaBlockSize>>>(
     firstInputImage->GetData(MEMORYDEVICE_CUDA),
     secondInputImage->GetData(MEMORYDEVICE_CUDA),
-    imgSize
+    imgSize,
+    outputImage->device<float>()
   );
 }
 
@@ -66,7 +65,7 @@ void ImageProcessor_CUDA::set_on_threshold(const ITMFloatImage_CPtr& input, Comp
 
   dim3 cudaBlockSize(8,8);
   dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
-  ck_pixel_setter<<<gridSize,cudaBlockSize>>>(
+  ck_set_on_threshold<<<gridSize,cudaBlockSize>>>(
     output->GetData(MEMORYDEVICE_CUDA),
     input->GetData(MEMORYDEVICE_CUDA),
     imgSize,

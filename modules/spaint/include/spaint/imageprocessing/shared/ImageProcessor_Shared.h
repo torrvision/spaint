@@ -10,17 +10,18 @@ namespace spaint {
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
- * \brief Calculates the absolute difference between the corresponding pixels of two images, 
- * if the corresponding pixel values in the two images are greater than or equal to zero.
+ * \brief Calculates the absolute difference between the corresponding pixels of two depth images, 
+ *        provided both pixel values are greater than or equal to zero. If either input pixel is 
+ *        less than zero then the corresponding output pixel will be set to -1.
  *
- * \param destination   The location into which to write the computed absolute difference.
- * \param firstInput    The first value.
- * \param secondInput   The second value.
+ * \param firstInput    The first pixel value.
+ * \param secondInput   The second pixel value.
+ * \param output        The location into which to write the computed absolute difference.
  */
 _CPU_AND_GPU_CODE_
-inline void shade_pixel_absolute_difference(float *destination, float firstInput, float secondInput)
+inline void calculate_pixel_depth_difference(float firstInput, float secondInput, float *output)
 {
-  *destination = firstInput >= 0 && secondInput >= 0 ? fabs(firstInput - secondInput) : -1.0f;
+  *output = firstInput >= 0 && secondInput >= 0 ? fabs(firstInput - secondInput) : -1.0f;
 }
 
 /**
