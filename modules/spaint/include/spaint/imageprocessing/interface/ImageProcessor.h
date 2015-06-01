@@ -89,12 +89,13 @@ public:
   /**
    * \brief Calculates a column-major index from a row-major index for a 2D matrix.
    *
-   * Consider a 3x3 (width x height) matrix A.
-   * The element (2, 1) (row, col) will have a row-major index of RM = (row * width + col) = 7.
-   * The same element will have a column-major index of CM = (col * height + row) = 5.
-   * In order to convert from row-major to column major indices, 
-   * first find the row and column indices from the row major index, 
-   * and then calculate CM as above.
+   * For example, consider a 3x3 (width x height) matrix A:
+   *
+   * - The element whose row = 2 and column = 1 will have a row-major index of (row * width + col) = 7.
+   * - The same element will have a column-major index of (col * height + row) = 5.
+   *
+   * To convert from a row-major to a column major index, we first find the row and column indices
+   * from the row-major index, and then calculate the column-major index as above.
    *
    * \param rowMajorIndex  The row-major index.
    * \param width          The width of the matrix.
@@ -108,7 +109,7 @@ private:
   /**
    * \brief Gets the size of an ArrayFire image.
    *
-   * \param img The Arrayfire image.
+   * \param img The ArrayFire image.
    * \return    The size of the ArrayFire image.
    */
   static Vector2i image_size(const AFImage_CPtr& img);
