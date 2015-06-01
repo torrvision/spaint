@@ -32,7 +32,7 @@ void ImageProcessor_CPU::calculate_absolute_difference(const ITMFloatImage_CPtr&
   }
 }
 
-void ImageProcessor_CPU::pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const
+void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& input, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& output) const
 {
   check_image_size_equal(output, input);
   int imgSize = input->noDims.x * input->noDims.y;
@@ -44,7 +44,7 @@ void ImageProcessor_CPU::pixel_setter(const ITMFloatImage_Ptr& output, const ITM
 #endif
   for(int locId = 0; locId < imgSize; ++locId)
   {
-    shade_pixel_on_comparison(&outputData[locId], inputData[locId], comparator, comparisonOperator, value);
+    shade_pixel_on_comparison(&outputData[locId], inputData[locId], threshold, op, value);
   }
 }
 

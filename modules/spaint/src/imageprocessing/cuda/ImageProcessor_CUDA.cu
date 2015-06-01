@@ -59,7 +59,7 @@ void ImageProcessor_CUDA::calculate_absolute_difference(const ITMFloatImage_CPtr
   );
 }
 
-void ImageProcessor_CUDA::pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const
+void ImageProcessor_CUDA::set_on_threshold(const ITMFloatImage_CPtr& input, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& output) const
 {
   check_image_size_equal(output, input);
   Vector2i imgSize = input->noDims;
@@ -70,8 +70,8 @@ void ImageProcessor_CUDA::pixel_setter(const ITMFloatImage_Ptr& output, const IT
     output->GetData(MEMORYDEVICE_CUDA),
     input->GetData(MEMORYDEVICE_CUDA),
     imgSize,
-    comparator,
-    comparisonOperator,
+    threshold,
+    op,
     value
     );
 

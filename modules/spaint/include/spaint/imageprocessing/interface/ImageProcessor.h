@@ -55,14 +55,17 @@ public:
   virtual void calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const = 0;
 
   /**
-   * \brief Sets pixels to a specified value if a condition is satisfied.
+   * \brief Tests the pixels in the input image against a threshold using the specified comparison operator,
+   *        and makes a copy of the image in which the corresponding pixels are either set to the specified
+   *        value (if they pass the test), or to their value in the input image (otherwise).
    *
-   * \param output     The output image.
-   * \param input      The input image.
-   * \param comparator The value to compare the pixel value to.
-   * \param value      The value to set the pixel to if the comparison is true.
+   * \param input     The input image.
+   * \param op        The comparison operator.
+   * \param threshold The value against which to compare the pixel values.
+   * \param value     The value to which to set a pixel in the output image when its corresponding input pixel passes the test.
+   * \param output    The output image.
    */
-  virtual void pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const = 0;
+  virtual void set_on_threshold(const ITMFloatImage_CPtr& input, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& output) const = 0;
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
