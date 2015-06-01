@@ -62,7 +62,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth)
+void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth)
 {
   calculate_binary_difference_image(renderState, camera, voxelSize, rawDepth);
 
@@ -126,14 +126,14 @@ const TouchState& TouchDetector::get_touch_state() const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth)
+void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth)
 {
   // The camera is assumed to be positioned close to the user.
   // This allows a threshold on the maximum depth that a touch interaction may occur.
   // For example the user's hand or leg cannot extend more than 2 meters away from the camera.
   // This turns out to be crucial since there may be large areas of the scene far away that are picked up by the Kinect but which are not integrated into the scene (InfiniTAM has a
   // depth threshold hard coded into its scene settings).
-  m_imageProcessor->pixel_setter(m_rawDepthCopy.get(), rawDepth, 2.0f, ImageProcessor::GREATER, -1.0f);
+  m_imageProcessor->pixel_setter(m_rawDepthCopy, rawDepth, 2.0f, ImageProcessor::GREATER, -1.0f);
 
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(
@@ -147,10 +147,10 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
 
   // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).
   // In this case 100.0f meters.
-  m_imageProcessor->pixel_setter(m_raycastedDepthResult.get(), m_raycastedDepthResult.get(), 0.0f, ImageProcessor::LESS, 100.0f);
+  m_imageProcessor->pixel_setter(m_raycastedDepthResult, m_raycastedDepthResult, 0.0f, ImageProcessor::LESS, 100.0f);
 
   // Calculate the difference between the raw depth and the raycasted depth.
-  m_imageProcessor->absolute_difference_calculator(m_diffRawRaycast.get(), m_rawDepthCopy.get(), m_raycastedDepthResult.get());
+  m_imageProcessor->calculate_absolute_difference(m_rawDepthCopy, m_raycastedDepthResult, m_diffRawRaycast);
 
   // Threshold the difference image - if there is a difference, there is something in the image!
   m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;

@@ -5,9 +5,9 @@
 #ifndef H_SPAINT_IMAGEPROCESSOR
 #define H_SPAINT_IMAGEPROCESSOR
 
-#include <stdexcept>
-
 #include <arrayfire.h>
+
+#include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Utils/ITMLibDefines.h>
 
@@ -15,13 +15,20 @@ namespace spaint {
 
 /**
  * \brief An instance of a class deriving from this one can be used to apply image processing algorithms to images.
- *
  */
 class ImageProcessor
 {
+  //#################### TYPEDEFS ####################
+protected:
+  typedef boost::shared_ptr<af::array> AFImage_Ptr;
+  typedef boost::shared_ptr<const af::array> AFImage_CPtr;
+  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
+  typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
+
+  //#################### ENUMERATIONS ####################
 public: 
   /**
-   * \brief Comparison Operators.
+   * \brief An enumeration containing the possible comparison operators that can be used when testing pixel values.
    */
   enum ComparisonOperator
   {
@@ -34,27 +41,18 @@ public:
   /**
    * \brief Destroys the image processor.
    */
-  virtual ~ImageProcessor() {}
+  virtual ~ImageProcessor();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Calculates the pixel-wise absolute difference between two images.
-   *
-   * \param outputImage      The image holding the result of the calculation.
-   * \param firstInputImage  The first input image.
-   * \param secondInputImage The second input image.
-   */
-  virtual void absolute_difference_calculator(ITMFloatImage *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const = 0;
-
    /**
    * \brief Calculates the pixel-wise absolute difference between two images.
    *
-   * \param outputImage      The image holding the result of the calculation.
    * \param firstInputImage  The first input image.
    * \param secondInputImage The second input image.
+   * \param outputImage      The image in which to store the result of the calculation.
    */
-  virtual void absolute_difference_calculator(af::array *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const = 0;
+  virtual void calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const = 0;
 
   /**
    * \brief Sets pixels to a specified value if a condition is satisfied.
@@ -64,7 +62,7 @@ public:
    * \param comparator The value to compare the pixel value to.
    * \param value      The value to set the pixel to if the comparison is true.
    */
-  virtual void pixel_setter(ITMFloatImage *output, const ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const = 0;
+  virtual void pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const = 0;
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -75,9 +73,14 @@ public:
    * \param imgB  The second image.
    */
   template <typename T, typename U>
-  static void check_image_size_equal(const T* imgA, const U* imgB)
+  static void check_image_size_equal(const T& imgA, const U& imgB)
   {
-    check_equal(image_size(imgA), image_size(imgB));
+    Vector2i sizeA = image_size(imgA);
+    Vector2i sizeB = image_size(imgB);
+    if(sizeA != sizeB)
+    {
+      throw std::runtime_error("The image dimensions are not equal");
+    }
   }
 
   /**
@@ -99,34 +102,23 @@ public:
 
  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
- /**
-  * \brief Checks whether two vectors are equal.
-  *
-  * \throws Throws an error if the vectors are not equal.
-  *
-  * \param a  The first vector.
-  * \param b  The second vector.
-  */
-  static void check_equal(const std::vector<int>& a, const std::vector<int>& b);
-
   /**
-   * \brief Gets the image size from an ArrayFire image.
+   * \brief Gets the size of an ArrayFire image.
    *
    * \param img The Arrayfire image.
    * \return    The size of the ArrayFire image.
    */
-  static std::vector<int> image_size(const af::array *img);
+  static Vector2i image_size(const AFImage_CPtr& img);
 
   /**
-   * \brief Gets the image size from an InfiniTAM image.
+   * \brief Gets the size of an InfiniTAM image.
    *
    * \param img  The InfiniTAM image.
    * \return     The size of the InfiniTAM image.
    */
-  static std::vector<int> image_size(const ITMFloatImage* img);
+  static Vector2i image_size(const ITMFloatImage_CPtr& img);
 };
 
 }
 
 #endif
-

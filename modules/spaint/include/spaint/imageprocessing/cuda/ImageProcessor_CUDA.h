@@ -17,13 +17,10 @@ class ImageProcessor_CUDA : public ImageProcessor
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override. */
-  virtual void absolute_difference_calculator(ITMFloatImage *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const;
+  virtual void calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const;
 
   /** Override. */
-  virtual void absolute_difference_calculator(af::array *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const;
-
-  /** Override. */
-  virtual void pixel_setter(ITMFloatImage *output, const ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const;
+  virtual void pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const;
 };
 
 }

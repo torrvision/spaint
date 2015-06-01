@@ -10,29 +10,10 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessor_CPU::absolute_difference_calculator(ITMFloatImage *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const
+void ImageProcessor_CPU::calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const
 {
-  ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
-  ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
-
-  int imgSize = outputImage->noDims.x * outputImage->noDims.y;
-  float *output = outputImage->GetData(MEMORYDEVICE_CPU);
-  const float *first = firstInputImage->GetData(MEMORYDEVICE_CPU);
-  const float *second = secondInputImage->GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int locId = 0; locId < imgSize; ++locId)
-  {
-    shade_pixel_absolute_difference(&output[locId], first[locId], second[locId]);
-  }
-}
-
-void ImageProcessor_CPU::absolute_difference_calculator(af::array *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const
-{
-  ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
-  ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
+  check_image_size_equal(firstInputImage, secondInputImage);
+  check_image_size_equal(firstInputImage, outputImage);
 
   int height = outputImage->dims(0);
   int width = outputImage->dims(1);
@@ -51,9 +32,9 @@ void ImageProcessor_CPU::absolute_difference_calculator(af::array *outputImage, 
   }
 }
 
-void ImageProcessor_CPU::pixel_setter(ITMFloatImage *output, const ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const
+void ImageProcessor_CPU::pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const
 {
-  ImageProcessor::check_image_size_equal(output, input);
+  check_image_size_equal(output, input);
   int imgSize = input->noDims.x * input->noDims.y;
   float *outputData = output->GetData(MEMORYDEVICE_CPU);
   const float *inputData = input->GetData(MEMORYDEVICE_CPU);

@@ -29,6 +29,7 @@ class TouchDetector
 private:
   typedef boost::shared_ptr<af::array> AFImage_Ptr;
   typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
+  typedef boost::shared_ptr<const ITMFloatImage> FloatImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef std::vector<Eigen::Vector2i> Points;
   typedef boost::shared_ptr<Points> Points_Ptr;
@@ -114,7 +115,7 @@ public:
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth);
+  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth);
 
   /**
    * \brief Gets the touch state.
@@ -133,7 +134,7 @@ private:
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage *rawDepth);
+  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth);
 
   /**
    * \brief Filter a binary image to remove small and spurious regions.

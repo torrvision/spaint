@@ -40,27 +40,10 @@ __global__ void ck_pixel_setter(float *output, const float *input, Vector2i imgS
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessor_CUDA::absolute_difference_calculator(ITMFloatImage *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const
+void ImageProcessor_CUDA::calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const
 {
-  ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
-  ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
-
-  Vector2i imgSize = outputImage->noDims;
-
-  dim3 cudaBlockSize(8, 8);
-  dim3 gridSize((int)ceil((float)imgSize.x / (float)cudaBlockSize.x), (int)ceil((float)imgSize.y / (float)cudaBlockSize.y));
-  ck_absolute_difference_calculator<<<gridSize,cudaBlockSize>>>(
-    outputImage->GetData(MEMORYDEVICE_CUDA),
-    firstInputImage->GetData(MEMORYDEVICE_CUDA),
-    secondInputImage->GetData(MEMORYDEVICE_CUDA),
-    imgSize
-  );
-}
-
-void ImageProcessor_CUDA::absolute_difference_calculator(af::array *outputImage, const ITMFloatImage *firstInputImage, const ITMFloatImage *secondInputImage) const
-{
-  ImageProcessor::check_image_size_equal(outputImage, firstInputImage);
-  ImageProcessor::check_image_size_equal(secondInputImage, firstInputImage);
+  check_image_size_equal(firstInputImage, secondInputImage);
+  check_image_size_equal(firstInputImage, outputImage);
 
   Vector2i imgSize;
   imgSize.y = outputImage->dims(0);
@@ -76,9 +59,9 @@ void ImageProcessor_CUDA::absolute_difference_calculator(af::array *outputImage,
   );
 }
 
-void ImageProcessor_CUDA::pixel_setter(ITMFloatImage *output, const ITMFloatImage *input, float comparator, ComparisonOperator comparisonOperator, float value) const
+void ImageProcessor_CUDA::pixel_setter(const ITMFloatImage_Ptr& output, const ITMFloatImage_CPtr& input, float comparator, ComparisonOperator comparisonOperator, float value) const
 {
-  ImageProcessor::check_image_size_equal(output, input);
+  check_image_size_equal(output, input);
   Vector2i imgSize = input->noDims;
 
   dim3 cudaBlockSize(8,8);

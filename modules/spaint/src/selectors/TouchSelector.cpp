@@ -4,6 +4,8 @@
 
 #include "selectors/TouchSelector.h"
 
+#include <boost/serialization/shared_ptr.hpp>
+
 #include <tvgutil/timers/Timer.h>
 
 #include "picking/cpu/Picker_CPU.h"
@@ -92,7 +94,8 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   static float voxelSize = m_settings->sceneParams.voxelSize;
 
   // Run the touch pipeline.
-  TIME(m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, m_view->depth),milliseconds, runningTouchDetectorOnFrame);
+  boost::shared_ptr<ITMFloatImage> depthImage(m_view->depth, boost::serialization::null_deleter());
+  TIME(m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, depthImage), milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
 
   // Get the touch state.
