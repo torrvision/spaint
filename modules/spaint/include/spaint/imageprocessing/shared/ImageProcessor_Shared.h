@@ -10,7 +10,8 @@ namespace spaint {
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
- * \brief Calculates the absolute difference between two images if the corresponding pixel values in the two images are greater than or equal to zero.
+ * \brief Calculates the absolute difference between the corresponding pixels of two images, 
+ * if the corresponding pixel values in the two images are greater than or equal to zero.
  *
  * \param destination   The location into which to write the computed absolute difference.
  * \param firstInput    The first value.

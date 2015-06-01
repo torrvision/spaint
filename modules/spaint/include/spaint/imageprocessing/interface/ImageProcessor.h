@@ -46,13 +46,17 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
    /**
-   * \brief Calculates the pixel-wise absolute difference between two images.
+   * \brief Calculates the pixel-wise absolute difference between two depth images.
+   *
+   * Note that either input image may contain pixels with invalid values (less than zero).
+   * For each pixel-wise operation, if either input pixel is invalid then the corresponding
+   * output pixel will be set to -1.
    *
    * \param firstInputImage  The first input image.
    * \param secondInputImage The second input image.
    * \param outputImage      The image in which to store the result of the calculation.
    */
-  virtual void calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const = 0;
+  virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const = 0;
 
   /**
    * \brief Tests the pixels in the input image against a threshold using the specified comparison operator,

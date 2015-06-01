@@ -150,7 +150,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   m_imageProcessor->set_on_threshold(m_raycastedDepthResult, ImageProcessor::CO_LESS, 0.0f, 100.0f, m_raycastedDepthResult);
 
   // Calculate the difference between the raw depth and the raycasted depth.
-  m_imageProcessor->calculate_absolute_difference(m_rawDepthCopy, m_raycastedDepthResult, m_diffRawRaycast);
+  m_imageProcessor->calculate_depth_difference(m_rawDepthCopy, m_raycastedDepthResult, m_diffRawRaycast);
 
   // Threshold the difference image - if there is a difference, there is something in the image!
   m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;

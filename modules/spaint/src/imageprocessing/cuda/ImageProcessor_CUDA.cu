@@ -40,7 +40,7 @@ __global__ void ck_pixel_setter(float *output, const float *input, Vector2i imgS
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessor_CUDA::calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const
+void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const
 {
   check_image_size_equal(firstInputImage, secondInputImage);
   check_image_size_equal(firstInputImage, outputImage);
