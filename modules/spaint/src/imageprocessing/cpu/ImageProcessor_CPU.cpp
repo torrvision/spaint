@@ -44,7 +44,7 @@ void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& input, Compa
 #endif
   for(int locId = 0; locId < imgSize; ++locId)
   {
-    shade_pixel_on_comparison(&outputData[locId], inputData[locId], threshold, op, value);
+    set_pixel_on_threshold(inputData[locId], op, threshold, value, &outputData[locId]);
   }
 }
 

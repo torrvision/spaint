@@ -25,30 +25,36 @@ inline void calculate_pixel_depth_difference(float firstInput, float secondInput
 }
 
 /**
- * \brief Shades a pixel on comparison.
- */
+   * \brief Tests the value of a pixel in an input image against a threshold using the specified comparison operator,
+   *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
+   *        or copies the value of the input pixel across (otherwise).
+   *
+   * \param input     The input pixel value.
+   * \param op        The comparison operator.
+   * \param threshold The value against which to compare the pixel value.
+   * \param value     The value to which to set the pixel in the output image when the input pixel passes the test.
+   * \param output    The location into which to write the output pixel value.
+   */
 _CPU_AND_GPU_CODE_
-inline void shade_pixel_on_comparison(float *output, float input, float comparator, ImageProcessor::ComparisonOperator comparisonOperator, float value)
+inline void set_pixel_on_threshold(float input, ImageProcessor::ComparisonOperator op, float threshold, float value, float *output)
 {
-  switch(comparisonOperator)
+  switch(op)
   {
     case ImageProcessor::CO_GREATER:
     {
-      if(input > comparator) *output = value;
+      if(input > threshold) *output = value;
       else *output = input;
       break;
     }
     case ImageProcessor::CO_LESS:
     {
-      if(input < comparator) *output = value;
+      if(input < threshold) *output = value;
       else *output = input;
       break;
     }
     default:
     {
       // This should never happen.
-      //throw std::runtime_error("Unknown comparison type");
-      printf("Unknown comparison type");
       break;
     }
   }

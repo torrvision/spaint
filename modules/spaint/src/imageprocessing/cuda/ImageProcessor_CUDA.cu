@@ -28,13 +28,13 @@ __global__ void ck_calculate_depth_difference(const float *firstInputImage, cons
   calculate_pixel_depth_difference(firstInputImage[locIdrm], secondInputImage[locIdrm], &outputImage[locIdcm]);
 }
 
-__global__ void ck_set_on_threshold(float *output, const float *input, Vector2i imgSize, float comparator, ImageProcessor::ComparisonOperator comparisonOperator, float value)
+__global__ void ck_set_on_threshold(float *output, const float *input, Vector2i imgSize, float threshold, ImageProcessor::ComparisonOperator op, float value)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if(x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
-  shade_pixel_on_comparison(&output[locId], input[locId], comparator, comparisonOperator, value);
+  set_pixel_on_threshold(input[locId], op, threshold, value, &output[locId]);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
