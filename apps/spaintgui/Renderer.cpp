@@ -84,11 +84,11 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     const int selectionRadius = 1;
-    std::vector<Eigen::Vector3f> pickPoints = selector.get_positions();
+    std::vector<Eigen::Vector3f> touchPoints = selector.get_positions();
 
-    for(size_t i = 0, size = pickPoints.size(); i < size; ++i)
+    for(size_t i = 0, size = touchPoints.size(); i < size; ++i)
     {
-      render_orb(pickPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
+      render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
   }
 #endif
