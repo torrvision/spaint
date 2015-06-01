@@ -10,6 +10,9 @@
 #include <spaint/selectors/LeapSelector.h>
 #endif
 #include <spaint/selectors/PickingSelector.h>
+#ifdef WITH_ARRAYFIRE
+#include <spaint/selectors/TouchSelector.h>
+#endif
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
@@ -73,16 +76,43 @@ public:
     boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 
-    glColor3f(m_colour.r, m_colour.g, m_colour.b);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    QuadricRenderer::render_sphere(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize, 10, 10);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    render_orb(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
   }
+
+#ifdef WITH_ARRAYFIRE
+  /** Override */
+  virtual void visit(const TouchSelector& selector) const
+  {
+    const int selectionRadius = 1;
+    std::vector<Eigen::Vector3f> pickPoints = selector.get_positions();
+
+    for(size_t i = 0, size = pickPoints.size(); i < size; ++i)
+    {
+      render_orb(pickPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
+    }
+  }
+#endif
 
   /** Override */
   virtual void visit(const VoxelToCubeSelectionTransformer& transformer) const
   {
     m_selectionRadius = transformer.get_radius();
+  }
+
+  //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+private:
+  /**
+   * \brief Renders an orb with a colour denoting the current semantic label.
+   *
+   * \param centre  The position of the centre of the orb.
+   * \param radius  The radius of the orb.
+   */
+  void render_orb(const Eigen::Vector3f& centre, double radius) const
+  {
+    glColor3f(m_colour.r, m_colour.g, m_colour.b);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    QuadricRenderer::render_sphere(centre, radius, 10, 10);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   }
 };
 
