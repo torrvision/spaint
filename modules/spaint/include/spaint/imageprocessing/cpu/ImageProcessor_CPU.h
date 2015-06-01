@@ -16,10 +16,10 @@ class ImageProcessor_CPU : public ImageProcessor
 {
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override. */
+  /** Override */
   virtual void calculate_absolute_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const;
 
-  /** Override. */
+  /** Override */
   virtual void set_on_threshold(const ITMFloatImage_CPtr& input, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& output) const;
 };
 
