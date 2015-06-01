@@ -133,7 +133,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   // For example the user's hand or leg cannot extend more than 2 meters away from the camera.
   // This turns out to be crucial since there may be large areas of the scene far away that are picked up by the Kinect but which are not integrated into the scene (InfiniTAM has a
   // depth threshold hard coded into its scene settings).
-  m_imageProcessor->pixel_setter(m_rawDepthCopy, rawDepth, 2.0f, ImageProcessor::GREATER, -1.0f);
+  m_imageProcessor->pixel_setter(m_rawDepthCopy, rawDepth, 2.0f, ImageProcessor::CO_GREATER, -1.0f);
 
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(
@@ -147,7 +147,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
 
   // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).
   // In this case 100.0f meters.
-  m_imageProcessor->pixel_setter(m_raycastedDepthResult, m_raycastedDepthResult, 0.0f, ImageProcessor::LESS, 100.0f);
+  m_imageProcessor->pixel_setter(m_raycastedDepthResult, m_raycastedDepthResult, 0.0f, ImageProcessor::CO_LESS, 100.0f);
 
   // Calculate the difference between the raw depth and the raycasted depth.
   m_imageProcessor->calculate_absolute_difference(m_rawDepthCopy, m_raycastedDepthResult, m_diffRawRaycast);

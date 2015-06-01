@@ -30,13 +30,13 @@ inline void shade_pixel_on_comparison(float *output, float input, float comparat
 {
   switch(comparisonOperator)
   {
-    case ImageProcessor::GREATER:
+    case ImageProcessor::CO_GREATER:
     {
       if(input > comparator) *output = value;
       else *output = input;
       break;
     }
-    case ImageProcessor::LESS:
+    case ImageProcessor::CO_LESS:
     {
       if(input < comparator) *output = value;
       else *output = input;

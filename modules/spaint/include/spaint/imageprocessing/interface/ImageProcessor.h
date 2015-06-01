@@ -32,8 +32,8 @@ public:
    */
   enum ComparisonOperator
   {
-    GREATER,
-    LESS
+    CO_GREATER,
+    CO_LESS
   };
 
   //#################### DESTRUCTOR ####################
