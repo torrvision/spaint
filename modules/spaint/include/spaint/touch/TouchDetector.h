@@ -170,9 +170,18 @@ private:
    * \return        The truncated and converted array.
    */
   af::array truncate_to_unsigned_char(const af::array& array);
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Converts an Eigen Vector to an InfiniTAM vector.
+   *
+   * \param v  The Eigen vector.
+   * \return   The InfiniTAM vector.
+   */
+  static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 }
 
 #endif
-

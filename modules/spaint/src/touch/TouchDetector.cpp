@@ -17,7 +17,6 @@
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVExtra.h"
 #endif
-#include "util/TypeConversions.h"
 
 namespace spaint {
 
@@ -139,8 +138,8 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(
     renderState.get(),
-    TypeConversions::to_itm(camera->p()),
-    TypeConversions::to_itm(camera->n()),
+    to_itm(camera->p()),
+    to_itm(camera->n()),
     voxelSize,
     DepthVisualiser::DT_ORTHOGRAPHIC,
     m_raycastedDepthResult.get()
@@ -375,5 +374,11 @@ af::array TouchDetector::truncate_to_unsigned_char(const af::array& array)
   return arrayCopy.as(u8);
 }
 
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+Vector3f TouchDetector::to_itm(const Eigen::Vector3f& v)
+{
+  return Vector3f(v[0], v[1], v[2]);
 }
 
+}

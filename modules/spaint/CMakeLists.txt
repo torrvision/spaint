@@ -306,7 +306,6 @@ SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
 src/util/SpaintDecisionFunctionGenerator.cpp
-src/util/TypeConversions.cpp
 )
 
 SET(util_headers
@@ -314,7 +313,6 @@ include/spaint/util/CameraPoseConverter.h
 include/spaint/util/LabelManager.h
 include/spaint/util/SpaintDecisionFunctionGenerator.h
 include/spaint/util/SpaintVoxel.h
-include/spaint/util/TypeConversions.h
 )
 
 ##
