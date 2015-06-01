@@ -19,7 +19,7 @@ int ImageProcessor::column_major_index_from_row_major_index(int rowMajorIndex, i
   return col * height + row;
 }
 
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+//#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
 
 Vector2i ImageProcessor::image_size(const AFImage_CPtr& img)
 {

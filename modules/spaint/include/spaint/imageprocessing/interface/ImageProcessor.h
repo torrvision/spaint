@@ -63,13 +63,13 @@ public:
    *        and makes a copy of the image in which the corresponding pixels are either set to the specified
    *        value (if they pass the test), or to their value in the input image (otherwise).
    *
-   * \param input     The input image.
-   * \param op        The comparison operator.
-   * \param threshold The value against which to compare the pixel values.
-   * \param value     The value to which to set a pixel in the output image when its corresponding input pixel passes the test.
-   * \param output    The output image.
+   * \param inputImage  The input image.
+   * \param op          The comparison operator.
+   * \param threshold   The value against which to compare the pixel values.
+   * \param value       The value to which to set a pixel in the output image when its corresponding input pixel passes the test.
+   * \param outputImage The output image.
    */
-  virtual void set_on_threshold(const ITMFloatImage_CPtr& input, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& output) const = 0;
+  virtual void set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const = 0;
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -108,8 +108,8 @@ public:
    */
   static int column_major_index_from_row_major_index(int rowMajorIndex, int width, int height);
 
- //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
+ //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
+protected:
   /**
    * \brief Gets the size of an ArrayFire image.
    *
