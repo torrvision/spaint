@@ -1,7 +1,6 @@
 build*/
 docs/
 install/
-libraries/arrayfire*/
 libraries/boost_1_56_0/
 libraries/boost-setup/
 libraries/Eigen-3.2.2/
