@@ -21,15 +21,14 @@ void OpenCVUtil::display_image_and_scale(ITMFloatImage *infiniTAMImage, float sc
   cv::Mat ocvImage = cv::Mat::zeros(height, width, CV_8UC1);
   unsigned char *ocvImageDataPtr = ocvImage.data;
 
-  // Inner loop to set the OpenCV Image Pixes.
-  for(int y = 0; y < height; ++y)
-    for(int x = 0; x < width; ++x)
-    {
-      float intensity = OpenCVUtil::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) * scaleFactor;
-      if(intensity < 0) intensity = 0;
-      if(intensity > 255) intensity = 255;
-      set_ocv_mat_8UC1(ocvImageDataPtr, x, y, width, static_cast<unsigned char>(intensity));
-    }
+  // Inner loop to set the OpenCV Image Pixels.
+  for(int i = 0, pixelCount = width * height; i < pixelCount; ++i)
+  {
+    float intensity = *itmImageDataPtr++ * scaleFactor;
+    if(intensity < 0) intensity = 0;
+    if(intensity > 255) intensity = 255;
+    *ocvImageDataPtr++ = static_cast<unsigned char>(intensity);
+  }
 
   // Display the image.
   cv::imshow(windowName, ocvImage);
@@ -54,12 +53,10 @@ void OpenCVUtil::display_image_scale_to_range(ITMFloatImage *infiniTAMImage, con
   unsigned char *ocvImageDataPtr = ocvImage.data;
 
   // Inner loop to set the OpenCV Image Pixels.
-  for(int y = 0; y < height; ++y)
-    for(int x = 0; x < width; ++x)
-    {
-      float intensity = (OpenCVUtil::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) - minAndMax.first) * scale;
-      set_ocv_mat_8UC1(ocvImageDataPtr, x, y, width, static_cast<unsigned char>(intensity));
-    }
+  for(int i = 0, pixelCount = width * height; i < pixelCount; ++i)
+  {
+    *ocvImageDataPtr++ = static_cast<unsigned char>((*itmImageDataPtr++ - minAndMax.first) * scale);
+  }
 
   // Display the image.
   cv::imshow(windowName, ocvImage);
@@ -84,22 +81,12 @@ void OpenCVUtil::ocvfig(const std::string& windowName, unsigned char *pixels, in
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void OpenCVUtil::set_ocv_mat_8UC1(unsigned char *ocvImageDataPtr, int x, int y, int width, unsigned char value)
-{
-  ocvImageDataPtr[y * width + x] = value;
-}
-
 std::pair<float, float> OpenCVUtil::itm_mat_32SC1_min_max_calculator(float *itmImageDataPtr, int width, int height)
 {
   std::vector<float> tmpImgVector(itmImageDataPtr, itmImageDataPtr + width * height);
   float minElement = *std::min_element(tmpImgVector.begin(), tmpImgVector.end());
   float maxElement = *std::max_element(tmpImgVector.begin(), tmpImgVector.end());
   return std::make_pair(minElement, maxElement);
-}
-
-float OpenCVUtil::get_itm_mat_32SC1(float *itmImageDataPtr, int x, int y, int width)
-{
-  return itmImageDataPtr[y * width + x];
 }
 
 }

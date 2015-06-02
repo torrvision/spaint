@@ -64,36 +64,14 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Sets an OpenCV image pixel.
-   *
-   * \param ocvImageDataPtr   The pointer to the first element in the image.
-   * \param x                 The x position in the image.
-   * \param y                 The y position in wht image.
-   * \param width             The width of the image.
-   * \param value             The pixel value to assign to the specified image pixel.
-   */
-  static void set_ocv_mat_8UC1(unsigned char *ocvImageDataPtr, int x, int y, int width, unsigned char value);
-
-  /**
    * \brief Calculates the minimum and maximum values in an InfiniTAM image.
    *
-   * \param itmImageDataPtr   The InfiniTAM image data pointer.
-   * \param width             The width of the image.
-   * \param height            The height of the image.
-   * \return                  A pair of values indicating the minimum and maximum values found.
+   * \param itmImageDataPtr The InfiniTAM image data pointer.
+   * \param width           The width of the image.
+   * \param height          The height of the image.
+   * \return                A pair of values indicating the minimum and maximum values found.
    */
   static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *itmImageDataPtr, int width, int height);
-
-  /**
-   * \brief Gets the value contained at a specified position in an InfiniTAM image.
-   *
-   * \param itmImageDataPtr   The pointer to the first element in the InfiniTAM image.
-   * \param x                       The x position in the image.
-   * \param y                       The y position in the image.
-   * \param width                   The width of the image.
-   * \return                        The value contained at the specified location.
-   */
-  static float get_itm_mat_32SC1(float *itmImageDataPtr, int x, int y, int width);
 };
 
 }
