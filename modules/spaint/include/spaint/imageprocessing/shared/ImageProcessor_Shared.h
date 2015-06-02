@@ -14,14 +14,20 @@ namespace spaint {
  *        provided both pixel values are greater than or equal to zero. If either input pixel is 
  *        less than zero then the corresponding output pixel will be set to -1.
  *
- * \param firstInput    The first pixel value.
- * \param secondInput   The second pixel value.
- * \param output        The location into which to write the computed absolute difference.
+ * \param rowMajorIndex   The row-major index of the two pixels on which the operation is being performed.
+ * \param firstInputData  The data for the first input image (in row-major format).
+ * \param secondInputData The data for the second input image (in row-major format).
+ * \param width           The width of each image.
+ * \param height          The height of each image.
+ * \param outputData      The data for the output image (in column-major format).
  */
 _CPU_AND_GPU_CODE_
-inline void calculate_pixel_depth_difference(float firstInput, float secondInput, float *output)
+inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *firstInputData, const float *secondInputData, int width, int height, float *outputData)
 {
-  *output = firstInput >= 0 && secondInput >= 0 ? fabs(firstInput - secondInput) : -1.0f;
+  int row = rowMajorIndex / width, col = rowMajorIndex % width;
+  int columnMajorIndex = col * height + row;
+  float firstPixel = firstInputData[rowMajorIndex], secondPixel = secondInputData[rowMajorIndex];
+  outputData[columnMajorIndex] = firstPixel >= 0 && secondPixel >= 0 ? fabs(firstPixel - secondPixel) : -1.0f;
 }
 
 /**
@@ -29,27 +35,29 @@ inline void calculate_pixel_depth_difference(float firstInput, float secondInput
    *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
    *        or copies the value of the input pixel across (otherwise).
    *
-   * \param input     The input pixel value.
-   * \param op        The comparison operator.
-   * \param threshold The value against which to compare the pixel value.
-   * \param value     The value to which to set the pixel in the output image when the input pixel passes the test.
-   * \param output    The location into which to write the output pixel value.
+   * \param pixelIndex  The index of the pixel being tested.
+   * \param inputData   The data for the input image.
+   * \param op          The comparison operator.
+   * \param threshold   The value against which to compare the pixel value.
+   * \param value       The value to which to set the pixel in the output image when the input pixel passes the test.
+   * \param outputData  The data for the output image.
    */
 _CPU_AND_GPU_CODE_
-inline void set_pixel_on_threshold(float input, ImageProcessor::ComparisonOperator op, float threshold, float value, float *output)
+inline void set_pixel_on_threshold(int pixelIndex, const float *inputData, ImageProcessor::ComparisonOperator op, float threshold, float value, float *outputData)
 {
+  float input = inputData[pixelIndex];
+  float *output = outputData + pixelIndex;
+
   switch(op)
   {
     case ImageProcessor::CO_GREATER:
     {
-      if(input > threshold) *output = value;
-      else *output = input;
+      *output = input > threshold ? value : input;
       break;
     }
     case ImageProcessor::CO_LESS:
     {
-      if(input < threshold) *output = value;
-      else *output = input;
+      *output = input < threshold ? value : input;
       break;
     }
     default:

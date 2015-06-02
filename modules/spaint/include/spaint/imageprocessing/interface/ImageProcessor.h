@@ -90,24 +90,6 @@ public:
     }
   }
 
-  /**
-   * \brief Calculates a column-major index from a row-major index for a 2D matrix.
-   *
-   * For example, consider a 3x3 (width x height) matrix A:
-   *
-   * - The element whose row = 2 and column = 1 will have a row-major index of (row * width + col) = 7.
-   * - The same element will have a column-major index of (col * height + row) = 5.
-   *
-   * To convert from a row-major to a column major index, we first find the row and column indices
-   * from the row-major index, and then calculate the column-major index as above.
-   *
-   * \param rowMajorIndex  The row-major index.
-   * \param width          The width of the matrix.
-   * \param height         The height of the matrix.
-   * \return               The column-major index.
-   */
-  static int column_major_index_from_row_major_index(int rowMajorIndex, int width, int height);
-
  //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
 protected:
   /**
