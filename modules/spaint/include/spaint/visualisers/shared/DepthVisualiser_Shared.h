@@ -15,7 +15,7 @@ namespace spaint {
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
- * \brief Computes the depth of a point in the scene relative to a known camera location.
+ * \brief Computes the depth for a pixel in a depth visualisation of the scene.
  *
  * \param dest              A location into which to write the computed depth.
  * \param point             The location of the point (if any) on the scene surface that was hit by a ray passing from the camera through the pixel.
