@@ -1,9 +1,9 @@
 /**
- * spaint: OpenCVExtra.h
+ * spaint: OpenCVUtil.h
  */
 
-#ifndef H_SPAINT_OPENCVEXTRA
-#define H_SPAINT_OPENCVEXTRA
+#ifndef H_SPAINT_OPENCVUTIL
+#define H_SPAINT_OPENCVUTIL
 
 #include <stdexcept>
 
@@ -16,9 +16,9 @@
 namespace spaint {
 
 /**
- * \brief This class provides helper functions to visualise InfiniTAM and ArrayFire images in OpenCV.
+ * \brief This class provides helper functions to visualise InfiniTAM and ArrayFire images using OpenCV.
  */
-class OpenCVExtra
+class OpenCVUtil
 {
   //#################### PUBLIC ENUMERATIONS ####################
 public:
@@ -57,7 +57,7 @@ public:
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
       {
-        float intensity = OpenCVExtra::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) * scaleFactor;
+        float intensity = OpenCVUtil::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) * scaleFactor;
         if(intensity < 0) intensity = 0;
         if(intensity > 255) intensity = 255;
         set_ocv_mat_8UC1(ocvImageDataPtr, x, y, width, static_cast<unsigned char>(intensity));
@@ -95,7 +95,7 @@ public:
     for(int y = 0; y < height; ++y)
       for(int x = 0; x < width; ++x)
       {
-        float intensity = (OpenCVExtra::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) - minAndMax.first) * scale;
+        float intensity = (OpenCVUtil::get_itm_mat_32SC1(itmImageDataPtr, x, y, width) - minAndMax.first) * scale;
         set_ocv_mat_8UC1(ocvImageDataPtr, x, y, width, static_cast<unsigned char>(intensity));
       }
 
