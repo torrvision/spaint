@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_DEPTHVISUALISER
 #define H_SPAINT_DEPTHVISUALISER
 
+#include <boost/shared_ptr.hpp>
+
 #include <ITMLib/Objects/ITMIntrinsics.h>
 #include <ITMLib/Objects/ITMPose.h>
 #include <ITMLib/Objects/ITMRenderState.h>
@@ -17,6 +19,10 @@ namespace spaint {
  */
 class DepthVisualiser
 {
+  //#################### TYPEDEFS ####################
+protected:
+  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
+
   //#################### ENUMERATIONS ####################
 public:
   /**
@@ -24,14 +30,17 @@ public:
    */
   enum DepthType
   {
+    /** Calculates the Euclidean distance of each voxel hit by the raycast from the camera centre. */
     DT_EUCLIDEAN,
+
+    /** Calculates the perpendicular distance of each voxel hit by the raycast from the plane containing the camera centre. */
     DT_ORTHOGRAPHIC
   };
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys the semantic visualiser.
+   * \brief Destroys the depth visualiser.
    */
   virtual ~DepthVisualiser() {}
 
@@ -40,15 +49,15 @@ public:
   /**
    * \brief Renders a depth view of the specified scene from the specified camera pose.
    *
-   * \param renderState       The render state.
-   * \param cameraPosition    The camera translation from the origin of the world coordinate system.
-   * \param cameraLookVector  The the camera look vector.
-   * \param voxelSize         The size of an InfiniTAM voxel.
-   * \param depthType         The type of depth calculation.
+   * \param depthType         The type of depth calculation to use.
+   * \param cameraPosition    The camera position (in world space).
+   * \param cameraLookVector  The camera look vector.
+   * \param renderState       The render state corresponding to the specified camera pose.
+   * \param voxelSize         The size of an InfiniTAM voxel (in metres).
    * \param outputImage       The image into which to write the depth visualisation of the scene.
    */
-  virtual void render_depth(const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType,
-                            ITMFloatImage *outputImage) const = 0;
+  virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::Objects::ITMRenderState *renderState,
+                            float voxelSize, const ITMFloatImage_Ptr& outputImage) const = 0;
 };
 
 }

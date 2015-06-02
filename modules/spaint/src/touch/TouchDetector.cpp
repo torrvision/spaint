@@ -137,12 +137,12 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
 
   // Calculate the depth raycast from the current scene, this is in metres.
   m_depthCalculator->render_depth(
-    renderState.get(),
+    DepthVisualiser::DT_ORTHOGRAPHIC,
     to_itm(camera->p()),
     to_itm(camera->n()),
+    renderState.get(),
     voxelSize,
-    DepthVisualiser::DT_ORTHOGRAPHIC,
-    m_raycastedDepthResult.get()
+    m_raycastedDepthResult
   );
 
   // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).

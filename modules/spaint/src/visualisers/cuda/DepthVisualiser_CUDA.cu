@@ -22,8 +22,8 @@ __global__ void ck_render_depth(float *outRendering, Vector3f cameraPosition, Ve
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void DepthVisualiser_CUDA::render_depth(const ITMLib::Objects::ITMRenderState *renderState, Vector3f cameraPosition, Vector3f cameraLookVector, float voxelSize, DepthType depthType,
-                                        ITMFloatImage *outputImage) const
+void DepthVisualiser_CUDA::render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::Objects::ITMRenderState *renderState,
+                                        float voxelSize, const ITMFloatImage_Ptr& outputImage) const
 {
   Vector2i imgSize = outputImage->noDims;
 
