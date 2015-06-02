@@ -31,17 +31,17 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
-   * \brief Tests the value of a pixel in an input image against a threshold using the specified comparison operator,
-   *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
-   *        or copies the value of the input pixel across (otherwise).
-   *
-   * \param pixelIndex  The index of the pixel being tested.
-   * \param inputData   The data for the input image.
-   * \param op          The comparison operator.
-   * \param threshold   The value against which to compare the pixel value.
-   * \param value       The value to which to set the pixel in the output image when the input pixel passes the test.
-   * \param outputData  The data for the output image.
-   */
+ * \brief Tests the value of a pixel in an input image against a threshold using the specified comparison operator,
+ *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
+ *        or copies the value of the input pixel across (otherwise).
+ *
+ * \param pixelIndex  The index of the pixel being tested.
+ * \param inputData   The data for the input image.
+ * \param op          The comparison operator.
+ * \param threshold   The value against which to compare the pixel value.
+ * \param value       The value to which to set the pixel in the output image when the input pixel passes the test.
+ * \param outputData  The data for the output image.
+ */
 _CPU_AND_GPU_CODE_
 inline void set_pixel_on_threshold(int pixelIndex, const float *inputData, ImageProcessor::ComparisonOperator op, float threshold, float value, float *outputData)
 {
