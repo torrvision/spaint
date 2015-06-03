@@ -88,7 +88,7 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
 
 void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  const size_t binCount = 32;
+  const size_t binCount = 36; // 10 degrees per bin
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
   const size_t featureCount = get_feature_count();
   const size_t patchArea = m_patchSize * m_patchSize;
@@ -101,7 +101,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {
     const float *featuresForVoxel = features + voxelLocationIndex * featureCount;
-    std::vector<size_t> histogram(binCount);
+    std::vector<double> histogram(binCount);
     std::vector<float> intensities(patchArea);
 
     for(size_t i = 0; i < patchArea; ++i)
@@ -115,8 +115,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
       float g = featuresForVoxel[featureOffset + 1];
       float b = featuresForVoxel[featureOffset + 2];
 
-      // TODO: Consider alternatives.
-      intensities[offset] = (r + g + b) / 3.0f;
+      intensities[offset] = convert_rgb_to_grey(r, g, b);
     }
 
     for(size_t i = 0; i < patchArea; ++i)
@@ -126,35 +125,36 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
 
       if(x != 0 && y != 0 && x != m_patchSize - 1 && y != m_patchSize - 1)
       {
-        size_t offset = y * m_patchSize + x;
-
         // Compute the derivatives.
-        float xDeriv = intensities[offset + 1] - intensities[offset - 1];
-        float yDeriv = intensities[offset + m_patchSize] - intensities[offset - m_patchSize];
+        float xDeriv = intensities[i + 1] - intensities[i - 1];
+        float yDeriv = intensities[i + m_patchSize] - intensities[i - m_patchSize];
+
+        // Compute the magnitude.
+        double mag = sqrt(xDeriv * xDeriv + yDeriv * yDeriv);
 
         // Compute the orientation.
         double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
 
         // Quantize the orientation and update the histogram.
         int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
-        ++histogram[bin]; // note: this will need synchronisation on the GPU
+        histogram[bin] += mag; // note: this will need synchronisation on the GPU
       }
     }
 
-    size_t dominantOrientationBin;
-    size_t highestCount = 0;
+    size_t dominantBin;
+    double highestBinValue = 0;
     for(size_t i = 0; i < binCount; ++i)
     {
-      size_t currentCount = histogram[i];
-      if(currentCount > highestCount)
+      double binValue = histogram[i];
+      if(binValue >= highestBinValue)
       {
-        highestCount = currentCount;
-        dominantOrientationBin = i;
+        highestBinValue = binValue;
+        dominantBin = i;
       }
     }
 
     float binAngle = static_cast<float>(2 * M_PI) / binCount;
-    float dominantOrientation = dominantOrientationBin * binAngle;
+    float dominantOrientation = dominantBin * binAngle;
 
     float c = cos(dominantOrientation);
     float s = sin(dominantOrientation);

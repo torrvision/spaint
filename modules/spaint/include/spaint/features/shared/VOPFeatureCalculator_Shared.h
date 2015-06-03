@@ -59,6 +59,20 @@ inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, fl
 }
 
 /**
+ * \brief Converts an RGB colour to greyscale.
+ *
+ * The conversion formula is from OpenCV, and takes into account the fact that the human
+ * eye is more sensitive to green than red or blue. See:
+ *
+ * http://docs.opencv.org/2.4.11/modules/imgproc/doc/miscellaneous_transformations.html.
+ */
+_CPU_AND_GPU_CODE_
+inline float convert_rgb_to_grey(float r, float g, float b)
+{
+  return 0.299f * r + 0.587f * g + 0.114f * b;
+}
+
+/**
  * \brief Generates a unit vector that is perpendicular to the specified plane normal.
  *
  * The vector generated will be the normalised cross product of the specified plane normal and another vector
