@@ -96,7 +96,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
 
 #if 1
-  std::vector<std::vector<double> > histograms(voxelLocationCount, std::vector<double>(binCount));
+  std::vector<std::vector<float> > histograms(voxelLocationCount, std::vector<float>(binCount));
   std::vector<std::vector<float> > intensities(voxelLocationCount, std::vector<float>(patchArea));
 
   int threadCount = voxelLocationCount * patchArea; 

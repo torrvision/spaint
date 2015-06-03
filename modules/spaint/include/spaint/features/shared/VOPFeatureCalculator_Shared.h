@@ -76,7 +76,7 @@ inline float convert_rgb_to_grey(float r, float g, float b)
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void compute_histogram_for_patch(int tid, int patchSize, float *intensityPatch, int binCount, double *histogram)
+inline void compute_histogram_for_patch(int tid, int patchSize, float *intensityPatch, int binCount, float *histogram)
 {
   int indexInPatch = tid % (patchSize * patchSize);
 
@@ -90,7 +90,7 @@ inline void compute_histogram_for_patch(int tid, int patchSize, float *intensity
     float yDeriv = intensityPatch[indexInPatch + patchSize] - intensityPatch[indexInPatch - patchSize];
 
     // Compute the magnitude.
-    double mag = sqrt(xDeriv * xDeriv + yDeriv * yDeriv);
+    float mag = static_cast<float>(sqrt(xDeriv * xDeriv + yDeriv * yDeriv));
 
     // Compute the orientation.
     double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
@@ -99,7 +99,8 @@ inline void compute_histogram_for_patch(int tid, int patchSize, float *intensity
     int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-    histogram[bin] += mag; // note: this will need synchronisation!
+    atomicAdd(&histogram[bin], mag);
+    //histogram[bin] += mag; // note: this will need synchronisation!
 #else
   #ifdef WITH_OPENMP
     #pragma omp atomic
@@ -113,7 +114,7 @@ inline void compute_histogram_for_patch(int tid, int patchSize, float *intensity
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, double *histogram, Vector3f *xAxis, Vector3f *yAxis)
+inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, float *histogram, Vector3f *xAxis, Vector3f *yAxis)
 {
   if(tid % patchArea == 0)
   {

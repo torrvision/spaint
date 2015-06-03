@@ -60,7 +60,7 @@ __global__ void ck_update_coordinate_systems(const int voxelLocationCount, const
                                              Vector3f *xAxes, Vector3f *yAxes)
 {
   // TODO: Comment on the fixed size of the intensities array.
-  __shared__ double histogram[64];
+  __shared__ float histogram[64];
   __shared__ float intensities[256];
 
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
