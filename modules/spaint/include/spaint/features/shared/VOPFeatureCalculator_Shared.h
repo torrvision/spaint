@@ -113,6 +113,40 @@ inline void compute_histogram_for_patch(int tid, int patchArea, int patchSize, f
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
+inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, double *histogram, Vector3f *xAxis, Vector3f *yAxis)
+{
+  if(tid % patchArea == 0)
+  {
+    size_t dominantBin;
+    double highestBinValue = 0;
+    for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
+    {
+      double binValue = histogram[binIndex];
+      if(binValue >= highestBinValue)
+      {
+        highestBinValue = binValue;
+        dominantBin = binIndex;
+      }
+    }
+
+    float binAngle = static_cast<float>(2 * M_PI) / binCount;
+    float dominantOrientation = dominantBin * binAngle;
+
+    float c = cos(dominantOrientation);
+    float s = sin(dominantOrientation);
+
+    Vector3f xAxisCopy = *xAxis;
+    Vector3f yAxisCopy = *yAxis;
+
+    *xAxis = c * xAxisCopy + s * yAxisCopy;
+    *yAxis = c * yAxisCopy - s * xAxisCopy;
+  }
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
 inline void compute_intensities_for_patch(int tid, int patchArea, const float *features, int featureCount, int patchSize, float *intensityPatch)
 {
   int voxelLocationIndex = tid / patchArea;

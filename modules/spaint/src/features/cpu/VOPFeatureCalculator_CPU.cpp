@@ -122,36 +122,10 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
 #ifdef WITH_OPENMP
   //#pragma omp parallel for
 #endif
-  for(int tid = 0, threadCount = voxelLocationCount * patchArea; tid < threadCount; ++tid)
+  for(int tid = 0; tid < threadCount; ++tid)
   {
-    if(tid % patchArea == 0)
-    {
-      int voxelLocationIndex = tid / patchArea;
-
-      size_t dominantBin;
-      double highestBinValue = 0;
-      for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
-      {
-        double binValue = histograms[voxelLocationIndex][binIndex];
-        if(binValue >= highestBinValue)
-        {
-          highestBinValue = binValue;
-          dominantBin = binIndex;
-        }
-      }
-
-      float binAngle = static_cast<float>(2 * M_PI) / binCount;
-      float dominantOrientation = dominantBin * binAngle;
-
-      float c = cos(dominantOrientation);
-      float s = sin(dominantOrientation);
-
-      Vector3f xAxis = xAxes[voxelLocationIndex];
-      Vector3f yAxis = yAxes[voxelLocationIndex];
-
-      xAxes[voxelLocationIndex] = c * xAxis + s * yAxis;
-      yAxes[voxelLocationIndex] = c * yAxis - s * xAxis;
-    }
+    int voxelLocationIndex = tid / patchArea;
+    update_patch_coordinate_system(tid, patchArea, binCount, &histograms[voxelLocationIndex][0], &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
   }
 #endif
 }
