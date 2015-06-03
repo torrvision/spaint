@@ -95,6 +95,95 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
   Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
 
+#if 1
+  std::vector<std::vector<double> > histograms(voxelLocationCount, std::vector<double>(binCount));
+  std::vector<std::vector<float> > intensities(voxelLocationCount, std::vector<float>(patchArea));
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int tid = 0, threadCount = voxelLocationCount * patchArea; tid < threadCount; ++tid)
+  {
+    int voxelLocationIndex = tid / patchArea;
+    int indexInPatch = tid % patchArea;
+    const float *featuresForVoxel = features + voxelLocationIndex * featureCount;
+    int y = indexInPatch / m_patchSize;
+    int x = indexInPatch % m_patchSize;
+    int featureOffset = indexInPatch * 3;
+
+    float r = featuresForVoxel[featureOffset];
+    float g = featuresForVoxel[featureOffset + 1];
+    float b = featuresForVoxel[featureOffset + 2];
+
+    intensities[voxelLocationIndex][indexInPatch] = convert_rgb_to_grey(r, g, b);
+  }
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int tid = 0, threadCount = voxelLocationCount * patchArea; tid < threadCount; ++tid)
+  {
+    int voxelLocationIndex = tid / patchArea;
+    int indexInPatch = tid % patchArea;
+
+    size_t y = indexInPatch / m_patchSize;
+    size_t x = indexInPatch % m_patchSize;
+
+    if(x != 0 && y != 0 && x != m_patchSize - 1 && y != m_patchSize - 1)
+    {
+      // Compute the derivatives.
+      float xDeriv = intensities[voxelLocationIndex][indexInPatch + 1] - intensities[voxelLocationIndex][indexInPatch - 1];
+      float yDeriv = intensities[voxelLocationIndex][indexInPatch + m_patchSize] - intensities[voxelLocationIndex][indexInPatch - m_patchSize];
+
+      // Compute the magnitude.
+      double mag = sqrt(xDeriv * xDeriv + yDeriv * yDeriv);
+
+      // Compute the orientation.
+      double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
+
+      // Quantize the orientation and update the histogram.
+      int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
+      histograms[voxelLocationIndex][bin] += mag; // note: this will need synchronisation!
+    }
+  }
+
+#ifdef WITH_OPENMP
+  //#pragma omp parallel for
+#endif
+  for(int tid = 0, threadCount = voxelLocationCount * patchArea; tid < threadCount; ++tid)
+  {
+    if(tid % patchArea == 0)
+    {
+      int voxelLocationIndex = tid / patchArea;
+
+      size_t dominantBin;
+      double highestBinValue = 0;
+      for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
+      {
+        double binValue = histograms[voxelLocationIndex][binIndex];
+        if(binValue >= highestBinValue)
+        {
+          highestBinValue = binValue;
+          dominantBin = binIndex;
+        }
+      }
+
+      float binAngle = static_cast<float>(2 * M_PI) / binCount;
+      float dominantOrientation = dominantBin * binAngle;
+
+      float c = cos(dominantOrientation);
+      float s = sin(dominantOrientation);
+
+      Vector3f xAxis = xAxes[voxelLocationIndex];
+      Vector3f yAxis = yAxes[voxelLocationIndex];
+
+      xAxes[voxelLocationIndex] = c * xAxis + s * yAxis;
+      yAxes[voxelLocationIndex] = c * yAxis - s * xAxis;
+    }
+  }
+#endif
+
+#if 0
 #ifdef WITH_OPENMP
   //#pragma omp parallel for
 #endif
@@ -165,6 +254,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
     xAxes[voxelLocationIndex] = c * xAxis + s * yAxis;
     yAxes[voxelLocationIndex] = c * yAxis - s * xAxis;
   }
+#endif
 }
 
 }

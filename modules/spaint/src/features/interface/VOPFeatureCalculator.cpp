@@ -38,7 +38,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   // Read an RGB patch around each voxel location.
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
-#if 0 && defined(WITH_OPENCV)
+#if 1 && defined(WITH_OPENCV)
   std::vector<cv::Mat3b> rgbPatchImages(voxelLocationsMB.dataSize);
   for(size_t i = 0; i < voxelLocationsMB.dataSize; ++i)
   {
@@ -51,6 +51,13 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
 
   // Read a new RGB patch around each voxel location that is oriented based on the dominant orientation.
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
+
+#if 1 && defined(WITH_OPENCV)
+  for(size_t i = 0; i < voxelLocationsMB.dataSize; ++i)
+  {
+    rgbPatchImages[i] = OpenCVUtil::make_image_rgb_cpu(featuresMB.GetData(MEMORYDEVICE_CPU) + i * get_feature_count(), 13, 13);
+  }
+#endif
 
   // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
   convert_patches_to_lab(voxelLocationCount, featuresMB);
