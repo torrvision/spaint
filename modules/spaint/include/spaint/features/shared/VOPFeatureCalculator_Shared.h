@@ -73,6 +73,61 @@ inline float convert_rgb_to_grey(float r, float g, float b)
 }
 
 /**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void compute_histogram_for_patch(int tid, int patchArea, int patchSize, float *intensityPatch, int binCount, double *histogram)
+{
+  int indexInPatch = tid % patchArea;
+
+  size_t y = indexInPatch / patchSize;
+  size_t x = indexInPatch % patchSize;
+
+  if(x != 0 && y != 0 && x != patchSize - 1 && y != patchSize - 1)
+  {
+    // Compute the derivatives.
+    float xDeriv = intensityPatch[indexInPatch + 1] - intensityPatch[indexInPatch - 1];
+    float yDeriv = intensityPatch[indexInPatch + patchSize] - intensityPatch[indexInPatch - patchSize];
+
+    // Compute the magnitude.
+    double mag = sqrt(xDeriv * xDeriv + yDeriv * yDeriv);
+
+    // Compute the orientation.
+    double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
+
+    // Quantize the orientation and update the histogram.
+    int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
+
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
+    histogram[bin] += mag; // note: this will need synchronisation!
+#else
+  #ifdef WITH_OPENMP
+    #pragma omp atomic
+  #endif
+    histogram[bin] += mag; // note: this will need synchronisation!
+#endif
+  }
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void compute_intensities_for_patch(int tid, int patchArea, const float *features, int featureCount, int patchSize, float *intensityPatch)
+{
+  int voxelLocationIndex = tid / patchArea;
+  int indexInPatch = tid % patchArea;
+
+  const float *rgbPatch = features + voxelLocationIndex * featureCount;
+  int pixelOffset = indexInPatch * 3;
+  float r = rgbPatch[pixelOffset];
+  float g = rgbPatch[pixelOffset + 1];
+  float b = rgbPatch[pixelOffset + 2];
+
+  intensityPatch[indexInPatch] = convert_rgb_to_grey(r, g, b);
+}
+
+/**
  * \brief Generates a unit vector that is perpendicular to the specified plane normal.
  *
  * The vector generated will be the normalised cross product of the specified plane normal and another vector
