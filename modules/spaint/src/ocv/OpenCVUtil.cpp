@@ -15,7 +15,7 @@ cv::Mat3b OpenCVUtil::make_image_rgb_cpu(float *rgbData, int width, int height)
   {
     for(int x = 0; x < width; ++x)
     {
-      result(x,y) = cv::Vec3b(
+      result(y,x) = cv::Vec3b(
         static_cast<unsigned char>(rgbData[2]),
         static_cast<unsigned char>(rgbData[1]),
         static_cast<unsigned char>(rgbData[0])
