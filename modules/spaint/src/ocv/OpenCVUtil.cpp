@@ -83,9 +83,9 @@ void OpenCVUtil::ocvfig(const std::string& windowName, unsigned char *pixels, in
 
 std::pair<float, float> OpenCVUtil::itm_mat_32SC1_min_max_calculator(float *itmImageDataPtr, int width, int height)
 {
-  std::vector<float> tmpImgVector(itmImageDataPtr, itmImageDataPtr + width * height);
-  float minElement = *std::min_element(tmpImgVector.begin(), tmpImgVector.end());
-  float maxElement = *std::max_element(tmpImgVector.begin(), tmpImgVector.end());
+  float *itmImageDataEnd = itmImageDataPtr + width * height;
+  float minElement = *std::min_element(itmImageDataPtr, itmImageDataEnd);
+  float maxElement = *std::max_element(itmImageDataPtr, itmImageDataEnd);
   return std::make_pair(minElement, maxElement);
 }
 
