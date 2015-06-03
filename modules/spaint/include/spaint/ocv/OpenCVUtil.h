@@ -163,14 +163,14 @@ public:
   }
 
   /**
-   * \brief Makes an RGB image of the specified size from some pixel data.
+   * \brief Makes an RGB image of the specified size from some pixel data that resides on the CPU.
    *
    * \param rgbData The pixel data for the image, in the format [R1,G1,B1,R2,G2,B2,...].
    * \param width   The width of the image.
    * \param height  The height of the image.
    * \return        The image.
    */
-  static cv::Mat3b make_image_rgb_cpu(float *rgbData, int width, int height);
+  static cv::Mat3b make_image_rgb_cpu(const float *rgbData, int width, int height);
 
   /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format and shows it in a named window.

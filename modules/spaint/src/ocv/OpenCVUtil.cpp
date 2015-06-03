@@ -8,7 +8,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-cv::Mat3b OpenCVUtil::make_image_rgb_cpu(float *rgbData, int width, int height)
+cv::Mat3b OpenCVUtil::make_image_rgb_cpu(const float *rgbData, int width, int height)
 {
   cv::Mat3b result = cv::Mat3b::zeros(height, width);
   for(int y = 0; y < height; ++y)
