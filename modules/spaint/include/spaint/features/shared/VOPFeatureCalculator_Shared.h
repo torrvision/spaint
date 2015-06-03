@@ -76,9 +76,9 @@ inline float convert_rgb_to_grey(float r, float g, float b)
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void compute_histogram_for_patch(int tid, int patchArea, int patchSize, float *intensityPatch, int binCount, double *histogram)
+inline void compute_histogram_for_patch(int tid, int patchSize, float *intensityPatch, int binCount, double *histogram)
 {
-  int indexInPatch = tid % patchArea;
+  int indexInPatch = tid % (patchSize * patchSize);
 
   size_t y = indexInPatch / patchSize;
   size_t x = indexInPatch % patchSize;
@@ -147,8 +147,9 @@ inline void update_patch_coordinate_system(int tid, int patchArea, int binCount,
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void compute_intensities_for_patch(int tid, int patchArea, const float *features, int featureCount, int patchSize, float *intensityPatch)
+inline void compute_intensities_for_patch(int tid, const float *features, int featureCount, int patchSize, float *intensityPatch)
 {
+  int patchArea = patchSize * patchSize;
   int voxelLocationIndex = tid / patchArea;
   int indexInPatch = tid % patchArea;
 

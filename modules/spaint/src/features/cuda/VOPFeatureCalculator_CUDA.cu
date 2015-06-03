@@ -56,6 +56,25 @@ __global__ void ck_generate_rgb_patches(const Vector3s *voxelLocations, const in
   }
 }
 
+__global__ void ck_update_coordinate_systems(const int voxelLocationCount, const float *features, size_t featureCount, size_t patchSize, size_t binCount,
+                                             Vector3f *xAxes, Vector3f *yAxes)
+{
+  // TODO: Comment on the fixed size of the intensities array.
+  __shared__ double histogram[64];
+  __shared__ float intensities[256];
+
+  int tid = threadIdx.x + blockDim.x * blockIdx.x;
+  int voxelLocationIndex = tid / (patchSize * patchSize);
+
+  compute_intensities_for_patch(tid, features, featureCount, patchSize, intensities);
+  __syncthreads();
+
+  compute_histogram_for_patch(tid, patchSize, intensities, binCount, histogram);
+  __syncthreads();
+
+  update_patch_coordinate_system(tid, patchSize * patchSize, binCount, histogram, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
+}
+
 //#################### CONSTRUCTORS ####################
 
 VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
@@ -148,7 +167,21 @@ void VOPFeatureCalculator_CUDA::generate_rgb_patches(const ORUtils::MemoryBlock<
 
 void VOPFeatureCalculator_CUDA::update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  // TODO
+  int threadsPerBlock = m_patchSize * m_patchSize;
+  int numBlocks = voxelLocationCount;
+
+  // TEMPORARY
+  const int binCount = 36;
+
+  ck_update_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
+    voxelLocationCount,
+    featuresMB.GetData(MEMORYDEVICE_CUDA),
+    get_feature_count(),
+    m_patchSize,
+    binCount,
+    m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
+    m_yAxesMB.GetData(MEMORYDEVICE_CUDA)
+  );
 }
 
 }

@@ -107,7 +107,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   for(int tid = 0; tid < threadCount; ++tid)
   {
     int voxelLocationIndex = tid / patchArea;
-    compute_intensities_for_patch(tid, patchArea, features, featureCount, m_patchSize, &intensities[voxelLocationIndex][0]);
+    compute_intensities_for_patch(tid, features, featureCount, m_patchSize, &intensities[voxelLocationIndex][0]);
   }
 
 #ifdef WITH_OPENMP
@@ -116,11 +116,11 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   for(int tid = 0; tid < threadCount; ++tid)
   {
     int voxelLocationIndex = tid / patchArea;
-    compute_histogram_for_patch(tid, patchArea, m_patchSize, &intensities[voxelLocationIndex][0], binCount, &histograms[voxelLocationIndex][0]);
+    compute_histogram_for_patch(tid, m_patchSize, &intensities[voxelLocationIndex][0], binCount, &histograms[voxelLocationIndex][0]);
   }
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int tid = 0; tid < threadCount; ++tid)
   {
