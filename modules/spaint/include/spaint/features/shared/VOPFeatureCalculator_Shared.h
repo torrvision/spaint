@@ -114,6 +114,20 @@ inline void compute_histogram_for_patch(int tid, int patchSize, float *intensity
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
+inline void fill_in_surface_normal(int tid, const Vector3f *surfaceNormals, size_t featureCount, float *features)
+{
+  Vector3f surfaceNormal = surfaceNormals[tid];
+  float *feature = features + tid * featureCount;
+  size_t offset = featureCount - 4;
+  feature[offset] = surfaceNormal.x;
+  feature[offset + 1] = surfaceNormal.y;
+  feature[offset + 2] = surfaceNormal.z;
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
 inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, float *histogram, Vector3f *xAxis, Vector3f *yAxis)
 {
   if(tid % patchArea == 0)

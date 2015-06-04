@@ -33,6 +33,9 @@ private:
   virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */
+  virtual void fill_in_surface_normals(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const;
+
+  /** Override */
   virtual void generate_coordinate_systems(int voxelLocationCount) const;
 
   /** Override */

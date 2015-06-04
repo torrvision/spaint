@@ -120,6 +120,11 @@ void VOPFeatureCalculator_CUDA::convert_patches_to_lab(int voxelLocationCount, O
 #endif
 }
 
+void VOPFeatureCalculator_CUDA::fill_in_surface_normals(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  //TODO
+}
+
 void VOPFeatureCalculator_CUDA::generate_coordinate_systems(int voxelLocationCount) const
 {
   int threadsPerBlock = 256;

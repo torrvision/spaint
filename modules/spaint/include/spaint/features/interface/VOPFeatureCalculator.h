@@ -69,6 +69,11 @@ private:
   virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
+   * \brief TODO
+   */
+  virtual void fill_in_surface_normals(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
+
+  /**
    * \brief Generates coordinate systems in the tangent planes to the surfaces at the voxel locations.
    *
    * \param voxelLocationCount  The number of voxel locations for which we are calculating features.
