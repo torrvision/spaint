@@ -4,23 +4,13 @@
 
 #include "ocv/OpenCVUtil.h"
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
 namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-// TODO
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-
-unsigned char OpenCVUtil::clamp_pixel_value(float pixelValue)
+void OpenCVUtil::show_scaled_greyscale_figure(const std::string& windowName, const float *inputData, int width, int height, Order order, float scaleFactor)
 {
-  if(pixelValue < 0.0f) pixelValue = 0.0f;
-  if(pixelValue > 255.0f) pixelValue = 255.0f;
-  return static_cast<unsigned char>(pixelValue);
+  show_scaled_greyscale_figure(windowName, inputData, width, height, order, ScaleByFactor(scaleFactor));
 }
 
 }

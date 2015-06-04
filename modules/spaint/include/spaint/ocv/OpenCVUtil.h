@@ -5,8 +5,6 @@
 #ifndef H_SPAINT_OPENCVUTIL
 #define H_SPAINT_OPENCVUTIL
 
-#include <stdexcept>
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -14,7 +12,7 @@
 namespace spaint {
 
 /**
- * \brief This class provides helper functions to visualise InfiniTAM and ArrayFire images using OpenCV.
+ * \brief This class provides helper functions to visualise image data using OpenCV.
  */
 class OpenCVUtil
 {
@@ -25,51 +23,117 @@ public:
    */
   enum Order
   {
-    ROW_MAJOR,
-    COL_MAJOR
+    COL_MAJOR,
+    ROW_MAJOR
+  };
+
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief A functor that scales values by the specified factor.
+   */
+  struct ScaleByFactor
+  {
+    /** The factor by which to scale values. */
+    float m_factor;
+
+    /**
+     * \brief Constructs a function that scales values by the specified factor.
+     *
+     * \param factor  The factor by which to scale values.
+     */
+    explicit ScaleByFactor(float factor)
+    : m_factor(factor)
+    {}
+
+    /**
+     * \brief Scales the specified value by the factor associated with this functor.
+     *
+     * \return  The result of scaling the specified value by the factor associated with this functor.
+     */
+    float operator()(float value) const
+    {
+      return value * m_factor;
+    }
+  };
+
+  /**
+   * \brief A functor that implements a linear mapping from an input range [minInputValue,maxInputValue] derived from an array of input data
+   *        to the range [minOutputValue,maxOutputValue].
+   */
+  struct ScaleDataToRange
+  {
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+    /** The lower bound of the input range. */
+    float m_minInputValue;
+
+    /** The lower bound of the output range. */
+    float m_minOutputValue;
+
+    /** The ratio between the size of the output range and the size of the input range (e.g. if the output range is twice the size then this would equal 2). */
+    float m_scalingFactor;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+
+    /**
+     * \brief Constructs a functor that implements a linear mapping from the range [minInputValue,maxInputValue] derived from an array of input data
+     *        to the range [minOutputValue,maxOutputValue].
+     *
+     * \param inputData       The array of input data from which to derive the input range.
+     * \param inputDateSize   The size of the array of input data.
+     * \param minOutputValue  The lower bound of the output range.
+     * \param maxOutputValue  The upper bound of the output range.
+     */
+    ScaleDataToRange(const float *inputData, int inputDataSize, float minOutputValue, float maxOutputValue)
+    : m_minOutputValue(minOutputValue)
+    {
+      const float *inputDataEnd = inputData + inputDataSize;
+      float maxInputValue = *std::max_element(inputData, inputDataEnd);
+      m_minInputValue = *std::min_element(inputData, inputDataEnd);
+      m_scalingFactor = (maxOutputValue - minOutputValue) / (maxInputValue - m_minInputValue);
+    }
+
+    /**
+     * \brief Maps the specified input value into the output range.
+     *
+     * \param inputValue  A value in the input range.
+     * \return            The result of mapping the specified input value into the output range.
+     */
+    float operator()(float inputValue) const
+    {
+      return m_minOutputValue + (inputValue - m_minInputValue) * m_scalingFactor;
+    }
   };
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format.
+   *
+   * \param inputData The pixel data for the image.
+   * \param width     The width of the image.
+   * \param height    The height of the image.
+   * \param order     Whether the pixel data is in row-major or column-major order.
+   * \return          The OpenCV image.
+   */
   template <typename T>
-  static T scale_identity(T t)
+  static cv::Mat1b make_greyscale_image(const T *inputData, int width, int height, Order order)
   {
-    return t;
+    return make_greyscale_image(inputData, width, height, order, &identity<T>);
   }
 
-  struct ScaleByFactor
-  {
-    float factor;
-
-    ScaleByFactor(float factor_)
-    : factor(factor_)
-    {}
-
-    float operator()(float f) const
-    {
-      return f * factor;
-    }
-  };
-
-  struct ScaleToRange
-  {
-    float minValue;
-    float scale;
-
-    ScaleToRange(const float *inputData, int width, int height)
-    {
-      const float *inputEnd = inputData + width * height;
-      float maxValue = *std::max_element(inputData, inputEnd);
-      minValue = *std::min_element(inputData, inputEnd);
-      scale = 255.0f / (maxValue - minValue);
-    }
-
-    float operator()(float f) const
-    {
-      return (f - minValue) * scale;
-    }
-  };
-
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format,
+   *        applying the specified scaling function to each pixel value as it goes.
+   *
+   * \param inputData The pixel data for the image.
+   * \param width     The width of the image.
+   * \param height    The height of the image.
+   * \param order     Whether the pixel data is in row-major or column-major order.
+   * \param scaleFunc The scaling function.
+   * \return          The OpenCV image.
+   */
   template <typename T, typename ScaleFunc>
   static cv::Mat1b make_greyscale_image(const T *inputData, int width, int height, Order order, ScaleFunc scaleFunc)
   {
@@ -98,32 +162,78 @@ public:
     return result;
   }
 
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format and shows it in a named window.
+   *
+   * \param windowName  The name to give the window.
+   * \param inputData   The pixel data for the image.
+   * \param width       The width of the image.
+   * \param height      The height of the image.
+   * \param order       Whether the pixel data is in row-major or column-major order.
+   */
   template <typename T>
-  static cv::Mat1b make_greyscale_image(const T *inputData, int width, int height, Order order)
+  static void show_greyscale_figure(const std::string& windowName, const T *inputData, int width, int height, Order order)
   {
-    return make_greyscale_image(inputData, width, height, order, &scale_identity<T>);
+    show_scaled_greyscale_figure(windowName, inputData, width, height, order, &identity<T>);
   }
 
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format, applying the specified scaling
+   *        factor to each pixel value as it goes, and shows the resulting image in a named window.
+   *
+   * \param windowName  The name to give the window.
+   * \param inputData   The pixel data for the image.
+   * \param width       The width of the image.
+   * \param height      The height of the image.
+   * \param order       Whether the pixel data is in row-major or column-major order.
+   * \param scaleFactor The scaling factor.
+   */
+  static void show_scaled_greyscale_figure(const std::string& windowName, const float *inputData, int width, int height, Order order, float scaleFactor);
+
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format, applying the specified scaling
+   *        function to each pixel value as it goes, and shows the resulting image in a named window.
+   *
+   * \param windowName  The name to give the window.
+   * \param inputData   The pixel data for the image.
+   * \param width       The width of the image.
+   * \param height      The height of the image.
+   * \param order       Whether the pixel data is in row-major or column-major order.
+   * \param scaleFunc   The scaling function.
+   */
   template <typename T, typename ScaleFunc>
-  static void show_figure(const std::string& windowName, const T *inputData, int width, int height, Order order, ScaleFunc scaleFunc)
+  static void show_scaled_greyscale_figure(const std::string& windowName, const T *inputData, int width, int height, Order order, ScaleFunc scaleFunc)
   {
     cv::imshow(windowName, make_greyscale_image(inputData, width, height, order, scaleFunc));
   }
 
-  template <typename T>
-  static void show_figure(const std::string& windowName, const T *inputData, int width, int height, Order order)
-  {
-    show_figure(windowName, inputData, width, height, order, &scale_identity<T>);
-  }
-
-  static void show_scaled_figure(const std::string& windowName, const float *inputData, int width, int height, Order order, float scaleFactor)
-  {
-    show_figure(windowName, inputData, width, height, order, ScaleByFactor(scaleFactor));
-  }
-
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
-  static unsigned char clamp_pixel_value(float pixelValue);
+  /**
+   * \brief Clamps the specified pixel value to the range [0,255] and converts it to an unsigned char.
+   *
+   * \param pixelValue  The pixel value.
+   * \return            The clamped pixel value as an unsigned char.
+   */
+  template <typename T>
+  static unsigned char clamp_pixel_value(T pixelValue)
+  {
+    if(pixelValue < T(0)) pixelValue = T(0);
+    if(pixelValue > T(255)) pixelValue = T(255);
+    return static_cast<unsigned char>(pixelValue);
+  }
+
+  /**
+   * \brief Returns the value it is passed.
+   *
+   * \param value A value.
+   * \return      The same value.
+   */
+  template <typename T>
+  static T identity(T value)
+  {
+    return value;
+  }
 };
 
 }

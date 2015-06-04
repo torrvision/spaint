@@ -79,7 +79,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
   int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
   connectedComponentsDisplay = m_connectedComponents * (255/numberOfConnectedComponents);
-  OpenCVUtil::show_figure("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
   // Post-process the good candidates to identify the region which is most likely to be touching a surface.
@@ -160,16 +160,14 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   // Display the raw depth and the raycasted depth.
   m_rawDepthCopy->UpdateHostFromDevice();
   m_raycastedDepthResult->UpdateHostFromDevice();
-  //OpenCVUtil::display_image_and_scale("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, 100.0f);
-  OpenCVUtil::show_scaled_figure("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
-  //OpenCVUtil::display_image_and_scale("Current depth raycast in centimetres", m_raycastedDepthResult->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, 100.0f);
-  OpenCVUtil::show_scaled_figure("Current depth raycast in centimetres", m_raycastedDepthResult->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
+  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
+  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_raycastedDepthResult->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
 
   // Display the absolute difference between the raw and raycasted depth.
   static af::array tmp;
   tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
   tmp = truncate_to_unsigned_char(tmp);
-  OpenCVUtil::show_figure("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   static bool initialised = false;
 
@@ -190,7 +188,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   // Display the thresholded image.
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_thresholded * 255.0f;
-  OpenCVUtil::show_figure("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   initialised = true;
 #endif
@@ -229,7 +227,7 @@ void TouchDetector::filter_binary_image()
   // Display the threholded image after applying morphological operations.
   static af::array morphDisplay;
   morphDisplay = m_thresholded * 255.0f;
-  OpenCVUtil::show_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   initialised = true;
 #endif
@@ -271,11 +269,11 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   // Display the best candidate's difference image.
   static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
   temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVUtil::show_figure("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   static af::array maskDisplay(m_rows, m_cols, u8);
   maskDisplay = mask * 255;
-  OpenCVUtil::show_figure("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
   return bestConnectedComponent;
