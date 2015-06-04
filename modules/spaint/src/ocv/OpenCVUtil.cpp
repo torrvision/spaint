@@ -12,15 +12,8 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-void OpenCVUtil::display_image_and_scale(ITMFloatImage *infiniTAMImage, float scaleFactor, const std::string& windowName)
+void OpenCVUtil::display_image_and_scale(const std::string& windowName, float *pixelData, int width, int height, float scaleFactor)
 {
-  int width = infiniTAMImage->noDims.x;
-  int height = infiniTAMImage->noDims.y;
-
-  // Get the infiniTAM image pointer.
-  infiniTAMImage->UpdateHostFromDevice();
-  float *itmImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
-
   // Create an OpenCV image and get the data pointer.
   cv::Mat ocvImage = cv::Mat::zeros(height, width, CV_8UC1);
   unsigned char *ocvImageDataPtr = ocvImage.data;
@@ -28,7 +21,7 @@ void OpenCVUtil::display_image_and_scale(ITMFloatImage *infiniTAMImage, float sc
   // Inner loop to set the OpenCV Image Pixels.
   for(int i = 0, pixelCount = width * height; i < pixelCount; ++i)
   {
-    float intensity = *itmImageDataPtr++ * scaleFactor;
+    float intensity = *pixelData++ * scaleFactor;
     if(intensity < 0) intensity = 0;
     if(intensity > 255) intensity = 255;
     *ocvImageDataPtr++ = static_cast<unsigned char>(intensity);
@@ -68,19 +61,19 @@ void OpenCVUtil::display_image_scale_to_range(ITMFloatImage *infiniTAMImage, con
   cv::imshow(windowName, ocvImage);
 }
 
-void OpenCVUtil::show_figure(const std::string& windowName, unsigned char *pixels, int width, int height, Order order)
+void OpenCVUtil::show_figure(const std::string& windowName, unsigned char *pixelData, int width, int height, Order order)
 {
   cv::Mat img;
   if(order == COL_MAJOR)
   {
     int step = height * sizeof(unsigned char);
-    img = cv::Mat(width, height, CV_8UC1, pixels, step);
+    img = cv::Mat(width, height, CV_8UC1, pixelData, step);
     cv::transpose(img, img);
   }
   else
   {
     int step = width * sizeof(unsigned char);
-    img = cv::Mat(height, width, CV_8UC1, pixels, step);
+    img = cv::Mat(height, width, CV_8UC1, pixelData, step);
   }
   cv::imshow(windowName, img);
 }

@@ -9,6 +9,7 @@
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
 #include "tvgutil/ArgUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
+
 #ifdef WITH_CUDA
 #include "imageprocessing/cuda/ImageProcessor_CUDA.h"
 #include "visualisers/cuda/DepthVisualiser_CUDA.h"
@@ -157,8 +158,10 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the raw depth and the raycasted depth.
-  OpenCVUtil::display_image_and_scale(m_rawDepthCopy.get(), 100.0f, "Current raw depth from camera in centimeters");
-  OpenCVUtil::display_image_and_scale(m_raycastedDepthResult.get(), 100.0f, "Current depth raycast in centimeters");
+  m_rawDepthCopy->UpdateHostFromDevice();
+  m_raycastedDepthResult->UpdateHostFromDevice();
+  OpenCVUtil::display_image_and_scale("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, 100.0f);
+  OpenCVUtil::display_image_and_scale("Current depth raycast in centimetres", m_raycastedDepthResult->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, 100.0f);
 
   // Display the absolute difference between the raw and raycasted depth.
   static af::array tmp;
