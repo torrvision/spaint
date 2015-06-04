@@ -64,21 +64,21 @@ void OpenCVUtil::display_image_scale_to_range(ITMFloatImage *infiniTAMImage, con
   cv::imshow(windowName, ocvImage);
 }
 
-void OpenCVUtil::ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order)
+void OpenCVUtil::show_figure(const std::string& windowName, unsigned char *pixels, int width, int height, Order order)
 {
+  cv::Mat img;
   if(order == COL_MAJOR)
   {
     int step = height * sizeof(unsigned char);
-    cv::Mat img(width, height, CV_8UC1, pixels, step);
+    img = cv::Mat(width, height, CV_8UC1, pixels, step);
     cv::transpose(img, img);
-    cv::imshow(windowName, img);
   }
   else
   {
     int step = width * sizeof(unsigned char);
-    cv::Mat img(height, width, CV_8UC1, pixels, step);
-    cv::imshow(windowName, img);
+    img = cv::Mat(height, width, CV_8UC1, pixels, step);
   }
+  cv::imshow(windowName, img);
 }
 
 }

@@ -16,12 +16,12 @@
 namespace spaint {
 
 /**
- * \brief This class provides helper functions to visualise InfiniTAM and ArrayFire images using OpenCV.
+ * \brief This struct provides helper functions to visualise InfiniTAM and ArrayFire images using OpenCV.
  */
-class OpenCVUtil
+struct OpenCVUtil
 {
-  //#################### PUBLIC ENUMERATIONS ####################
-public:
+  //#################### ENUMERATIONS ####################
+
   /**
    * \brief An enumeration containing two possible ways of arranging multidimensional arrays in a single linear array.
    */
@@ -32,7 +32,7 @@ public:
   };
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /*
    * \brief Displays an image and scales the pixel values by a specified scaling factor.
    *
@@ -51,15 +51,15 @@ public:
   static void display_image_scale_to_range(ITMFloatImage *infiniTAMImage, const std::string& windowName);
 
   /**
-   * \brief Displays an image in a window from an array of pixel values.
+   * \brief Makes an OpenCV image from pixel data in unsigned char format and displays it in a window with the specified name.
    *
-   * \param windowName   The name of the window.
-   * \param pixels       A pointer to the first pixel element in the image.
-   * \param width        The width of the image.
-   * \param height       The hwight of the image.
-   * \param order        Whether the pixel values are arrange din column-major or row-major order.
+   * \param windowName  The name to give the window.
+   * \param pixels      A pointer to the first pixel in the image.
+   * \param width       The width of the image.
+   * \param height      The hwight of the image.
+   * \param order       Whether the pixel values are arranged in column-major or row-major order.
    */
-  static void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order);
+  static void show_figure(const std::string& windowName, unsigned char *pixels, int width, int height, Order order);
 };
 
 }

@@ -78,7 +78,7 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
   static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
   int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
   connectedComponentsDisplay = m_connectedComponents * (255/numberOfConnectedComponents);
-  OpenCVUtil::ocvfig("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_figure("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
   // Post-process the good candidates to identify the region which is most likely to be touching a surface.
@@ -164,7 +164,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   static af::array tmp;
   tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
   tmp = truncate_to_unsigned_char(tmp);
-  OpenCVUtil::ocvfig("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_figure("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   static bool initialised = false;
 
@@ -185,7 +185,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
   // Display the thresholded image.
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_thresholded * 255.0f;
-  OpenCVUtil::ocvfig("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_figure("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   initialised = true;
 #endif
@@ -224,7 +224,7 @@ void TouchDetector::filter_binary_image()
   // Display the threholded image after applying morphological operations.
   static af::array morphDisplay;
   morphDisplay = m_thresholded * 255.0f;
-  OpenCVUtil::ocvfig("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   initialised = true;
 #endif
@@ -266,11 +266,11 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   // Display the best candidate's difference image.
   static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
   temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVUtil::ocvfig("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_figure("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   static af::array maskDisplay(m_rows, m_cols, u8);
   maskDisplay = mask * 255;
-  OpenCVUtil::ocvfig("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_figure("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
   return bestConnectedComponent;
