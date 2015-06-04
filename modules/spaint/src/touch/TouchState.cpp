@@ -9,14 +9,11 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 TouchState::TouchState()
-: m_touchingSurface(false),
-  m_touchPositionKnown(false)
+: m_touchingSurface(false), m_touchPositionKnown(false)
 {}
 
 TouchState::TouchState(const TouchState::TouchPositions_CPtr& touchPositions, bool touchingSurface, bool touchPositionKnown)
-: m_touchPositions(touchPositions),
-  m_touchingSurface(touchingSurface),
-  m_touchPositionKnown(touchPositionKnown)
+: m_touchPositions(touchPositions), m_touchingSurface(touchingSurface), m_touchPositionKnown(touchPositionKnown)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -73,11 +73,6 @@ public:
   bool touch_position_known() const;
 };
 
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<TouchState> TouchState_Ptr;
-typedef boost::shared_ptr<const TouchState> TouchState_CPtr;
-
 }
 
 #endif
