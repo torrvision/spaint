@@ -60,18 +60,6 @@ public:
    * \param order        Whether the pixel values are arrange din column-major or row-major order.
    */
   static void ocvfig(const std::string& windowName, unsigned char *pixels, int width, int height, Order order);
-
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Calculates the minimum and maximum values in an InfiniTAM image.
-   *
-   * \param itmImageDataPtr The InfiniTAM image data pointer.
-   * \param width           The width of the image.
-   * \param height          The height of the image.
-   * \return                A pair of values indicating the minimum and maximum values found.
-   */
-  static std::pair<float, float> itm_mat_32SC1_min_max_calculator(float *itmImageDataPtr, int width, int height);
 };
 
 }

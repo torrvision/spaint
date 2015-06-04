@@ -42,10 +42,12 @@ void OpenCVUtil::display_image_scale_to_range(ITMFloatImage *infiniTAMImage, con
   // Get the minimum and maximum values in the infiniTAM image.
   infiniTAMImage->UpdateHostFromDevice();
   float *itmImageDataPtr = infiniTAMImage->GetData(MEMORYDEVICE_CPU);
-  std::pair<float, float> minAndMax = itm_mat_32SC1_min_max_calculator(itmImageDataPtr, width, height);
+  float *itmImageDataEnd = itmImageDataPtr + width * height;
+  float minValue = *std::min_element(itmImageDataPtr, itmImageDataEnd);
+  float maxValue = *std::max_element(itmImageDataPtr, itmImageDataEnd);
 
   // Calculate the mapping to image values between 0 and 255.
-  float range = minAndMax.second - minAndMax.first;
+  float range = maxValue - minValue;
   float scale = 255.0f / range;
 
   // Create an OpenCV image and get the data pointer.
@@ -55,7 +57,7 @@ void OpenCVUtil::display_image_scale_to_range(ITMFloatImage *infiniTAMImage, con
   // Inner loop to set the OpenCV Image Pixels.
   for(int i = 0, pixelCount = width * height; i < pixelCount; ++i)
   {
-    *ocvImageDataPtr++ = static_cast<unsigned char>((*itmImageDataPtr++ - minAndMax.first) * scale);
+    *ocvImageDataPtr++ = static_cast<unsigned char>((*itmImageDataPtr++ - minValue) * scale);
   }
 
   // Display the image.
@@ -77,16 +79,6 @@ void OpenCVUtil::ocvfig(const std::string& windowName, unsigned char *pixels, in
     cv::Mat img(height, width, CV_8UC1, pixels, step);
     cv::imshow(windowName, img);
   }
-}
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-
-std::pair<float, float> OpenCVUtil::itm_mat_32SC1_min_max_calculator(float *itmImageDataPtr, int width, int height)
-{
-  float *itmImageDataEnd = itmImageDataPtr + width * height;
-  float minElement = *std::min_element(itmImageDataPtr, itmImageDataEnd);
-  float maxElement = *std::max_element(itmImageDataPtr, itmImageDataEnd);
-  return std::make_pair(minElement, maxElement);
 }
 
 }
