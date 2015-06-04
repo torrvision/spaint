@@ -7,6 +7,10 @@
 
 #include "FeatureCalculator.h"
 
+#ifdef WITH_OPENCV
+#include "ocv/OpenCVUtil.h"
+#endif
+
 namespace spaint {
 
 /**
@@ -86,6 +90,15 @@ public:
 
   /** Override */
   virtual size_t get_feature_count() const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+#ifdef WITH_OPENCV
+  /**
+   * \brief TODO.
+   */
+  void debug_display_features(const float *features, size_t size, const std::string& windowName) const;
+#endif
 };
 
 }

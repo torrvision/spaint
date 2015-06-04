@@ -39,11 +39,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
 #if 1 && defined(WITH_OPENCV)
-  std::vector<cv::Mat3b> rgbPatchImages(voxelLocationsMB.dataSize);
-  for(size_t i = 0; i < voxelLocationsMB.dataSize; ++i)
-  {
-    rgbPatchImages[i] = OpenCVUtil::make_image_rgb_cpu(featuresMB.GetData(MEMORYDEVICE_CPU) + i * get_feature_count(), 13, 13);
-  }
+  debug_display_features(featuresMB.GetData(MEMORYDEVICE_CPU), voxelLocationsMB.dataSize, "Feature Samples Before Rotation");
 #endif
 
   // Determine the dominant orientation for each patch and update the coordinate systems accordingly.
@@ -53,14 +49,15 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
 #if 1 && defined(WITH_OPENCV)
-  for(size_t i = 0; i < voxelLocationsMB.dataSize; ++i)
-  {
-    rgbPatchImages[i] = OpenCVUtil::make_image_rgb_cpu(featuresMB.GetData(MEMORYDEVICE_CPU) + i * get_feature_count(), 13, 13);
-  }
+  debug_display_features(featuresMB.GetData(MEMORYDEVICE_CPU), voxelLocationsMB.dataSize, "Feature Samples After Rotation");
 #endif
 
   // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
   convert_patches_to_lab(voxelLocationCount, featuresMB);
+
+#if 1 && defined(WITH_OPENCV)
+  debug_display_features(featuresMB.GetData(MEMORYDEVICE_CPU), voxelLocationsMB.dataSize, "Feature Samples After LAB Conversion");
+#endif
 
   // For each feature vector, fill in the surface normal and the signed distance to the dominant horizontal surface present in the scene as extra features.
   // TODO
@@ -73,4 +70,30 @@ size_t VOPFeatureCalculator::get_feature_count() const
   return m_patchSize * m_patchSize * 3 + 3 + 1;
 }
 
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+#ifdef WITH_OPENCV
+void VOPFeatureCalculator::debug_display_features(const float *features, size_t size, const std::string& windowName) const
+{
+  std::vector<cv::Mat3b> rgbPatchImages(size);
+  for(size_t i = 0; i < size; ++i)
+  {
+    rgbPatchImages[i] = OpenCVUtil::make_image_rgb_cpu(features + i * get_feature_count(), m_patchSize, m_patchSize);
+  }
+  static bool initialised = false;
+  static int debugDelay = 30; //milliseconds
+  if(!initialised)
+  {
+    cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("Debug delay (milliseconds)", windowName, &debugDelay, 3000);
+  }
+  debugDelay = cv::getTrackbarPos("Debug delay (milliseconds)", windowName);
+  const size_t tilingWidth = 17;
+  const size_t tilingHeight = 9;
+  const size_t scaleFactor = 6;
+  cv::Mat3b tiledImage = OpenCVUtil::tile_images(rgbPatchImages, tilingWidth, tilingHeight, scaleFactor);
+  cv::imshow(windowName, tiledImage);
+  cv::waitKey(debugDelay);
+}
+#endif
 }

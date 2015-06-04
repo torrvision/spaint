@@ -217,6 +217,11 @@ public:
     cv::imshow(windowName, make_greyscale_image(inputData, width, height, order, scaleFunc));
   }
 
+  /**
+   * \brief TODO.
+   */
+  static cv::Mat3b tile_images(const std::vector<cv::Mat3b>& images, int tiledWidth, int tiledHeight, size_t scaleFactor);
+
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
