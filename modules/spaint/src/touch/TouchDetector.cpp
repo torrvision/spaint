@@ -63,8 +63,10 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth)
+TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth)
 {
+  TouchState touchState;
+
   calculate_binary_difference_image(renderState, camera, voxelSize, rawDepth);
 
   filter_binary_image();
@@ -96,11 +98,11 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
     // Get the touchPoints, will return empty if the best connected component is not touching the scene.
     Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
 
-    if(touchPoints->size() > 0) m_touchState.set_touch_state(touchPoints, true, true);
-    else m_touchState.set_touch_state(touchPoints, false, false);
+    if(touchPoints->size() > 0) touchState = TouchState(touchPoints, true, true);
+    else touchState = TouchState(touchPoints, false, false);
   }
   else{
-    m_touchState.set_touch_state(Points_CPtr(new Points), false, false);
+    touchState = TouchState(Points_CPtr(new Points), false, false);
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -118,11 +120,8 @@ void TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderSt
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   cv::waitKey(m_debugDelayms);
 #endif
-}
 
-const TouchState& TouchDetector::get_touch_state() const
-{
-  return m_touchState;
+  return touchState;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

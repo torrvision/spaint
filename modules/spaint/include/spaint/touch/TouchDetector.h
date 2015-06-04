@@ -95,9 +95,6 @@ private:
   /** An array in which to store a binary image resulting fro a threshold operation. */
   af::array m_thresholded;
 
-  /** An instance of the current touch state. */
-  TouchState m_touchState;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -108,21 +105,15 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Perform image processing routines on the raw and raycasted depth images in order to set the touch state.
+   * \brief Perform image processing routines on the raw and raycasted depth images in order to determine the touch state.
    *
    * \param renderState   The render state.
    * \param camera        The camera.
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
+   * \return              The touch state.
    */
-  void run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth);
-
-  /**
-   * \brief Gets the touch state.
-   *
-   * \return  The touch state.
-   */
-  const TouchState& get_touch_state() const;
+  TouchState run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

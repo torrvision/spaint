@@ -27,15 +27,27 @@ private:
   /** The touch positions. */
   TouchPositions_CPtr m_touchPositions;
 
-  /** A flag indicating whether the surface is being touched. */
+  /** A flag indicating whether or not the surface is currently being touched. */
   bool m_touchingSurface;
 
-  /** A flag indicating whether the touch position is known. */
+  /** A flag indicating whether or not the touch position is currently known. */
   bool m_touchPositionKnown;
 
   //#################### CONSTRUCTORS ####################
 public:
+  /**
+   * \brief Constructs a touch state with an empty set of touch positions.
+   */
   TouchState();
+
+  /**
+   * \brief Constructs a touch state.
+   *
+   * \param touchPositions      The touch positions.
+   * \param touchingSurface     Whether or not the surface is currently being touched.
+   * \param touchPositionKnown  Whether or not the touch position is currently known.
+   */
+  TouchState(const TouchPositions_CPtr& touchPositions, bool touchingSurface, bool touchPositionKnown);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -47,35 +59,25 @@ public:
   TouchPositions_CPtr get_positions() const;
 
   /**
-   * \brief Sets the touch state.
+   * \brief Gets whether or not the surface is currently being touched.
    *
-   * \param position_x          The x positions.
-   * \param position_y          The y positions.
-   * \param touchingSurface     Whether the surface is being touched or not.
-   * \param touchPositionKnown  Whether the touch position is known.
-   */
-  void set_touch_state(TouchPositions_CPtr touchPositions, bool touchingSurface, bool touchPositionKnown);
-
-  /**
-   * \brief Gets whether the surface is being touched.
-   *
-   * \return The touching-surface flag.
+   * \return  true, if the surface is currently being touched, or false otherwise.
    */
   bool touching_surface() const;
 
   /**
-   * \brief Gets whether the touch positin is known.
+   * \brief Gets whether or not the touch position is currently known.
    *
-   * \return The touch-position-known flag.
+   * \return true, if the touch position is currently known, or false otherwise.
    */
   bool touch_position_known() const;
 };
 
 //#################### TYPEDEFS ####################
+
 typedef boost::shared_ptr<TouchState> TouchState_Ptr;
 typedef boost::shared_ptr<const TouchState> TouchState_CPtr;
 
 }
 
 #endif
-
