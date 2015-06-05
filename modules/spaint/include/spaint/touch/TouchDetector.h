@@ -15,9 +15,6 @@
 #include "../visualisers/interface/DepthVisualiser.h"
 #include "TouchState.h"
 
-//#define DEBUG_TOUCH_VERBOSE
-//#define DEBUG_TOUCH_DISPLAY
-
 namespace spaint {
 
 /**
@@ -27,15 +24,14 @@ class TouchDetector
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<af::array> AFImage_Ptr;
-  typedef boost::shared_ptr<ITMFloatImage> FloatImage_Ptr;
-  typedef boost::shared_ptr<const ITMFloatImage> FloatImage_CPtr;
+  typedef boost::shared_ptr<af::array> AFArray_Ptr;
+  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
+  typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef std::vector<Eigen::Vector2i> Points;
   typedef boost::shared_ptr<Points> Points_Ptr;
   typedef boost::shared_ptr<const Points> Points_CPtr;
 
-#ifdef DEBUG_TOUCH_DISPLAY
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
   /** The delay between processing frames (0 = pause). */
@@ -43,7 +39,6 @@ private:
 
   /** The lower depth threshold value in millimeters needed to the opencv trackbar. */
   int m_depthLowerThresholdmm;
-#endif
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -63,7 +58,7 @@ private:
   float m_depthUpperThreshold;
 
   /** An image in which each pixel is the absolute difference between the current and raycasted depth. */
-  AFImage_Ptr m_diffRawRaycast;
+  AFArray_Ptr m_diffRawRaycast;
 
   /** Multiplatform image processing tools. */
   boost::shared_ptr<const ImageProcessor> m_imageProcessor;
@@ -84,10 +79,10 @@ private:
   int m_morphKernelSize;
 
   /** A copy of the raw depth captured from Kinect. */
-  FloatImage_Ptr m_rawDepthCopy;
+  ITMFloatImage_Ptr m_rawDepthCopy;
 
   /** An image into which to store the depth of the currently visible scene from the camera. */
-  FloatImage_Ptr m_raycastedDepthResult;
+  ITMFloatImage_Ptr m_raycastedDepthResult;
 
   /** The number of rows in the image matrix. */
   int m_rows;
@@ -113,7 +108,7 @@ public:
    * \param rawDepth      The raw depth image from the camera.
    * \return              The touch state.
    */
-  TouchState run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth);
+  TouchState run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -125,7 +120,7 @@ private:
    * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth);
+  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth);
 
   /**
    * \brief Filter a binary image to remove small and spurious regions.

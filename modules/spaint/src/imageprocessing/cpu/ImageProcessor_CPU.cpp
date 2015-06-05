@@ -10,7 +10,7 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const
+void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(firstInputImage, secondInputImage);
   check_image_size_equal(firstInputImage, outputImage);

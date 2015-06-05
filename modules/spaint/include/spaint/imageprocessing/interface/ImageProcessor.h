@@ -20,8 +20,8 @@ class ImageProcessor
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<af::array> AFImage_Ptr;
-  typedef boost::shared_ptr<const af::array> AFImage_CPtr;
+  typedef boost::shared_ptr<af::array> AFArray_Ptr;
+  typedef boost::shared_ptr<const af::array> AFArray_CPtr;
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
 
@@ -56,7 +56,7 @@ public:
    * \param secondInputImage The second input image.
    * \param outputImage      The image in which to store the result of the calculation.
    */
-  virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFImage_Ptr& outputImage) const = 0;
+  virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Tests the pixels in the input image against a threshold using the specified comparison operator,
@@ -98,7 +98,7 @@ protected:
    * \param img The ArrayFire image.
    * \return    The size of the ArrayFire image.
    */
-  static Vector2i image_size(const AFImage_CPtr& img);
+  static Vector2i image_size(const AFArray_CPtr& img);
 
   /**
    * \brief Gets the size of an InfiniTAM image.

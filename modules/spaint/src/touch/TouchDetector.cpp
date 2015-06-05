@@ -19,6 +19,9 @@
 #include "ocv/OpenCVUtil.h"
 #endif
 
+//#define DEBUG_TOUCH_VERBOSE
+//#define DEBUG_TOUCH_DISPLAY
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -63,7 +66,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth)
+TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth)
 {
   TouchState touchState;
 
@@ -126,7 +129,7 @@ TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& re
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const FloatImage_CPtr& rawDepth)
+void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth)
 {
   // The camera is assumed to be positioned close to the user.
   // This allows a threshold on the maximum depth that a touch interaction may occur.

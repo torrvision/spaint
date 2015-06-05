@@ -12,7 +12,7 @@ ImageProcessor::~ImageProcessor() {}
 
 //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
 
-Vector2i ImageProcessor::image_size(const AFImage_CPtr& img)
+Vector2i ImageProcessor::image_size(const AFArray_CPtr& img)
 {
   return Vector2i(img->dims(1), img->dims(0));
 }
