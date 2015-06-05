@@ -208,27 +208,18 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
 
 void TouchDetector::filter_binary_image()
 {
-  // Perform morphological operations on the image to get rid of small segments.
-  static af::array morphKernel;
+  // Ensure that the morphological kernel size is odd and >= 3.
+  int morphKernelSize = m_morphKernelSize;
+  if(morphKernelSize < 3) morphKernelSize = 3;
+  if(morphKernelSize % 2 == 0) ++morphKernelSize;
 
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  m_morphKernelSize = (m_morphKernelSize < 3) ? 3 : m_morphKernelSize;
-
-  // Keep the morphological kernel size odd;
-  if((m_morphKernelSize % 2) == 0)
-  {
-    ++m_morphKernelSize;
-  }
-#endif
-  morphKernel = af::constant(1, m_morphKernelSize, m_morphKernelSize);
-
-  // Apply morphological operations on the thresholded image.
+  // Apply a morphological opening operation to the thresholded image to reduce noise.
+  af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
   m_thresholded = af::erode(m_thresholded, morphKernel);
   m_thresholded = af::dilate(m_thresholded, morphKernel);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   static bool initialised = false;
-
   if(!initialised)
   {
     cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
