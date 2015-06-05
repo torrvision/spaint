@@ -110,23 +110,23 @@ public:
   /**
    * \brief Perform image processing routines on the raw and raycasted depth images in order to determine the touch state.
    *
-   * \param renderState   The render state.
-   * \param camera        The camera.
+   * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
+   * \param renderState   The render state corresponding to the camera (contains the raycasted depth image).
    * \return              The touch state.
    */
-  TouchState run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth);
+  TouchState determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Find image regions which differ from the raw and raycasted depth images.
+   * \brief Find image regions which differ between the raw and raycasted depth images.
    *
-   * \param renderState   The render state.
-   * \param camera        The camera.
+   * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
+   * \param renderState   The render state corresponding to the camera (contains the raycasted depth image).
    */
-  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth);
+  void calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   /**
    * \brief Filter a binary image to remove small and spurious regions.

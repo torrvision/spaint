@@ -67,11 +67,11 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth)
+TouchState TouchDetector::determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 {
   TouchState touchState;
 
-  calculate_binary_difference_image(renderState, camera, rawDepth);
+  calculate_binary_difference_image(camera, rawDepth, renderState);
 
   filter_binary_image();
 
@@ -130,7 +130,7 @@ TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& re
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth)
+void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 {
   // The camera is assumed to be positioned close to the user.
   // This allows a threshold on the maximum depth that a touch interaction may occur.

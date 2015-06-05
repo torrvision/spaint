@@ -94,7 +94,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
 
   // Run the touch pipeline.
   boost::shared_ptr<ITMFloatImage> depthImage(m_view->depth, boost::serialization::null_deleter());
-  TIME(TouchState touchState = m_touchDetector->run_touch_detector_on_frame(renderState, camera, depthImage), milliseconds, runningTouchDetectorOnFrame);
+  TIME(TouchState touchState = m_touchDetector->determine_touch_state(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
 
   // Update whether or not the selector is active.
