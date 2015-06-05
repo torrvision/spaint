@@ -54,14 +54,14 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 #endif
 
   // The minimum area threshold is set to a percentage of the total image area.
-  m_minimumConnectedComponentAreaThreshold = (m_minimumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols);
+  m_minimumConnectedComponentAreaThreshold = static_cast<int>((m_minimumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols));
 
-  // The maximum are threshold is set to a precentage of the total image area.
-  m_maximumConnectedComponentAreaThreshold = (m_maximumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols);
+  // The maximum are threshold is set to a percentage of the total image area.
+  m_maximumConnectedComponentAreaThreshold = static_cast<int>((m_maximumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols));
 
 #ifdef DEBUG_TOUCH_DISPLAY
   m_debugDelayms = 30;
-  m_depthLowerThresholdmm = m_depthLowerThreshold * 1000.0f;
+  m_depthLowerThresholdmm = static_cast<int>(m_depthLowerThreshold * 1000.0f);
 #endif
 }
 
