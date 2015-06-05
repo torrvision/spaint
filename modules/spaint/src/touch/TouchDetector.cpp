@@ -108,7 +108,7 @@ TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& re
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the touch points.
   cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
-  const Points_CPtr& touchPoints = m_touchState.get_positions();
+  const Points_CPtr& touchPoints = touchState.get_positions();
   for(size_t i = 0, iend = touchPoints->size(); i < iend; ++i)
   {
     const Eigen::Vector2i& v = touchPoints->at(i);
