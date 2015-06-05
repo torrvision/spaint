@@ -93,7 +93,7 @@ TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& re
     static af::array diffCopyMillimetersU8(m_rows, m_cols, u8);
 
     // Convert the difference between raw and raycasted depth to millimeters.
-    diffCopyMillimetersU8 = truncate_to_unsigned_char((*m_diffRawRaycast) * 1000.0f);
+    diffCopyMillimetersU8 = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
     // Find the connected component most likely to be a touch iteractor.
     int bestConnectedComponent = find_best_connected_component(goodCandidates, diffCopyMillimetersU8);
@@ -167,8 +167,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
 
   // Display the absolute difference between the raw and raycasted depth.
   static af::array tmp;
-  tmp = *m_diffRawRaycast * 100.0f; // Convert to centimeters.
-  tmp = truncate_to_unsigned_char(tmp);
+  tmp = clamp_to_range(*m_diffRawRaycast * 100.0f, 0.0f, 255.0f); // convert to centimetres
   OpenCVUtil::show_greyscale_figure("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   static bool initialised = false;
@@ -363,23 +362,20 @@ af::array TouchDetector::select_good_connected_components()
   return goodCandidates;
 }
 
-af::array TouchDetector::truncate_to_unsigned_char(const af::array& array)
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float upper)
 {
-  // Truncate any values outside the range [0-255], before converting to unsigned 8-bit.
-  static af::array lowmask;
-  lowmask = array < 0.0f;
+  static af::array lowerMask, upperMask;
+  lowerMask = arr < lower;
+  upperMask = arr > upper;
 
   static af::array arrayCopy;
-  arrayCopy = array - lowmask * array;
+  arrayCopy = arr - lowerMask * arr;
+  arrayCopy = arrayCopy - (upperMask * arrayCopy) + (upperMask * upper);
 
-  static af::array highmask;
-  highmask = arrayCopy > 255.0f;
-  arrayCopy = arrayCopy - (highmask * arrayCopy) + (255 * highmask);
-
-  return arrayCopy.as(u8);
+  return arrayCopy;
 }
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
 Vector3f TouchDetector::to_itm(const Eigen::Vector3f& v)
 {

@@ -150,16 +150,18 @@ private:
    */
   af::array select_good_connected_components();
 
-  /**
-   * \brief Convert an array to unsigned char truncating values outside the range 0-255.
-   *
-   * \param array   The input array.
-   * \return        The truncated and converted array.
-   */
-  af::array truncate_to_unsigned_char(const af::array& array);
-
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Makes a copy of an ArrayFire array in which the elements have been clamped to the specified range.
+   *
+   * \param arr   An ArrayFire array.
+   * \param lower The lower bound of the range to which to clamp.
+   * \param upper The upper bound of the range to which to clamp.
+   * \return      A copy of the array in which the elements have been clamped to the specified range.
+   */
+  static af::array clamp_to_range(const af::array& arr, float lower, float upper);
+
   /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
    *
