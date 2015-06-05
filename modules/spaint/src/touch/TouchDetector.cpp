@@ -39,16 +39,14 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_settings(settings),
   m_thresholded(imgSize.y, imgSize.x)
 {
-#ifdef WITH_CUDA
-  m_rawDepthCopy.reset(new ITMFloatImage(imgSize, true, true));
+  m_thresholdedRawDepth.reset(new ITMFloatImage(imgSize, true, true));
   m_depthRaycast.reset(new ITMFloatImage(imgSize, true, true));
 
+  // FIXME: Take the device type in settings into account.
+#ifdef WITH_CUDA
   m_depthCalculator.reset(new DepthVisualiser_CUDA);
   m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
-  m_rawDepthCopy.reset(new ITMFloatImage(imgSize, true, false));
-  m_depthRaycast.reset(new ITMFloatImage(imgSize, true, false));
-
   m_depthCalculator.reset(new DepthVisualiser_CPU);
   m_imageProcessor.reset(new ImageProcessor_CPU);
 #endif
@@ -71,6 +69,9 @@ TouchState TouchDetector::determine_touch_state(const rigging::MoveableCamera_CP
 try
 {
   TouchState touchState;
+
+  // Prepare a thresholded version of the raw depth image and a depth raycast ready for movement detection.
+  prepare_inputs(camera, rawDepth, renderState);
 
   calculate_binary_difference_image(camera, rawDepth, renderState);
 
@@ -138,31 +139,8 @@ catch(af::exception&)
 
 void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 {
-  // As a first step, make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
-  // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera, they are not fused
-  // into the scene by InfiniTAM (which has a depth threshold hard-coded into its scene settings). As a result, there will always be
-  // large expected differences between the raw and raycasted depth images in those parts of the scene. A 2m threshold is reasonable
-  // because we assume that the camera is positioned close to the user and that the user's hand or leg will therefore not extend more
-  // than two metres away from the camera position.
-  m_imageProcessor->set_on_threshold(rawDepth, ImageProcessor::CO_GREATER, 2.0f, -1.0f, m_rawDepthCopy);
-
-  // Generate an orthographic depth raycast of the current scene from the current camera position.
-  // As with the raw depth image, the pixel values of this raycast denote depth values in metres.
-  // We assume that parts of the scene for which we have no information are far away (at an
-  // arbitrarily large depth of 100m).
-  const float invalidDepthValue = 100.0f;
-  m_depthCalculator->render_depth(
-    DepthVisualiser::DT_ORTHOGRAPHIC,
-    to_itm(camera->p()),
-    to_itm(camera->n()),
-    renderState.get(),
-    m_settings->sceneParams.voxelSize,
-    invalidDepthValue,
-    m_depthRaycast
-  );
-
   // Calculate the difference between the raw depth image and the depth raycast.
-  m_imageProcessor->calculate_depth_difference(m_rawDepthCopy, m_depthRaycast, m_diffRawRaycast);
+  m_imageProcessor->calculate_depth_difference(m_thresholdedRawDepth, m_depthRaycast, m_diffRawRaycast);
 
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
@@ -172,9 +150,9 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the raw depth image and the depth raycast.
   const float mToCm = 100.0f; // the scaling factor needed to convert metres to centimetres
-  m_rawDepthCopy->UpdateHostFromDevice();
+  m_thresholdedRawDepth->UpdateHostFromDevice();
   m_depthRaycast->UpdateHostFromDevice();
-  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
+  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_thresholdedRawDepth->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
   OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_depthRaycast->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
 
   // Display the absolute difference between the raw depth image and the depth raycast.
@@ -326,6 +304,32 @@ TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComp
   }
 
   return touchPoints;
+}
+
+void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+{
+  // Make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
+  // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera,
+  // they are not fused into the scene by InfiniTAM (which has a depth threshold hard-coded into its scene settings).
+  // As a result, there will always be large expected differences between the raw and raycasted depth images in those
+  // parts of the scene. A 2m threshold is reasonable because we assume that the camera is positioned close to the user
+  // and that the user's hand or leg will therefore not extend more than two metres away from the camera position.
+  m_imageProcessor->set_on_threshold(rawDepth, ImageProcessor::CO_GREATER, 2.0f, -1.0f, m_thresholdedRawDepth);
+
+  // Generate an orthographic depth raycast of the current scene from the current camera position.
+  // As with the raw depth image, the pixel values of this raycast denote depth values in metres.
+  // We assume that parts of the scene for which we have no information are far away (at an
+  // arbitrarily large depth of 100m).
+  const float invalidDepthValue = 100.0f;
+  m_depthCalculator->render_depth(
+    DepthVisualiser::DT_ORTHOGRAPHIC,
+    to_itm(camera->p()),
+    to_itm(camera->n()),
+    renderState.get(),
+    m_settings->sceneParams.voxelSize,
+    invalidDepthValue,
+    m_depthRaycast
+  );
 }
 
 af::array TouchDetector::select_good_connected_components()

@@ -83,9 +83,6 @@ private:
   /** The size of the square morphological operator. */
   int m_morphKernelSize;
 
-  /** A copy of the raw depth captured from Kinect. */
-  ITMFloatImage_Ptr m_rawDepthCopy;
-
   /** The number of rows in the image matrix. */
   int m_rows;
 
@@ -94,6 +91,9 @@ private:
 
   /** An array in which to store a binary image resulting fro a threshold operation. */
   af::array m_thresholded;
+
+  /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
+  ITMFloatImage_Ptr m_thresholdedRawDepth;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -150,6 +150,11 @@ private:
    * \return                       The touch points.
    */
   Points_CPtr get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8);
+
+  /**
+   * \brief TODO
+   */
+  void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   /**
    * \brief Select good connected components.
