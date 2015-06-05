@@ -132,11 +132,12 @@ TouchState TouchDetector::determine_touch_state(const rigging::MoveableCamera_CP
 
 void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 {
-  // The camera is assumed to be positioned close to the user.
-  // This allows a threshold on the maximum depth that a touch interaction may occur.
-  // For example the user's hand or leg cannot extend more than 2 meters away from the camera.
-  // This turns out to be crucial since there may be large areas of the scene far away that are picked up by the Kinect but which are not integrated into the scene (InfiniTAM has a
-  // depth threshold hard coded into its scene settings).
+  // As a first step, make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
+  // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera, they are not fused
+  // into the scene by InfiniTAM (which has a depth threshold hard-coded into its scene settings). As a result, there will always be
+  // large expected differences between the raw and raycasted depth images in those parts of the scene. A 2m threshold is reasonable
+  // because we assume that the camera is positioned close to the user and that the user's hand or leg will therefore not extend more
+  // than two metres away from the camera position.
   m_imageProcessor->set_on_threshold(rawDepth, ImageProcessor::CO_GREATER, 2.0f, -1.0f, m_rawDepthCopy);
 
   // Calculate the depth raycast from the current scene, this is in metres.

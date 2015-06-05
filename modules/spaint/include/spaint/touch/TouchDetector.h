@@ -108,7 +108,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Perform image processing routines on the raw and raycasted depth images in order to determine the touch state.
+   * \brief Performs image processing routines on the raw and raycasted depth images in order to determine the touch state.
    *
    * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
@@ -120,7 +120,7 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Find image regions which differ between the raw and raycasted depth images.
+   * \brief Finds image regions that differ between the raw and raycasted depth images.
    *
    * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
