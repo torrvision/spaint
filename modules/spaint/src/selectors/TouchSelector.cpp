@@ -27,7 +27,7 @@ TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_
   m_pickPointValid(false),
   m_maximumValidPickPoints(50),
   m_numberOfValidPickPoints(0),
-  m_touchDetector(new TouchDetector(view->depth->noDims)),
+  m_touchDetector(new TouchDetector(view->depth->noDims, settings)),
   m_trackingState(trackingState),
   m_view(view)
 {
@@ -92,12 +92,9 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
   static boost::shared_ptr<MoveableCamera> camera;
   camera.reset( new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
 
-  // Get voxel size.
-  static float voxelSize = m_settings->sceneParams.voxelSize;
-
   // Run the touch pipeline.
   boost::shared_ptr<ITMFloatImage> depthImage(m_view->depth, boost::serialization::null_deleter());
-  TIME(TouchState touchState = m_touchDetector->run_touch_detector_on_frame(renderState, camera, voxelSize, depthImage), milliseconds, runningTouchDetectorOnFrame);
+  TIME(TouchState touchState = m_touchDetector->run_touch_detector_on_frame(renderState, camera, depthImage), milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
 
   // Update whether or not the selector is active.

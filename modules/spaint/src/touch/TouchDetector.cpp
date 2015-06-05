@@ -26,7 +26,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
 : m_cols(imgSize.x),
   m_connectedComponents(imgSize.y, imgSize.x, u32),
   m_depthLowerThreshold(0.010f),
@@ -36,6 +36,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
   m_minimumConnectedComponentAreaPercentage(1), // 1%.
   m_morphKernelSize(5),
   m_rows(imgSize.y),
+  m_settings(settings),
   m_thresholded(imgSize.y, imgSize.x)
 {
 #ifdef WITH_CUDA
@@ -66,11 +67,11 @@ TouchDetector::TouchDetector(const Vector2i& imgSize)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth)
+TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth)
 {
   TouchState touchState;
 
-  calculate_binary_difference_image(renderState, camera, voxelSize, rawDepth);
+  calculate_binary_difference_image(renderState, camera, rawDepth);
 
   filter_binary_image();
 
@@ -129,7 +130,7 @@ TouchState TouchDetector::run_touch_detector_on_frame(const RenderState_CPtr& re
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth)
+void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth)
 {
   // The camera is assumed to be positioned close to the user.
   // This allows a threshold on the maximum depth that a touch interaction may occur.
@@ -144,7 +145,7 @@ void TouchDetector::calculate_binary_difference_image(const RenderState_CPtr& re
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
-    voxelSize,
+    m_settings->sceneParams.voxelSize,
     m_raycastedDepthResult
   );
 

@@ -63,7 +63,7 @@ public:
   /*
    * \brief Constructs a touch selector.
    *
-   * \param settings       The settings to use for InfiniTAM which contains the voxel size.
+   * \param settings       The settings to use for InfiniTAM.
    * \param trachingState  The InfiniTAM tracking state which contains the pose5of the camera.
    * \param view           The InfiniTAM view which contains the raw depth image.
    */

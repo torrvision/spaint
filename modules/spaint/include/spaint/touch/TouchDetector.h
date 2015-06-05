@@ -8,6 +8,7 @@
 #include <arrayfire.h>
 
 #include <ITMLib/Objects/ITMRenderState.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <rigging/SimpleCamera.h>
 
@@ -31,6 +32,7 @@ private:
   typedef std::vector<Eigen::Vector2i> Points;
   typedef boost::shared_ptr<Points> Points_Ptr;
   typedef boost::shared_ptr<const Points> Points_CPtr;
+  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
@@ -87,6 +89,9 @@ private:
   /** The number of rows in the image matrix. */
   int m_rows;
 
+  /** The settings to use for InfiniTAM. */
+  Settings_CPtr m_settings;
+
   /** An array in which to store a binary image resulting fro a threshold operation. */
   af::array m_thresholded;
 
@@ -94,8 +99,11 @@ private:
 public:
   /**
    * \brief An instance of this class may be used to identify those pixels which are touching a surface.
+   *
+   * \param imgSize   TODO
+   * \param settings  The settings to use for InfiniTAM.
    */
-  explicit TouchDetector(const Vector2i& imgSize);
+  TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -104,11 +112,10 @@ public:
    *
    * \param renderState   The render state.
    * \param camera        The camera.
-   * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    * \return              The touch state.
    */
-  TouchState run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth);
+  TouchState run_touch_detector_on_frame(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -117,10 +124,9 @@ private:
    *
    * \param renderState   The render state.
    * \param camera        The camera.
-   * \param voxelSize     The scene voxel size.
    * \param rawDepth      The raw depth image from the camera.
    */
-  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, float voxelSize, const ITMFloatImage_CPtr& rawDepth);
+  void calculate_binary_difference_image(const RenderState_CPtr& renderState, const rigging::MoveableCamera_CPtr camera, const ITMFloatImage_CPtr& rawDepth);
 
   /**
    * \brief Filter a binary image to remove small and spurious regions.
