@@ -68,6 +68,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 TouchState TouchDetector::determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+try
 {
   TouchState touchState;
 
@@ -126,6 +127,11 @@ TouchState TouchDetector::determine_touch_state(const rigging::MoveableCamera_CP
 #endif
 
   return touchState;
+}
+catch(af::exception&)
+{
+  // Prevent the touch detector from crashing when tracking is lost.
+  return TouchState();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
