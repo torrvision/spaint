@@ -56,10 +56,13 @@ private:
   /** The threshold below which the raw and raycasted depth is assumed to be equal. */
   float m_depthLowerThreshold;
 
+  /** An image into which to store the depth of the currently visible scene from the camera. */
+  ITMFloatImage_Ptr m_depthRaycast;
+
   /** The threshold above which any difference in the raw and raycasted depth is ignored. */
   float m_depthUpperThreshold;
 
-  /** An image in which each pixel is the absolute difference between the current and raycasted depth. */
+  /** An image in which each pixel is the absolute difference between the current and raycasted depths. */
   AFArray_Ptr m_diffRawRaycast;
 
   /** Multiplatform image processing tools. */
@@ -83,9 +86,6 @@ private:
   /** A copy of the raw depth captured from Kinect. */
   ITMFloatImage_Ptr m_rawDepthCopy;
 
-  /** An image into which to store the depth of the currently visible scene from the camera. */
-  ITMFloatImage_Ptr m_raycastedDepthResult;
-
   /** The number of rows in the image matrix. */
   int m_rows;
 
@@ -108,11 +108,11 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Performs image processing routines on the raw and raycasted depth images in order to determine the touch state.
+   * \brief Performs image processing routines on the raw depth image and a depth raycast of the current scene in order to determine the touch state.
    *
    * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
-   * \param renderState   The render state corresponding to the camera (contains the raycasted depth image).
+   * \param renderState   The render state corresponding to the camera.
    * \return              The touch state.
    */
   TouchState determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
@@ -124,7 +124,7 @@ private:
    *
    * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
-   * \param renderState   The render state corresponding to the camera (contains the raycasted depth image).
+   * \param renderState   The render state corresponding to the camera.
    */
   void calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 

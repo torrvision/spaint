@@ -18,7 +18,7 @@ class DepthVisualiser_CUDA : public DepthVisualiser
 public:
   /** Override */
   virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::Objects::ITMRenderState *renderState,
-                            float voxelSize, const ITMFloatImage_Ptr& outputImage) const;
+                            float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const;
 };
 
 }

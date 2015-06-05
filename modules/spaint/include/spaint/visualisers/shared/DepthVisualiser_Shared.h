@@ -23,13 +23,14 @@ namespace spaint {
  * \param cameraPosition    The camera position (in world space).
  * \param cameraLookVector  The camera look vector.
  * \param voxelSize         The size of an InfiniTAM voxel (in metres).
+ * \param invalidDepthValue The depth value to use for pixels whose rays do not intersect the scene.
  * \param depthType         The type of depth calculation to use.
  */
 _CPU_AND_GPU_CODE_
 inline void shade_pixel_depth(float& dest, const Vector3f& point, bool foundPoint, const Vector3f& cameraPosition, const Vector3f& cameraLookVector,
-                              float voxelSize, DepthVisualiser::DepthType depthType)
+                              float voxelSize, float invalidDepthValue, DepthVisualiser::DepthType depthType)
 {
-  dest = -1.0f;
+  dest = invalidDepthValue;
   if(foundPoint)
   {
     if(depthType == DepthVisualiser::DT_EUCLIDEAN)

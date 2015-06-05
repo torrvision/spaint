@@ -54,10 +54,11 @@ public:
    * \param cameraLookVector  The camera look vector.
    * \param renderState       The render state corresponding to the specified camera pose.
    * \param voxelSize         The size of an InfiniTAM voxel (in metres).
+   * \param invalidDepthValue The depth value to use for pixels whose rays do not intersect the scene.
    * \param outputImage       The image into which to write the depth visualisation of the scene.
    */
   virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::Objects::ITMRenderState *renderState,
-                            float voxelSize, const ITMFloatImage_Ptr& outputImage) const = 0;
+                            float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const = 0;
 };
 
 }

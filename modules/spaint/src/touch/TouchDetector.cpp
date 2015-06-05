@@ -41,13 +41,13 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 {
 #ifdef WITH_CUDA
   m_rawDepthCopy.reset(new ITMFloatImage(imgSize, true, true));
-  m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, true));
+  m_depthRaycast.reset(new ITMFloatImage(imgSize, true, true));
 
   m_depthCalculator.reset(new DepthVisualiser_CUDA);
   m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
   m_rawDepthCopy.reset(new ITMFloatImage(imgSize, true, false));
-  m_raycastedDepthResult.reset(new ITMFloatImage(imgSize, true, false));
+  m_depthRaycast.reset(new ITMFloatImage(imgSize, true, false));
 
   m_depthCalculator.reset(new DepthVisualiser_CPU);
   m_imageProcessor.reset(new ImageProcessor_CPU);
@@ -140,32 +140,35 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
   // than two metres away from the camera position.
   m_imageProcessor->set_on_threshold(rawDepth, ImageProcessor::CO_GREATER, 2.0f, -1.0f, m_rawDepthCopy);
 
-  // Calculate the depth raycast from the current scene, this is in metres.
+  // Generate an orthographic depth raycast of the current scene from the current camera position.
+  // As with the raw depth image, the pixel values of this raycast denote depth values in metres.
+  // We assume that parts of the scene for which we have no information are far away (at an
+  // arbitrarily large depth of 100m).
+  const float invalidDepthValue = 100.0f;
   m_depthCalculator->render_depth(
     DepthVisualiser::DT_ORTHOGRAPHIC,
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
     m_settings->sceneParams.voxelSize,
-    m_raycastedDepthResult
+    invalidDepthValue,
+    m_depthRaycast
   );
 
-  // Pre-process the raycasted depth result, so that regions of the image which are not valid are assigned a large depth value (infinity).
-  // In this case 100.0f meters.
-  m_imageProcessor->set_on_threshold(m_raycastedDepthResult, ImageProcessor::CO_LESS, 0.0f, 100.0f, m_raycastedDepthResult);
+  // Calculate the difference between the raw depth image and the depth raycast.
+  m_imageProcessor->calculate_depth_difference(m_rawDepthCopy, m_depthRaycast, m_diffRawRaycast);
 
-  // Calculate the difference between the raw depth and the raycasted depth.
-  m_imageProcessor->calculate_depth_difference(m_rawDepthCopy, m_raycastedDepthResult, m_diffRawRaycast);
-
-  // Threshold the difference image - if there is a difference, there is something in the image!
+  // Threshold the difference image to find significant differences between the raw depth image
+  // and the depth raycast. Such differences indicate locations in which the scene has changed
+  // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
   m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the raw depth and the raycasted depth.
   m_rawDepthCopy->UpdateHostFromDevice();
-  m_raycastedDepthResult->UpdateHostFromDevice();
+  m_depthRaycast->UpdateHostFromDevice();
   OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
-  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_raycastedDepthResult->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
+  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_depthRaycast->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
 
   // Display the absolute difference between the raw and raycasted depth.
   static af::array tmp;

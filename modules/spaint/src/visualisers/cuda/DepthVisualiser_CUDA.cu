@@ -11,20 +11,20 @@ namespace spaint {
 //#################### CUDA KERNELS ####################
 
 __global__ void ck_render_depth(float *outRendering, const Vector4f *ptsRay, Vector3f cameraPosition, Vector3f cameraLookVector,
-                                Vector2i imgSize, float voxelSize, DepthVisualiser::DepthType depthType)
+                                Vector2i imgSize, float voxelSize, float invalidDepthValue, DepthVisualiser::DepthType depthType)
 {
   int x = blockIdx.x * blockDim.x + threadIdx.x, y = blockIdx.y * blockDim.y + threadIdx.y;
   if(x >= imgSize.x || y >= imgSize.y) return;
 
   int locId = y * imgSize.x + x;
   Vector4f ptRay = ptsRay[locId];
-  shade_pixel_depth(outRendering[locId], ptRay.toVector3() * voxelSize, ptRay.w > 0, cameraPosition, cameraLookVector, voxelSize, depthType);
+  shade_pixel_depth(outRendering[locId], ptRay.toVector3() * voxelSize, ptRay.w > 0, cameraPosition, cameraLookVector, voxelSize, invalidDepthValue, depthType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void DepthVisualiser_CUDA::render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::Objects::ITMRenderState *renderState,
-                                        float voxelSize, const ITMFloatImage_Ptr& outputImage) const
+                                        float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const
 {
   Vector2i imgSize = outputImage->noDims;
 
@@ -39,6 +39,7 @@ void DepthVisualiser_CUDA::render_depth(DepthType depthType, const Vector3f& cam
     cameraLookVector,
     imgSize,
     voxelSize,
+    invalidDepthValue,
     depthType
   );
 }
