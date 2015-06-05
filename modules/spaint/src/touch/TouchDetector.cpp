@@ -20,7 +20,7 @@
 #endif
 
 //#define DEBUG_TOUCH_VERBOSE
-//#define DEBUG_TOUCH_DISPLAY
+#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
@@ -164,29 +164,31 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
   m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  // Display the raw depth and the raycasted depth.
+  // Display the raw depth image and the depth raycast.
+  const float mToCm = 100.0f; // the scaling factor needed to convert metres to centimetres
   m_rawDepthCopy->UpdateHostFromDevice();
   m_depthRaycast->UpdateHostFromDevice();
-  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
-  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_depthRaycast->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, 100.0f);
+  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_rawDepthCopy->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
+  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_depthRaycast->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
 
-  // Display the absolute difference between the raw and raycasted depth.
-  static af::array tmp;
-  tmp = clamp_to_range(*m_diffRawRaycast * 100.0f, 0.0f, 255.0f); // convert to centimetres
-  OpenCVUtil::show_greyscale_figure("Diff image in arrayfire", tmp.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  // Display the absolute difference between the raw depth image and the depth raycast.
+  af::array diffRawRaycastInCm = clamp_to_range(*m_diffRawRaycast * mToCm, 0.0f, 255.0f);
+  OpenCVUtil::show_greyscale_figure("Diff image in centimetres", diffRawRaycastInCm.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
+  // If this is the first iteration, create a debug window with a number of trackbars that can be used to control the touch detection.
+  const std::string debugWindowName = "DebuggingOutputWindow";
   static bool initialised = false;
-
-  // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)
   {
-    cv::namedWindow("DebuggingOutputWindow", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("depthThresholdmm", "DebuggingOutputWindow", &m_depthLowerThresholdmm, 50);
-    cv::createTrackbar("debugDelaymx", "DebuggingOutputWindow", &m_debugDelayms, 3000);
+    cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("depthThresholdmm", debugWindowName, &m_depthLowerThresholdmm, 50);
+    cv::createTrackbar("debugDelayms", debugWindowName, &m_debugDelayms, 3000);
+    initialised = true;
   }
-  // Get the values from the trackBars
-  m_depthLowerThresholdmm = cv::getTrackbarPos("depthThresholdmm", "DebuggingOutputWindow");
-  m_debugDelayms = cv::getTrackbarPos("debugDelaymx", "DebuggingOutputWindow");
+
+  // Update the relevant variables based on the values of the trackbars.
+  m_debugDelayms = cv::getTrackbarPos("debugDelayms", debugWindowName);
+  m_depthLowerThresholdmm = cv::getTrackbarPos("depthThresholdmm", debugWindowName);
 
   // Update the current depth Threshold in meters;
   m_depthLowerThreshold = m_depthLowerThresholdmm / 1000.0f;
@@ -194,9 +196,7 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
   // Display the thresholded image.
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_thresholded * 255.0f;
-  OpenCVUtil::show_greyscale_figure("DebuggingOutputWindow", thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-
-  initialised = true;
+  OpenCVUtil::show_greyscale_figure(debugWindowName, thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 }
 
