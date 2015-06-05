@@ -120,18 +120,9 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Finds image regions that differ between the raw and raycasted depth images.
-   *
-   * \param camera        The camera from which the scene is being rendered.
-   * \param rawDepth      The raw depth image from the camera.
-   * \param renderState   The render state corresponding to the camera.
+   * \brief TODO
    */
-  void calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
-
-  /**
-   * \brief Filter a binary image to remove small and spurious regions.
-   */
-  void filter_binary_image();
+  void detect_changes();
 
   /**
    * \brief Select the best candidate amongst the good candidates.
@@ -152,7 +143,11 @@ private:
   Points_CPtr get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8);
 
   /**
-   * \brief TODO
+   * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for movement detection.
+   *
+   * \param camera        The camera from which the scene is being rendered.
+   * \param rawDepth      The raw depth image from the camera.
+   * \param renderState   The render state corresponding to the camera.
    */
   void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 

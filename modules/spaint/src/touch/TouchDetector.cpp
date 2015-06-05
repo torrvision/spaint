@@ -70,12 +70,11 @@ try
 {
   TouchState touchState;
 
-  // Prepare a thresholded version of the raw depth image and a depth raycast ready for movement detection.
+  // Prepare a thresholded version of the raw depth image and a depth raycast ready for change detection.
   prepare_inputs(camera, rawDepth, renderState);
 
-  calculate_binary_difference_image(camera, rawDepth, renderState);
-
-  filter_binary_image();
+  // Detect changes in the scene with respect to the reconstructed model.
+  detect_changes();
 
   // Calculate the connected components.
   m_connectedComponents = af::regions(m_thresholded);
@@ -137,7 +136,7 @@ catch(af::exception&)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+void TouchDetector::detect_changes()
 {
   // Calculate the difference between the raw depth image and the depth raycast.
   m_imageProcessor->calculate_depth_difference(m_thresholdedRawDepth, m_depthRaycast, m_diffRawRaycast);
@@ -146,6 +145,16 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
   m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;
+
+  // Ensure that the morphological kernel size is odd and >= 3.
+  int morphKernelSize = m_morphKernelSize;
+  if(morphKernelSize < 3) morphKernelSize = 3;
+  if(morphKernelSize % 2 == 0) ++morphKernelSize;
+
+  // Apply a morphological opening operation to the thresholded image to reduce noise.
+  af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
+  m_thresholded = af::erode(m_thresholded, morphKernel);
+  m_thresholded = af::dilate(m_thresholded, morphKernel);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the raw depth image and the depth raycast.
@@ -167,6 +176,10 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("depthThresholdmm", debugWindowName, &m_depthLowerThresholdmm, 50);
     cv::createTrackbar("debugDelayms", debugWindowName, &m_debugDelayms, 3000);
+
+    cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("KernelSize", "MorphologicalOperatorWindow", &m_morphKernelSize, 15);
+
     initialised = true;
   }
 
@@ -181,36 +194,13 @@ void TouchDetector::calculate_binary_difference_image(const rigging::MoveableCam
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_thresholded * 255.0f;
   OpenCVUtil::show_greyscale_figure(debugWindowName, thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-#endif
-}
 
-void TouchDetector::filter_binary_image()
-{
-  // Ensure that the morphological kernel size is odd and >= 3.
-  int morphKernelSize = m_morphKernelSize;
-  if(morphKernelSize < 3) morphKernelSize = 3;
-  if(morphKernelSize % 2 == 0) ++morphKernelSize;
-
-  // Apply a morphological opening operation to the thresholded image to reduce noise.
-  af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
-  m_thresholded = af::erode(m_thresholded, morphKernel);
-  m_thresholded = af::dilate(m_thresholded, morphKernel);
-
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  static bool initialised = false;
-  if(!initialised)
-  {
-    cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("KernelSize", "MorphologicalOperatorWindow", &m_morphKernelSize, 15);
-  }
   m_morphKernelSize = cv::getTrackbarPos("KernelSize", "MorphologicalOperatorWindow");
 
   // Display the threholded image after applying morphological operations.
   static af::array morphDisplay;
   morphDisplay = m_thresholded * 255.0f;
   OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-
-  initialised = true;
 #endif
 }
 
