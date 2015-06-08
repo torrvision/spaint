@@ -50,8 +50,8 @@ private:
   /** The number of columns in the image matrix, (width). */
   int m_cols;
 
-  /** The image holding the connedted components. */
-  af::array m_connectedComponents;
+  /** An image in which to store the connected components of the change mask. */
+  af::array m_connectedComponentImage;
 
   /** The depth calculator. */
   boost::shared_ptr<const DepthVisualiser> m_depthCalculator;
@@ -152,9 +152,11 @@ private:
   void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   /**
-   * \brief Select good connected components.
+   * \brief Select candidate connected components that fall within a certain size range.
+   *
+   * \return  The IDs of the candidate components.
    */
-  af::array select_good_connected_components();
+  af::array select_candidate_components();
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:

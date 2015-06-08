@@ -29,7 +29,7 @@ namespace spaint {
 TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
 : m_changeMask(imgSize.y, imgSize.x),
   m_cols(imgSize.x),
-  m_connectedComponents(imgSize.y, imgSize.x, u32),
+  m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthLowerThreshold(0.010f),
   m_depthUpperThreshold(0.255f),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
@@ -76,27 +76,29 @@ try
   // Detect changes in the scene with respect to the reconstructed model.
   detect_changes();
 
-  // Calculate the connected components of the change mask.
-  m_connectedComponents = af::regions(m_changeMask);
+  // Make a connected-component image from the change mask.
+  m_connectedComponentImage = af::regions(m_changeMask);
 
-  // Try to find an optimal connected component that satisfies certain constraints. If no such connected component can be found, early out.
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the connected components.
+  static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
+  int numberOfConnectedComponents = af::max<int>(m_connectedComponentImage) + 1;
+  connectedComponentsDisplay = m_connectedComponentImage * (255/numberOfConnectedComponents);
+  OpenCVUtil::show_greyscale_figure("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+#endif
+
+  // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, early out.
+  af::array candidateComponents = select_candidate_components();
+  if(candidateComponents.isempty()) return TouchState();
+
+  // Try to find an optimal connected component that satisfies certain constraints.
   // TODO
 
   // Convert the chosen connected component into a set of touch points that denote the parts of the scene touched by the user.
   // TODO
 
-  af::array goodCandidates = select_good_connected_components();
-
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  // Display the connected components.
-  static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
-  int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
-  connectedComponentsDisplay = m_connectedComponents * (255/numberOfConnectedComponents);
-  OpenCVUtil::show_greyscale_figure("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-#endif
-
   // Post-process the good candidates to identify the region which is most likely to be touching a surface.
-  if(goodCandidates.elements() > 0)
+  if(candidateComponents.elements() > 0)
   {
     static af::array diffCopyMillimetersU8(m_rows, m_cols, u8);
 
@@ -104,7 +106,7 @@ try
     diffCopyMillimetersU8 = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
     // Find the connected component most likely to be a touch iteractor.
-    int bestConnectedComponent = find_best_connected_component(goodCandidates, diffCopyMillimetersU8);
+    int bestConnectedComponent = find_best_connected_component(candidateComponents, diffCopyMillimetersU8);
 
     // Get the touchPoints, will return empty if the best connected component is not touching the scene.
     Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
@@ -223,7 +225,7 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
     std::vector<float> means(numberOfGoodCandidates);
     for(int i = 0; i < numberOfGoodCandidates; ++i)
     {
-      mask = (m_connectedComponents == candidateIds[i]);
+      mask = (m_connectedComponentImage == candidateIds[i]);
       temporaryCandidate = diffCopyMillimetersU8 * mask;
       means[i] = af::mean<float>(temporaryCandidate);
     }
@@ -237,8 +239,8 @@ int TouchDetector::find_best_connected_component(const af::array& goodCandidates
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  mask = (m_connectedComponents.as(u32) == bestConnectedComponent);
-  //af::print("m_connectedComponents", m_connectedComponents);
+  mask = (m_connectedComponentImage.as(u32) == bestConnectedComponent);
+  //af::print("m_connectedComponentImage", m_connectedComponentImage);
   temporaryCandidate = diffCopyMillimetersU8 * mask;
 
   // Display the best candidate's difference image.
@@ -260,7 +262,7 @@ TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComp
 
   // Binary mask identifying the region with the best candidate.
   static af::array mask;
-  mask = m_connectedComponents == bestConnectedComponent;
+  mask = m_connectedComponentImage == bestConnectedComponent;
 
   // Get the diff values corresponding to the best candidate region.
   static af::array temporaryCandidate;
@@ -326,21 +328,22 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   );
 }
 
-af::array TouchDetector::select_good_connected_components()
+af::array TouchDetector::select_candidate_components()
 {
-  int numberOfConnectedComponents = af::max<int>(m_connectedComponents) + 1;
+  // Calculate the areas of the connected components.
+  const int componentCount = af::max<int>(m_connectedComponentImage) + 1;
+  af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
 
-  // Create a histogram of the connected components to identify the size of each region.
-  static af::array histogram;
-  histogram = af::histogram(m_connectedComponents, numberOfConnectedComponents);
+  // Zero out connected components that are either too small or too large.
+  componentAreas -= (componentAreas < m_minimumConnectedComponentAreaThreshold) * componentAreas;
+  componentAreas -= (componentAreas > m_maximumConnectedComponentAreaThreshold) * componentAreas;
 
-  // Remove connected components which are too small or too large.
-  histogram = histogram - (histogram < m_minimumConnectedComponentAreaThreshold) * histogram;
-  histogram = histogram - (histogram > m_maximumConnectedComponentAreaThreshold) * histogram;
-  af::array goodCandidates = af::where(histogram);
+  // Keep the remaining non-zero components as candidates.
+  af::array candidates = af::where(componentAreas);
+
 #ifdef DEBUG_TOUCH_VERBOSE
-  af::print("Histogram of connected component image", histogram);
-  if(goodCandidates.elements() > 0) af::print("goodCandidates", goodCandidates);
+  af::print("componentAreas", componentAreas);
+  if(candidates.elements() > 0) af::print("candidates", candidates);
 #endif
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -358,8 +361,7 @@ af::array TouchDetector::select_good_connected_components()
   initialised = true;
 #endif
 
-  // The good candidates are those whose area is greater than some specified threshold.
-  return goodCandidates;
+  return candidates;
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
