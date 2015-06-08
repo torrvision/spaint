@@ -94,7 +94,7 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
 
   // Run the touch pipeline.
   boost::shared_ptr<ITMFloatImage> depthImage(m_view->depth, boost::serialization::null_deleter());
-  TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_state(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
+  TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_points(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
 
   // Try and pick an individual voxel.

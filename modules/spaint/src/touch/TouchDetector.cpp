@@ -65,7 +65,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::vector<Eigen::Vector2i> TouchDetector::determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 try
 {
   // Prepare a thresholded version of the raw depth image and a depth raycast ready for change detection.
@@ -90,14 +90,14 @@ try
   if(candidateComponents.isempty()) return std::vector<Eigen::Vector2i>();
 
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
-  af::array diffCopyMillimetersU8 = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
+  af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
   // Pick the candidate component most likely to correspond to a touch interaction.
-  int bestConnectedComponent = find_best_connected_component(candidateComponents, diffCopyMillimetersU8);
+  int bestConnectedComponent = pick_best_candidate_component(candidateComponents, diffRawRaycastInMm);
 
-  // Convert the chosen connected component into a set of touch points that denote the parts of the scene touched by the user.
+  // Extract a set of touch points from the chosen connected component that denote the parts of the scene touched by the user.
   // Note that the set of touch points may end up being empty if the user is not touching the scene.
-  std::vector<Eigen::Vector2i> touchPoints = *get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
+  std::vector<Eigen::Vector2i> touchPoints = extract_touch_points(bestConnectedComponent, diffRawRaycastInMm);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the touch points.
@@ -190,63 +190,17 @@ void TouchDetector::detect_changes()
 #endif
 }
 
-int TouchDetector::find_best_connected_component(const af::array& goodCandidates, const af::array& diffCopyMillimetersU8)
+std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, const af::array& diffRawRaycastInMm)
 {
-  int numberOfGoodCandidates = goodCandidates.dims(0);
-  int *candidateIds = goodCandidates.as(s32).host<int>();
-  int bestConnectedComponent = -1;
-
-  static af::array temporaryCandidate(m_rows, m_cols, u8);
-  static af::array mask(m_rows, m_cols, b8);
-
-  // If there are several good candidate then select the one which is closest to a surface.
-  if(numberOfGoodCandidates > 1)
-  {
-    std::vector<float> means(numberOfGoodCandidates);
-    for(int i = 0; i < numberOfGoodCandidates; ++i)
-    {
-      mask = (m_connectedComponentImage == candidateIds[i]);
-      temporaryCandidate = diffCopyMillimetersU8 * mask;
-      means[i] = af::mean<float>(temporaryCandidate);
-    }
-    size_t minIndex = tvgutil::ArgUtil::argmin(means);
-    if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
-    bestConnectedComponent = candidateIds[minIndex];
-  }
-  else
-  {
-    bestConnectedComponent = candidateIds[0];
-  }
-
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  mask = (m_connectedComponentImage.as(u32) == bestConnectedComponent);
-  //af::print("m_connectedComponentImage", m_connectedComponentImage);
-  temporaryCandidate = diffCopyMillimetersU8 * mask;
-
-  // Display the best candidate's difference image.
-  static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
-  temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVUtil::show_greyscale_figure("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-
-  static af::array maskDisplay(m_rows, m_cols, u8);
-  maskDisplay = mask * 255;
-  OpenCVUtil::show_greyscale_figure("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-#endif
-
-  return bestConnectedComponent;
-}
-
-TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8)
-{
-  Points_Ptr touchPoints(new Points);
+  std::vector<Eigen::Vector2i> touchPoints;
 
   // Binary mask identifying the region with the best candidate.
   static af::array mask;
-  mask = m_connectedComponentImage == bestConnectedComponent;
+  mask = m_connectedComponentImage == component;
 
   // Get the diff values corresponding to the best candidate region.
   static af::array temporaryCandidate;
-  temporaryCandidate = diffCopyMillimetersU8 * mask;
+  temporaryCandidate = diffRawRaycastInMm * mask;
 
   // Quantize the intensity levels to 32 levels from 256.
   temporaryCandidate = (temporaryCandidate / 8).as(u8) * 8;
@@ -275,11 +229,57 @@ TouchDetector::Points_CPtr TouchDetector::get_touch_points(int bestConnectedComp
     {
       Eigen::Vector2i point((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)), (touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
 
-      touchPoints->push_back(point);
+      touchPoints.push_back(point);
     }
   }
 
   return touchPoints;
+}
+
+int TouchDetector::pick_best_candidate_component(const af::array& goodCandidates, const af::array& diffRawRaycastInMm)
+{
+  int numberOfGoodCandidates = goodCandidates.dims(0);
+  int *candidateIds = goodCandidates.as(s32).host<int>();
+  int bestConnectedComponent = -1;
+
+  static af::array temporaryCandidate(m_rows, m_cols, u8);
+  static af::array mask(m_rows, m_cols, b8);
+
+  // If there are several good candidate then select the one which is closest to a surface.
+  if(numberOfGoodCandidates > 1)
+  {
+    std::vector<float> means(numberOfGoodCandidates);
+    for(int i = 0; i < numberOfGoodCandidates; ++i)
+    {
+      mask = (m_connectedComponentImage == candidateIds[i]);
+      temporaryCandidate = diffRawRaycastInMm * mask;
+      means[i] = af::mean<float>(temporaryCandidate);
+    }
+    size_t minIndex = tvgutil::ArgUtil::argmin(means);
+    if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
+    bestConnectedComponent = candidateIds[minIndex];
+  }
+  else
+  {
+    bestConnectedComponent = candidateIds[0];
+  }
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  mask = (m_connectedComponentImage.as(u32) == bestConnectedComponent);
+  //af::print("m_connectedComponentImage", m_connectedComponentImage);
+  temporaryCandidate = diffRawRaycastInMm * mask;
+
+  // Display the best candidate's difference image.
+  static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
+  temporaryCandidateDisplay = temporaryCandidate;
+  OpenCVUtil::show_greyscale_figure("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+
+  static af::array maskDisplay(m_rows, m_cols, u8);
+  maskDisplay = mask * 255;
+  OpenCVUtil::show_greyscale_figure("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+#endif
+
+  return bestConnectedComponent;
 }
 
 void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)

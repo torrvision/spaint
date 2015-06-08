@@ -107,14 +107,14 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Performs image processing routines on the raw depth image and a depth raycast of the current scene in order to determine the touch state.
+   * \brief Determines the points (if any) that the user is touching in the scene.
    *
    * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
    * \param renderState   The render state corresponding to the camera.
-   * \return              The touch state.
+   * \return              The points (if any) that the user is touching in the scene.
    */
-  std::vector<Eigen::Vector2i> determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
+  std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -124,22 +124,22 @@ private:
   void detect_changes();
 
   /**
-   * \brief Select the best candidate amongst the good candidates.
+   * \brief Extracts a set of touch points from the specified component in the connected component image.
    *
-   * \param goodCandidates         Image regions which are promising touch regions.
-   * \param diffCopyMillimetersU8  A copy of the difference image in millimeters and as an unsigned char.
-   * \return                       The best candidate region.
+   * \param component           The ID of a component in the connected component image.
+   * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
+   * \return                    The touch points extracted from the specified component.
    */
-  int find_best_connected_component(const af::array& goodCandidates, const af::array& diffCopyMillimetersU8);
+  std::vector<Eigen::Vector2i> extract_touch_points(int component, const af::array& diffRawRaycastInMm);
 
   /**
-   * \brief Get the touch points from the best connected component.
+   * Picks the candidate component most likely to correspond to a touch interaction.
    *
-   * \param bestCandidate          The id of the best connected component.
-   * \param diffCopyMillimetersU8  The diff in millimeters unsigned char.
-   * \return                       The touch points.
+   * \param candidateComponents The IDs of components in the connected component image that denote promising touch regions.
+   * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
+   * \return                    The ID of the best candidate component.
    */
-  Points_CPtr get_touch_points(int bestConnectedComponent, const af::array& diffCopyMillimetersU8);
+  int pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
 
   /**
    * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for movement detection.
