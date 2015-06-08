@@ -91,37 +91,22 @@ try
   af::array candidateComponents = select_candidate_components();
   if(candidateComponents.isempty()) return TouchState();
 
-  // Try to find an optimal connected component that satisfies certain constraints.
-  // TODO
+  // Convert the differences between the raw depth image and the depth raycast to millimetres.
+  af::array diffCopyMillimetersU8 = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
+
+  // Pick the candidate component most likely to correspond to a touch interaction.
+  int bestConnectedComponent = find_best_connected_component(candidateComponents, diffCopyMillimetersU8);
 
   // Convert the chosen connected component into a set of touch points that denote the parts of the scene touched by the user.
-  // TODO
+  // Note that the set of touch points may end up being empty if the user is not touching the scene.
+  Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
 
-  // Post-process the good candidates to identify the region which is most likely to be touching a surface.
-  if(candidateComponents.elements() > 0)
-  {
-    static af::array diffCopyMillimetersU8(m_rows, m_cols, u8);
-
-    // Convert the difference between raw and raycasted depth to millimeters.
-    diffCopyMillimetersU8 = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
-
-    // Find the connected component most likely to be a touch iteractor.
-    int bestConnectedComponent = find_best_connected_component(candidateComponents, diffCopyMillimetersU8);
-
-    // Get the touchPoints, will return empty if the best connected component is not touching the scene.
-    Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
-
-    if(touchPoints->size() > 0) touchState = TouchState(touchPoints, true, true);
-    else touchState = TouchState(touchPoints, false, false);
-  }
-  else{
-    touchState = TouchState(Points_CPtr(new Points), false, false);
-  }
+  if(touchPoints->size() > 0) touchState = TouchState(touchPoints, true, true);
+  else touchState = TouchState(touchPoints, false, false);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the touch points.
   cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
-  const Points_CPtr& touchPoints = touchState.get_positions();
   for(size_t i = 0, iend = touchPoints->size(); i < iend; ++i)
   {
     const Eigen::Vector2i& v = touchPoints->at(i);

@@ -9,7 +9,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 TouchState::TouchState()
-: m_touchingSurface(false), m_touchPositionKnown(false)
+: m_touchPositions(new std::vector<Eigen::Vector2i>), m_touchingSurface(false), m_touchPositionKnown(false)
 {}
 
 TouchState::TouchState(const TouchState::TouchPositions_CPtr& touchPositions, bool touchingSurface, bool touchPositionKnown)
