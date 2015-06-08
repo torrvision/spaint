@@ -234,50 +234,40 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   return touchPoints;
 }
 
-int TouchDetector::pick_best_candidate_component(const af::array& goodCandidates, const af::array& diffRawRaycastInMm)
+int TouchDetector::pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
 {
-  int numberOfGoodCandidates = goodCandidates.dims(0);
-  int *candidateIds = goodCandidates.as(s32).host<int>();
-  int bestConnectedComponent = -1;
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
 
-  static af::array temporaryCandidate(m_rows, m_cols, u8);
-  static af::array mask(m_rows, m_cols, b8);
+  int bestCandidateID = -1;
+  af::array mask;
 
-  // If there are several good candidate then select the one which is closest to a surface.
-  if(numberOfGoodCandidates > 1)
+  if(candidateCount == 1)
   {
-    std::vector<float> means(numberOfGoodCandidates);
-    for(int i = 0; i < numberOfGoodCandidates; ++i)
-    {
-      mask = (m_connectedComponentImage == candidateIds[i]);
-      temporaryCandidate = diffRawRaycastInMm * mask;
-      means[i] = af::mean<float>(temporaryCandidate);
-    }
-    size_t minIndex = tvgutil::ArgUtil::argmin(means);
-    if(minIndex < 0 || minIndex >= numberOfGoodCandidates) throw std::runtime_error("Out of bounds error");
-    bestConnectedComponent = candidateIds[minIndex];
+    // If there is only one candidate, then by definition it's the best candidate.
+    bestCandidateID = candidateIDs[0];
   }
   else
   {
-    bestConnectedComponent = candidateIds[0];
+    // Otherwise, select the candidate that is closest to a surface.
+    std::vector<float> meanDistances(candidateCount);
+    for(int i = 0; i < candidateCount; ++i)
+    {
+      mask = m_connectedComponentImage == candidateIDs[i];
+      meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
+    }
+    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
+    bestCandidateID = candidateIDs[minIndex];
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  mask = (m_connectedComponentImage.as(u32) == bestConnectedComponent);
-  //af::print("m_connectedComponentImage", m_connectedComponentImage);
-  temporaryCandidate = diffRawRaycastInMm * mask;
-
-  // Display the best candidate's difference image.
-  static af::array temporaryCandidateDisplay(m_rows, m_cols, u8);
-  temporaryCandidateDisplay = temporaryCandidate;
-  OpenCVUtil::show_greyscale_figure("bestConnectedComponent", temporaryCandidateDisplay.host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-
-  static af::array maskDisplay(m_rows, m_cols, u8);
-  maskDisplay = mask * 255;
-  OpenCVUtil::show_greyscale_figure("maskDisplay", maskDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  // Display the best candidate's difference image and mask.
+  mask = m_connectedComponentImage.as(u32) == bestCandidateID;
+  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
-  return bestConnectedComponent;
+  return bestCandidateID;
 }
 
 void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
@@ -317,7 +307,7 @@ af::array TouchDetector::select_candidate_components()
   componentAreas -= (componentAreas > m_maximumConnectedComponentAreaThreshold) * componentAreas;
 
   // Keep the remaining non-zero components as candidates.
-  af::array candidates = af::where(componentAreas);
+  af::array candidates = af::where(componentAreas).as(s32);
 
 #ifdef DEBUG_TOUCH_VERBOSE
   af::print("componentAreas", componentAreas);
