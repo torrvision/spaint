@@ -27,7 +27,8 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
-: m_cols(imgSize.x),
+: m_changeMask(imgSize.y, imgSize.x),
+  m_cols(imgSize.x),
   m_connectedComponents(imgSize.y, imgSize.x, u32),
   m_depthLowerThreshold(0.010f),
   m_depthUpperThreshold(0.255f),
@@ -36,8 +37,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_minimumConnectedComponentAreaPercentage(1), // 1%.
   m_morphKernelSize(5),
   m_rows(imgSize.y),
-  m_settings(settings),
-  m_thresholded(imgSize.y, imgSize.x)
+  m_settings(settings)
 {
   m_thresholdedRawDepth.reset(new ITMFloatImage(imgSize, true, true));
   m_depthRaycast.reset(new ITMFloatImage(imgSize, true, true));
@@ -76,8 +76,14 @@ try
   // Detect changes in the scene with respect to the reconstructed model.
   detect_changes();
 
-  // Calculate the connected components.
-  m_connectedComponents = af::regions(m_thresholded);
+  // Calculate the connected components of the change mask.
+  m_connectedComponents = af::regions(m_changeMask);
+
+  // Try to find an optimal connected component that satisfies certain constraints. If no such connected component can be found, early out.
+  // TODO
+
+  // Convert the chosen connected component into a set of touch points that denote the parts of the scene touched by the user.
+  // TODO
 
   af::array goodCandidates = select_good_connected_components();
 
@@ -144,17 +150,15 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_thresholded = *m_diffRawRaycast > m_depthLowerThreshold;
+  m_changeMask = *m_diffRawRaycast > m_depthLowerThreshold;
 
-  // Ensure that the morphological kernel size is odd and >= 3.
+  // Apply a morphological opening operation to the change mask to reduce noise.
   int morphKernelSize = m_morphKernelSize;
   if(morphKernelSize < 3) morphKernelSize = 3;
   if(morphKernelSize % 2 == 0) ++morphKernelSize;
-
-  // Apply a morphological opening operation to the thresholded image to reduce noise.
   af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
-  m_thresholded = af::erode(m_thresholded, morphKernel);
-  m_thresholded = af::dilate(m_thresholded, morphKernel);
+  m_changeMask = af::erode(m_changeMask, morphKernel);
+  m_changeMask = af::dilate(m_changeMask, morphKernel);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the raw depth image and the depth raycast.
@@ -192,14 +196,14 @@ void TouchDetector::detect_changes()
 
   // Display the thresholded image.
   static af::array thresholdedDisplay;
-  thresholdedDisplay = m_thresholded * 255.0f;
+  thresholdedDisplay = m_changeMask * 255.0f;
   OpenCVUtil::show_greyscale_figure(debugWindowName, thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 
   m_morphKernelSize = cv::getTrackbarPos("KernelSize", "MorphologicalOperatorWindow");
 
   // Display the threholded image after applying morphological operations.
   static af::array morphDisplay;
-  morphDisplay = m_thresholded * 255.0f;
+  morphDisplay = m_changeMask * 255.0f;
   OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 }

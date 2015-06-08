@@ -44,6 +44,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
+  af::array m_changeMask;
+
   /** The number of columns in the image matrix, (width). */
   int m_cols;
 
@@ -88,9 +91,6 @@ private:
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
-
-  /** An array in which to store a binary image resulting fro a threshold operation. */
-  af::array m_thresholded;
 
   /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
   ITMFloatImage_Ptr m_thresholdedRawDepth;
