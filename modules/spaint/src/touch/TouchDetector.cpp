@@ -79,10 +79,9 @@ try
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the connected components.
-  static af::array connectedComponentsDisplay(m_rows, m_cols, u8);
-  int numberOfConnectedComponents = af::max<int>(m_connectedComponentImage) + 1;
-  connectedComponentsDisplay = m_connectedComponentImage * (255/numberOfConnectedComponents);
-  OpenCVUtil::show_greyscale_figure("connectedComponentsDisplay", connectedComponentsDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  int componentCount = af::max<int>(m_connectedComponentImage) + 1;
+  af::array connectedComponentDebugImage = m_connectedComponentImage * (255.0f / componentCount);
+  OpenCVUtil::show_greyscale_figure("connectedComponentDebugImage", connectedComponentDebugImage.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
   // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, early out.
@@ -101,16 +100,15 @@ try
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the touch points.
-  cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
-  for(size_t i = 0, iend = touchPoints.size(); i < iend; ++i)
+  cv::Mat touchPointDebugImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
+  for(size_t i = 0, size = touchPoints.size(); i < size; ++i)
   {
-    const Eigen::Vector2i& v = touchPoints[i];
-    cv::circle(touchPointImage, cv::Point(v[0], v[1]), 5, cv::Scalar(255), 2);
+    const Eigen::Vector2i& p = touchPoints[i];
+    cv::circle(touchPointDebugImage, cv::Point(p[0], p[1]), 5, cv::Scalar(255), 2);
   }
-  cv::imshow("touchPointImage", touchPointImage);
-#endif
+  cv::imshow("touchPointDebugImage", touchPointDebugImage);
 
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Wait for the specified number of milliseconds (or until a key is pressed).
   cv::waitKey(m_debugDelayms);
 #endif
 
