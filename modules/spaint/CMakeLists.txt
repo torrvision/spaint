@@ -272,12 +272,10 @@ ENDIF()
 ##
 SET(touch_sources
 src/touch/TouchDetector.cpp
-src/touch/TouchState.cpp
 )
 
 SET(touch_headers
 include/spaint/touch/TouchDetector.h
-include/spaint/touch/TouchState.h
 )
 
 IF(WITH_ARRAYFIRE)
@@ -293,17 +291,6 @@ IF(WITH_VICON)
   SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
   SET(trackers_headers ${trackers_headers} include/spaint/trackers/ViconTracker.h)
 ENDIF()
-
-##
-SET(touch_sources
-src/touch/TouchDetector.cpp
-src/touch/TouchState.cpp
-)
-
-SET(touch_headers
-include/spaint/touch/TouchDetector.h
-include/spaint/touch/TouchState.h
-)
 
 ##
 SET(util_sources

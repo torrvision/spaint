@@ -14,7 +14,6 @@
 
 #include "../imageprocessing/interface/ImageProcessor.h"
 #include "../visualisers/interface/DepthVisualiser.h"
-#include "TouchState.h"
 
 namespace spaint {
 
@@ -115,7 +114,7 @@ public:
    * \param renderState   The render state corresponding to the camera.
    * \return              The touch state.
    */
-  TouchState determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
+  std::vector<Eigen::Vector2i> determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

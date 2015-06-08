@@ -94,19 +94,18 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
 
   // Run the touch pipeline.
   boost::shared_ptr<ITMFloatImage> depthImage(m_view->depth, boost::serialization::null_deleter());
-  TIME(TouchState touchState = m_touchDetector->determine_touch_state(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
+  TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_state(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
   std::cout << runningTouchDetectorOnFrame << '\n';
-
-  // Update whether or not the selector is active.
-  m_isActive = touchState.touching_surface();
 
   // Try and pick an individual voxel.
   m_pickPointValid = false;
   m_numberOfValidPickPoints = 0;
 
-  if(!touchState.touch_position_known()) return;
-  const boost::shared_ptr<const std::vector<Eigen::Vector2i> >& points = touchState.get_positions();
-  int nTouchPoints = points->size();
+  // Update whether or not the selector is active.
+  m_isActive = !touchPoints.empty();
+  if(!m_isActive) return;
+
+  int nTouchPoints = touchPoints.size();
 
   // FIXME: Instead of clearing the MemoryBlock at each frame, pass around it's size. Resizeable with fixed length back buffer.
   if(nTouchPoints < m_maximumValidPickPoints)
@@ -114,12 +113,11 @@ void TouchSelector::update(const InputState& inputState, const RenderState_CPtr&
 
   Vector3f *m_pickPointFloatMBData = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
 
-  //FIXME Only selecting the forest point for now.
   for(int i = 0; i < nTouchPoints; ++i)
   {
     bool pickPointValid = false;
     ORUtils::MemoryBlock<Vector3f> pickPointFloatMB(1, true, true);
-    pickPointValid = m_picker->pick(points->at(i)[0], points->at(i)[1], renderState.get(), pickPointFloatMB);
+    pickPointValid = m_picker->pick(touchPoints[i][0], touchPoints[i][1], renderState.get(), pickPointFloatMB);
     if(pickPointValid)
     {
       pickPointFloatMB.UpdateHostFromDevice();

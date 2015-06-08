@@ -65,11 +65,9 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-TouchState TouchDetector::determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+std::vector<Eigen::Vector2i> TouchDetector::determine_touch_state(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 try
 {
-  TouchState touchState;
-
   // Prepare a thresholded version of the raw depth image and a depth raycast ready for change detection.
   prepare_inputs(camera, rawDepth, renderState);
 
@@ -89,7 +87,7 @@ try
 
   // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, early out.
   af::array candidateComponents = select_candidate_components();
-  if(candidateComponents.isempty()) return TouchState();
+  if(candidateComponents.isempty()) return std::vector<Eigen::Vector2i>();
 
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffCopyMillimetersU8 = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
@@ -99,17 +97,14 @@ try
 
   // Convert the chosen connected component into a set of touch points that denote the parts of the scene touched by the user.
   // Note that the set of touch points may end up being empty if the user is not touching the scene.
-  Points_CPtr touchPoints = get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
-
-  if(touchPoints->size() > 0) touchState = TouchState(touchPoints, true, true);
-  else touchState = TouchState(touchPoints, false, false);
+  std::vector<Eigen::Vector2i> touchPoints = *get_touch_points(bestConnectedComponent, diffCopyMillimetersU8);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the touch points.
   cv::Mat touchPointImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
-  for(size_t i = 0, iend = touchPoints->size(); i < iend; ++i)
+  for(size_t i = 0, iend = touchPoints.size(); i < iend; ++i)
   {
-    const Eigen::Vector2i& v = touchPoints->at(i);
+    const Eigen::Vector2i& v = touchPoints[i];
     cv::circle(touchPointImage, cv::Point(v[0], v[1]), 5, cv::Scalar(255), 2);
   }
   cv::imshow("touchPointImage", touchPointImage);
@@ -119,12 +114,12 @@ try
   cv::waitKey(m_debugDelayms);
 #endif
 
-  return touchState;
+  return touchPoints;
 }
 catch(af::exception&)
 {
   // Prevent the touch detector from crashing when tracking is lost.
-  return TouchState();
+  return std::vector<Eigen::Vector2i>();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
