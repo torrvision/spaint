@@ -38,6 +38,9 @@ private:
   /** The name of the debugging output window. */
   std::string m_debuggingOutputWindowName;
 
+  /** The name of the morphological operator output window. */
+  std::string m_morphologicalOperatorWindowName;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
@@ -164,6 +167,14 @@ private:
    * \return   The InfiniTAM vector.
    */
   static Vector3f to_itm(const Eigen::Vector3f& v);
+
+  //#################### PRIVATE DEBUGGING MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Initialises the OpenCV windows which are to contain a trackbar
+   *        and updates the variables with the values at the trackbar slider position.
+   */
+  void process_debug_windows();
 };
 
 }
