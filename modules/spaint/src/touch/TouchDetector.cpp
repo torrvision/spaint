@@ -28,6 +28,8 @@ namespace spaint {
 TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
 : m_changeMask(imgSize.y, imgSize.x),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
+  m_debugDelayMs(30),
+  m_debuggingOutputWindowName("DebuggingOutputWindow"),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
@@ -61,10 +63,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
-
-#ifdef DEBUG_TOUCH_DISPLAY
-  m_debugDelayMs = 30;
-#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -72,6 +70,11 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 try
 {
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // TODO
+  //process_debug_windows();
+#endif
+
   // Prepare a thresholded version of the raw depth image and a depth raycast ready for change detection.
   prepare_inputs(camera, rawDepth, renderState);
 
@@ -131,19 +134,6 @@ void TouchDetector::detect_changes()
   // Calculate the difference between the raw depth image and the depth raycast.
   m_imageProcessor->calculate_depth_difference(m_thresholdedRawDepth, m_depthRaycast, m_diffRawRaycast);
 
-  // Threshold the difference image to find significant differences between the raw depth image
-  // and the depth raycast. Such differences indicate locations in which the scene has changed
-  // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > (m_lowerDepthThresholdMm / 1000.0f);
-
-  // Apply a morphological opening operation to the change mask to reduce noise.
-  int morphKernelSize = m_morphKernelSize;
-  if(morphKernelSize < 3) morphKernelSize = 3;
-  if(morphKernelSize % 2 == 0) ++morphKernelSize;
-  af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
-  m_changeMask = af::erode(m_changeMask, morphKernel);
-  m_changeMask = af::dilate(m_changeMask, morphKernel);
-
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the raw depth image and the depth raycast.
   const float mToCm = 100.0f; // the scaling factor needed to convert metres to centimetres
@@ -155,37 +145,49 @@ void TouchDetector::detect_changes()
   // Display the absolute difference between the raw depth image and the depth raycast.
   af::array diffRawRaycastInCm = clamp_to_range(*m_diffRawRaycast * mToCm, 0.0f, 255.0f);
   OpenCVUtil::show_greyscale_figure("Diff image in centimetres", diffRawRaycastInCm.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
 
-  // If this is the first iteration, create a debug window with a number of trackbars that can be used to control the touch detection.
-  const std::string debugWindowName = "DebuggingOutputWindow";
+  // Threshold the difference image to find significant differences between the raw depth image
+  // and the depth raycast. Such differences indicate locations in which the scene has changed
+  // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
+  m_changeMask = *m_diffRawRaycast > (m_lowerDepthThresholdMm / 1000.0f);
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the change mask.
+  OpenCVUtil::show_greyscale_figure(m_debuggingOutputWindowName, (m_changeMask * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
+
+  // Apply a morphological opening operation to the change mask to reduce noise.
+  int morphKernelSize = m_morphKernelSize;
+  if(morphKernelSize < 3) morphKernelSize = 3;
+  if(morphKernelSize % 2 == 0) ++morphKernelSize;
+  af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
+  m_changeMask = af::erode(m_changeMask, morphKernel);
+  m_changeMask = af::dilate(m_changeMask, morphKernel);
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // If this is the first iteration, create debugging windows with trackbars that can be used to control the touch detection.
+  const std::string morphologicalOperatorWindowName = "MorphologicalOperatorWindow";
   static bool initialised = false;
   if(!initialised)
   {
-    cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("lowerDepthThresholdMm", debugWindowName, &m_lowerDepthThresholdMm, 50);
-    cv::createTrackbar("debugDelayMs", debugWindowName, &m_debugDelayMs, 3000);
+    cv::namedWindow(m_debuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_lowerDepthThresholdMm, 50);
+    cv::createTrackbar("debugDelayMs", m_debuggingOutputWindowName, &m_debugDelayMs, 3000);
 
-    cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("KernelSize", "MorphologicalOperatorWindow", &m_morphKernelSize, 15);
+    cv::namedWindow(morphologicalOperatorWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("KernelSize", morphologicalOperatorWindowName, &m_morphKernelSize, 15);
 
     initialised = true;
   }
 
   // Update the relevant variables based on the values of the trackbars.
-  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", debugWindowName);
-  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", debugWindowName);
-
-  // Display the thresholded image.
-  static af::array thresholdedDisplay;
-  thresholdedDisplay = m_changeMask * 255.0f;
-  OpenCVUtil::show_greyscale_figure(debugWindowName, thresholdedDisplay.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
-
-  m_morphKernelSize = cv::getTrackbarPos("KernelSize", "MorphologicalOperatorWindow");
+  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_debuggingOutputWindowName);
+  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
+  m_morphKernelSize = cv::getTrackbarPos("KernelSize", morphologicalOperatorWindowName);
 
   // Display the thresholded image after applying morphological operations.
-  static af::array morphDisplay;
-  morphDisplay = m_changeMask * 255.0f;
-  OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure(morphologicalOperatorWindowName, (m_changeMask * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 }
 
@@ -312,11 +314,11 @@ af::array TouchDetector::select_candidate_components()
   // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)
   {
-    cv::createTrackbar("minCandidateArea", "DebuggingOutputWindow", &m_minCandidateArea, m_imageHeight * m_imageWidth);
-    cv::createTrackbar("maxCandidateArea", "DebuggingOutputWindow", &m_maxCandidateArea, m_imageHeight * m_imageWidth);
+    cv::createTrackbar("minCandidateArea", m_debuggingOutputWindowName, &m_minCandidateArea, m_imageHeight * m_imageWidth);
+    cv::createTrackbar("maxCandidateArea", m_debuggingOutputWindowName, &m_maxCandidateArea, m_imageHeight * m_imageWidth);
   }
-  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", "DebuggingOutputWindow");
-  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", "DebuggingOutputWindow");
+  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_debuggingOutputWindowName);
+  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_debuggingOutputWindowName);
 
   initialised = true;
 #endif

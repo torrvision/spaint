@@ -35,6 +35,9 @@ private:
   /** The number of milliseconds by which to delay between consecutive frames when debugging (0 = pause). */
   int m_debugDelayMs;
 
+  /** The name of the debugging output window. */
+  std::string m_debuggingOutputWindowName;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
