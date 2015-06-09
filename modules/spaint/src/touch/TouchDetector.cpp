@@ -182,11 +182,20 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   diffImage = (diffImage / 8).as(u8) * 8;
 
   // Threshold the difference image, keeping only parts that are close to the surface.
-  const int upperDepthThresholdMm = m_lowerDepthThresholdMm + 10;
+  const int upperDepthThresholdMm = m_lowerDepthThresholdMm + 15;
   diffImage = (diffImage > m_lowerDepthThresholdMm) && (diffImage < upperDepthThresholdMm);
 
+  // Apply a morphological opening operation to the difference image to reduce noise.
+  af::array morphKernel = af::constant(1, 5, 5);
+  diffImage = af::erode(diffImage, morphKernel);
+  diffImage = af::dilate(diffImage, morphKernel);
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  OpenCVUtil::show_greyscale_figure("diffImage", (diffImage * 255).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
+
   // Spatially quantize the difference image by resizing it to 50% of its current size. This has the effect of reducing the eventual number of touch points.
-  const float scaleFactor = 0.5f;
+  const float scaleFactor = 0.3f;
   diffImage = af::resize(scaleFactor, diffImage);
 
   // Make a 1D array whose elements denote the pixels at which the user is touching the scene. Each element is a column-major index into the resized difference image.
