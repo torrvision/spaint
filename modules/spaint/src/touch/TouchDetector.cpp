@@ -4,10 +4,9 @@
 
 #include "touch/TouchDetector.h"
 
-#include <iostream>
+#include <tvgutil/ArgUtil.h>
 
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
-#include "tvgutil/ArgUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
 
 #ifdef WITH_CUDA
@@ -29,27 +28,34 @@ namespace spaint {
 TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
 : m_changeMask(imgSize.y, imgSize.x),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
+  m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThreshold(0.010f),
+  m_lowerDepthThreshold(0.01f), // i.e. 0.01m = 10mm
   m_morphKernelSize(5),
-  m_settings(settings)
+  m_settings(settings),
+  m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true))
 {
-  m_thresholdedRawDepth.reset(new ITMFloatImage(imgSize, true, true));
-  m_depthRaycast.reset(new ITMFloatImage(imgSize, true, true));
-
-  // FIXME: Take the device type in settings into account.
+  // Set up the depth visualiser and image processor.
+  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
 #ifdef WITH_CUDA
-  m_depthVisualiser.reset(new DepthVisualiser_CUDA);
-  m_imageProcessor.reset(new ImageProcessor_CUDA);
+    m_depthVisualiser.reset(new DepthVisualiser_CUDA);
+    m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
-  m_depthCalculator.reset(new DepthVisualiser_CPU);
-  m_imageProcessor.reset(new ImageProcessor_CPU);
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
+  }
+  else
+  {
+    m_depthVisualiser.reset(new DepthVisualiser_CPU);
+    m_imageProcessor.reset(new ImageProcessor_CPU);
+  }
 
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
-  // The thresholds are set relative to the total image area to avoid depending on a particular size of image.
+  // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
   const float minCandidateFraction = 0.01f; // i.e. 1% of the image
   const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image
