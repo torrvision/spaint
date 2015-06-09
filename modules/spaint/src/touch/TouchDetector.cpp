@@ -32,7 +32,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThreshold(0.01f), // i.e. 0.01m = 10mm
+  m_lowerDepthThresholdMm(10),
   m_morphKernelSize(5),
   m_settings(settings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true))
@@ -64,7 +64,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 
 #ifdef DEBUG_TOUCH_DISPLAY
   m_debugDelayMs = 30;
-  m_lowerDepthThresholdMm = static_cast<int>(m_lowerDepthThreshold * 1000.0f);
 #endif
 }
 
@@ -135,7 +134,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > m_lowerDepthThreshold;
+  m_changeMask = *m_diffRawRaycast > (m_lowerDepthThresholdMm / 1000.0f);
 
   // Apply a morphological opening operation to the change mask to reduce noise.
   int morphKernelSize = m_morphKernelSize;
@@ -176,9 +175,6 @@ void TouchDetector::detect_changes()
   m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", debugWindowName);
   m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", debugWindowName);
 
-  // Update the current depth Threshold in meters;
-  m_lowerDepthThreshold = m_lowerDepthThresholdMm / 1000.0f;
-
   // Display the thresholded image.
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_changeMask * 255.0f;
@@ -203,9 +199,8 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   diffImage = (diffImage / 8).as(u8) * 8;
 
   // Threshold the difference image, keeping only parts that are close to the surface.
-  const float depthLowerThresholdMm = m_lowerDepthThreshold * 1000.0f;
-  const float depthUpperThresholdMm = depthLowerThresholdMm + 10.0f;
-  diffImage = (diffImage > depthLowerThresholdMm) && (diffImage < depthUpperThresholdMm);
+  const int upperDepthThresholdMm = m_lowerDepthThresholdMm + 10;
+  diffImage = (diffImage > m_lowerDepthThresholdMm) && (diffImage < upperDepthThresholdMm);
 
   // Spatially quantize the difference image by resizing it to 50% of its current size. This has the effect of reducing the eventual number of touch points.
   const float scaleFactor = 0.5f;

@@ -35,9 +35,6 @@ private:
   /** The number of milliseconds by which to delay between consecutive frames when debugging (0 = pause). */
   int m_debugDelayMs;
 
-  /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal (needed for the OpenCV trackbar when debugging). */
-  int m_lowerDepthThresholdMm;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
@@ -64,8 +61,8 @@ private:
   /** The width of the images on which the touch detector is running. */
   int m_imageWidth;
 
-  /** The threshold (in metres) below which the raw and raycasted depths are assumed to be equal. */
-  float m_lowerDepthThreshold;
+  /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal (needed for the OpenCV trackbar when debugging). */
+  int m_lowerDepthThresholdMm;
 
   /** The maximum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
   int m_maxCandidateArea;
