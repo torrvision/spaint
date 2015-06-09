@@ -80,7 +80,7 @@ void VoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBl
 
   // For each possible label:
   const int stride = m_raycastResultSize + 1;
-  for(int k = 0; k < m_maxLabelCount; ++k)
+  for(size_t k = 0; k < m_maxLabelCount; ++k)
   {
     // If the label is not currently in use, continue.
     if(!labelMask[k]) continue;

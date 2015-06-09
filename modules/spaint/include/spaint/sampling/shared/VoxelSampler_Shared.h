@@ -29,7 +29,7 @@ _CPU_AND_GPU_CODE_
 inline void copy_sampled_voxel_locations(int voxelIndex, const bool *labelMask, size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize,
                                          const Vector3s *candidateVoxelLocations, const int *candidateVoxelIndices, Vector3s *sampledVoxelLocations)
 {
-  for(int k = 0; k < maxLabelCount; ++k)
+  for(size_t k = 0; k < maxLabelCount; ++k)
   {
     if(labelMask[k])
     {
@@ -66,7 +66,7 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
   const SpaintVoxel *voxel = isFound ? &voxelData[voxelAddress] : NULL;
 
   // Update the voxel masks for the various labels (even the ones that are not currently active).
-  for(int k = 0; k < maxLabelCount; ++k)
+  for(size_t k = 0; k < maxLabelCount; ++k)
   {
     voxelMasks[k * (raycastResultSize + 1) + voxelIndex] = voxel && voxel->label == k ? 1 : 0;
   }
@@ -110,7 +110,7 @@ inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *rayca
   // Note: We do not need to explicitly use the label mask in this function, since there will never be any candidates for unused labels.
 
   // For each possible label:
-  for(int k = 0; k < maxLabelCount; ++k)
+  for(size_t k = 0; k < maxLabelCount; ++k)
   {
     const int maskOffset = k * (raycastResultSize + 1) + voxelIndex;
 
