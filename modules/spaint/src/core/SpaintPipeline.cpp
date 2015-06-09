@@ -236,7 +236,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   LabelManager_CPtr labelManager = m_model->get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
   bool *labelMask = m_labelMaskMB->GetData(MEMORYDEVICE_CPU);
-  for(int i = 0; i < maxLabelCount; ++i)
+  for(size_t i = 0; i < maxLabelCount; ++i)
   {
     labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
   }
