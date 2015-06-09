@@ -28,15 +28,12 @@ namespace spaint {
 
 TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
 : m_changeMask(imgSize.y, imgSize.x),
-  m_cols(imgSize.x),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
-  m_depthLowerThreshold(0.010f),
-  m_depthUpperThreshold(0.255f),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
-  m_maximumConnectedComponentAreaPercentage(20),
-  m_minimumConnectedComponentAreaPercentage(1), // 1%.
+  m_imageHeight(imgSize.y),
+  m_imageWidth(imgSize.x),
+  m_lowerDepthThreshold(0.010f),
   m_morphKernelSize(5),
-  m_rows(imgSize.y),
   m_settings(settings)
 {
   m_thresholdedRawDepth.reset(new ITMFloatImage(imgSize, true, true));
@@ -44,22 +41,24 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 
   // FIXME: Take the device type in settings into account.
 #ifdef WITH_CUDA
-  m_depthCalculator.reset(new DepthVisualiser_CUDA);
+  m_depthVisualiser.reset(new DepthVisualiser_CUDA);
   m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
   m_depthCalculator.reset(new DepthVisualiser_CPU);
   m_imageProcessor.reset(new ImageProcessor_CPU);
 #endif
 
-  // The minimum area threshold is set to a percentage of the total image area.
-  m_minimumConnectedComponentAreaThreshold = static_cast<int>((m_minimumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols));
-
-  // The maximum are threshold is set to a percentage of the total image area.
-  m_maximumConnectedComponentAreaThreshold = static_cast<int>((m_maximumConnectedComponentAreaPercentage / 100.0f) * (m_rows * m_cols));
+  // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
+  // The thresholds are set relative to the total image area to avoid depending on a particular size of image.
+  const int imageArea = m_imageHeight * m_imageWidth;
+  const float minCandidateFraction = 0.01f; // i.e. 1% of the image
+  const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image
+  m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
+  m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 
 #ifdef DEBUG_TOUCH_DISPLAY
-  m_debugDelayms = 30;
-  m_depthLowerThresholdmm = static_cast<int>(m_depthLowerThreshold * 1000.0f);
+  m_debugDelayMs = 30;
+  m_lowerDepthThresholdMm = static_cast<int>(m_lowerDepthThreshold * 1000.0f);
 #endif
 }
 
@@ -81,7 +80,7 @@ try
   // Display the connected components.
   int componentCount = af::max<int>(m_connectedComponentImage) + 1;
   af::array connectedComponentDebugImage = m_connectedComponentImage * (255.0f / componentCount);
-  OpenCVUtil::show_greyscale_figure("connectedComponentDebugImage", connectedComponentDebugImage.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("connectedComponentDebugImage", connectedComponentDebugImage.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 
   // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, early out.
@@ -100,7 +99,7 @@ try
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the touch points.
-  cv::Mat touchPointDebugImage = cv::Mat::zeros(m_rows, m_cols, CV_8UC1);
+  cv::Mat touchPointDebugImage = cv::Mat::zeros(m_imageHeight, m_imageWidth, CV_8UC1);
   for(size_t i = 0, size = touchPoints.size(); i < size; ++i)
   {
     const Eigen::Vector2i& p = touchPoints[i];
@@ -109,7 +108,7 @@ try
   cv::imshow("touchPointDebugImage", touchPointDebugImage);
 
   // Wait for the specified number of milliseconds (or until a key is pressed).
-  cv::waitKey(m_debugDelayms);
+  cv::waitKey(m_debugDelayMs);
 #endif
 
   return touchPoints;
@@ -130,7 +129,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > m_depthLowerThreshold;
+  m_changeMask = *m_diffRawRaycast > m_lowerDepthThreshold;
 
   // Apply a morphological opening operation to the change mask to reduce noise.
   int morphKernelSize = m_morphKernelSize;
@@ -145,12 +144,12 @@ void TouchDetector::detect_changes()
   const float mToCm = 100.0f; // the scaling factor needed to convert metres to centimetres
   m_thresholdedRawDepth->UpdateHostFromDevice();
   m_depthRaycast->UpdateHostFromDevice();
-  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_thresholdedRawDepth->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
-  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_depthRaycast->GetData(MEMORYDEVICE_CPU), m_cols, m_rows, OpenCVUtil::ROW_MAJOR, mToCm);
+  OpenCVUtil::show_scaled_greyscale_figure("Current raw depth from camera in centimetres", m_thresholdedRawDepth->GetData(MEMORYDEVICE_CPU), m_imageWidth, m_imageHeight, OpenCVUtil::ROW_MAJOR, mToCm);
+  OpenCVUtil::show_scaled_greyscale_figure("Current depth raycast in centimetres", m_depthRaycast->GetData(MEMORYDEVICE_CPU), m_imageWidth, m_imageHeight, OpenCVUtil::ROW_MAJOR, mToCm);
 
   // Display the absolute difference between the raw depth image and the depth raycast.
   af::array diffRawRaycastInCm = clamp_to_range(*m_diffRawRaycast * mToCm, 0.0f, 255.0f);
-  OpenCVUtil::show_greyscale_figure("Diff image in centimetres", diffRawRaycastInCm.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("Diff image in centimetres", diffRawRaycastInCm.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 
   // If this is the first iteration, create a debug window with a number of trackbars that can be used to control the touch detection.
   const std::string debugWindowName = "DebuggingOutputWindow";
@@ -158,8 +157,8 @@ void TouchDetector::detect_changes()
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("depthThresholdmm", debugWindowName, &m_depthLowerThresholdmm, 50);
-    cv::createTrackbar("debugDelayms", debugWindowName, &m_debugDelayms, 3000);
+    cv::createTrackbar("lowerDepthThresholdMm", debugWindowName, &m_lowerDepthThresholdMm, 50);
+    cv::createTrackbar("debugDelayMs", debugWindowName, &m_debugDelayMs, 3000);
 
     cv::namedWindow("MorphologicalOperatorWindow", cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("KernelSize", "MorphologicalOperatorWindow", &m_morphKernelSize, 15);
@@ -168,23 +167,23 @@ void TouchDetector::detect_changes()
   }
 
   // Update the relevant variables based on the values of the trackbars.
-  m_debugDelayms = cv::getTrackbarPos("debugDelayms", debugWindowName);
-  m_depthLowerThresholdmm = cv::getTrackbarPos("depthThresholdmm", debugWindowName);
+  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", debugWindowName);
+  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", debugWindowName);
 
   // Update the current depth Threshold in meters;
-  m_depthLowerThreshold = m_depthLowerThresholdmm / 1000.0f;
+  m_lowerDepthThreshold = m_lowerDepthThresholdMm / 1000.0f;
 
   // Display the thresholded image.
   static af::array thresholdedDisplay;
   thresholdedDisplay = m_changeMask * 255.0f;
-  OpenCVUtil::show_greyscale_figure(debugWindowName, thresholdedDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure(debugWindowName, thresholdedDisplay.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 
   m_morphKernelSize = cv::getTrackbarPos("KernelSize", "MorphologicalOperatorWindow");
 
   // Display the thresholded image after applying morphological operations.
   static af::array morphDisplay;
   morphDisplay = m_changeMask * 255.0f;
-  OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 }
 
@@ -198,7 +197,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   diffImage = (diffImage / 8).as(u8) * 8;
 
   // Threshold the difference image, keeping only parts that are close to the surface.
-  const float depthLowerThresholdMm = m_depthLowerThreshold * 1000.0f;
+  const float depthLowerThresholdMm = m_lowerDepthThreshold * 1000.0f;
   const float depthUpperThresholdMm = depthLowerThresholdMm + 10.0f;
   diffImage = (diffImage > depthLowerThresholdMm) && (diffImage < depthUpperThresholdMm);
 
@@ -210,11 +209,11 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   af::array touchIndicesImage = af::where(diffImage);
 
   // If there are too few touch indices, assume the user is not touching the scene in a meaningful way and early out.
-  const float touchAreaLowerThreshold = 0.0001f * m_cols * m_rows;
+  const float touchAreaLowerThreshold = 0.0001f * m_imageWidth * m_imageHeight;
   if(touchIndicesImage.elements() <= touchAreaLowerThreshold) return std::vector<Eigen::Vector2i>();
 
   // Otherwise, convert the touch indices to touch points and return them.
-  const int resizedDiffHeight = static_cast<int>(m_rows * scaleFactor);
+  const int resizedDiffHeight = static_cast<int>(m_imageHeight * scaleFactor);
   const int *touchIndices = touchIndicesImage.as(s32).host<int>();
   std::vector<Eigen::Vector2i> touchPoints;
   for(int i = 0, touchPointCount = touchIndicesImage.elements(); i < touchPointCount; ++i)
@@ -255,8 +254,8 @@ int TouchDetector::pick_best_candidate_component(const af::array& candidateCompo
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the best candidate's mask and difference image.
   mask = m_connectedComponentImage.as(s32) == bestCandidateID;
-  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
-  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 
   return bestCandidateID;
@@ -277,7 +276,7 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   // We assume that parts of the scene for which we have no information are far away (at an
   // arbitrarily large depth of 100m).
   const float invalidDepthValue = 100.0f;
-  m_depthCalculator->render_depth(
+  m_depthVisualiser->render_depth(
     DepthVisualiser::DT_ORTHOGRAPHIC,
     to_itm(camera->p()),
     to_itm(camera->n()),
@@ -295,8 +294,8 @@ af::array TouchDetector::select_candidate_components()
   af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
 
   // Zero out connected components that are either too small or too large.
-  componentAreas -= (componentAreas < m_minimumConnectedComponentAreaThreshold) * componentAreas;
-  componentAreas -= (componentAreas > m_maximumConnectedComponentAreaThreshold) * componentAreas;
+  componentAreas -= (componentAreas < m_minCandidateArea) * componentAreas;
+  componentAreas -= (componentAreas > m_maxCandidateArea) * componentAreas;
 
   // Keep the remaining non-zero components as candidates.
   af::array candidates = af::where(componentAreas).as(s32);
@@ -312,11 +311,11 @@ af::array TouchDetector::select_candidate_components()
   // Initialise the OpenCV Trackbar if it's the first iteration.
   if(!initialised)
   {
-    cv::createTrackbar("minimumAreaThreshold", "DebuggingOutputWindow", &m_minimumConnectedComponentAreaThreshold, m_rows * m_cols);
-    cv::createTrackbar("maximumAreaThreshold", "DebuggingOutputWindow", &m_maximumConnectedComponentAreaThreshold, m_rows * m_cols);
+    cv::createTrackbar("minCandidateArea", "DebuggingOutputWindow", &m_minCandidateArea, m_imageHeight * m_imageWidth);
+    cv::createTrackbar("maxCandidateArea", "DebuggingOutputWindow", &m_maxCandidateArea, m_imageHeight * m_imageWidth);
   }
-  m_minimumConnectedComponentAreaThreshold = cv::getTrackbarPos("minimumAreaThreshold", "DebuggingOutputWindow");
-  m_maximumConnectedComponentAreaThreshold = cv::getTrackbarPos("maximumAreaThreshold", "DebuggingOutputWindow");
+  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", "DebuggingOutputWindow");
+  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", "DebuggingOutputWindow");
 
   initialised = true;
 #endif

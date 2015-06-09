@@ -28,65 +28,53 @@ private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
-  typedef std::vector<Eigen::Vector2i> Points;
-  typedef boost::shared_ptr<Points> Points_Ptr;
-  typedef boost::shared_ptr<const Points> Points_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
-  /** The delay between processing frames (0 = pause). */
-  int m_debugDelayms;
+  /** The number of milliseconds by which to delay between consecutive frames when debugging (0 = pause). */
+  int m_debugDelayMs;
 
-  /** The lower depth threshold value in millimeters needed to the opencv trackbar. */
-  int m_depthLowerThresholdmm;
+  /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal (needed for the OpenCV trackbar when debugging). */
+  int m_lowerDepthThresholdMm;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
   af::array m_changeMask;
 
-  /** The number of columns in the image matrix, (width). */
-  int m_cols;
-
   /** An image in which to store the connected components of the change mask. */
   af::array m_connectedComponentImage;
 
-  /** The depth calculator. */
-  boost::shared_ptr<const DepthVisualiser> m_depthCalculator;
-
-  /** The threshold below which the raw and raycasted depth is assumed to be equal. */
-  float m_depthLowerThreshold;
-
-  /** An image into which to store the depth of the currently visible scene from the camera. */
+  /** An image in which to store the depth of the reconstructed model as viewed from the current camera pose. */
   ITMFloatImage_Ptr m_depthRaycast;
 
-  /** The threshold above which any difference in the raw and raycasted depth is ignored. */
-  float m_depthUpperThreshold;
+  /** The depth visualiser. */
+  boost::shared_ptr<const DepthVisualiser> m_depthVisualiser;
 
-  /** An image in which each pixel is the absolute difference between the current and raycasted depths. */
+  /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
 
-  /** Multiplatform image processing tools. */
+  /** The height of the images on which the touch detector is running. */
+  int m_imageHeight;
+
+  /** The image processor. */
   boost::shared_ptr<const ImageProcessor> m_imageProcessor;
 
-  /** The maximum image area a connected component region can take, expressed as a percentage of the number of pixels in the image. */
-  float m_maximumConnectedComponentAreaPercentage;
+  /** The width of the images on which the touch detector is running. */
+  int m_imageWidth;
 
-  /** The maximum image area a connected component region can take, expressed in square-pixels. */
-  int m_maximumConnectedComponentAreaThreshold;
+  /** The threshold (in metres) below which the raw and raycasted depths are assumed to be equal. */
+  float m_lowerDepthThreshold;
 
-  /** The minimum image area a connected component region can take, expressed as a percentage of the number of pixels in the image. */
-  float m_minimumConnectedComponentAreaPercentage;
+  /** The maximum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
+  int m_maxCandidateArea;
 
-  /** The minimum image area a connected component region can take, expressed in square-pixels. */
-  int m_minimumConnectedComponentAreaThreshold;
+  /** The minimum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
+  int m_minCandidateArea;
 
-  /** The size of the square morphological operator. */
+  /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
   int m_morphKernelSize;
-
-  /** The number of rows in the image matrix. */
-  int m_rows;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
@@ -97,9 +85,9 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief An instance of this class may be used to identify those pixels which are touching a surface.
+   * \brief Constructs a touch detector.
    *
-   * \param imgSize   TODO
+   * \param imgSize   The size of the images on which the touch detector is to run.
    * \param settings  The settings to use for InfiniTAM.
    */
   TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings);
@@ -119,7 +107,7 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Detects changes between the raw depth image from the camera and a depth raycast of the reconstructed model.
    */
   void detect_changes();
 
@@ -135,14 +123,14 @@ private:
   /**
    * Picks the candidate component most likely to correspond to a touch interaction.
    *
-   * \param candidateComponents The IDs of components in the connected component image that denote promising touch regions.
+   * \param candidateComponents The IDs of components in the connected component image that denote candidate touch interactions.
    * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
    * \return                    The ID of the best candidate component.
    */
   int pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
 
   /**
-   * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for movement detection.
+   * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for change detection.
    *
    * \param camera        The camera from which the scene is being rendered.
    * \param rawDepth      The raw depth image from the camera.
