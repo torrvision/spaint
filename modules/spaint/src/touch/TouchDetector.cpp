@@ -181,7 +181,7 @@ void TouchDetector::detect_changes()
 
   m_morphKernelSize = cv::getTrackbarPos("KernelSize", "MorphologicalOperatorWindow");
 
-  // Display the threholded image after applying morphological operations.
+  // Display the thresholded image after applying morphological operations.
   static af::array morphDisplay;
   morphDisplay = m_changeMask * 255.0f;
   OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", morphDisplay.as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
@@ -190,45 +190,37 @@ void TouchDetector::detect_changes()
 
 std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, const af::array& diffRawRaycastInMm)
 {
+  // Determine the component's binary mask and difference image.
+  af::array mask = m_connectedComponentImage == component;
+  af::array diffImage = diffRawRaycastInMm * mask;
+
+  // Quantize the intensites in the difference image to 32 levels (from a starting point of 256 levels).
+  diffImage = (diffImage / 8).as(u8) * 8;
+
+  // Threshold the difference image, keeping only parts that are close to the surface.
+  const float depthLowerThresholdMm = m_depthLowerThreshold * 1000.0f;
+  const float depthUpperThresholdMm = depthLowerThresholdMm + 10.0f;
+  diffImage = (diffImage > depthLowerThresholdMm) && (diffImage < depthUpperThresholdMm);
+
+  // Spatially quantize the difference image by resizing it to 50% of its current size. This has the effect of reducing the eventual number of touch points.
+  const float scaleFactor = 0.5f;
+  diffImage = af::resize(scaleFactor, diffImage);
+
+  // Make a 1D array whose elements denote the pixels at which the user is touching the scene. Each element is a column-major index into the resized difference image.
+  af::array touchIndicesImage = af::where(diffImage);
+
+  // If there are too few touch indices, assume the user is not touching the scene in a meaningful way and early out.
+  const float touchAreaLowerThreshold = 0.0001f * m_cols * m_rows;
+  if(touchIndicesImage.elements() <= touchAreaLowerThreshold) return std::vector<Eigen::Vector2i>();
+
+  // Otherwise, convert the touch indices to touch points and return them.
+  const int resizedDiffHeight = static_cast<int>(m_rows * scaleFactor);
+  const int *touchIndices = touchIndicesImage.as(s32).host<int>();
   std::vector<Eigen::Vector2i> touchPoints;
-
-  // Binary mask identifying the region with the best candidate.
-  static af::array mask;
-  mask = m_connectedComponentImage == component;
-
-  // Get the diff values corresponding to the best candidate region.
-  static af::array temporaryCandidate;
-  temporaryCandidate = diffRawRaycastInMm * mask;
-
-  // Quantize the intensity levels to 32 levels from 256.
-  temporaryCandidate = (temporaryCandidate / 8).as(u8) * 8;
-
-  // Filter the best candidate region prior to calculating the histogram.
-  af::medfilt(temporaryCandidate, 5, 5);
-
-  // Find the array positions which are within a narrow range close to a surface.
-  static float depthLowerThresholdMillimeters = m_depthLowerThreshold * 1000.0f;
-  static float depthUpperThresholdMillimeters = depthLowerThresholdMillimeters + 10.0f;
-
-  static float scaleFactor = 0.5f;
-  af::array goodPixelPositions = af::where(af::resize(scaleFactor, (temporaryCandidate > depthLowerThresholdMillimeters) && (temporaryCandidate < depthUpperThresholdMillimeters)));
-
-  static float touchAreaLowerThreshold = 0.0001f * m_cols * m_rows;
-  if(goodPixelPositions.elements() > touchAreaLowerThreshold)
+  for(int i = 0, touchPointCount = touchIndicesImage.elements(); i < touchPointCount; ++i)
   {
-#ifdef DEBUG_TOUCH_VERBOSE
-    af::print("goodPixelPositions", goodPixelPositions);
-#endif
-
-    int numberOfTouchPoints = goodPixelPositions.dims(0);
-    int *touchIndices = goodPixelPositions.as(s32).host<int>();
-
-    for(int i = 0; i < numberOfTouchPoints; ++i)
-    {
-      Eigen::Vector2i point((touchIndices[i] / (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)), (touchIndices[i] % (int)(m_rows * scaleFactor)) * float(1.0f / (scaleFactor)));
-
-      touchPoints.push_back(point);
-    }
+    Eigen::Vector2f point(touchIndices[i] / resizedDiffHeight, touchIndices[i] % resizedDiffHeight);
+    touchPoints.push_back((point / scaleFactor).cast<int>());
   }
 
   return touchPoints;
@@ -261,10 +253,10 @@ int TouchDetector::pick_best_candidate_component(const af::array& candidateCompo
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  // Display the best candidate's difference image and mask.
-  mask = m_connectedComponentImage.as(u32) == bestCandidateID;
-  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  // Display the best candidate's mask and difference image.
+  mask = m_connectedComponentImage.as(s32) == bestCandidateID;
   OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_cols, m_rows, OpenCVUtil::COL_MAJOR);
 #endif
 
   return bestCandidateID;
