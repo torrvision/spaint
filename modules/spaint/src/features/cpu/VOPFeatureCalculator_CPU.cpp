@@ -58,7 +58,7 @@ void VOPFeatureCalculator_CPU::fill_in_surface_normals(int voxelLocationCount, O
   ORUtils::Vector3<float> *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
-  //#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {

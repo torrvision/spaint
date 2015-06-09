@@ -119,6 +119,7 @@ inline void fill_in_surface_normal(int tid, const Vector3f *surfaceNormals, size
   Vector3f surfaceNormal = surfaceNormals[tid];
   float *feature = features + tid * featureCount;
   size_t offset = featureCount - 4;
+
   feature[offset] = surfaceNormal.x;
   feature[offset + 1] = surfaceNormal.y;
   feature[offset + 2] = surfaceNormal.z;
