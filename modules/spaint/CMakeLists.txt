@@ -269,6 +269,11 @@ IF(WITH_LEAP)
   SET(selectors_headers ${selectors_headers} include/spaint/selectors/LeapSelector.h)
 ENDIF()
 
+IF(WITH_ARRAYFIRE)
+  SET(selectors_sources ${selectors_sources} src/selectors/TouchSelector.cpp)
+  SET(selectors_headers ${selectors_headers} include/spaint/selectors/TouchSelector.h)
+ENDIF()
+
 ##
 SET(touch_sources
 src/touch/TouchDetector.cpp
@@ -277,11 +282,6 @@ src/touch/TouchDetector.cpp
 SET(touch_headers
 include/spaint/touch/TouchDetector.h
 )
-
-IF(WITH_ARRAYFIRE)
-  SET(selectors_sources ${selectors_sources} src/selectors/TouchSelector.cpp)
-  SET(selectors_headers ${selectors_headers} include/spaint/selectors/TouchSelector.h)
-ENDIF()
 
 ##
 SET(trackers_sources)
@@ -396,8 +396,15 @@ ${visualisers_shared_headers}
 )
 
 IF(WITH_ARRAYFIRE)
-  SET(sources ${sources} ${imageprocessing_cpu_sources} ${imageprocessing_interface_sources})
-  SET(headers ${headers} ${imageprocessing_cpu_headers} ${imageprocessing_interface_headers} ${imageprocessing_shared_headers})
+  SET(sources ${sources}
+    ${imageprocessing_cpu_sources}
+    ${imageprocessing_interface_sources}
+  )
+  SET(headers ${headers}
+    ${imageprocessing_cpu_headers}
+    ${imageprocessing_interface_headers}
+    ${imageprocessing_shared_headers}
+  )
 ENDIF()
 
 IF(WITH_CUDA)
