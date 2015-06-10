@@ -133,7 +133,7 @@ void VOPFeatureCalculator_CUDA::fill_in_surface_normals(int voxelLocationCount, 
 {
   int threadsPerBlock = 256;
   int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
-  ORUtils::Vector3<float> *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA);
+  Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA);
 
   ck_fill_in_surface_normals<<<numBlocks,threadsPerBlock>>>(
     voxelLocationCount,
