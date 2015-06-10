@@ -25,7 +25,7 @@ IF(WITH_CUDA)
 
   # If on Linux, make sure that C++11 support is enabled when compiling with nvcc.
   IF(${CMAKE_SYSTEM} MATCHES "Linux")
-    SET(CUDA_NVCC_FLAGS -std=c++11; -Xcudafe "--diag_suppress=cc_clobber_ignored"; -Xcudafe "--diag_suppress=set_but_not_used"; ${CUDA_NVCC_FLAGS})
+    SET(CUDA_NVCC_FLAGS -std=c++11; -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
   ADD_DEFINITIONS(-DWITH_CUDA)
