@@ -112,7 +112,7 @@ inline void write_candidate_voxel_location(int voxelIndex, const Vector4f *rayca
   // For each possible label:
   for(size_t k = 0; k < maxLabelCount; ++k)
   {
-    const int maskOffset = k * (raycastResultSize + 1) + voxelIndex;
+    const size_t maskOffset = k * (raycastResultSize + 1) + voxelIndex;
 
     // If the voxel we're processing is a candidate for this label:
     if(voxelMasks[maskOffset])
