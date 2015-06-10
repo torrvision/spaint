@@ -6,6 +6,10 @@
 #include <iostream>
 #include <string>
 
+#ifdef WITH_ARRAYFIRE
+  #include <arrayfire.h>
+#endif
+
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
 
@@ -33,6 +37,14 @@ try
   {
     quit("Error: Failed to initialise SDL.");
   }
+
+#ifdef WITH_ARRAYFIRE
+  // Choose a device for ArrayFire.
+  if(af::getDeviceCount() > 1)
+  {
+    af::setDevice(1);
+  }
+#endif
 
   // Parse the command-line arguments.
   if (argc > 4)

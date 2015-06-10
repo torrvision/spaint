@@ -127,6 +127,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
+              << "I + 4 = To Touch Selector\n"
               << "M + 1 = To Normal Mode\n"
               << "M + 2 = To Training Mode\n"
               << "M + 3 = To Prediction Mode\n"
