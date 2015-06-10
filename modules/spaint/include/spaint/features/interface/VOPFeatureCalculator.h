@@ -7,9 +7,7 @@
 
 #include "FeatureCalculator.h"
 
-#ifdef WITH_OPENCV
-#include "ocv/OpenCVUtil.h"
-#endif
+#define DEBUG_FEATURE_DISPLAY
 
 namespace spaint {
 
@@ -18,6 +16,14 @@ namespace spaint {
  */
 class VOPFeatureCalculator : public FeatureCalculator
 {
+  //#################### PRIVATE DEBUGGING VARIABLES ####################
+private:
+  /** The number of milliseconds by which to delay between consecutive frames when debugging (0 = pause). */
+  mutable int m_debugDelayMs;
+
+  /** The name of the debugging output window. */
+  std::string m_debuggingOutputWindowName;
+
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** The side length of a VOP patch (must be odd). */
@@ -93,11 +99,16 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-#ifdef WITH_OPENCV
+#if defined(WITH_OPENCV) && defined(DEBUG_FEATURE_DISPLAY)
   /**
    * \brief TODO.
    */
-  void debug_display_features(const float *features, size_t size, const std::string& windowName) const;
+  void debug_display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const;
+
+  /**
+   * \brief Sets up a debugging window containing a trackbar that can be used to control the delay between consecutive frames.
+   */
+  void process_debug_windows() const;
 #endif
 };
 
