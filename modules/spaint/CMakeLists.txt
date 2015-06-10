@@ -361,7 +361,6 @@ ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
 ${selectors_sources}
-${touch_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
@@ -387,7 +386,6 @@ ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
 ${selectors_headers}
-${touch_headers}
 ${trackers_headers}
 ${util_headers}
 ${visualisers_cpu_headers}
@@ -399,11 +397,13 @@ IF(WITH_ARRAYFIRE)
   SET(sources ${sources}
     ${imageprocessing_cpu_sources}
     ${imageprocessing_interface_sources}
+    ${touch_sources}
   )
   SET(headers ${headers}
     ${imageprocessing_cpu_headers}
     ${imageprocessing_interface_headers}
     ${imageprocessing_shared_headers}
+    ${touch_headers}
   )
 ENDIF()
 
