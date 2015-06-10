@@ -67,7 +67,7 @@ private:
   /** The width of the images on which the touch detector is running. */
   int m_imageWidth;
 
-  /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal (needed for the OpenCV trackbar when debugging). */
+  /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
   int m_lowerDepthThresholdMm;
 
   /** The maximum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
@@ -142,6 +142,12 @@ private:
   void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   /**
+   * \brief Sets up some debugging windows containing trackbars that can be used to control the values of
+   *        various member variables, and updates those variables based on the current trackbar positions.
+   */
+  void process_debug_windows();
+
+  /**
    * \brief Select candidate connected components that fall within a certain size range.
    *
    * \return  The IDs of the candidate components.
@@ -167,14 +173,6 @@ private:
    * \return   The InfiniTAM vector.
    */
   static Vector3f to_itm(const Eigen::Vector3f& v);
-
-  //#################### PRIVATE DEBUGGING MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Initialises the OpenCV windows which are to contain a trackbar
-   *        and updates the variables with the values at the trackbar slider position.
-   */
-  void process_debug_windows();
 };
 
 }

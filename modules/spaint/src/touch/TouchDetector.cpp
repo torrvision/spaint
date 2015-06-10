@@ -19,19 +19,20 @@
 #endif
 
 //#define DEBUG_TOUCH_VERBOSE
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
+:
   // Debugging variables.
-: m_debugDelayMs(30),
+  m_debugDelayMs(30),
   m_debuggingOutputWindowName("DebuggingOutputWindow"),
   m_morphologicalOperatorWindowName("MorphologicalOperatorWindow"),
 
-  // Member variables.
+  // Normal variables.
   m_changeMask(imgSize.y, imgSize.x),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
@@ -75,7 +76,6 @@ std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging
 try
 {
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  // TODO
   process_debug_windows();
 #endif
 
@@ -280,6 +280,38 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   );
 }
 
+void TouchDetector::process_debug_windows()
+{
+  // If this is the first iteration, create debugging windows with trackbars that can be used to control the touch detection.
+  static bool initialised = false;
+  if(!initialised)
+  {
+    const int imageArea = m_imageHeight * m_imageWidth;
+
+    cv::namedWindow(m_debuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_lowerDepthThresholdMm, 50);
+    cv::createTrackbar("debugDelayMs", m_debuggingOutputWindowName, &m_debugDelayMs, 3000);
+    cv::createTrackbar("minCandidateArea", m_debuggingOutputWindowName, &m_minCandidateArea, imageArea);
+    cv::createTrackbar("maxCandidateArea", m_debuggingOutputWindowName, &m_maxCandidateArea, imageArea);
+
+    cv::namedWindow(m_morphologicalOperatorWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("kernelSize", m_morphologicalOperatorWindowName, &m_morphKernelSize, 15);
+
+    initialised = true;
+  }
+
+  // Update the relevant variables based on the values of the trackbars.
+  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
+  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_debuggingOutputWindowName);
+  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_debuggingOutputWindowName);
+  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_debuggingOutputWindowName);
+
+  m_morphKernelSize = cv::getTrackbarPos("kernelSize", m_morphologicalOperatorWindowName);
+
+  // Wait for the specified number of milliseconds (or until a key is pressed).
+  cv::waitKey(m_debugDelayMs);
+}
+
 af::array TouchDetector::select_candidate_components()
 {
   // Calculate the areas of the connected components.
@@ -319,39 +351,6 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
 Vector3f TouchDetector::to_itm(const Eigen::Vector3f& v)
 {
   return Vector3f(v[0], v[1], v[2]);
-}
-
-//#################### PRIVATE DEBUGGING MEMBER FUNCTIONS ####################
-
-void TouchDetector::process_debug_windows()
-{
-  // If this is the first iteration, create debugging windows with trackbars that can be used to control the touch detection.
-  static bool initialised = false;
-  if(!initialised)
-  {
-    cv::namedWindow(m_debuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_lowerDepthThresholdMm, 50);
-    cv::createTrackbar("debugDelayMs", m_debuggingOutputWindowName, &m_debugDelayMs, 3000);
-
-    cv::namedWindow(m_morphologicalOperatorWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("KernelSize", m_morphologicalOperatorWindowName, &m_morphKernelSize, 15);
-
-    cv::createTrackbar("minCandidateArea", m_debuggingOutputWindowName, &m_minCandidateArea, m_imageHeight * m_imageWidth);
-    cv::createTrackbar("maxCandidateArea", m_debuggingOutputWindowName, &m_maxCandidateArea, m_imageHeight * m_imageWidth);
-
-    initialised = true;
-  }
-
-  // Update the relevant variables based on the values of the trackbars.
-  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_debuggingOutputWindowName);
-  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
-  m_morphKernelSize = cv::getTrackbarPos("KernelSize", m_morphologicalOperatorWindowName);
-
-  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_debuggingOutputWindowName);
-  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_debuggingOutputWindowName);
-
-  // Wait for the specified number of milliseconds (or until a key is pressed).
-  cv::waitKey(m_debugDelayMs);
 }
 
 }
