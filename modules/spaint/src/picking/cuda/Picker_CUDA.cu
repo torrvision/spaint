@@ -25,14 +25,19 @@ __global__ void ck_to_short(const Vector3f *pickPointsFloat, Vector3s *pickPoint
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const
+bool Picker_CUDA::pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset) const
 {
+  if(offset >= pickPointsMB.dataSize)
+  {
+    throw std::runtime_error("Error: The offset at which to write the pick point is out of range");
+  }
+
   static ORUtils::MemoryBlock<bool> result(1, true, true);
   ck_get_pick_point<<<1,1>>>(
     x, y,
     renderState->raycastResult->noDims.x,
     renderState->raycastResult->GetData(MEMORYDEVICE_CUDA),
-    pickPointMB.GetData(MEMORYDEVICE_CUDA),
+    pickPointsMB.GetData(MEMORYDEVICE_CUDA) + offset,
     result.GetData(MEMORYDEVICE_CUDA)
   );
   result.UpdateHostFromDevice();

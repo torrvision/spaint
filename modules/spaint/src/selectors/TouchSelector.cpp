@@ -11,28 +11,31 @@
 #include <tvgutil/timers/Timer.h>
 
 #include "picking/cpu/Picker_CPU.h"
+#include "util/CameraPoseConverter.h"
+
 #ifdef WITH_CUDA
 #include "picking/cuda/Picker_CUDA.h"
 #endif
-#include "util/CameraPoseConverter.h"
 
 using namespace rigging;
+
+#define DEBUGGING 0
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view)
+TouchSelector::TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints)
 : Selector(settings),
-  m_pickPointValid(false),
-  m_maximumValidPickPoints(50),
-  m_numberOfValidPickPoints(0),
+  m_keptTouchPointCount(0),  
+  m_keptTouchPointsFloatMB(new ORUtils::MemoryBlock<Vector3f>(maxKeptTouchPoints, true, true)),
+  m_keptTouchPointsShortMB(new ORUtils::MemoryBlock<Vector3s>(maxKeptTouchPoints, true, true)),
+  m_maxKeptTouchPoints(maxKeptTouchPoints),
   m_touchDetector(new TouchDetector(view->depth->noDims, settings)),
   m_trackingState(trackingState),
   m_view(view)
 {
-  m_pickPointFloatMB.reset(new ORUtils::MemoryBlock<Vector3f>(m_maximumValidPickPoints, true, true));
-  m_pickPointShortMB.reset(new ORUtils::MemoryBlock<Vector3s>(m_maximumValidPickPoints, true, true));
+  m_isActive = true;
 
   // Make the picker.
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -59,85 +62,57 @@ void TouchSelector::accept(const SelectorVisitor& visitor) const
 
 std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
 {
-  // If the last update did not yield a valid pick point, early out.
-  if(!m_pickPointValid) return std::vector<Eigen::Vector3f>();
+  // If the last update did not yield any valid touch points, early out.
+  if(m_keptTouchPointCount == 0) return std::vector<Eigen::Vector3f>();
 
-  int nPickPoints = std::min(m_numberOfValidPickPoints, m_maximumValidPickPoints);
-  std::vector<Eigen::Vector3f> pickPoints(nPickPoints);
+  // If the touch points are on the GPU, copy them across to the CPU.
+  m_keptTouchPointsFloatMB->UpdateHostFromDevice();
 
-  // If the pick point is on the GPU, copy it across to the CPU.
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointFloatMB->UpdateHostFromDevice();
-
-  // Convert the pick points from voxel coordinates into scene coordinates and return it.
+  // Convert the touch points from voxel coordinates into scene coordinates and return them.
   float voxelSize = m_settings->sceneParams.voxelSize;
-
-  m_pickPointFloatMB->UpdateHostFromDevice();
-  Vector3f *pickPointFloatMBData = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
-  for(int i = 0; i < nPickPoints; ++i)
+  const Vector3f *keptTouchPointsFloat = m_keptTouchPointsFloatMB->GetData(MEMORYDEVICE_CPU);
+  std::vector<Eigen::Vector3f> touchPoints(m_keptTouchPointCount);
+  for(size_t i = 0; i < m_keptTouchPointCount; ++i)
   {
-    const Vector3f& pickPoint = pickPointFloatMBData[i];
-    pickPoints[i] = Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
+    const Vector3f& keptTouchPoint = keptTouchPointsFloat[i];
+    touchPoints[i] = Eigen::Vector3f(keptTouchPoint.x, keptTouchPoint.y, keptTouchPoint.z) * voxelSize;
   }
-  return pickPoints;
+
+  return touchPoints;
 }
 
 Selector::Selection_CPtr TouchSelector::get_selection() const
 {
-  return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
+  return m_keptTouchPointCount > 0 ? m_keptTouchPointsShortMB : Selection_CPtr();
 }
 
 void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
 {
-  // Get camera.
-  static boost::shared_ptr<MoveableCamera> camera;
-  camera.reset( new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
-
-  // Run the touch pipeline.
-  boost::shared_ptr<ITMFloatImage> depthImage(m_view->depth, boost::serialization::null_deleter());
+  // Detect any points that the user is touching in the scene.
+  MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
+  ITMFloatImage_Ptr depthImage(m_view->depth, boost::serialization::null_deleter());
   TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_points(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
+#if DEBUGGING
   std::cout << runningTouchDetectorOnFrame << '\n';
+#endif
 
-  // Try and pick an individual voxel.
-  m_pickPointValid = false;
-  m_numberOfValidPickPoints = 0;
-
-  // Update whether or not the selector is active.
-  m_isActive = !touchPoints.empty();
-  if(!m_isActive) return;
-
-  int nTouchPoints = touchPoints.size();
-
-  // FIXME: Instead of clearing the MemoryBlock at each frame, pass around it's size. Resizeable with fixed length back buffer.
-  if(nTouchPoints < m_maximumValidPickPoints)
-    m_pickPointFloatMB.reset(new ORUtils::MemoryBlock<Vector3f>(m_maximumValidPickPoints, true, true));
-
-  Vector3f *m_pickPointFloatMBData = m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
-
-  for(int i = 0; i < nTouchPoints; ++i)
+  // Determine which of the touch points are valid (i.e. are ones that we want to keep) and copy them into a memory block.
+  // Note that we limit the overall number of points we keep for performance reasons, so not all of the valid touch points
+  // may end up being retained.
+  m_keptTouchPointsFloatMB->Clear();
+  m_keptTouchPointCount = 0;
+  for(size_t i = 0, touchPointCount = touchPoints.size(); i < touchPointCount && m_keptTouchPointCount < m_maxKeptTouchPoints; ++i)
   {
-    bool pickPointValid = false;
-    ORUtils::MemoryBlock<Vector3f> pickPointFloatMB(1, true, true);
-    pickPointValid = m_picker->pick(touchPoints[i][0], touchPoints[i][1], renderState.get(), pickPointFloatMB);
-    if(pickPointValid)
+    if(m_picker->pick(touchPoints[i][0], touchPoints[i][1], renderState.get(), *m_keptTouchPointsFloatMB, m_keptTouchPointCount))
     {
-      pickPointFloatMB.UpdateHostFromDevice();
-      Vector3f * pickPointFloatMBData = pickPointFloatMB.GetData(MEMORYDEVICE_CPU);
-      m_pickPointFloatMBData[i] = Vector3f(pickPointFloatMBData->x, pickPointFloatMBData->y, pickPointFloatMBData->z);
-      ++m_numberOfValidPickPoints;
+      ++m_keptTouchPointCount;
     }
-    if(m_numberOfValidPickPoints >= m_maximumValidPickPoints)
-      break;
   }
 
-  if(m_numberOfValidPickPoints > 0)
+  // Convert the touch points we kept to Vector3s format.
+  if(m_keptTouchPointCount > 0)
   {
-    m_pickPointValid = true;
-    m_pickPointFloatMB->UpdateDeviceFromHost();
-    m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
-  }
-  else
-  {
-    m_pickPointValid = false;
+    m_picker->to_short(*m_keptTouchPointsFloatMB, *m_keptTouchPointsShortMB);
   }
 }
 

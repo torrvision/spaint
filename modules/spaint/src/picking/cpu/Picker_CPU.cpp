@@ -12,13 +12,18 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool Picker_CPU::pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const
+bool Picker_CPU::pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset) const
 {
+  if(offset >= pickPointsMB.dataSize)
+  {
+    throw std::runtime_error("Error: The offset at which to write the pick point is out of range");
+  }
+
   return get_pick_point(
     x, y,
     renderState->raycastResult->noDims.x,
     renderState->raycastResult->GetData(MEMORYDEVICE_CPU),
-    *pickPointMB.GetData(MEMORYDEVICE_CPU)
+    *(pickPointsMB.GetData(MEMORYDEVICE_CPU) + offset)
   );
 }
 

@@ -27,13 +27,14 @@ public:
    * \brief Determines the nearest scene point (if any) that would be hit by a ray cast through (x,y) on the image plane
    *        when viewed from the camera pose with the specified render state.
    *
-   * \param x           The x coordinate of the point on the image plane through which the ray is cast.
-   * \param y           The y coordinate of the point on the image plane through which the ray is cast.
-   * \param renderState A render state corresponding to the camera pose.
-   * \param pickPointMB A memory block into which to write the voxel coordinates of the nearest scene point (if any) that is hit by the ray.
-   * \return            true, if the ray hit the scene, or false otherwise.
+   * \param x             The x coordinate of the point on the image plane through which the ray is cast.
+   * \param y             The y coordinate of the point on the image plane through which the ray is cast.
+   * \param renderState   A render state corresponding to the camera pose.
+   * \param pickPointsMB  A memory block into which to write the voxel coordinates of the nearest scene point (if any) that is hit by the ray.
+   * \param offset        The offset into the memory block at which to write.
+   * \return              true, if the ray hit the scene, or false otherwise.
    */
-  virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointMB) const = 0;
+  virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset = 0) const = 0;
 
   /**
    * \brief Converts one or more pick points in Vector3f format into Vector3s format.

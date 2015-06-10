@@ -49,7 +49,7 @@ boost::optional<Eigen::Vector3f> PickingSelector::get_position() const
   if(!m_pickPointValid) return boost::none;
 
   // If the pick point is on the GPU, copy it across to the CPU.
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointFloatMB.UpdateHostFromDevice();
+  m_pickPointFloatMB.UpdateHostFromDevice();
 
   // Convert the pick point from voxel coordinates into scene coordinates and return it.
   float voxelSize = m_settings->sceneParams.voxelSize;

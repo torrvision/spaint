@@ -17,7 +17,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to select voxels in the scene based on what theuser is touching in the real world.
+ * \brief An instance of this class can be used to select voxels in the scene based on what the user is touching in the real world.
  *
  * This is achieved by analysing the differences between the live depth input and a depth raycast of the scene.
  */
@@ -25,34 +25,32 @@ class TouchSelector : public Selector
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The number of touch points that were kept in the most recent update. */
+  size_t m_keptTouchPointCount;
+
+  /** A memory block into which to store the kept touch points in Vector3f format and voxel coordinates. */
+  mutable boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_keptTouchPointsFloatMB;
+
+  /** A selection into which to store the kept touch points in Vector3s format and voxel coordinates. */
+  Selection_Ptr m_keptTouchPointsShortMB;
+
+  /** The maximum number of touch points that we should keep in a single update (we limit this for performance reasons). */
+  size_t m_maxKeptTouchPoints;
+
   /** The picker. */
   boost::shared_ptr<const Picker> m_picker;
-
-  /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
-  mutable boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;
-
-  /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
-  Selection_Ptr m_pickPointShortMB;
-
-  /** Whether or not the most recent update operation returned at least one valid pick point. */
-  bool m_pickPointValid;
-
-  /** The maximum number of pick-points allowed. */
-  int m_maximumValidPickPoints;
-
-  /** The number of valid pick-points. */
-  int m_numberOfValidPickPoints;
 
   /** The touch detector. */
   TouchDetector_Ptr m_touchDetector;
 
-  /** The traching state. */
+  /** The tracking state. */
   TrackingState_Ptr m_trackingState;
 
   /** The view. */
@@ -63,11 +61,12 @@ public:
   /*
    * \brief Constructs a touch selector.
    *
-   * \param settings       The settings to use for InfiniTAM.
-   * \param trachingState  The InfiniTAM tracking state which contains the pose5of the camera.
-   * \param view           The InfiniTAM view which contains the raw depth image.
+   * \param settings            The settings to use for InfiniTAM.
+   * \param trackingState       The InfiniTAM tracking state (contains the camera pose).
+   * \param view                The InfiniTAM view (contains the raw depth image).
+   * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view);
+  explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -75,9 +74,9 @@ public:
   virtual void accept(const SelectorVisitor& visitor) const;
 
   /**
-   * \brief Gets the positions of the touch points (if known).
+   * \brief Gets the positions of the current touch points.
    *
-   * \return The positions of the touch points (if known), or boost::none otherwise.
+   * \return The positions of the current touch points.
    */
   std::vector<Eigen::Vector3f> get_positions() const;
 
@@ -91,4 +90,3 @@ public:
 }
 
 #endif
-
