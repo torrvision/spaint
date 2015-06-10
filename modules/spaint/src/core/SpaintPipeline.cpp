@@ -247,7 +247,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelsMB, *m_sampledVoxelCountsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
-  for(int i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)
+  for(size_t i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)
   {
     std::cout << m_sampledVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
   }
