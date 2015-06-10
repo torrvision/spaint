@@ -220,7 +220,12 @@ public:
   /**
    * \brief TODO.
    */
-  static cv::Mat3b tile_images(const std::vector<cv::Mat3b>& images, int tiledWidth, int tiledHeight, size_t scaleFactor);
+  static cv::Mat3b pad_image(const cv::Mat3b& image, size_t paddingSize);
+
+  /**
+   * \brief TODO.
+   */
+  static cv::Mat3b tile_image_patches(const std::vector<cv::Mat3b>& images, size_t tiledWidth, size_t tiledHeight, size_t patchWidth, size_t patchHeight);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
