@@ -55,7 +55,7 @@ void VOPFeatureCalculator_CPU::fill_in_surface_normals(int voxelLocationCount, O
 {
   const size_t featureCount = get_feature_count();
   float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
-  Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
