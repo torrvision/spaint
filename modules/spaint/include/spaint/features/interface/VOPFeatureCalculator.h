@@ -71,7 +71,7 @@ private:
   /**
    * \brief TODO
    */
-  virtual void fill_in_surface_normals(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
+  virtual void fill_in_normal_features(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
    * \brief Generates coordinate systems in the tangent planes to the surfaces at the voxel locations.

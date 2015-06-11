@@ -34,12 +34,12 @@ __global__ void ck_convert_patches_to_lab(const int voxelLocationCount, const si
   }
 }
 
-__global__ void ck_fill_in_surface_normals(const int voxelLocationCount, const Vector3f *surfaceNormals, const size_t featureCount, float *features)
+__global__ void ck_fill_in_normal_features(const int voxelLocationCount, const Vector3f *surfaceNormals, const size_t featureCount, float *features)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelLocationIndex < voxelLocationCount)
   {
-    fill_in_surface_normal(voxelLocationIndex, surfaceNormals, featureCount, features);
+    fill_in_normal_feature(voxelLocationIndex, surfaceNormals, featureCount, features);
   }
 }
 
@@ -129,12 +129,12 @@ void VOPFeatureCalculator_CUDA::convert_patches_to_lab(int voxelLocationCount, O
 #endif
 }
 
-void VOPFeatureCalculator_CUDA::fill_in_surface_normals(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const
+void VOPFeatureCalculator_CUDA::fill_in_normal_features(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const
 {
   int threadsPerBlock = 256;
   int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
 
-  ck_fill_in_surface_normals<<<numBlocks,threadsPerBlock>>>(
+  ck_fill_in_normal_features<<<numBlocks,threadsPerBlock>>>(
     voxelLocationCount,
     m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA),
     get_feature_count(),

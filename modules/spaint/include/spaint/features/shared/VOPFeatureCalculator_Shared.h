@@ -114,15 +114,15 @@ inline void compute_histogram_for_patch(int tid, int patchSize, float *intensity
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void fill_in_surface_normal(int voxelLocationIndex, const Vector3f *surfaceNormals, size_t featureCount, float *features)
+inline void fill_in_normal_feature(int voxelLocationIndex, const Vector3f *surfaceNormals, size_t featureCount, float *features)
 {
   const Vector3f& n = surfaceNormals[voxelLocationIndex];
-  float *feature = features + voxelLocationIndex * featureCount;
+  float *featuresForVoxel = features + voxelLocationIndex * featureCount;
   size_t offset = featureCount - 4;
 
-  feature[offset] = n.x;
-  feature[offset + 1] = n.y;
-  feature[offset + 2] = n.z;
+  featuresForVoxel[offset] = n.x;
+  featuresForVoxel[offset + 1] = n.y;
+  featuresForVoxel[offset + 2] = n.z;
 }
 
 /**

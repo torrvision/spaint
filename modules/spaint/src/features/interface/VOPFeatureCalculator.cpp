@@ -70,7 +70,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
 #endif
 
   // For each feature vector, fill in the surface normal and the signed distance to the dominant horizontal surface present in the scene as extra features.
-  fill_in_surface_normals(voxelLocationCount, featuresMB);
+  fill_in_normal_features(voxelLocationCount, featuresMB);
   //TODO fill_in_signed_distance().
 }
 
