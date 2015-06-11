@@ -173,6 +173,14 @@ public:
   static cv::Mat3b make_image_rgb_cpu(const float *rgbData, int width, int height);
 
   /**
+   * \brief Makes an image with a black border around it.
+   *
+   * \param image       The image.
+   * \param paddingSize The size of the black border to be placed around the image (in pixels).
+   */
+  static cv::Mat3b pad_image(const cv::Mat& image, size_t paddingSize);
+
+  /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format and shows it in a named window.
    *
    * \param windowName  The name to give the window.
@@ -220,12 +228,12 @@ public:
   /**
    * \brief TODO.
    */
-  static cv::Mat3b pad_image(const cv::Mat3b& image, size_t paddingSize);
+  static cv::Mat3b tile_regular_image_patches(const std::vector<cv::Mat3b>& images, size_t imageWidth, size_t imageHeight, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
 
   /**
    * \brief TODO.
    */
-  static cv::Mat3b tile_image_patches(const std::vector<cv::Mat3b>& images, size_t tiledWidth, size_t tiledHeight, size_t patchWidth, size_t patchHeight);
+  static cv::Mat3b tile_regular_image_patches_within_image_bounds(const std::vector<cv::Mat3b>& images, size_t tileCols, size_t tileRows, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
