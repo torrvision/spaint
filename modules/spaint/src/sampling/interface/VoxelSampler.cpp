@@ -22,7 +22,7 @@ VoxelSampler::VoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int r
 {
   // Make sure that the dummy elements at the end of the voxel masks for the various labels are properly initialised.
   unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
-  for(int k = 1; k <= maxLabelCount; ++k)
+  for(size_t k = 1; k <= maxLabelCount; ++k)
   {
     voxelMasks[k * (raycastResultSize + 1) - 1] = 0;
   }
@@ -69,7 +69,7 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
   // Update the voxel counts for the different labels to reflect the number of voxels sampled.
   const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
-  for(int k = 0; k < m_maxLabelCount; ++k)
+  for(size_t k = 0; k < m_maxLabelCount; ++k)
   {
     if(labelMask[k])
     {
@@ -92,7 +92,7 @@ void VoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<boo
   int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
 
   // For each possible label:
-  for(int k = 0; k < m_maxLabelCount; ++k)
+  for(size_t k = 0; k < m_maxLabelCount; ++k)
   {
     // If the label is not currently in use, ignore it.
     if(!labelMask[k]) continue;

@@ -16,10 +16,17 @@ fi
 
 # Build/extract the libraries.
 cd libraries
+
 ./build-boost_1_56_0-nix.sh
 #./build-opencv-2.4.9-nix.sh
 ./build-SDL2-2.0.3-nix.sh
 ./extract-Eigen-3.2.2.sh
+
+if [ $PLATFORM == "linux" ]
+then
+  ./build-glew-1.12.0-nix.sh
+fi
+
 cd ..
 
 # Build spaint itself.

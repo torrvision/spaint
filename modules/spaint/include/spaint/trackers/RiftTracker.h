@@ -7,7 +7,7 @@
 
 #include <ITMLib/Engine/ITMTracker.h>
 
-#include <OVR.h>
+#include <OVR_CAPI.h>
 
 namespace spaint {
 

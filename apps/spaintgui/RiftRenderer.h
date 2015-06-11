@@ -7,11 +7,11 @@
 
 #include <string>
 
-#include <OVR.h>
+#include <OVR_CAPI.h>
 
 #include <rigging/CompositeCamera.h>
 
-#include <spaint/ogl/WrappedGL.h>
+#include <spaint/ogl/FrameBuffer.h>
 
 #include "Renderer.h"
 
@@ -36,11 +36,8 @@ private:
   /** The camera from which to render the scene. */
   rigging::CompositeCamera_Ptr m_camera;
 
-  /** The images in which to store the eye textures each frame. */
-  ITMUChar4Image_Ptr m_eyeImages[ovrEye_Count];
-
-  /** The eye texture IDs. */
-  GLuint m_eyeTextureIDs[ovrEye_Count];
+  /** The eye frame buffers. */
+  spaint::FrameBuffer_CPtr m_eyeFrameBuffers[ovrEye_Count];
 
   /** The Rift handle. */
   ovrHmd m_hmd;
@@ -53,12 +50,12 @@ public:
   /**
    * \brief Constructs a Rift renderer.
    *
+   * \param title         The title of the window.
    * \param model         The spaint model.
    * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param title         The title to give the window.
    * \param renderingMode The rendering mode to use.
    */
-  RiftRenderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, const std::string& title, RiftRenderingMode renderingMode);
+  RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

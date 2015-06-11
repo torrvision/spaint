@@ -31,8 +31,7 @@ using namespace tvgutil;
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 : m_commandManager(10), m_spaintPipeline(spaintPipeline)
 {
-  const Vector2i& imgSize = spaintPipeline->get_model()->get_depth_image_size();
-  m_renderer.reset(new WindowedRenderer(spaintPipeline->get_model(), spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", spaintPipeline->get_model(), spaintPipeline->get_raycaster()));
 
   // Set up the semantic labels.
   const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
@@ -128,6 +127,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
+              << "I + 4 = To Touch Selector\n"
               << "M + 1 = To Normal Mode\n"
               << "M + 2 = To Training Mode\n"
               << "M + 3 = To Prediction Mode\n"
@@ -373,8 +373,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(SDLK_1))
       {
-        const Vector2i& imgSize = m_spaintPipeline->get_model()->get_depth_image_size();
-        m_renderer.reset(new WindowedRenderer(m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster(), "Semantic Paint", imgSize.width, imgSize.height));
+        m_renderer.reset(new WindowedRenderer("Semantic Paint", m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster()));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
@@ -383,14 +382,17 @@ void Application::process_renderer_input()
         try
         {
           m_renderer.reset(new RiftRenderer(
+            "Semantic Paint",
             m_spaintPipeline->get_model(),
             m_spaintPipeline->get_raycaster(),
-            "Semantic Paint",
             m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
           ));
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
-        catch(std::runtime_error&) {}
+        catch(std::runtime_error& e)
+        {
+          std::cerr << e.what() << '\n';
+        }
 #endif
       }
     }

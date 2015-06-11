@@ -14,6 +14,9 @@ class LeapSelector;
 #endif
 class NullSelector;
 class PickingSelector;
+#ifdef WITH_ARRAYFIRE
+class TouchSelector;
+#endif
 
 /**
  * \brief An instance of a class deriving from this one can be used to visit selectors (e.g. for the purpose of rendering them).
@@ -51,6 +54,15 @@ public:
    * \param selector  The selector to visit.
    */
   virtual void visit(const PickingSelector& selector) const;
+
+#ifdef WITH_ARRAYFIRE
+  /**
+   * \brief Visits a touch selector.
+   *
+   * \param selector  The selector to visit.
+   */
+  virtual void visit(const TouchSelector& selector) const;
+#endif
 };
 
 }

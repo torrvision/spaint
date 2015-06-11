@@ -12,9 +12,11 @@ SET(targetname spaint)
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
@@ -54,6 +56,38 @@ include/spaint/input/MouseButton.h
 )
 
 ##
+SET(imageprocessing_cpu_sources
+src/imageprocessing/cpu/ImageProcessor_CPU.cpp
+)
+
+SET(imageprocessing_cpu_headers
+include/spaint/imageprocessing/cpu/ImageProcessor_CPU.h
+)
+
+##
+SET(imageprocessing_cuda_sources
+src/imageprocessing/cuda/ImageProcessor_CUDA.cu
+)
+
+SET(imageprocessing_cuda_headers
+include/spaint/imageprocessing/cuda/ImageProcessor_CUDA.h
+)
+
+##
+SET(imageprocessing_interface_sources
+src/imageprocessing/interface/ImageProcessor.cpp
+)
+
+SET(imageprocessing_interface_headers
+include/spaint/imageprocessing/interface/ImageProcessor.h
+)
+
+##
+SET(imageprocessing_shared_headers
+include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
+)
+
+##
 SET(markers_cpu_sources
 src/markers/cpu/VoxelMarker_CPU.cpp
 )
@@ -82,11 +116,22 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 )
 
 ##
+SET(ocv_sources
+src/ocv/OpenCVUtil.cpp
+)
+
+SET(ocv_headers
+include/spaint/ocv/OpenCVUtil.h
+)
+
+##
 SET(ogl_sources
+src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
 )
@@ -224,6 +269,20 @@ IF(WITH_LEAP)
   SET(selectors_headers ${selectors_headers} include/spaint/selectors/LeapSelector.h)
 ENDIF()
 
+IF(WITH_ARRAYFIRE)
+  SET(selectors_sources ${selectors_sources} src/selectors/TouchSelector.cpp)
+  SET(selectors_headers ${selectors_headers} include/spaint/selectors/TouchSelector.h)
+ENDIF()
+
+##
+SET(touch_sources
+src/touch/TouchDetector.cpp
+)
+
+SET(touch_headers
+include/spaint/touch/TouchDetector.h
+)
+
 ##
 SET(trackers_sources)
 SET(trackers_headers)
@@ -254,19 +313,23 @@ include/spaint/util/SpaintVoxel.h
 
 ##
 SET(visualisers_cpu_sources
+src/visualisers/cpu/DepthVisualiser_CPU.cpp
 src/visualisers/cpu/SemanticVisualiser_CPU.cpp
 )
 
 SET(visualisers_cpu_headers
+include/spaint/visualisers/cpu/DepthVisualiser_CPU.h
 include/spaint/visualisers/cpu/SemanticVisualiser_CPU.h
 )
 
 ##
 SET(visualisers_cuda_sources
+src/visualisers/cuda/DepthVisualiser_CUDA.cu
 src/visualisers/cuda/SemanticVisualiser_CUDA.cu
 )
 
 SET(visualisers_cuda_headers
+include/spaint/visualisers/cuda/DepthVisualiser_CUDA.h
 include/spaint/visualisers/cuda/SemanticVisualiser_CUDA.h
 )
 
@@ -276,11 +339,13 @@ src/visualisers/interface/SemanticVisualiser.cpp
 )
 
 SET(visualisers_interface_headers
+include/spaint/visualisers/interface/DepthVisualiser.h
 include/spaint/visualisers/interface/SemanticVisualiser.h
 )
 
 ##
 SET(visualisers_shared_headers
+include/spaint/visualisers/shared/DepthVisualiser_Shared.h
 include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 )
 
@@ -333,6 +398,20 @@ ${visualisers_interface_headers}
 ${visualisers_shared_headers}
 )
 
+IF(WITH_ARRAYFIRE)
+  SET(sources ${sources}
+    ${imageprocessing_cpu_sources}
+    ${imageprocessing_interface_sources}
+    ${touch_sources}
+  )
+  SET(headers ${headers}
+    ${imageprocessing_cpu_headers}
+    ${imageprocessing_interface_headers}
+    ${imageprocessing_shared_headers}
+    ${touch_headers}
+  )
+ENDIF()
+
 IF(WITH_CUDA)
   SET(sources ${sources}
     ${markers_cuda_sources}
@@ -349,6 +428,16 @@ IF(WITH_CUDA)
     ${selectiontransformers_cuda_headers}
     ${visualisers_cuda_headers}
   )
+
+  IF(WITH_ARRAYFIRE)
+    SET(sources ${sources} ${imageprocessing_cuda_sources})
+    SET(headers ${headers} ${imageprocessing_cuda_headers})
+  ENDIF()
+ENDIF()
+
+IF(WITH_OPENCV)
+  SET(sources ${sources} ${ocv_sources})
+  SET(headers ${headers} ${ocv_headers})
 ENDIF()
 
 #############################
@@ -356,11 +445,16 @@ ENDIF()
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
+SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
+SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
+SOURCE_GROUP(imageprocessing\\shared FILES ${imageprocessing_shared_headers})
 SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
+SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
@@ -377,6 +471,7 @@ SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sour
 SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_sources} ${selectiontransformers_interface_headers})
 SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
 SOURCE_GROUP(selectors FILES ${selectors_sources} ${selectors_headers})
+SOURCE_GROUP(touch FILES ${touch_sources} ${touch_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 SOURCE_GROUP(visualisers\\cpu FILES ${visualisers_cpu_sources} ${visualisers_cpu_headers})
@@ -392,7 +487,6 @@ INCLUDE_DIRECTORIES(include/spaint)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
-#INCLUDE_DIRECTORIES(SYSTEM ${PROJECT_SOURCE_DIR}/helpers)
 
 ##########################################
 # Specify the target and where to put it #

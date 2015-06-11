@@ -6,6 +6,8 @@
 
 #include <stdexcept>
 
+#include <Extras/OVR_Math.h>
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################

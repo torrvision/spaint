@@ -6,11 +6,15 @@
 #include <iostream>
 #include <string>
 
+#ifdef WITH_ARRAYFIRE
+  #include <arrayfire.h>
+#endif
+
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
 
 #ifdef WITH_OVR
-#include <OVR.h>
+#include <OVR_CAPI.h>
 #endif
 
 #include <SDL.h>
@@ -37,6 +41,14 @@ try
   {
     quit("Error: Failed to initialise SDL.");
   }
+
+#ifdef WITH_ARRAYFIRE
+  // Choose a device for ArrayFire.
+  if(af::getDeviceCount() > 1)
+  {
+    af::setDevice(1);
+  }
+#endif
 
 #ifdef WITH_OVR
   // If we built with Rift support, initialise the Rift SDK.

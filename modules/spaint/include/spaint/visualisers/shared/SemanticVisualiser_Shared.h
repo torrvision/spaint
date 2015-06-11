@@ -15,7 +15,7 @@ namespace spaint {
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
- * \brief Computes the necessary colour for a pixel in a semantic visualiation of the scene.
+ * \brief Computes the colour for a pixel in a semantic visualisation of the scene.
  *
  * This function is roughly analogous to a pixel shader.
  *

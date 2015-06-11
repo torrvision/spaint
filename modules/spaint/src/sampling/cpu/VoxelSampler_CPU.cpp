@@ -24,13 +24,13 @@ void VoxelSampler_CPU::calculate_voxel_mask_prefix_sums(const ORUtils::MemoryBlo
 
   // For each possible label:
   const int stride = m_raycastResultSize + 1;
-  for(int k = 0; k < m_maxLabelCount; ++k)
+  for(size_t k = 0; k < m_maxLabelCount; ++k)
   {
     // If the label is not currently in use, continue.
     if(!labelMask[k]) continue;
 
     // Calculate the prefix sum of the voxel mask.
-    const int offset = k * stride;
+    const size_t offset = k * stride;
     voxelMaskPrefixSums[offset] = 0;
     for(int i = 1; i < stride; ++i)
     {
@@ -73,7 +73,7 @@ void VoxelSampler_CPU::write_candidate_voxel_counts(const ORUtils::MemoryBlock<b
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int k = 0; k < m_maxLabelCount; ++k)
+  for(int k = 0; k < static_cast<int>(m_maxLabelCount); ++k)
   {
     write_candidate_voxel_count(k, m_raycastResultSize, labelMask, voxelMaskPrefixSums, voxelCountsForLabels);
   }
@@ -113,7 +113,7 @@ void VoxelSampler_CPU::write_sampled_voxel_locations(const ORUtils::MemoryBlock<
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int voxelIndex = 0; voxelIndex < m_maxVoxelsPerLabel; ++voxelIndex)
+  for(int voxelIndex = 0; voxelIndex < static_cast<int>(m_maxVoxelsPerLabel); ++voxelIndex)
   {
     copy_sampled_voxel_locations(
       voxelIndex,
