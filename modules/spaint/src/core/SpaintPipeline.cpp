@@ -274,21 +274,20 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
 
-  // Sample
+  // Sample some voxels for which to predict labels.
   const int voxelsToSample = 1024;
-
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, voxelsToSample, *m_sampledVoxelLocationsMB);
 
   // FIXME Pass in the number of locations from which to calculate features.
+  // Calculate feature descriptors for the voxels.
   m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
-
-  // Make the descriptors to pass to the forest.
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(
     *m_featuresMB,
     voxelsToSample,
     m_featureCalculator->get_feature_count()
   );
 
+  // Predict labels for the voxels based on the feature descriptors.
   boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::LabelType> > labelsMB(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(voxelsToSample, true, true));
   SpaintVoxel::LabelType *labels = labelsMB->GetData(MEMORYDEVICE_CPU);
 
@@ -301,6 +300,8 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   }
 
   labelsMB->UpdateDeviceFromHost();
+
+  // Mark the voxels with their predicted labels.
   m_interactor->mark_voxels(m_sampledVoxelLocationsMB, labelsMB);
 }
 
