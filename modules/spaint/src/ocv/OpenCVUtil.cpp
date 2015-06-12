@@ -4,6 +4,8 @@
 
 #include "ocv/OpenCVUtil.h"
 
+#include <stdexcept>
+
 namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
