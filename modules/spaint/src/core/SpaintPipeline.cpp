@@ -289,15 +289,19 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
     m_featureCalculator->get_feature_count()
   );
 
-  std::vector<SpaintVoxel::LabelType> predictedLabels(voxelsToSample);
+  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::LabelType> > labelsMB(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(voxelsToSample, true, true));
+  SpaintVoxel::LabelType *labels = labelsMB->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int i = 0; i < static_cast<int>(voxelsToSample); ++i)
   {
-    predictedLabels[i] = m_forest->predict(descriptors[i]);
+    labels[i] = m_forest->predict(descriptors[i]);
   }
+
+  labelsMB->UpdateDeviceFromHost();
+  m_interactor->mark_voxels(m_sampledVoxelLocationsMB, labelsMB);
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
