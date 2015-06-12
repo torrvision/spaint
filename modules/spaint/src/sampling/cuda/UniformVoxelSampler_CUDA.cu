@@ -19,6 +19,12 @@ __global__ void ck_write_sampled_voxel_locations(size_t voxelsToSample, const Ve
   }
 }
 
+//#################### CONSTRUCTORS ####################
+
+UniformVoxelSampler_CUDA::UniformVoxelSampler_CUDA(int raycastResultSize, unsigned int seed)
+: UniformVoxelSampler(raycastResultSize, seed)
+{}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void UniformVoxelSampler_CUDA::write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t voxelsToSample,

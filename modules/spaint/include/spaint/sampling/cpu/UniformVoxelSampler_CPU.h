@@ -14,6 +14,13 @@ namespace spaint {
  */
 class UniformVoxelSampler_CPU : public UniformVoxelSampler
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  UniformVoxelSampler_CPU(int raycastResultSize, unsigned int seed);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */

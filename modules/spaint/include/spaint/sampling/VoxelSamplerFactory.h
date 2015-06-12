@@ -7,6 +7,7 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include "interface/UniformVoxelSampler.h"
 #include "interface/VoxelSampler.h"
 
 namespace spaint {
@@ -18,6 +19,15 @@ class VoxelSamplerFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Makes a uniform voxel sampler.
+   *
+   * \param raycastResultSize The size of the raycast result (in pixels).
+   * \param seed              The seed for the random number generator.
+   * \param deviceType        The device on which the sampler should operate.
+   */
+  static UniformVoxelSampler_CPtr make_uniform_sampler(int raycastResultSize, unsigned int seed, ITMLibSettings::DeviceType deviceType);
+
   /**
    * \brief Makes a voxel sampler.
    *

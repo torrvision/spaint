@@ -9,7 +9,7 @@
 
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "util/SpaintVoxel.h"
+#include "../../util/SpaintVoxel.h"
 
 namespace tvgutil {
 
@@ -38,7 +38,7 @@ protected:
   mutable ORUtils::MemoryBlock<int> m_sampledVoxelIndicesMB;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief TODO
    *
@@ -79,10 +79,12 @@ private:
   /**
    * \brief TODO
    */
-  void choose_voxels_to_sample(size_t maxVoxelsToSample, size_t raycastResultSize) const;
+  void choose_voxels_to_sample(size_t maxVoxelsToSample) const;
 };
 
+//#################### TYPEDEFS ####################
 
+typedef boost::shared_ptr<const UniformVoxelSampler> UniformVoxelSampler_CPtr;
 
 }
 

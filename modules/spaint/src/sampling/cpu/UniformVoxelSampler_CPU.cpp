@@ -8,6 +8,12 @@
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+UniformVoxelSampler_CPU::UniformVoxelSampler_CPU(int raycastResultSize, unsigned int seed)
+: UniformVoxelSampler(raycastResultSize, seed)
+{}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void UniformVoxelSampler_CPU::write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t voxelsToSample,

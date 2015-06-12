@@ -14,6 +14,7 @@
 #include "SpaintRaycaster.h"
 
 #include "../features/interface/FeatureCalculator.h"
+#include "../sampling/interface/UniformVoxelSampler.h"
 #include "../sampling/interface/VoxelSampler.h"
 
 #ifdef WITH_VICON
@@ -115,6 +116,9 @@ private:
 
   /** The spaint model. */
   SpaintModel_Ptr m_model;
+
+  /** The voxel sampler used in prediction mode. */
+  UniformVoxelSampler_CPtr m_predictionSampler;
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   SpaintRaycaster_Ptr m_raycaster;

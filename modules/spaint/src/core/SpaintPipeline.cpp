@@ -213,12 +213,14 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
 
-  // Set up the voxel sampler.
+  // Set up the voxel samplers.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t maxVoxelsPerLabel = 128;
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   const unsigned int seed = 12345;
-  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, depthImageSize.width * depthImageSize.height, seed, settings->deviceType);
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+  m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
