@@ -233,7 +233,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   DecisionTree<SpaintVoxel::LabelType>::Settings dtSettings;
   dtSettings.candidateCount = 256;
   dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(patchSize));
-  // TODO
+  dtSettings.gainThreshold = 0.0f;
+  dtSettings.maxClassSize = 1000;
+  dtSettings.maxTreeHeight = 20;
+  dtSettings.randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(seed));
+  dtSettings.seenExamplesThreshold = 50;
+  dtSettings.splittabilityThreshold = 0.8f;
+  dtSettings.usePMFReweighting = true;
   m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
 
   m_featuresMB.reset(new ORUtils::MemoryBlock<float>(maxVoxelLocationCount * m_featureCalculator->get_feature_count(), true, true));
@@ -303,6 +309,10 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
     128, // TODO: maxVoxelsPerLabel
     maxLabelCount
   );
+
+  // Train the forest.
+  m_forest->add_examples(examples);
+  m_forest->train(examples.size());
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
