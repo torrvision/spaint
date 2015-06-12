@@ -25,7 +25,7 @@ UniformVoxelSampler::~UniformVoxelSampler() {}
 void UniformVoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, size_t voxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   // Choose which voxels to sample from the raycast result.
-  choose_voxels_to_sample(voxelsToSample);
+  choose_voxels_to_sample(voxelsToSample, raycastResult->dataSize);
 
   // Write the sampled voxel locations into the sampled voxel locations array.
   write_sampled_voxel_locations(raycastResult, voxelsToSample, sampledVoxelLocationsMB);
@@ -33,9 +33,15 @@ void UniformVoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, siz
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void UniformVoxelSampler::choose_voxels_to_sample(size_t voxelsToSample) const
+void UniformVoxelSampler::choose_voxels_to_sample(size_t voxelsToSample, size_t raycastResultSize) const
 {
-  // TODO
+  int *sampledVoxelIndices = m_sampledVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  for(size_t i = 0; i < voxelsToSample; ++i)
+  {
+    sampledVoxelIndices[i] = m_rng->generate_int_from_uniform(0, static_cast<int>(raycastResultSize) - 1);
+  }
+
+  m_sampledVoxelIndicesMB.UpdateDeviceFromHost();
 }
 
 }

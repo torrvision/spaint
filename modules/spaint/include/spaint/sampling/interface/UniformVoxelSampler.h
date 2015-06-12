@@ -79,7 +79,7 @@ private:
   /**
    * \brief TODO
    */
-  void choose_voxels_to_sample(size_t maxVoxelsToSample) const;
+  void choose_voxels_to_sample(size_t maxVoxelsToSample, size_t raycastResultSize) const;
 };
 
 
