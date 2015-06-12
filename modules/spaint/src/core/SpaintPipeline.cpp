@@ -128,7 +128,7 @@ void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& samplingR
   switch(m_mode)
   {
     case MODE_PREDICTION:
-      // TODO
+      run_prediction_section(samplingRenderState);
       break;
     case MODE_TRAINING:
       run_training_section(samplingRenderState);
@@ -267,6 +267,37 @@ ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, cons
     ), 1
   );
   return compositeTracker;
+}
+
+void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
+{
+  // If we haven't been provided with a camera position from which to sample, early out.
+  if(!samplingRenderState) return;
+
+  // Sample
+  const int voxelsToSample = 128;
+
+  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, voxelsToSample, *m_sampledVoxelLocationsMB);
+
+  // FIXME Pass in the number of locations from which to calculate features.
+  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
+
+  // Make the descriptors to pass to the forest.
+  std::vector<Descriptor_CPtr> descriptors = ExampleBuilder<SpaintVoxel::LabelType>::make_descriptors(
+    *m_featuresMB,
+    voxelsToSample,
+    m_featureCalculator->get_feature_count()
+  );
+
+  std::vector<SpaintVoxel::LabelType> predictedLabels(voxelsToSample);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < static_cast<int>(voxelsToSample); ++i)
+  {
+    predictedLabels[i] = m_forest->predict(descriptors[i]);
+  }
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

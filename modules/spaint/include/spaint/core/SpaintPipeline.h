@@ -284,6 +284,13 @@ private:
   ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
 
   /**
+   * \brief Runs the section of the pipeline associated with prediction mode.
+   *
+   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_prediction_section(const RenderState_CPtr& samplingRenderState);
+
+  /**
    * \brief Runs the section of the pipeline associated with training mode.
    *
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
