@@ -275,7 +275,7 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   if(!samplingRenderState) return;
 
   // Sample
-  const int voxelsToSample = 128;
+  const int voxelsToSample = 1024;
 
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, voxelsToSample, *m_sampledVoxelLocationsMB);
 
