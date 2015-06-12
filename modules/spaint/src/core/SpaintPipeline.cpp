@@ -15,6 +15,7 @@ using namespace rafl;
 using namespace InfiniTAM::Engine;
 
 #include "features/FeatureCalculatorFactory.h"
+#include "randomforest/ExampleBuilder.h"
 #include "sampling/VoxelSamplerFactory.h"
 #include "util/SpaintDecisionFunctionGenerator.h"
 
@@ -292,6 +293,16 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   // Compute feature vectors for the sampled voxels.
   m_sampledVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
   m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
+
+  // Make the training examples.
+  typedef boost::shared_ptr<const Example<SpaintVoxel::LabelType> > Example_CPtr;
+  std::vector<Example_CPtr> examples = ExampleBuilder<SpaintVoxel::LabelType>::make_examples(
+    *m_featuresMB,
+    *m_sampledVoxelCountsMB,
+    m_featureCalculator->get_feature_count(),
+    128, // TODO: maxVoxelsPerLabel
+    maxLabelCount
+  );
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
