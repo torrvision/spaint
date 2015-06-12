@@ -7,8 +7,6 @@
 
 #include "FeatureCalculator.h"
 
-#define DEBUG_FEATURE_DISPLAY
-
 namespace spaint {
 
 /**
@@ -60,18 +58,15 @@ private:
    * \param voxelLocationsMB  A memory block containing the locations of the voxels for which to calculate the surface normals.
    * \param voxelData         The scene's voxel data.
    * \param indexData         The scene's index data.
+   * \param featuresMB        A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
-  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const = 0;
+  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                         ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
    * \brief TODO
    */
   virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual void fill_in_normal_features(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
    * \brief Generates coordinate systems in the tangent planes to the surfaces at the voxel locations.
@@ -104,7 +99,6 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-#if defined(WITH_OPENCV) && defined(DEBUG_FEATURE_DISPLAY)
   /**
    * \brief TODO.
    */
@@ -114,7 +108,6 @@ private:
    * \brief Sets up a debugging window containing a trackbar that can be used to control the delay between consecutive frames.
    */
   void process_debug_windows() const;
-#endif
 };
 
 }

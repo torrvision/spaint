@@ -266,9 +266,19 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
  */
 _CPU_AND_GPU_CODE_
 inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                 Vector3f *surfaceNormals)
+                                 Vector3f *surfaceNormals, size_t featureCount, float *features)
 {
-  surfaceNormals[voxelLocationIndex] = computeSingleNormalFromSDF(voxelData, indexData, voxelLocations[voxelLocationIndex].toFloat());
+  // Compute the voxel's surface normal.
+  Vector3f n = computeSingleNormalFromSDF(voxelData, indexData, voxelLocations[voxelLocationIndex].toFloat());
+
+  // Write the normal into the surface normals array to make debugging easier.
+  surfaceNormals[voxelLocationIndex] = n;
+
+  // Write the normal into the feature vector for the voxel.
+  float *normalFeaturesForVoxel = features + (voxelLocationIndex + 1) * featureCount - 4;
+  *normalFeaturesForVoxel++ = n.x;
+  *normalFeaturesForVoxel++ = n.y;
+  *normalFeaturesForVoxel++ = n.z;
 }
 
 }

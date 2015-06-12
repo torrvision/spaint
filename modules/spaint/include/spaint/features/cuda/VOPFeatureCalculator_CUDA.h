@@ -27,13 +27,11 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const;
+  virtual void calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                         ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */
   virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const;
-
-  /** Override */
-  virtual void fill_in_normal_features(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */
   virtual void generate_coordinate_systems(int voxelLocationCount) const;

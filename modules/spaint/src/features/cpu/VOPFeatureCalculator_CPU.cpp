@@ -22,8 +22,11 @@ VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(size_t maxVoxelLocationCount,
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                                         const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData) const
+                                                         const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                                         ORUtils::MemoryBlock<float>& featuresMB) const
 {
+  const size_t featureCount = get_feature_count();
+  float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
   Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
@@ -33,7 +36,7 @@ void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBl
 #endif
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {
-    write_surface_normal(voxelLocationIndex, voxelLocations, voxelData, indexData, surfaceNormals);
+    write_surface_normal(voxelLocationIndex, voxelLocations, voxelData, indexData, surfaceNormals, featureCount, features);
   }
 }
 
@@ -48,21 +51,6 @@ void VOPFeatureCalculator_CPU::convert_patches_to_lab(int voxelLocationCount, OR
   for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
   {
     convert_patch_to_lab(voxelLocationIndex, featureCount, features);
-  }
-}
-
-void VOPFeatureCalculator_CPU::fill_in_normal_features(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const
-{
-  const size_t featureCount = get_feature_count();
-  float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
-  const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int voxelLocationIndex = 0; voxelLocationIndex < voxelLocationCount; ++voxelLocationIndex)
-  {
-    fill_in_normal_feature(voxelLocationIndex, surfaceNormals, featureCount, features);
   }
 }
 
