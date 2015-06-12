@@ -279,6 +279,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   m_interactor->mark_voxels(m_sampledVoxelLocationsMB, 0);
 
   // Compute feature vectors for the sampled voxels.
+  m_sampledVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
   m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
 }
 

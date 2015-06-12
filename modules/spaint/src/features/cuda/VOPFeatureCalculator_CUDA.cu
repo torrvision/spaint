@@ -34,6 +34,15 @@ __global__ void ck_convert_patches_to_lab(const int voxelLocationCount, const si
   }
 }
 
+__global__ void ck_fill_in_heights(const Vector3s *voxelLocations, int voxelLocationCount, size_t featureCount, float *features)
+{
+  int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
+  if(voxelLocationIndex < voxelLocationCount)
+  {
+    fill_in_height(voxelLocationIndex, voxelLocations, featureCount, features);
+  }
+}
+
 __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, const int voxelLocationCount, Vector3f *xAxes, Vector3f *yAxes)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
@@ -119,7 +128,26 @@ void VOPFeatureCalculator_CUDA::convert_patches_to_lab(int voxelLocationCount, O
     featuresMB.GetData(MEMORYDEVICE_CUDA)
   );
 
-#ifdef DEBUGGING
+#if DEBUGGING
+  featuresMB.UpdateHostFromDevice();
+#endif
+}
+
+void VOPFeatureCalculator_CUDA::fill_in_heights(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<float>& featuresMB) const
+{
+  const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
+
+  int threadsPerBlock = 256;
+  int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
+
+  ck_fill_in_heights<<<numBlocks,threadsPerBlock>>>(
+    voxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
+    voxelLocationCount,
+    get_feature_count(),
+    featuresMB.GetData(MEMORYDEVICE_CUDA)
+  );
+
+#if DEBUGGING
   featuresMB.UpdateHostFromDevice();
 #endif
 }

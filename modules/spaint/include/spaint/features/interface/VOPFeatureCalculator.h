@@ -69,6 +69,14 @@ private:
   virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
+   * \brief Write the height of each voxel into the corresponding feature vector for use as an extra feature.
+   *
+   * \param voxelLocations  A memory block containing the locations of the voxels for which to fill in heights.
+   * \param featuresMB      A memory block into which to store the calculated feature descriptors (packed sequentially).
+   */
+  virtual void fill_in_heights(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
+
+  /**
    * \brief Generates coordinate systems in the tangent planes to the surfaces at the voxel locations.
    *
    * \param voxelLocationCount  The number of voxel locations for which we are calculating features.

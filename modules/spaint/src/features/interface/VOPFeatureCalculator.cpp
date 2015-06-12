@@ -71,14 +71,14 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   debug_display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After LAB Conversion");
 #endif
 
-  // For each feature vector, fill in the surface normal and the signed distance to the dominant horizontal surface present in the scene as extra features.
-  //TODO fill_in_signed_distance().
+  // For each feature vector, fill in the height of the corresponding voxel in the scene as an extra feature.
+  fill_in_heights(voxelLocationsMB, featuresMB);
 }
 
 size_t VOPFeatureCalculator::get_feature_count() const
 {
   // A feature vector consists of a patch of CIELab colour values, the surface normal,
-  // and the signed distance to the dominant horizontal surface present in the scene.
+  // and the height of the voxel in the scene.
   return m_patchSize * m_patchSize * 3 + 3 + 1;
 }
 

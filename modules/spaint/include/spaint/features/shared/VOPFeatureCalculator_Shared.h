@@ -179,6 +179,15 @@ inline void compute_intensities_for_patch(int tid, const float *features, int fe
 }
 
 /**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void fill_in_height(int voxelLocationIndex, const Vector3s *voxelLocations, size_t featureCount, float *features)
+{
+  features[(voxelLocationIndex + 1) * featureCount - 1] = voxelLocations[voxelLocationIndex].y;
+}
+
+/**
  * \brief Generates a unit vector that is perpendicular to the specified plane normal.
  *
  * The vector generated will be the normalised cross product of the specified plane normal and another vector
