@@ -15,7 +15,7 @@ using namespace rafl;
 using namespace InfiniTAM::Engine;
 
 #include "features/FeatureCalculatorFactory.h"
-#include "randomforest/ExampleBuilder.h"
+#include "randomforest/ForestUtil.h"
 #include "sampling/VoxelSamplerFactory.h"
 #include "util/SpaintDecisionFunctionGenerator.h"
 
@@ -283,7 +283,7 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
 
   // Make the descriptors to pass to the forest.
-  std::vector<Descriptor_CPtr> descriptors = ExampleBuilder<SpaintVoxel::LabelType>::make_descriptors(
+  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(
     *m_featuresMB,
     voxelsToSample,
     m_featureCalculator->get_feature_count()
@@ -341,7 +341,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::LabelType> > Example_CPtr;
-  std::vector<Example_CPtr> examples = ExampleBuilder<SpaintVoxel::LabelType>::make_examples(
+  std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::LabelType>(
     *m_featuresMB,
     *m_sampledVoxelCountsMB,
     m_featureCalculator->get_feature_count(),

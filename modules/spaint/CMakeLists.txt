@@ -207,8 +207,12 @@ include/spaint/picking/shared/Picker_Shared.h
 )
 
 ##
+SET(randomforest_sources
+src/randomforest/ForestUtil.cpp
+)
+
 SET(randomforest_headers
-include/spaint/randomforest/ExampleBuilder.h
+include/spaint/randomforest/ForestUtil.h
 )
 
 ##
@@ -416,6 +420,7 @@ ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
+${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
@@ -529,7 +534,7 @@ SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
-SOURCE_GROUP(randomforest FILES ${randomforest_headers})
+SOURCE_GROUP(randomforest FILES ${randomforest_sources} ${randomforest_headers})
 SOURCE_GROUP(sampling FILES ${sampling_sources} ${sampling_headers})
 SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers})
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
