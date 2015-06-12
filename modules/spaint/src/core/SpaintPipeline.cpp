@@ -293,8 +293,10 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   }
   std::cout << '\n';
 
+#if 0
   // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
   m_interactor->mark_voxels(m_sampledVoxelLocationsMB, 0);
+#endif
 
   // Compute feature vectors for the sampled voxels.
   m_sampledVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
