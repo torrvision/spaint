@@ -1,8 +1,8 @@
 /**
- * spaint: VoxelSampler_CUDA.cu
+ * spaint: PerLabelVoxelSampler_CUDA.cu
  */
 
-#include "sampling/cuda/VoxelSampler_CUDA.h"
+#include "sampling/cuda/PerLabelVoxelSampler_CUDA.h"
 
 #include <cassert>
 
@@ -19,7 +19,7 @@
   #pragma warning(default:4267)
 #endif
 
-#include "sampling/shared/VoxelSampler_Shared.h"
+#include "sampling/shared/PerLabelVoxelSampler_Shared.h"
 
 #define DEBUGGING 0
 

@@ -226,41 +226,41 @@ include/spaint/sampling/VoxelSamplerFactory.h
 
 ##
 SET(sampling_cpu_sources
+src/sampling/cpu/PerLabelVoxelSampler_CPU.cpp
 src/sampling/cpu/UniformVoxelSampler_CPU.cpp
-src/sampling/cpu/VoxelSampler_CPU.cpp
 )
 
 SET(sampling_cpu_headers
+include/spaint/sampling/cpu/PerLabelVoxelSampler_CPU.h
 include/spaint/sampling/cpu/UniformVoxelSampler_CPU.h
-include/spaint/sampling/cpu/VoxelSampler_CPU.h
 )
 
 ##
 SET(sampling_cuda_sources
+src/sampling/cuda/PerLabelVoxelSampler_CUDA.cu
 src/sampling/cuda/UniformVoxelSampler_CUDA.cu
-src/sampling/cuda/VoxelSampler_CUDA.cu
 )
 
 SET(sampling_cuda_headers
+include/spaint/sampling/cuda/PerLabelVoxelSampler_CUDA.h
 include/spaint/sampling/cuda/UniformVoxelSampler_CUDA.h
-include/spaint/sampling/cuda/VoxelSampler_CUDA.h
 )
 
 ##
 SET(sampling_interface_sources
+src/sampling/interface/PerLabelVoxelSampler.cpp
 src/sampling/interface/UniformVoxelSampler.cpp
-src/sampling/interface/VoxelSampler.cpp
 )
 
 SET(sampling_interface_headers
+include/spaint/sampling/interface/PerLabelVoxelSampler.h
 include/spaint/sampling/interface/UniformVoxelSampler.h
-include/spaint/sampling/interface/VoxelSampler.h
 )
 
 ##
 SET(sampling_shared_headers
+include/spaint/sampling/shared/PerLabelVoxelSampler_Shared.h
 include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
-include/spaint/sampling/shared/VoxelSampler_Shared.h
 )
 
 ##

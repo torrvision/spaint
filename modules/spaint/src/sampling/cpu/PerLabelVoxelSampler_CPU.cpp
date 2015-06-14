@@ -1,10 +1,10 @@
 /**
- * spaint: VoxelSampler_CPU.cpp
+ * spaint: PerLabelVoxelSampler_CPU.cpp
  */
 
-#include "sampling/cpu/VoxelSampler_CPU.h"
+#include "sampling/cpu/PerLabelVoxelSampler_CPU.h"
 
-#include "sampling/shared/VoxelSampler_Shared.h"
+#include "sampling/shared/PerLabelVoxelSampler_Shared.h"
 
 namespace spaint {
 

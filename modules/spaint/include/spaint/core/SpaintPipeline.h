@@ -14,8 +14,8 @@
 #include "SpaintRaycaster.h"
 
 #include "../features/interface/FeatureCalculator.h"
+#include "../sampling/interface/PerLabelVoxelSampler.h"
 #include "../sampling/interface/UniformVoxelSampler.h"
-#include "../sampling/interface/VoxelSampler.h"
 
 #ifdef WITH_VICON
 #include "../trackers/ViconTracker.h"

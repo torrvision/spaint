@@ -219,7 +219,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   const unsigned int seed = 12345;
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_voxelSampler = VoxelSamplerFactory::make(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+  m_voxelSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
 
   // Set up the feature calculator.

@@ -1,8 +1,8 @@
 /**
- * spaint: VoxelSampler.cpp
+ * spaint: PerLabelVoxelSampler.cpp
  */
 
-#include "sampling/interface/VoxelSampler.h"
+#include "sampling/interface/PerLabelVoxelSampler.h"
 
 #include <tvgutil/RandomNumberGenerator.h>
 
