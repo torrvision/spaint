@@ -1,9 +1,9 @@
 /**
- * spaint: VoxelSampler.h
+ * spaint: PerLabelVoxelSampler.h
  */
 
-#ifndef H_SPAINT_VOXELSAMPLER
-#define H_SPAINT_VOXELSAMPLER
+#ifndef H_SPAINT_PERLABELVOXELSAMPLER
+#define H_SPAINT_PERLABELVOXELSAMPLER
 
 #include <boost/shared_ptr.hpp>
 
@@ -24,7 +24,7 @@ namespace spaint {
 /**
  * \brief An instance of a class deriving from this one can be used to sample voxels for each currently-used label from a scene.
  */
-class VoxelSampler
+class PerLabelVoxelSampler
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
@@ -61,21 +61,21 @@ protected:
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief Constructs a voxel sampler.
+   * \brief Constructs a per-label voxel sampler.
    *
    * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  PerLabelVoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the voxel sampler.
    */
-  virtual ~VoxelSampler();
+  virtual ~PerLabelVoxelSampler();
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
@@ -148,7 +148,7 @@ private:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<const VoxelSampler> VoxelSampler_CPtr;
+typedef boost::shared_ptr<const PerLabelVoxelSampler> PerLabelVoxelSampler_CPtr;
 
 }
 

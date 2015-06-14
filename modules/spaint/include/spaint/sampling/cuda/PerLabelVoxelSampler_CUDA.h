@@ -12,19 +12,19 @@ namespace spaint {
 /**
  * \brief An instance of this class can be used to sample voxels for each currently-used label from a scene using CUDA.
  */
-class VoxelSampler_CUDA : public VoxelSampler
+class PerLabelVoxelSampler_CUDA : public PerLabelVoxelSampler
 {
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a CUDA-based voxel sampler.
+   * \brief Constructs a CUDA-based per-label voxel sampler.
    *
    * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  PerLabelVoxelSampler_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

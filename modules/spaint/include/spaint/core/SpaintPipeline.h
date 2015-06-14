@@ -147,6 +147,9 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
+  /** The voxel sampler used in training mode. */
+  PerLabelVoxelSampler_CPtr m_trainingSampler;
+
 #ifdef WITH_VICON
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
   ViconTracker *m_viconTracker;
@@ -154,9 +157,6 @@ private:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
-
-  /** The voxel sampler. */
-  VoxelSampler_CPtr m_voxelSampler;
 
   //#################### CONSTRUCTORS ####################
 public:

@@ -16,15 +16,15 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-VoxelSampler_CPtr VoxelSamplerFactory::make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed,
-                                                              ITMLibSettings::DeviceType deviceType)
+PerLabelVoxelSampler_CPtr VoxelSamplerFactory::make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed,
+                                                                      ITMLibSettings::DeviceType deviceType)
 {
-  VoxelSampler_CPtr sampler;
+  PerLabelVoxelSampler_CPtr sampler;
 
   if(deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    sampler.reset(new VoxelSampler_CUDA(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed));
+    sampler.reset(new PerLabelVoxelSampler_CUDA(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -32,7 +32,7 @@ VoxelSampler_CPtr VoxelSamplerFactory::make_per_label_sampler(size_t maxLabelCou
   }
   else
   {
-    sampler.reset(new VoxelSampler_CPU(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed));
+    sampler.reset(new PerLabelVoxelSampler_CPU(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed));
   }
 
   return sampler;

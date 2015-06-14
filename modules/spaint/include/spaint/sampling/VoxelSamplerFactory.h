@@ -29,8 +29,8 @@ public:
    * \param deviceType        The device on which the sampler should operate.
    * \return                  The voxel sampler.
    */
-  static VoxelSampler_CPtr make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed,
-                                                  ITMLibSettings::DeviceType deviceType);
+  static PerLabelVoxelSampler_CPtr make_per_label_sampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed,
+                                                          ITMLibSettings::DeviceType deviceType);
 
   /**
    * \brief Makes a uniform voxel sampler.

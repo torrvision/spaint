@@ -219,7 +219,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   const unsigned int seed = 12345;
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_voxelSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, maxVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
 
   // Set up the feature calculator.
@@ -322,7 +322,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_voxelSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
   for(size_t i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)

@@ -1,9 +1,9 @@
 /**
- * spaint: VoxelSampler_Shared.h
+ * spaint: PerLabelVoxelSampler_Shared.h
  */
 
-#ifndef H_SPAINT_VOXELSAMPLER_SHARED
-#define H_SPAINT_VOXELSAMPLER_SHARED
+#ifndef H_SPAINT_PERLABELVOXELSAMPLER_SHARED
+#define H_SPAINT_PERLABELVOXELSAMPLER_SHARED
 
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 
