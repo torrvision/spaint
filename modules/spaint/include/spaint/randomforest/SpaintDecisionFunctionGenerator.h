@@ -7,7 +7,7 @@
 
 #include <rafl/decisionfunctions/CompositeDecisionFunctionGenerator.h>
 
-#include "SpaintVoxel.h"
+#include "../util/SpaintVoxel.h"
 
 namespace spaint {
 

@@ -209,10 +209,12 @@ include/spaint/picking/shared/Picker_Shared.h
 ##
 SET(randomforest_sources
 src/randomforest/ForestUtil.cpp
+src/randomforest/SpaintDecisionFunctionGenerator.cpp
 )
 
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
+include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 )
 
 ##
@@ -359,13 +361,11 @@ ENDIF()
 SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
-src/util/SpaintDecisionFunctionGenerator.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/LabelManager.h
-include/spaint/util/SpaintDecisionFunctionGenerator.h
 include/spaint/util/SpaintVoxel.h
 )
 

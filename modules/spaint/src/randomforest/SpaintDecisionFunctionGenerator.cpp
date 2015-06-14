@@ -2,7 +2,7 @@
  * spaint: SpaintDecisionFunctionGenerator.cpp
  */
 
-#include "util/SpaintDecisionFunctionGenerator.h"
+#include "randomforest/SpaintDecisionFunctionGenerator.h"
 
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 #include <rafl/decisionfunctions/PairwiseOpAndThresholdDecisionFunctionGenerator.h>

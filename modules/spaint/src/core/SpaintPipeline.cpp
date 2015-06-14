@@ -16,8 +16,8 @@ using namespace InfiniTAM::Engine;
 
 #include "features/FeatureCalculatorFactory.h"
 #include "randomforest/ForestUtil.h"
+#include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
-#include "util/SpaintDecisionFunctionGenerator.h"
 
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
