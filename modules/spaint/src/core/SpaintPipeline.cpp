@@ -310,11 +310,15 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
 
-  // Calculate a mask indicating which labels are currently in use.
+  // Calculate a mask indicating the labels that are currently in use and from which we want to train.
+  // Note that we deliberately avoid training from the background label (0), since the entire scene is
+  // initially labelled as background and so training from the background would cause us to learn
+  // incorrect labels for non-background things.
   LabelManager_CPtr labelManager = m_model->get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
   bool *labelMask = m_labelMaskMB->GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0; i < maxLabelCount; ++i)
+  labelMask[0] = false;
+  for(size_t i = 1; i < maxLabelCount; ++i)
   {
     labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
   }
