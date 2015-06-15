@@ -105,7 +105,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} rafl rigging spaint tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvgutil) #Note that spaint needs to preceed rafl on Linux.
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
