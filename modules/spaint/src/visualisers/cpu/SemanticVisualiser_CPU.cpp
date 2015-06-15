@@ -18,7 +18,7 @@ SemanticVisualiser_CPU::SemanticVisualiser_CPU(const std::vector<Vector3u>& labe
 
 void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                    bool usePhong, ITMUChar4Image *outputImage) const
+                                    bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
 {
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;
@@ -39,7 +39,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
   for (int locId = 0; locId < imgSize; ++locId)
   {
     Vector4f ptRay = pointsRay[locId];
-    shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos, usePhong);
+    shade_pixel_semantic(outRendering[locId], ptRay.toVector3(), ptRay.w > 0, voxelData, voxelIndex, labelColours, viewerPos, lightPos, usePhong, labelAlpha);
   }
 }
 
