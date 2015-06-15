@@ -287,6 +287,11 @@ include/spaint/touch/TouchDetector.h
 SET(trackers_sources)
 SET(trackers_headers)
 
+IF(WITH_OVR)
+  SET(trackers_sources ${trackers_sources} src/trackers/RiftTracker.cpp)
+  SET(trackers_headers ${trackers_headers} include/spaint/trackers/RiftTracker.h)
+ENDIF()
+
 IF(WITH_VICON)
   SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
   SET(trackers_headers ${trackers_headers} include/spaint/trackers/ViconTracker.h)
