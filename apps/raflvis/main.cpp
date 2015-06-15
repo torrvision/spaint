@@ -115,6 +115,25 @@ static std::vector<Descriptor_CPtr> generate_2d_descriptor_grid(float min, float
 }
 
 /**
+ * \brief Rotates a set of 2d examples vector by a specified angle.
+ *
+ * \param examples   The set of examples.
+ * \param angle      The angle by which to rotate each example.
+ * \return           The rotated set of examples.
+ */
+static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr> examples, float angle)
+{
+  std::vector<Example_CPtr> rotatedExamples;
+  for(int i = 0, size = examples.size(); i < size; ++i)
+  {
+    const Example<Label>& example = *examples[i];
+    const Descriptor_CPtr& desc = example.get_descriptor();
+    rotatedExamples.push_back(boost::shared_ptr<Example<Label> >(new Example<Label>(make_2d_descriptor(cosf(desc[0]),sinf(desc[1])), example.get_label())));
+  }
+  return rotatedExamples;
+}
+
+/**
  * \brief Evaluates the accuracy of the random forest on a set of examples.
  *
  * \param forest    The random forest.
