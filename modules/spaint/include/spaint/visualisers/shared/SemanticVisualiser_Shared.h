@@ -12,6 +12,41 @@
 
 namespace spaint {
 
+//#################### COLOUR READING ####################
+
+/**
+ * \brief An instance of a specialisaton of this struct template can be used to read a voxel's colour in the scene (if available).
+ */
+template <bool hasColour> struct SceneColourReader;
+
+/**
+ * \brief An instance of this struct can be used to return a default scene colour for a voxel when no colour information is available.
+ */
+template <>
+struct SceneColourReader<false>
+{
+  template <typename TVoxel>
+  _CPU_AND_GPU_CODE_
+  static Vector3u read(const TVoxel& voxel)
+  {
+    return Vector3u((uchar)0);
+  }
+};
+
+/**
+ * \brief An instance of this struct can be used to return a voxel's colour in the scene when colour information is available.
+ */
+template <>
+struct SceneColourReader<true>
+{
+  template <typename TVoxel>
+  _CPU_AND_GPU_CODE_
+  static Vector3u read(const TVoxel& voxel)
+  {
+    return voxel.clr;
+  }
+};
+
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
@@ -28,11 +63,12 @@ namespace spaint {
  * \param viewerPos     The position of the viewer (in voxel coordinates).
  * \param lightPos      The position of the light source that is illuminating the scene (in voxel coordinates).
  * \param usePhong      Whether or not to use Phong lighting.
+ * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colour that should be based on the voxel's semantic label rather than its scene colour.
  */
 _CPU_AND_GPU_CODE_
 inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool foundPoint, const SpaintVoxel *voxelData,
                                  const ITMVoxelIndex::IndexData *voxelIndex, const Vector3u *labelColours,
-                                 const Vector3f& viewerPos, const Vector3f& lightPos, bool usePhong)
+                                 const Vector3f& viewerPos, const Vector3f& lightPos, bool usePhong, const float labelAlpha)
 {
   const float ambient = usePhong ? 0.3f : 0.2f;
   const float lambertianCoefficient = usePhong ? 0.35f : 0.8f;
@@ -42,9 +78,16 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
   dest = Vector4u((uchar)0);
   if(foundPoint)
   {
-    // Determine the base colour to use for the pixel based on the semantic label of the voxel we hit.
+    // Determine the base colour to use for the pixel based on the semantic label of the voxel we hit and its scene colour (if available).
     const SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, point.toIntRound(), foundPoint);
-    const Vector3u colour = labelColours[voxel.label];
+    const Vector3u labelColour = labelColours[voxel.label];
+    Vector3u colour;
+    if(SpaintVoxel::hasColorInformation)
+    {
+      const Vector3u sceneColour = SceneColourReader<SpaintVoxel::hasColorInformation>::read(voxel);
+      colour = (labelAlpha * labelColour.toFloat() + (1.0f - labelAlpha) * sceneColour.toFloat()).toUChar();
+    }
+    else colour = labelColour;
 
     // Calculate the Lambertian lighting term.
     Vector3f L = normalize(lightPos - point);

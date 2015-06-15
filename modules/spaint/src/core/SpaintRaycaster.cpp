@@ -68,11 +68,14 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
                                          ITMLib::Engine::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
+    case RT_SEMANTICCOLOUR:
     case RT_SEMANTICLAMBERTIAN:
     case RT_SEMANTICPHONG:
     {
+      bool usePhong = raycastType == RT_SEMANTICPHONG;
+      float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
       m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), raycastType == RT_SEMANTICPHONG, renderState->raycastImage);
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), usePhong, labelAlpha, renderState->raycastImage);
       break;
     }
     default:
