@@ -14,7 +14,10 @@
 using namespace InfiniTAM::Engine;
 
 #include "sampling/VoxelSamplerFactory.h"
+
+#ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
+#endif
 
 namespace spaint {
 

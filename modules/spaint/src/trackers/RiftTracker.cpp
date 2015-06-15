@@ -41,7 +41,7 @@ void RiftTracker::UpdateInitialPose(ITMTrackingState *trackingState)
     ++tries;
   }
 
-  // If we exceed the maximum number of tries, throw.
+  // If we reach the maximum number of tries, throw.
   if(tries == maxTries)
   {
     throw std::runtime_error("[spaint] Failed to read initial pose information from the Rift!");
