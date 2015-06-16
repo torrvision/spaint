@@ -12,6 +12,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
+#include <tvgutil/ArgUtil.h>
+
 #include "Histogram.h"
 
 namespace rafl {
@@ -100,19 +102,7 @@ public:
    */
   Label calculate_best_label() const
   {
-    // TODO: Refactor this to use tvgutil::ArgUtil::argmax.
-    Label bestLabel;
-    float bestMass = 0.0f;
-    for(typename std::map<Label,float>::const_iterator it = m_masses.begin(), iend = m_masses.end(); it != iend; ++it)
-    {
-      if(it->second > bestMass)
-      {
-        bestLabel = it->first;
-        bestMass = it->second;
-      }
-    }
-    assert(bestMass > 0.0f);  // note: there must be at least one label that has a non-zero mass
-    return bestLabel;
+    return tvgutil::ArgUtil::argmax(m_masses);
   }
 
   /**
