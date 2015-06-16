@@ -516,6 +516,16 @@ private:
   }
 
   /**
+   * \brief Gets the number of nodes in the tree.
+   *
+   * \return  The node count.
+   */
+  size_t get_node_count() const
+  {
+    return m_nodes.size();
+  }
+
+  /**
    * \brief Returns whether or not the specified node is a leaf.
    *
    * \param nodeIndex  The index of the node.
