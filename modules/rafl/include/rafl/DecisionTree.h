@@ -520,6 +520,26 @@ private:
   }
 
   /**
+   * \brief Gets the average leaf entropy in the tree.
+   *
+   * \return  The average leaf entropy.
+   */
+  float get_average_leaf_entropy() const
+  {
+    float totalLeafEntropy = 0;
+    size_t leafCount = 0;
+    for(size_t i = 0, size = m_nodes.size(); i < size; ++i)
+    {
+      if(is_leaf(i))
+      {
+        totalLeafEntropy += make_pmf(i).calculate_entropy();
+        ++leafCount;
+      }
+    }
+    return totalLeafEntropy / leafCount;
+  }
+
+  /**
    * \brief Gets the number of nodes in the tree.
    *
    * \return  The node count.
