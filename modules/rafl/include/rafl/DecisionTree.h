@@ -540,6 +540,16 @@ private:
   }
 
   /**
+   * \brief Gets a histogram of the total example counts per class pass to the tree.
+   *
+   * \return  The class frequencies.
+   */
+  Histogram<Label> get_class_frequencies() const
+  {
+    return m_classFrequencies;
+  }
+
+  /**
    * \brief Gets the number of nodes in the tree.
    *
    * \return  The node count.
