@@ -159,13 +159,16 @@ public:
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *
    * \param splitBudget The maximum number of nodes per tree that may be split in this training step.
+   * \return            The total number of nodes that have been split across trees.
    */
-  void train(size_t splitBudget)
+  size_t train(size_t splitBudget)
   {
+    size_t nodesSplit = 0;
     for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
-      (*it)->train(splitBudget);
+      nodesSplit += (*it)->train(splitBudget);
     }
+    return nodesSplit;
   }
 
   //#################### SERIALIZATION ####################

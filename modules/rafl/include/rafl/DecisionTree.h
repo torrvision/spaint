@@ -364,11 +364,11 @@ public:
   {
     float totalLeafEntropy = 0;
     size_t leafCount = 0;
-    for(size_t i = 0, size = m_nodes.size(); i < size; ++i)
+    for(size_t nodeIndex = 0, size = m_nodes.size(); nodeIndex < size; ++nodeIndex)
     {
-      if(is_leaf(i))
+      if(is_leaf(nodeIndex))
       {
-        totalLeafEntropy += make_pmf(i).calculate_entropy();
+        totalLeafEntropy += make_pmf(nodeIndex).calculate_entropy();
         ++leafCount;
       }
     }
@@ -444,8 +444,9 @@ public:
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *
    * \param splitBudget The maximum number of nodes that may be split in this training step.
+   * \return            The number of nodes that have been split.
    */
-  void train(size_t splitBudget)
+  size_t train(size_t splitBudget)
   {
     size_t nodesSplit = 0;
 
@@ -471,6 +472,8 @@ public:
     {
       m_splittabilityQueue.insert(it->id(), it->key(), it->data());
     }
+
+    return nodesSplit;
   }
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
