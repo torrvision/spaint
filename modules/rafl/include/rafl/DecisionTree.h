@@ -285,6 +285,9 @@ private:
   /** The settings needed to configure the decision tree. */
   Settings m_settings;
 
+  /** The depth of the tree. */
+  size_t m_treeDepth;
+
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
 
@@ -296,7 +299,7 @@ public:
    * \param settings  The settings needed to configure the decision tree.
    */
   explicit DecisionTree(const Settings& settings)
-  : m_settings(settings)
+  : m_settings(settings), m_treeDepth(0)
   {
     m_rootIndex = add_node(0);
 
@@ -452,6 +455,7 @@ private:
   int add_node(size_t depth)
   {
     m_nodes.push_back(Node_Ptr(new Node(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
+    m_treeDepth = m_treeDepth < depth ? depth : m_treeDepth;
     int id = static_cast<int>(m_nodes.size()) - 1;
     const signed char nullData = -1;
     m_splittabilityQueue.insert(id, 0.0f, nullData);
@@ -523,6 +527,16 @@ private:
   size_t get_node_count() const
   {
     return m_nodes.size();
+  }
+
+  /**
+   * \brief Gets the depth of the tree.
+   *
+   * \return  The depth of the tree.
+   */
+  size_t get_tree_depth() const
+  {
+    return m_treeDepth;
   }
 
   /**
