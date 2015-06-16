@@ -285,11 +285,11 @@ private:
   /** The settings needed to configure the decision tree. */
   Settings m_settings;
 
-  /** The depth of the tree. */
-  size_t m_treeDepth;
-
   /** A priority queue of nodes that ranks them by how suitable they are for splitting. */
   SplittabilityQueue m_splittabilityQueue;
+
+  /** The depth of the tree. */
+  size_t m_treeDepth;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -356,6 +356,56 @@ public:
   }
 
   /**
+   * \brief Gets the average leaf entropy in the tree.
+   *
+   * \return  The average leaf entropy.
+   */
+  float get_average_leaf_entropy() const
+  {
+    float totalLeafEntropy = 0;
+    size_t leafCount = 0;
+    for(size_t i = 0, size = m_nodes.size(); i < size; ++i)
+    {
+      if(is_leaf(i))
+      {
+        totalLeafEntropy += make_pmf(i).calculate_entropy();
+        ++leafCount;
+      }
+    }
+    return totalLeafEntropy / leafCount;
+  }
+
+  /**
+   * \brief Gets a histogram of the total example counts per class pass to the tree.
+   *
+   * \return  The class frequencies.
+   */
+  Histogram<Label> get_class_frequencies() const
+  {
+    return m_classFrequencies;
+  }
+
+  /**
+   * \brief Gets the number of nodes in the tree.
+   *
+   * \return  The node count.
+   */
+  size_t get_node_count() const
+  {
+    return m_nodes.size();
+  }
+
+  /**
+   * \brief Gets the depth of the tree.
+   *
+   * \return  The depth of the tree.
+   */
+  size_t get_tree_depth() const
+  {
+    return m_treeDepth;
+  }
+
+ /**
    * \brief Looks up the probability mass function for the leaf to which an example with the specified descriptor would be added.
    *
    * \param descriptor  The descriptor.
@@ -455,7 +505,9 @@ private:
   int add_node(size_t depth)
   {
     m_nodes.push_back(Node_Ptr(new Node(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
-    m_treeDepth = m_treeDepth < depth ? depth : m_treeDepth;
+    if(m_treeDepth < depth){
+      m_treeDepth = depth;
+    }
     int id = static_cast<int>(m_nodes.size()) - 1;
     const signed char nullData = -1;
     m_splittabilityQueue.insert(id, 0.0f, nullData);
@@ -517,56 +569,6 @@ private:
       curIndex = m_nodes[curIndex]->m_splitter->classify_descriptor(descriptor) == DecisionFunction::DC_LEFT ? m_nodes[curIndex]->m_leftChildIndex : m_nodes[curIndex]->m_rightChildIndex;
     }
     return curIndex;
-  }
-
-  /**
-   * \brief Gets the average leaf entropy in the tree.
-   *
-   * \return  The average leaf entropy.
-   */
-  float get_average_leaf_entropy() const
-  {
-    float totalLeafEntropy = 0;
-    size_t leafCount = 0;
-    for(size_t i = 0, size = m_nodes.size(); i < size; ++i)
-    {
-      if(is_leaf(i))
-      {
-        totalLeafEntropy += make_pmf(i).calculate_entropy();
-        ++leafCount;
-      }
-    }
-    return totalLeafEntropy / leafCount;
-  }
-
-  /**
-   * \brief Gets a histogram of the total example counts per class pass to the tree.
-   *
-   * \return  The class frequencies.
-   */
-  Histogram<Label> get_class_frequencies() const
-  {
-    return m_classFrequencies;
-  }
-
-  /**
-   * \brief Gets the number of nodes in the tree.
-   *
-   * \return  The node count.
-   */
-  size_t get_node_count() const
-  {
-    return m_nodes.size();
-  }
-
-  /**
-   * \brief Gets the depth of the tree.
-   *
-   * \return  The depth of the tree.
-   */
-  size_t get_tree_depth() const
-  {
-    return m_treeDepth;
   }
 
   /**
@@ -743,6 +745,7 @@ private:
     ar & m_rootIndex;
     ar & m_settings;
     ar & m_splittabilityQueue;
+    ar & m_treeDepth;
   }
 
   friend class boost::serialization::access;
