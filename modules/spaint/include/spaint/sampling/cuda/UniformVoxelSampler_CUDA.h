@@ -10,14 +10,17 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to uniformly sample voxels from a scene using CUDA.
  */
 class UniformVoxelSampler_CUDA : public UniformVoxelSampler
 {
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a CUDA-based uniform voxel sampler.
+   *
+   * \param raycastResultSize The size of the raycast result (in pixels).
+   * \param seed              The seed for the random number generator.
    */
   UniformVoxelSampler_CUDA(int raycastResultSize, unsigned int seed);
 
