@@ -23,6 +23,8 @@ using namespace InfiniTAM::Engine;
 #include "trackers/RiftTracker.h"
 #endif
 
+#define DEBUGGING 1
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -328,20 +330,19 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
   m_trainingSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
-  // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
+#if DEBUGGING
+  // Output the numbers of voxels sampled for each label (for debugging purposes).
   for(size_t i = 0; i < m_trainingVoxelCountsMB->dataSize; ++i)
   {
     std::cout << m_trainingVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
   }
   std::cout << '\n';
 
-#if 0
-  // TEMPORARY: Clear the labels of the sampled voxels (for debugging purposes).
-  m_interactor->mark_voxels(m_sampledVoxelLocationsMB, 0);
+  // Make sure that the sampled voxels are available on the CPU so that they can be checked.
+  m_trainingVoxelLocationsMB->UpdateHostFromDevice();
 #endif
 
   // Compute feature vectors for the sampled voxels.
-  m_trainingVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
   m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
 
   // Make the training examples.
