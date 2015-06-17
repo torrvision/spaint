@@ -10,10 +10,10 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_write_sampled_voxel_locations(size_t voxelsToSample, const Vector4f *raycastResultData, const int *sampledVoxelIndices, Vector3s *sampledVoxelLocations)
+__global__ void ck_write_sampled_voxel_locations(int voxelsToSample, const Vector4f *raycastResultData, const int *sampledVoxelIndices, Vector3s *sampledVoxelLocations)
 {
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
-  if(tid < static_cast<int>(voxelsToSample))
+  if(tid < voxelsToSample)
   {
     write_sampled_voxel_location(tid, raycastResultData, sampledVoxelIndices, sampledVoxelLocations);
   }
@@ -34,7 +34,7 @@ void UniformVoxelSampler_CUDA::write_sampled_voxel_locations(const ITMFloat4Imag
   int numBlocks = (static_cast<int>(sampledVoxelCount) + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_write_sampled_voxel_locations<<<numBlocks,threadsPerBlock>>>(
-    sampledVoxelCount,
+    static_cast<int>(sampledVoxelCount),
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     m_sampledVoxelIndicesMB.GetData(MEMORYDEVICE_CUDA),
     sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)

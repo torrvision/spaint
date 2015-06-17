@@ -10,7 +10,14 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief Writes the location of a voxel to be sampled from the raycast result into the sampled voxel locations array.
+ *
+ * Each thread writes the location of a single voxel.
+ *
+ * \param tid                   The thread ID.
+ * \param raycastResult         The current raycast result.
+ * \param sampledVoxelIndices   The indices of the voxels to be sampled from the raycast result.
+ * \param sampledVoxelLocations An array into which to write the locations of the sampled voxels.
  */
 _CPU_AND_GPU_CODE_
 inline void write_sampled_voxel_location(int tid, const Vector4f *raycastResult, const int *sampledVoxelIndices, Vector3s *sampledVoxelLocations)
