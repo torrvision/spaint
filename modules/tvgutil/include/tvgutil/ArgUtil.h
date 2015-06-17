@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <vector>
 
 namespace tvgutil {
 
