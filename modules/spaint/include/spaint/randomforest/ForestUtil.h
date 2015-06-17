@@ -12,16 +12,21 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief This struct provides utility functions that can make feature descriptors and examples for use with rafl random forests.
  */
 struct ForestUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /**
-   * \brief TODO
+   * \brief Makes rafl feature descriptors from feature descriptors that are stored implicitly and contiguously in an InfiniTAM memory block.
+   *
+   * \param featuresMB      The InfiniTAM memory block containing the feature descriptors.
+   * \param descriptorCount The number of feature descriptors that are stored in the memory block.
+   * \param featureCount    The number of features in a feature descriptor.
+   * \return                The rafl feature descriptors.
    */
-  static std::vector<rafl::Descriptor_CPtr> make_descriptors(const ORUtils::MemoryBlock<float>& featuresMB, size_t sampledVoxelCount, size_t featureCount);
+  static std::vector<rafl::Descriptor_CPtr> make_descriptors(const ORUtils::MemoryBlock<float>& featuresMB, size_t descriptorCount, size_t featureCount);
 
   /**
    * \brief TODO

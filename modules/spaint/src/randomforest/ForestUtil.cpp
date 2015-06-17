@@ -8,18 +8,23 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-std::vector<rafl::Descriptor_CPtr> ForestUtil::make_descriptors(const ORUtils::MemoryBlock<float>& featuresMB, size_t sampledVoxelCount, size_t featureCount)
+std::vector<rafl::Descriptor_CPtr> ForestUtil::make_descriptors(const ORUtils::MemoryBlock<float>& featuresMB, size_t descriptorCount, size_t featureCount)
 {
-  // Make the descriptors.
+  // Make sure that the features are available and up-to-date on the CPU.
   featuresMB.UpdateHostFromDevice();
+
+  // Make the rafl feature descriptors.
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
-  std::vector<rafl::Descriptor_CPtr> descriptors(sampledVoxelCount);
-  size_t descriptorIndex = 0;
-  for(size_t i = 0; i < sampledVoxelCount; ++i)
+  std::vector<rafl::Descriptor_CPtr> descriptors(descriptorCount);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < static_cast<int>(descriptorCount); ++i)
   {
     // Copy the relevant features into a descriptor and add it.
     const float *featuresForDescriptor = features + i * featureCount;
-    descriptors[descriptorIndex++].reset(new rafl::Descriptor(featuresForDescriptor, featuresForDescriptor + featureCount));
+    descriptors[i].reset(new rafl::Descriptor(featuresForDescriptor, featuresForDescriptor + featureCount));
   }
 
   return descriptors;
