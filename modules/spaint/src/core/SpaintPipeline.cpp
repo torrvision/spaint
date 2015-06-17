@@ -244,7 +244,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   dtSettings.usePMFReweighting = true;
   m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
 
-  m_featuresMB.reset(new ORUtils::MemoryBlock<float>(maxVoxelLocationCount * m_featureCalculator->get_feature_count(), true, true));
+  m_trainingFeaturesMB.reset(new ORUtils::MemoryBlock<float>(maxVoxelLocationCount * m_featureCalculator->get_feature_count(), true, true));
   m_fusionEnabled = true;
   m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_mode = MODE_NORMAL;
@@ -280,9 +280,9 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
 
   // FIXME Pass in the number of locations from which to calculate features.
   // Calculate feature descriptors for the voxels.
-  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
+  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(
-    *m_featuresMB,
+    *m_trainingFeaturesMB,
     voxelsToSample,
     m_featureCalculator->get_feature_count()
   );
@@ -342,12 +342,12 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Compute feature vectors for the sampled voxels.
   m_sampledVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
-  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_featuresMB);
+  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::LabelType> > Example_CPtr;
   std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::LabelType>(
-    *m_featuresMB,
+    *m_trainingFeaturesMB,
     *m_sampledVoxelCountsMB,
     m_featureCalculator->get_feature_count(),
     128, // TODO: maxVoxelsPerLabel

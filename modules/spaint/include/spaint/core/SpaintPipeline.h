@@ -81,9 +81,6 @@ private:
   /** The feature calculator. */
   FeatureCalculator_CPtr m_featureCalculator;
 
-  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
-  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_featuresMB;
-
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
@@ -131,6 +128,9 @@ private:
 
   /** A memory block in which to store the locations of the voxels sampled for each label. */
   Selector::Selection_Ptr m_sampledVoxelLocationsMB;
+
+  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
