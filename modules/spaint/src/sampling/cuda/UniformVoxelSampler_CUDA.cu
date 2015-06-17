@@ -27,14 +27,14 @@ UniformVoxelSampler_CUDA::UniformVoxelSampler_CUDA(int raycastResultSize, unsign
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void UniformVoxelSampler_CUDA::write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t voxelsToSample,
+void UniformVoxelSampler_CUDA::write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t sampledVoxelCount,
                                                              ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   int threadsPerBlock = 256;
-  int numBlocks = (static_cast<int>(voxelsToSample) + threadsPerBlock - 1) / threadsPerBlock;
+  int numBlocks = (static_cast<int>(sampledVoxelCount) + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_write_sampled_voxel_locations<<<numBlocks,threadsPerBlock>>>(
-    voxelsToSample,
+    sampledVoxelCount,
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     m_sampledVoxelIndicesMB.GetData(MEMORYDEVICE_CUDA),
     sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)

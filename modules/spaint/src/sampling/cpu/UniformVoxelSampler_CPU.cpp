@@ -16,7 +16,7 @@ UniformVoxelSampler_CPU::UniformVoxelSampler_CPU(int raycastResultSize, unsigned
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void UniformVoxelSampler_CPU::write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t voxelsToSample,
+void UniformVoxelSampler_CPU::write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t sampledVoxelCount,
                                                             ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
@@ -26,7 +26,7 @@ void UniformVoxelSampler_CPU::write_sampled_voxel_locations(const ITMFloat4Image
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int tid = 0; tid < static_cast<int>(voxelsToSample); ++tid)
+  for(int tid = 0; tid < static_cast<int>(sampledVoxelCount); ++tid)
   {
     write_sampled_voxel_location(tid, raycastResultData, sampledVoxelIndices, sampledVoxelLocations);
   }

@@ -22,7 +22,7 @@ class RandomNumberGenerator;
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of a class deriving from this one can be used to uniformly sample voxels from a scene.
  */
 class UniformVoxelSampler
 {
@@ -40,7 +40,7 @@ protected:
   //#################### CONSTRUCTORS ####################
 protected:
   /**
-   * \brief TODO
+   * \brief Constructs a uniform voxel sampler.
    *
    * \param raycastResultSize The size of the raycast result (in pixels).
    * \param seed              The seed for the random number generator.
@@ -57,29 +57,26 @@ public:
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Writes the locations of the voxels to be sampled from the raycast result into the sampled voxel locations memory block.
+   *
+   * \param raycastResult           The current raycast result.
+   * \param sampledVoxelCount       The number of sampled voxels.
+   * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    */
-  virtual void write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t voxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
+  virtual void write_sampled_voxel_locations(const ITMFloat4Image *raycastResult, size_t sampledVoxelCount, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Samples voxels uniformly from the current raycast result.
+   * \brief Uniformly samples the specified number of voxels from the current raycast result.
    *
    * Note that this sampler does not guarantee that the voxels it produces are valid, so client code must account for this.
    *
    * \param raycastResult           The current raycast result.
-   * \param voxelsToSample          The number of voxels to sample.
+   * \param numVoxelsToSample       The number of voxels to sample.
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult, size_t voxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief TODO
-   */
-  void choose_voxels_to_sample(size_t maxVoxelsToSample) const;
+  void sample_voxels(const ITMFloat4Image *raycastResult, size_t numVoxelsToSample, ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const;
 };
 
 //#################### TYPEDEFS ####################
