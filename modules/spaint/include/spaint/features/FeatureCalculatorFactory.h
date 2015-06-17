@@ -12,12 +12,12 @@
 namespace spaint {
 
 /**
- * \brief This class can be used to construct feature calculators.
+ * \brief This struct can be used to construct feature calculators.
  */
-class FeatureCalculatorFactory
+struct FeatureCalculatorFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /**
    * \brief Makes a VOP feature calculator.
    *
