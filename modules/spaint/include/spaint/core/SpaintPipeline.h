@@ -123,15 +123,6 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
-  /** A memory block in which to store the number of voxels sampled for each label. */
-  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_sampledVoxelCountsMB;
-
-  /** A memory block in which to store the locations of the voxels sampled for each label. */
-  Selector::Selection_Ptr m_sampledVoxelLocationsMB;
-
-  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
-  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
-
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
@@ -149,6 +140,15 @@ private:
 
   /** The voxel sampler used in training mode. */
   PerLabelVoxelSampler_CPtr m_trainingSampler;
+
+  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
+
+  /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
+
+  /** A memory block in which to store the locations of the voxels sampled for each label for training purposes. */
+  Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
 #ifdef WITH_VICON
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */

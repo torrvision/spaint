@@ -249,8 +249,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
-  m_sampledVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
-  m_sampledVoxelLocationsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
+  m_trainingVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
+  m_trainingVoxelLocationsMB.reset(new Selector::Selection(maxLabelCount * maxVoxelsPerLabel, true, true));
 }
 
 ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
@@ -276,11 +276,11 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
 
   // Sample some voxels for which to predict labels.
   const int voxelsToSample = 1024;
-  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, voxelsToSample, *m_sampledVoxelLocationsMB);
+  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, voxelsToSample, *m_trainingVoxelLocationsMB);
 
   // FIXME Pass in the number of locations from which to calculate features.
   // Calculate feature descriptors for the voxels.
-  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
+  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(
     *m_trainingFeaturesMB,
     voxelsToSample,
@@ -302,7 +302,7 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   labelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  m_interactor->mark_voxels(m_sampledVoxelLocationsMB, labelsMB);
+  m_interactor->mark_voxels(m_trainingVoxelLocationsMB, labelsMB);
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
@@ -326,12 +326,12 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_trainingSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_sampledVoxelLocationsMB, *m_sampledVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
   // TEMPORARY: Output the numbers of voxels sampled for each label (for debugging purposes).
-  for(size_t i = 0; i < m_sampledVoxelCountsMB->dataSize; ++i)
+  for(size_t i = 0; i < m_trainingVoxelCountsMB->dataSize; ++i)
   {
-    std::cout << m_sampledVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
+    std::cout << m_trainingVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
   }
   std::cout << '\n';
 
@@ -341,14 +341,14 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 #endif
 
   // Compute feature vectors for the sampled voxels.
-  m_sampledVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
-  m_featureCalculator->calculate_features(*m_sampledVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
+  m_trainingVoxelLocationsMB->UpdateHostFromDevice(); // TEMPORARY
+  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::LabelType> > Example_CPtr;
   std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::LabelType>(
     *m_trainingFeaturesMB,
-    *m_sampledVoxelCountsMB,
+    *m_trainingVoxelCountsMB,
     m_featureCalculator->get_feature_count(),
     128, // TODO: maxVoxelsPerLabel
     maxLabelCount
