@@ -92,12 +92,12 @@ void VOPFeatureCalculator::debug_display_features(const ORUtils::MemoryBlock<flo
   std::vector<cv::Mat3b> rgbPatchImages(size);
   for(size_t i = 0; i < size; ++i)
   {
-    rgbPatchImages[i] = OpenCVUtil::make_image_rgb_cpu(features + i * get_feature_count(), m_patchSize, m_patchSize);
+    rgbPatchImages[i] = OpenCVUtil::make_rgb_image(features + i * get_feature_count(), m_patchSize, m_patchSize);
   }
 
   const size_t scaleFactor = 6;
   const size_t patchWidth = scaleFactor * m_patchSize;
-  cv::Mat3b tiledImage = OpenCVUtil::tile_regular_image_patches_within_image_bounds(rgbPatchImages, 1024, 768, patchWidth, patchWidth);
+  cv::Mat3b tiledImage = OpenCVUtil::tile_image_patches_bounded(rgbPatchImages, 1024, 768, patchWidth, patchWidth);
   cv::imshow(windowName, tiledImage);
 #endif
 }

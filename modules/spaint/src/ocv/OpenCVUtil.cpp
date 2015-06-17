@@ -10,7 +10,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-cv::Mat3b OpenCVUtil::make_image_rgb_cpu(const float *rgbData, int width, int height)
+cv::Mat3b OpenCVUtil::make_rgb_image(const float *rgbData, int width, int height)
 {
   cv::Mat3b result = cv::Mat3b::zeros(height, width);
   for(int y = 0; y < height; ++y)
@@ -30,7 +30,7 @@ cv::Mat3b OpenCVUtil::make_image_rgb_cpu(const float *rgbData, int width, int he
 
 cv::Mat3b OpenCVUtil::pad_image(const cv::Mat& image, size_t paddingSize)
 {
-  cv::Mat3b paddedImage(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.depth());
+  cv::Mat3b paddedImage(image.rows + paddingSize * 2, image.cols + paddingSize * 2);
   cv::Rect roi(paddingSize, paddingSize, image.cols, image.rows);
   image.copyTo(paddedImage(roi));
   return paddedImage;
@@ -41,46 +41,52 @@ void OpenCVUtil::show_scaled_greyscale_figure(const std::string& windowName, con
   show_scaled_greyscale_figure(windowName, inputData, width, height, order, ScaleByFactor(scaleFactor));
 }
 
-cv::Mat3b OpenCVUtil::tile_regular_image_patches(const std::vector<cv::Mat3b>& images, size_t tileCols, size_t tileRows, size_t patchWidth, size_t patchHeight, size_t paddingSize)
+cv::Mat3b OpenCVUtil::tile_image_patches(const std::vector<cv::Mat3b>& images, size_t tileCols, size_t tileRows, size_t patchWidth, size_t patchHeight, size_t paddingSize)
 {
-  // Pre-process the vector of images.
-  std::vector<cv::Mat3b> processedImages;
-  for(int i = 0, size = images.size(); i < size; ++i)
+  // Scale and pad the input images to make the tiles.
+  std::vector<cv::Mat3b> tiles;
+  for(size_t i = 0, size = images.size(); i < size; ++i)
   {
-    cv::Mat3b scaledImage(patchHeight, patchWidth, images[i].depth());
-    cv::resize(images[i], scaledImage, scaledImage.size(), 0, 0, CV_INTER_NN);
-    processedImages.push_back(pad_image(scaledImage, paddingSize));
+    cv::Mat3b scaledImage(patchHeight, patchWidth);
+    cv::resize(images[i], scaledImage, scaledImage.size(), 0.0, 0.0, CV_INTER_NN);
+    tiles.push_back(pad_image(scaledImage, paddingSize));
   }
 
-  int maxTiles = tileCols * tileRows;
-
-  int tileHeight = patchHeight + 2 * paddingSize;
-  int tileWidth = patchWidth + 2 * paddingSize;
+  // Make a blank output image of the right size to which the tiles can be copied.
+  const int tileHeight = patchHeight + 2 * paddingSize;
+  const int tileWidth = patchWidth + 2 * paddingSize;
   cv::Mat3b tiledImage = cv::Mat3b::zeros(tileHeight * tileRows, tileWidth * tileCols);
 
-  for(int i = 0; i < maxTiles; ++i)
+  // Copy the tiles across to the output image.
+  for(int i = 0, tileCount = tileCols * tileRows; i < tileCount; ++i)
   {
     int x = (i % tileCols) * tileWidth;
     int y = (i / tileCols) * tileHeight;
     cv::Rect roi(x, y, tileWidth, tileHeight);
-    processedImages[i].copyTo(tiledImage(roi));
+    tiles[i].copyTo(tiledImage(roi));
   }
 
   return tiledImage;
 }
 
-cv::Mat3b OpenCVUtil::tile_regular_image_patches_within_image_bounds(const std::vector<cv::Mat3b>& images, size_t imageWidth, size_t imageHeight, size_t patchWidth, size_t patchHeight, size_t paddingSize)
+cv::Mat3b OpenCVUtil::tile_image_patches_bounded(const std::vector<cv::Mat3b>& images, size_t imageWidth, size_t imageHeight, size_t patchWidth, size_t patchHeight, size_t paddingSize)
 {
+  // Compute the size of each tile.
   size_t tileWidth = patchWidth + 2 * paddingSize;
   size_t tileHeight = patchHeight + 2 * paddingSize;
+
+  // If the image is too small to show even a single column or single row of tiles, throw.
   if(imageWidth < tileWidth || imageHeight < tileHeight)
   {
-    throw std::runtime_error("The image dimensions are too small to tile patches of the specified size.");
+    throw std::runtime_error("The image dimensions are too small to tile patches of the specified size");
   }
+
+  // Determine how many columns and rows of tiles we can fit into an output image of the specified size.
   size_t tileCols = imageWidth / tileWidth;
   size_t tileRows = imageHeight / tileHeight ;
 
-  return tile_regular_image_patches(images, tileCols, tileRows, patchHeight, patchWidth, paddingSize);
+  // Tile the patches and return the output image.
+  return tile_image_patches(images, tileCols, tileRows, patchHeight, patchWidth, paddingSize);
 }
 
 }

@@ -163,14 +163,14 @@ public:
   }
 
   /**
-   * \brief Makes an RGB image of the specified size from some pixel data that resides on the CPU.
+   * \brief Makes an RGB image of the specified size from some pixel data.
    *
    * \param rgbData The pixel data for the image, in the format [R1,G1,B1,R2,G2,B2,...].
    * \param width   The width of the image.
    * \param height  The height of the image.
    * \return        The image.
    */
-  static cv::Mat3b make_image_rgb_cpu(const float *rgbData, int width, int height);
+  static cv::Mat3b make_rgb_image(const float *rgbData, int width, int height);
 
   /**
    * \brief Makes an image with a black border around it.
@@ -228,12 +228,12 @@ public:
   /**
    * \brief TODO.
    */
-  static cv::Mat3b tile_regular_image_patches(const std::vector<cv::Mat3b>& images, size_t imageWidth, size_t imageHeight, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
+  static cv::Mat3b tile_image_patches(const std::vector<cv::Mat3b>& images, size_t imageWidth, size_t imageHeight, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
 
   /**
    * \brief TODO.
    */
-  static cv::Mat3b tile_regular_image_patches_within_image_bounds(const std::vector<cv::Mat3b>& images, size_t tileCols, size_t tileRows, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
+  static cv::Mat3b tile_image_patches_bounded(const std::vector<cv::Mat3b>& images, size_t tileCols, size_t tileRows, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
