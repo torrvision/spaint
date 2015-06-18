@@ -358,8 +358,9 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   );
 
   // Train the forest.
+  const size_t splitBudget = 128;
   m_forest->add_examples(examples);
-  m_forest->train(examples.size());
+  m_forest->train(splitBudget);
 }
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
