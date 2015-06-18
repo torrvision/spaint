@@ -28,11 +28,11 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Calculates VOP feature descriptors for the specified voxels (grouped by label).
+   * \brief Calculates feature descriptors for the specified voxels (grouped by label).
    *
-   * \param voxelLocationsMB        A memory block containing the locations of the voxels for which to calculate feature descriptors.
-   * \param scene                   The scene.
-   * \param featuresMB              A memory block into which to store the calculated feature descriptors (packed sequentially).
+   * \param voxelLocationsMB  A memory block containing the locations of the voxels for which to calculate feature descriptors.
+   * \param scene             The scene.
+   * \param featuresMB        A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                                   const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
