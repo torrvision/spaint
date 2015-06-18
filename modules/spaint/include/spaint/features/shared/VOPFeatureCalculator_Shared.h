@@ -291,7 +291,7 @@ inline void update_coordinate_system(int tid, int patchArea, const float *histog
   if(tid % patchArea == 0)
   {
     // Calculate the dominant orientation for the voxel.
-    size_t dominantBin;
+    size_t dominantBin = 0;
     double highestBinValue = 0;
     for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
     {
