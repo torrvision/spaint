@@ -51,7 +51,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples Before Rotation");
+  display_features(featuresMB, voxelLocationCount, "Feature Samples Before Rotation");
 #endif
 
   // Determine the dominant orientation for each patch and update the coordinate systems accordingly.
@@ -61,14 +61,14 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After Rotation");
+  display_features(featuresMB, voxelLocationCount, "Feature Samples After Rotation");
 #endif
 
   // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
   convert_patches_to_lab(voxelLocationCount, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After LAB Conversion");
+  display_features(featuresMB, voxelLocationCount, "Feature Samples After LAB Conversion");
 #endif
 
   // For each feature vector, fill in the height of the corresponding voxel in the scene as an extra feature.
@@ -84,15 +84,16 @@ size_t VOPFeatureCalculator::get_feature_count() const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VOPFeatureCalculator::display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const
+void VOPFeatureCalculator::display_features(const ORUtils::MemoryBlock<float>& featuresMB, int voxelLocationCount, const std::string& windowName) const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
+  const int patchSize = static_cast<int>(m_patchSize);
 
-  std::vector<cv::Mat3b> rgbPatchImages(size);
-  for(size_t i = 0; i < size; ++i)
+  std::vector<cv::Mat3b> rgbPatchImages(voxelLocationCount);
+  for(int i = 0; i < voxelLocationCount; ++i)
   {
-    rgbPatchImages[i] = OpenCVUtil::make_rgb_image(features + i * get_feature_count(), m_patchSize, m_patchSize);
+    rgbPatchImages[i] = OpenCVUtil::make_rgb_image(features + i * get_feature_count(), patchSize, patchSize);
   }
 
   const size_t scaleFactor = 6;

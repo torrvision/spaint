@@ -30,7 +30,7 @@ cv::Mat3b OpenCVUtil::make_rgb_image(const float *rgbData, int width, int height
 
 cv::Mat3b OpenCVUtil::pad_image(const cv::Mat& image, size_t paddingSize)
 {
-  cv::Mat3b paddedImage(image.rows + paddingSize * 2, image.cols + paddingSize * 2);
+  cv::Mat3b paddedImage = cv::Mat3b::zeros(image.rows + paddingSize * 2, image.cols + paddingSize * 2);
   cv::Rect roi(paddingSize, paddingSize, image.cols, image.rows);
   image.copyTo(paddedImage(roi));
   return paddedImage;

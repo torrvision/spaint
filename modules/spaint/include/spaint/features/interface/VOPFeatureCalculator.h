@@ -121,9 +121,16 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO.
+   * \brief Displays the feature descriptors we have calculated for the voxels in a named OpenCV window.
+   *
+   * Note that we limit the resolution of the window for display purposes, so it is common for
+   * some of the feature descriptors not to be shown if there is not enough space.
+   *
+   * \param featuresMB          A memory block containing the calculated feature descriptors (packed sequentially).
+   * \param voxelLocationCount  The number of voxel locations for which we are calculating features.
+   * \param windowName          The name of the window in which to show the feature descriptors.
    */
-  void display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const;
+  void display_features(const ORUtils::MemoryBlock<float>& featuresMB, int voxelLocationCount, const std::string& windowName) const;
 
   /**
    * \brief Sets up a debugging window containing a trackbar that can be used to control the delay between consecutive frames.
