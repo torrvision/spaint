@@ -215,9 +215,10 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
 
-  // Set various parameters.
+  // Set the prediction and training parameters.
+  // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
-  m_maxPredictionVoxelCount = 1024;
+  m_maxPredictionVoxelCount = 4096;
   const size_t maxTrainingVoxelsPerLabel = 128;
   const size_t maxTrainingVoxelCount = maxLabelCount * maxTrainingVoxelsPerLabel;
 
@@ -228,18 +229,19 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(std::max(m_maxPredictionVoxelCount, maxTrainingVoxelCount), patchSize, patchSpacing, settings->deviceType);
 
   // Set up the voxel samplers and the memory blocks that are needed to work with them.
-  // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t featureCount = m_featureCalculator->get_feature_count();
-  const unsigned int seed = 12345;
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  const unsigned int seed = 12345;
 
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_predictionFeaturesMB.reset(new ORUtils::MemoryBlock<float>(m_maxPredictionVoxelCount * featureCount, true, true));
+  m_predictionLabelsMB.reset(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount, true, true));
+  m_predictionVoxelLocationsMB.reset(new Selector::Selection(m_maxPredictionVoxelCount, true, true));
 
   m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
   m_trainingFeaturesMB.reset(new ORUtils::MemoryBlock<float>(maxTrainingVoxelCount * featureCount, true, true));
   m_trainingVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
-  m_trainingVoxelLocationsMB.reset(new Selector::Selection(maxLabelCount * maxTrainingVoxelsPerLabel, true, true));
+  m_trainingVoxelLocationsMB.reset(new Selector::Selection(maxTrainingVoxelCount, true, true));
 
   // Set up the random forest.
   // FIXME: These settings shouldn't be hard-coded here ultimately.
@@ -284,20 +286,15 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   if(!samplingRenderState) return;
 
   // Sample some voxels for which to predict labels.
-  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_trainingVoxelLocationsMB);
+  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
-  // FIXME Pass in the number of locations from which to calculate features.
-  // Calculate feature descriptors for the voxels.
-  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_model->get_scene().get(), *m_predictionFeaturesMB);
-  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(
-    *m_predictionFeaturesMB,
-    m_maxPredictionVoxelCount,
-    m_featureCalculator->get_feature_count()
-  );
+  // Calculate feature descriptors for the sampled voxels.
+  // FIXME: Pass in the number of locations from which to calculate features.
+  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_model->get_scene().get(), *m_predictionFeaturesMB);
+  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
 
   // Predict labels for the voxels based on the feature descriptors.
-  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::LabelType> > labelsMB(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount, true, true));
-  SpaintVoxel::LabelType *labels = labelsMB->GetData(MEMORYDEVICE_CPU);
+  SpaintVoxel::LabelType *labels = m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -307,10 +304,10 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
     labels[i] = m_forest->predict(descriptors[i]);
   }
 
-  labelsMB->UpdateDeviceFromHost();
+  m_predictionLabelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  m_interactor->mark_voxels(m_trainingVoxelLocationsMB, labelsMB);
+  m_interactor->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

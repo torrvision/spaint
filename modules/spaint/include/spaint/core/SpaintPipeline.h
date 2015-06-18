@@ -120,8 +120,14 @@ private:
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
+  /** A memory block in which to store the labels predicted for the various voxels. */
+  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::LabelType> > m_predictionLabelsMB;
+
   /** The voxel sampler used in prediction mode. */
   UniformVoxelSampler_CPtr m_predictionSampler;
+
+  /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
+  Selector::Selection_Ptr m_predictionVoxelLocationsMB;
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   SpaintRaycaster_Ptr m_raycaster;
