@@ -131,11 +131,7 @@ static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr>
     const Descriptor_CPtr& desc = example.get_descriptor();
     const float x = desc->at(0);
     const float y = desc->at(1);
-    //rotatedExamples.push_back(boost::shared_ptr<Example<Label> >(new Example<Label>(
-    rotatedExamples.push_back(Example_Ptr(new Example<Label>(
-            make_2d_descriptor(x * cosf(angle) - y * sinf(angle),x * sinf(angle) + y * cosf(angle)), example.get_label())));
-  }
-  return rotatedExamples;
+    rotatedExamples.push_back(Example_Ptr(new Example<Label>(make_2d_descriptor(x * cosf(angle) - y * sinf(angle),x * sinf(angle) + y * cosf(angle)), example.get_label()))); rotatedExamples;
 }
 
 /**
