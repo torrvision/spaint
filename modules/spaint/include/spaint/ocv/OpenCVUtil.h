@@ -173,12 +173,12 @@ public:
   static cv::Mat3b make_rgb_image(const float *rgbData, int width, int height);
 
   /**
-   * \brief Makes an image with a black border around it.
+   * \brief Makes a copy of an RGB image that has been padded with a black border.
    *
-   * \param image       The image.
+   * \param image       The image to be padded.
    * \param paddingSize The size of the black border to be placed around the image (in pixels).
    */
-  static cv::Mat3b pad_image(const cv::Mat& image, size_t paddingSize);
+  static cv::Mat3b pad_image(const cv::Mat3b& image, size_t paddingSize);
 
   /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format and shows it in a named window.
