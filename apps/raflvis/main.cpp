@@ -27,6 +27,7 @@ using namespace rafl;
 
 typedef int Label;
 
+typedef boost::shared_ptr<Example<Label> > Example_Ptr;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef DecisionTree<Label> DT;
@@ -128,7 +129,11 @@ static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr>
   {
     const Example<Label>& example = *examples[i];
     const Descriptor_CPtr& desc = example.get_descriptor();
-    rotatedExamples.push_back(boost::shared_ptr<Example<Label> >(new Example<Label>(make_2d_descriptor(cosf(desc[0]),sinf(desc[1])), example.get_label())));
+    const float x = desc->at(0);
+    const float y = desc->at(1);
+    //rotatedExamples.push_back(boost::shared_ptr<Example<Label> >(new Example<Label>(
+    rotatedExamples.push_back(Example_Ptr(new Example<Label>(
+            make_2d_descriptor(x * cosf(angle) - y * sinf(angle),x * sinf(angle) + y * cosf(angle)), example.get_label())));
   }
   return rotatedExamples;
 }
@@ -160,7 +165,8 @@ static float evaluate_forest_accuracy(const RF_Ptr& forest, const std::vector<Ex
 
 int main(int argc, char *argv[])
 {
-#define CLASS_IMBALANCE_TEST
+//#define CLASS_IMBALANCE_TEST
+#define EXAMPLE_ROTATION_TEST
 
   // The seed for the random number generator.
   const unsigned int seed = 1234;
@@ -250,6 +256,13 @@ int main(int argc, char *argv[])
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 30);
     std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 3000);
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
+#elif defined(EXAMPLE_ROTATION_TEST)
+    static int currentRotation = 0;
+    if(roundCount % 20 == 0)
+    {
+      currentRotation += 10;
+    }
+    std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
 #else
     // Add an additional current class label after every 20 rounds of training.
     if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
