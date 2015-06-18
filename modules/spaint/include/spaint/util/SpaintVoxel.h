@@ -22,7 +22,7 @@ struct SpaintVoxel
   _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
   _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
 
-#ifndef USE_LOW_MEMORY_MODE
+#ifndef USE_LOW_POWER_MODE
   static const bool hasColorInformation = true;
 #else
   static const bool hasColorInformation = false;
@@ -33,7 +33,7 @@ struct SpaintVoxel
   /** Number of fused observations that make up @p sdf. */
   uchar w_depth;
 
-#ifndef USE_LOW_MEMORY_MODE
+#ifndef USE_LOW_POWER_MODE
   /** RGB colour information stored for this voxel. */
   Vector3u clr;
   /** Number of observations that made up @p clr. */
@@ -47,12 +47,10 @@ struct SpaintVoxel
   {
     sdf = SDF_initialValue();
     w_depth = 0;
-
-#ifndef USE_LOW_MEMORY_MODE
+#ifndef USE_LOW_POWER_MODE
     clr = (uchar)0;
     w_color = 0;
 #endif
-
     label = 0;
   }
 };

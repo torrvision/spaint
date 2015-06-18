@@ -8,11 +8,11 @@
 
 SET(targetname spaint)
 
-############################
-# Offer low-memory support #
-############################
+###########################
+# Offer low-power support #
+###########################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowMemorySupport.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
 
 ################################
 # Specify the libraries to use #
