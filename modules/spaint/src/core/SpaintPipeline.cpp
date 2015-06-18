@@ -219,8 +219,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   m_maxPredictionVoxelCount = 4096;
-  const size_t maxTrainingVoxelsPerLabel = 128;
-  const size_t maxTrainingVoxelCount = maxLabelCount * maxTrainingVoxelsPerLabel;
+  m_maxTrainingVoxelsPerLabel = 128;
+  const size_t maxTrainingVoxelCount = maxLabelCount * m_maxTrainingVoxelsPerLabel;
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
@@ -238,7 +238,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_predictionLabelsMB.reset(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount, true, true));
   m_predictionVoxelLocationsMB.reset(new Selector::Selection(m_maxPredictionVoxelCount, true, true));
 
-  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
   m_trainingFeaturesMB.reset(new ORUtils::MemoryBlock<float>(maxTrainingVoxelCount * featureCount, true, true));
   m_trainingLabelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_trainingVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
@@ -354,7 +354,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
     *m_trainingFeaturesMB,
     *m_trainingVoxelCountsMB,
     m_featureCalculator->get_feature_count(),
-    128, // TODO: maxVoxelsPerLabel
+    m_maxTrainingVoxelsPerLabel,
     maxLabelCount
   );
 

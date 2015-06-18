@@ -108,6 +108,9 @@ private:
   /** The maximum number of voxels for which to predict labels each frame. */
   size_t m_maxPredictionVoxelCount;
 
+  /** The maximum number of voxels per label from which to train each frame. */
+  size_t m_maxTrainingVoxelsPerLabel;
+
   /** The mode in which the pipeline is currently running. */
   Mode m_mode;
 
