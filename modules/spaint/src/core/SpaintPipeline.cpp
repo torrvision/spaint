@@ -240,6 +240,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
   m_trainingFeaturesMB.reset(new ORUtils::MemoryBlock<float>(maxTrainingVoxelCount * featureCount, true, true));
+  m_trainingLabelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_trainingVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
   m_trainingVoxelLocationsMB.reset(new Selector::Selection(maxTrainingVoxelCount, true, true));
 
@@ -259,7 +260,6 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
 
   m_fusionEnabled = true;
-  m_labelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
 }
@@ -321,17 +321,17 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   // incorrect labels for non-background things.
   LabelManager_CPtr labelManager = m_model->get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
-  bool *labelMask = m_labelMaskMB->GetData(MEMORYDEVICE_CPU);
+  bool *labelMask = m_trainingLabelMaskMB->GetData(MEMORYDEVICE_CPU);
   labelMask[0] = false;
   for(size_t i = 1; i < maxLabelCount; ++i)
   {
     labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
   }
-  m_labelMaskMB->UpdateDeviceFromHost();
+  m_trainingLabelMaskMB->UpdateDeviceFromHost();
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_trainingSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_labelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, m_model->get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
 #if DEBUGGING
   // Output the numbers of voxels sampled for each label (for debugging purposes).

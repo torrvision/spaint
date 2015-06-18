@@ -102,9 +102,6 @@ private:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   SpaintInteractor_Ptr m_interactor;
 
-  /** A memory block in which to store a mask indicating which labels are currently in use. */
-  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_labelMaskMB;
-
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
@@ -152,6 +149,9 @@ private:
 
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
+
+  /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to trani. */
+  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
 
   /** The voxel sampler used in training mode. */
   PerLabelVoxelSampler_CPtr m_trainingSampler;
