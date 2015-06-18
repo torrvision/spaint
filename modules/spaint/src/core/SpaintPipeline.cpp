@@ -222,23 +222,23 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_maxTrainingVoxelsPerLabel = 128;
   const size_t maxTrainingVoxelCount = maxLabelCount * m_maxTrainingVoxelsPerLabel;
 
+  // Set up the voxel samplers.
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  const unsigned int seed = 12345;
+  m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
+  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t patchSize = 13;
   const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
   m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(std::max(m_maxPredictionVoxelCount, maxTrainingVoxelCount), patchSize, patchSpacing, settings->deviceType);
 
-  // Set up the voxel samplers and the memory blocks that are needed to work with them.
+  // Set up the memory blocks needed for prediction and training.
   const size_t featureCount = m_featureCalculator->get_feature_count();
-  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  const unsigned int seed = 12345;
-
-  m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_predictionFeaturesMB.reset(new ORUtils::MemoryBlock<float>(m_maxPredictionVoxelCount * featureCount, true, true));
   m_predictionLabelsMB.reset(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount, true, true));
   m_predictionVoxelLocationsMB.reset(new Selector::Selection(m_maxPredictionVoxelCount, true, true));
-
-  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
   m_trainingFeaturesMB.reset(new ORUtils::MemoryBlock<float>(maxTrainingVoxelCount * featureCount, true, true));
   m_trainingLabelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
   m_trainingVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
