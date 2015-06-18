@@ -153,7 +153,7 @@ private:
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
-  /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to trani. */
+  /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to train. */
   boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
 
   /** The voxel sampler used in training mode. */
