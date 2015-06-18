@@ -203,7 +203,7 @@ void VOPFeatureCalculator_CUDA::update_coordinate_systems(int voxelLocationCount
   int numBlocks = voxelLocationCount;
 
   // TEMPORARY
-  const int binCount = 36;
+  const size_t binCount = 36;
 
   ck_update_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
     voxelLocationCount,

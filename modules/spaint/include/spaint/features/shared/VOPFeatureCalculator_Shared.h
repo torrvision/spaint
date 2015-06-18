@@ -286,7 +286,7 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
  * \param yAxis     The yAxis for the voxel corresponding to the current patch.
  */
 _CPU_AND_GPU_CODE_
-inline void update_coordinate_system(int tid, int patchArea, const float *histogram, int binCount, Vector3f *xAxis, Vector3f *yAxis)
+inline void update_coordinate_system(int tid, int patchArea, const float *histogram, size_t binCount, Vector3f *xAxis, Vector3f *yAxis)
 {
   if(tid % patchArea == 0)
   {
