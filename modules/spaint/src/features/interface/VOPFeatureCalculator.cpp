@@ -16,11 +16,11 @@ namespace spaint {
 
 VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
 :
-  // Debugging Variables.
+  // Debugging variables
   m_debugDelayMs(30),
   m_debuggingOutputWindowName("DebuggingOutputWindow"),
 
-  // Normal Variables.
+  // Normal variables
   m_patchSize(patchSize),
   m_patchSpacing(patchSpacing),
   m_surfaceNormalsMB(maxVoxelLocationCount, true, true),
@@ -38,7 +38,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   process_debug_window();
 #endif
 
-  // Calculate the surface normals at the voxel locations.
+  // Calculate the surface normals at the voxel locations (this also writes them into the feature vectors).
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
   calculate_surface_normals(voxelLocationsMB, voxelData, indexData, featuresMB);
@@ -64,7 +64,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   display_features(featuresMB, voxelLocationCount, "Feature Samples After Rotation");
 #endif
 
-  // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
+  // Convert the new RGB patches to the CIELab colour space.
   convert_patches_to_lab(voxelLocationCount, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
@@ -72,6 +72,10 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
 #endif
 
   // For each feature vector, fill in the height of the corresponding voxel in the scene as an extra feature.
+  // Since we assume that the scene's up vector corresponds with the up vector in the real world, the heights
+  // we write are simply the y values of the voxels. We ensure that scene up corresponds to world up by making
+  // use of the gyro in the Oculus Rift. (If the Rift is not being used, the camera should simply be held
+  // horizontally when running the application.)
   fill_in_heights(voxelLocationsMB, featuresMB);
 }
 
@@ -97,8 +101,8 @@ void VOPFeatureCalculator::display_features(const ORUtils::MemoryBlock<float>& f
   }
 
   const size_t scaleFactor = 6;
-  const size_t patchWidth = scaleFactor * m_patchSize;
-  cv::Mat3b tiledImage = OpenCVUtil::tile_image_patches_bounded(rgbPatchImages, 1024, 768, patchWidth, patchWidth);
+  const size_t scaledPatchSize = scaleFactor * m_patchSize;
+  cv::Mat3b tiledImage = OpenCVUtil::tile_image_patches_bounded(rgbPatchImages, 1024, 768, scaledPatchSize, scaledPatchSize);
   cv::imshow(windowName, tiledImage);
 #endif
 }
