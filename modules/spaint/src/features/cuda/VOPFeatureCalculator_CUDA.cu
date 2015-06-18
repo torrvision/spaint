@@ -81,7 +81,7 @@ __global__ void ck_update_coordinate_systems(const int voxelLocationCount, const
   compute_histogram_for_patch(tid, patchSize, intensities, binCount, histogram);
   __syncthreads();
 
-  update_patch_coordinate_system(tid, patchSize * patchSize, binCount, histogram, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
+  update_coordinate_system(tid, patchSize * patchSize, histogram, binCount, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
 }
 
 //#################### CONSTRUCTORS ####################

@@ -272,13 +272,25 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
 }
 
 /**
- * \brief TODO
+ * \brief Updates the coordinate system for a voxel to align it with the dominant orientation in the voxel's RGB patch.
+ *
+ * Because of the way in which the coordinate system update has been parallelised, there is a thread running for each
+ * pixel in the voxel's patch. However, the coordinate system for the voxel only needs to be updated once. As a result,
+ * we only perform the update in the thread of the first pixel in the patch.
+ *
+ * \param tid       The thread ID.
+ * \param patchArea The area of a voxel's patch.
+ * \param histogram The histogram of oriented intensity gradients for the patch.
+ * \param binCount  The number of quantized orientation bins in the histogram.
+ * \param xAxis     The xAxis for the voxel corresponding to the current patch.
+ * \param yAxis     The yAxis for the voxel corresponding to the current patch.
  */
 _CPU_AND_GPU_CODE_
-inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, const float *histogram, Vector3f *xAxis, Vector3f *yAxis)
+inline void update_coordinate_system(int tid, int patchArea, const float *histogram, int binCount, Vector3f *xAxis, Vector3f *yAxis)
 {
   if(tid % patchArea == 0)
   {
+    // Calculate the dominant orientation for the voxel.
     size_t dominantBin;
     double highestBinValue = 0;
     for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
@@ -294,6 +306,7 @@ inline void update_patch_coordinate_system(int tid, int patchArea, int binCount,
     float binAngle = static_cast<float>(2 * M_PI) / binCount;
     float dominantOrientation = dominantBin * binAngle;
 
+    // Rotate the existing axes to be aligned with the dominant orientation.
     float c = cos(dominantOrientation);
     float s = sin(dominantOrientation);
 
@@ -306,7 +319,15 @@ inline void update_patch_coordinate_system(int tid, int patchArea, int binCount,
 }
 
 /**
- * \brief TODO
+ * \brief Calculates the surface normal for the specified voxel and writes it into the surface normals array and the features array.
+ *
+ * \param voxelLocationIndex  The index of the voxel whose surface normal is to be written.
+ * \param voxelLocations      The locations of the voxels for which to write surface normals.
+ * \param voxelData           The scene's voxel data.
+ * \param indexData           The scene's index data.
+ * \param surfaceNormals      The surface normals at the voxel locations.
+ * \param featureCount        The number of features in a feature descriptor for a voxel.
+ * \param features            The features for the various voxels (packed sequentially).
  */
 _CPU_AND_GPU_CODE_
 inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLocations, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
@@ -315,10 +336,10 @@ inline void write_surface_normal(int voxelLocationIndex, const Vector3s *voxelLo
   // Compute the voxel's surface normal.
   Vector3f n = computeSingleNormalFromSDF(voxelData, indexData, voxelLocations[voxelLocationIndex].toFloat());
 
-  // Write the normal into the surface normals array to make debugging easier.
+  // Write the normal into the surface normals array.
   surfaceNormals[voxelLocationIndex] = n;
 
-  // Write the normal into the feature vector for the voxel.
+  // Write the normal into the normal segment of the feature vector for the voxel.
   float *normalFeaturesForVoxel = features + (voxelLocationIndex + 1) * featureCount - 4;
   *normalFeaturesForVoxel++ = n.x;
   *normalFeaturesForVoxel++ = n.y;

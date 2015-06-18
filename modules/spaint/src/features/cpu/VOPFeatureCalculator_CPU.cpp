@@ -144,7 +144,7 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   for(int tid = 0; tid < threadCount; ++tid)
   {
     int voxelLocationIndex = tid / patchArea;
-    update_patch_coordinate_system(tid, patchArea, binCount, &histograms[voxelLocationIndex][0], &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
+    update_coordinate_system(tid, patchArea, &histograms[voxelLocationIndex][0], binCount, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
   }
 #endif
 }
