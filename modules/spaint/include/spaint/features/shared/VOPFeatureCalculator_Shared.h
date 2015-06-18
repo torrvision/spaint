@@ -79,7 +79,7 @@ inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, fl
  * \param histogram       The location into which to write the histogram for the patch.
  */
 _CPU_AND_GPU_CODE_
-inline void compute_histogram_for_patch(int tid, int patchSize, const float *intensityPatch, int binCount, float *histogram)
+inline void compute_histogram_for_patch(int tid, size_t patchSize, const float *intensityPatch, int binCount, float *histogram)
 {
   // Compute the index and (x,y) coordinates of the pixel we're processing within the current patch.
   const int indexInPatch = tid % (patchSize * patchSize);
