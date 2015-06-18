@@ -108,11 +108,17 @@ private:
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
+  /** The maximum number of voxels for which to predict labels each frame. */
+  size_t m_maxPredictionVoxelCount;
+
   /** The mode in which the pipeline is currently running. */
   Mode m_mode;
 
   /** The spaint model. */
   SpaintModel_Ptr m_model;
+
+  /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
   /** The voxel sampler used in prediction mode. */
   UniformVoxelSampler_CPtr m_predictionSampler;
@@ -138,11 +144,11 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
-  /** The voxel sampler used in training mode. */
-  PerLabelVoxelSampler_CPtr m_trainingSampler;
-
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
+
+  /** The voxel sampler used in training mode. */
+  PerLabelVoxelSampler_CPtr m_trainingSampler;
 
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
