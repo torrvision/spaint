@@ -8,7 +8,7 @@
 
 #include "features/shared/VOPFeatureCalculator_Shared.h"
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 namespace spaint {
 
