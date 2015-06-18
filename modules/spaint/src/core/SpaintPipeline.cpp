@@ -218,7 +218,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
-  m_maxPredictionVoxelCount = 4096;
+  m_maxPredictionVoxelCount = 8192;
   m_maxTrainingVoxelsPerLabel = 128;
   const size_t maxTrainingVoxelCount = maxLabelCount * m_maxTrainingVoxelsPerLabel;
 
@@ -246,7 +246,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the random forest.
   // FIXME: These settings shouldn't be hard-coded here ultimately.
-  const size_t treeCount = 1;
+  const size_t treeCount = 5;
   DecisionTree<SpaintVoxel::LabelType>::Settings dtSettings;
   dtSettings.candidateCount = 256;
   dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(patchSize));
