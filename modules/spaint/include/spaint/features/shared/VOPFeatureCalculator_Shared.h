@@ -157,7 +157,12 @@ inline void compute_intensities_for_patch(int tid, const float *features, int fe
 }
 
 /**
- * \brief TODO
+ * \brief Writes the height of the specified voxel into the corresponding feature vector for use as an extra feature.
+ *
+ * \param voxelLocationIndex  The index of the voxel whose height should be written.
+ * \param voxelLocations      The locations of the voxels for which we are calculating features.
+ * \param featureCount        The number of features in a feature descriptor for a voxel.
+ * \param features            The feature descriptors for the various voxels (stored sequentially).
  */
 _CPU_AND_GPU_CODE_
 inline void fill_in_height(int voxelLocationIndex, const Vector3s *voxelLocations, size_t featureCount, float *features)
@@ -197,7 +202,12 @@ inline Vector3f generate_arbitrary_coplanar_unit_vector(const Vector3f& n)
 }
 
 /**
- * \brief TODO
+ * \brief Generates an (x,y) coordinate system in the tangent plane of the specified voxel.
+ *
+ * \param voxelLocationIndex  The index of the voxel for which to generate a coordinate system.
+ * \param surfaceNormals      The surface normals at the voxel locations.
+ * \param xAxes               The array in which to store the generated x axis for the voxel.
+ * \param yAxes               The array in which to store the generated y axis for the voxel.
  */
 _CPU_AND_GPU_CODE_
 inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *surfaceNormals, Vector3f *xAxes, Vector3f *yAxes)
@@ -209,7 +219,20 @@ inline void generate_coordinate_system(int voxelLocationIndex, const Vector3f *s
 }
 
 /**
- * \brief TODO
+ * \brief Generates an RGB patch for the specified voxel by sampling from a regularly-spaced grid around it in its tangent plane.
+ *
+ * The RGB patches will be stored as the patch segments of the feature descriptors for the various voxels.
+ *
+ * \param voxelLocationIndex  The index of the voxel for which to generate an RGB patch.
+ * \param voxelLocations      The locations of the voxels for which to generate RGB patches.
+ * \param xAxes               The x axes of the coordinate systems in the tangent planes to the surfaces at the voxel locations.
+ * \param yAxes               The y axes of the coordinate systems in the tangent planes to the surfaces at the voxel locations.
+ * \param voxelData           The scene's voxel data.
+ * \param indexData           The scene's index data.
+ * \param patchSize           The side length of a VOP patch (must be odd).
+ * \param patchSpacing        The spacing in the scene (in voxels) between individual pixels in a patch.
+ * \param featureCount        The number of features in a feature descriptor for a voxel.
+ * \param features            The feature descriptors for the various voxels (stored sequentially).
  */
 _CPU_AND_GPU_CODE_
 inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLocations, const Vector3f *xAxes, const Vector3f *yAxes,
