@@ -64,7 +64,7 @@ private:
                                          ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
-   * \brief Converts the VOP patch segments of the feature vectors for the voxels from RGB to LAB.
+   * \brief Converts the VOP patch segments of the feature vectors for the voxels from RGB to CIELab.
    *
    * \param voxelLocationCount  The number of voxel locations for which we are calculating features.
    * \param featuresMB          A memory block into which to store the calculated feature descriptors (packed sequentially).

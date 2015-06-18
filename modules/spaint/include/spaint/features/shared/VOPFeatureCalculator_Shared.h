@@ -21,12 +21,20 @@ inline float rgb_to_lab_f(float t)
 }
 
 /**
- * \brief TODO
+ * \brief Converts the RGB patch for the specified voxel to the CIELab colour space.
+ *
+ * The patches are stored as the patch segments of the feature descriptors for the various voxels.
+ *
+ * \param voxelLocationIndex  The index of the voxel whose patch is to be converted.
+ * \param featureCount        The number of features in a feature descriptor for a voxel.
+ * \param features            The feature descriptors for the various voxels (stored sequentially).
  */
 _CPU_AND_GPU_CODE_
 inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, float *features)
 {
-  // Convert each RGB colour in the VOP patch of a feature vector to the CIELab colour space.
+  const float EPSILON = 0.000001f;
+
+  // Convert each RGB colour in the patch segment of the voxel's feature vector to the CIELab colour space.
   for(size_t i = voxelLocationIndex * featureCount, end = i + featureCount - 4; i != end; i += 3)
   {
     // Equivalent Matlab code can be found at: https://www.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/code/Util/RGB2Lab.m
@@ -50,11 +58,58 @@ inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, fl
     float A = 500.0f * (fx - fy);
     float B = 200.0f * (fy - fz);
 
-    //float AplusB = A + B;
+    float AplusB = fabs(A + B) + EPSILON;
 
     features[i] = L;
-    features[i+1] = A/* / AplusB*/;
-    features[i+2] = B/* / AplusB*/;
+    features[i+1] = A / AplusB;
+    features[i+2] = B / AplusB;
+  }
+}
+
+/**
+ * \brief Computes a histogram of oriented gradients from a patch of intensity values.
+ *
+ * Note that each thread handles an individual pixel within a patch. On the GPU, there is a
+ * thread block per patch, and we store the histograms in shared memory for efficiency.
+ *
+ * \param tid             The thread ID.
+ * \param patchSize       The side length of a VOP patch (must be odd).
+ * \param intensityPatch  The patch of intensity values from which to calculate the histogram.
+ * \param binCount        The number of bins into which to quantize the gradient orientations.
+ * \param histogram       The location into which to write the histogram for the patch.
+ */
+_CPU_AND_GPU_CODE_
+inline void compute_histogram_for_patch(int tid, int patchSize, const float *intensityPatch, int binCount, float *histogram)
+{
+  // Compute the index and (x,y) coordinates of the pixel we're processing within the current patch.
+  const int indexInPatch = tid % (patchSize * patchSize);
+  const size_t y = indexInPatch / patchSize;
+  const size_t x = indexInPatch % patchSize;
+
+  // Provided we're within the boundaries of the patch and can safely compute a gradient:
+  if(x != 0 && y != 0 && x != patchSize - 1 && y != patchSize - 1)
+  {
+    // Compute the x and y derivatives.
+    float xDeriv = intensityPatch[indexInPatch + 1] - intensityPatch[indexInPatch - 1];
+    float yDeriv = intensityPatch[indexInPatch + patchSize] - intensityPatch[indexInPatch - patchSize];
+
+    // Compute the magnitude.
+    float mag = static_cast<float>(sqrt(xDeriv * xDeriv + yDeriv * yDeriv));
+
+    // Compute the orientation.
+    double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
+
+    // Quantize the orientation and update the histogram.
+    int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
+
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
+    atomicAdd(&histogram[bin], mag);
+#else
+  #ifdef WITH_OPENMP
+    #pragma omp atomic
+  #endif
+    histogram[bin] += mag;
+#endif
   }
 }
 
@@ -73,94 +128,17 @@ inline float convert_rgb_to_grey(float r, float g, float b)
 }
 
 /**
- * \brief TODO
- */
-_CPU_AND_GPU_CODE_
-inline void compute_histogram_for_patch(int tid, int patchSize, float *intensityPatch, int binCount, float *histogram)
-{
-  int indexInPatch = tid % (patchSize * patchSize);
-
-  size_t y = indexInPatch / patchSize;
-  size_t x = indexInPatch % patchSize;
-
-  if(x != 0 && y != 0 && x != patchSize - 1 && y != patchSize - 1)
-  {
-    // Compute the derivatives.
-    float xDeriv = intensityPatch[indexInPatch + 1] - intensityPatch[indexInPatch - 1];
-    float yDeriv = intensityPatch[indexInPatch + patchSize] - intensityPatch[indexInPatch - patchSize];
-
-    // Compute the magnitude.
-    float mag = static_cast<float>(sqrt(xDeriv * xDeriv + yDeriv * yDeriv));
-
-    // Compute the orientation.
-    double ori = atan2(yDeriv, xDeriv) + 2 * M_PI;
-
-    // Quantize the orientation and update the histogram.
-    int bin = static_cast<int>(binCount * ori / (2 * M_PI)) % binCount;
-
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-    atomicAdd(&histogram[bin], mag);
-    //histogram[bin] += mag; // note: this will need synchronisation!
-#else
-  #ifdef WITH_OPENMP
-    #pragma omp atomic
-  #endif
-    histogram[bin] += mag; // note: this will need synchronisation!
-#endif
-  }
-}
-
-/**
- * \brief TODO
- */
-_CPU_AND_GPU_CODE_
-inline void fill_in_normal_feature(int voxelLocationIndex, const Vector3f *surfaceNormals, size_t featureCount, float *features)
-{
-  const Vector3f& n = surfaceNormals[voxelLocationIndex];
-  float *featuresForVoxel = features + voxelLocationIndex * featureCount;
-  size_t offset = featureCount - 4;
-
-  featuresForVoxel[offset] = n.x;
-  featuresForVoxel[offset + 1] = n.y;
-  featuresForVoxel[offset + 2] = n.z;
-}
-
-/**
- * \brief TODO
- */
-_CPU_AND_GPU_CODE_
-inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, float *histogram, Vector3f *xAxis, Vector3f *yAxis)
-{
-  if(tid % patchArea == 0)
-  {
-    size_t dominantBin;
-    double highestBinValue = 0;
-    for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
-    {
-      double binValue = histogram[binIndex];
-      if(binValue >= highestBinValue)
-      {
-        highestBinValue = binValue;
-        dominantBin = binIndex;
-      }
-    }
-
-    float binAngle = static_cast<float>(2 * M_PI) / binCount;
-    float dominantOrientation = dominantBin * binAngle;
-
-    float c = cos(dominantOrientation);
-    float s = sin(dominantOrientation);
-
-    Vector3f xAxisCopy = *xAxis;
-    Vector3f yAxisCopy = *yAxis;
-
-    *xAxis = c * xAxisCopy + s * yAxisCopy;
-    *yAxis = c * yAxisCopy - s * xAxisCopy;
-  }
-}
-
-/**
- * \brief TODO
+ * \brief Computes a patch of intensity values from an RGB patch.
+ *
+ * The RGB patches are stored as the patch segments of the feature descriptors for the various voxels.
+ * Each thread processes one pixel of a patch. On the GPU, there is a thread block per patch, and the
+ * intensity values are stored in shared memory for efficiency.
+ *
+ * \param tid             The thread ID.
+ * \param features        The feature descriptors for the various voxels (stored sequentially).
+ * \param featureCount    The number of features in a feature descriptor for a voxel.
+ * \param patchSize       The side length of a VOP patch (must be odd).
+ * \param intensityPatch  The location into which to write the intensity values for the patch.
  */
 _CPU_AND_GPU_CODE_
 inline void compute_intensities_for_patch(int tid, const float *features, int featureCount, int patchSize, float *intensityPatch)
@@ -267,6 +245,40 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
       features[offset++] = clr.g;
       features[offset++] = clr.b;
     }
+  }
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void update_patch_coordinate_system(int tid, int patchArea, int binCount, const float *histogram, Vector3f *xAxis, Vector3f *yAxis)
+{
+  if(tid % patchArea == 0)
+  {
+    size_t dominantBin;
+    double highestBinValue = 0;
+    for(size_t binIndex = 0; binIndex < binCount; ++binIndex)
+    {
+      double binValue = histogram[binIndex];
+      if(binValue >= highestBinValue)
+      {
+        highestBinValue = binValue;
+        dominantBin = binIndex;
+      }
+    }
+
+    float binAngle = static_cast<float>(2 * M_PI) / binCount;
+    float dominantOrientation = dominantBin * binAngle;
+
+    float c = cos(dominantOrientation);
+    float s = sin(dominantOrientation);
+
+    Vector3f xAxisCopy = *xAxis;
+    Vector3f yAxisCopy = *yAxis;
+
+    *xAxis = c * xAxisCopy + s * yAxisCopy;
+    *yAxis = c * yAxisCopy - s * xAxisCopy;
   }
 }
 
