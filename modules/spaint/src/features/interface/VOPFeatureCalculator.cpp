@@ -35,7 +35,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
                                               ORUtils::MemoryBlock<float>& featuresMB) const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  process_debug_windows();
+  process_debug_window();
 #endif
 
   // Calculate the surface normals at the voxel locations.
@@ -51,7 +51,7 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  debug_display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples Before Rotation");
+  display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples Before Rotation");
 #endif
 
   // Determine the dominant orientation for each patch and update the coordinate systems accordingly.
@@ -61,14 +61,14 @@ void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3
   generate_rgb_patches(voxelLocationsMB, voxelData, indexData, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  debug_display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After Rotation");
+  display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After Rotation");
 #endif
 
   // Convert the new RGB patches to the CIELab colour space to form the feature vectors.
   convert_patches_to_lab(voxelLocationCount, featuresMB);
 
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
-  debug_display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After LAB Conversion");
+  display_features(featuresMB, voxelLocationsMB.dataSize, "Feature Samples After LAB Conversion");
 #endif
 
   // For each feature vector, fill in the height of the corresponding voxel in the scene as an extra feature.
@@ -84,7 +84,7 @@ size_t VOPFeatureCalculator::get_feature_count() const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VOPFeatureCalculator::debug_display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const
+void VOPFeatureCalculator::display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
@@ -102,7 +102,7 @@ void VOPFeatureCalculator::debug_display_features(const ORUtils::MemoryBlock<flo
 #endif
 }
 
-void VOPFeatureCalculator::process_debug_windows() const
+void VOPFeatureCalculator::process_debug_window() const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
   // If this is the first iteration, create a debugging window with a trackbar used to control the delay between consecutive frames.

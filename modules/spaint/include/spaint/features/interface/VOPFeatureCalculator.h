@@ -64,15 +64,18 @@ private:
                                          ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
-   * \brief TODO
+   * \brief Converts the VOP patch segments of the feature vectors for the voxels from RGB to LAB.
+   *
+   * \param voxelLocationCount  The number of voxel locations for which we are calculating features.
+   * \param featuresMB          A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void convert_patches_to_lab(int voxelLocationCount, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
-   * \brief Write the height of each voxel into the corresponding feature vector for use as an extra feature.
+   * \brief Writes the height of each voxel into the corresponding feature vector for use as an extra feature.
    *
-   * \param voxelLocations  A memory block containing the locations of the voxels for which to fill in heights.
-   * \param featuresMB      A memory block into which to store the calculated feature descriptors (packed sequentially).
+   * \param voxelLocationsMB  A memory block containing the locations of the voxels for which to fill in the heights.
+   * \param featuresMB        A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void fill_in_heights(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
@@ -84,14 +87,24 @@ private:
   virtual void generate_coordinate_systems(int voxelLocationCount) const = 0;
 
   /**
-   * \brief TODO
+   * \brief Generates an RGB patch for each voxel by sampling from a regularly-spaced grid around it in its tangent plane.
+   *
+   * \param voxelLocationsMB  A memory block containing the locations of the voxels for which to generate RGB patches.
+   * \param voxelData         The scene's voxel data.
+   * \param indexData         The scene's index data.
+   * \param featuresMB        A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void generate_rgb_patches(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                                     const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                     ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**
-   * \brief TODO
+   * \brief Updates the coordinate system for each voxel to align it with the dominant orientation in the voxel's RGB patch.
+   *
+   * This is intended to achieve at least some degree of rotation invariance.
+   *
+   * \param voxelLocationCount  The number of voxel locations for which we are calculating features.
+   * \param featuresMB          A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
@@ -110,12 +123,12 @@ private:
   /**
    * \brief TODO.
    */
-  void debug_display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const;
+  void display_features(const ORUtils::MemoryBlock<float>& featuresMB, size_t size, const std::string& windowName) const;
 
   /**
    * \brief Sets up a debugging window containing a trackbar that can be used to control the delay between consecutive frames.
    */
-  void process_debug_windows() const;
+  void process_debug_window() const;
 };
 
 }
