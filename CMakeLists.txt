@@ -34,7 +34,7 @@ ENDIF()
 ADD_SUBDIRECTORY(modules)
 
 OPTION(BUILD_APPS "Build the applications?" ON)
-OPTION(BUILD_EVALUATION " Build the evaluation module?" ON)
+OPTION(BUILD_EVALUATION "Build the evaluation module?" ON)
 OPTION(BUILD_TESTS "Build the tests?" ON)
 
 IF(BUILD_APPS)

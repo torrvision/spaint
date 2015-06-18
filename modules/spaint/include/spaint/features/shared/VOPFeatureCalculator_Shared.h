@@ -261,7 +261,7 @@ inline void generate_rgb_patch(int voxelLocationIndex, const Vector3s *voxelLoca
       // If there is a voxel at that location, get its colour; otherwise, default to magenta.
       Vector3u clr(255, 0, 255);
       SpaintVoxel voxel = readVoxel(voxelData, indexData, loc, isFound);
-      if(isFound) clr = voxel.clr;
+      if(isFound) clr = VoxelColourReader<SpaintVoxel::hasColorInformation>::read(voxel);
 
       // Write the colour values into the relevant places in the features array.
       features[offset++] = clr.r;

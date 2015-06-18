@@ -8,6 +8,12 @@
 
 SET(targetname spaintgui)
 
+############################
+# Offer low-memory support #
+############################
+
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowMemorySupport.cmake)
+
 ################################
 # Specify the libraries to use #
 ################################
