@@ -289,7 +289,6 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
   // Calculate feature descriptors for the sampled voxels.
-  // FIXME: Pass in the number of locations from which to calculate features.
   m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_model->get_scene().get(), *m_predictionFeaturesMB);
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
 
