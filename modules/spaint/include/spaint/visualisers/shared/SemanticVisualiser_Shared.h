@@ -91,8 +91,8 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
 
     // Calculate the Lambertian lighting term.
     Vector3f L = normalize(lightPos - point);
-    Vector3f N;
-    float NdotL;
+    Vector3f N = 0.0f;
+    float NdotL = 0.0f;
     computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, L, N, NdotL);
     float lambertian = CLAMP(NdotL, 0.0f, 1.0f);
 
