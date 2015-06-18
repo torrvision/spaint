@@ -159,7 +159,7 @@ private:
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
 
-  /** A memory block in which to store the locations of the voxels sampled for each label for training purposes. */
+  /** A memory block in which to store the locations of the voxels sampled for training purposes. */
   Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
 #ifdef WITH_VICON

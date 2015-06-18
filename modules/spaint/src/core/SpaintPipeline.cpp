@@ -215,7 +215,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
 
-  // Set the prediction and training parameters.
+  // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   m_maxPredictionVoxelCount = 4096;
