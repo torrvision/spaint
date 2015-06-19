@@ -95,12 +95,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
-  // If the P key is pressed, toggle whether or not Phong lighting is enabled.
-  if(keysym.sym == SDLK_p)
-  {
-    m_renderer->set_phong_enabled(!m_renderer->get_phong_enabled());
-  }
-
   // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene and reset the command manager.
   if(keysym.sym == SDLK_BACKSPACE)
   {
@@ -124,6 +118,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
               << "Right = Turn Right\n"
+              << "C + 1 = To Semantic Lambertian Raycast\n"
+              << "C + 2 = To Semantic Phong Raycast\n"
+              << "C + 3 = To Semantic Colour Raycast\n"
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
@@ -398,4 +395,12 @@ void Application::process_renderer_input()
     }
   }
   else --framesTillSwitchAllowed;
+
+  // Allow the user to switch raycast type.
+  if(m_inputState.key_down(SDLK_c))
+  {
+    if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICCOLOUR);
+  }
 }
