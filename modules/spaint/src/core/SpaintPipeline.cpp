@@ -20,6 +20,10 @@ using namespace InfiniTAM::Engine;
 #include "sampling/VoxelSamplerFactory.h"
 #include "util/MemoryBlockFactory.h"
 
+#ifdef WITH_OPENCV
+#include "ocv/OpenCVUtil.h"
+#endif
+
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
 #endif
@@ -126,15 +130,18 @@ void SpaintPipeline::run_main_section()
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
 }
 
-void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& samplingRenderState)
+void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 {
   switch(m_mode)
   {
+    case MODE_FEATURE_INSPECTION:
+      run_feature_inspection_section(renderState);
+      break;
     case MODE_PREDICTION:
-      run_prediction_section(samplingRenderState);
+      run_prediction_section(renderState);
       break;
     case MODE_TRAINING:
-      run_training_section(samplingRenderState);
+      run_training_section(renderState);
       break;
     default:
       break;
@@ -289,6 +296,30 @@ ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, cons
     ), 1
   );
   return compositeTracker;
+}
+
+void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
+{
+  // Get the voxels (if any) selected by the user (prior to selection transformation).
+  Selector::Selection_CPtr selection = m_interactor->get_selector()->get_selection();
+
+  // If the user hasn't selected a single voxel, early out.
+  if(!selection || selection->dataSize != 1) return;
+
+  // Calculate the feature descriptor for the selected voxel.
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(m_featureCalculator->get_feature_count());
+  m_featureCalculator->calculate_features(*selection, m_model->get_scene().get(), *featuresMB);
+
+#ifdef WITH_OPENCV
+  // Convert the features to an OpenCV image and show it in a window.
+  featuresMB->UpdateHostFromDevice();
+  const float *features = featuresMB->GetData(MEMORYDEVICE_CPU);
+  const size_t patchSize = 13; // TEMPORARY
+  cv::Mat3b featuresImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
+  const float scaleFactor = 10.0f;
+  cv::resize(featuresImage, featuresImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
+  cv::imshow("Features", featuresImage);
+#endif
 }
 
 void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)

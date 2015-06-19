@@ -355,6 +355,7 @@ void Application::process_mode_input()
     if(m_inputState.key_down(SDLK_1))      mode = SpaintPipeline::MODE_NORMAL;
     else if(m_inputState.key_down(SDLK_2)) mode = SpaintPipeline::MODE_TRAINING;
     else if(m_inputState.key_down(SDLK_3)) mode = SpaintPipeline::MODE_PREDICTION;
+    else if(m_inputState.key_down(SDLK_4)) mode = SpaintPipeline::MODE_FEATURE_INSPECTION;
   }
   m_spaintPipeline->set_mode(mode);
 }
