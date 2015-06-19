@@ -178,7 +178,7 @@ public:
    * \param image       The image to be padded.
    * \param paddingSize The size of the black border to be placed around the image (in pixels).
    */
-  static cv::Mat3b pad_image(const cv::Mat3b& image, size_t paddingSize);
+  static cv::Mat3b pad_image(const cv::Mat3b& image, int paddingSize);
 
   /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format and shows it in a named window.
@@ -239,7 +239,7 @@ public:
    * \param paddingSize   The size of the black border to be placed around each tile (in pixels).
    * \return              The tiled image.
    */
-  static cv::Mat3b tile_image_patches(const std::vector<cv::Mat3b>& images, size_t tileCols, size_t tileRows, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
+  static cv::Mat3b tile_image_patches(const std::vector<cv::Mat3b>& images, int tileCols, int tileRows, int patchWidth, int patchHeight, int paddingSize = 2);
 
   /**
    * \brief Tiles images on a regular grid within a overall image of fixed dimensions.
@@ -255,7 +255,7 @@ public:
    * \param paddingSize   The size of the black border to be placed around each tile (in pixels).
    * \return              The tiled image.
    */
-  static cv::Mat3b tile_image_patches_bounded(const std::vector<cv::Mat3b>& images, size_t imageWidth, size_t imageHeight, size_t patchWidth, size_t patchHeight, size_t paddingSize = 2);
+  static cv::Mat3b tile_image_patches_bounded(const std::vector<cv::Mat3b>& images, int imageWidth, int imageHeight, int patchWidth, int patchHeight, int paddingSize = 2);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
