@@ -29,10 +29,10 @@ class PerLabelVoxelSampler
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** A memory block in which to store random indices when sampling from the candidate voxels for each label. */
-  mutable ORUtils::MemoryBlock<int> m_candidateVoxelIndicesMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<int> > m_candidateVoxelIndicesMB;
 
   /** A memory block in which to store the locations of candidate voxels in the raycast result, grouped by label. */
-  mutable ORUtils::MemoryBlock<Vector3s> m_candidateVoxelLocationsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3s> > m_candidateVoxelLocationsMB;
 
   /** The maximum number of labels that can be in use. */
   const size_t m_maxLabelCount;
@@ -50,13 +50,13 @@ protected:
    * A memory block in which to store the prefix sums for the voxel masks. These are used to determine the locations in the
    * candidate voxel locations array into which to write candidate voxels.
    */
-  mutable ORUtils::MemoryBlock<unsigned int> m_voxelMaskPrefixSumsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_voxelMaskPrefixSumsMB;
 
   /**
    * A memory block in which to store voxel masks indicating which voxels may be used as examples of which semantic labels.
    * The masks for the different labels are concatenated into a single 1D array.
    */
-  mutable ORUtils::MemoryBlock<unsigned char> m_voxelMasksMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned char> > m_voxelMasksMB;
 
   //#################### CONSTRUCTORS ####################
 protected:

@@ -35,7 +35,7 @@ protected:
   boost::shared_ptr<tvgutil::RandomNumberGenerator> m_rng;
 
   /** A memory block in which to store the indices of the voxels to be sampled from the raycast result. */
-  mutable ORUtils::MemoryBlock<int> m_sampledVoxelIndicesMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<int> > m_sampledVoxelIndicesMB;
 
   //#################### CONSTRUCTORS ####################
 protected:

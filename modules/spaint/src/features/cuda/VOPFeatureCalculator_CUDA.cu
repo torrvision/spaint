@@ -110,13 +110,13 @@ void VOPFeatureCalculator_CUDA::calculate_surface_normals(const ORUtils::MemoryB
     voxelLocationCount,
     voxelData,
     indexData,
-    m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA),
+    m_surfaceNormalsMB->GetData(MEMORYDEVICE_CUDA),
     get_feature_count(),
     featuresMB.GetData(MEMORYDEVICE_CUDA)
   );
 
 #if DEBUGGING
-  m_surfaceNormalsMB.UpdateHostFromDevice();
+  m_surfaceNormalsMB->UpdateHostFromDevice();
   featuresMB.UpdateHostFromDevice();
 #endif
 }
@@ -162,15 +162,15 @@ void VOPFeatureCalculator_CUDA::generate_coordinate_systems(int voxelLocationCou
   int numBlocks = (voxelLocationCount + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_generate_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
-    m_surfaceNormalsMB.GetData(MEMORYDEVICE_CUDA),
+    m_surfaceNormalsMB->GetData(MEMORYDEVICE_CUDA),
     voxelLocationCount,
-    m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
-    m_yAxesMB.GetData(MEMORYDEVICE_CUDA)
+    m_xAxesMB->GetData(MEMORYDEVICE_CUDA),
+    m_yAxesMB->GetData(MEMORYDEVICE_CUDA)
   );
 
 #if DEBUGGING
-  m_xAxesMB.UpdateHostFromDevice();
-  m_yAxesMB.UpdateHostFromDevice();
+  m_xAxesMB->UpdateHostFromDevice();
+  m_yAxesMB->UpdateHostFromDevice();
 #endif
 }
 
@@ -186,8 +186,8 @@ void VOPFeatureCalculator_CUDA::generate_rgb_patches(const ORUtils::MemoryBlock<
   ck_generate_rgb_patches<<<numBlocks,threadsPerBlock>>>(
     voxelLocationsMB.GetData(MEMORYDEVICE_CUDA),
     voxelLocationCount,
-    m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
-    m_yAxesMB.GetData(MEMORYDEVICE_CUDA),
+    m_xAxesMB->GetData(MEMORYDEVICE_CUDA),
+    m_yAxesMB->GetData(MEMORYDEVICE_CUDA),
     voxelData,
     indexData,
     m_patchSize,
@@ -212,13 +212,13 @@ void VOPFeatureCalculator_CUDA::update_coordinate_systems(int voxelLocationCount
     get_feature_count(),
     m_patchSize,
     m_binCount,
-    m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
-    m_yAxesMB.GetData(MEMORYDEVICE_CUDA)
+    m_xAxesMB->GetData(MEMORYDEVICE_CUDA),
+    m_yAxesMB->GetData(MEMORYDEVICE_CUDA)
   );
 
 #if DEBUGGING
-  m_xAxesMB.UpdateHostFromDevice();
-  m_yAxesMB.UpdateHostFromDevice();
+  m_xAxesMB->UpdateHostFromDevice();
+  m_yAxesMB->UpdateHostFromDevice();
 #endif
 }
 

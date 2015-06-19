@@ -18,6 +18,7 @@ using namespace InfiniTAM::Engine;
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
+#include "util/MemoryBlockFactory.h"
 
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
@@ -163,6 +164,9 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   }
 #endif
 
+  // Get the memory block factory.
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
+
   // Determine the RGB and depth image sizes.
   Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
   Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
@@ -245,13 +249,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the memory blocks needed for prediction and training.
   const size_t featureCount = m_featureCalculator->get_feature_count();
-  m_predictionFeaturesMB.reset(new ORUtils::MemoryBlock<float>(m_maxPredictionVoxelCount * featureCount, true, true));
-  m_predictionLabelsMB.reset(new ORUtils::MemoryBlock<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount, true, true));
-  m_predictionVoxelLocationsMB.reset(new Selector::Selection(m_maxPredictionVoxelCount, true, true));
-  m_trainingFeaturesMB.reset(new ORUtils::MemoryBlock<float>(maxTrainingVoxelCount * featureCount, true, true));
-  m_trainingLabelMaskMB.reset(new ORUtils::MemoryBlock<bool>(maxLabelCount, true, true));
-  m_trainingVoxelCountsMB.reset(new ORUtils::MemoryBlock<unsigned int>(maxLabelCount, true, true));
-  m_trainingVoxelLocationsMB.reset(new Selector::Selection(maxTrainingVoxelCount, true, true));
+  m_predictionFeaturesMB = mbf.make_block<float>(m_maxPredictionVoxelCount * featureCount);
+  m_predictionLabelsMB = mbf.make_block<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount);
+  m_predictionVoxelLocationsMB = mbf.make_block<Vector3s>(m_maxPredictionVoxelCount);
+  m_trainingFeaturesMB = mbf.make_block<float>(maxTrainingVoxelCount * featureCount);
+  m_trainingLabelMaskMB = mbf.make_block<bool>(maxLabelCount);
+  m_trainingVoxelCountsMB = mbf.make_block<unsigned int>(maxLabelCount);
+  m_trainingVoxelLocationsMB = mbf.make_block<Vector3s>(maxTrainingVoxelCount);
 
   // Set up the random forest.
   // FIXME: These settings shouldn't be hard-coded here ultimately.

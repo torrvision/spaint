@@ -4,6 +4,9 @@
 
 #include "MarkVoxelsCommand.h"
 
+#include <spaint/util/MemoryBlockFactory.h>
+using namespace spaint;
+
 //#################### CONSTRUCTORS ####################
 
 MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, unsigned char label,
@@ -11,7 +14,7 @@ MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::Memo
 : Command(get_static_description()),
   m_interactor(interactor),
   m_label(label),
-  m_oldVoxelLabelsMB(new ORUtils::MemoryBlock<unsigned char>(voxelLocationsMB->dataSize, true, true)),
+  m_oldVoxelLabelsMB(MemoryBlockFactory::instance().make_block<unsigned char>(voxelLocationsMB->dataSize)),
   m_voxelLocationsMB(voxelLocationsMB)
 {}
 

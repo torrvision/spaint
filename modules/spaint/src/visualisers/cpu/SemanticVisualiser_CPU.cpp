@@ -31,7 +31,7 @@ void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,
   const Vector4f *pointsRay = renderState->raycastResult->GetData(MEMORYDEVICE_CPU);
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const ITMVoxelIndex::IndexData *voxelIndex = scene->index.getIndexData();
-  const Vector3u *labelColours = m_labelColoursMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3u *labelColours = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for

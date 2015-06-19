@@ -24,7 +24,7 @@ class SemanticVisualiser
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** A memory block in which to store the colours to use for the semantic labels. */
-  mutable ORUtils::MemoryBlock<Vector3u> m_labelColoursMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3u> > m_labelColoursMB;
 
   //#################### CONSTRUCTORS ####################
 protected:

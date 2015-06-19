@@ -4,6 +4,8 @@
 
 #include "features/interface/VOPFeatureCalculator.h"
 
+#include "util/MemoryBlockFactory.h"
+
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
 #endif
@@ -24,9 +26,9 @@ VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t 
   m_binCount(binCount),
   m_patchSize(patchSize),
   m_patchSpacing(patchSpacing),
-  m_surfaceNormalsMB(maxVoxelLocationCount, true, true),
-  m_xAxesMB(maxVoxelLocationCount, true, true),
-  m_yAxesMB(maxVoxelLocationCount, true, true)
+  m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(maxVoxelLocationCount)),
+  m_xAxesMB(MemoryBlockFactory::instance().make_block<Vector3f>(maxVoxelLocationCount)),
+  m_yAxesMB(MemoryBlockFactory::instance().make_block<Vector3f>(maxVoxelLocationCount))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
