@@ -136,7 +136,7 @@ public:
       os << "Tree: " << i << ", ";
       os << "NodeCount: " << m_trees[i]->get_node_count() << ", ";
       os << "Depth: " << m_trees[i]->get_tree_depth() << ", ";
-      os << "Avg Leaf Entropy: " << m_trees[i]->get_average_leaf_entropy() << ", ";
+      os << "Avg Leaf Entropy: " << m_trees[i]->calculate_average_leaf_entropy() << ", ";
       os << "Class Frequencies: " << m_trees[i]->get_class_frequencies() << '\n';
     }
     os << '\n';

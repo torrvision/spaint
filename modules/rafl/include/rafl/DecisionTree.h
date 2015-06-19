@@ -356,15 +356,15 @@ public:
   }
 
   /**
-   * \brief Gets the average leaf entropy in the tree.
+   * \brief Calculates the average leaf entropy in the tree.
    *
-   * \return  The average leaf entropy.
+   * \return  The average leaf entropy in the tree.
    */
-  float get_average_leaf_entropy() const
+  float calculate_average_leaf_entropy() const
   {
-    float totalLeafEntropy = 0;
+    float totalLeafEntropy = 0.0f;
     size_t leafCount = 0;
-    for(size_t nodeIndex = 0, size = m_nodes.size(); nodeIndex < size; ++nodeIndex)
+    for(int nodeIndex = 0, nodeCount = static_cast<int>(m_nodes.size()); nodeIndex < nodeCount; ++nodeIndex)
     {
       if(is_leaf(nodeIndex))
       {
@@ -376,11 +376,11 @@ public:
   }
 
   /**
-   * \brief Gets a histogram of the total example counts per class pass to the tree.
+   * \brief Gets a histogram holding the class frequencies observed in the training data.
    *
-   * \return  The class frequencies.
+   * \return  A histogram holding the class frequencies observed in the training data.
    */
-  Histogram<Label> get_class_frequencies() const
+  const Histogram<Label>& get_class_frequencies() const
   {
     return m_classFrequencies;
   }
@@ -388,7 +388,7 @@ public:
   /**
    * \brief Gets the number of nodes in the tree.
    *
-   * \return  The node count.
+   * \return  The number of nodes in the tree.
    */
   size_t get_node_count() const
   {
@@ -508,12 +508,12 @@ private:
   int add_node(size_t depth)
   {
     m_nodes.push_back(Node_Ptr(new Node(depth, m_settings.maxClassSize, m_settings.randomNumberGenerator)));
-    if(m_treeDepth < depth){
-      m_treeDepth = depth;
-    }
+    if(depth > m_treeDepth) m_treeDepth = depth;
+
     int id = static_cast<int>(m_nodes.size()) - 1;
     const signed char nullData = -1;
     m_splittabilityQueue.insert(id, 0.0f, nullData);
+
     return id;
   }
 

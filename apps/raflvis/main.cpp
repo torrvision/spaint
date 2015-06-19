@@ -255,9 +255,8 @@ int main(int argc, char *argv[])
     // Predict the labels of the examples passed to the forest under the current hypothesis.
     accuracyOverTime.push_back(evaluate_forest_accuracy(randomForest, currentExamples));
 
-    // Train the random forest by splitting up to the specified number of leaf nodes,
-    // and output the forest statistics each time the forest has split nodes,
-    // in order to help diagnose the learning.
+    // Train the random forest by splitting up to the specified number of leaf nodes, and output forest statistics each time the forest
+    // has split some nodes in order to help diagnose the learning.
     static const size_t splitBudget = 1;
     if(randomForest->train(splitBudget)) randomForest->output_statistics(std::cout);
 
