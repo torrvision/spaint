@@ -21,8 +21,9 @@ public:
    * \param maxVoxelLocationCount The maximum number of voxel locations for which we will be calculating features at any one time.
    * \param patchSize             The side length of a VOP patch (must be odd).
    * \param patchSpacing          The spacing in the scene (in voxels) between individual pixels in a patch.
+   * \param binCount              The number of bins into which to quantize orientations when aligning voxel patches.
    */
-  VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing);
+  VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

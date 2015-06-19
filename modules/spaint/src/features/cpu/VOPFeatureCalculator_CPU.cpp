@@ -14,8 +14,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
-: VOPFeatureCalculator(maxVoxelLocationCount, patchSize, patchSpacing)
+VOPFeatureCalculator_CPU::VOPFeatureCalculator_CPU(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount)
+: VOPFeatureCalculator(maxVoxelLocationCount, patchSize, patchSpacing, binCount)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -106,7 +106,6 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
 
 void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount, const ORUtils::MemoryBlock<float>& featuresMB) const
 {
-  const size_t binCount = 36; // 10 degrees per bin
   const int featureCount = static_cast<int>(get_feature_count());
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
   const int patchSize = static_cast<int>(m_patchSize);
@@ -114,11 +113,12 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
   Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
 
-  std::vector<std::vector<float> > histograms(voxelLocationCount, std::vector<float>(binCount));
+  std::vector<std::vector<float> > histograms(voxelLocationCount, std::vector<float>(m_binCount));
   std::vector<std::vector<float> > intensities(voxelLocationCount, std::vector<float>(patchArea));
 
   int threadCount = voxelLocationCount * patchArea;
 
+  // Convert each voxel's RGB patch to an intensity patch.
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
@@ -128,22 +128,24 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
     compute_intensities_for_patch(tid, features, featureCount, patchSize, &intensities[voxelLocationIndex][0]);
   }
 
+  // Compute a histogram of oriented gradients from the intensity patch for each voxel.
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int tid = 0; tid < threadCount; ++tid)
   {
     int voxelLocationIndex = tid / patchArea;
-    compute_histogram_for_patch(tid, m_patchSize, &intensities[voxelLocationIndex][0], binCount, &histograms[voxelLocationIndex][0]);
+    compute_histogram_for_patch(tid, m_patchSize, &intensities[voxelLocationIndex][0], m_binCount, &histograms[voxelLocationIndex][0]);
   }
 
+  // Calculate the dominant orientation for each voxel and rotate its coordinate system to align with that as necessary.
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int tid = 0; tid < threadCount; ++tid)
   {
     int voxelLocationIndex = tid / patchArea;
-    update_coordinate_system(tid, patchArea, &histograms[voxelLocationIndex][0], binCount, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
+    update_coordinate_system(tid, patchArea, &histograms[voxelLocationIndex][0], m_binCount, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
   }
 }
 

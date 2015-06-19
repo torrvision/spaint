@@ -34,7 +34,7 @@ __global__ void ck_convert_patches_to_lab(const int voxelLocationCount, const si
   }
 }
 
-__global__ void ck_fill_in_heights(const Vector3s *voxelLocations, int voxelLocationCount, size_t featureCount, float *features)
+__global__ void ck_fill_in_heights(const Vector3s *voxelLocations, const int voxelLocationCount, const size_t featureCount, float *features)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelLocationIndex < voxelLocationCount)
@@ -55,7 +55,7 @@ __global__ void ck_generate_coordinate_systems(const Vector3f *surfaceNormals, c
 __global__ void ck_generate_rgb_patches(const Vector3s *voxelLocations, const int voxelLocationCount,
                                         const Vector3f *xAxes, const Vector3f *yAxes,
                                         const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                        size_t patchSize, float patchSpacing, size_t featureCount,
+                                        const size_t patchSize, const float patchSpacing, const size_t featureCount,
                                         float *features)
 {
   int voxelLocationIndex = threadIdx.x + blockDim.x * blockIdx.x;
@@ -65,29 +65,33 @@ __global__ void ck_generate_rgb_patches(const Vector3s *voxelLocations, const in
   }
 }
 
-__global__ void ck_update_coordinate_systems(const int voxelLocationCount, const float *features, size_t featureCount, size_t patchSize, size_t binCount,
-                                             Vector3f *xAxes, Vector3f *yAxes)
+__global__ void ck_update_coordinate_systems(const int voxelLocationCount, const float *features, const size_t featureCount,
+                                             const size_t patchSize, const size_t binCount, Vector3f *xAxes, Vector3f *yAxes)
 {
-  // TODO: Comment on the fixed size of the intensities array.
+  // Note: We declare these shared arrays with fixed sizes here for simplicity. The sizes will need to be changed
+  //       if we ever want to use a histogram with more than 64 bins or VOP patches that are bigger than 16 x 16.
   __shared__ float histogram[64];
   __shared__ float intensities[256];
 
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
   int voxelLocationIndex = tid / (patchSize * patchSize);
 
+  // Convert the voxel's RGB patch to an intensity patch.
   compute_intensities_for_patch(tid, features, featureCount, patchSize, intensities);
   __syncthreads();
 
+  // Compute a histogram of oriented gradients from the intensity patch for the voxel.
   compute_histogram_for_patch(tid, patchSize, intensities, binCount, histogram);
   __syncthreads();
 
+  // Calculate the dominant orientation for the voxel and rotate its coordinate system to align with that as necessary.
   update_coordinate_system(tid, patchSize * patchSize, histogram, binCount, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
 }
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
-: VOPFeatureCalculator(maxVoxelLocationCount, patchSize, patchSpacing)
+VOPFeatureCalculator_CUDA::VOPFeatureCalculator_CUDA(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount)
+: VOPFeatureCalculator(maxVoxelLocationCount, patchSize, patchSpacing, binCount)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -202,18 +206,20 @@ void VOPFeatureCalculator_CUDA::update_coordinate_systems(int voxelLocationCount
   int threadsPerBlock = static_cast<int>(m_patchSize * m_patchSize);
   int numBlocks = voxelLocationCount;
 
-  // TEMPORARY
-  const size_t binCount = 36;
-
   ck_update_coordinate_systems<<<numBlocks,threadsPerBlock>>>(
     voxelLocationCount,
     featuresMB.GetData(MEMORYDEVICE_CUDA),
     get_feature_count(),
     m_patchSize,
-    binCount,
+    m_binCount,
     m_xAxesMB.GetData(MEMORYDEVICE_CUDA),
     m_yAxesMB.GetData(MEMORYDEVICE_CUDA)
   );
+
+#if DEBUGGING
+  m_xAxesMB.UpdateHostFromDevice();
+  m_yAxesMB.UpdateHostFromDevice();
+#endif
 }
 
 }

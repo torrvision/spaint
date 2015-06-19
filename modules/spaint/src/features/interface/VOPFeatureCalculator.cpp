@@ -14,13 +14,14 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing)
+VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount)
 :
   // Debugging variables
   m_debugDelayMs(30),
   m_debuggingOutputWindowName("DebuggingOutputWindow"),
 
   // Normal variables
+  m_binCount(binCount),
   m_patchSize(patchSize),
   m_patchSpacing(patchSpacing),
   m_surfaceNormalsMB(maxVoxelLocationCount, true, true),

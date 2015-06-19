@@ -236,7 +236,12 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t patchSize = 13;
   const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
-  m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(std::max(m_maxPredictionVoxelCount, maxTrainingVoxelCount), patchSize, patchSpacing, settings->deviceType);
+  const size_t binCount = 36;                                         // 10 degrees per bin
+
+  m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
+    std::max(m_maxPredictionVoxelCount, maxTrainingVoxelCount),
+    patchSize, patchSpacing, binCount, settings->deviceType
+  );
 
   // Set up the memory blocks needed for prediction and training.
   const size_t featureCount = m_featureCalculator->get_feature_count();
