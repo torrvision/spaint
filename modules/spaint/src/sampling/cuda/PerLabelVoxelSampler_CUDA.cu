@@ -101,7 +101,7 @@ void PerLabelVoxelSampler_CUDA::calculate_voxel_mask_prefix_sums(const ORUtils::
   }
 
 #if DEBUGGING
-  m_voxelMaskPrefixSumsMB.UpdateHostFromDevice();
+  m_voxelMaskPrefixSumsMB->UpdateHostFromDevice();
 #endif
 }
 
@@ -121,7 +121,7 @@ void PerLabelVoxelSampler_CUDA::calculate_voxel_masks(const ITMFloat4Image *rayc
   );
 
 #if DEBUGGING
-  m_voxelMasksMB.UpdateHostFromDevice();
+  m_voxelMasksMB->UpdateHostFromDevice();
 #endif
 }
 
@@ -156,7 +156,7 @@ void PerLabelVoxelSampler_CUDA::write_candidate_voxel_locations(const ITMFloat4I
   );
 
 #if DEBUGGING
-  m_candidateVoxelLocationsMB.UpdateHostFromDevice();
+  m_candidateVoxelLocationsMB->UpdateHostFromDevice();
 #endif
 }
 
