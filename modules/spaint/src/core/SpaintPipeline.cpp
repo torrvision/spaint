@@ -164,9 +164,6 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   }
 #endif
 
-  // Get the memory block factory.
-  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-
   // Determine the RGB and depth image sizes.
   Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
   Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
@@ -248,6 +245,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   );
 
   // Set up the memory blocks needed for prediction and training.
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   const size_t featureCount = m_featureCalculator->get_feature_count();
   m_predictionFeaturesMB = mbf.make_block<float>(m_maxPredictionVoxelCount * featureCount);
   m_predictionLabelsMB = mbf.make_block<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount);
