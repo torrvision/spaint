@@ -5,6 +5,7 @@
 #include "selectors/LeapSelector.h"
 
 #include "selectiontransformers/SelectionTransformerFactory.h"
+#include "util/MemoryBlockFactory.h"
 
 namespace spaint {
 
@@ -12,7 +13,7 @@ namespace spaint {
 
 LeapSelector::LeapSelector(const Settings_CPtr& settings, const Scene_CPtr& scene)
 : Selector(settings),
-  m_pickPointShortMB(new ORUtils::MemoryBlock<Vector3s>(1, true, true)),
+  m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
   m_scene(scene)
 {}
 

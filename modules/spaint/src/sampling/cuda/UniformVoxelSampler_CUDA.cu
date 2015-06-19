@@ -36,7 +36,7 @@ void UniformVoxelSampler_CUDA::write_sampled_voxel_locations(const ITMFloat4Imag
   ck_write_sampled_voxel_locations<<<numBlocks,threadsPerBlock>>>(
     static_cast<int>(sampledVoxelCount),
     raycastResult->GetData(MEMORYDEVICE_CUDA),
-    m_sampledVoxelIndicesMB.GetData(MEMORYDEVICE_CUDA),
+    m_sampledVoxelIndicesMB->GetData(MEMORYDEVICE_CUDA),
     sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CUDA)
   );
 }

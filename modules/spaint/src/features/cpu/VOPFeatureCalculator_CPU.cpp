@@ -26,7 +26,7 @@ void VOPFeatureCalculator_CPU::calculate_surface_normals(const ORUtils::MemoryBl
 {
   const size_t featureCount = get_feature_count();
   float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
-  Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
+  Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
 
@@ -71,9 +71,9 @@ void VOPFeatureCalculator_CPU::fill_in_heights(const ORUtils::MemoryBlock<Vector
 
 void VOPFeatureCalculator_CPU::generate_coordinate_systems(int voxelLocationCount) const
 {
-  const Vector3f *surfaceNormals = m_surfaceNormalsMB.GetData(MEMORYDEVICE_CPU);
-  Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
-  Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
+  Vector3f *xAxes = m_xAxesMB->GetData(MEMORYDEVICE_CPU);
+  Vector3f *yAxes = m_yAxesMB->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -90,8 +90,8 @@ void VOPFeatureCalculator_CPU::generate_rgb_patches(const ORUtils::MemoryBlock<V
 {
   const size_t featureCount = get_feature_count();
   float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
-  const Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
-  const Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3f *xAxes = m_xAxesMB->GetData(MEMORYDEVICE_CPU);
+  const Vector3f *yAxes = m_yAxesMB->GetData(MEMORYDEVICE_CPU);
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const int voxelLocationCount = static_cast<int>(voxelLocationsMB.dataSize);
 
@@ -110,8 +110,8 @@ void VOPFeatureCalculator_CPU::update_coordinate_systems(int voxelLocationCount,
   const float *features = featuresMB.GetData(MEMORYDEVICE_CPU);
   const int patchSize = static_cast<int>(m_patchSize);
   const int patchArea = patchSize * patchSize;
-  Vector3f *xAxes = m_xAxesMB.GetData(MEMORYDEVICE_CPU);
-  Vector3f *yAxes = m_yAxesMB.GetData(MEMORYDEVICE_CPU);
+  Vector3f *xAxes = m_xAxesMB->GetData(MEMORYDEVICE_CPU);
+  Vector3f *yAxes = m_yAxesMB->GetData(MEMORYDEVICE_CPU);
 
   std::vector<std::vector<float> > histograms(voxelLocationCount, std::vector<float>(m_binCount));
   std::vector<std::vector<float> > intensities(voxelLocationCount, std::vector<float>(patchArea));

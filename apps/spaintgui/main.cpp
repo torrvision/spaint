@@ -20,6 +20,7 @@ using namespace InfiniTAM::Engine;
 #include <SDL.h>
 
 #include <spaint/core/SpaintPipeline.h>
+#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
 #include "Application.h"
@@ -103,6 +104,9 @@ try
     trackerType = SpaintPipeline::TRACKER_INFINITAM;
 #endif
   }
+
+  // Pass the device type to the memory block factory.
+  MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;

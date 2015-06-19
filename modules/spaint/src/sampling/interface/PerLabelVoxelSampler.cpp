@@ -6,27 +6,29 @@
 
 #include <tvgutil/RandomNumberGenerator.h>
 
+#include "util/MemoryBlockFactory.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 PerLabelVoxelSampler::PerLabelVoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
-: m_candidateVoxelIndicesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
-  m_candidateVoxelLocationsMB(maxLabelCount * raycastResultSize, true, true),
+: m_candidateVoxelIndicesMB(MemoryBlockFactory::instance().make_block<int>(maxLabelCount * maxVoxelsPerLabel)),
+  m_candidateVoxelLocationsMB(MemoryBlockFactory::instance().make_block<Vector3s>(maxLabelCount * raycastResultSize)),
   m_maxLabelCount(maxLabelCount),
   m_maxVoxelsPerLabel(maxVoxelsPerLabel),
   m_raycastResultSize(raycastResultSize),
   m_rng(new tvgutil::RandomNumberGenerator(seed)),
-  m_voxelMaskPrefixSumsMB(maxLabelCount * (raycastResultSize + 1), true, true),
-  m_voxelMasksMB(maxLabelCount * (raycastResultSize + 1), true, true)
+  m_voxelMaskPrefixSumsMB(MemoryBlockFactory::instance().make_block<unsigned int>(maxLabelCount * (raycastResultSize + 1))),
+  m_voxelMasksMB(MemoryBlockFactory::instance().make_block<unsigned char>(maxLabelCount * (raycastResultSize + 1)))
 {
   // Make sure that the dummy elements at the end of the voxel masks for the various labels are properly initialised.
-  unsigned char *voxelMasks = m_voxelMasksMB.GetData(MEMORYDEVICE_CPU);
+  unsigned char *voxelMasks = m_voxelMasksMB->GetData(MEMORYDEVICE_CPU);
   for(size_t k = 1; k <= maxLabelCount; ++k)
   {
     voxelMasks[k * (raycastResultSize + 1) - 1] = 0;
   }
-  m_voxelMasksMB.UpdateDeviceFromHost();
+  m_voxelMasksMB->UpdateDeviceFromHost();
 }
 
 //#################### DESTRUCTOR ####################
@@ -90,7 +92,7 @@ void PerLabelVoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryB
 {
   const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);
-  int *candidateVoxelIndices = m_candidateVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  int *candidateVoxelIndices = m_candidateVoxelIndicesMB->GetData(MEMORYDEVICE_CPU);
 
   // For each possible label:
   for(size_t k = 0; k < m_maxLabelCount; ++k)
@@ -121,7 +123,7 @@ void PerLabelVoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryB
     }
   }
 
-  m_candidateVoxelIndicesMB.UpdateDeviceFromHost();
+  m_candidateVoxelIndicesMB->UpdateDeviceFromHost();
 }
 
 }

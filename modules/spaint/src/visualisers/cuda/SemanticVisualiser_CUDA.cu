@@ -50,7 +50,7 @@ void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     imgSize,
-    m_labelColoursMB.GetData(MEMORYDEVICE_CUDA),
+    m_labelColoursMB->GetData(MEMORYDEVICE_CUDA),
     viewerPos,
     lightPos,
     usePhong,

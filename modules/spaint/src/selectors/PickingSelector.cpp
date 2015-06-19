@@ -10,14 +10,16 @@
 #include "picking/cuda/Picker_CUDA.h"
 #endif
 
+#include "util/MemoryBlockFactory.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 PickingSelector::PickingSelector(const Settings_CPtr& settings)
 : Selector(settings),
-  m_pickPointFloatMB(1, true, true),
-  m_pickPointShortMB(new ORUtils::MemoryBlock<Vector3s>(1, true, true)),
+  m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
+  m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
   m_pickPointValid(false)
 {
   // Make the picker.
@@ -49,11 +51,11 @@ boost::optional<Eigen::Vector3f> PickingSelector::get_position() const
   if(!m_pickPointValid) return boost::none;
 
   // If the pick point is on the GPU, copy it across to the CPU.
-  m_pickPointFloatMB.UpdateHostFromDevice();
+  m_pickPointFloatMB->UpdateHostFromDevice();
 
   // Convert the pick point from voxel coordinates into scene coordinates and return it.
   float voxelSize = m_settings->sceneParams.voxelSize;
-  const Vector3f& pickPoint = *m_pickPointFloatMB.GetData(MEMORYDEVICE_CPU);
+  const Vector3f& pickPoint = *m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
   return Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
 }
 
@@ -74,8 +76,8 @@ void PickingSelector::update(const InputState& inputState, const RenderState_CPt
   int x = inputState.mouse_position_x();
   int y = inputState.mouse_position_y();
 
-  m_pickPointValid = m_picker->pick(x, y, renderState.get(), m_pickPointFloatMB);
-  if(m_pickPointValid) m_picker->to_short(m_pickPointFloatMB, *m_pickPointShortMB);
+  m_pickPointValid = m_picker->pick(x, y, renderState.get(), *m_pickPointFloatMB);
+  if(m_pickPointValid) m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
 }
 
 }

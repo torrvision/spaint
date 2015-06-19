@@ -4,19 +4,21 @@
 
 #include "visualisers/interface/SemanticVisualiser.h"
 
+#include "util/MemoryBlockFactory.h"
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 SemanticVisualiser::SemanticVisualiser(const std::vector<Vector3u>& labelColours)
-: m_labelColoursMB(static_cast<int>(labelColours.size()), true, true)
+: m_labelColoursMB(MemoryBlockFactory::instance().make_block<Vector3u>(labelColours.size()))
 {
-  Vector3u *labelColoursData = m_labelColoursMB.GetData(MEMORYDEVICE_CPU);
+  Vector3u *labelColoursData = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = labelColours.size(); i < size; ++i)
   {
     labelColoursData[i] = labelColours[i];
   }
-  m_labelColoursMB.UpdateDeviceFromHost();
+  m_labelColoursMB->UpdateDeviceFromHost();
 }
 
 //#################### DESTRUCTOR ####################

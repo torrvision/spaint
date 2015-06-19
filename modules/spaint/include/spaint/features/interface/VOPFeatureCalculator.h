@@ -34,13 +34,13 @@ protected:
   float m_patchSpacing;
 
   /** The surface normals at the voxel locations. */
-  mutable ORUtils::MemoryBlock<Vector3f> m_surfaceNormalsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_surfaceNormalsMB;
 
   /** The x axes of the coordinate systems in the tangent planes to the surfaces at the voxel locations. */
-  mutable ORUtils::MemoryBlock<Vector3f> m_xAxesMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_xAxesMB;
 
   /** The y axes of the coordinate systems in the tangent planes to the surfaces at the voxel locations. */
-  mutable ORUtils::MemoryBlock<Vector3f> m_yAxesMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_yAxesMB;
 
   //#################### CONSTRUCTORS ####################
 protected:

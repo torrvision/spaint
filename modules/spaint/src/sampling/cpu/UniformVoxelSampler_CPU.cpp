@@ -20,7 +20,7 @@ void UniformVoxelSampler_CPU::write_sampled_voxel_locations(const ITMFloat4Image
                                                             ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB) const
 {
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
-  const int *sampledVoxelIndices = m_sampledVoxelIndicesMB.GetData(MEMORYDEVICE_CPU);
+  const int *sampledVoxelIndices = m_sampledVoxelIndicesMB->GetData(MEMORYDEVICE_CPU);
   Vector3s *sampledVoxelLocations = sampledVoxelLocationsMB.GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
