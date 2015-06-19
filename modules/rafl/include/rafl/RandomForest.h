@@ -133,11 +133,12 @@ public:
     os << std::setprecision(5);
     for(size_t i = 0, size = m_trees.size(); i < size; ++i)
     {
+      const DT_Ptr& tree = m_trees[i];
       os << "Tree: " << i << ", ";
-      os << "Node Count: " << m_trees[i]->get_node_count() << ", ";
-      os << "Depth: " << m_trees[i]->get_tree_depth() << ", ";
-      os << "Avg. Leaf Entropy: " << m_trees[i]->calculate_average_leaf_entropy() << ", ";
-      os << "Class Frequencies: " << m_trees[i]->get_class_frequencies() << '\n';
+      os << "Node Count: " << tree->get_node_count() << ", ";
+      os << "Depth: " << tree->get_tree_depth() << ", ";
+      os << "Avg. Leaf Entropy: " << tree->calculate_average_leaf_entropy() << ", ";
+      os << "Class Frequencies: " << tree->get_class_frequencies() << '\n';
     }
     os << '\n';
   }
