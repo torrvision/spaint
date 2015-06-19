@@ -314,7 +314,8 @@ void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& rend
   // Convert the feature descriptor into an OpenCV image and show it in a window.
   featuresMB->UpdateHostFromDevice();
   const float *features = featuresMB->GetData(MEMORYDEVICE_CPU);
-  cv::Mat3b featuresImage = OpenCVUtil::make_rgb_image(features, m_patchSize, m_patchSize);
+  const int patchSize = static_cast<int>(m_patchSize);
+  cv::Mat3b featuresImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
 
   const float scaleFactor = 10.0f;
   cv::resize(featuresImage, featuresImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
