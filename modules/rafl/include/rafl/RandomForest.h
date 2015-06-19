@@ -124,6 +124,26 @@ public:
   }
 
   /**
+   * \brief Outputs statistics about the random forest to a stream.
+   *
+   * \param os  The stream to which to output the statistics.
+   */
+  void output_statistics(std::ostream& os) const
+  {
+    os << std::setprecision(5);
+    for(size_t i = 0, size = m_trees.size(); i < size; ++i)
+    {
+      const DT_Ptr& tree = m_trees[i];
+      os << "Tree: " << i << ", ";
+      os << "Node Count: " << tree->get_node_count() << ", ";
+      os << "Depth: " << tree->get_tree_depth() << ", ";
+      os << "Avg. Leaf Entropy: " << tree->calculate_average_leaf_entropy() << ", ";
+      os << "Class Frequencies: " << tree->get_class_frequencies() << '\n';
+    }
+    os << '\n';
+  }
+
+  /**
    * \brief Predicts a label for the specified descriptor.
    *
    * \param descriptor  The descriptor.
@@ -140,13 +160,16 @@ public:
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *
    * \param splitBudget The maximum number of nodes per tree that may be split in this training step.
+   * \return            The total number of nodes that have been split across all the trees.
    */
-  void train(size_t splitBudget)
+  size_t train(size_t splitBudget)
   {
+    size_t nodesSplit = 0;
     for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
-      (*it)->train(splitBudget);
+      nodesSplit += (*it)->train(splitBudget);
     }
+    return nodesSplit;
   }
 
   //#################### SERIALIZATION ####################
