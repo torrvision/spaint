@@ -27,7 +27,7 @@ private:
   boost::shared_ptr<const Picker> m_picker;
 
   /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
-  mutable ORUtils::MemoryBlock<Vector3f> m_pickPointFloatMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;
 
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
