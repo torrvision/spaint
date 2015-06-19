@@ -120,6 +120,9 @@ private:
   /** The spaint model. */
   SpaintModel_Ptr m_model;
 
+  /** The side length of a VOP patch (must be odd). */
+  size_t m_patchSize;
+
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 

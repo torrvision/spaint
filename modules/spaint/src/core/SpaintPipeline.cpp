@@ -242,13 +242,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
-  const size_t patchSize = 13;
+  m_patchSize = 13;
   const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
   const size_t binCount = 36;                                         // 10 degrees per bin
 
   m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
     std::max(m_maxPredictionVoxelCount, maxTrainingVoxelCount),
-    patchSize, patchSpacing, binCount, settings->deviceType
+    m_patchSize, patchSpacing, binCount, settings->deviceType
   );
 
   // Set up the memory blocks needed for prediction and training.
@@ -267,7 +267,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const size_t treeCount = 5;
   DecisionTree<SpaintVoxel::LabelType>::Settings dtSettings;
   dtSettings.candidateCount = 256;
-  dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(patchSize));
+  dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(m_patchSize));
   dtSettings.gainThreshold = 0.0f;
   dtSettings.maxClassSize = 1000;
   dtSettings.maxTreeHeight = 20;
@@ -311,13 +311,14 @@ void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& rend
   m_featureCalculator->calculate_features(*selection, m_model->get_scene().get(), *featuresMB);
 
 #ifdef WITH_OPENCV
-  // Convert the features to an OpenCV image and show it in a window.
+  // Convert the feature descriptor into an OpenCV image and show it in a window.
   featuresMB->UpdateHostFromDevice();
   const float *features = featuresMB->GetData(MEMORYDEVICE_CPU);
-  const size_t patchSize = 13; // TEMPORARY
-  cv::Mat3b featuresImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
+  cv::Mat3b featuresImage = OpenCVUtil::make_rgb_image(features, m_patchSize, m_patchSize);
+
   const float scaleFactor = 10.0f;
   cv::resize(featuresImage, featuresImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
+
   cv::imshow("Features", featuresImage);
 #endif
 }
