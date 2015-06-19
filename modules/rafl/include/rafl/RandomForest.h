@@ -124,7 +124,7 @@ public:
   }
 
   /**
-   * \brief Outputs the random forest statistics to a stream.
+   * \brief Outputs statistics about the random forest to a stream.
    *
    * \param os  The stream to which to output the statistics.
    */
@@ -134,9 +134,9 @@ public:
     for(size_t i = 0, size = m_trees.size(); i < size; ++i)
     {
       os << "Tree: " << i << ", ";
-      os << "NodeCount: " << m_trees[i]->get_node_count() << ", ";
+      os << "Node Count: " << m_trees[i]->get_node_count() << ", ";
       os << "Depth: " << m_trees[i]->get_tree_depth() << ", ";
-      os << "Avg Leaf Entropy: " << m_trees[i]->calculate_average_leaf_entropy() << ", ";
+      os << "Avg. Leaf Entropy: " << m_trees[i]->calculate_average_leaf_entropy() << ", ";
       os << "Class Frequencies: " << m_trees[i]->get_class_frequencies() << '\n';
     }
     os << '\n';
@@ -159,7 +159,7 @@ public:
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
    *
    * \param splitBudget The maximum number of nodes per tree that may be split in this training step.
-   * \return            The total number of nodes that have been split across trees.
+   * \return            The total number of nodes that have been split across all the trees.
    */
   size_t train(size_t splitBudget)
   {
