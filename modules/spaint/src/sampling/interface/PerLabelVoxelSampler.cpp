@@ -1,8 +1,8 @@
 /**
- * spaint: VoxelSampler.cpp
+ * spaint: PerLabelVoxelSampler.cpp
  */
 
-#include "sampling/interface/VoxelSampler.h"
+#include "sampling/interface/PerLabelVoxelSampler.h"
 
 #include <tvgutil/RandomNumberGenerator.h>
 
@@ -10,7 +10,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VoxelSampler::VoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
+PerLabelVoxelSampler::PerLabelVoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed)
 : m_candidateVoxelIndicesMB(maxLabelCount * maxVoxelsPerLabel, true, true),
   m_candidateVoxelLocationsMB(maxLabelCount * raycastResultSize, true, true),
   m_maxLabelCount(maxLabelCount),
@@ -31,15 +31,15 @@ VoxelSampler::VoxelSampler(size_t maxLabelCount, size_t maxVoxelsPerLabel, int r
 
 //#################### DESTRUCTOR ####################
 
-VoxelSampler::~VoxelSampler() {}
+PerLabelVoxelSampler::~PerLabelVoxelSampler() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
-                                 const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                 const ORUtils::MemoryBlock<bool>& labelMaskMB,
-                                 ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
-                                 ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+void PerLabelVoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
+                                         const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                         const ORUtils::MemoryBlock<bool>& labelMaskMB,
+                                         ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
+                                         ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   // Calculate the voxel masks for all labels (these indicate which voxels could serve as examples of each label).
   // Note that we calculate masks even for unused labels to avoid unnecessary branching - these will always be empty.
@@ -85,7 +85,8 @@ void VoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void VoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<bool>& labelMaskMB, const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
+void PerLabelVoxelSampler::choose_candidate_voxel_indices(const ORUtils::MemoryBlock<bool>& labelMaskMB,
+                                                          const ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const
 {
   const bool *labelMask = labelMaskMB.GetData(MEMORYDEVICE_CPU);
   const unsigned int *voxelCountsForLabels = voxelCountsForLabelsMB.GetData(MEMORYDEVICE_CPU);

@@ -2,7 +2,7 @@
  * spaint: SpaintDecisionFunctionGenerator.cpp
  */
 
-#include "util/SpaintDecisionFunctionGenerator.h"
+#include "randomforest/SpaintDecisionFunctionGenerator.h"
 
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 #include <rafl/decisionfunctions/PairwiseOpAndThresholdDecisionFunctionGenerator.h>
@@ -17,8 +17,11 @@ SpaintDecisionFunctionGenerator::SpaintDecisionFunctionGenerator(size_t patchSiz
 {
   int vopFeatureCount = static_cast<int>(patchSize * patchSize * 3);
   std::pair<int,int> vopFeatureIndexRange(0, vopFeatureCount - 1);
+
+#ifndef USE_LOW_POWER_MODE
   this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(vopFeatureIndexRange)));
   this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<SpaintVoxel::LabelType>(vopFeatureIndexRange)));
+#endif
   this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(std::make_pair(vopFeatureCount, vopFeatureCount + 2))));
   this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(std::make_pair(vopFeatureCount + 3, vopFeatureCount + 3))));
 }

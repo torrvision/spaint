@@ -12,41 +12,6 @@
 
 namespace spaint {
 
-//#################### COLOUR READING ####################
-
-/**
- * \brief An instance of a specialisaton of this struct template can be used to read a voxel's colour in the scene (if available).
- */
-template <bool hasColour> struct SceneColourReader;
-
-/**
- * \brief An instance of this struct can be used to return a default scene colour for a voxel when no colour information is available.
- */
-template <>
-struct SceneColourReader<false>
-{
-  template <typename TVoxel>
-  _CPU_AND_GPU_CODE_
-  static Vector3u read(const TVoxel& voxel)
-  {
-    return Vector3u((uchar)0);
-  }
-};
-
-/**
- * \brief An instance of this struct can be used to return a voxel's colour in the scene when colour information is available.
- */
-template <>
-struct SceneColourReader<true>
-{
-  template <typename TVoxel>
-  _CPU_AND_GPU_CODE_
-  static Vector3u read(const TVoxel& voxel)
-  {
-    return voxel.clr;
-  }
-};
-
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
@@ -84,15 +49,15 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
     Vector3u colour;
     if(SpaintVoxel::hasColorInformation)
     {
-      const Vector3u sceneColour = SceneColourReader<SpaintVoxel::hasColorInformation>::read(voxel);
+      const Vector3u sceneColour = VoxelColourReader<SpaintVoxel::hasColorInformation>::read(voxel);
       colour = (labelAlpha * labelColour.toFloat() + (1.0f - labelAlpha) * sceneColour.toFloat()).toUChar();
     }
     else colour = labelColour;
 
     // Calculate the Lambertian lighting term.
     Vector3f L = normalize(lightPos - point);
-    Vector3f N;
-    float NdotL;
+    Vector3f N(0.0f, 0.0f, 0.0f);
+    float NdotL = 0.0f;
     computeNormalAndAngle<SpaintVoxel,ITMVoxelIndex>(foundPoint, point, voxelData, voxelIndex, L, N, NdotL);
     float lambertian = CLAMP(NdotL, 0.0f, 1.0f);
 

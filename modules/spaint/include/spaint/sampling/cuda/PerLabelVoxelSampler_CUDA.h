@@ -1,30 +1,30 @@
 /**
- * spaint: VoxelSampler_CPU.h
+ * spaint: PerLabelVoxelSampler_CUDA.h
  */
 
-#ifndef H_SPAINT_VOXELSAMPLER_CPU
-#define H_SPAINT_VOXELSAMPLER_CPU
+#ifndef H_SPAINT_PERLABELVOXELSAMPLER_CUDA
+#define H_SPAINT_PERLABELVOXELSAMPLER_CUDA
 
-#include "../interface/VoxelSampler.h"
+#include "../interface/PerLabelVoxelSampler.h"
 
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to sample voxels for each currently-used label from a scene using the CPU.
+ * \brief An instance of this class can be used to sample voxels for each currently-used label from a scene using CUDA.
  */
-class VoxelSampler_CPU : public VoxelSampler
+class PerLabelVoxelSampler_CUDA : public PerLabelVoxelSampler
 {
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a CPU-based voxel sampler.
+   * \brief Constructs a CUDA-based per-label voxel sampler.
    *
    * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param maxVoxelsPerLabel The maximum number of voxels to sample for each label.
    * \param raycastResultSize The size of the raycast result image (in pixels).
    * \param seed              The seed for the random number generator.
    */
-  VoxelSampler_CPU(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
+  PerLabelVoxelSampler_CUDA(size_t maxLabelCount, size_t maxVoxelsPerLabel, int raycastResultSize, unsigned int seed);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

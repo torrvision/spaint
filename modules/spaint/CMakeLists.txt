@@ -8,6 +8,12 @@
 
 SET(targetname spaint)
 
+###########################
+# Offer low-power support #
+###########################
+
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
+
 ################################
 # Specify the libraries to use #
 ################################
@@ -43,6 +49,48 @@ include/spaint/core/SpaintInteractor.h
 include/spaint/core/SpaintModel.h
 include/spaint/core/SpaintPipeline.h
 include/spaint/core/SpaintRaycaster.h
+)
+
+##
+SET(features_sources
+src/features/FeatureCalculatorFactory.cpp
+)
+
+SET(features_headers
+include/spaint/features/FeatureCalculatorFactory.h
+)
+
+##
+SET(features_cpu_sources
+src/features/cpu/VOPFeatureCalculator_CPU.cpp
+)
+
+SET(features_cpu_headers
+include/spaint/features/cpu/VOPFeatureCalculator_CPU.h
+)
+
+##
+SET(features_cuda_sources
+src/features/cuda/VOPFeatureCalculator_CUDA.cu
+)
+
+SET(features_cuda_headers
+include/spaint/features/cuda/VOPFeatureCalculator_CUDA.h
+)
+
+##
+SET(features_interface_sources
+src/features/interface/VOPFeatureCalculator.cpp
+)
+
+SET(features_interface_headers
+include/spaint/features/interface/FeatureCalculator.h
+include/spaint/features/interface/VOPFeatureCalculator.h
+)
+
+##
+SET(features_shared_headers
+include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
@@ -165,6 +213,17 @@ include/spaint/picking/shared/Picker_Shared.h
 )
 
 ##
+SET(randomforest_sources
+src/randomforest/ForestUtil.cpp
+src/randomforest/SpaintDecisionFunctionGenerator.cpp
+)
+
+SET(randomforest_headers
+include/spaint/randomforest/ForestUtil.h
+include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
+)
+
+##
 SET(sampling_sources
 src/sampling/VoxelSamplerFactory.cpp
 )
@@ -175,34 +234,41 @@ include/spaint/sampling/VoxelSamplerFactory.h
 
 ##
 SET(sampling_cpu_sources
-src/sampling/cpu/VoxelSampler_CPU.cpp
+src/sampling/cpu/PerLabelVoxelSampler_CPU.cpp
+src/sampling/cpu/UniformVoxelSampler_CPU.cpp
 )
 
 SET(sampling_cpu_headers
-include/spaint/sampling/cpu/VoxelSampler_CPU.h
+include/spaint/sampling/cpu/PerLabelVoxelSampler_CPU.h
+include/spaint/sampling/cpu/UniformVoxelSampler_CPU.h
 )
 
 ##
 SET(sampling_cuda_sources
-src/sampling/cuda/VoxelSampler_CUDA.cu
+src/sampling/cuda/PerLabelVoxelSampler_CUDA.cu
+src/sampling/cuda/UniformVoxelSampler_CUDA.cu
 )
 
 SET(sampling_cuda_headers
-include/spaint/sampling/cuda/VoxelSampler_CUDA.h
+include/spaint/sampling/cuda/PerLabelVoxelSampler_CUDA.h
+include/spaint/sampling/cuda/UniformVoxelSampler_CUDA.h
 )
 
 ##
 SET(sampling_interface_sources
-src/sampling/interface/VoxelSampler.cpp
+src/sampling/interface/PerLabelVoxelSampler.cpp
+src/sampling/interface/UniformVoxelSampler.cpp
 )
 
 SET(sampling_interface_headers
-include/spaint/sampling/interface/VoxelSampler.h
+include/spaint/sampling/interface/PerLabelVoxelSampler.h
+include/spaint/sampling/interface/UniformVoxelSampler.h
 )
 
 ##
 SET(sampling_shared_headers
-include/spaint/sampling/shared/VoxelSampler_Shared.h
+include/spaint/sampling/shared/PerLabelVoxelSampler_Shared.h
+include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
 )
 
 ##
@@ -301,13 +367,11 @@ ENDIF()
 SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
-src/util/SpaintDecisionFunctionGenerator.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/LabelManager.h
-include/spaint/util/SpaintDecisionFunctionGenerator.h
 include/spaint/util/SpaintVoxel.h
 )
 
@@ -355,10 +419,14 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 
 SET(sources
 ${core_sources}
+${features_sources}
+${features_cpu_sources}
+${features_interface_sources}
 ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
+${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
@@ -374,6 +442,10 @@ ${visualisers_interface_sources}
 
 SET(headers
 ${core_headers}
+${features_headers}
+${features_cpu_headers}
+${features_interface_headers}
+${features_shared_headers}
 ${input_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
@@ -382,6 +454,7 @@ ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
+${randomforest_headers}
 ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
@@ -414,6 +487,7 @@ ENDIF()
 
 IF(WITH_CUDA)
   SET(sources ${sources}
+    ${features_cuda_sources}
     ${markers_cuda_sources}
     ${picking_cuda_sources}
     ${sampling_cuda_sources}
@@ -422,6 +496,7 @@ IF(WITH_CUDA)
   )
 
   SET(headers ${headers}
+    ${features_cuda_headers}
     ${markers_cuda_headers}
     ${picking_cuda_headers}
     ${sampling_cuda_headers}
@@ -445,6 +520,11 @@ ENDIF()
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
+SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
+SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
+SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
+SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
 SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
@@ -460,6 +540,7 @@ SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
+SOURCE_GROUP(randomforest FILES ${randomforest_sources} ${randomforest_headers})
 SOURCE_GROUP(sampling FILES ${sampling_sources} ${sampling_headers})
 SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers})
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})

@@ -7,11 +7,15 @@
 
 #include <boost/optional.hpp>
 
+#include <rafl/RandomForest.h>
+
 #include "SpaintInteractor.h"
 #include "SpaintModel.h"
 #include "SpaintRaycaster.h"
 
-#include "../sampling/interface/VoxelSampler.h"
+#include "../features/interface/FeatureCalculator.h"
+#include "../sampling/interface/PerLabelVoxelSampler.h"
+#include "../sampling/interface/UniformVoxelSampler.h"
 
 #ifdef WITH_VICON
 #include "../trackers/ViconTracker.h"
@@ -32,6 +36,7 @@ private:
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::LabelType> > RandomForest_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
@@ -51,10 +56,10 @@ public:
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
 
-    /** In prediction mode, the model is used to predict labels for previously-unseen voxels. */
+    /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
     MODE_PREDICTION,
 
-    /** In training mode, a model is trained using voxels sampled from the current raycast. */
+    /** In training mode, a random forest is trained using voxels sampled from the current raycast. */
     MODE_TRAINING
   };
 
@@ -72,6 +77,12 @@ public:
 private:
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
+
+  /** The feature calculator. */
+  FeatureCalculator_CPtr m_featureCalculator;
+
+  /** The random forest. */
+  RandomForest_Ptr m_forest;
 
   /** Whether or not fusion should be run as part of the pipeline. */
   bool m_fusionEnabled;
@@ -91,11 +102,14 @@ private:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   SpaintInteractor_Ptr m_interactor;
 
-  /** A memory block in which to store a mask indicating which labels are currently in use. */
-  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_labelMaskMB;
-
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
+
+  /** The maximum number of voxels for which to predict labels each frame. */
+  size_t m_maxPredictionVoxelCount;
+
+  /** The maximum number of voxels per label from which to train each frame. */
+  size_t m_maxTrainingVoxelsPerLabel;
 
   /** The mode in which the pipeline is currently running. */
   Mode m_mode;
@@ -103,17 +117,23 @@ private:
   /** The spaint model. */
   SpaintModel_Ptr m_model;
 
+  /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
+
+  /** A memory block in which to store the labels predicted for the various voxels. */
+  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::LabelType> > m_predictionLabelsMB;
+
+  /** The voxel sampler used in prediction mode. */
+  UniformVoxelSampler_CPtr m_predictionSampler;
+
+  /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
+  Selector::Selection_Ptr m_predictionVoxelLocationsMB;
+
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   SpaintRaycaster_Ptr m_raycaster;
 
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
-
-  /** A memory block in which to store the number of voxels sampled for each label. */
-  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_sampledVoxelCountsMB;
-
-  /** A memory block in which to store the voxels sampled for each label. */
-  Selector::Selection_Ptr m_sampledVoxelsMB;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
@@ -130,6 +150,21 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
+  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
+
+  /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to train. */
+  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
+
+  /** The voxel sampler used in training mode. */
+  PerLabelVoxelSampler_CPtr m_trainingSampler;
+
+  /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
+
+  /** A memory block in which to store the locations of the voxels sampled for training purposes. */
+  Selector::Selection_Ptr m_trainingVoxelLocationsMB;
+
 #ifdef WITH_VICON
   /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
   ViconTracker *m_viconTracker;
@@ -137,9 +172,6 @@ private:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
-
-  /** The voxel sampler. */
-  VoxelSampler_CPtr m_voxelSampler;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -265,6 +297,13 @@ private:
    * \return                  The hybrid tracker.
    */
   ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
+
+  /**
+   * \brief Runs the section of the pipeline associated with prediction mode.
+   *
+   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_prediction_section(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Runs the section of the pipeline associated with training mode.
