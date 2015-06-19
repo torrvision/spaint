@@ -131,7 +131,7 @@ private:
   void process_mode_input();
 
   /**
-   * \brief Processes user input that deals with switching renderers.
+   * \brief Processes user input that deals with switching the renderer or raycast type.
    */
   void process_renderer_input();
 };

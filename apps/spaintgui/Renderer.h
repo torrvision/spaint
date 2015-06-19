@@ -55,11 +55,11 @@ private:
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
 
-  /** Whether or not Phong lighting is currently enabled. */
-  bool m_phongEnabled;
-
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   spaint::SpaintRaycaster_CPtr m_raycaster;
+
+  /** The type of raycast to use. */
+  spaint::SpaintRaycaster::RaycastType m_raycastType;
 
   /** The texture ID for the visualisation we're drawing. */
   GLuint m_textureID;
@@ -117,13 +117,6 @@ public:
   CameraMode get_camera_mode() const;
 
   /**
-   * \brief Gets whether or not Phong lighting is currently enabled.
-   *
-   * \return  true, if Phong lighting is currently enabled, or false otherwise.
-   */
-  bool get_phong_enabled() const;
-
-  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
@@ -131,11 +124,11 @@ public:
   void set_camera_mode(CameraMode cameraMode);
 
   /**
-   * \brief Enables or disables Phong lighting.
+   * \brief Sets the type of raycast to use.
    *
-   * \param phongEnabled  true, if Phong lighting should be enabled, or false otherwise.
+   * \param raycastType The type of raycast to use.
    */
-  void set_phong_enabled(bool phongEnabled);
+  void set_raycast_type(spaint::SpaintRaycaster::RaycastType raycastType);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
