@@ -36,7 +36,7 @@ private:
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::LabelType> > RandomForest_Ptr;
+  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::Label> > RandomForest_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
@@ -130,7 +130,7 @@ private:
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
   /** A memory block in which to store the labels predicted for the various voxels. */
-  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::LabelType> > m_predictionLabelsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
 
   /** The voxel sampler used in prediction mode. */
   UniformVoxelSampler_CPtr m_predictionSampler;

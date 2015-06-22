@@ -17,16 +17,16 @@ void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount) const
 #endif
   for(int i = 0; i < voxelCount; ++i)
   {
-    voxels[i].label = 0;
+    voxels[i].packedLabel = SpaintVoxel::PackedLabel();
   }
 }
 
-void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
+void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
+                                  ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
-  unsigned char *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
+  SpaintVoxel::PackedLabel *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
   int voxelCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
@@ -42,13 +42,13 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
 }
 
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                  const ORUtils::MemoryBlock<SpaintVoxel::LabelType>& voxelLabelsMB,
+                                  const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const
+                                  ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
-  const unsigned char *voxelLabels = voxelLabelsMB.GetData(MEMORYDEVICE_CPU);
-  unsigned char *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
+  const SpaintVoxel::PackedLabel *voxelLabels = voxelLabelsMB.GetData(MEMORYDEVICE_CPU);
+  SpaintVoxel::PackedLabel *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
   int voxelCount = static_cast<int>(voxelLocationsMB.dataSize);
 
   SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();

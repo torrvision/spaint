@@ -20,15 +20,15 @@ public:
   virtual void clear_labels(SpaintVoxel *voxels, int voxelCount) const;
 
   /** Override */
-  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::LabelType label,
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                           ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const;
+                           ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const;
 
   /** Override */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                           const ORUtils::MemoryBlock<SpaintVoxel::LabelType>& voxelLabelsMB,
+                           const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                           ORUtils::MemoryBlock<SpaintVoxel::LabelType> *oldVoxelLabelsMB) const;
+                           ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const;
 };
 
 }

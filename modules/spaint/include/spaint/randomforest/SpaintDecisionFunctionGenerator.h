@@ -25,13 +25,13 @@ namespace spaint {
  * An spaint decision function generator contains a separate subsidiary generator for each segment. When asked to generate a candidate
  * decision function, it randomly picks a segment and then uses the generator for that segment to generate the candidate.
  */
-class SpaintDecisionFunctionGenerator : public rafl::CompositeDecisionFunctionGenerator<SpaintVoxel::LabelType>
+class SpaintDecisionFunctionGenerator : public rafl::CompositeDecisionFunctionGenerator<SpaintVoxel::Label>
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef SpaintVoxel::LabelType LabelType;
-  typedef boost::shared_ptr<DecisionFunctionGenerator<LabelType> > DecisionFunctionGenerator_Ptr;
-  typedef boost::shared_ptr<const DecisionFunctionGenerator<LabelType> > DecisionFunctionGenerator_CPtr;
+  typedef SpaintVoxel::Label Label;
+  typedef boost::shared_ptr<DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_Ptr;
+  typedef boost::shared_ptr<const DecisionFunctionGenerator<Label> > DecisionFunctionGenerator_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

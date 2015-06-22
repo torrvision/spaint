@@ -16,7 +16,41 @@ namespace spaint {
  */
 struct SpaintVoxel
 {
-  typedef uchar LabelType;
+  typedef uchar Label;
+
+  /**
+   * \brief The values of this enumeration specify the possible groups in which a voxel label can reside.
+   */
+  enum LabelGroup
+  {
+    /** Labels in the "user" group are those that have been supplied directly by the user. They are assumed to be correct enough to use for training. */
+    LG_USER,
+
+    /** Labels in the "forest" group are those that have been predicted by the random forest. They are assumed to be unreliable, and ignored for training purposes. */
+    LG_FOREST,
+  };
+
+  struct PackedLabel
+  {
+    LabelGroup group : 2;
+    Label label : 6;
+
+    _CPU_AND_GPU_CODE_
+    PackedLabel()
+    : group(LG_USER), label(0)
+    {}
+
+    _CPU_AND_GPU_CODE_
+    PackedLabel(Label label_, LabelGroup group_)
+    : group(group_), label(label_)
+    {}
+
+    _CPU_AND_GPU_CODE_
+    bool operator==(const PackedLabel& rhs) const
+    {
+      return group == rhs.group && label == rhs.label;
+    }
+  };
 
   _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
   _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
@@ -41,9 +75,10 @@ struct SpaintVoxel
 #endif
 
   /** Semantic label. */
-  LabelType label;
+  PackedLabel packedLabel;
 
-  _CPU_AND_GPU_CODE_ SpaintVoxel()
+  _CPU_AND_GPU_CODE_
+  SpaintVoxel()
   {
     sdf = SDF_initialValue();
     w_depth = 0;
@@ -51,7 +86,7 @@ struct SpaintVoxel
     clr = (uchar)0;
     w_color = 0;
 #endif
-    label = 0;
+    packedLabel = PackedLabel(0, LG_USER);
   }
 };
 

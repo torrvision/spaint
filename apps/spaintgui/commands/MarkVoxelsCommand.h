@@ -20,10 +20,10 @@ private:
   spaint::SpaintInteractor_Ptr m_interactor;
 
   /** The semantic label with which to mark the voxels. */
-  unsigned char m_label;
+  spaint::SpaintVoxel::PackedLabel m_label;
 
   /** A memory block into which to store the old labels of the voxels being marked. */
-  boost::shared_ptr<ORUtils::MemoryBlock<unsigned char> > m_oldVoxelLabelsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_oldVoxelLabelsMB;
 
   /** The locations of the voxels in the scene to mark. */
   boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> > m_voxelLocationsMB;
@@ -37,7 +37,7 @@ public:
    * \param label             The semantic label with which to mark the voxels.
    * \param interactor        The spaint interactor that is used to interact with the scene.
    */
-  MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, unsigned char label,
+  MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, spaint::SpaintVoxel::PackedLabel label,
                     const spaint::SpaintInteractor_Ptr& interactor);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

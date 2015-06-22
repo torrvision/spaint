@@ -68,7 +68,8 @@ inline void update_masks_for_voxel(int voxelIndex, const Vector4f *raycastResult
   // Update the voxel masks for the various labels (even the ones that are not currently active).
   for(size_t k = 0; k < maxLabelCount; ++k)
   {
-    voxelMasks[k * (raycastResultSize + 1) + voxelIndex] = voxel && voxel->label == k ? 1 : 0;
+    // FIXME: We shouldn't hard-code the fact that we're only training from user labels here.
+    voxelMasks[k * (raycastResultSize + 1) + voxelIndex] = voxel && voxel->packedLabel.label == k && voxel->packedLabel.group == SpaintVoxel::LG_USER ? 1 : 0;
   }
 }
 
