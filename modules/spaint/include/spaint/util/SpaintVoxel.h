@@ -35,11 +35,11 @@ struct SpaintVoxel
    */
   enum LabelGroup
   {
-    /** Labels in the "user" group are those that have been supplied directly by the user. They are assumed to be correct enough to use for training. */
-    LG_USER,
-
     /** Labels in the "forest" group are those that have been predicted by the random forest. They are assumed to be unreliable, and ignored for training purposes. */
     LG_FOREST,
+
+    /** Labels in the "user" group are those that have been supplied directly by the user. They are assumed to be correct enough to use for training. */
+    LG_USER
   };
 
   //#################### NESTED TYPES ####################
