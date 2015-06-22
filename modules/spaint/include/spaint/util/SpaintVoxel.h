@@ -16,7 +16,19 @@ namespace spaint {
  */
 struct SpaintVoxel
 {
+  //#################### CONSTANTS ####################
+
+#ifndef USE_LOW_POWER_MODE
+  static const bool hasColorInformation = true;
+#else
+  static const bool hasColorInformation = false;
+#endif
+
+  //#################### TYPEDEFS ####################
+
   typedef uchar Label;
+
+  //#################### ENUMERATIONS ####################
 
   /**
    * \brief The values of this enumeration specify the possible groups in which a voxel label can reside.
@@ -30,10 +42,26 @@ struct SpaintVoxel
     LG_FOREST,
   };
 
+  //#################### NESTED TYPES ####################
+
+  /**
+   * \brief An instance of this struct represents the semantic label for a voxel.
+   *
+   * Labels can be in multiple groups, allowing us to separate them based on their provenance
+   * (e.g. it is important to know whether a label was provided by the user or predicted by
+   * the random forest). They are bit-packed for memory efficiency reasons.
+   */
   struct PackedLabel
   {
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+    /** The group of the label (e.g. "user", "forest", etc.). */
     LabelGroup group : 2;
+
+    /** The label itself. */
     Label label : 6;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 
     _CPU_AND_GPU_CODE_
     PackedLabel()
@@ -45,6 +73,8 @@ struct SpaintVoxel
     : group(group_), label(label_)
     {}
 
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC OPERATORS ~~~~~~~~~~~~~~~~~~~~
+
     _CPU_AND_GPU_CODE_
     bool operator==(const PackedLabel& rhs) const
     {
@@ -52,15 +82,7 @@ struct SpaintVoxel
     }
   };
 
-  _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
-  _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
-  _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
-
-#ifndef USE_LOW_POWER_MODE
-  static const bool hasColorInformation = true;
-#else
-  static const bool hasColorInformation = false;
-#endif
+  //#################### PUBLIC VARIABLES ####################
 
   /** Value of the truncated signed distance transformation. */
   short sdf;
@@ -77,6 +99,8 @@ struct SpaintVoxel
   /** Semantic label. */
   PackedLabel packedLabel;
 
+  //#################### CONSTRUCTORS ####################
+
   _CPU_AND_GPU_CODE_
   SpaintVoxel()
   {
@@ -88,6 +112,12 @@ struct SpaintVoxel
 #endif
     packedLabel = PackedLabel(0, LG_USER);
   }
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
+  _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
+  _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
 };
 
 //#################### COLOUR READING ####################
