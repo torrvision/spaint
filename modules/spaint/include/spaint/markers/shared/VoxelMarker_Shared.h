@@ -12,6 +12,30 @@
 namespace spaint {
 
 /**
+ * \brief Decides whether or not it is possible to overwrite the old semantic label for a voxel with a new one.
+ *
+ * This decision is based on both the old and new labels.
+ *
+ * \param oldLabel  The old semantic label for the voxel.
+ * \param newLabel  The new semantic label for the voxel.
+ * \return          true, if it is possible to overwrite the existing label with the new one, or false otherwise.
+ */
+_CPU_AND_GPU_CODE_
+inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::PackedLabel newLabel)
+{
+  // The new label can overwrite the old label iff one of the following is true:
+  return
+    // (a) The old label is the original (null) label.
+    (oldLabel.label == 0 && oldLabel.group == SpaintVoxel::LG_USER) ||
+
+    // (b) The old label and the new label are in the same group (e.g. they are both predictions from the forest).
+    oldLabel.group == newLabel.group ||
+
+    // (c) The new label was supplied by the user.
+    newLabel.group == SpaintVoxel::LG_USER;
+}
+
+/**
  * \brief Marks a voxel in the scene with a semantic label.
  *
  * \param loc         The location of the voxel.
@@ -28,8 +52,9 @@ inline void mark_voxel(const Vector3s& loc, SpaintVoxel::PackedLabel label, Spai
   int voxelAddress = findVoxel(voxelIndex, loc.toInt(), isFound);
   if(isFound)
   {
-    if(oldLabel) *oldLabel = voxelData[voxelAddress].packedLabel;
-    voxelData[voxelAddress].packedLabel = label;
+    SpaintVoxel::PackedLabel oldLabelLocal = voxelData[voxelAddress].packedLabel;
+    if(oldLabel) *oldLabel = oldLabelLocal;
+    if(can_overwrite_label(oldLabelLocal, label)) voxelData[voxelAddress].packedLabel = label;
   }
 }
 
