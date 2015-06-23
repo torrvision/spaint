@@ -65,19 +65,19 @@ bool LabelManager::add_label(const std::string& name)
   if(get_label_count() == get_max_label_count()) return false;
 
   // Add the new label.
-  SpaintVoxel::LabelType label = static_cast<SpaintVoxel::LabelType>(m_labelAllocator.allocate());
+  SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(m_labelAllocator.allocate());
   m_labelProperties.insert(std::make_pair(label, std::make_pair(name, colours[label])));
   m_labelsByName.insert(std::make_pair(name, label));
 
   return true;
 }
 
-SpaintVoxel::LabelType LabelManager::get_label(const std::string& name) const
+SpaintVoxel::Label LabelManager::get_label(const std::string& name) const
 {
   return MapUtil::lookup(m_labelsByName, name);
 }
 
-Vector3u LabelManager::get_label_colour(SpaintVoxel::LabelType label) const
+Vector3u LabelManager::get_label_colour(SpaintVoxel::Label label) const
 {
   return MapUtil::lookup(m_labelProperties, label).second;
 }
@@ -92,7 +92,7 @@ size_t LabelManager::get_label_count() const
   return m_labelAllocator.used_count();
 }
 
-std::string LabelManager::get_label_name(SpaintVoxel::LabelType label) const
+std::string LabelManager::get_label_name(SpaintVoxel::Label label) const
 {
   return MapUtil::lookup(m_labelProperties, label).first;
 }
@@ -102,21 +102,21 @@ size_t LabelManager::get_max_label_count() const
   return m_maxLabelCount;
 }
 
-SpaintVoxel::LabelType LabelManager::get_next_label(SpaintVoxel::LabelType label) const
+SpaintVoxel::Label LabelManager::get_next_label(SpaintVoxel::Label label) const
 {
   const std::set<int>& used = m_labelAllocator.used();
   std::set<int>::const_iterator it = used.upper_bound(static_cast<int>(label));
-  return it != used.end() ? static_cast<SpaintVoxel::LabelType>(*it) : label;
+  return it != used.end() ? static_cast<SpaintVoxel::Label>(*it) : label;
 }
 
-SpaintVoxel::LabelType LabelManager::get_previous_label(SpaintVoxel::LabelType label) const
+SpaintVoxel::Label LabelManager::get_previous_label(SpaintVoxel::Label label) const
 {
   const std::set<int>& used = m_labelAllocator.used();
   std::set<int>::const_iterator it = used.find(static_cast<int>(label));
-  return it != used.begin() ? static_cast<SpaintVoxel::LabelType>(*--it) : label;
+  return it != used.begin() ? static_cast<SpaintVoxel::Label>(*--it) : label;
 }
 
-bool LabelManager::has_label(SpaintVoxel::LabelType label) const
+bool LabelManager::has_label(SpaintVoxel::Label label) const
 {
   return m_labelProperties.find(label) != m_labelProperties.end();
 }

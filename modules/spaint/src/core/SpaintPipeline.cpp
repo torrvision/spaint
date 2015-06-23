@@ -263,7 +263,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   const size_t featureCount = m_featureCalculator->get_feature_count();
   m_predictionFeaturesMB = mbf.make_block<float>(m_maxPredictionVoxelCount * featureCount);
-  m_predictionLabelsMB = mbf.make_block<SpaintVoxel::LabelType>(m_maxPredictionVoxelCount);
+  m_predictionLabelsMB = mbf.make_block<SpaintVoxel::PackedLabel>(m_maxPredictionVoxelCount);
   m_predictionVoxelLocationsMB = mbf.make_block<Vector3s>(m_maxPredictionVoxelCount);
   m_trainingFeaturesMB = mbf.make_block<float>(maxTrainingVoxelCount * featureCount);
   m_trainingLabelMaskMB = mbf.make_block<bool>(maxLabelCount);
@@ -273,7 +273,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the random forest.
   // FIXME: These settings shouldn't be hard-coded here ultimately.
   const size_t treeCount = 5;
-  DecisionTree<SpaintVoxel::LabelType>::Settings dtSettings;
+  DecisionTree<SpaintVoxel::Label>::Settings dtSettings;
   dtSettings.candidateCount = 256;
   dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(m_patchSize));
   dtSettings.gainThreshold = 0.0f;
@@ -283,7 +283,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   dtSettings.seenExamplesThreshold = 50;
   dtSettings.splittabilityThreshold = 0.8f;
   dtSettings.usePMFReweighting = true;
-  m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
+  m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 
   m_featureInspectionWindowName = "Feature Inspection";
   m_fusionEnabled = true;
@@ -351,14 +351,14 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
 
   // Predict labels for the voxels based on the feature descriptors.
-  SpaintVoxel::LabelType *labels = m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
+  SpaintVoxel::PackedLabel *labels = m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int i = 0; i < static_cast<int>(m_maxPredictionVoxelCount); ++i)
   {
-    labels[i] = m_forest->predict(descriptors[i]);
+    labels[i] = SpaintVoxel::PackedLabel(m_forest->predict(descriptors[i]), SpaintVoxel::LG_FOREST);
   }
 
   m_predictionLabelsMB->UpdateDeviceFromHost();
@@ -382,7 +382,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   labelMask[0] = false;
   for(size_t i = 1; i < maxLabelCount; ++i)
   {
-    labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::LabelType>(i));
+    labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::Label>(i));
   }
   m_trainingLabelMaskMB->UpdateDeviceFromHost();
 
@@ -406,8 +406,8 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_model->get_scene().get(), *m_trainingFeaturesMB);
 
   // Make the training examples.
-  typedef boost::shared_ptr<const Example<SpaintVoxel::LabelType> > Example_CPtr;
-  std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::LabelType>(
+  typedef boost::shared_ptr<const Example<SpaintVoxel::Label> > Example_CPtr;
+  std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::Label>(
     *m_trainingFeaturesMB,
     *m_trainingVoxelCountsMB,
     m_featureCalculator->get_feature_count(),

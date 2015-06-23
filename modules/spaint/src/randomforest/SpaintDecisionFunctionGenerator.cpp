@@ -19,11 +19,11 @@ SpaintDecisionFunctionGenerator::SpaintDecisionFunctionGenerator(size_t patchSiz
   std::pair<int,int> vopFeatureIndexRange(0, vopFeatureCount - 1);
 
 #ifndef USE_LOW_POWER_MODE
-  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(vopFeatureIndexRange)));
-  this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<SpaintVoxel::LabelType>(vopFeatureIndexRange)));
+  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(vopFeatureIndexRange)));
+  this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(vopFeatureIndexRange)));
 #endif
-  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(std::make_pair(vopFeatureCount, vopFeatureCount + 2))));
-  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<SpaintVoxel::LabelType>(std::make_pair(vopFeatureCount + 3, vopFeatureCount + 3))));
+  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(std::make_pair(vopFeatureCount, vopFeatureCount + 2))));
+  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(std::make_pair(vopFeatureCount + 3, vopFeatureCount + 3))));
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

@@ -21,8 +21,8 @@ class SpaintInteractor
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ORUtils::MemoryBlock<unsigned char> > Labels_Ptr;
-  typedef boost::shared_ptr<const ORUtils::MemoryBlock<unsigned char> > Labels_CPtr;
+  typedef boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > PackedLabels_Ptr;
+  typedef boost::shared_ptr<const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
@@ -43,7 +43,7 @@ private:
   Selector_Ptr m_selector;
 
   /** The semantic label to use for manually labelling the scene. */
-  SpaintVoxel::LabelType m_semanticLabel;
+  SpaintVoxel::Label m_semanticLabel;
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   VoxelMarker_CPtr m_voxelMarker;
@@ -90,7 +90,7 @@ public:
    *
    * \return  The semantic label that is being used for manually labelling the scene.
    */
-  SpaintVoxel::LabelType get_semantic_label() const;
+  SpaintVoxel::Label get_semantic_label() const;
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.
@@ -99,7 +99,7 @@ public:
    * \param label     The semantic label with which to mark the voxels.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::LabelType label, const Labels_Ptr& oldLabels = Labels_Ptr());
+  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic labels.
@@ -107,7 +107,7 @@ public:
    * \param selection The selection of voxels.
    * \param labels    The semantic labels with which to mark the voxels (one per voxel).
    */
-  void mark_voxels(const Selection_CPtr& selection, const Labels_CPtr& labels);
+  void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels);
 
   /**
    * \brief Gets whether or not the current selector is active.
@@ -121,7 +121,7 @@ public:
    *
    * \param semanticLabel The semantic label to use for manually labelling the scene.
    */
-  void set_semantic_label(SpaintVoxel::LabelType semanticLabel);
+  void set_semantic_label(SpaintVoxel::Label semanticLabel);
 
   /**
    * \brief Allows the user to change selector or update the current selector.

@@ -45,7 +45,7 @@ inline void shade_pixel_semantic(Vector4u& dest, const Vector3f& point, bool fou
   {
     // Determine the base colour to use for the pixel based on the semantic label of the voxel we hit and its scene colour (if available).
     const SpaintVoxel voxel = readVoxel(voxelData, voxelIndex, point.toIntRound(), foundPoint);
-    const Vector3u labelColour = labelColours[voxel.label];
+    const Vector3u labelColour = labelColours[voxel.packedLabel.label];
     Vector3u colour;
     if(SpaintVoxel::hasColorInformation)
     {

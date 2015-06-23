@@ -9,12 +9,12 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, unsigned char label,
+MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, SpaintVoxel::PackedLabel label,
                                      const spaint::SpaintInteractor_Ptr& interactor)
 : Command(get_static_description()),
   m_interactor(interactor),
   m_label(label),
-  m_oldVoxelLabelsMB(MemoryBlockFactory::instance().make_block<unsigned char>(voxelLocationsMB->dataSize)),
+  m_oldVoxelLabelsMB(MemoryBlockFactory::instance().make_block<SpaintVoxel::PackedLabel>(voxelLocationsMB->dataSize)),
   m_voxelLocationsMB(voxelLocationsMB)
 {}
 

@@ -292,7 +292,7 @@ void Application::process_labelling_input()
   static bool canChangeLabel = true;
   const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
   LabelManager_CPtr labelManager = m_spaintPipeline->get_model()->get_label_manager();
-  SpaintVoxel::LabelType semanticLabel = interactor->get_semantic_label();
+  SpaintVoxel::Label semanticLabel = interactor->get_semantic_label();
 
   if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
   {
@@ -328,6 +328,7 @@ void Application::process_labelling_input()
     // If there are selected voxels, mark the voxels with the current semantic label.
     if(selection)
     {
+      const SpaintVoxel::PackedLabel packedLabel(semanticLabel, SpaintVoxel::LG_USER);
       const bool useUndo = true;
       if(useUndo)
       {
@@ -336,9 +337,9 @@ void Application::process_labelling_input()
           m_commandManager.execute_command(Command_CPtr(new NoOpCommand(beginMarkVoxelsDesc)));
           currentlyMarking = true;
         }
-        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, semanticLabel, interactor)), precursors);
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, interactor)), precursors);
       }
-      else interactor->mark_voxels(selection, semanticLabel);
+      else interactor->mark_voxels(selection, packedLabel);
     }
   }
   else if(currentlyMarking)

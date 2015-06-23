@@ -76,17 +76,17 @@ Selector_CPtr SpaintInteractor::get_selector() const
   return m_selector;
 }
 
-SpaintVoxel::LabelType SpaintInteractor::get_semantic_label() const
+SpaintVoxel::Label SpaintInteractor::get_semantic_label() const
 {
   return m_semanticLabel;
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::LabelType label, const Labels_Ptr& oldLabels)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels)
 {
   m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get());
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, const Labels_CPtr& labels)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels)
 {
   m_voxelMarker->mark_voxels(*selection, *labels, m_model->get_scene().get());
 }
@@ -96,7 +96,7 @@ bool SpaintInteractor::selector_is_active() const
   return m_selector->is_active();
 }
 
-void SpaintInteractor::set_semantic_label(SpaintVoxel::LabelType semanticLabel)
+void SpaintInteractor::set_semantic_label(SpaintVoxel::Label semanticLabel)
 {
   m_semanticLabel = semanticLabel;
 }
