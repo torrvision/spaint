@@ -276,6 +276,9 @@ private:
   /** The inverses of the L1-normalised class frequencies observed in the training data. */
   boost::optional<std::map<Label,float> > m_inverseClassWeights;
 
+  /** A flag indicating whether or not the tree is valid (trees are invalid until we have started to train them). */
+  bool m_isValid;
+
   /** The nodes in the tree. */
   std::vector<Node_Ptr> m_nodes;
 
@@ -299,7 +302,7 @@ public:
    * \param settings  The settings needed to configure the decision tree.
    */
   explicit DecisionTree(const Settings& settings)
-  : m_settings(settings), m_treeDepth(0)
+  : m_isValid(false), m_settings(settings), m_treeDepth(0)
   {
     m_rootIndex = add_node(0);
 
@@ -346,6 +349,9 @@ public:
     {
       add_example(examples.at(indices[i]));
     }
+
+    // Provided we added at least one example, the tree is now valid if it wasn't already.
+    if(!examples.empty()) m_isValid = true;
 
     // Update the inverse class weights (note that this must be done before updating the dirty nodes,
     // since the splittability calculations for the dirty nodes depend on the new weights).
@@ -403,6 +409,18 @@ public:
   size_t get_tree_depth() const
   {
     return m_treeDepth;
+  }
+
+  /**
+   * \brief Gets whether or not the tree is valid.
+   *
+   * Trees are invalid until we have started training them.
+   *
+   * \return  true, if the tree is valid, or false otherwise.
+   */
+  bool is_valid() const
+  {
+    return m_isValid;
   }
 
  /**
@@ -744,6 +762,7 @@ private:
     ar & m_classFrequencies;
     ar & m_dirtyNodes;
     ar & m_inverseClassWeights;
+    ar & m_isValid;
     ar & m_nodes;
     ar & m_rootIndex;
     ar & m_settings;

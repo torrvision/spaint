@@ -109,6 +109,22 @@ public:
   }
 
   /**
+   * \brief Gets whether or not the forest is valid.
+   *
+   * Forests are invalid until we have started training them.
+   *
+   * \return  true, if the forest is valid, or false otherwise.
+   */
+  bool is_valid() const
+  {
+    for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
+    {
+      if(!(*it)->is_valid()) return false;
+    }
+    return true;
+  }
+
+  /**
    * \brief Outputs the random forest to a stream.
    *
    * \param os  The stream to which to output the forest.
