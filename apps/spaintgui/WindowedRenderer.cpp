@@ -64,6 +64,9 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
 
 void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
+  // Reacquire the focus for this window if it has been lost to debugging windows.
+  SDL_RaiseWindow(get_window());
+
   // Determine the camera pose.
   ITMPose pose;
   switch(get_camera_mode())
@@ -82,5 +85,6 @@ void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
   // Render the scene from that camera pose.
   render_scene(pose, interactor, m_renderState);
 
+  // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());
 }

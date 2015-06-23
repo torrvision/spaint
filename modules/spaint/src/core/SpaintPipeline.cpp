@@ -20,6 +20,10 @@ using namespace InfiniTAM::Engine;
 #include "sampling/VoxelSamplerFactory.h"
 #include "util/MemoryBlockFactory.h"
 
+#ifdef WITH_OPENCV
+#include "ocv/OpenCVUtil.h"
+#endif
+
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
 #endif
@@ -126,15 +130,18 @@ void SpaintPipeline::run_main_section()
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
 }
 
-void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& samplingRenderState)
+void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 {
   switch(m_mode)
   {
+    case MODE_FEATURE_INSPECTION:
+      run_feature_inspection_section(renderState);
+      break;
     case MODE_PREDICTION:
-      run_prediction_section(samplingRenderState);
+      run_prediction_section(renderState);
       break;
     case MODE_TRAINING:
-      run_training_section(samplingRenderState);
+      run_training_section(renderState);
       break;
     default:
       break;
@@ -148,6 +155,14 @@ void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
 
 void SpaintPipeline::set_mode(Mode mode)
 {
+#ifdef WITH_OPENCV
+  // If we are switching out of feature inspection mode, destroy the feature inspection window.
+  if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
+  {
+    cv::destroyWindow(m_featureInspectionWindowName);
+  }
+#endif
+
   m_mode = mode;
 }
 
@@ -235,13 +250,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
-  const size_t patchSize = 13;
+  m_patchSize = 13;
   const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
   const size_t binCount = 36;                                         // 10 degrees per bin
 
   m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
     std::max(m_maxPredictionVoxelCount, maxTrainingVoxelCount),
-    patchSize, patchSpacing, binCount, settings->deviceType
+    m_patchSize, patchSpacing, binCount, settings->deviceType
   );
 
   // Set up the memory blocks needed for prediction and training.
@@ -260,7 +275,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const size_t treeCount = 5;
   DecisionTree<SpaintVoxel::LabelType>::Settings dtSettings;
   dtSettings.candidateCount = 256;
-  dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(patchSize));
+  dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(m_patchSize));
   dtSettings.gainThreshold = 0.0f;
   dtSettings.maxClassSize = 1000;
   dtSettings.maxTreeHeight = 20;
@@ -270,6 +285,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   dtSettings.usePMFReweighting = true;
   m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
 
+  m_featureInspectionWindowName = "Feature Inspection";
   m_fusionEnabled = true;
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
@@ -289,6 +305,34 @@ ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, cons
     ), 1
   );
   return compositeTracker;
+}
+
+void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
+{
+  // Get the voxels (if any) selected by the user (prior to selection transformation).
+  Selector::Selection_CPtr selection = m_interactor->get_selector()->get_selection();
+
+  // If the user hasn't selected a single voxel, early out.
+  if(!selection || selection->dataSize != 1) return;
+
+  // Calculate the feature descriptor for the selected voxel.
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(m_featureCalculator->get_feature_count());
+  m_featureCalculator->calculate_features(*selection, m_model->get_scene().get(), *featuresMB);
+
+#ifdef WITH_OPENCV
+  // Convert the feature descriptor into an OpenCV image and show it in a window.
+  featuresMB->UpdateHostFromDevice();
+  const float *features = featuresMB->GetData(MEMORYDEVICE_CPU);
+  const int patchSize = static_cast<int>(m_patchSize);
+  cv::Mat3b featureInspectionImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
+
+  const float scaleFactor = 10.0f;
+  cv::resize(featureInspectionImage, featureInspectionImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
+
+  cv::imshow(m_featureInspectionWindowName, featureInspectionImage);
+  const int delayMs = 1;
+  cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
+#endif
 }
 
 void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)

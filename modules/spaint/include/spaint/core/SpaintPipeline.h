@@ -53,6 +53,9 @@ public:
    */
   enum Mode
   {
+    /** In feature inspection mode, the user can move the mouse around and visualise the features at particular points in the scene. */
+    MODE_FEATURE_INSPECTION,
+
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
 
@@ -80,6 +83,9 @@ private:
 
   /** The feature calculator. */
   FeatureCalculator_CPtr m_featureCalculator;
+
+  /** The name to give the featuere inspection window. */
+  std::string m_featureInspectionWindowName;
 
   /** The random forest. */
   RandomForest_Ptr m_forest;
@@ -116,6 +122,9 @@ private:
 
   /** The spaint model. */
   SpaintModel_Ptr m_model;
+
+  /** The side length of a VOP patch (must be odd). */
+  size_t m_patchSize;
 
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
@@ -260,9 +269,9 @@ public:
   /**
    * \brief Runs the mode-specific section of the pipeline.
    *
-   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
+   * \param renderState The render state to be used by the mode-specific section of the pipeline.
    */
-  void run_mode_specific_section(const RenderState_CPtr& samplingRenderState);
+  void run_mode_specific_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Sets whether or not fusion should be run as part of the pipeline.
@@ -297,6 +306,13 @@ private:
    * \return                  The hybrid tracker.
    */
   ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
+
+  /**
+   * \brief Runs the section of the pipeline associated with feature inspection mode.
+   *
+   * \param renderState The render state associated with the camera position from which the user is picking voxels.
+   */
+  void run_feature_inspection_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with prediction mode.
