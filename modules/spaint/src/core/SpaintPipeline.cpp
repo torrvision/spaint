@@ -329,6 +329,8 @@ void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& rend
   cv::resize(featureInspectionImage, featureInspectionImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
 
   cv::imshow("Feature Inspection", featureInspectionImage);
+  const int delayMs = 1;
+  cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
 #endif
 }
 
