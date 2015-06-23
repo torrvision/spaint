@@ -84,6 +84,9 @@ private:
   /** The feature calculator. */
   FeatureCalculator_CPtr m_featureCalculator;
 
+  /** The name to give the featuere inspection window. */
+  std::string m_featureInspectionWindowName;
+
   /** The random forest. */
   RandomForest_Ptr m_forest;
 

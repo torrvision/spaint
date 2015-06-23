@@ -159,7 +159,7 @@ void SpaintPipeline::set_mode(Mode mode)
   // If we are switching out of feature inspection mode, destroy the feature inspection window.
   if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
   {
-    cv::destroyWindow("Feature Inspection");
+    cv::destroyWindow(m_featureInspectionWindowName);
   }
 #endif
 
@@ -285,6 +285,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   dtSettings.usePMFReweighting = true;
   m_forest.reset(new RandomForest<SpaintVoxel::LabelType>(treeCount, dtSettings));
 
+  m_featureInspectionWindowName = "Feature Inspection";
   m_fusionEnabled = true;
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
@@ -328,7 +329,7 @@ void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& rend
   const float scaleFactor = 10.0f;
   cv::resize(featureInspectionImage, featureInspectionImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
 
-  cv::imshow("Feature Inspection", featureInspectionImage);
+  cv::imshow(m_featureInspectionWindowName, featureInspectionImage);
   const int delayMs = 1;
   cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
 #endif
