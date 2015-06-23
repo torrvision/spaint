@@ -25,7 +25,7 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
 {
   // The new label can overwrite the old label iff one of the following is true:
   return
-    // (a) The old label is the original (null) label.
+    // (a) The old label is the original (background) label.
     (oldLabel.label == 0 && oldLabel.group == SpaintVoxel::LG_USER) ||
 
     // (b) The old label and the new label are in the same group (e.g. they are both predictions from the forest).

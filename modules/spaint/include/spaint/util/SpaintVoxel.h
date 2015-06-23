@@ -47,9 +47,9 @@ struct SpaintVoxel
   /**
    * \brief An instance of this struct represents the semantic label for a voxel.
    *
-   * Labels can be in multiple groups, allowing us to separate them based on their provenance
+   * Labels can be in different groups, allowing us to separate them based on their provenance
    * (e.g. it is important to know whether a label was provided by the user or predicted by
-   * the random forest). They are bit-packed for memory efficiency reasons.
+   * the random forest). Note the use of bit fields for memory efficiency reasons.
    */
   struct PackedLabel
   {
