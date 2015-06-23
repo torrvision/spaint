@@ -128,6 +128,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 1 = To Normal Mode\n"
               << "M + 2 = To Training Mode\n"
               << "M + 3 = To Prediction Mode\n"
+              << "M + 4 = To Feature Inspection Mode\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
               << "R + 3 = To Rift Renderer (Fullscreen)\n"
