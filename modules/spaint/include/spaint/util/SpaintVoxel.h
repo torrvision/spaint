@@ -56,10 +56,10 @@ struct SpaintVoxel
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
     /** The group of the label (e.g. "user", "forest", etc.). */
-    LabelGroup group : 2;
+    uchar group : 2;
 
     /** The label itself. */
-    Label label : 6;
+    uchar label : 6;
 
     //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
 
@@ -70,7 +70,7 @@ struct SpaintVoxel
 
     _CPU_AND_GPU_CODE_
     PackedLabel(Label label_, LabelGroup group_)
-    : group(group_), label(label_)
+    : group(static_cast<uchar>(group_)), label(label_)
     {}
 
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC OPERATORS ~~~~~~~~~~~~~~~~~~~~
