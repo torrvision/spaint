@@ -159,7 +159,7 @@ void SpaintPipeline::set_mode(Mode mode)
   // If we are switching out of feature inspection mode, destroy the feature inspection window.
   if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
   {
-    cv::destroyWindow(m_featureInspectionWindowName);
+    cv::destroyAllWindows();
   }
 #endif
 
