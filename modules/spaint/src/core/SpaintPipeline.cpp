@@ -340,6 +340,9 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
 
+  // If the random forest is not yet valid, early out.
+  if(!m_forest->is_valid()) return;
+
   // Sample some voxels for which to predict labels.
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
