@@ -155,6 +155,14 @@ void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
 
 void SpaintPipeline::set_mode(Mode mode)
 {
+#ifdef WITH_OPENCV
+  // If we are switching out of feature inspection mode, destroy the feature inspection window.
+  if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
+  {
+    cv::destroyWindow("Feature Inspection");
+  }
+#endif
+
   m_mode = mode;
 }
 
@@ -315,12 +323,12 @@ void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& rend
   featuresMB->UpdateHostFromDevice();
   const float *features = featuresMB->GetData(MEMORYDEVICE_CPU);
   const int patchSize = static_cast<int>(m_patchSize);
-  cv::Mat3b featuresImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
+  cv::Mat3b featureInspectionImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
 
   const float scaleFactor = 10.0f;
-  cv::resize(featuresImage, featuresImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
+  cv::resize(featureInspectionImage, featureInspectionImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
 
-  cv::imshow("Features", featuresImage);
+  cv::imshow("Feature Inspection", featureInspectionImage);
 #endif
 }
 
