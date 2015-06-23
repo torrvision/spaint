@@ -101,9 +101,10 @@ RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_C
 
   // Set up the stereo camera.
   const float HALF_IPD = 0.032f; // the average (male) interpupillary distance (IPD) is about 6.4cm
+  const float N_OFFSET = 0.3f;   // the amount by which we move the camera away from the scene to ensure that the user can see enough
   m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, 0.0f))));
-  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, 0.0f))));
+  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, -N_OFFSET))));
+  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, -N_OFFSET))));
 
   // Set up the eye frame buffers.
   ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
@@ -186,7 +187,7 @@ void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
 
     eyeTextures[i].OGL.Header.API = ovrRenderAPI_OpenGL;
     eyeTextures[i].OGL.Header.TextureSize = OVR::Sizei(width, height);
-    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti(OVR::Sizei(width, height));
+    eyeTextures[i].OGL.Header.RenderViewport = OVR::Recti((width - height) / 2, 0, height, height);
     eyeTextures[i].OGL.TexId = m_eyeFrameBuffers[i]->get_colour_buffer_id();
   }
 
