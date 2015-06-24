@@ -64,10 +64,13 @@ Selector::Selection_CPtr PickingSelector::get_selection() const
   return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
 }
 
-void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
+void PickingSelector::update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
 {
   // Update whether or not the selector is active.
-  m_isActive = inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
+  m_isActive = renderingInMono && inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
+
+  // If the scene is not being rendered in mono, early out.
+  if(!renderingInMono) return;
 
   // Try and pick an individual voxel.
   m_pickPointValid = false;

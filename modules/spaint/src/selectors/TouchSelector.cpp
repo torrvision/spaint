@@ -86,7 +86,7 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
   return m_keptTouchPointCount > 0 ? m_keptTouchPointsShortMB : Selection_CPtr();
 }
 
-void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState)
+void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
 {
   // Detect any points that the user is touching in the scene.
   MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));

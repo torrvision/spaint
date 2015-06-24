@@ -132,8 +132,13 @@ MoveableCamera_Ptr RiftRenderer::get_camera()
 
 RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state() const
 {
-  // The Rift is a stereo display - it doesn't have a monocular render state.
-  return RenderState_CPtr();
+  // The Rift is a stereo display, so return the render state corresponding to the left eye.
+  return m_renderStates[ovrEye_Left];
+}
+
+bool RiftRenderer::is_mono() const
+{
+  return false;
 }
 
 void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const

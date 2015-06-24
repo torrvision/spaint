@@ -84,10 +84,11 @@ public:
   /**
    * \brief Updates the selector based on the current input state.
    *
-   * \param inputState  The current input state.
-   * \param renderState The render state corresponding to the camera from which the scene is being viewed.
+   * \param inputState      The current input state.
+   * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
+   * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState) = 0;
+  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono) = 0;
 };
 
 //#################### TYPEDEFS ####################

@@ -101,7 +101,7 @@ void SpaintInteractor::set_semantic_label(SpaintVoxel::Label semanticLabel)
   m_semanticLabel = semanticLabel;
 }
 
-void SpaintInteractor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState)
+void SpaintInteractor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
 {
   // Allow the user to switch between different selectors.
   const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
@@ -128,7 +128,7 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
   if(m_selectionTransformer) m_selectionTransformer->update(inputState);
 
   // Update the current selector.
-  m_selector->update(inputState, renderState);
+  m_selector->update(inputState, renderState, renderingInMono);
 }
 
 }
