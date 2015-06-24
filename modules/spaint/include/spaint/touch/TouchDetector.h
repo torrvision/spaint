@@ -107,6 +107,13 @@ public:
    */
   std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
+  /**
+   * \brief Gets the binary mask denoting the image regions in which a touch interaction is happening if any.
+   *
+   * \return The mask image denoting touch regions.
+   */
+  ITMFloatImage_CPtr get_touch_mask() const;
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**

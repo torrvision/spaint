@@ -128,6 +128,11 @@ catch(af::exception&)
   return std::vector<Eigen::Vector2i>();
 }
 
+TouchDetector::ITMFloatImage_CPtr TouchDetector::get_touch_mask() const
+{
+  return m_thresholdedRawDepth;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void TouchDetector::detect_changes()
