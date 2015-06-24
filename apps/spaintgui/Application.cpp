@@ -424,6 +424,6 @@ void Application::process_voice_input()
     if(command == "label chair")      label = 1;
     else if(command == "label floor") label = 2;
     else if(command == "label table") label = 3;
-    if(label != -1) m_spaintPipeline->get_interactor()->set_semantic_label(SpaintVoxel::LabelType(label));
+    if(label != -1) m_spaintPipeline->get_interactor()->set_semantic_label(SpaintVoxel::Label(label));
   }
 }
