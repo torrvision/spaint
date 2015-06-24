@@ -84,7 +84,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState);
+  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
 };
 
 }

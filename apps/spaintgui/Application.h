@@ -62,11 +62,11 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Gets the current monocular render state (if any).
+   * \brief Gets the current monocular render state.
    *
-   * This will only exist if we're currently rendering in mono rather than stereo.
+   * If we're rendering in stereo, this will return the render state corresponding to the left eye.
    *
-   * \return  The current monocular render state, if any, or null otherwise.
+   * \return  The current monocular render state.
    */
   Renderer::RenderState_CPtr get_monocular_render_state() const;
 

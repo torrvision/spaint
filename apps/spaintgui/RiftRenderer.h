@@ -79,6 +79,9 @@ public:
   virtual RenderState_CPtr get_monocular_render_state() const;
 
   /** Override */
+  virtual bool is_mono() const;
+
+  /** Override */
   virtual void render(const spaint::SpaintInteractor_CPtr& interactor) const;
 };
 

@@ -24,6 +24,6 @@ Selector::Selection_CPtr NullSelector::get_selection() const
   return Selection_CPtr();
 }
 
-void NullSelector::update(const InputState& inputState, const RenderState_CPtr& renderState) {}
+void NullSelector::update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono) {}
 
 }

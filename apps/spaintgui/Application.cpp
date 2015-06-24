@@ -69,10 +69,6 @@ void Application::run()
 
 Application::RenderState_CPtr Application::get_monocular_render_state() const
 {
-  // If we're rendering in stereo (e.g. on the Rift), return a null render state.
-  if(!m_renderer->get_monocular_render_state()) return RenderState_CPtr();
-
-  // Otherwise, return the monocular render state corresponding to the current camera mode.
   switch(m_renderer->get_camera_mode())
   {
     case Renderer::CM_FOLLOW:
@@ -284,10 +280,6 @@ void Application::process_input()
 
 void Application::process_labelling_input()
 {
-  // Get the current monocular render state, if any. If we're not currently rendering in mono, early out.
-  RenderState_CPtr renderState = get_monocular_render_state();
-  if(!renderState) return;
-
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
   const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
@@ -309,7 +301,7 @@ void Application::process_labelling_input()
   interactor->set_semantic_label(semanticLabel);
 
   // Update the current selector.
-  interactor->update_selector(m_inputState, renderState);
+  interactor->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
 
   // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
   static bool currentlyMarking = false;

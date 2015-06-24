@@ -126,10 +126,11 @@ public:
   /**
    * \brief Allows the user to change selector or update the current selector.
    *
-   * \param inputState  The current input state.
-   * \param renderState The render state corresponding to the camera from which the scene is being viewed.
+   * \param inputState      The current input state.
+   * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
+   * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  void update_selector(const InputState& inputState, const RenderState_CPtr& renderState);
+  void update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
 };
 
 //#################### TYPEDEFS ####################

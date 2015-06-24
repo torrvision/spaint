@@ -94,11 +94,20 @@ public:
   virtual rigging::MoveableCamera_Ptr get_camera() = 0;
 
   /**
-   * \brief Gets the render state for the camera, if it's monocular, or null otherwise.
+   * \brief Gets the monocular render state for the camera.
    *
-   * \return  The render state for the camera, if it's monocular, or null otherwise.
+   * If the camera is a stereo one, this will return the render state corresponding to the left eye.
+   *
+   * \return  The monocular render state for the camera.
    */
   virtual RenderState_CPtr get_monocular_render_state() const = 0;
+
+  /**
+   * \brief Gets whether or not the renderer is rendering the scene in mono.
+   *
+   * \return  true, if the renderer is rendering the scene in mono, or false otherwise.
+   */
+  virtual bool is_mono() const = 0;
 
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.

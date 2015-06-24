@@ -62,6 +62,11 @@ WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(
   return m_renderState;
 }
 
+bool WindowedRenderer::is_mono() const
+{
+  return true;
+}
+
 void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
 {
   // Reacquire the focus for this window if it has been lost to debugging windows.
