@@ -171,6 +171,17 @@ public:
   }
 
   /**
+   * \brief Resets a specified tree in the random forest with specific settings.
+   */
+  void reset_tree(size_t treeId, const typename DT::Settings& settings)
+  {
+    if(treeId < m_trees.size())
+    {
+      m_trees[treeId] = DT_Ptr(new DT(settings));
+    }
+  }
+
+  /**
    * \brief Trains the forest by splitting a number of suitable nodes in each tree.
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.

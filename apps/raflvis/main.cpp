@@ -131,7 +131,9 @@ static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr>
     const Descriptor_CPtr& desc = example.get_descriptor();
     const float x = desc->at(0);
     const float y = desc->at(1);
-    rotatedExamples.push_back(Example_Ptr(new Example<Label>(make_2d_descriptor(x * cosf(angle) - y * sinf(angle),x * sinf(angle) + y * cosf(angle)), example.get_label()))); rotatedExamples;
+    rotatedExamples.push_back(Example_Ptr(new Example<Label>(make_2d_descriptor(x * cosf(angle) - y * sinf(angle),x * sinf(angle) + y * cosf(angle)), example.get_label())));
+  }
+  return rotatedExamples;
 }
 
 /**
@@ -169,6 +171,8 @@ int main(int argc, char *argv[])
 
   // Generate a set of labels.
 #ifdef CLASS_IMBALANCE_TEST
+  const int labelCount = 5;
+#elif defined(EXAMPLE_ROTATION_TEST)
   const int labelCount = 5;
 #else
   const int labelCount = 20;
@@ -220,7 +224,7 @@ int main(int argc, char *argv[])
   DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
   // Initialise the online random forest with the specified parameters.
-  const size_t treeCount = 1;
+  const size_t treeCount = 2;
   DT::Settings settings(params[0]);
   RF_Ptr randomForest(new RF(treeCount, settings));
 
@@ -254,11 +258,16 @@ int main(int argc, char *argv[])
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
 #elif defined(EXAMPLE_ROTATION_TEST)
     static int currentRotation = 0;
+    static int treeToChop = 0;
     if(roundCount % 20 == 0)
     {
+#if 0
+      randomForest->reset_tree(treeToChop++ % treeCount, settings);
+#endif
       currentRotation += 10;
     }
     std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
+
 #else
     // Add an additional current class label after every 20 rounds of training.
     if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
