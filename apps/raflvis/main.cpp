@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
     static int treeToChop = 0;
     if(roundCount % 20 == 0)
     {
-#if 0
+#if 1
       randomForest->reset_tree(treeToChop++ % treeCount, settings);
 #endif
       currentRotation += 10;
