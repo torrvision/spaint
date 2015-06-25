@@ -90,7 +90,7 @@ private:
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
-  /** Whether or not fusion should be run as part of the pipeline. */
+  /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
   /** The engine used to provide input images to the fusion pipeline. */
@@ -212,9 +212,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets whether or not fusion is currently being run as part of the pipeline.
+   * \brief Gets whether or not the user wants fusion to be run as part of the pipeline.
    *
-   * \return  true, if fusion is currently being run as part of the pipeline, or false otherwise.
+   * \return  true, if the user wants fusion to be run as part of the pipeline, or false otherwise.
    */
   bool get_fusion_enabled() const;
 
@@ -275,9 +275,12 @@ public:
   void run_mode_specific_section(const RenderState_CPtr& renderState);
 
   /**
-   * \brief Sets whether or not fusion should be run as part of the pipeline.
+   * \brief Sets whether or not the user wants fusion to be run as part of the pipeline.
    *
-   * \param fusionEnabled Whether or not fusion should be run as part of the pipeline.
+   * Note: Just because the user wants fusion to be run doesn't mean that it necessarily will be on every frame.
+   *       In particular, we prevent fusion when we know we have lost tracking, regardless of this setting.
+   *
+   * \param fusionEnabled Whether or not the user wants fusion to be run as part of the pipeline.
    */
   void set_fusion_enabled(bool fusionEnabled);
 
