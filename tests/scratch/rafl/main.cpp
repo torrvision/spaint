@@ -32,7 +32,7 @@ int main()
 
 #include <Eigen/Dense>
 
-#include <rafl/RandomForest.h>
+#include <rafl/core/RandomForest.h>
 #include <rafl/decisionfunctions/FeatureThresholdingDecisionFunctionGenerator.h>
 using namespace rafl;
 

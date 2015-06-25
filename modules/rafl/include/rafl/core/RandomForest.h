@@ -83,6 +83,17 @@ public:
   }
 
   /**
+   * \brief Calculate the average leaf entropy of a specified tree.
+   *
+   * \param treeId  The Id of the specified tree.
+   * \return        The average leaf entropy of the specified tree.
+   */
+  float calculate_average_leaf_entropy(size_t treeId) const
+  {
+    return m_trees[treeId]->calculate_average_leaf_entropy();
+  }
+
+  /**
    * \brief Calculates an overall forest PMF for the specified descriptor.
    *
    * This is simply the average of the PMFs for the specified descriptor in the various decision trees.
@@ -108,6 +119,38 @@ public:
     return ProbabilityMassFunction<Label>(masses);
   }
 
+  /**
+   * \brief Gets a histogram holding the class frequencies observed in the training data for a particular tree.
+   *
+   * \param treeId  The Id of the specified tree.
+   * \return        A histogram holding the class frequencies observed in the training data for a specified tree.
+   */
+  const Histogram<Label>& get_class_frequencies(size_t treeId) const
+  {
+    return m_trees[treeId]->get_class_frequencies();
+  }
+
+  /**
+   * \brief Gets the number of nodes in a specified tree.
+   *
+   * \param treeId  The Id of the specified tree.
+   * \return        The number of nodes in the specified tree.
+   */
+  size_t get_node_count(size_t treeId) const
+  {
+    return m_trees[treeId]->get_node_count();
+  }
+
+  /**
+   * \brief Gets the depth of the specified tree.
+   *
+   * \return  The depth of the tree.
+   */
+  size_t get_tree_depth(size_t treeId) const
+  {
+    return m_trees[treeId]->get_tree_depth();
+  }
+  
   /**
    * \brief Gets whether or not the forest is valid.
    *
@@ -136,8 +179,7 @@ public:
       os << "Tree " << i << ":\n";
       m_trees[i]->output(os);
       os << '\n';
-    }
-  }
+    } }
 
   /**
    * \brief Outputs statistics about the random forest to a stream.
@@ -149,12 +191,11 @@ public:
     os << std::setprecision(5);
     for(size_t i = 0, size = m_trees.size(); i < size; ++i)
     {
-      const DT_Ptr& tree = m_trees[i];
       os << "Tree: " << i << ", ";
-      os << "Node Count: " << tree->get_node_count() << ", ";
-      os << "Depth: " << tree->get_tree_depth() << ", ";
-      os << "Avg. Leaf Entropy: " << tree->calculate_average_leaf_entropy() << ", ";
-      os << "Class Frequencies: " << tree->get_class_frequencies() << '\n';
+      os << "Node Count: " << get_node_count(i) << ", ";
+      os << "Depth: " << get_tree_depth(i) << ", ";
+      os << "Avg. Leaf Entropy: " << calculate_average_leaf_entropy(i) << ", ";
+      os << "Class Frequencies: " << get_class_frequencies(i) << '\n';
     }
     os << '\n';
   }

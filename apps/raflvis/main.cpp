@@ -14,7 +14,8 @@ using namespace tvgutil;
 #include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
-#include <rafl/RandomForest.h>
+#include <rafl/choppers/CyclicTreeChopper.h>
+#include <rafl/core/RandomForest.h>
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
