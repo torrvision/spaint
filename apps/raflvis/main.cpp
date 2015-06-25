@@ -229,6 +229,9 @@ int main(int argc, char *argv[])
   DT::Settings settings(params[0]);
   RF_Ptr randomForest(new RF(treeCount, settings));
 
+  // Create an instance of a cyclic tree chopper.
+  CyclicTreeChopper treeChopper(treeCount, 20);
+
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");
   PlotWindow decisionBoundaryPlot("DecisionBoundary");
@@ -259,14 +262,10 @@ int main(int argc, char *argv[])
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
 #elif defined(EXAMPLE_ROTATION_TEST)
     static int currentRotation = 0;
-    static int treeToChop = 0;
-    if(roundCount % 20 == 0)
-    {
-#if 1
-      randomForest->reset_tree(treeToChop++ % treeCount, settings);
-#endif
-      currentRotation += 10;
-    }
+    if(roundCount % 20 == 0) currentRotation += 10;
+
+    randomForest->chop_tree(treeChopper.calculate_tree_to_chop(), settings);
+
     std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
 
 #else

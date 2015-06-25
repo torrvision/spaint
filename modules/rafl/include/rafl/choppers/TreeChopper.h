@@ -5,6 +5,8 @@
 #ifndef H_RAFL_TREECHOPPER
 #define H_RAFL_TREECHOPPER
 
+#include <boost/optional.hpp>
+
 namespace rafl {
 
 /**
@@ -24,7 +26,7 @@ public:
   /**
    * \brief TODO.
    */
-  virtual size_t calculate_tree_to_chop() const = 0;
+  virtual boost::optional<size_t> calculate_tree_to_chop() const = 0;
 };
 
 }

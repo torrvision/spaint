@@ -214,11 +214,14 @@ public:
   /**
    * \brief Resets a specified tree in the random forest with specific settings.
    */
-  void reset_tree(size_t treeId, const typename DT::Settings& settings)
+  void chop_tree(const boost::optional<size_t>& treeId, const typename DT::Settings& settings)
   {
-    if(treeId < m_trees.size())
+    if(treeId)
     {
-      m_trees[treeId] = DT_Ptr(new DT(settings));
+      if(*treeId < m_trees.size())
+      {
+        m_trees[*treeId] = DT_Ptr(new DT(settings));
+      }
     }
   }
 
