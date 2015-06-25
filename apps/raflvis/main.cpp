@@ -15,6 +15,7 @@ using namespace tvgutil;
 using namespace evaluation;
 
 #include <rafl/choppers/CyclicTreeChopper.h>
+#include <rafl/choppers/MaxHeightTreeChopper.h>
 #include <rafl/choppers/RandomTreeChopper.h>
 #include <rafl/core/RandomForest.h>
 #include <rafl/examples/ExampleUtil.h>
@@ -232,11 +233,8 @@ int main(int argc, char *argv[])
 
   // Create an instance of a cyclic tree chopper.
   const size_t timePeriod = 20;
-#if 1
-  CyclicTreeChopper treeChopper(treeCount, timePeriod);
-#else
-  RandomTreeChopper treeChopper(treeCount, timePeriod, seed);
-#endif
+  const size_t maxTreeHeight = 2;
+  MaxHeightTreeChopper<Label> treeChopper(randomForest, maxTreeHeight, timePeriod);
 
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");
@@ -270,7 +268,7 @@ int main(int argc, char *argv[])
     static int currentRotation = 0;
     if(roundCount % 20 == 0) currentRotation += 10;
 
-    randomForest->chop_tree(treeChopper.calculate_tree_to_chop(), settings);
+    randomForest->chop_tree(treeChopper.calculate_tree_to_chop(randomForest), settings);
 
     std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
 

@@ -28,14 +28,9 @@ include/rafl/base/ProbabilityMassFunction.h
 )
 
 ##
-SET(choppers_sources
-src/choppers/CyclicTreeChopper.cpp
-src/choppers/RandomTreeChopper.cpp
-src/choppers/TreeChopper.cpp
-)
-
 SET(choppers_headers
 include/rafl/choppers/CyclicTreeChopper.h
+include/rafl/choppers/MaxHeightTreeChopper.h
 include/rafl/choppers/RandomTreeChopper.h
 include/rafl/choppers/TreeChopper.h
 )
@@ -77,7 +72,6 @@ include/rafl/examples/UnitCircleExampleGenerator.h
 #################################################################
 
 SET(sources
-${choppers_sources}
 ${decisionfunctions_sources}
 )
 
@@ -94,7 +88,7 @@ ${examples_headers}
 #############################
 
 SOURCE_GROUP(base FILES ${base_headers})
-SOURCE_GROUP(choppers FILES ${choppers_sources} ${choppers_headers})
+SOURCE_GROUP(choppers FILES ${choppers_headers})
 SOURCE_GROUP(core FILES ${core_headers})
 SOURCE_GROUP(decisionfunctions FILES ${decisionfunctions_sources} ${decisionfunctions_headers})
 SOURCE_GROUP(examples FILES ${examples_headers})

@@ -14,8 +14,13 @@ namespace rafl {
 /**
  * \brief An instance of this class represents a tree chopper that chops trees at random.
  */
-class RandomTreeChopper : public TreeChopper
+template <typename Label>
+class RandomTreeChopper : public TreeChopper<Label>
 {
+  //#################### TYPEDEFS #################### 
+private:
+  typedef TreeChopper<Label> TC;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The random number generator to use when chopping trees. */
@@ -30,12 +35,22 @@ public:
    * \param period    The time period between successive chops.
    * \param seed      The seed for the random number generator.
    */
-  RandomTreeChopper(size_t treeCount, size_t period, unsigned int seed);
+  RandomTreeChopper(size_t treeCount, size_t period, unsigned int seed)
+  : TC(treeCount, period), m_rng(seed)
+  {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual boost::optional<size_t> calculate_tree_to_chop() const;
+  virtual boost::optional<size_t> calculate_tree_to_chop(const typename TC::RF_Ptr& randomForest) const
+  {
+    boost::optional<size_t> treeToChop;
+    if(this->time_to_chop())
+    {
+      treeToChop.reset((m_rng.generate_int_from_uniform(0, static_cast<int>(this->m_treeCount) - 1)));
+    }
+    return treeToChop;
+  }
 };
 
 }

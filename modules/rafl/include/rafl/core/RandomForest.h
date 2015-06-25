@@ -142,6 +142,16 @@ public:
   }
 
   /**
+   * \brief Gets the number of trees in the random forest.
+   *
+   * \reutrn The number of trees in the random forest.
+   */
+  size_t get_tree_count() const
+  {
+    return m_trees.size();
+  }
+
+  /**
    * \brief Gets the depth of the specified tree.
    *
    * \return  The depth of the tree.
