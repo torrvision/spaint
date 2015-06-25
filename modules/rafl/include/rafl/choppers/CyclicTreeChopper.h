@@ -21,15 +21,6 @@ private:
   /** The number of three that have been chopped. */
   mutable size_t m_chopCount;
 
-  /** The time period between successive chops. */
-  size_t m_period;
-
-  /** A count of the number of times the lunberjack has come to manage the trees. */
-  mutable size_t m_time;
-
-  /** The number of trees in the random forest. */
-  size_t m_treeCount;
-
   // #################### CONSTRUCTORS #################### 
 public:
   /**
@@ -38,22 +29,12 @@ public:
    * \param treeCount The number of trees in the random forest.
    * \param period    The time period between successive chops.
    */
-  CyclicTreeChopper(size_t treeCount, size_t period)
-  : m_chopCount(0), m_period(period), m_time(0), m_treeCount(treeCount)
-  {}
+  CyclicTreeChopper(size_t treeCount, size_t period);
 
   // #################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
   /** Override */
-  virtual boost::optional<size_t> calculate_tree_to_chop() const
-  {
-    boost::optional<size_t> treeToChop;
-    if(m_time++ % m_period == 0)
-    {
-      treeToChop.reset(m_chopCount++ % m_treeCount);
-    }
-    return treeToChop;
-  }
+  virtual boost::optional<size_t> calculate_tree_to_chop() const;
 };
 
 }

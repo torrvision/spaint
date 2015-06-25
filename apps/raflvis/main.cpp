@@ -15,6 +15,7 @@ using namespace tvgutil;
 using namespace evaluation;
 
 #include <rafl/choppers/CyclicTreeChopper.h>
+#include <rafl/choppers/RandomTreeChopper.h>
 #include <rafl/core/RandomForest.h>
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
@@ -230,7 +231,12 @@ int main(int argc, char *argv[])
   RF_Ptr randomForest(new RF(treeCount, settings));
 
   // Create an instance of a cyclic tree chopper.
-  CyclicTreeChopper treeChopper(treeCount, 20);
+  const size_t timePeriod = 20;
+#if 1
+  CyclicTreeChopper treeChopper(treeCount, timePeriod);
+#else
+  RandomTreeChopper treeChopper(treeCount, timePeriod, seed);
+#endif
 
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");
