@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 
   // Create an instance of a cyclic tree chopper.
   const size_t timePeriod = 20;
-  const size_t maxTreeHeight = 2;
+  const size_t maxTreeHeight = 5;
   MaxHeightTreeChopper<Label> treeChopper(randomForest, maxTreeHeight, timePeriod);
 
   // Generate the windows into which we will display the output of the random forest.

@@ -50,8 +50,6 @@ public:
     boost::optional<size_t> treeToChop;
     if(this->time_to_chop())
     {
-      std::cout << "\n\nTime to Chop\n";
-      if(randomForest->is_valid()) randomForest->output_statistics(std::cout);
       for(size_t i = 0; i < this->m_treeCount; ++i)
       {
         if(randomForest->get_tree_depth(i) > m_maxTreeHeight)
@@ -60,7 +58,6 @@ public:
           break;
         }
       }
-      std::cout << "End to Chop\n";
     }
     return treeToChop;
   }
