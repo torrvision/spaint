@@ -10,7 +10,7 @@
 namespace rafl {
 
 /**
- * \brief An instance of a class derived from this one represents a tree chopping strategy that can be used to chop trees in the forest based on various criteria.
+ * \brief An instance of a class derived from this one represents a tree chopping strategy for a random forest.
  */
 class TreeChopper
 {
@@ -24,7 +24,7 @@ public:
   //#################### PUBLICABSTRACT MEMBER FUNCTIONS #################### 
 public:
   /**
-   * \brief TODO.
+   * \brief Calculates the Id of a tree to be chopped, or boost::none if no tree needs chopping.
    */
   virtual boost::optional<size_t> calculate_tree_to_chop() const = 0;
 };

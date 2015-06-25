@@ -12,7 +12,7 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class represents a tree chopper that chops trees in a cyclic order.
+ * \brief An instance of this class represents a tree chopper that chops trees in a cycle.
  */
 class CyclicTreeChopper : public TreeChopper
 {
@@ -21,13 +21,13 @@ private:
   /** The number of three that have been chopped. */
   mutable size_t m_chopCount;
 
-  /** TODO. */
+  /** The time period between successive chops. */
   size_t m_period;
 
   /** A count of the number of times the lunberjack has come to manage the trees. */
   mutable size_t m_time;
 
-  /** TODO */
+  /** The number of trees in the random forest. */
   size_t m_treeCount;
 
   // #################### CONSTRUCTORS #################### 
@@ -35,7 +35,8 @@ public:
   /**
    * \brief Constructs a cyclic tree chopper.
    *
-   * \param period The number of time steps to wait before chopping the next tree.
+   * \param treeCount The number of trees in the random forest.
+   * \param period    The time period between successive chops.
    */
   CyclicTreeChopper(size_t treeCount, size_t period)
   : m_chopCount(0), m_period(period), m_time(0), m_treeCount(treeCount)
