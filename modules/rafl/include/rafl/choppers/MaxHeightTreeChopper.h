@@ -39,7 +39,7 @@ public:
    * \param period        The time period between successive chops.
    */
   MaxHeightTreeChopper(const typename TC::RF_Ptr& randomForest, size_t maxTreeHeight, size_t period)
-  : TC(randomForest->get_tree_count(), period), m_maxTreeHeight(maxTreeHeight)
+  : TC(period), m_maxTreeHeight(maxTreeHeight)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
@@ -50,7 +50,7 @@ public:
     boost::optional<size_t> treeToChop;
     if(this->time_to_chop())
     {
-      for(size_t i = 0; i < this->m_treeCount; ++i)
+      for(size_t i = 0, treeCount = randomForest->get_tree_count(); i < treeCount; ++i)
       {
         if(randomForest->get_tree_depth(i) > m_maxTreeHeight)
         {

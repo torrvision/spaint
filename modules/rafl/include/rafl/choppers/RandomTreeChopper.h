@@ -31,12 +31,11 @@ public:
   /**
    * \brief Constructs a random tree chopper.
    *
-   * \param treeCount The number of trees in the random forest.
    * \param period    The time period between successive chops.
    * \param seed      The seed for the random number generator.
    */
   RandomTreeChopper(size_t treeCount, size_t period, unsigned int seed)
-  : TC(treeCount, period), m_rng(seed)
+  : TC(period), m_rng(seed)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -47,7 +46,7 @@ public:
     boost::optional<size_t> treeToChop;
     if(this->time_to_chop())
     {
-      treeToChop.reset((m_rng.generate_int_from_uniform(0, static_cast<int>(this->m_treeCount) - 1)));
+      treeToChop.reset((m_rng.generate_int_from_uniform(0, static_cast<int>(randomForest->get_tree_count()) - 1)));
     }
     return treeToChop;
   }

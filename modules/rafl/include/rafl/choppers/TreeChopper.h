@@ -29,9 +29,6 @@ protected:
   /** A count of the number of times the lunberjack has come to manage the trees. */
   mutable size_t m_time;
 
-  /** The number of trees in the random forest. */
-  size_t m_treeCount;
-
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -47,8 +44,8 @@ public:
    * \param treeCount The number of trees in the random forest.
    * \param period    The time period between successive chops.
    */
-  TreeChopper(size_t treeCount, size_t period)
-  : m_period(period), m_time(0), m_treeCount(treeCount)
+  TreeChopper(size_t period)
+  : m_period(period), m_time(0)
   {}
 
   //#################### PUBLICABSTRACT MEMBER FUNCTIONS ####################
