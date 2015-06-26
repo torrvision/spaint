@@ -29,7 +29,7 @@ public:
   /**
    * \brief Constructs a cyclic tree chopper.
    *
-   * \param period    The time period between successive chops.
+   * \param period  The time period between successive chops.
    */
   CyclicTreeChopper(size_t period)
   : TC(period), m_chopCount(0)

@@ -39,26 +39,28 @@ public:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a cyclic chopper.
+   * \brief Constructs a tree chopper.
    *
-   * \param treeCount The number of trees in the random forest.
    * \param period    The time period between successive chops.
    */
   TreeChopper(size_t period)
   : m_period(period), m_time(0)
   {}
 
-  //#################### PUBLICABSTRACT MEMBER FUNCTIONS ####################
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Calculates the Id of a tree to be chopped, or boost::none if no tree needs chopping.
+   *
+   * \param randomForest  The random forest being monitored.
+   * \return              The (optional) Id of the tree to be chopped.
    */
   virtual boost::optional<size_t> calculate_tree_to_chop(const RF_Ptr& randomForest) const = 0;
 
   //#################### PROTECTED MEMBER FUNCTIONS #################### 
 protected:
   /**
-   * \brief Calculates whether its time to chop a tree.
+   * \brief Calculates whether it's time to chop a tree.
    */
   bool time_to_chop() const
   {
