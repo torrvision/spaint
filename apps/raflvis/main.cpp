@@ -119,7 +119,7 @@ static std::vector<Descriptor_CPtr> generate_2d_descriptor_grid(float min, float
 }
 
 /**
- * \brief Rotates a set of 2d examples vector by a specified angle.
+ * \brief Rotates a set of 2D examples by a specified angle.
  *
  * \param examples   The set of examples.
  * \param angle      The angle by which to rotate each example.
@@ -130,11 +130,11 @@ static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr>
   std::vector<Example_CPtr> rotatedExamples;
   for(int i = 0, size = examples.size(); i < size; ++i)
   {
-    const Example<Label>& example = *examples[i];
-    const Descriptor_CPtr& desc = example.get_descriptor();
-    const float x = desc->at(0);
-    const float y = desc->at(1);
-    rotatedExamples.push_back(Example_Ptr(new Example<Label>(make_2d_descriptor(x * cosf(angle) - y * sinf(angle),x * sinf(angle) + y * cosf(angle)), example.get_label())));
+    const Descriptor_CPtr& desc = examples[i]->get_descriptor();
+    const float x = (*desc)[0], y = (*desc)[1];
+    const float rx = x * cosf(angle) - y * sinf(angle);
+    const float ry = x * sinf(angle) + y * cosf(angle);
+    rotatedExamples.push_back(Example_Ptr(new Example<Label>(make_2d_descriptor(rx,ry), examples[i]->get_label())));
   }
   return rotatedExamples;
 }
