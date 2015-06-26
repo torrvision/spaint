@@ -22,4 +22,9 @@ Vector2i ImageProcessor::image_size(const ITMFloatImage_CPtr& img)
   return img->noDims;
 }
 
+Vector2i ImageProcessor::image_size(const ITMUCharImage_CPtr& img)
+{
+  return img->noDims;
+}
+
 }

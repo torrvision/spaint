@@ -32,6 +32,23 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
   }
 }
 
+void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+
+  const unsigned char *inputData = inputImage->device<unsigned char>();
+  unsigned char *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
+
+  const int height = inputImage->dims(0);
+  const int width = inputImage->dims(1);
+  const int pixelCount = height * width;
+
+  for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
+  {
+    copy_af_pixel_to_itm(columnMajorIndex, inputData, width, height, outputData);
+  }
+}
+
 void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);

@@ -31,6 +31,17 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
+ * \brief TODO.
+ */
+_CPU_AND_GPU_CODE_
+inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inputData, int width, int height, unsigned char *outputData)
+{
+  int row = columnMajorIndex % height, col = columnMajorIndex / height;
+  int rowMajorIndex = row * width + col;
+  outputData[rowMajorIndex] = inputData[columnMajorIndex];
+}
+
+/**
  * \brief Tests the value of a pixel in an input image against a threshold using the specified comparison operator,
  *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
  *        or copies the value of the input pixel across (otherwise).

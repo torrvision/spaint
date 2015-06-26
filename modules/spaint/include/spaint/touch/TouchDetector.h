@@ -27,6 +27,8 @@ private:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
+  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
+  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
 
@@ -85,6 +87,12 @@ private:
   /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
   ITMFloatImage_Ptr m_thresholdedRawDepth;
 
+  /** An Arrayfire image in which to store a mask of the detected touch region. */
+  AFArray_Ptr m_touchMaskAF;
+
+  /** An InfiniTAM image in which to store a mask of the detected touch region. */
+  ITMUCharImage_Ptr m_touchMaskITM;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -108,11 +116,11 @@ public:
   std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   /**
-   * \brief Gets the binary mask denoting the image regions in which a touch interaction is happening if any.
+   * \brief Gets the binary mask denoting the image regions in which a touch interaction is taking place.
    *
-   * \return The mask image denoting touch regions.
+   * \return The touch mask.
    */
-  ITMFloatImage_CPtr get_touch_mask() const;
+  ITMUCharImage_CPtr get_touch_mask() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

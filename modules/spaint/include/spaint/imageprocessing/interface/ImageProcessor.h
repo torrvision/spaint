@@ -24,6 +24,8 @@ protected:
   typedef boost::shared_ptr<const af::array> AFArray_CPtr;
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
+  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
+  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
 
   //#################### ENUMERATIONS ####################
 public: 
@@ -57,6 +59,14 @@ public:
    * \param outputImage      The image in which to store the result of the calculation.
    */
   virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief Copies an Arrayfire image to an InfiniTAM image.
+   *
+   * \param inputImage  The input image to be copied.
+   * \param outputImage The output image.
+   */
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const = 0;
 
   /**
    * \brief Tests the pixels in the input image against a threshold using the specified comparison operator,
@@ -107,6 +117,11 @@ protected:
    * \return     The size of the InfiniTAM image.
    */
   static Vector2i image_size(const ITMFloatImage_CPtr& img);
+
+  /**
+   * \TODO.
+   */
+  static Vector2i image_size(const ITMUCharImage_CPtr& img);
 };
 
 }

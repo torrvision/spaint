@@ -27,6 +27,7 @@ class TouchSelector : public Selector
 private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
+  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
@@ -89,7 +90,7 @@ public:
    *
    * \return The touch mask.
    */
-  ITMFloatImage_CPtr get_touch_mask() const;
+  ITMUCharImage_CPtr get_touch_mask() const;
 
   /** Override */
   virtual void update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);

@@ -42,7 +42,9 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_lowerDepthThresholdMm(10),
   m_morphKernelSize(5),
   m_settings(settings),
-  m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true))
+  m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
+  m_touchMaskAF(new af::array(imgSize.y, imgSize.x, u8)),
+  m_touchMaskITM(new ITMUCharImage(imgSize, true, true))
 {
   // Set up the depth visualiser and image processor.
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -128,9 +130,9 @@ catch(af::exception&)
   return std::vector<Eigen::Vector2i>();
 }
 
-TouchDetector::ITMFloatImage_CPtr TouchDetector::get_touch_mask() const
+TouchDetector::ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
 {
-  return m_thresholdedRawDepth;
+  return m_touchMaskITM;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -180,8 +182,21 @@ void TouchDetector::detect_changes()
 std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, const af::array& diffRawRaycastInMm)
 {
   // Determine the component's binary mask and difference image.
-  af::array mask = m_connectedComponentImage == component;
-  af::array diffImage = diffRawRaycastInMm * mask;
+  *m_touchMaskAF = m_connectedComponentImage == component;
+#if 1
+  OpenCVUtil::show_greyscale_figure("m_touchMaskAF", (*m_touchMaskAF * 255).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
+  //af::array mask = m_connectedComponentImage == component;
+  af::array diffImage = diffRawRaycastInMm * *m_touchMaskAF;
+
+  *m_touchMaskAF *= 255;
+  m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
+
+#if 1
+  m_touchMaskITM->UpdateHostFromDevice();
+  OpenCVUtil::show_greyscale_figure("m_touchMaskITM", m_touchMaskITM->GetData(MEMORYDEVICE_CPU), m_imageWidth, m_imageHeight, OpenCVUtil::ROW_MAJOR);
+  cv::waitKey(10);
+#endif
 
   // Quantize the intensites in the difference image to 32 levels (from a starting point of 256 levels).
   diffImage = (diffImage / 8).as(u8) * 8;

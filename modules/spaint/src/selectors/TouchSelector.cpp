@@ -86,7 +86,7 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
   return m_keptTouchPointCount > 0 ? m_keptTouchPointsShortMB : Selection_CPtr();
 }
 
-TouchSelector::ITMFloatImage_CPtr TouchSelector::get_touch_mask() const
+TouchSelector::ITMUCharImage_CPtr TouchSelector::get_touch_mask() const
 {
   return m_touchDetector->get_touch_mask();
 }
