@@ -23,6 +23,10 @@ using namespace spaint;
  */
 class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisitor
 {
+  //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
+private:
+  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
+
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
   const Renderer *m_base;
@@ -90,6 +94,95 @@ public:
     {
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
+
+    const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
+    const ITMFloatImage *depth = m_base->m_model->get_view()->depth;
+
+    const ITMRGBDCalib calib = *m_base->m_model->get_view()->calib;
+    
+    float ifx = 1.0f / calib.intrinsics_d.projectionParamsSimple.fx;
+    float ify = 1.0f / calib.intrinsics_d.projectionParamsSimple.fy;
+    float icx = -1.0f * calib.intrinsics_d.projectionParamsSimple.px / calib.intrinsics_d.projectionParamsSimple.fx;
+    float icy = -1.0f * calib.intrinsics_d.projectionParamsSimple.py / calib.intrinsics_d.projectionParamsSimple.fy;
+
+    float fx = calib.intrinsics_rgb.projectionParamsSimple.fx;
+    float fy = calib.intrinsics_rgb.projectionParamsSimple.fy;
+    float cx = calib.intrinsics_rgb.projectionParamsSimple.px;
+    float cy = calib.intrinsics_rgb.projectionParamsSimple.py;
+
+		float r11 = calib.trafo_rgb_to_depth.calib_inv.m00;
+		float r12 = calib.trafo_rgb_to_depth.calib_inv.m10;
+		float r13 = calib.trafo_rgb_to_depth.calib_inv.m20;
+		float t1 = calib.trafo_rgb_to_depth.calib_inv.m30;
+
+		float r21 = calib.trafo_rgb_to_depth.calib_inv.m01;
+		float r22 = calib.trafo_rgb_to_depth.calib_inv.m11;
+		float r23 = calib.trafo_rgb_to_depth.calib_inv.m21;
+		float t2 = calib.trafo_rgb_to_depth.calib_inv.m31;
+
+		float r31 = calib.trafo_rgb_to_depth.calib_inv.m02;
+		float r32 = calib.trafo_rgb_to_depth.calib_inv.m12;
+		float r33 = calib.trafo_rgb_to_depth.calib_inv.m22;
+		float t3 = calib.trafo_rgb_to_depth.calib_inv.m32;
+
+		Matrix4f depthToRgb = Matrix4f(
+			fx*r11*ifx + cx*r31*ifx, fy*r21*ifx + cy*r31*ifx, r31*ifx, 0,
+			fx*r12*ify + cx*r32*ify, fy*r22*ify + cy*r32*ify, r32*ify, 0,
+			fx*(r11*icx + r12*icy + r13) + cx*(r31*icx + r32*icy + r33), fy*(r21*icx + r22*icy + r23) + cy*(r31*icx + r32*icy + r33), r31*icx + r32*icy + r33, 0,
+			fx*t1 + cx*t3, fy*t2 + cy*t3, t3, 1);
+    std::cout << depthToRgb << std::endl;
+
+
+#if 0
+    const ITMExtrinsics& trafo_rgb_to_depth = calib->trafo_rgb_to_depth;
+    std::cout << trafo_rgb_to_depth.calib << std::endl;
+#endif
+
+    const ITMUCharImage_CPtr& touchMask = selector.get_touch_mask();
+
+    // Copy the image to the CPU.
+    rgb->UpdateHostFromDevice();
+    depth->UpdateHostFromDevice();
+    touchMask->UpdateHostFromDevice();
+
+    // Create a new RGBA image to hold the texture to be rendered.
+    Vector2i imgSize = touchMask->noDims;
+    Renderer::ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
+    
+    const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
+    const unsigned char *mask = touchMask->GetData(MEMORYDEVICE_CPU);
+    const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
+    Vector4u *touchImageData = touchImage->GetData(MEMORYDEVICE_CPU);
+
+    const int width = imgSize.x;
+    const int height = imgSize.y;
+    // Copy the rgb and mask into the new image, where the mask values are used to fill in the alpha values.
+    for(int i = 0, numPixels = width * height; i < numPixels; ++i)
+    {
+      if(depthData[i] > 0)
+      {
+        float depthValue = depthData[i];
+        float xScaled = static_cast<float>(i % width) * depthValue;
+        float yScaled = static_cast<float>(i / width) * depthValue;
+        Vector4f point3D = depthToRgb * Vector4f(xScaled, yScaled, depthValue, 1.0f);
+
+        const int xDirtyHackOffset = 5;
+        const int yDirtyHackOffset = -36;
+        int trafo_x = static_cast<int>(point3D.x / point3D.z) + xDirtyHackOffset;
+        int trafo_y = static_cast<int>(point3D.y / point3D.z) + yDirtyHackOffset;
+
+        int trafo_i = trafo_y * imgSize.x + trafo_x;
+        if(trafo_i >= 0 && trafo_i < numPixels)
+        {
+          touchImageData[i].x = rgbData[trafo_i].x;
+          touchImageData[i].y = rgbData[trafo_i].y;
+          touchImageData[i].z = rgbData[trafo_i].z;
+        }
+        touchImageData[i].w = mask[i];
+      }
+    }
+
+    render_touch(touchImage);
   }
 #endif
 
@@ -113,6 +206,27 @@ private:
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     QuadricRenderer::render_sphere(centre, radius, 10, 10);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+  
+  /**
+   * TODO.
+   */
+  void render_touch(const Renderer::ITMUChar4Image_CPtr& touchImage) const
+  {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Copy the touch image to a texture.
+    glBindTexture(GL_TEXTURE_2D, m_base->m_textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_base->m_image->noDims.x, m_base->m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, touchImage->GetData(MEMORYDEVICE_CPU));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    m_base->begin_2d();
+      m_base->render_textured_quad(m_base->m_textureID);
+    m_base->end_2d();
+
+    glDisable(GL_BLEND);
   }
 };
 

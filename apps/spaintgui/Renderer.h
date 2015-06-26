@@ -36,6 +36,7 @@ public:
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 public:
@@ -54,6 +55,9 @@ private:
 
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
+
+  /** The pixel data in the current texture buffer. */
+  GLuint *m_pixelData;
 
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   spaint::SpaintRaycaster_CPtr m_raycaster;
