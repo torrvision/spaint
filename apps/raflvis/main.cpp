@@ -14,9 +14,7 @@ using namespace tvgutil;
 #include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
-#include <rafl/choppers/CyclicTreeChopper.h>
 #include <rafl/choppers/MaxHeightTreeChopper.h>
-#include <rafl/choppers/RandomTreeChopper.h>
 #include <rafl/core/RandomForest.h>
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
@@ -231,10 +229,10 @@ int main(int argc, char *argv[])
   DT::Settings settings(params[0]);
   RF_Ptr randomForest(new RF(treeCount, settings));
 
-  // Create an instance of a cyclic tree chopper.
+  // Create an instance of a max height tree chopper.
   const size_t timePeriod = 20;
   const size_t maxTreeHeight = 5;
-  MaxHeightTreeChopper<Label> treeChopper(randomForest, maxTreeHeight, timePeriod);
+  MaxHeightTreeChopper<Label> maxHeightTreeChopper(randomForest, maxTreeHeight, timePeriod);
 
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");
@@ -264,12 +262,13 @@ int main(int argc, char *argv[])
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 30);
     std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 3000);
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
+
 #elif defined(EXAMPLE_ROTATION_TEST)
     static int currentRotation = 0;
     if(roundCount % 20 == 0) currentRotation += 10;
 
-    randomForest->chop_tree(treeChopper.calculate_tree_to_chop(randomForest), settings);
-
+    // Chop trees in the random forest based on a tree-chopping strategy.
+    randomForest->chop_tree(maxHeightTreeChopper.calculate_tree_to_chop(randomForest), settings);
     std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
 
 #else
