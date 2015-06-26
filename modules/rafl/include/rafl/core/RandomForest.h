@@ -120,7 +120,7 @@ public:
   }
 
   /**
-   * \brief Gets a histogram holding the class frequencies observed in the training data for a particular tree.
+   * \brief Gets a histogram holding the class frequencies observed in the training data for a specified tree.
    *
    * \param treeId  The Id of the specified tree.
    * \return        A histogram holding the class frequencies observed in the training data for a specified tree.
