@@ -99,7 +99,12 @@ try
 
   // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, early out.
   af::array candidateComponents = select_candidate_components();
-  if(candidateComponents.isempty()) return std::vector<Eigen::Vector2i>();
+  if(candidateComponents.isempty())
+  {
+    *m_touchMaskAF *= 0;
+    m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
+    return std::vector<Eigen::Vector2i>();
+  }
 
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
@@ -183,20 +188,11 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
 {
   // Determine the component's binary mask and difference image.
   *m_touchMaskAF = m_connectedComponentImage == component;
-#if 1
-  OpenCVUtil::show_greyscale_figure("m_touchMaskAF", (*m_touchMaskAF * 255).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
-#endif
-  //af::array mask = m_connectedComponentImage == component;
   af::array diffImage = diffRawRaycastInMm * *m_touchMaskAF;
 
+  // Copy the Arrayfire image to an InfiniTAM image which may be fetched and used as a mask to render the colour image that corresponds to the best connected component.
   *m_touchMaskAF *= 255;
   m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
-
-#if 1
-  m_touchMaskITM->UpdateHostFromDevice();
-  OpenCVUtil::show_greyscale_figure("m_touchMaskITM", m_touchMaskITM->GetData(MEMORYDEVICE_CPU), m_imageWidth, m_imageHeight, OpenCVUtil::ROW_MAJOR);
-  cv::waitKey(10);
-#endif
 
   // Quantize the intensites in the difference image to 32 levels (from a starting point of 256 levels).
   diffImage = (diffImage / 8).as(u8) * 8;
