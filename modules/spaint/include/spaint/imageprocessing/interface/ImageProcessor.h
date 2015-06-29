@@ -111,7 +111,7 @@ protected:
   static Vector2i image_size(const AFArray_CPtr& img);
 
   /**
-   * \brief Gets the size of an InfiniTAM image.
+   * \brief Gets the size of an InfiniTAM float image.
    *
    * \param img  The InfiniTAM image.
    * \return     The size of the InfiniTAM image.
@@ -119,7 +119,10 @@ protected:
   static Vector2i image_size(const ITMFloatImage_CPtr& img);
 
   /**
-   * \TODO.
+   * \brief Gets the size of an InfiniTAM uchar iamge.
+   *
+   * \param img  The InfiniTAM image.
+   * \return     The size of the InfiniTAM image.
    */
   static Vector2i image_size(const ITMUCharImage_CPtr& img);
 };
