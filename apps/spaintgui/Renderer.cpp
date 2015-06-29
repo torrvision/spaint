@@ -108,46 +108,46 @@ public:
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
+
+  Matrix4f get_camera_calibration_matrix(const ITMIntrinsics& intrinsics) const
+  {
+    Matrix4f ccm; ccm.setZeros();
+    ccm.m00 = intrinsics.projectionParamsSimple.fx;
+    ccm.m11 = intrinsics.projectionParamsSimple.fy;
+    ccm.m20 = intrinsics.projectionParamsSimple.px;
+    ccm.m21 = intrinsics.projectionParamsSimple.py;
+    ccm.m22 = 1.0f;
+    ccm.m33 = 1.0f;
+    return ccm;
+  }
+
   /**
    * \brief TODO.
    */
   Matrix4f get_depth_to_rgb_matrix() const
   {
     const ITMRGBDCalib calib = *m_base->m_model->get_view()->calib;
+
+    Matrix4f depthCalibrationMatrix = get_camera_calibration_matrix(calib.intrinsics_d);
+
+    Matrix4f inverseDepthCalibrationMatrix;
+    depthCalibrationMatrix.inv(inverseDepthCalibrationMatrix);
+
+    Matrix4f RgbCalibrationMatrix = get_camera_calibration_matrix(calib.intrinsics_rgb);
     
-    float ifx = 1.0f / calib.intrinsics_d.projectionParamsSimple.fx;
-    float ify = 1.0f / calib.intrinsics_d.projectionParamsSimple.fy;
-    float icx = -1.0f * calib.intrinsics_d.projectionParamsSimple.px / calib.intrinsics_d.projectionParamsSimple.fx;
-    float icy = -1.0f * calib.intrinsics_d.projectionParamsSimple.py / calib.intrinsics_d.projectionParamsSimple.fy;
+    Matrix4f depthToRgb = RgbCalibrationMatrix * calib.trafo_rgb_to_depth.calib_inv * inverseDepthCalibrationMatrix;
 
-    float fx = calib.intrinsics_rgb.projectionParamsSimple.fx;
-    float fy = calib.intrinsics_rgb.projectionParamsSimple.fy;
-    float cx = calib.intrinsics_rgb.projectionParamsSimple.px;
-    float cy = calib.intrinsics_rgb.projectionParamsSimple.py;
-
-		float r11 = calib.trafo_rgb_to_depth.calib_inv.m00;
-		float r12 = calib.trafo_rgb_to_depth.calib_inv.m10;
-		float r13 = calib.trafo_rgb_to_depth.calib_inv.m20;
-		float t1 = calib.trafo_rgb_to_depth.calib_inv.m30;
-
-		float r21 = calib.trafo_rgb_to_depth.calib_inv.m01;
-		float r22 = calib.trafo_rgb_to_depth.calib_inv.m11;
-		float r23 = calib.trafo_rgb_to_depth.calib_inv.m21;
-		float t2 = calib.trafo_rgb_to_depth.calib_inv.m31;
-
-		float r31 = calib.trafo_rgb_to_depth.calib_inv.m02;
-		float r32 = calib.trafo_rgb_to_depth.calib_inv.m12;
-		float r33 = calib.trafo_rgb_to_depth.calib_inv.m22;
-		float t3 = calib.trafo_rgb_to_depth.calib_inv.m32;
-
-		Matrix4f depthToRgb = Matrix4f(
-			fx*r11*ifx + cx*r31*ifx, fy*r21*ifx + cy*r31*ifx, r31*ifx, 0,
-			fx*r12*ify + cx*r32*ify, fy*r22*ify + cy*r32*ify, r32*ify, 0,
-			fx*(r11*icx + r12*icy + r13) + cx*(r31*icx + r32*icy + r33), fy*(r21*icx + r22*icy + r23) + cy*(r31*icx + r32*icy + r33), r31*icx + r32*icy + r33, 0,
-			fx*t1 + cx*t3, fy*t2 + cy*t3, t3, 1);
-
+#if 0
+    std::cout << "depthCalibrationMatrix:\n" << depthCalibrationMatrix << std::endl;
+    std::cout << "inverseDepthCalibrationMatrix:\n" << inverseDepthCalibrationMatrix << std::endl;
+    std::cout << "RgbCalibrationMatrix:\n" << RgbCalibrationMatrix << std::endl;
+    std::cout << "Extrinsics:\n"<< calib.trafo_rgb_to_depth.calib_inv << std::endl;
+    std::cout << "depthToRgb:\n" << depthToRgb << std::endl;
+#endif
     return depthToRgb;
   }
+
+  
 
   Renderer::ITMUChar4Image_Ptr calculate_touch_image(const TouchSelector& selector) const
   {
@@ -189,8 +189,8 @@ private:
 
         const int xDirtyHackOffset = 5;
         const int yDirtyHackOffset = -36;
-        int trafo_x = static_cast<int>(point3D.x / point3D.z) + xDirtyHackOffset;
-        int trafo_y = static_cast<int>(point3D.y / point3D.z) + yDirtyHackOffset;
+        int trafo_x = static_cast<int>(point3D.x / point3D.z);// + xDirtyHackOffset;
+        int trafo_y = static_cast<int>(point3D.y / point3D.z);// + yDirtyHackOffset;
 
         int trafo_i = trafo_y * imgSize.x + trafo_x;
         if(trafo_i >= 0 && trafo_i < numPixels)
@@ -199,7 +199,15 @@ private:
           touchImageData[i].y = rgbData[trafo_i].y;
           touchImageData[i].z = rgbData[trafo_i].z;
         }
-        touchImageData[i].w = mask[i];
+        //touchImageData[i].w = mask[i];
+        if(i > numPixels/2)
+        {
+         touchImageData[i].w = 255;
+        }
+        else
+        {
+         touchImageData[i].w = 0;
+        }
       }
     }
     return touchImage;
