@@ -96,9 +96,25 @@ public:
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
 
-    const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
-    const ITMFloatImage *depth = m_base->m_model->get_view()->depth;
+    const Renderer::ITMUChar4Image_Ptr& touchImage = prepare_touch_image(selector);
 
+    render_touch(touchImage);
+  }
+#endif
+
+  /** Override */
+  virtual void visit(const VoxelToCubeSelectionTransformer& transformer) const
+  {
+    m_selectionRadius = transformer.get_radius();
+  }
+
+  //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+private:
+  /**
+   * \brief TODO.
+   */
+  Matrix4f get_depth_to_rgb_matrix() const
+  {
     const ITMRGBDCalib calib = *m_base->m_model->get_view()->calib;
     
     float ifx = 1.0f / calib.intrinsics_d.projectionParamsSimple.fx;
@@ -131,14 +147,15 @@ public:
 			fx*r12*ify + cx*r32*ify, fy*r22*ify + cy*r32*ify, r32*ify, 0,
 			fx*(r11*icx + r12*icy + r13) + cx*(r31*icx + r32*icy + r33), fy*(r21*icx + r22*icy + r23) + cy*(r31*icx + r32*icy + r33), r31*icx + r32*icy + r33, 0,
 			fx*t1 + cx*t3, fy*t2 + cy*t3, t3, 1);
-    std::cout << depthToRgb << std::endl;
 
+    return depthToRgb;
+  }
 
-#if 0
-    const ITMExtrinsics& trafo_rgb_to_depth = calib->trafo_rgb_to_depth;
-    std::cout << trafo_rgb_to_depth.calib << std::endl;
-#endif
-
+  Renderer::ITMUChar4Image_Ptr prepare_touch_image(const TouchSelector& selector) const
+  {
+    // Get the relevant image to create the touch image.
+    const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
+    const ITMFloatImage *depth = m_base->m_model->get_view()->depth;
     const ITMUCharImage_CPtr& touchMask = selector.get_touch_mask();
 
     // Copy the image to the CPU.
@@ -146,10 +163,14 @@ public:
     depth->UpdateHostFromDevice();
     touchMask->UpdateHostFromDevice();
 
+    // Get the transformation between the depth and rgb images.
+    static Matrix4f depthToRgb = get_depth_to_rgb_matrix();
+
     // Create a new RGBA image to hold the texture to be rendered.
     Vector2i imgSize = touchMask->noDims;
     Renderer::ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
     
+    // Get the relevant data pointers.
     const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
     const unsigned char *mask = touchMask->GetData(MEMORYDEVICE_CPU);
     const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
@@ -157,6 +178,7 @@ public:
 
     const int width = imgSize.x;
     const int height = imgSize.y;
+
     // Copy the rgb and mask into the new image, where the mask values are used to fill in the alpha values.
     for(int i = 0, numPixels = width * height; i < numPixels; ++i)
     {
@@ -182,19 +204,9 @@ public:
         touchImageData[i].w = mask[i];
       }
     }
-
-    render_touch(touchImage);
-  }
-#endif
-
-  /** Override */
-  virtual void visit(const VoxelToCubeSelectionTransformer& transformer) const
-  {
-    m_selectionRadius = transformer.get_radius();
+    return touchImage;
   }
 
-  //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
-private:
   /**
    * \brief Renders an orb with a colour denoting the current semantic label.
    *
