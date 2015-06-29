@@ -20,7 +20,7 @@
 #endif
 
 //#define DEBUG_TOUCH_VERBOSE
-//#define DEBUG_TOUCH_DISPLAY
+#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
@@ -105,6 +105,7 @@ try
     return std::vector<Eigen::Vector2i>();
   }
 
+#if 0
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
@@ -127,6 +128,10 @@ try
 #endif
 
   return touchPoints;
+#else
+  cv::waitKey(1);
+  return std::vector<Eigen::Vector2i>();
+#endif
 }
 catch(af::exception&)
 {
@@ -389,6 +394,8 @@ af::array TouchDetector::select_candidate_components()
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;
   af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
+
+  // Make sure that all the candidates are in regions which are foreground.
 
   // Zero out connected components that are either too small or too large.
   componentAreas -= (componentAreas < m_minCandidateArea) * componentAreas;
