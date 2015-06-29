@@ -26,6 +26,7 @@ class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisi
   //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
 private:
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
@@ -211,7 +212,7 @@ private:
   /**
    * TODO.
    */
-  void render_touch(const Renderer::ITMUChar4Image_CPtr& touchImage) const
+  void render_touch(const ITMUChar4Image_CPtr& touchImage) const
   {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
