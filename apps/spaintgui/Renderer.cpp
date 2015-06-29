@@ -96,9 +96,7 @@ public:
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
 
-    const Renderer::ITMUChar4Image_Ptr& touchImage = prepare_touch_image(selector);
-
-    render_touch(touchImage);
+    render_touch(calculate_touch_image(selector));
   }
 #endif
 
@@ -151,7 +149,7 @@ private:
     return depthToRgb;
   }
 
-  Renderer::ITMUChar4Image_Ptr prepare_touch_image(const TouchSelector& selector) const
+  Renderer::ITMUChar4Image_Ptr calculate_touch_image(const TouchSelector& selector) const
   {
     // Get the relevant image to create the touch image.
     const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
