@@ -96,7 +96,7 @@ public:
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
 
-    render_touch(calculate_touch_image(selector));
+    render_touch(generate_touch_image(selector));
   }
 #endif
 
@@ -108,8 +108,13 @@ public:
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
-
-  Matrix4f get_camera_calibration_matrix(const ITMIntrinsics& intrinsics) const
+  /**
+   * \brief Transforms the camera calibration data from InfiniTAM into a standard 4x4 camera calibration matrix.
+   *
+   * \param intrinsics  Intrinsic camera calibration parameters in the InfiniTAM format.
+   * \return            A 4x4 standard camera calibration matrix.
+   */
+  Matrix4f transform_into_camera_calibration_matrix(const ITMIntrinsics& intrinsics) const
   {
     Matrix4f ccm; ccm.setZeros();
     ccm.m00 = intrinsics.projectionParamsSimple.fx;
@@ -122,18 +127,20 @@ private:
   }
 
   /**
-   * \brief TODO.
+   * \brief Calculates the depth to RGB camera transformation needed to map pixels in the depth image to pixels in the rgb image.
+   *
+   * \return  The depth to RGB camera transformation matrix.
    */
-  Matrix4f get_depth_to_rgb_matrix() const
+  Matrix4f calculate_depth_to_rgb_matrix() const
   {
-    const ITMRGBDCalib calib = *m_base->m_model->get_view()->calib;
+    const ITMRGBDCalib& calib = *m_base->m_model->get_view()->calib;
 
-    Matrix4f depthCalibrationMatrix = get_camera_calibration_matrix(calib.intrinsics_d);
+    Matrix4f depthCalibrationMatrix = transform_into_camera_calibration_matrix(calib.intrinsics_d);
 
     Matrix4f inverseDepthCalibrationMatrix;
     depthCalibrationMatrix.inv(inverseDepthCalibrationMatrix);
 
-    Matrix4f RgbCalibrationMatrix = get_camera_calibration_matrix(calib.intrinsics_rgb);
+    Matrix4f RgbCalibrationMatrix = transform_into_camera_calibration_matrix(calib.intrinsics_rgb);
     
     Matrix4f depthToRgb = RgbCalibrationMatrix * calib.trafo_rgb_to_depth.calib_inv * inverseDepthCalibrationMatrix;
 
@@ -147,9 +154,13 @@ private:
     return depthToRgb;
   }
 
-  
-
-  Renderer::ITMUChar4Image_Ptr calculate_touch_image(const TouchSelector& selector) const
+  /**
+   * \brief Generates the touch image from the RGB, depth, and touch mask.
+   *
+   * \param selector  The selector.
+   * \return          The touch image.
+   */
+  Renderer::ITMUChar4Image_Ptr generate_touch_image(const TouchSelector& selector) const
   {
     // Get the relevant image to create the touch image.
     const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
@@ -162,7 +173,7 @@ private:
     touchMask->UpdateHostFromDevice();
 
     // Get the transformation between the depth and rgb images.
-    static Matrix4f depthToRgb = get_depth_to_rgb_matrix();
+    static Matrix4f depthToRgb = calculate_depth_to_rgb_matrix();
 
     // Create a new RGBA image to hold the texture to be rendered.
     Vector2i imgSize = touchMask->noDims;
@@ -199,7 +210,9 @@ private:
           touchImageData[i].y = rgbData[trafo_i].y;
           touchImageData[i].z = rgbData[trafo_i].z;
         }
-        //touchImageData[i].w = mask[i];
+#if 1
+        touchImageData[i].w = mask[i];
+#else
         if(i > numPixels/2)
         {
          touchImageData[i].w = 255;
@@ -208,6 +221,7 @@ private:
         {
          touchImageData[i].w = 0;
         }
+#endif
       }
     }
     return touchImage;
@@ -228,7 +242,9 @@ private:
   }
   
   /**
-   * TODO.
+   * \brief Renders the touch interaction on the scene raycast.
+   *
+   * \param touchImage  The touch image denoting image areas in which a touch interaction is present.
    */
   void render_touch(const ITMUChar4Image_CPtr& touchImage) const
   {
