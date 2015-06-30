@@ -66,8 +66,8 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.016f; // i.e. 1% of the image
-  const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image
+  const float minCandidateFraction = 0.016f; // i.e. 1.6% of the image determined empirically.
+  const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image determined empirically.
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 }
