@@ -391,6 +391,12 @@ void TouchDetector::process_debug_windows()
 
 af::array TouchDetector::select_candidate_components()
 {
+  // Add one to the connected component image to allow for a special zero component.
+  m_connectedComponentImage += 1;
+
+  // Set all regions in the connected component image which are in the static scene to zero.
+  m_connectedComponentImage *= m_thresholdedRawDepth;
+
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;
   af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
