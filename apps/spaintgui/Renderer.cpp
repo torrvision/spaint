@@ -109,25 +109,26 @@ public:
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
   /**
-   * \brief Transforms the camera calibration data from InfiniTAM into a standard 4x4 camera calibration matrix.
+   * \brief Converts the camera calibration data from InfiniTAM to a standard 4x4 camera calibration matrix.
    *
-   * \param intrinsics  Intrinsic camera calibration parameters in the InfiniTAM format.
-   * \return            A 4x4 standard camera calibration matrix.
+   * \param intrinsics  The intrinsic camera calibration parameters in the InfiniTAM format.
+   * \return            The 4x4 camera calibration matrix in standard format.
    */
-  Matrix4f transform_into_camera_calibration_matrix(const ITMIntrinsics& intrinsics) const
+  Matrix4f convert_to_camera_calibration_matrix(const ITMIntrinsics& intrinsics) const
   {
-    Matrix4f ccm; ccm.setZeros();
-    ccm.m00 = intrinsics.projectionParamsSimple.fx;
-    ccm.m11 = intrinsics.projectionParamsSimple.fy;
-    ccm.m20 = intrinsics.projectionParamsSimple.px;
-    ccm.m21 = intrinsics.projectionParamsSimple.py;
-    ccm.m22 = 1.0f;
-    ccm.m33 = 1.0f;
-    return ccm;
+    Matrix4f cameraCalibrationMatrix;
+    cameraCalibrationMatrix.setZeros();
+    cameraCalibrationMatrix.m00 = intrinsics.projectionParamsSimple.fx;
+    cameraCalibrationMatrix.m11 = intrinsics.projectionParamsSimple.fy;
+    cameraCalibrationMatrix.m20 = intrinsics.projectionParamsSimple.px;
+    cameraCalibrationMatrix.m21 = intrinsics.projectionParamsSimple.py;
+    cameraCalibrationMatrix.m22 = 1.0f;
+    cameraCalibrationMatrix.m33 = 1.0f;
+    return cameraCalibrationMatrix;
   }
 
   /**
-   * \brief Calculates the depth to RGB camera transformation needed to map pixels in the depth image to pixels in the rgb image.
+   * \brief Calculates the depth to RGB camera transformation needed to map pixels in the depth image to pixels in the RGB image.
    *
    * \return  The depth to RGB camera transformation matrix.
    */
@@ -135,12 +136,12 @@ private:
   {
     const ITMRGBDCalib& calib = *m_base->m_model->get_view()->calib;
 
-    Matrix4f depthCalibrationMatrix = transform_into_camera_calibration_matrix(calib.intrinsics_d);
+    Matrix4f depthCalibrationMatrix = convert_to_camera_calibration_matrix(calib.intrinsics_d);
 
     Matrix4f inverseDepthCalibrationMatrix;
     depthCalibrationMatrix.inv(inverseDepthCalibrationMatrix);
 
-    Matrix4f RgbCalibrationMatrix = transform_into_camera_calibration_matrix(calib.intrinsics_rgb);
+    Matrix4f RgbCalibrationMatrix = convert_to_camera_calibration_matrix(calib.intrinsics_rgb);
     
     Matrix4f depthToRgb = RgbCalibrationMatrix * calib.trafo_rgb_to_depth.calib_inv * inverseDepthCalibrationMatrix;
 
@@ -160,19 +161,19 @@ private:
    * \param selector  The selector.
    * \return          The touch image.
    */
-  Renderer::ITMUChar4Image_Ptr generate_touch_image(const TouchSelector& selector) const
+  Renderer::ITMUChar4Image_Ptr generate_touch_image(const TouchSelector& selector, int xOffset = 0, int yOffset = 0) const
   {
-    // Get the relevant image to create the touch image.
+    // Get the relevant images to create the touch image.
     const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
     const ITMFloatImage *depth = m_base->m_model->get_view()->depth;
     const ITMUCharImage_CPtr& touchMask = selector.get_touch_mask();
 
-    // Copy the image to the CPU.
+    // Copy the images to the CPU.
     rgb->UpdateHostFromDevice();
     depth->UpdateHostFromDevice();
     touchMask->UpdateHostFromDevice();
 
-    // Get the transformation between the depth and rgb images.
+    // Get the transformation between the depth and RGB image.
     static Matrix4f depthToRgb = calculate_depth_to_rgb_matrix();
 
     // Create a new RGBA image to hold the texture to be rendered.
@@ -185,10 +186,9 @@ private:
     const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
     Vector4u *touchImageData = touchImage->GetData(MEMORYDEVICE_CPU);
 
+    // Copy the RGB pixels to the touch image, using the touch mask to fill in the alpha values.
     const int width = imgSize.x;
     const int height = imgSize.y;
-
-    // Copy the rgb and mask into the new image, where the mask values are used to fill in the alpha values.
     for(int i = 0, numPixels = width * height; i < numPixels; ++i)
     {
       if(depthData[i] > 0)
@@ -198,10 +198,8 @@ private:
         float yScaled = static_cast<float>(i / width) * depthValue;
         Vector4f point3D = depthToRgb * Vector4f(xScaled, yScaled, depthValue, 1.0f);
 
-        const int xDirtyHackOffset = 5;
-        const int yDirtyHackOffset = -36;
-        int trafo_x = static_cast<int>(point3D.x / point3D.z);// + xDirtyHackOffset;
-        int trafo_y = static_cast<int>(point3D.y / point3D.z);// + yDirtyHackOffset;
+        int trafo_x = static_cast<int>(point3D.x / point3D.z) + xOffset;
+        int trafo_y = static_cast<int>(point3D.y / point3D.z) + yOffset;
 
         int trafo_i = trafo_y * imgSize.x + trafo_x;
         if(trafo_i >= 0 && trafo_i < numPixels)
@@ -248,6 +246,7 @@ private:
    */
   void render_touch(const ITMUChar4Image_CPtr& touchImage) const
   {
+    // Enable blending and set the blender to transparency mode.
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -257,6 +256,7 @@ private:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+    // Render a quad textured with the raycasted scene.
     m_base->begin_2d();
       m_base->render_textured_quad(m_base->m_textureID);
     m_base->end_2d();
