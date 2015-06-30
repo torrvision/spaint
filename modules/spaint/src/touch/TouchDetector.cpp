@@ -20,7 +20,7 @@
 #endif
 
 //#define DEBUG_TOUCH_VERBOSE
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
 
@@ -40,7 +40,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThresholdMm(10),
+  m_lowerDepthThresholdMm(15),
   m_morphKernelSize(5),
   m_settings(settings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
@@ -66,7 +66,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.01f; // i.e. 1% of the image
+  const float minCandidateFraction = 0.016f; // i.e. 1% of the image
   const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
@@ -105,7 +105,6 @@ try
     return std::vector<Eigen::Vector2i>();
   }
 
-#if 0
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
@@ -128,10 +127,6 @@ try
 #endif
 
   return touchPoints;
-#else
-  cv::waitKey(1);
-  return std::vector<Eigen::Vector2i>();
-#endif
 }
 catch(af::exception&)
 {
@@ -395,13 +390,14 @@ af::array TouchDetector::select_candidate_components()
   m_connectedComponentImage += 1;
 
   // Set all regions in the connected component image which are in the static scene to zero.
-  m_connectedComponentImage *= m_thresholdedRawDepth;
+  m_connectedComponentImage *= m_changeMask;
 
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;
   af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
 
-  // Make sure that all the candidates are in regions which are foreground.
+  // Set the static scene component to zero.
+  componentAreas(0) = 0;
 
   // Zero out connected components that are either too small or too large.
   componentAreas -= (componentAreas < m_minCandidateArea) * componentAreas;
