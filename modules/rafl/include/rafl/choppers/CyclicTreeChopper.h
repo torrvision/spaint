@@ -28,11 +28,9 @@ private:
 public:
   /**
    * \brief Constructs a cyclic tree chopper.
-   *
-   * \param period  The time period between successive chops.
    */
-  CyclicTreeChopper(size_t period)
-  : TC(period), m_chopCount(0)
+  CyclicTreeChopper()
+  : m_chopCount(0)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
@@ -41,10 +39,7 @@ public:
   virtual boost::optional<size_t> calculate_tree_to_chop(const typename TC::RF_Ptr& randomForest) const
   {
     boost::optional<size_t> treeToChop;
-    if(this->time_to_chop())
-    {
-      treeToChop.reset(m_chopCount++ % randomForest->get_tree_count());
-    }
+    treeToChop.reset(m_chopCount++ % randomForest->get_tree_count());
     return treeToChop;
   }
 };

@@ -21,31 +21,12 @@ class TreeChopper
 protected:
   typedef boost::shared_ptr<RandomForest<Label> > RF_Ptr;
 
-  //#################### PROTECTED VARIABLES ####################
-protected:
-  /** The time period between successive chops. */
-  size_t m_period;
-
-  /** A count of the number of times the lunberjack has come to manage the trees. */
-  mutable size_t m_time;
-
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the tree chopper.
    */
   virtual ~TreeChopper() {}
-
-  //#################### CONSTRUCTORS ####################
-public:
-  /**
-   * \brief Constructs a tree chopper.
-   *
-   * \param period    The time period between successive chops.
-   */
-  TreeChopper(size_t period)
-  : m_period(period), m_time(0)
-  {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -56,16 +37,6 @@ public:
    * \return              The (optional) Id of the tree to be chopped.
    */
   virtual boost::optional<size_t> calculate_tree_to_chop(const RF_Ptr& randomForest) const = 0;
-
-  //#################### PROTECTED MEMBER FUNCTIONS #################### 
-protected:
-  /**
-   * \brief Calculates whether it's time to chop a tree.
-   */
-  bool time_to_chop() const
-  {
-    return m_time++ % m_period == 0;
-  }
 };
 
 }
