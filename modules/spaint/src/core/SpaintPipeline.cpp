@@ -36,10 +36,9 @@ namespace spaint {
 
 #ifdef WITH_OPENNI
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                               TrackerType trackerType, const std::string& trackerParams)
+                               TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
 : m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
-  bool useInternalCalibration = true;
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration));
   initialise(settings);
 }

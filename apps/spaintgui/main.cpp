@@ -63,7 +63,7 @@ try
     quit("Usage: spaint [<Calibration Filename> [<OpenNI Device URI> | <RGB Image Mask> <Depth Image Mask>]]");
   }
 
-  std::string calibrationFilename = argc >= 2 ? argv[1] : "./Resources/DefaultCalibration.txt",
+  std::string calibrationFilename = argc >= 2 ? argv[1] : "./resources/DefaultCalibration.txt",
               openNIDeviceURI = argc == 3 ? argv[2] : "Default",
               rgbImageMask = argc == 4 ? argv[2] : "",
               depthImageMask = argc == 4 ? argv[3] : "";
@@ -120,7 +120,8 @@ try
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, trackerType, trackerParams));
+    bool useInternalCalibration = true;
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, trackerType, trackerParams, useInternalCalibration));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
