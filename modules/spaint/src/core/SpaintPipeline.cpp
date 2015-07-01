@@ -39,7 +39,8 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
                                TrackerType trackerType, const std::string& trackerParams)
 : m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
-  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL));
+  bool useInternalCalibration = true;
+  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration));
   initialise(settings);
 }
 #endif
