@@ -61,9 +61,9 @@ public:
   virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
-   * \brief Copies an Arrayfire image to an InfiniTAM image.
+   * \brief Copies an ArrayFire image to an InfiniTAM image.
    *
-   * \param inputImage  The input image to be copied.
+   * \param inputImage  The input image.
    * \param outputImage The output image.
    */
   virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const = 0;
@@ -111,20 +111,28 @@ protected:
   static Vector2i image_size(const AFArray_CPtr& img);
 
   /**
-   * \brief Gets the size of an InfiniTAM float image.
+   * \brief Gets the size of an InfiniTAM image.
    *
-   * \param img  The InfiniTAM image.
-   * \return     The size of the InfiniTAM image.
+   * \param img The InfiniTAM image.
+   * \return    The size of the image.
    */
-  static Vector2i image_size(const ITMFloatImage_CPtr& img);
+  template <typename T>
+  static Vector2i image_size(const boost::shared_ptr<ORUtils::Image<T> >& img)
+  {
+    return img->noDims;
+  }
 
   /**
-   * \brief Gets the size of an InfiniTAM uchar iamge.
+   * \brief Gets the size of an InfiniTAM image.
    *
-   * \param img  The InfiniTAM image.
-   * \return     The size of the InfiniTAM image.
+   * \param img The InfiniTAM image.
+   * \return    The size of the image.
    */
-  static Vector2i image_size(const ITMUCharImage_CPtr& img);
+  template <typename T>
+  static Vector2i image_size(const boost::shared_ptr<const ORUtils::Image<T> >& img)
+  {
+    return img->noDims;
+  }
 };
 
 }
