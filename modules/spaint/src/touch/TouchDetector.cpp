@@ -97,11 +97,11 @@ try
   OpenCVUtil::show_greyscale_figure("connectedComponentDebugImage", connectedComponentDebugImage.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 
-  // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, early out.
+  // Select candidate connected components that fall within a certain size range. If no components meet the size constraints, clear the touch mask and early out.
   af::array candidateComponents = select_candidate_components();
   if(candidateComponents.isempty())
   {
-    *m_touchMaskAF *= 0;
+    *m_touchMaskAF = 0;
     m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
     return std::vector<Eigen::Vector2i>();
   }
@@ -190,7 +190,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   *m_touchMaskAF = m_connectedComponentImage == component;
   af::array diffImage = diffRawRaycastInMm * *m_touchMaskAF;
 
-  // Copy the Arrayfire image to an InfiniTAM image which may be fetched and used as a mask to render the colour image that corresponds to the best connected component.
+  // Copy the mask to an InfiniTAM image so that it can be used later when rendering the touch interaction.
   *m_touchMaskAF *= 255;
   m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
 

@@ -87,7 +87,7 @@ private:
   /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
   ITMFloatImage_Ptr m_thresholdedRawDepth;
 
-  /** An Arrayfire image in which to store a mask denoting the detected touch region. */
+  /** An ArrayFire image in which to store a mask denoting the detected touch region. */
   AFArray_Ptr m_touchMaskAF;
 
   /** An InfiniTAM image in which to store a mask denoting the detected touch region. */
@@ -116,7 +116,7 @@ public:
   std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
   /**
-   * \brief Gets the binary mask denoting the image regions in which a touch interaction is taking place.
+   * \brief Gets a binary mask denoting the image region in which a touch interaction is taking place.
    *
    * \return The touch mask.
    */
