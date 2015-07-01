@@ -31,7 +31,6 @@ public:
   /**
    * \brief Constructs a maximum tree height chopper.
    *
-   * \param randomForest  The random forest to be checked for overgrowth.
    * \param maxTreeHeight The maximum height of a tree in the random forest before it gets chopped.
    */
   MaxHeightTreeChopper(size_t maxTreeHeight)
@@ -41,7 +40,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
   /** Override */
-  virtual boost::optional<size_t> calculate_tree_to_chop(const typename TC::RF_Ptr& randomForest) const
+  virtual boost::optional<size_t> calculate_tree_to_chop(const typename TC::RF_CPtr& randomForest) const
   {
     boost::optional<size_t> treeToChop;
     for(size_t i = 0, treeCount = randomForest->get_tree_count(); i < treeCount; ++i)

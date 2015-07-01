@@ -19,7 +19,7 @@ class TreeChopper
 {
   //#################### TYPEDEFS #################### 
 protected:
-  typedef boost::shared_ptr<RandomForest<Label> > RF_Ptr;
+  typedef boost::shared_ptr<const RandomForest<Label> > RF_CPtr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -36,7 +36,7 @@ public:
    * \param randomForest  The random forest being monitored.
    * \return              The (optional) Id of the tree to be chopped.
    */
-  virtual boost::optional<size_t> calculate_tree_to_chop(const RF_Ptr& randomForest) const = 0;
+  virtual boost::optional<size_t> calculate_tree_to_chop(const RF_CPtr& randomForest) const = 0;
 };
 
 }
