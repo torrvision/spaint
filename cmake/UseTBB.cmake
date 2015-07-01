@@ -1,0 +1,19 @@
+################
+# UseTBB.cmake #
+################
+
+OPTION(WITH_TBB "Build with Intel TBB support?" OFF)
+
+IF(WITH_TBB)
+  FIND_PATH(TBB_ROOT README HINTS "${PROJECT_SOURCE_DIR}/libraries/tbb43_20150611oss")
+  FIND_PATH(TBB_INCLUDE_DIR tbb/tbb.h "${TBB_ROOT}/include")
+
+  IF(MSVC_IDE)
+    FIND_LIBRARY(TBB_LIBRARY tbb HINTS "${TBB_ROOT}/lib/intel64/vc12")
+  ENDIF()
+
+  INCLUDE_DIRECTORIES(${TBB_INCLUDE_DIR})
+
+  ADD_DEFINITIONS(-DWITH_TBB)
+  ADD_DEFINITIONS(-D__TBB_NO_IMPLICIT_LINKAGE)
+ENDIF()
