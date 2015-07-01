@@ -27,6 +27,7 @@ class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisi
 private:
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
@@ -145,23 +146,16 @@ private:
     
     Matrix4f depthToRgb = RgbCalibrationMatrix * calib.trafo_rgb_to_depth.calib_inv * inverseDepthCalibrationMatrix;
 
-#if 0
-    std::cout << "depthCalibrationMatrix:\n" << depthCalibrationMatrix << std::endl;
-    std::cout << "inverseDepthCalibrationMatrix:\n" << inverseDepthCalibrationMatrix << std::endl;
-    std::cout << "RgbCalibrationMatrix:\n" << RgbCalibrationMatrix << std::endl;
-    std::cout << "Extrinsics:\n"<< calib.trafo_rgb_to_depth.calib_inv << std::endl;
-    std::cout << "depthToRgb:\n" << depthToRgb << std::endl;
-#endif
     return depthToRgb;
   }
 
   /**
    * \brief Generates the touch image from the RGB, depth, and touch mask.
    *
-   * \param selector  The selector.
+   * \param selector  The touch selector.
    * \return          The touch image.
    */
-  Renderer::ITMUChar4Image_Ptr generate_touch_image(const TouchSelector& selector, int xOffset = 0, int yOffset = 0) const
+  Renderer::ITMUChar4Image_Ptr generate_touch_image(const TouchSelector& selector) const
   {
     // Get the relevant images to create the touch image.
     const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
@@ -178,7 +172,7 @@ private:
 
     // Create a new RGBA image to hold the texture to be rendered.
     Vector2i imgSize = touchMask->noDims;
-    Renderer::ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
+    ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
     
     // Get the relevant data pointers.
     const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
@@ -198,8 +192,8 @@ private:
         float yScaled = static_cast<float>(i / width) * depthValue;
         Vector4f point3D = depthToRgb * Vector4f(xScaled, yScaled, depthValue, 1.0f);
 
-        int trafo_x = static_cast<int>(point3D.x / point3D.z) + xOffset;
-        int trafo_y = static_cast<int>(point3D.y / point3D.z) + yOffset;
+        int trafo_x = static_cast<int>(point3D.x / point3D.z);
+        int trafo_y = static_cast<int>(point3D.y / point3D.z);
 
         int trafo_i = trafo_y * imgSize.x + trafo_x;
         if(trafo_i >= 0 && trafo_i < numPixels)
@@ -208,18 +202,7 @@ private:
           touchImageData[i].y = rgbData[trafo_i].y;
           touchImageData[i].z = rgbData[trafo_i].z;
         }
-#if 1
         touchImageData[i].w = mask[i];
-#else
-        if(i > numPixels/2)
-        {
-         touchImageData[i].w = 255;
-        }
-        else
-        {
-         touchImageData[i].w = 0;
-        }
-#endif
       }
     }
     return touchImage;
