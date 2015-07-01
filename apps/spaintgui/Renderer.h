@@ -61,7 +61,7 @@ private:
   /** The type of raycast to use. */
   spaint::SpaintRaycaster::RaycastType m_raycastType;
 
-  /** The texture ID for the visualisation we're drawing. */
+  /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
 
   /** The window into which to render. */
