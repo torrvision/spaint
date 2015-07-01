@@ -31,7 +31,7 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
- * \brief Copies a pixel value from an Arrayfire image to an InfiniTAM image.
+ * \brief Copies a pixel value from an ArrayFire image to an InfiniTAM image.
  *
  * \param columnMajorIndex  The column-major index of the pixel to be copied.
  * \param inputData         The data for the input image (in column-major format).

@@ -43,6 +43,9 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
   const int width = inputImage->dims(1);
   const int pixelCount = height * width;
 
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
   for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
   {
     copy_af_pixel_to_itm(columnMajorIndex, inputData, width, height, outputData);
