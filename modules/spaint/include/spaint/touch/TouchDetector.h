@@ -28,7 +28,6 @@ private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
@@ -125,13 +124,6 @@ public:
    * \return      A colour image containing the current touch interaction (if any).
    */
   ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
-
-  /**
-   * \brief Gets a binary mask denoting the image region in which a touch interaction is taking place.
-   *
-   * \return The touch mask.
-   */
-  ITMUCharImage_CPtr get_touch_mask() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

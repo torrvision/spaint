@@ -199,11 +199,6 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
   return touchImage;
 }
 
-TouchDetector::ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
-{
-  return m_touchMaskITM;
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void TouchDetector::detect_changes()

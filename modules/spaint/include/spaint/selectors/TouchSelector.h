@@ -26,7 +26,6 @@ class TouchSelector : public Selector
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
