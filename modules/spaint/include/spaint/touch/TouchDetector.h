@@ -29,8 +29,11 @@ private:
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMView> View_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
@@ -114,6 +117,14 @@ public:
    * \return              The points (if any) that the user is touching in the scene.
    */
   std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
+
+  /**
+   * \brief Generates a colour image containing the current touch interaction (if any).
+   *
+   * \param view  The current view.
+   * \return      A colour image containing the current touch interaction (if any).
+   */
+  ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
 
   /**
    * \brief Gets a binary mask denoting the image region in which a touch interaction is taking place.

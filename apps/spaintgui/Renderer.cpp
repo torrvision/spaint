@@ -91,7 +91,7 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // Render the hand (/ foot etc.) with which the user is touching the scene.
-    render_touch_image(generate_touch_image(selector.get_touch_mask()));
+    render_touch_image(selector.generate_touch_image(m_base->get_model()->get_view()));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -112,75 +112,6 @@ public:
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
-  /**
-   * \brief Generates a touch image from the current RGB and depth images and the touch mask.
-   *
-   * \param touchMask The touch mask.
-   * \return          A colour image containing the touch interaction we want to render.
-   */
-  Renderer::ITMUChar4Image_Ptr generate_touch_image(const ITMUCharImage_CPtr& touchMask) const
-  {
-    // Get the current RGB and depth images.
-    const ITMUChar4Image *rgb = m_base->m_model->get_view()->rgb;
-    const ITMFloatImage *depth = m_base->m_model->get_view()->depth;
-
-    // Copy the images to the CPU.
-    rgb->UpdateHostFromDevice();
-    depth->UpdateHostFromDevice();
-    touchMask->UpdateHostFromDevice();
-
-    // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
-    static Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*m_base->m_model->get_view()->calib);
-
-    // Create the touch image.
-    Vector2i imgSize = touchMask->noDims;
-    ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
-    
-    // Get the relevant data pointers.
-    const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
-    const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
-    Vector4u *touchImageData = touchImage->GetData(MEMORYDEVICE_CPU);
-    const unsigned char *touchMaskData = touchMask->GetData(MEMORYDEVICE_CPU);
-
-    // Copy the RGB pixels to the touch image, using the touch mask to fill in the alpha values.
-    const int width = imgSize.x;
-    const int height = imgSize.y;
-    const int pixelCount = width * height;
-
-#ifdef WITH_OPENMP
-    #pragma omp parallel for
-#endif
-    for(int i = 0; i < pixelCount; ++i)
-    {
-      // Initialise the i'th pixel in the touch image to a default value.
-      touchImageData[i] = Vector4u((uchar)0);
-
-      float depthValue = depthData[i];
-      if(depthValue > 0.0f)
-      {
-        // If we have valid depth data for the pixel, determine the corresponding pixel in the RGB image.
-        float x = static_cast<float>(i % width);
-        float y = static_cast<float>(i / width);
-        Vector4f depthPos3D(x * depthValue, y * depthValue, depthValue, 1.0f);
-        Vector4f rgbPos3D = depthToRGB3D * depthPos3D;
-        Vector2f rgbPos2D(rgbPos3D.x / rgbPos3D.z, rgbPos3D.y / rgbPos3D.z);
-
-        if(0 <= rgbPos2D.x && rgbPos2D.x < width && 0 <= rgbPos2D.y && rgbPos2D.y < height)
-        {
-          // If the pixel is within the bounds of the image, copy its colour across to the touch image and
-          // fill in the alpha value using the touch mask.
-          int rgbPixelIndex = static_cast<int>(rgbPos2D.y) * width + static_cast<int>(rgbPos2D.x);
-          touchImageData[i].r = rgbData[rgbPixelIndex].r;
-          touchImageData[i].g = rgbData[rgbPixelIndex].g;
-          touchImageData[i].b = rgbData[rgbPixelIndex].b;
-          touchImageData[i].a = touchMaskData[i];
-        }
-      }
-    }
-
-    return touchImage;
-  }
-
   /**
    * \brief Renders an orb with a colour denoting the current semantic label.
    *

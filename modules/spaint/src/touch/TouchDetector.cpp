@@ -7,6 +7,7 @@
 #include <tvgutil/ArgUtil.h>
 
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
+#include "util/RGBDUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
 
 #ifdef WITH_CUDA
@@ -133,6 +134,69 @@ catch(af::exception&)
 {
   // Prevent the touch detector from crashing when tracking is lost.
   return std::vector<Eigen::Vector2i>();
+}
+
+TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
+{
+  // Get the current RGB and depth images.
+  const ITMUChar4Image *rgb = view->rgb;
+  const ITMFloatImage *depth = view->depth;
+
+  // Copy the images to the CPU.
+  rgb->UpdateHostFromDevice();
+  depth->UpdateHostFromDevice();
+  m_touchMaskITM->UpdateHostFromDevice();
+
+  // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
+  static Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*view->calib);
+
+  // Create the touch image.
+  Vector2i imgSize = m_touchMaskITM->noDims;
+  ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
+    
+  // Get the relevant data pointers.
+  const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
+  const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
+  Vector4u *touchImageData = touchImage->GetData(MEMORYDEVICE_CPU);
+  const unsigned char *touchMaskData = m_touchMaskITM->GetData(MEMORYDEVICE_CPU);
+
+  // Copy the RGB pixels to the touch image, using the touch mask to fill in the alpha values.
+  const int width = imgSize.x;
+  const int height = imgSize.y;
+  const int pixelCount = width * height;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    // Initialise the i'th pixel in the touch image to a default value.
+    touchImageData[i] = Vector4u((uchar)0);
+
+    float depthValue = depthData[i];
+    if(depthValue > 0.0f)
+    {
+      // If we have valid depth data for the pixel, determine the corresponding pixel in the RGB image.
+      float x = static_cast<float>(i % width);
+      float y = static_cast<float>(i / width);
+      Vector4f depthPos3D(x * depthValue, y * depthValue, depthValue, 1.0f);
+      Vector4f rgbPos3D = depthToRGB3D * depthPos3D;
+      Vector2f rgbPos2D(rgbPos3D.x / rgbPos3D.z, rgbPos3D.y / rgbPos3D.z);
+
+      if(0 <= rgbPos2D.x && rgbPos2D.x < width && 0 <= rgbPos2D.y && rgbPos2D.y < height)
+      {
+        // If the pixel is within the bounds of the image, copy its colour across to the touch image and
+        // fill in the alpha value using the touch mask.
+        int rgbPixelIndex = static_cast<int>(rgbPos2D.y) * width + static_cast<int>(rgbPos2D.x);
+        touchImageData[i].r = rgbData[rgbPixelIndex].r;
+        touchImageData[i].g = rgbData[rgbPixelIndex].g;
+        touchImageData[i].b = rgbData[rgbPixelIndex].b;
+        touchImageData[i].a = touchMaskData[i];
+      }
+    }
+  }
+
+  return touchImage;
 }
 
 TouchDetector::ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
