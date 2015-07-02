@@ -112,19 +112,24 @@ public:
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
   /**
-   * \brief Calculates a matrix mapping 3D points in the depth coordinate frame to 3D points in the RGB coordinate frame.
+   * \brief Calculates a matrix mapping points from 3D depth image coordinates to 3D RGB image coordinates.
    *
    * \param calib The joint RGBD calibration parameters.
-   * \return      A transformation matrix mapping 3D points in the depth coordinate frame to 3D points in the RGB coordinate frame.
+   * \return      A matrix mapping points from 3D depth image coordinates to 3D RGB image coordinates.
    */
-  static Matrix4f calculate_depth_to_rgb_matrix(const ITMRGBDCalib& calib)
+  static Matrix4f calculate_depth_to_rgb_matrix_3D(const ITMRGBDCalib& calib)
   {
+    // Calculate the transformation from 3D world (depth) to 3D image (depth).
     Matrix4f depthCalib = convert_to_camera_calibration_matrix(calib.intrinsics_d);
+
+    // Calculate the transformation from 3D world (RGB) to 3D image (RGB).
     Matrix4f rgbCalib = convert_to_camera_calibration_matrix(calib.intrinsics_rgb);
 
+    // Calculate the transformation from 3D image (depth) to 3D world (depth).
     Matrix4f invDepthCalib;
     depthCalib.inv(invDepthCalib);
 
+    // Calculate the transformation from 3D image (depth) to 3D image (RGB).
     return rgbCalib * calib.trafo_rgb_to_depth.calib_inv * invDepthCalib;
   }
 
@@ -179,8 +184,8 @@ private:
     depth->UpdateHostFromDevice();
     touchMask->UpdateHostFromDevice();
 
-    // Calculate a matrix that maps pixels in the depth image to pixels in the RGB image.
-    static Matrix4f depthToRGB = calculate_depth_to_rgb_matrix(*m_base->m_model->get_view()->calib);
+    // Calculates a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
+    static Matrix4f depthToRGB3D = calculate_depth_to_rgb_matrix_3D(*m_base->m_model->get_view()->calib);
 
     // Create a new RGBA image to hold the texture to be rendered.
     Vector2i imgSize = touchMask->noDims;
@@ -212,7 +217,7 @@ private:
         float x = static_cast<float>(i % width);
         float y = static_cast<float>(i / width);
         Vector4f depthPos3D(x * depthValue, y * depthValue, depthValue, 1.0f);
-        Vector4f rgbPos3D = depthToRGB * depthPos3D;
+        Vector4f rgbPos3D = depthToRGB3D * depthPos3D;
         Vector2f rgbPos2D(rgbPos3D.x / rgbPos3D.z, rgbPos3D.y / rgbPos3D.z);
 
         if(0 <= rgbPos2D.x && rgbPos2D.x < width && 0 <= rgbPos2D.y && rgbPos2D.y < height)
