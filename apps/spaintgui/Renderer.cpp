@@ -14,7 +14,6 @@
 #include <spaint/selectors/TouchSelector.h>
 #endif
 #include <spaint/util/CameraPoseConverter.h>
-#include <spaint/util/RGBDUtil.h>
 using namespace spaint;
 
 //#################### LOCAL TYPES ####################
