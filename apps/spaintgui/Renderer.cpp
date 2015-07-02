@@ -137,7 +137,7 @@ private:
    * \brief Generates a touch image from the current RGB and depth images and the touch mask.
    *
    * \param touchMask The touch mask.
-   * \return          The touch image.
+   * \return          A colour image containing the touch interaction we want to render.
    */
   Renderer::ITMUChar4Image_Ptr generate_touch_image(const ITMUCharImage_CPtr& touchMask) const
   {
@@ -150,10 +150,10 @@ private:
     depth->UpdateHostFromDevice();
     touchMask->UpdateHostFromDevice();
 
-    // Calculates a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
+    // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
     static Matrix4f depthToRGB3D = calculate_depth_to_rgb_matrix_3D(*m_base->m_model->get_view()->calib);
 
-    // Create a new RGBA image to hold the texture to be rendered.
+    // Create the touch image.
     Vector2i imgSize = touchMask->noDims;
     ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
     
@@ -188,7 +188,8 @@ private:
 
         if(0 <= rgbPos2D.x && rgbPos2D.x < width && 0 <= rgbPos2D.y && rgbPos2D.y < height)
         {
-          // If the pixel is within the bounds of the image, copy its colour across to the touch image.
+          // If the pixel is within the bounds of the image, copy its colour across to the touch image and
+          // fill in the alpha value using the touch mask.
           int rgbPixelIndex = static_cast<int>(rgbPos2D.y) * width + static_cast<int>(rgbPos2D.x);
           touchImageData[i].r = rgbData[rgbPixelIndex].r;
           touchImageData[i].g = rgbData[rgbPixelIndex].g;
