@@ -124,9 +124,11 @@ private:
   }
   
   /**
-   * \brief Renders a touch image over the top of the scene raycast as a semi-transparent quad.
+   * \brief Renders a colour image containing the current touch interaction.
    *
-   * \param touchImage  A colour image containing the touch interaction we want to render.
+   * The rendering works by drawing a semi-transparent quad textured with the touch image over the existing scene.
+   *
+   * \param touchImage  A colour image containing the current touch interaction.
    */
   void render_touch_image(const ITMUChar4Image_CPtr& touchImage) const
   {
@@ -140,7 +142,7 @@ private:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Render a semi-transparent quad textured with the touch image over the top of the scene raycast.
+    // Render a semi-transparent quad textured with the touch image over the top of the existing scene.
     m_base->begin_2d();
       m_base->render_textured_quad(m_base->m_textureID);
     m_base->end_2d();
