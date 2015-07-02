@@ -112,25 +112,20 @@ public:
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
   /**
-   * \brief Calculates a matrix mapping pixels in the depth image to pixels in the RGB image.
+   * \brief Calculates a matrix mapping 3D points in the depth coordinate frame to 3D points in the RGB coordinate frame.
    *
    * \param calib The joint RGBD calibration parameters.
-   * \return      A transformation matrix mapping depth pixels to RGB pixels.
+   * \return      A transformation matrix mapping 3D points in the depth coordinate frame to 3D points in the RGB coordinate frame.
    */
   static Matrix4f calculate_depth_to_rgb_matrix(const ITMRGBDCalib& calib)
   {
-    // Calculate the transformation from the 3D depth camera coordinate system to the 2D depth camera coordinate system.
-    Matrix4f depthCalibrationMatrix = convert_to_camera_calibration_matrix(calib.intrinsics_d);
+    Matrix4f depthCalib = convert_to_camera_calibration_matrix(calib.intrinsics_d);
+    Matrix4f rgbCalib = convert_to_camera_calibration_matrix(calib.intrinsics_rgb);
 
-    // Calculate the transformation from the 2D depth camera coordinate system to the 3D depth camera coordinate system.
-    Matrix4f invDepthCalibrationMatrix;
-    depthCalibrationMatrix.inv(invDepthCalibrationMatrix);
+    Matrix4f invDepthCalib;
+    depthCalib.inv(invDepthCalib);
 
-    // Calculate the transformation from the 3D RGB camera coordinate system to the 2D RGB camera coordinate system.
-    Matrix4f rgbCalibrationMatrix = convert_to_camera_calibration_matrix(calib.intrinsics_rgb);
-
-    // Calculate the transformation from the 2D depth camera coordinate system to the 2D RGB camera coordinate system.
-    return rgbCalibrationMatrix * calib.trafo_rgb_to_depth.calib_inv * invDepthCalibrationMatrix;
+    return rgbCalib * calib.trafo_rgb_to_depth.calib_inv * invDepthCalib;
   }
 
   /**
@@ -143,16 +138,28 @@ private:
    */
   static Matrix4f convert_to_camera_calibration_matrix(const ITMIntrinsics& intrinsics)
   {
-    // Note: The indices here are column-first not row-first.
-    Matrix4f M;
-    M.setZeros();
-    M.m00 = intrinsics.projectionParamsSimple.fx;
-    M.m11 = intrinsics.projectionParamsSimple.fy;
-    M.m20 = intrinsics.projectionParamsSimple.px;
-    M.m21 = intrinsics.projectionParamsSimple.py;
-    M.m22 = 1.0f;
-    M.m33 = 1.0f;
-    return M;
+    /*
+    The indices here are column-first not row-first, thus:
+
+    K = [fx 0  px 0]
+        [0  fy py 0]
+        [0  0  1  0]
+        [0  0  0  1]
+
+    The camera calibration matrix K performs part of the role normally performed by the projection matrix in Computer Graphics.
+    In particular, it maps a 3D point [X,Y,Z,1] to [x,y,z,1] = [fx.X + px.Z, fy.Y + py.Z, Z, 1]. We subsequently divide through
+    by Z to get the point [fx.X/Z + px, fy.Y/Z + py, 1, 1/Z] and keep only the x and y components of this to give our 2D point.
+    To unproject a 2D point [x,y] with depth z, we form the 3D point p = z[x, y, 1, 1/z] = [xz, yz, z, 1] and compute K^-1 p.
+    */
+    Matrix4f K;
+    K.setZeros();
+    K.m00 = intrinsics.projectionParamsSimple.fx;
+    K.m11 = intrinsics.projectionParamsSimple.fy;
+    K.m20 = intrinsics.projectionParamsSimple.px;
+    K.m21 = intrinsics.projectionParamsSimple.py;
+    K.m22 = 1.0f;
+    K.m33 = 1.0f;
+    return K;
   }
 
   /**
@@ -195,46 +202,31 @@ private:
 #endif
     for(int i = 0; i < pixelCount; ++i)
     {
+      // Initialise the i'th pixel in the touch image to a default value.
+      touchImageData[i] = Vector4u((uchar)0);
+
       float depthValue = depthData[i];
       if(depthValue > 0.0f)
       {
+        // If we have valid depth data for the pixel, determine the corresponding pixel in the RGB image.
         float x = static_cast<float>(i % width);
         float y = static_cast<float>(i / width);
+        Vector4f depthPos3D(x * depthValue, y * depthValue, depthValue, 1.0f);
+        Vector4f rgbPos3D = depthToRGB * depthPos3D;
+        Vector2f rgbPos2D(rgbPos3D.x / rgbPos3D.z, rgbPos3D.y / rgbPos3D.z);
 
-        // TODO: Check this extremely carefully.
-#if 0
-        Vector4f point3D = depthToRGB * Vector4f(x * depthValue, y * depthValue, depthValue, 1.0f);
-
-        int rgbX = static_cast<int>(point3D.x / point3D.z);
-        int rgbY = static_cast<int>(point3D.y / point3D.z);
-
-        int rgbPixelIndex = rgbY * imgSize.x + rgbX;
-#else
-        Vector4f depthPos(x, y, 1.0f, 1.0f);
-        Vector4f rgbPos = depthToRGB * depthPos;
-        //int rgbPixelIndex = static_cast<int>((rgbPos.y / rgbPos.z) * width + (rgbPos.x / rgbPos.z));
-        int rgbPixelIndex = static_cast<int>(rgbPos.y) * imgSize.x + static_cast<int>(rgbPos.x);
-#endif
-        if(0 <= rgbPixelIndex && rgbPixelIndex < pixelCount)
+        if(0 <= rgbPos2D.x && rgbPos2D.x < width && 0 <= rgbPos2D.y && rgbPos2D.y < height)
         {
+          // If the pixel is within the bounds of the image, copy its colour across to the touch image.
+          int rgbPixelIndex = static_cast<int>(rgbPos2D.y) * width + static_cast<int>(rgbPos2D.x);
           touchImageData[i].r = rgbData[rgbPixelIndex].r;
           touchImageData[i].g = rgbData[rgbPixelIndex].g;
           touchImageData[i].b = rgbData[rgbPixelIndex].b;
+          touchImageData[i].a = touchMaskData[i];
         }
-#if 0
-        touchImageData[i].a = touchMaskData[i];
-#else
-        if(i > pixelCount/2)
-        {
-          touchImageData[i].a = 255;
-        }
-        else
-        {
-          touchImageData[i].a = 0;
-        }
-#endif
       }
     }
+
     return touchImage;
   }
 
