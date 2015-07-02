@@ -66,8 +66,8 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.016f; // i.e. 1.6% of the image determined empirically.
-  const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image determined empirically.
+  const float minCandidateFraction = 0.016f; // i.e. 1.6% of the image (determined empirically)
+  const float maxCandidateFraction = 0.2f;   // i.e. 20% of the image (determined empirically)
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 }
@@ -386,7 +386,7 @@ void TouchDetector::process_debug_windows()
 
 af::array TouchDetector::select_candidate_components()
 {
-  // Add one to the connected component image to allow for a special zero component.
+  // Add one to every pixel in the connected component image to allow for a special zero component.
   m_connectedComponentImage += 1;
 
   // Set all regions in the connected component image which are in the static scene to zero.
@@ -396,7 +396,7 @@ af::array TouchDetector::select_candidate_components()
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;
   af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
 
-  // Set the static scene component to zero.
+  // Zero out the connected component corresponding to the static scene.
   componentAreas(0) = 0;
 
   // Zero out connected components that are either too small or too large.
