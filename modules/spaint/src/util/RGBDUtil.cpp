@@ -10,13 +10,13 @@ namespace spaint {
 
 Matrix4f RGBDUtil::calculate_depth_to_rgb_matrix_3D(const ITMLib::Objects::ITMRGBDCalib& calib)
 {
-  // Calculate a transformation from 3D world coordinates (depth) to 3D image coordinates (depth).
+  // Calculate the transformation from 3D world coordinates (depth) to 3D image coordinates (depth).
   Matrix4f depthCalib = make_calibration_matrix(calib.intrinsics_d);
 
-  // Calculate a transformation from 3D world coordinates (RGB) to 3D image coordinates (RGB).
+  // Calculate the transformation from 3D world coordinates (RGB) to 3D image coordinates (RGB).
   Matrix4f rgbCalib = make_calibration_matrix(calib.intrinsics_rgb);
 
-  // Calculate a transformation from 3D image coordinates (depth) to 3D world coordinates (depth).
+  // Calculate the transformation from 3D image coordinates (depth) to 3D world coordinates (depth).
   Matrix4f invDepthCalib;
   depthCalib.inv(invDepthCalib);
 
@@ -41,7 +41,7 @@ Matrix4f RGBDUtil::make_calibration_matrix(const ITMLib::Objects::ITMIntrinsics&
   Z to give [fx.X/Z + px, fy.Y/Z + py, 1, 1/Z] and then keeping only the x and y components to obtain a 2D point.
 
   The inverse transformation from a point [x,y] in 2D image coordinates with known depth z to 3D world coordinates can be accomplished by forming the
-  corresponding point p = [xz, yz, z, 1] in 3D image coordinates and then computing K^-1 p.
+  corresponding point p = [xz, yz, z, 1] in 3D image coordinates and then computing K^-1(p).
   */
   Matrix4f K;
   K.setZeros();
