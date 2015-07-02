@@ -138,6 +138,7 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
 {
   static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
   static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
+  ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
 
   // Get the current RGB and depth images.
   const ITMUChar4Image *rgb = view->rgb;
@@ -152,11 +153,8 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
   touchMask->UpdateHostFromDevice();
 
   // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
-  static Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*view->calib);
+  Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*view->calib);
 
-  // Create the touch image.
-  ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
-    
   // Get the relevant data pointers.
   const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
   const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
@@ -179,7 +177,7 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
     float depthValue = depthData[i];
     if(depthValue > 0.0f)
     {
-      // If we have valid depth data for the pixel, determine the corresponding pixel in the RGB image.
+      // If we have valid depth data for the pixel in the depth image, determine the corresponding pixel in the RGB image.
       float x = static_cast<float>(i % width);
       float y = static_cast<float>(i / width);
       Vector4f depthPos3D(x * depthValue, y * depthValue, depthValue, 1.0f);
@@ -188,7 +186,7 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
 
       if(0 <= rgbPos2D.x && rgbPos2D.x < width && 0 <= rgbPos2D.y && rgbPos2D.y < height)
       {
-        // If the pixel is within the bounds of the image, copy its colour across to the touch image and
+        // If the pixel is within the bounds of the RGB image, copy its colour across to the touch image and
         // fill in the alpha value using the touch mask.
         int rgbPixelIndex = static_cast<int>(rgbPos2D.y) * width + static_cast<int>(rgbPos2D.x);
         touchImageData[i].r = rgbData[rgbPixelIndex].r;
