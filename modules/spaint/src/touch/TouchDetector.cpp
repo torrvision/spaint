@@ -40,7 +40,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThresholdMm(10),
+  m_lowerDepthThresholdMm(15),
   m_morphKernelSize(5),
   m_settings(settings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
@@ -66,8 +66,8 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.01f; // i.e. 1% of the image
-  const float maxCandidateFraction = 0.2f;  // i.e. 20% of the image
+  const float minCandidateFraction = 0.016f; // i.e. 1.6% of the image (determined empirically)
+  const float maxCandidateFraction = 0.2f;   // i.e. 20% of the image (determined empirically)
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 }
@@ -386,9 +386,18 @@ void TouchDetector::process_debug_windows()
 
 af::array TouchDetector::select_candidate_components()
 {
+  // Add one to every pixel in the connected component image to allow for a special zero component.
+  m_connectedComponentImage += 1;
+
+  // Set all regions in the connected component image which are in the static scene to zero.
+  m_connectedComponentImage *= m_changeMask;
+
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;
   af::array componentAreas = af::histogram(m_connectedComponentImage, componentCount);
+
+  // Zero out the connected component corresponding to the static scene.
+  componentAreas(0) = 0;
 
   // Zero out connected components that are either too small or too large.
   componentAreas -= (componentAreas < m_minCandidateArea) * componentAreas;
