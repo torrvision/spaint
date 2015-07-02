@@ -60,6 +60,11 @@ void TouchSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
+TouchSelector::ITMUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
+{
+  return m_touchDetector->generate_touch_image(view);
+}
+
 std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
 {
   // If the last update did not yield any valid touch points, early out.

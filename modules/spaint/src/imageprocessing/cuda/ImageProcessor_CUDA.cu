@@ -28,6 +28,15 @@ __global__ void ck_calculate_depth_difference(const float *firstInputData, const
   }
 }
 
+__global__ void ck_copy_af_to_itm(const unsigned char *inputData, int width, int height, unsigned char *outputData)
+{
+  int tid = threadIdx.x + blockDim.x * blockIdx.x;
+  if(tid < width * height)
+  {
+    copy_af_pixel_to_itm(tid, inputData, width, height, outputData);
+  }
+}
+
 __global__ void ck_set_on_threshold(const float *inputData, int pixelCount, ImageProcessor::ComparisonOperator op, float threshold, float value, float *outputData)
 {
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
@@ -55,6 +64,24 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
     imgSize.x,
     imgSize.y,
     outputImage->device<float>()
+  );
+}
+
+void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  
+  Vector2i imgSize = outputImage->noDims;
+  int pixelCount = imgSize.x * imgSize.y;
+
+  int threadsPerBlock = 256;
+  int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
+  
+  ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
+    inputImage->device<unsigned char>(),
+    imgSize.x,
+    imgSize.y,
+    outputImage->GetData(MEMORYDEVICE_CUDA)
   );
 }
 

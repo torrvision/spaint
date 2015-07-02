@@ -31,6 +31,23 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
+ * \brief Copies a pixel value from an ArrayFire image to an InfiniTAM image.
+ *
+ * \param columnMajorIndex  The column-major index of the pixel to be copied.
+ * \param inputData         The data for the input image (in column-major format).
+ * \param width             The width of each image.
+ * \param height            The height of each image.
+ * \param outputData        The data for the output image (in row-major format).
+ */
+_CPU_AND_GPU_CODE_
+inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inputData, int width, int height, unsigned char *outputData)
+{
+  int row = columnMajorIndex % height, col = columnMajorIndex / height;
+  int rowMajorIndex = row * width + col;
+  outputData[rowMajorIndex] = inputData[columnMajorIndex];
+}
+
+/**
  * \brief Tests the value of a pixel in an input image against a threshold using the specified comparison operator,
  *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
  *        or copies the value of the input pixel across (otherwise).

@@ -368,12 +368,14 @@ SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
+src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
+include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintVoxel.h
 )
 

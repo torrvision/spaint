@@ -188,14 +188,15 @@ public:
   /**
    * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source.
    *
-   * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
-   * \param openNIDeviceURI     An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
-   * \param settings            The settings to use for InfiniTAM.
-   * \param trackerType         The type of tracker to use.
-   * \param trackerParams       The parameters for the tracker (if any).
+   * \param calibrationFilename     The name of a file containing InfiniTAM calibration settings.
+   * \param openNIDeviceURI         An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
+   * \param settings                The settings to use for InfiniTAM.
+   * \param trackerType             The type of tracker to use.
+   * \param trackerParams           The parameters for the tracker (if any).
+   * \param useInternalCalibration  A flag indicating whether or not to use internal calibration.
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                 TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
+                 TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "", bool useInternalCalibration = false);
 #endif
 
   /**

@@ -23,6 +23,10 @@ using namespace spaint;
  */
 class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisitor
 {
+  //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
+private:
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
+
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
 private:
   const Renderer *m_base;
@@ -83,6 +87,10 @@ public:
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
+    // Render a colour image containing the current touch interaction.
+    render_touch_image(selector.generate_touch_image(m_base->m_model->get_view()));
+
+    // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
     std::vector<Eigen::Vector3f> touchPoints = selector.get_positions();
 
@@ -113,6 +121,34 @@ private:
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     QuadricRenderer::render_sphere(centre, radius, 10, 10);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  }
+  
+  /**
+   * \brief Renders a colour image containing the current touch interaction.
+   *
+   * The rendering works by drawing a semi-transparent quad textured with the touch image over the existing scene.
+   *
+   * \param touchImage  A colour image containing the current touch interaction.
+   */
+  void render_touch_image(const ITMUChar4Image_CPtr& touchImage) const
+  {
+    // Copy the touch image to a texture.
+    glBindTexture(GL_TEXTURE_2D, m_base->m_textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, touchImage->noDims.x, touchImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, touchImage->GetData(MEMORYDEVICE_CPU));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    // Enable blending.
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Render a semi-transparent quad textured with the touch image over the top of the existing scene.
+    m_base->begin_2d();
+      m_base->render_textured_quad(m_base->m_textureID);
+    m_base->end_2d();
+
+    // Disable blending again.
+    glDisable(GL_BLEND);
   }
 };
 
@@ -193,7 +229,7 @@ void Renderer::initialise_common()
   // Create an image into which to temporarily store visualisations of the scene.
   m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
 
-  // Set up a texture in which to store the reconstructed scene.
+  // Set up a texture in which to temporarily store the scene raycast and touch image when rendering.
   glGenTextures(1, &m_textureID);
 }
 

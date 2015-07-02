@@ -26,9 +26,11 @@ class TouchSelector : public Selector
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
+  typedef boost::shared_ptr<const ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -72,6 +74,14 @@ public:
 public:
   /** Override */
   virtual void accept(const SelectorVisitor& visitor) const;
+
+  /**
+   * \brief Generates a colour image containing the current touch interaction (if any).
+   *
+   * \param view  The current view.
+   * \return      A colour image containing the current touch interaction (if any).
+   */
+  ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
 
   /**
    * \brief Gets the positions of the current touch points.
