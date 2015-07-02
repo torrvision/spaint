@@ -14,6 +14,7 @@
 #include <spaint/selectors/TouchSelector.h>
 #endif
 #include <spaint/util/CameraPoseConverter.h>
+#include <spaint/util/RGBDUtil.h>
 using namespace spaint;
 
 //#################### LOCAL TYPES ####################
@@ -112,28 +113,6 @@ public:
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 private:
   /**
-   * \brief Calculates a matrix mapping points from 3D depth image coordinates to 3D RGB image coordinates.
-   *
-   * \param calib The joint RGBD calibration parameters.
-   * \return      A matrix mapping points from 3D depth image coordinates to 3D RGB image coordinates.
-   */
-  static Matrix4f calculate_depth_to_rgb_matrix_3D(const ITMRGBDCalib& calib)
-  {
-    // Calculate a transformation from 3D world coordinates (depth) to 3D image coordinates (depth).
-    Matrix4f depthCalib = make_calibration_matrix(calib.intrinsics_d);
-
-    // Calculate a transformation from 3D world coordinates (RGB) to 3D image coordinates (RGB).
-    Matrix4f rgbCalib = make_calibration_matrix(calib.intrinsics_rgb);
-
-    // Calculate a transformation from 3D image coordinates (depth) to 3D world coordinates (depth).
-    Matrix4f invDepthCalib;
-    depthCalib.inv(invDepthCalib);
-
-    // Calculate the transformation from 3D image coordinates (depth) to 3D image coordinates (RGB).
-    return rgbCalib * calib.trafo_rgb_to_depth.calib_inv * invDepthCalib;
-  }
-
-  /**
    * \brief Generates a touch image from the current RGB and depth images and the touch mask.
    *
    * \param touchMask The touch mask.
@@ -151,7 +130,7 @@ private:
     touchMask->UpdateHostFromDevice();
 
     // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
-    static Matrix4f depthToRGB3D = calculate_depth_to_rgb_matrix_3D(*m_base->m_model->get_view()->calib);
+    static Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*m_base->m_model->get_view()->calib);
 
     // Create the touch image.
     Vector2i imgSize = touchMask->noDims;
@@ -200,42 +179,6 @@ private:
     }
 
     return touchImage;
-  }
-
-  /**
-   * \brief Makes a 4x4 calibration matrix from a set of intrinsic camera parameters.
-   *
-   * See p.141 of Multiple View Geometry in Computer Vision.
-   *
-   * \param intrinsics  The intrinsic camera parameters.
-   * \return            The corresponding 4x4 calibration matrix.
-   */
-  static Matrix4f make_calibration_matrix(const ITMIntrinsics& intrinsics)
-  {
-    /*
-    The indices here are column-first not row-first, thus:
-
-    K = [fx 0  px 0]
-        [0  fy py 0]
-        [0  0  1  0]
-        [0  0  0  1]
-
-    The camera calibration matrix K converts from 3D world coordinates to 3D image coordinates. In particular, given a (homogeneous) 3D point [X,Y,Z,1]
-    in 3D world space, it maps it to [fx.X + px.Z, fy.Y + py.Z, Z, 1] in 3D image space. This point can subsequently be projected into 2D by dividing by
-    Z to give [fx.X/Z + px, fy.Y/Z + py, 1, 1/Z] and then keeping only the x and y components to obtain a 2D point.
-
-    The inverse transformation from a point [x,y] in 2D image coordinates with known depth z to 3D world coordinates can be accomplished by forming the
-    corresponding point p = [xz, yz, z, 1] in 3D image coordinates and then computing K^-1 p.
-    */
-    Matrix4f K;
-    K.setZeros();
-    K.m00 = intrinsics.projectionParamsSimple.fx;
-    K.m11 = intrinsics.projectionParamsSimple.fy;
-    K.m20 = intrinsics.projectionParamsSimple.px;
-    K.m21 = intrinsics.projectionParamsSimple.py;
-    K.m22 = 1.0f;
-    K.m33 = 1.0f;
-    return K;
   }
 
   /**
