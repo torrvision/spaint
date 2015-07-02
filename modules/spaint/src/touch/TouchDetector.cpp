@@ -194,7 +194,7 @@ TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const Vie
         touchImageData[i].r = rgbData[rgbPixelIndex].r;
         touchImageData[i].g = rgbData[rgbPixelIndex].g;
         touchImageData[i].b = rgbData[rgbPixelIndex].b;
-        touchImageData[i].a = touchMaskData[i];
+        touchImageData[i].a = touchMaskData[i] == 1 ? 255 : 0;
       }
     }
   }
@@ -251,9 +251,6 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   // Determine the component's binary mask and difference image.
   *m_touchMask = m_connectedComponentImage == component;
   af::array diffImage = diffRawRaycastInMm * *m_touchMask;
-
-  // Scale the mask so that it can be used later when generating the touch image.
-  *m_touchMask *= 255;
 
   // Quantize the intensites in the difference image to 32 levels (from a starting point of 256 levels).
   diffImage = (diffImage / 8).as(u8) * 8;
