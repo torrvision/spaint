@@ -44,8 +44,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_morphKernelSize(5),
   m_settings(settings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
-  m_touchMaskAF(new af::array(imgSize.y, imgSize.x, u8)),
-  m_touchMaskITM(new ITMUCharImage(imgSize, true, true))
+  m_touchMask(new af::array(imgSize.y, imgSize.x, u8))
 {
   // Set up the depth visualiser and image processor.
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -102,8 +101,7 @@ try
   af::array candidateComponents = select_candidate_components();
   if(candidateComponents.isempty())
   {
-    *m_touchMaskAF = 0;
-    m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
+    *m_touchMask = 0;
     return std::vector<Eigen::Vector2i>();
   }
 
@@ -138,27 +136,32 @@ catch(af::exception&)
 
 TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
 {
+  static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
+  static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
+
   // Get the current RGB and depth images.
   const ITMUChar4Image *rgb = view->rgb;
   const ITMFloatImage *depth = view->depth;
 
-  // Copy the images to the CPU.
+  // Copy the touch mask across to an InfiniTAM image.
+  m_imageProcessor->copy_af_to_itm(m_touchMask, touchMask);
+
+  // Copy the RGB and depth images and the touch mask across to the CPU.
   rgb->UpdateHostFromDevice();
   depth->UpdateHostFromDevice();
-  m_touchMaskITM->UpdateHostFromDevice();
+  touchMask->UpdateHostFromDevice();
 
   // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
   static Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*view->calib);
 
   // Create the touch image.
-  Vector2i imgSize = m_touchMaskITM->noDims;
   ITMUChar4Image_Ptr touchImage(new ITMUChar4Image(imgSize, true, false));
     
   // Get the relevant data pointers.
   const float *depthData = depth->GetData(MEMORYDEVICE_CPU);
   const Vector4u *rgbData = rgb->GetData(MEMORYDEVICE_CPU);
   Vector4u *touchImageData = touchImage->GetData(MEMORYDEVICE_CPU);
-  const unsigned char *touchMaskData = m_touchMaskITM->GetData(MEMORYDEVICE_CPU);
+  const unsigned char *touchMaskData = touchMask->GetData(MEMORYDEVICE_CPU);
 
   // Copy the RGB pixels to the touch image, using the touch mask to fill in the alpha values.
   const int width = imgSize.x;
@@ -246,12 +249,11 @@ void TouchDetector::detect_changes()
 std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, const af::array& diffRawRaycastInMm)
 {
   // Determine the component's binary mask and difference image.
-  *m_touchMaskAF = m_connectedComponentImage == component;
-  af::array diffImage = diffRawRaycastInMm * *m_touchMaskAF;
+  *m_touchMask = m_connectedComponentImage == component;
+  af::array diffImage = diffRawRaycastInMm * *m_touchMask;
 
-  // Copy the mask to an InfiniTAM image so that it can be used later when rendering the touch interaction.
-  *m_touchMaskAF *= 255;
-  m_imageProcessor->copy_af_to_itm(m_touchMaskAF, m_touchMaskITM);
+  // Scale the mask so that it can be used later when generating the touch image.
+  *m_touchMask *= 255;
 
   // Quantize the intensites in the difference image to 32 levels (from a starting point of 256 levels).
   diffImage = (diffImage / 8).as(u8) * 8;

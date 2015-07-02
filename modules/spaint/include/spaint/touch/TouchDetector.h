@@ -89,11 +89,8 @@ private:
   /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
   ITMFloatImage_Ptr m_thresholdedRawDepth;
 
-  /** An ArrayFire image in which to store a mask denoting the detected touch region. */
-  AFArray_Ptr m_touchMaskAF;
-
-  /** An InfiniTAM image in which to store a mask denoting the detected touch region. */
-  ITMUCharImage_Ptr m_touchMaskITM;
+  /** An image in which to store a mask denoting the detected touch region. */
+  AFArray_Ptr m_touchMask;
 
   //#################### CONSTRUCTORS ####################
 public:

@@ -10,7 +10,7 @@ namespace spaint {
 
 ImageProcessor::~ImageProcessor() {}
 
-//#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 Vector2i ImageProcessor::image_size(const AFArray_CPtr& img)
 {

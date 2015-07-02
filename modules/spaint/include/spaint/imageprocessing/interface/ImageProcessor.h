@@ -99,8 +99,6 @@ public:
     }
   }
 
- //#################### PROTECTED STATIC MEMBER FUNCTIONS ####################
-protected:
   /**
    * \brief Gets the size of an ArrayFire image.
    *
