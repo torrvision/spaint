@@ -25,8 +25,6 @@ class SelectorRenderer : public SelectionTransformerVisitor, public SelectorVisi
 {
   //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
 private:
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
   //~~~~~~~~~~~~~~~~~~~~ PRIVATE VARIABLES ~~~~~~~~~~~~~~~~~~~~
