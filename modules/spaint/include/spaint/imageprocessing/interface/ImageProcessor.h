@@ -25,7 +25,6 @@ protected:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
 
   //#################### ENUMERATIONS ####################
 public: 
