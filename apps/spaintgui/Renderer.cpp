@@ -88,7 +88,7 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // Render a colour image containing the current touch interaction.
-    render_touch_image(selector.generate_touch_image(m_base->get_model()->get_view()));
+    render_touch_image(selector.generate_touch_image(m_base->m_model->get_view()));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -134,7 +134,7 @@ private:
   {
     // Copy the touch image to a texture.
     glBindTexture(GL_TEXTURE_2D, m_base->m_textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_base->m_image->noDims.x, m_base->m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, touchImage->GetData(MEMORYDEVICE_CPU));
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, touchImage->noDims.x, touchImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, touchImage->GetData(MEMORYDEVICE_CPU));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -229,7 +229,7 @@ void Renderer::initialise_common()
   // Create an image into which to temporarily store visualisations of the scene.
   m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
 
-  // Set up a texture in which to store the reconstructed scene.
+  // Set up a texture in which to temporarily store the scene raycast and touch image when rendering.
   glGenTextures(1, &m_textureID);
 }
 
