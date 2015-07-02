@@ -87,7 +87,7 @@ public:
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
-    // Render the hand (/ foot etc.) with which the user is touching the scene.
+    // Render a colour image containing the current touch interaction.
     render_touch_image(selector.generate_touch_image(m_base->get_model()->get_view()));
 
     // Render the points at which the user is touching the scene.
