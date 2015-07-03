@@ -29,12 +29,13 @@ using namespace rafl;
 
 typedef int Label;
 
-typedef boost::shared_ptr<Example<Label> > Example_Ptr;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
 typedef DecisionTree<Label> DT;
 typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<RF> RF_Ptr;
+
+typedef boost::shared_ptr<const TreeChopper<Label> > TreeChopper_CPtr;
 
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
@@ -121,7 +122,7 @@ static std::vector<Descriptor_CPtr> generate_2d_descriptor_grid(float min, float
  * \brief Rotates a set of 2D examples by a specified angle.
  *
  * \param examples   The set of examples.
- * \param angle      The angle by which to rotate each example.
+ * \param angle      The angle by which to rotate each example (in radians).
  * \return           The rotated set of examples.
  */
 static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr> examples, float angle)
@@ -133,7 +134,7 @@ static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr>
     const float x = (*desc)[0], y = (*desc)[1];
     const float rx = x * cosf(angle) - y * sinf(angle);
     const float ry = x * sinf(angle) + y * cosf(angle);
-    rotatedExamples.push_back(Example_Ptr(new Example<Label>(make_2d_descriptor(rx,ry), examples[i]->get_label())));
+    rotatedExamples.push_back(Example_CPtr(new Example<Label>(make_2d_descriptor(rx,ry), examples[i]->get_label())));
   }
   return rotatedExamples;
 }
@@ -172,7 +173,7 @@ int main(int argc, char *argv[])
   const unsigned int seed = 1234;
 
   // Generate a set of labels.
-#ifdef CLASS_IMBALANCE_TEST
+#if defined(CLASS_IMBALANCE_TEST)
   const int labelCount = 5;
 #elif defined(EXAMPLE_ROTATION_TEST)
   const int labelCount = 5;
@@ -230,12 +231,10 @@ int main(int argc, char *argv[])
   DT::Settings settings(params[0]);
   RF_Ptr randomForest(new RF(treeCount, settings));
 
-  // Create an instance of a height-limiting tree chopper.
+  // Create the tree chopper.
   const size_t maxTreeHeight = 5;
-  boost::shared_ptr<HeightLimitingTreeChopper<Label> > heightLimitingTreeChopper(new HeightLimitingTreeChopper<Label>(maxTreeHeight));
-
   const size_t timePeriod = 20;
-  TimeBasedTreeChopper<Label> timeBasedTreeChopper(heightLimitingTreeChopper, timePeriod);
+  TimeBasedTreeChopper<Label> treeChopper(TreeChopper_CPtr(new HeightLimitingTreeChopper<Label>(maxTreeHeight)), timePeriod);
 
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");
@@ -260,20 +259,20 @@ int main(int argc, char *argv[])
   const size_t maxLearningRounds = 500;
   for(size_t roundCount = 0; roundCount < maxLearningRounds; ++roundCount)
   {
-#ifdef CLASS_IMBALANCE_TEST
+#if defined(CLASS_IMBALANCE_TEST)
     // Generate a set of examples with an unbalanced number of class labels.
     std::vector<Example_CPtr> currentExamples = uceg.generate_examples(unbiasedClassLabels, 30);
     std::vector<Example_CPtr> currentBiasedExamples = uceg.generate_examples(biasedClassLabels, 3000);
     currentExamples.insert(currentExamples.end(), currentBiasedExamples.begin(), currentBiasedExamples.end());
-
 #elif defined(EXAMPLE_ROTATION_TEST)
-    static int currentRotation = 0;
-    if(roundCount % 20 == 0) currentRotation += 10;
+    // Rotate the examples by an angle that increases by 10 degrees every 20 rounds until it hits a maximum of 90 degrees.
+    static int degreeAngle = 0;
+    if(roundCount % 20 == 0) degreeAngle = std::min(90, degreeAngle + 10);
+    float radianAngle = static_cast<float>(degreeAngle * M_PI / 180.0);
+    std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), radianAngle);
 
-    // Chop trees in the random forest based on a tree-chopping strategy.
-    timeBasedTreeChopper.chop_tree_if_necessary(randomForest);
-    std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
-
+    // Chop old trees in the forest as necessary to make the forest adapt better to the new examples as the rotation increases.
+    treeChopper.chop_tree_if_necessary(randomForest);
 #else
     // Add an additional current class label after every 20 rounds of training.
     if(roundCount % 20 == 0) currentClassLabels.insert(classLabelSampler.get_sample(classLabels));
