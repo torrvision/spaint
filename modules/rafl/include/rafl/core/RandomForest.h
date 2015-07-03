@@ -20,9 +20,13 @@ private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef DecisionTree<Label> DT;
   typedef boost::shared_ptr<DT> DT_Ptr;
+  typedef boost::shared_ptr<const DT> DT_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The settings needed to configure the decision trees. */
+  typename DT::Settings m_settings;
+
   /** The decision trees that collectively make up the random forest. */
   std::vector<DT_Ptr> m_trees;
 
@@ -35,6 +39,7 @@ public:
    * \param settings  The settings needed to configure the decision trees.
    */
   RandomForest(size_t treeCount, const typename DT::Settings& settings)
+  : m_settings(settings)
   {
     for(size_t i = 0; i < treeCount; ++i)
     {
@@ -109,6 +114,28 @@ public:
   }
 
   /**
+   * \brief Gets the specified tree in the forest.
+   *
+   * \param treeIndex The index of the tree to get.
+   * \return          The specified tree.
+   */
+  DT_CPtr get_tree(size_t treeIndex) const
+  {
+    if(treeIndex < m_trees.size()) return m_trees[treeIndex];
+    else throw std::runtime_error("Bad tree index");
+  }
+
+  /**
+   * \brief Gets the number of trees in the forest.
+   *
+   * \return  The number of trees in the forest.
+   */
+  size_t get_tree_count() const
+  {
+    return m_trees.size();
+  }
+  
+  /**
    * \brief Gets whether or not the forest is valid.
    *
    * Forests are invalid until we have started training them.
@@ -171,6 +198,18 @@ public:
   }
 
   /**
+   * \brief Resets the specified tree.
+   *
+   * \param treeIndex           The index of the tree to reset.
+   * \throws std::runtime_error If the tree index is invalid.
+   */
+  void reset_tree(size_t treeIndex)
+  {
+    if(treeIndex < m_trees.size()) m_trees[treeIndex].reset(new DT(m_settings));
+    else throw std::runtime_error("Bad tree index whilst trying to reset tree");
+  }
+
+  /**
    * \brief Trains the forest by splitting a number of suitable nodes in each tree.
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
@@ -199,6 +238,7 @@ private:
   template <typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
+    ar & m_settings;
     ar & m_trees;
   }
 

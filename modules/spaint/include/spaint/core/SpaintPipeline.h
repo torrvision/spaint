@@ -7,7 +7,7 @@
 
 #include <boost/optional.hpp>
 
-#include <rafl/RandomForest.h>
+#include <rafl/core/RandomForest.h>
 
 #include "SpaintInteractor.h"
 #include "SpaintModel.h"

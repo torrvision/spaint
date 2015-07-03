@@ -28,6 +28,21 @@ include/rafl/base/ProbabilityMassFunction.h
 )
 
 ##
+SET(choppers_headers
+include/rafl/choppers/CyclicTreeChopper.h
+include/rafl/choppers/HeightLimitingTreeChopper.h
+include/rafl/choppers/RandomTreeChopper.h
+include/rafl/choppers/TimeBasedTreeChopper.h
+include/rafl/choppers/TreeChopper.h
+)
+
+##
+SET(core_headers
+include/rafl/core/DecisionTree.h
+include/rafl/core/RandomForest.h
+)
+
+##
 SET(decisionfunctions_sources
 src/decisionfunctions/FeatureThresholdingDecisionFunction.cpp
 src/decisionfunctions/PairwiseOpAndThresholdDecisionFunction.cpp
@@ -53,12 +68,6 @@ include/rafl/examples/ExampleUtil.h
 include/rafl/examples/UnitCircleExampleGenerator.h
 )
 
-##
-SET(toplevel_headers
-include/rafl/DecisionTree.h
-include/rafl/RandomForest.h
-)
-
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -69,17 +78,19 @@ ${decisionfunctions_sources}
 
 SET(headers
 ${base_headers}
+${choppers_headers}
+${core_headers}
 ${decisionfunctions_headers}
 ${examples_headers}
-${toplevel_headers}
 )
 
 #############################
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP("" FILES ${toplevel_headers})
 SOURCE_GROUP(base FILES ${base_headers})
+SOURCE_GROUP(choppers FILES ${choppers_headers})
+SOURCE_GROUP(core FILES ${core_headers})
 SOURCE_GROUP(decisionfunctions FILES ${decisionfunctions_sources} ${decisionfunctions_headers})
 SOURCE_GROUP(examples FILES ${examples_headers})
 

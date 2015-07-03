@@ -11,7 +11,7 @@
 #include <evaluation/core/PerformanceMeasure.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
 
-#include <rafl/RandomForest.h>
+#include <rafl/core/RandomForest.h>
 
 #include <tvgutil/MapUtil.h>
 
