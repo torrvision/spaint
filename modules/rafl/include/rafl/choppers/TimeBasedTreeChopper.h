@@ -12,7 +12,7 @@ namespace rafl {
 /**
  * \brief An instance of this class represents a tree chopper that periodically applies another tree chopper.
  *
- * For computer scientists: This is an example of the Decorator pattern.
+ * For computer scientists: this is an example of the Decorator pattern.
  */
 template <typename Label>
 class TimeBasedTreeChopper : public TreeChopper<Label>
