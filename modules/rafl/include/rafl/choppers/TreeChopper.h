@@ -51,7 +51,7 @@ public:
   void chop_tree_if_necessary(const RF_Ptr& forest) const
   {
     boost::optional<size_t> treeToChop = choose_tree_to_chop(forest);
-    if(treeToChop) forest->chop_tree(treeToChop);
+    if(treeToChop) forest->reset_tree(*treeToChop);
   }
 };
 

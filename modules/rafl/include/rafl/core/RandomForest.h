@@ -124,20 +124,6 @@ public:
   }
 
   /**
-   * \brief Resets a specified tree in the random forest.
-   */
-  void chop_tree(const boost::optional<size_t>& treeId)
-  {
-    if(treeId)
-    {
-      if(*treeId < m_trees.size())
-      {
-        m_trees[*treeId] = DT_Ptr(new DT(m_settings));
-      }
-    }
-  }
-
-  /**
    * \brief Gets a histogram holding the class frequencies observed in the training data for a specified tree.
    *
    * \param treeId  The Id of the specified tree.
@@ -237,6 +223,18 @@ public:
   Label predict(const Descriptor_CPtr& descriptor) const
   {
     return calculate_pmf(descriptor).calculate_best_label();
+  }
+
+  /**
+   * \brief Resets the specified tree.
+   *
+   * \param treeIndex           The index of the tree to reset.
+   * \throws std::runtime_error If the tree index is invalid.
+   */
+  void reset_tree(size_t treeIndex)
+  {
+    if(treeIndex < m_trees.size()) m_trees[treeIndex].reset(new DT(m_settings));
+    else throw std::runtime_error("Bad tree index whilst trying to reset tree");
   }
 
   /**
