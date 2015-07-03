@@ -15,14 +15,14 @@ namespace rafl {
 template <typename Label>
 class CyclicTreeChopper : public TreeChopper<Label>
 {
-  //#################### TYPEDEFS #################### 
+  //#################### USINGS #################### 
 private:
-  typedef TreeChopper<Label> TC;
+  using TreeChopper<Label>::RF_CPtr;
 
   //#################### PRIVATE VARIABLES #################### 
 private:
-  /** The number of trees that have been chopped. */
-  mutable size_t m_chopCount;
+  /** The index of the next tree to chop. */
+  mutable size_t m_nextTreeToChop;
 
   //#################### CONSTRUCTORS #################### 
 public:
@@ -30,17 +30,17 @@ public:
    * \brief Constructs a cyclic tree chopper.
    */
   CyclicTreeChopper()
-  : m_chopCount(0)
+  : m_nextTreeToChop(0)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
   /** Override */
-  virtual boost::optional<size_t> choose_tree_to_chop(const typename TC::RF_CPtr& forest) const
+  virtual boost::optional<size_t> choose_tree_to_chop(const RF_CPtr& forest) const
   {
-    boost::optional<size_t> treeToChop;
-    treeToChop.reset(m_chopCount++ % forest->get_tree_count());
-    return treeToChop;
+    size_t result = m_nextTreeToChop;
+    m_nextTreeToChop = (m_nextTreeToChop + 1) % forest->get_tree_count();
+    return result;
   }
 };
 

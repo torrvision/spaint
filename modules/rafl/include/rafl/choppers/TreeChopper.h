@@ -37,7 +37,7 @@ public:
    * \brief Optionally chooses a tree in the random forest for chopping.
    *
    * \param forest  The random forest.
-   * \return        The ID of the tree to be chopped, if any, or boost::none otherwise.
+   * \return        The index of the tree to be chopped, if any, or boost::none otherwise.
    */
   virtual boost::optional<size_t> choose_tree_to_chop(const RF_CPtr& forest) const = 0;
 
