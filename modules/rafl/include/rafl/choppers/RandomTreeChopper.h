@@ -5,8 +5,6 @@
 #ifndef H_RAFL_RANDOMTREECHOPPER
 #define H_RAFL_RANDOMTREECHOPPER
 
-#include <tvgutil/RandomNumberGenerator.h>
-
 #include "TreeChopper.h"
 
 namespace rafl {
@@ -17,9 +15,9 @@ namespace rafl {
 template <typename Label>
 class RandomTreeChopper : public TreeChopper<Label>
 {
-  //#################### TYPEDEFS #################### 
+  //#################### USINGS #################### 
 private:
-  typedef TreeChopper<Label> TC;
+  using TreeChopper<Label>::RF_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -31,20 +29,18 @@ public:
   /**
    * \brief Constructs a random tree chopper.
    *
-   * \param seed    The seed for the random number generator.
+   * \param seed  The seed for the random number generator.
    */
-  RandomTreeChopper(unsigned int seed)
+  explicit RandomTreeChopper(unsigned int seed)
   : m_rng(seed)
   {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual boost::optional<size_t> choose_tree_to_chop(const typename TC::RF_CPtr& forest) const
+  virtual boost::optional<size_t> choose_tree_to_chop(const RF_CPtr& forest) const
   {
-    boost::optional<size_t> treeToChop;
-    treeToChop.reset((m_rng.generate_int_from_uniform(0, static_cast<int>(forest->get_tree_count()) - 1)));
-    return treeToChop;
+    return m_rng.generate_int_from_uniform(0, static_cast<int>(forest->get_tree_count()) - 1);
   }
 };
 
