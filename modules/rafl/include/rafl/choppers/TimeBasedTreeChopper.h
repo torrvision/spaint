@@ -24,14 +24,14 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The most recent iteration of the lumberjack's chopping cycle. */
+  mutable size_t m_iteration;
+
   /** A nested chopper that will be applied periodically. */
   TreeChopper_CPtr m_nestedChopper;
 
   /** The time period between successive chops (every period'th attempt to chop will be forwarded to the nested chopper). */
   const size_t m_period;
-
-  /** The number of times the lumberjack has come to manage the trees. */
-  mutable size_t m_time;
 
   //#################### CONSTRUCTORS #################### 
 public:
@@ -42,7 +42,7 @@ public:
    * \param period        The time period between successive chops (every period'th attempt to chop will be forwarded to the nested chopper).
    */
   TimeBasedTreeChopper(const TreeChopper_CPtr& nestedChopper, size_t period)
-  : m_nestedChopper(nestedChopper), m_period(period), m_time(0)
+  : m_iteration(period - 1), m_nestedChopper(nestedChopper), m_period(period)
   {}
 
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
@@ -50,7 +50,8 @@ public:
   /** Override */
   virtual boost::optional<size_t> choose_tree_to_chop(const RF_CPtr& forest) const
   {
-    return m_time++ % m_period == 0 ? boost::optional<size_t>(m_nestedChopper->choose_tree_to_chop(forest)) : boost::none;
+    m_iteration = (m_iteration + 1) % m_period;
+    return m_iteration == 0 ? boost::optional<size_t>(m_nestedChopper->choose_tree_to_chop(forest)) : boost::none;
   }
 };
 
