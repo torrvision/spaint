@@ -14,7 +14,7 @@ using namespace tvgutil;
 #include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
-#include <rafl/choppers/MaxHeightTreeChopper.h>
+#include <rafl/choppers/HeightLimitingTreeChopper.h>
 #include <rafl/choppers/TimeBasedTreeChopper.h>
 #include <rafl/core/RandomForest.h>
 #include <rafl/examples/ExampleUtil.h>
@@ -230,12 +230,12 @@ int main(int argc, char *argv[])
   DT::Settings settings(params[0]);
   RF_Ptr randomForest(new RF(treeCount, settings));
 
-  // Create an instance of a max height tree chopper.
+  // Create an instance of a height-limiting tree chopper.
   const size_t maxTreeHeight = 5;
-  boost::shared_ptr<MaxHeightTreeChopper<Label> > maxHeightTreeChopper(new MaxHeightTreeChopper<Label>(maxTreeHeight));
+  boost::shared_ptr<HeightLimitingTreeChopper<Label> > heightLimitingTreeChopper(new HeightLimitingTreeChopper<Label>(maxTreeHeight));
 
   const size_t timePeriod = 20;
-  TimeBasedTreeChopper<Label> timeBasedTreeChopper(maxHeightTreeChopper, timePeriod);
+  TimeBasedTreeChopper<Label> timeBasedTreeChopper(heightLimitingTreeChopper, timePeriod);
 
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");

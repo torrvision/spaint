@@ -30,7 +30,7 @@ include/rafl/base/ProbabilityMassFunction.h
 ##
 SET(choppers_headers
 include/rafl/choppers/CyclicTreeChopper.h
-include/rafl/choppers/MaxHeightTreeChopper.h
+include/rafl/choppers/HeightLimitingTreeChopper.h
 include/rafl/choppers/RandomTreeChopper.h
 include/rafl/choppers/TimeBasedTreeChopper.h
 include/rafl/choppers/TreeChopper.h

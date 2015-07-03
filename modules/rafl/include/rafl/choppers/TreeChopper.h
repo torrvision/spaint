@@ -5,8 +5,6 @@
 #ifndef H_RAFL_TREECHOPPER
 #define H_RAFL_TREECHOPPER
 
-#include <boost/optional.hpp>
-
 #include "../core/RandomForest.h"
 
 namespace rafl {
