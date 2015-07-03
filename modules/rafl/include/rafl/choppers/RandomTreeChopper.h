@@ -40,10 +40,10 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual boost::optional<size_t> calculate_tree_to_chop(const typename TC::RF_CPtr& randomForest) const
+  virtual boost::optional<size_t> try_select_tree_to_chop(const typename TC::RF_CPtr& forest) const
   {
     boost::optional<size_t> treeToChop;
-    treeToChop.reset((m_rng.generate_int_from_uniform(0, static_cast<int>(randomForest->get_tree_count()) - 1)));
+    treeToChop.reset((m_rng.generate_int_from_uniform(0, static_cast<int>(forest->get_tree_count()) - 1)));
     return treeToChop;
   }
 };
