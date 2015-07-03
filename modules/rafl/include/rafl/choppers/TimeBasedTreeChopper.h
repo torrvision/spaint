@@ -19,7 +19,7 @@ class TimeBasedTreeChopper : public TreeChopper<Label>
 {
   //#################### TYPEDEFS AND USINGS #################### 
 private:
-  using TreeChopper<Label>::RF_CPtr;
+  using typename TreeChopper<Label>::RF_CPtr;
   typedef boost::shared_ptr<const TreeChopper<Label> > TreeChopper_CPtr;
 
   //#################### PRIVATE VARIABLES ####################

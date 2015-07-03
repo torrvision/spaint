@@ -17,7 +17,7 @@ class CyclicTreeChopper : public TreeChopper<Label>
 {
   //#################### USINGS #################### 
 private:
-  using TreeChopper<Label>::RF_CPtr;
+  using typename TreeChopper<Label>::RF_CPtr;
 
   //#################### PRIVATE VARIABLES #################### 
 private:
