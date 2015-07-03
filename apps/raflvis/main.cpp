@@ -127,7 +127,7 @@ static std::vector<Descriptor_CPtr> generate_2d_descriptor_grid(float min, float
 static std::vector<Example_CPtr> rotate_examples(const std::vector<Example_CPtr> examples, float angle)
 {
   std::vector<Example_CPtr> rotatedExamples;
-  for(int i = 0, size = examples.size(); i < size; ++i)
+  for(size_t i = 0, size = examples.size(); i < size; ++i)
   {
     const Descriptor_CPtr& desc = examples[i]->get_descriptor();
     const float x = (*desc)[0], y = (*desc)[1];
