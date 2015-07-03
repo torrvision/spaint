@@ -47,12 +47,12 @@ public:
 //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
   /** Override */
-  virtual boost::optional<size_t> try_select_tree_to_chop(const typename TC::RF_CPtr& forest) const
+  virtual boost::optional<size_t> choose_tree_to_chop(const typename TC::RF_CPtr& forest) const
   {
     boost::optional<size_t> treeToChop;
     if(m_time++ % m_period == 0)
     {
-      treeToChop = m_treeChopper->try_select_tree_to_chop(forest);
+      treeToChop = m_treeChopper->choose_tree_to_chop(forest);
     }
     return treeToChop;
   }

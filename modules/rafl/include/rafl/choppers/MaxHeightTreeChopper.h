@@ -40,7 +40,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS #################### 
 public:
   /** Override */
-  virtual boost::optional<size_t> try_select_tree_to_chop(const typename TC::RF_CPtr& forest) const
+  virtual boost::optional<size_t> choose_tree_to_chop(const typename TC::RF_CPtr& forest) const
   {
     boost::optional<size_t> treeToChop;
     for(size_t i = 0, treeCount = forest->get_tree_count(); i < treeCount; ++i)

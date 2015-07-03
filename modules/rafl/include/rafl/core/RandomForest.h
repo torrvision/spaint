@@ -23,6 +23,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The settings needed to configure the decision trees. */
+  typename DT::Settings m_settings;
+
   /** The decision trees that collectively make up the random forest. */
   std::vector<DT_Ptr> m_trees;
 
@@ -35,6 +38,7 @@ public:
    * \param settings  The settings needed to configure the decision trees.
    */
   RandomForest(size_t treeCount, const typename DT::Settings& settings)
+  : m_settings(settings)
   {
     for(size_t i = 0; i < treeCount; ++i)
     {
@@ -117,6 +121,20 @@ public:
 
     // Create a normalised probability mass function from the summed masses.
     return ProbabilityMassFunction<Label>(masses);
+  }
+
+  /**
+   * \brief Resets a specified tree in the random forest.
+   */
+  void chop_tree(const boost::optional<size_t>& treeId)
+  {
+    if(treeId)
+    {
+      if(*treeId < m_trees.size())
+      {
+        m_trees[*treeId] = DT_Ptr(new DT(m_settings));
+      }
+    }
   }
 
   /**
@@ -222,20 +240,6 @@ public:
   }
 
   /**
-   * \brief Resets a specified tree in the random forest with specific settings.
-   */
-  void chop_tree(const boost::optional<size_t>& treeId, const typename DT::Settings& settings)
-  {
-    if(treeId)
-    {
-      if(*treeId < m_trees.size())
-      {
-        m_trees[*treeId] = DT_Ptr(new DT(settings));
-      }
-    }
-  }
-
-  /**
    * \brief Trains the forest by splitting a number of suitable nodes in each tree.
    *
    * The number of nodes that are split in each training step is limited to ensure that a step is not overly costly.
@@ -264,6 +268,7 @@ private:
   template <typename Archive>
   void serialize(Archive& ar, const unsigned int version)
   {
+    ar & m_settings;
     ar & m_trees;
   }
 

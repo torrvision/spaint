@@ -21,6 +21,7 @@ class TreeChopper
 {
   //#################### TYPEDEFS #################### 
 protected:
+  typedef boost::shared_ptr<RandomForest<Label> > RF_Ptr;
   typedef boost::shared_ptr<const RandomForest<Label> > RF_CPtr;
 
   //#################### DESTRUCTOR ####################
@@ -33,12 +34,27 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Attempts to select a tree in a random forest for chopping.
+   * \brief Optionally chooses a tree in the random forest for chopping.
    *
    * \param forest  The random forest.
    * \return        The ID of the tree to be chopped, if any, or boost::none otherwise.
    */
-  virtual boost::optional<size_t> try_select_tree_to_chop(const RF_CPtr& forest) const = 0;
+  virtual boost::optional<size_t> choose_tree_to_chop(const RF_CPtr& forest) const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Chops an individual tree in the forest as necessary.
+   *
+   * Individual tree choppers can define "necessary" as they see fit.
+   *
+   * \param forest  The random forest.
+   */
+  void chop_tree_if_necessary(const RF_Ptr& forest) const
+  {
+    boost::optional<size_t> treeToChop = choose_tree_to_chop(forest);
+    if(treeToChop) forest->chop_tree(treeToChop);
+  }
 };
 
 }

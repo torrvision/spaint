@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
     if(roundCount % 20 == 0) currentRotation += 10;
 
     // Chop trees in the random forest based on a tree-chopping strategy.
-    randomForest->chop_tree(timeBasedTreeChopper.try_select_tree_to_chop(randomForest), settings);
+    timeBasedTreeChopper.chop_tree_if_necessary(randomForest);
     std::vector<Example_CPtr> currentExamples = rotate_examples(uceg.generate_examples(classLabels, 50), std::min(90, currentRotation) * M_PI / 180.0f);
 
 #else
