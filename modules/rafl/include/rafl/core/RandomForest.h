@@ -20,6 +20,7 @@ private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
   typedef DecisionTree<Label> DT;
   typedef boost::shared_ptr<DT> DT_Ptr;
+  typedef boost::shared_ptr<const DT> DT_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -87,17 +88,6 @@ public:
   }
 
   /**
-   * \brief Calculate the average leaf entropy of a specified tree.
-   *
-   * \param treeId  The Id of the specified tree.
-   * \return        The average leaf entropy of the specified tree.
-   */
-  float calculate_average_leaf_entropy(size_t treeId) const
-  {
-    return m_trees[treeId]->calculate_average_leaf_entropy();
-  }
-
-  /**
    * \brief Calculates an overall forest PMF for the specified descriptor.
    *
    * This is simply the average of the PMFs for the specified descriptor in the various decision trees.
@@ -124,45 +114,25 @@ public:
   }
 
   /**
-   * \brief Gets a histogram holding the class frequencies observed in the training data for a specified tree.
+   * \brief Gets the specified tree in the forest.
    *
-   * \param treeId  The Id of the specified tree.
-   * \return        A histogram holding the class frequencies observed in the training data for a specified tree.
+   * \param treeIndex The index of the tree to get.
+   * \return          The specified tree.
    */
-  const Histogram<Label>& get_class_frequencies(size_t treeId) const
+  DT_CPtr get_tree(size_t treeIndex) const
   {
-    return m_trees[treeId]->get_class_frequencies();
+    if(treeIndex < m_trees.size()) return m_trees[treeIndex];
+    else throw std::runtime_error("Bad tree index");
   }
 
   /**
-   * \brief Gets the number of nodes in a specified tree.
+   * \brief Gets the number of trees in the forest.
    *
-   * \param treeId  The Id of the specified tree.
-   * \return        The number of nodes in the specified tree.
-   */
-  size_t get_node_count(size_t treeId) const
-  {
-    return m_trees[treeId]->get_node_count();
-  }
-
-  /**
-   * \brief Gets the number of trees in the random forest.
-   *
-   * \reutrn The number of trees in the random forest.
+   * \return  The number of trees in the forest.
    */
   size_t get_tree_count() const
   {
     return m_trees.size();
-  }
-
-  /**
-   * \brief Gets the depth of the specified tree.
-   *
-   * \return  The depth of the tree.
-   */
-  size_t get_tree_depth(size_t treeId) const
-  {
-    return m_trees[treeId]->get_tree_depth();
   }
   
   /**
@@ -193,7 +163,8 @@ public:
       os << "Tree " << i << ":\n";
       m_trees[i]->output(os);
       os << '\n';
-    } }
+    }
+  }
 
   /**
    * \brief Outputs statistics about the random forest to a stream.
@@ -205,11 +176,12 @@ public:
     os << std::setprecision(5);
     for(size_t i = 0, size = m_trees.size(); i < size; ++i)
     {
+      const DT_Ptr& tree = m_trees[i];
       os << "Tree: " << i << ", ";
-      os << "Node Count: " << get_node_count(i) << ", ";
-      os << "Depth: " << get_tree_depth(i) << ", ";
-      os << "Avg. Leaf Entropy: " << calculate_average_leaf_entropy(i) << ", ";
-      os << "Class Frequencies: " << get_class_frequencies(i) << '\n';
+      os << "Node Count: " << tree->get_node_count() << ", ";
+      os << "Depth: " << tree->get_tree_depth() << ", ";
+      os << "Avg. Leaf Entropy: " << tree->calculate_average_leaf_entropy() << ", ";
+      os << "Class Frequencies: " << tree->get_class_frequencies() << '\n';
     }
     os << '\n';
   }

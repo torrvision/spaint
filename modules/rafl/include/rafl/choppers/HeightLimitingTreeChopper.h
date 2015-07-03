@@ -42,7 +42,7 @@ public:
   {
     for(size_t i = 0, treeCount = forest->get_tree_count(); i < treeCount; ++i)
     {
-      if(forest->get_tree_depth(i) > m_maxTreeHeight) return i;
+      if(forest->get_tree(i)->get_tree_depth() > m_maxTreeHeight) return i;
     }
     return boost::none;
   }
