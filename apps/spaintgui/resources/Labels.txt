@@ -1,0 +1,7 @@
+background
+table
+keyboard
+chair
+wall
+ground
+bin
