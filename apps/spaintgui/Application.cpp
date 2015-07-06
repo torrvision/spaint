@@ -416,7 +416,7 @@ void Application::process_voice_input()
     for(size_t i = 0, labelCount = labelManager->get_label_count(); i < labelCount; ++i)
     {
       SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(i);
-      std::string changeLabelCommand = "label " + boost::to_lower_copy(labelManager->get_label_name(label));
+      std::string changeLabelCommand = "label " + labelManager->get_label_name(label);
       if(command == changeLabelCommand) m_spaintPipeline->get_interactor()->set_semantic_label(label);
     }
 
