@@ -150,6 +150,11 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
+
+  /**
+   * \brief Sets up the semantic labels with which the user can label the scene.
+   */
+  void setup_labels();
 };
 
 #endif

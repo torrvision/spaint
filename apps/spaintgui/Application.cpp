@@ -36,38 +36,7 @@ Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
   m_voiceCommandStream("localhost", "23984")
 {
   m_renderer.reset(new WindowedRenderer("Semantic Paint", spaintPipeline->get_model(), spaintPipeline->get_raycaster()));
-
-  // Set up the semantic labels.
-  const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
-  std::ifstream fs("./resources/Labels.txt");
-  if(fs)
-  {
-    // If a labels file is present, load the labels from it.
-    std::string label;
-    while(std::getline(fs, label))
-    {
-      boost::trim(label);
-      if(label != "") labelManager->add_label(label);
-    }
-
-    // Add additional dummy labels up to the maximum number of labels we are allowed.
-    for(size_t i = labelManager->get_label_count(), count = labelManager->get_max_label_count(); i < count; ++i)
-    {
-      labelManager->add_label(boost::lexical_cast<std::string>(i));
-    }
-  }
-  else
-  {
-    // Otherwise, use a set of dummy labels.
-    labelManager->add_label("background");
-    for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
-    {
-      labelManager->add_label(boost::lexical_cast<std::string>(i));
-    }
-  }
-
-  // Set the initial semantic label to use for painting.
-  m_spaintPipeline->get_interactor()->set_semantic_label(1);
+  setup_labels();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -456,4 +425,38 @@ void Application::process_voice_input()
     if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
     if(command == "switch to training mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
   }
+}
+
+void Application::setup_labels()
+{
+  const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+  std::ifstream fs("./resources/Labels.txt");
+  if(fs)
+  {
+    // If a labels file is present, load the labels from it.
+    std::string label;
+    while(std::getline(fs, label))
+    {
+      boost::trim(label);
+      if(label != "") labelManager->add_label(label);
+    }
+
+    // Add additional dummy labels up to the maximum number of labels we are allowed.
+    for(size_t i = labelManager->get_label_count(), count = labelManager->get_max_label_count(); i < count; ++i)
+    {
+      labelManager->add_label(boost::lexical_cast<std::string>(i));
+    }
+  }
+  else
+  {
+    // Otherwise, use a set of dummy labels.
+    labelManager->add_label("background");
+    for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
+    {
+      labelManager->add_label(boost::lexical_cast<std::string>(i));
+    }
+  }
+
+  // Set the initial semantic label to use for painting.
+  m_spaintPipeline->get_interactor()->set_semantic_label(1);
 }
