@@ -10,6 +10,8 @@ public <commands> = <standard_commands> ;
  * A grammar for Semantic Paint.
  */
 public <spaint> =
+  disable fusion |
+  enable fusion |
   switch to normal mode |
   switch to prediction mode |
   switch to training mode |

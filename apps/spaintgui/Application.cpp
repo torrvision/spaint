@@ -420,6 +420,10 @@ void Application::process_voice_input()
       if(command == changeLabelCommand) m_spaintPipeline->get_interactor()->set_semantic_label(label);
     }
 
+    // Process any requests to disable/enable fusion.
+    if(command == "disable fusion") m_spaintPipeline->set_fusion_enabled(false);
+    if(command == "enable fusion") m_spaintPipeline->set_fusion_enabled(true);
+
     // Process any requests to change pipeline mode.
     if(command == "switch to normal mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_NORMAL);
     if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
