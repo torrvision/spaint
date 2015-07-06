@@ -4,6 +4,7 @@
 
 #include "Application.h"
 
+#include <fstream>
 #include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
@@ -38,17 +39,31 @@ Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 
   // Set up the semantic labels.
   const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
-  assert(labelManager->get_max_label_count() >= 7);
-  labelManager->add_label("Background");
-  labelManager->add_label("Table");
-  labelManager->add_label("Keyboard");
-  labelManager->add_label("Chair");
-  labelManager->add_label("Wall");
-  labelManager->add_label("Ground");
-  labelManager->add_label("Bin");
-  for(size_t i = labelManager->get_label_count(), count = labelManager->get_max_label_count(); i < count; ++i)
+  std::ifstream fs("./resources/Labels.txt");
+  if(fs)
   {
-    labelManager->add_label(boost::lexical_cast<std::string>(i));
+    // If a labels file is present, load the labels from it.
+    std::string label;
+    while(std::getline(fs, label))
+    {
+      boost::trim(label);
+      if(label != "") labelManager->add_label(label);
+    }
+
+    // Add additional dummy labels up to the maximum number of labels we are allowed.
+    for(size_t i = labelManager->get_label_count(), count = labelManager->get_max_label_count(); i < count; ++i)
+    {
+      labelManager->add_label(boost::lexical_cast<std::string>(i));
+    }
+  }
+  else
+  {
+    // Otherwise, use a set of dummy labels.
+    labelManager->add_label("background");
+    for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
+    {
+      labelManager->add_label(boost::lexical_cast<std::string>(i));
+    }
   }
 
   // Set the initial semantic label to use for painting.
