@@ -38,8 +38,15 @@ Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
 
   // Set up the semantic labels.
   const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+  assert(labelManager->get_max_label_count() >= 7);
   labelManager->add_label("Background");
-  for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
+  labelManager->add_label("Table");
+  labelManager->add_label("Keyboard");
+  labelManager->add_label("Chair");
+  labelManager->add_label("Wall");
+  labelManager->add_label("Ground");
+  labelManager->add_label("Bin");
+  for(size_t i = labelManager->get_label_count(), count = labelManager->get_max_label_count(); i < count; ++i)
   {
     labelManager->add_label(boost::lexical_cast<std::string>(i));
   }
@@ -406,24 +413,32 @@ void Application::process_renderer_input()
 
 void Application::process_voice_input()
 {
+  // If we are not connected to a voice command server, early out.
   if(!m_voiceCommandStream) return;
 
   size_t availableBytes;
   while((availableBytes = m_voiceCommandStream.rdbuf()->available()) > 0)
   {
+    // If there is a voice command available, get it from the stream and trim it to remove any trailing carriage return.
     std::string command;
     std::getline(m_voiceCommandStream, command);
-
-    // Trim the command to get rid of any trailing carriage return character.
     boost::trim(command);
 
+    // Output the voice command for debugging purposes.
     std::cout << "Voice Command: " << command << '\n';
 
-    // TEMPORARY
-    int label = -1;
-    if(command == "label chair")      label = 1;
-    else if(command == "label floor") label = 2;
-    else if(command == "label table") label = 3;
-    if(label != -1) m_spaintPipeline->get_interactor()->set_semantic_label(SpaintVoxel::Label(label));
+    // Process any requests to change label.
+    const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+    for(size_t i = 0, labelCount = labelManager->get_label_count(); i < labelCount; ++i)
+    {
+      SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(i);
+      std::string changeLabelCommand = "label " + boost::to_lower_copy(labelManager->get_label_name(label));
+      if(command == changeLabelCommand) m_spaintPipeline->get_interactor()->set_semantic_label(label);
+    }
+
+    // Process any requests to change pipeline mode.
+    if(command == "switch to normal mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_NORMAL);
+    if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
+    if(command == "switch to training mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
   }
 }
