@@ -5,6 +5,18 @@
 #ifndef H_SPAINTGUI_APPLICATION
 #define H_SPAINTGUI_APPLICATION
 
+#ifdef _MSC_VER
+  // Suppress some VC++ warnings that are produced by boost/asio.hpp.
+  #pragma warning(disable:4267)
+#endif
+
+#include <boost/asio.hpp>
+
+#ifdef _MSC_VER
+  // Re-enable the VC++ warnings for the rest of the code.
+  #pragma warning(default:4267)
+#endif
+
 #include <SDL.h>
 
 // Suppress the definition of M_PI provided by SDL - we want the one in <cmath>.
@@ -42,6 +54,9 @@ private:
 
   /** The spaint pipeline that the application should use. */
   spaint::SpaintPipeline_Ptr m_spaintPipeline;
+
+  /** The stream of commands being sent from the voice command server. */
+  boost::asio::ip::tcp::iostream m_voiceCommandStream;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -134,6 +149,16 @@ private:
    * \brief Processes user input that deals with switching the renderer or raycast type.
    */
   void process_renderer_input();
+
+  /**
+   * \brief Processes voice input from the user.
+   */
+  void process_voice_input();
+
+  /**
+   * \brief Sets up the semantic labels with which the user can label the scene.
+   */
+  void setup_labels();
 };
 
 #endif

@@ -32,4 +32,7 @@ IF(MSVC_IDE)
 
   # Make sure that the maths constants are defined.
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+
+  # Define a macro needed when using Boost.ASIO.
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
 ENDIF()

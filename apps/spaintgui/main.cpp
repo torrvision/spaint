@@ -6,6 +6,9 @@
 #include <iostream>
 #include <string>
 
+// Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
+#include "Application.h"
+
 #ifdef WITH_ARRAYFIRE
   #include <arrayfire.h>
 #endif
@@ -14,16 +17,12 @@
 using namespace InfiniTAM::Engine;
 
 #ifdef WITH_OVR
-#include <OVR_CAPI.h>
+  #include <OVR_CAPI.h>
 #endif
-
-#include <SDL.h>
 
 #include <spaint/core/SpaintPipeline.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
-
-#include "Application.h"
 
 //#################### FUNCTIONS ####################
 
@@ -63,7 +62,7 @@ try
     quit("Usage: spaint [<Calibration Filename> [<OpenNI Device URI> | <RGB Image Mask> <Depth Image Mask>]]");
   }
 
-  std::string calibrationFilename = argc >= 2 ? argv[1] : "./resources/DefaultCalibration.txt",
+  std::string calibrationFilename = argc >= 2 ? argv[1] : "",
               openNIDeviceURI = argc == 3 ? argv[2] : "Default",
               rgbImageMask = argc == 4 ? argv[2] : "",
               depthImageMask = argc == 4 ? argv[3] : "";

@@ -4,9 +4,11 @@
 
 #include "Application.h"
 
+#include <fstream>
 #include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
 
@@ -29,20 +31,12 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
-: m_commandManager(10), m_spaintPipeline(spaintPipeline)
+: m_commandManager(10),
+  m_spaintPipeline(spaintPipeline),
+  m_voiceCommandStream("localhost", "23984")
 {
   m_renderer.reset(new WindowedRenderer("Semantic Paint", spaintPipeline->get_model(), spaintPipeline->get_raycaster()));
-
-  // Set up the semantic labels.
-  const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
-  labelManager->add_label("Background");
-  for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
-  {
-    labelManager->add_label(boost::lexical_cast<std::string>(i));
-  }
-
-  // Set the initial semantic label to use for painting.
-  m_spaintPipeline->get_interactor()->set_semantic_label(1);
+  setup_labels();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -276,6 +270,7 @@ void Application::process_input()
   process_labelling_input();
   process_mode_input();
   process_renderer_input();
+  process_voice_input();
 }
 
 void Application::process_labelling_input()
@@ -398,4 +393,78 @@ void Application::process_renderer_input()
     else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICPHONG);
     else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICCOLOUR);
   }
+}
+
+void Application::process_voice_input()
+{
+  // If we are not connected to a voice command server, early out.
+  if(!m_voiceCommandStream) return;
+
+  size_t availableBytes;
+  while((availableBytes = m_voiceCommandStream.rdbuf()->available()) > 0)
+  {
+    // If there is a voice command available, get it from the stream and trim it to remove any trailing carriage return.
+    std::string command;
+    std::getline(m_voiceCommandStream, command);
+    boost::trim(command);
+
+    // Output the voice command for debugging purposes.
+    std::cout << "Voice Command: " << command << '\n';
+
+    // Process any requests to change label.
+    const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+    for(size_t i = 0, labelCount = labelManager->get_label_count(); i < labelCount; ++i)
+    {
+      SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(i);
+      std::string changeLabelCommand = "label " + labelManager->get_label_name(label);
+      if(command == changeLabelCommand) m_spaintPipeline->get_interactor()->set_semantic_label(label);
+    }
+
+    // Process any requests to disable/enable fusion.
+    if(command == "disable fusion") m_spaintPipeline->set_fusion_enabled(false);
+    if(command == "enable fusion") m_spaintPipeline->set_fusion_enabled(true);
+
+    // Process any requests to change pipeline mode.
+    if(command == "switch to normal mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_NORMAL);
+    if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
+    if(command == "switch to training mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
+  }
+}
+
+void Application::setup_labels()
+{
+  const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+  std::ifstream fs("./resources/Labels.txt");
+  if(fs)
+  {
+    // If a labels file is present, load the labels from it.
+    std::cout << "[spaint] Loading labels...\n";
+
+    std::string label;
+    while(std::getline(fs, label))
+    {
+      boost::trim(label);
+      if(label != "") labelManager->add_label(label);
+    }
+
+    // Add additional dummy labels up to the maximum number of labels we are allowed.
+    for(size_t i = labelManager->get_label_count(), count = labelManager->get_max_label_count(); i < count; ++i)
+    {
+      labelManager->add_label(boost::lexical_cast<std::string>(i));
+    }
+  }
+  else
+  {
+    // Otherwise, use a set of dummy labels.
+    std::cout << "[spaint] Failed to load labels, reverting to a set of dummy labels...\n";
+
+    labelManager->add_label("background");
+    for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
+    {
+      labelManager->add_label(boost::lexical_cast<std::string>(i));
+    }
+  }
+
+  // Set the initial semantic label to use for painting.
+  m_spaintPipeline->get_interactor()->set_semantic_label(1);
 }
