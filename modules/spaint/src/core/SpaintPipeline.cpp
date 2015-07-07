@@ -106,15 +106,13 @@ void SpaintPipeline::run_main_section()
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
+  // Determine whether or not fusion should be run.
+  bool runFusion = m_fusionEnabled;
 #ifdef WITH_VICON
-  if(m_trackerType == TRACKER_VICON)
-  {
-    // If we're using the Vicon tracker, make sure to only fuse when we have tracking information available.
-    m_fusionEnabled = !m_viconTracker->lost_tracking();
-  }
+  if(m_trackerType == TRACKER_VICON && m_viconTracker->lost_tracking()) runFusion = false;
 #endif
 
-  if(m_fusionEnabled)
+  if(runFusion)
   {
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
