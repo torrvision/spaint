@@ -5,6 +5,8 @@
 
 #include "touch/TouchDetector.h"
 
+#include <boost/format.hpp>
+
 #include <tvgutil/ArgUtil.h>
 
 #include "imageprocessing/ImageProcessorFactory.h"
@@ -41,7 +43,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_imageHeight(imgSize.y),
   m_imageProcessor(ImageProcessorFactory::make_image_processor(settings->deviceType)),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThresholdMm(15),
+  m_lowerDepthThresholdMm(10),
   m_morphKernelSize(5),
   m_settings(settings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
@@ -65,7 +67,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.016f; // i.e. 1.6% of the image (determined empirically)
+  const float minCandidateFraction = 0.01f; // i.e. 1% of the image (determined empirically)
   const float maxCandidateFraction = 0.2f;   // i.e. 20% of the image (determined empirically)
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
@@ -106,6 +108,11 @@ try
 
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
+
+#if 1
+  const std::string savePath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchData/trial001/images";
+  save_candidate_components(savePath, candidateComponents, diffRawRaycastInMm);
+#endif
 
   // Pick the candidate component most likely to correspond to a touch interaction.
   int bestConnectedComponent = pick_best_candidate_component(candidateComponents, diffRawRaycastInMm);
@@ -426,6 +433,26 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
   arrayCopy = arrayCopy - (upperMask * arrayCopy) + (upperMask * upper);
 
   return arrayCopy;
+}
+
+void TouchDetector::save_candidate_components(const std::string& savePath, const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
+{
+  static size_t imageCounter = 0;
+
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+
+  af::array mask(m_imageHeight, m_imageWidth, u8);
+
+  boost::format fiveDigits("%05d");
+  for(int i = 0; i < candidateCount; ++i)
+  {
+    mask = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+
+    std::string saveString = savePath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+
+    cv::imwrite(saveString, OpenCVUtil::make_greyscale_image(mask.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR));
+  }
 }
 
 Vector3f TouchDetector::to_itm(const Eigen::Vector3f& v)

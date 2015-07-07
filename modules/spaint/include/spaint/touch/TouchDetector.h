@@ -34,6 +34,7 @@ private:
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
+  typedef boost::shared_ptr<const RandomForest<int> > RF_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
@@ -181,6 +182,11 @@ private:
    * \return      A copy of the array in which the elements have been clamped to the specified range.
    */
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
+  
+  /**
+   * \brief TODO.
+   */
+  void save_candidate_components(const std::string& savePath, const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
   /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
