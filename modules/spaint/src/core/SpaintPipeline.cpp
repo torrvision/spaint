@@ -279,7 +279,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   dtSettings.maxTreeHeight = 20;
   dtSettings.randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(seed));
   dtSettings.seenExamplesThreshold = 50;
-  dtSettings.splittabilityThreshold = 0.8f;
+  dtSettings.splittabilityThreshold = 0.5f;
   dtSettings.usePMFReweighting = true;
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 
