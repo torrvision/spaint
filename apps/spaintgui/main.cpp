@@ -62,7 +62,7 @@ try
     quit("Usage: spaint [<Calibration Filename> [<OpenNI Device URI> | <RGB Image Mask> <Depth Image Mask>]]");
   }
 
-  std::string calibrationFilename = argc >= 2 ? argv[1] : "./resources/DefaultCalibration.txt",
+  std::string calibrationFilename = argc >= 2 ? argv[1] : "",
               openNIDeviceURI = argc == 3 ? argv[2] : "Default",
               rgbImageMask = argc == 4 ? argv[2] : "",
               depthImageMask = argc == 4 ? argv[3] : "";
