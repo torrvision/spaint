@@ -438,6 +438,8 @@ void Application::setup_labels()
   if(fs)
   {
     // If a labels file is present, load the labels from it.
+    std::cout << "[spaint] Loading labels...\n";
+
     std::string label;
     while(std::getline(fs, label))
     {
@@ -454,6 +456,8 @@ void Application::setup_labels()
   else
   {
     // Otherwise, use a set of dummy labels.
+    std::cout << "[spaint] Failed to load labels, reverting to a set of dummy labels...\n";
+
     labelManager->add_label("background");
     for(size_t i = 1, count = labelManager->get_max_label_count(); i < count; ++i)
     {
