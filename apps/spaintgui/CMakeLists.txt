@@ -126,6 +126,16 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
 
+#########################################
+# Copy resource files to the build tree #
+#########################################
+
+ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/spaintgui/resources" "$<TARGET_FILE_DIR:${targetname}>/resources")
+
+IF(MSVC_IDE)
+  ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/spaintgui/resources" "${PROJECT_BINARY_DIR}/apps/spaintgui/resources")
+ENDIF()
+
 #############################
 # Specify things to install #
 #############################
