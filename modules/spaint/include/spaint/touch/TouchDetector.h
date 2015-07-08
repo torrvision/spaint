@@ -155,6 +155,7 @@ private:
    * \return                    The ID of the best candidate component.
    */
   int pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
+  int pick_best_candidate_component2(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
 
   /**
    * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for change detection.

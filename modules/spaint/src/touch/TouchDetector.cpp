@@ -79,6 +79,9 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
 
   const std::string forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchData/trial001/results/randomForest-20150707T112725.rf";
   m_forest = tvgutil::SerializationUtil::load_text(forestPath, m_forest);
+#if 1
+  m_forest->output_statistics(std::cout);
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -117,13 +120,19 @@ try
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
-#if 1
+#if 0
+  // TODO: make sure that you don't overwrite a valid dataset!
   const std::string savePath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchData/trial001/images";
   save_candidate_components(savePath, candidateComponents, diffRawRaycastInMm);
 #endif
 
   // Pick the candidate component most likely to correspond to a touch interaction.
-  int bestConnectedComponent = pick_best_candidate_component(candidateComponents, diffRawRaycastInMm);
+  int bestConnectedComponent = pick_best_candidate_component2(candidateComponents, diffRawRaycastInMm);
+  if(bestConnectedComponent == -1)
+  {
+    *m_touchMask = 0;
+    return std::vector<Eigen::Vector2i>();
+  }
 
   // Extract a set of touch points from the chosen connected component that denote the parts of the scene touched by the user.
   // Note that the set of touch points may end up being empty if the user is not touching the scene.
@@ -302,6 +311,64 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   }
 
   return touchPoints;
+}
+
+int TouchDetector::pick_best_candidate_component2(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
+{
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+
+  int bestCandidateID = -1;
+  af::array mask;
+
+  std::vector<float> touchProb(candidateCount);
+  for(int i = 0; i < candidateCount; ++i)
+  {
+    mask = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    rafl::Descriptor_CPtr d = TouchUtil::extract_touch_feature(mask);
+    rafl::ProbabilityMassFunction<Label> pmf = m_forest->calculate_pmf(d);
+    std::cout << "The pmf is: " << pmf << std::endl;
+    std::map<Label,float> masses = pmf.get_masses();
+    touchProb[i] = tvgutil::MapUtil::lookup(masses, 1);
+  }
+  size_t maxIndex = tvgutil::ArgUtil::argmin(touchProb);
+  if(touchProb[maxIndex] > 0.5f)
+  {
+    bestCandidateID = candidateIDs[maxIndex];
+  }
+  else
+  {
+    bestCandidateID = -1;
+  }
+
+#if 0
+  if(candidateCount == 1)
+  {
+    // If there is only one candidate, then by definition it's the best candidate.
+    bestCandidateID = candidateIDs[0];
+  }
+  else
+  {
+    // Otherwise, select the candidate that is closest to a surface.
+    std::vector<float> meanDistances(candidateCount);
+    for(int i = 0; i < candidateCount; ++i)
+    {
+      mask = m_connectedComponentImage == candidateIDs[i];
+      meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
+    }
+    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
+    bestCandidateID = candidateIDs[minIndex];
+  }
+#endif
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the best candidate's mask and difference image.
+  mask = m_connectedComponentImage.as(s32) == bestCandidateID;
+  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
+
+  return bestCandidateID;
 }
 
 int TouchDetector::pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
