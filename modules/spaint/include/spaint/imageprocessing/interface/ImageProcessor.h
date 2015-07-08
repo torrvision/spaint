@@ -25,6 +25,8 @@ protected:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
   //#################### ENUMERATIONS ####################
 public: 
@@ -66,6 +68,16 @@ public:
    * \param outputImage The output image.
    */
   virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Tests the pixels in the input image against a threshold using the specified comparison operator,
@@ -130,6 +142,11 @@ public:
   {
     return img->noDims;
   }
+
+  /**
+   * \brief TODO
+   */
+  void median_filter(const ITMUChar4Image_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const;
 };
 
 }

@@ -48,6 +48,23 @@ inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inpu
 }
 
 /**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void copy_itm_pixel_to_af(int rowMajorIndex, const Vector4u *inputData, int width, int height,
+                                 unsigned char *outputRedData, unsigned char *outputGreenData,
+                                 unsigned char *outputBlueData, unsigned char *outputAlphaData)
+{
+  int row = rowMajorIndex / width, col = rowMajorIndex % width;
+  int columnMajorIndex = col * height + row;
+  Vector4u inputPixel = inputData[rowMajorIndex];
+  outputRedData[columnMajorIndex] = inputPixel.r;
+  outputGreenData[columnMajorIndex] = inputPixel.g;
+  outputBlueData[columnMajorIndex] = inputPixel.b;
+  outputAlphaData[columnMajorIndex] = inputPixel.a;
+}
+
+/**
  * \brief Tests the value of a pixel in an input image against a threshold using the specified comparison operator,
  *        and either writes a specified value to the corresponding pixel in the output image (if the test is passed),
  *        or copies the value of the input pixel across (otherwise).

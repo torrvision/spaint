@@ -52,6 +52,41 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
   }
 }
 
+void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+
+  // TODO
+}
+
+void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+
+  af::array& outputRed = (*outputImage)(af::span, af::span, 0);
+  af::array& outputGreen = (*outputImage)(af::span, af::span, 1);
+  af::array& outputBlue = (*outputImage)(af::span, af::span, 2);
+  af::array& outputAlpha = (*outputImage)(af::span, af::span, 3);
+
+  const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
+  unsigned char *outputRedData = outputRed.device<unsigned char>();
+  unsigned char *outputGreenData = outputGreen.device<unsigned char>();
+  unsigned char *outputBlueData = outputBlue.device<unsigned char>();
+  unsigned char *outputAlphaData = outputAlpha.device<unsigned char>();
+
+  const int height = inputImage->noDims.y;
+  const int width = inputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
+  {
+    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputRedData, outputGreenData, outputBlueData, outputAlphaData);
+  }
+}
+
 void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
