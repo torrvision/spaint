@@ -34,7 +34,6 @@ private:
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
-  typedef boost::shared_ptr<const RandomForest<int> > RF_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
