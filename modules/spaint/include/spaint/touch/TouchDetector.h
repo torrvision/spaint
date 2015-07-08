@@ -194,6 +194,11 @@ private:
   /**
    * \brief TODO.
    */
+  static size_t get_file_count(const std::string& path);
+
+  /**
+   * \brief TODO.
+   */
   void save_candidate_components(const std::string& savePath, const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
   /**

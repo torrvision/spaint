@@ -7,6 +7,8 @@
 #include "touch/TouchUtil.h"
 
 #include <boost/format.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <tvgutil/ArgUtil.h>
 #include <tvgutil/SerializationUtil.h>
@@ -122,8 +124,17 @@ try
 
 #if 0
   // TODO: make sure that you don't overwrite a valid dataset!
-  const std::string savePath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchData/trial001/images";
-  save_candidate_components(savePath, candidateComponents, diffRawRaycastInMm);
+  const std::string savePath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq000/images";
+  static size_t fileCount = get_file_count(savePath);
+
+  if(fileCount)
+  {
+    throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + "images captured data in: " + savePath);
+  }
+  else
+  {
+    save_candidate_components(savePath, candidateComponents, diffRawRaycastInMm);
+  }
 #endif
 
   // Pick the candidate component most likely to correspond to a touch interaction.
@@ -508,6 +519,13 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
   arrayCopy = arrayCopy - (upperMask * arrayCopy) + (upperMask * upper);
 
   return arrayCopy;
+}
+
+size_t TouchDetector::get_file_count(const std::string& path)
+{
+  size_t fileCount = 0;
+  for(boost::filesystem::directory_iterator it(path); it != boost::filesystem::directory_iterator(); ++it) ++fileCount;
+  return fileCount;
 }
 
 void TouchDetector::save_candidate_components(const std::string& savePath, const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
