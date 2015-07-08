@@ -11,6 +11,8 @@
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <rafl/core/RandomForest.h>
+
 #include <rigging/SimpleCamera.h>
 
 #include "../imageprocessing/interface/ImageProcessor.h"
@@ -34,6 +36,9 @@ private:
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
+  typedef int Label;
+  typedef rafl::RandomForest<Label> RF;
+  typedef boost::shared_ptr<RF> RF_Ptr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
@@ -62,6 +67,9 @@ private:
 
   /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
+
+  /** A random forest used to score the candidate connected components. */
+  RF_Ptr m_forest;
 
   /** The height of the images on which the touch detector is running. */
   int m_imageHeight;

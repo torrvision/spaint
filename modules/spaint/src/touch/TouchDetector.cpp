@@ -4,10 +4,12 @@
  */
 
 #include "touch/TouchDetector.h"
+#include "touch/TouchUtil.h"
 
 #include <boost/format.hpp>
 
 #include <tvgutil/ArgUtil.h>
+#include <tvgutil/SerializationUtil.h>
 
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "util/RGBDUtil.h"
@@ -71,6 +73,12 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   const float maxCandidateFraction = 0.2f;   // i.e. 20% of the image (determined empirically)
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
+
+  // Register the relevant decision function generators with the factory.
+  rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
+
+  const std::string forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchData/trial001/results/randomForest-20150707T112725.rf";
+  m_forest = tvgutil::SerializationUtil::load_text(forestPath, m_forest);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
