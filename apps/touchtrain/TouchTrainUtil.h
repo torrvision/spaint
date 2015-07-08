@@ -19,12 +19,11 @@ class TouchTrainUtil
 {
 public:
   template <typename Label>
-  static std::vector<std::pair<std::string, Label> > load_instances(const std::string& trainingSetPath, const std::string& trainingSetFileName)
+  static std::vector<std::pair<std::string, Label> > load_instances(const std::string& imagePath, const std::string& annotationPath)
   {
     std::vector<std::pair<std::string, Label> > instances;
 
-    std::string filename = trainingSetPath + "/" + trainingSetFileName;
-    std::ifstream fs(filename.c_str());
+    std::ifstream fs(annotationPath.c_str());
     std::string line;
     while(std::getline(fs, line))
     {
@@ -35,27 +34,30 @@ public:
 
       std::string imageName = tokens[0];
       Label label = boost::lexical_cast<Label>(tokens.back());
-      instances.push_back(std::make_pair(trainingSetPath + "/images/" + imageName, label));
+      instances.push_back(std::make_pair(imagePath + "/" + imageName, label));
     }
 
     return instances;
   }
 
   template <typename Label>
-  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<std::pair<std::string, Label> >& instances)
+  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<std::vector<std::pair<std::string, Label> > >& instances)
   {
     typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
     std::vector<Example_CPtr> result;
 
-    for(size_t i = 0, size = instances.size(); i < size; ++i)
+    for(size_t i = 0, iend = instances.size(); i < iend; ++i)
     {
+      for(size_t j = 0, jend = instances[i].size(); j < jend; ++j)
+      {
 #if 0
-      std::cout << "Filename: " << instances[i].first << " Label: " << instances[i].second << std::endl;
+        std::cout << "Filename: " << instances[i][j].first << " Label: " << instances[i][j].second << std::endl;
 #endif
 
-      af::array img = af::loadImage(instances[i].first.c_str());
-      rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::extract_touch_feature(img);
-      result.push_back(Example_CPtr(new Example<Label>(descriptor, instances[i].second)));
+        af::array img = af::loadImage(instances[i][j].first.c_str());
+        rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::extract_touch_feature(img);
+        result.push_back(Example_CPtr(new Example<Label>(descriptor, instances[i][j].second)));
+      }
     }
 
     return result;

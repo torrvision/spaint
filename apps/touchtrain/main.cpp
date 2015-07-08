@@ -3,6 +3,8 @@
  */
 
 #include <boost/assign/list_of.hpp>
+#include <boost/format.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
@@ -44,6 +46,78 @@ std::string get_iso_timestamp()
   return boost::posix_time::to_iso_string(currentDateTime);
 }
 
+bool check_directory_exists(const std::string& dir)
+{
+  if(!boost::filesystem::is_directory(dir))
+  {
+    std::cout << "Expecting a directory at: " << dir << std::endl;
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+bool check_path_exists(const std::string& path)
+{
+  if(!boost::filesystem::exists(path))
+  {
+    std::cout << "Expecting a to see: " << path << std::endl << std::flush;
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+struct TouchTrainData
+{
+  typedef std::vector<std::pair<std::string,Label> > Instances;
+
+  std::string m_crossValidationResults;
+  std::vector<Instances> m_instances;
+  std::string m_models;
+  std::string m_root;
+
+  TouchTrainData(const std::string& root, std::vector<size_t> sequenceNumbers)
+  : m_instances(sequenceNumbers.size()), m_root(root) 
+  {
+    bool validFlag = true;
+
+    m_crossValidationResults = root + "/crossvalidation-results";
+    validFlag = validFlag && check_directory_exists(m_crossValidationResults);
+
+    m_models = root + "/models";
+    validFlag = validFlag && check_directory_exists(m_models);
+
+    boost::format threeDigits("%03d");
+    for(size_t i = 0, size = sequenceNumbers.size(); i < size; ++i)
+    {
+      std::string sequencePath = root + "/seq" + (threeDigits % sequenceNumbers[i]).str();
+      validFlag = validFlag && check_directory_exists(sequencePath);
+
+      std::string imagePath = sequencePath + "/images";
+      std::string annotationPath = sequencePath + "/annotation.txt";
+      validFlag = validFlag && check_path_exists(imagePath);
+      validFlag = validFlag && check_path_exists(annotationPath);
+
+      m_instances[i] = TouchTrainUtil::load_instances<Label>(imagePath, annotationPath);
+      if(m_instances[i].empty())
+      {
+        validFlag = validFlag && false;
+        std::cout << "Expecting some data in: " << sequencePath << std::endl;
+      }
+    }
+    
+    if(!validFlag)
+    {
+      throw std::runtime_error("The aforementioned directories were not found, please create and populate them.");
+    }
+  }
+};
+
 int main(int argc, char *argv[])
 {
 #if WITH_OPENMP
@@ -52,48 +126,44 @@ int main(int argc, char *argv[])
 
   const unsigned int seed = 12345;
 
-  if(argc != 4)
+  if(argc != 2)
   {
-    std::cerr << "Usage: raflperf [<touch training set path> <training set filename> <output path>]\n";
+    std::cerr << "Usage: raflperf [<touch training set path>]\n";
     return EXIT_FAILURE;
   }
 
   std::vector<Example_CPtr> examples;
   std::vector<ParamSet> params;
-  std::string outputResultPath;
 
   const size_t treeCount = 8;
   const size_t splitBudget = 1048576/2;
 
-  if(argc == 4)
-  {
-    std::string trainingSetPath = argv[1];
-    std::string trainingSetFileName = argv[2];
-    outputResultPath = argv[3];
+  TouchTrainData touchDataset(argv[1],list_of(0)(1));
 
-    std::cout << "Training set: " << trainingSetPath << '\n';
+  //std::string trainingSetFileName = argv[2];
+  //outputResultPath = argv[3];
 
-    Instances instances = TouchTrainUtil::load_instances<Label>(trainingSetPath, trainingSetFileName);
-    examples = TouchTrainUtil::generate_examples<Label>(instances);
+  std::cout << "Training set: " << touchDataset.m_root << '\n';
 
-    std::cout << "Number of examples = " << examples.size() << '\n';
+  examples = TouchTrainUtil::generate_examples<Label>(touchDataset.m_instances);
 
-    // Generate the parameter sets with which to test the random forest.
-    params = CartesianProductParameterSetGenerator()
-      .add_param("treeCount", list_of<size_t>(treeCount))
-      .add_param("splitBudget", list_of<size_t>(splitBudget))
-      .add_param("candidateCount", list_of<int>(256))
-      .add_param("decisionFunctionGeneratorParams", list_of<std::string>(""))
-      .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
-      .add_param("gainThreshold", list_of<float>(0.0f))
-      .add_param("maxClassSize", list_of<size_t>(1000))
-      .add_param("maxTreeHeight", list_of<size_t>(20))
-      .add_param("randomSeed", list_of<unsigned int>(seed))
-      .add_param("seenExamplesThreshold", list_of<size_t>(32)(64)(128))
-      .add_param("splittabilityThreshold", list_of<float>(0.3f)(0.5f)(0.8f))
-      .add_param("usePMFReweighting", list_of<bool>(false)(true))
-      .generate_param_sets();
-  }
+  std::cout << "Number of examples = " << examples.size() << '\n';
+
+  // Generate the parameter sets with which to test the random forest.
+  params = CartesianProductParameterSetGenerator()
+    .add_param("treeCount", list_of<size_t>(treeCount))
+    .add_param("splitBudget", list_of<size_t>(splitBudget))
+    .add_param("candidateCount", list_of<int>(256))
+    .add_param("decisionFunctionGeneratorParams", list_of<std::string>(""))
+    .add_param("decisionFunctionGeneratorType", list_of<std::string>("FeatureThresholding"))
+    .add_param("gainThreshold", list_of<float>(0.0f))
+    .add_param("maxClassSize", list_of<size_t>(1000))
+    .add_param("maxTreeHeight", list_of<size_t>(20))
+    .add_param("randomSeed", list_of<unsigned int>(seed))
+    .add_param("seenExamplesThreshold", list_of<size_t>(32)(64)(128))
+    .add_param("splittabilityThreshold", list_of<float>(0.3f)(0.5f)(0.8f))
+    .add_param("usePMFReweighting", list_of<bool>(false)(true))
+    .generate_param_sets();
 
   // Register the relevant decision function generators with the factory.
   DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
@@ -128,7 +198,7 @@ int main(int argc, char *argv[])
   results.output(std::cout);
 
   // Time-stamp the results file.
-  std::string textOutputResultPath =  outputResultPath + "/crossvalidationresults-" + get_iso_timestamp() + ".txt";
+  std::string textOutputResultPath =  touchDataset.m_crossValidationResults + "/crossvalidationresults-" + get_iso_timestamp() + ".txt";
 
   // Output the performance table to the results file.
   std::ofstream resultsFile(textOutputResultPath.c_str());
@@ -151,9 +221,7 @@ int main(int argc, char *argv[])
   RF_Ptr randomForest(new RF(treeCount, settings));
   randomForest->add_examples(examples);
   if(randomForest->train(splitBudget)) randomForest->output_statistics(std::cout);
-  const std::string rfPath = outputResultPath + "/randomForest-" + get_iso_timestamp() + ".rf"; 
-  std::cout << rfPath << std::endl;
-  tvgutil::SerializationUtil::save_text(rfPath, *randomForest);
+  tvgutil::SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + get_iso_timestamp() + ".rf", *randomForest);
 
   return 0;
 }
