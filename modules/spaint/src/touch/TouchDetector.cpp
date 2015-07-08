@@ -79,7 +79,9 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Register the relevant decision function generators with the factory.
   rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
-  const std::string forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchData/trial001/results/randomForest-20150707T112725.rf";
+  const std::string forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150708T180339.rf";
+  if(!boost::filesystem::exists(forestPath)) throw std::runtime_error("Forest not found: " + forestPath);
+
   m_forest = tvgutil::SerializationUtil::load_text(forestPath, m_forest);
 #if 1
   m_forest->output_statistics(std::cout);
@@ -124,7 +126,9 @@ try
 
 #if 0
   // TODO: make sure that you don't overwrite a valid dataset!
-  const std::string savePath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq000/images";
+  const std::string savePath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq003/images";
+  if(!boost::filesystem::exists(savePath)) throw std::runtime_error("Path not found: " + savePath);
+
   static size_t fileCount = get_file_count(savePath);
 
   if(fileCount)
