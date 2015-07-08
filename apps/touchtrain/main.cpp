@@ -46,24 +46,11 @@ std::string get_iso_timestamp()
   return boost::posix_time::to_iso_string(currentDateTime);
 }
 
-bool check_directory_exists(const std::string& dir)
-{
-  if(!boost::filesystem::is_directory(dir))
-  {
-    std::cout << "Expecting a directory at: " << dir << std::endl;
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-
 bool check_path_exists(const std::string& path)
 {
   if(!boost::filesystem::exists(path))
   {
-    std::cout << "Expecting a to see: " << path << std::endl << std::flush;
+    std::cout << "Expecting to see: " << path << std::endl;
     return false;
   }
   else
@@ -84,34 +71,34 @@ struct TouchTrainData
   TouchTrainData(const std::string& root, std::vector<size_t> sequenceNumbers)
   : m_instances(sequenceNumbers.size()), m_root(root) 
   {
-    bool validFlag = true;
+    size_t invalidCount = 0; 
 
     m_crossValidationResults = root + "/crossvalidation-results";
-    validFlag = validFlag && check_directory_exists(m_crossValidationResults);
+    if(!check_path_exists(m_crossValidationResults)) ++invalidCount;
 
     m_models = root + "/models";
-    validFlag = validFlag && check_directory_exists(m_models);
+    if(!check_path_exists(m_models)) ++invalidCount;
 
     boost::format threeDigits("%03d");
     for(size_t i = 0, size = sequenceNumbers.size(); i < size; ++i)
     {
       std::string sequencePath = root + "/seq" + (threeDigits % sequenceNumbers[i]).str();
-      validFlag = validFlag && check_directory_exists(sequencePath);
+      if(!check_path_exists(sequencePath)) ++invalidCount;
 
       std::string imagePath = sequencePath + "/images";
       std::string annotationPath = sequencePath + "/annotation.txt";
-      validFlag = validFlag && check_path_exists(imagePath);
-      validFlag = validFlag && check_path_exists(annotationPath);
+      if(!check_path_exists(imagePath)) ++invalidCount;
+      if(!check_path_exists(annotationPath)) ++invalidCount;
 
       m_instances[i] = TouchTrainUtil::load_instances<Label>(imagePath, annotationPath);
       if(m_instances[i].empty())
       {
-        validFlag = validFlag && false;
         std::cout << "Expecting some data in: " << sequencePath << std::endl;
+        ++invalidCount;
       }
     }
     
-    if(!validFlag)
+    if(invalidCount > 0)
     {
       throw std::runtime_error("The aforementioned directories were not found, please create and populate them.");
     }
