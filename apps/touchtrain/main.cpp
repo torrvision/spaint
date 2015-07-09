@@ -23,6 +23,7 @@ using namespace evaluation;
 using namespace rafl;
 
 #include <tvgutil/timers/Timer.h>
+#include <tvgutil/TimeUtil.h>
 
 #include "TouchTrainUtil.h"
 
@@ -35,6 +36,7 @@ typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################
 
+#if 0
 /**
  * \brief Gets the current time in ISO format.
  *
@@ -45,6 +47,7 @@ std::string get_iso_timestamp()
   boost::posix_time::ptime currentDateTime(boost::posix_time::second_clock::local_time());
   return boost::posix_time::to_iso_string(currentDateTime);
 }
+#endif
 
 bool check_path_exists(const std::string& path)
 {
@@ -184,8 +187,11 @@ int main(int argc, char *argv[])
   // Output the performance table to the screen.
   results.output(std::cout);
 
+  // Get a time-stamp for tagging the resulting files.
+  const std::string timeStamp = TimeUtil::get_iso_timestamp();
+
   // Time-stamp the results file.
-  std::string textOutputResultPath =  touchDataset.m_crossValidationResults + "/crossvalidationresults-" + get_iso_timestamp() + ".txt";
+  std::string textOutputResultPath =  touchDataset.m_crossValidationResults + "/crossvalidationresults-" + timeStamp + ".txt";
 
   // Output the performance table to the results file.
   std::ofstream resultsFile(textOutputResultPath.c_str());
@@ -208,7 +214,7 @@ int main(int argc, char *argv[])
   RF_Ptr randomForest(new RF(treeCount, settings));
   randomForest->add_examples(examples);
   if(randomForest->train(splitBudget)) randomForest->output_statistics(std::cout);
-  tvgutil::SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + get_iso_timestamp() + ".rf", *randomForest);
+  tvgutil::SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + timeStamp + ".rf", *randomForest);
 
   return 0;
 }
