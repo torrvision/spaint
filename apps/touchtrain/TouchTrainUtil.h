@@ -15,9 +15,23 @@
 
 #include <spaint/touch/TouchUtil.h>
 
+/**
+ * \brief This class contains functions that help us to load training annotation and generate examples from the annotation.
+ */
 class TouchTrainUtil
 {
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Generates an array of instance data in the following format: <path-to-image,label>
+   *
+   * \param imagePath       The path to the specified images directory.
+   * \param annotationPath  The path to the specified file containing the associated annotation.
+   *
+   * The annotation is assumed to be in the following format: <imageName,label>
+   *
+   * \return  An array containing the instance data.
+   */
   template <typename Label>
   static std::vector<std::pair<std::string, Label> > load_instances(const std::string& imagePath, const std::string& annotationPath)
   {
@@ -40,6 +54,12 @@ public:
     return instances;
   }
 
+  /**
+   * \brief Generates an array of examples given an array of instance data.
+   *
+   * \param instances  The instance data.
+   * \return           The examples.
+   */
   template <typename Label>
   static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<std::vector<std::pair<std::string, Label> > >& instances)
   {
