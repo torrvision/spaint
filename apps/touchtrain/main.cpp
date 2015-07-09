@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
   typedef boost::shared_ptr<RF> RF_Ptr;
 
   std::cout << "[touchtrain] Training the forest with the best parameters selected during cross-validation...\n";
-  ParamSet bestParams = results.find_best_params("Accuracy");
+  ParamSet bestParams = results.find_best_param_set("Accuracy");
   DT::Settings settings(bestParams);
   RF_Ptr randomForest(new RF(treeCount, settings));
   randomForest->add_examples(examples);
