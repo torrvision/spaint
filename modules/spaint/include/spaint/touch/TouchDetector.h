@@ -200,12 +200,19 @@ private:
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
 
   /**
-   * \brief TODO.
+   * \brief Gets the number of files contained in a directory.
+   *
+   * \param path  The path of the directory.
+   * \return      The number of files in the specified directory.
    */
   static size_t get_file_count(const std::string& path);
 
   /**
-   * \brief TODO.
+   * \brief Saves the candidate components to a folder.
+   *
+   * \param savePath            The path of the directory.
+   * \param candidateComponents The IDs of components in the connected component image that denote candidate touch interactions.
+   * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
    */
   void save_candidate_components(const std::string& savePath, const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
