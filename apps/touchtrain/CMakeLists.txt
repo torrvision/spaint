@@ -27,16 +27,11 @@ SET(sources
 main.cpp
 )
 
-SET(headers
-RandomForestEvaluator.h
-)
-
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(sources FILES ${sources})
-SOURCE_GROUP(headers FILES ${headers})
 
 ##########################################
 # Specify additional include directories #
