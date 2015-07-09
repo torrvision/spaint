@@ -19,7 +19,7 @@ public:
    *
    * \return  The current time in ISO format.
    */
-  std::string get_iso_timestamp()
+  static std::string get_iso_timestamp()
   {
     boost::posix_time::ptime currentDateTime(boost::posix_time::second_clock::local_time());
     return boost::posix_time::to_iso_string(currentDateTime);

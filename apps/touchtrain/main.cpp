@@ -36,19 +36,6 @@ typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################
 
-#if 0
-/**
- * \brief Gets the current time in ISO format.
- *
- * \return  The current time in ISO format.
- */
-std::string get_iso_timestamp()
-{
-  boost::posix_time::ptime currentDateTime(boost::posix_time::second_clock::local_time());
-  return boost::posix_time::to_iso_string(currentDateTime);
-}
-#endif
-
 bool check_path_exists(const std::string& path)
 {
   if(!boost::filesystem::exists(path))
@@ -188,7 +175,7 @@ int main(int argc, char *argv[])
   results.output(std::cout);
 
   // Get a time-stamp for tagging the resulting files.
-  const std::string timeStamp = TimeUtil::get_iso_timestamp();
+  const std::string timeStamp = tvgutil::TimeUtil::get_iso_timestamp();
 
   // Time-stamp the results file.
   std::string textOutputResultPath =  touchDataset.m_crossValidationResults + "/crossvalidationresults-" + timeStamp + ".txt";
