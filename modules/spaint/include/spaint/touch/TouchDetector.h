@@ -154,8 +154,16 @@ private:
    * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
    * \return                    The ID of the best candidate component.
    */
-  int pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
-  int pick_best_candidate_component2(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
+  int pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
+
+  /**
+   * \brief Picks the candidate component most likely to correspond to a touch interaction based on predictions made by a random forest.
+   *
+   * \param candidateComponents The IDs of components in the connected omponent image that denote candidate touch interactions.
+   * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
+   * \return                    The IS of the best candidate component, or -1 if none are found.
+   */
+  int pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
 
   /**
    * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for change detection.
@@ -190,7 +198,7 @@ private:
    * \return      A copy of the array in which the elements have been clamped to the specified range.
    */
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
-  
+
   /**
    * \brief TODO.
    */

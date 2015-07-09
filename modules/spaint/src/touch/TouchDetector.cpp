@@ -142,7 +142,7 @@ try
 #endif
 
   // Pick the candidate component most likely to correspond to a touch interaction.
-  int bestConnectedComponent = pick_best_candidate_component2(candidateComponents, diffRawRaycastInMm);
+  int bestConnectedComponent = pick_best_candidate_component_based_on_forest(candidateComponents, diffRawRaycastInMm);
   if(bestConnectedComponent == -1)
   {
     *m_touchMask = 0;
@@ -328,7 +328,43 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   return touchPoints;
 }
 
-int TouchDetector::pick_best_candidate_component2(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
+int TouchDetector::pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
+{
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+
+  int bestCandidateID = -1;
+  af::array mask;
+
+  if(candidateCount == 1)
+  {
+    // If there is only one candidate, then by definition it's the best candidate.
+    bestCandidateID = candidateIDs[0];
+  }
+  else
+  {
+    // Otherwise, select the candidate that is closest to a surface.
+    std::vector<float> meanDistances(candidateCount);
+    for(int i = 0; i < candidateCount; ++i)
+    {
+      mask = m_connectedComponentImage == candidateIDs[i];
+      meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
+    }
+    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
+    bestCandidateID = candidateIDs[minIndex];
+  }
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the best candidate's mask and difference image.
+  mask = m_connectedComponentImage.as(s32) == bestCandidateID;
+  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
+
+  return bestCandidateID;
+}
+
+int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
 {
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);
@@ -354,62 +390,6 @@ int TouchDetector::pick_best_candidate_component2(const af::array& candidateComp
   else
   {
     bestCandidateID = -1;
-  }
-
-#if 0
-  if(candidateCount == 1)
-  {
-    // If there is only one candidate, then by definition it's the best candidate.
-    bestCandidateID = candidateIDs[0];
-  }
-  else
-  {
-    // Otherwise, select the candidate that is closest to a surface.
-    std::vector<float> meanDistances(candidateCount);
-    for(int i = 0; i < candidateCount; ++i)
-    {
-      mask = m_connectedComponentImage == candidateIDs[i];
-      meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
-    }
-    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
-    bestCandidateID = candidateIDs[minIndex];
-  }
-#endif
-
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
-  // Display the best candidate's mask and difference image.
-  mask = m_connectedComponentImage.as(s32) == bestCandidateID;
-  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
-  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
-#endif
-
-  return bestCandidateID;
-}
-
-int TouchDetector::pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
-{
-  const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
-
-  int bestCandidateID = -1;
-  af::array mask;
-
-  if(candidateCount == 1)
-  {
-    // If there is only one candidate, then by definition it's the best candidate.
-    bestCandidateID = candidateIDs[0];
-  }
-  else
-  {
-    // Otherwise, select the candidate that is closest to a surface.
-    std::vector<float> meanDistances(candidateCount);
-    for(int i = 0; i < candidateCount; ++i)
-    {
-      mask = m_connectedComponentImage == candidateIDs[i];
-      meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
-    }
-    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
-    bestCandidateID = candidateIDs[minIndex];
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
