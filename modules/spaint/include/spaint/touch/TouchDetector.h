@@ -71,6 +71,9 @@ private:
   /** A random forest used to score the candidate connected components. */
   RF_Ptr m_forest;
 
+  /** The path to the random forest used to filter touch regions. */
+  std::string m_forestPath;
+
   /** The height of the images on which the touch detector is running. */
   int m_imageHeight;
 
@@ -91,6 +94,12 @@ private:
 
   /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
   int m_morphKernelSize;
+
+  /** A flag indicating whether to save images of the candidate connected components. */
+  bool m_saveCandidateComponents;
+
+  /** The path to use when saving the candidate components. */
+  std::string m_saveCandidateComponentsPath;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
@@ -208,13 +217,12 @@ private:
   static size_t get_file_count(const std::string& path);
 
   /**
-   * \brief Saves the candidate components to a folder.
+   * \brief Saves the candidate component images to a directory.
    *
-   * \param savePath            The path of the directory.
    * \param candidateComponents The IDs of components in the connected component image that denote candidate touch interactions.
    * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
    */
-  void save_candidate_components(const std::string& savePath, const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
+  void save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
   /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
