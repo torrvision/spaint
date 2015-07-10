@@ -15,7 +15,7 @@ namespace tvgutil {
 struct TimeUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /**
    * \brief Gets the current time in ISO format.
    *
