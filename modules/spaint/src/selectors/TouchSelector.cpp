@@ -8,7 +8,7 @@
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-#include <tvgutil/timers/Timer.h>
+#include <tvgutil/timing/Timer.h>
 
 #include "picking/cpu/Picker_CPU.h"
 #include "util/CameraPoseConverter.h"

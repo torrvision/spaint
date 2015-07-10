@@ -5,8 +5,8 @@
 
 #include <boost/thread.hpp>
 
-#include <tvgutil/timers/AverageTimer.h>
-#include <tvgutil/timers/Timer.h>
+#include <tvgutil/timing/AverageTimer.h>
+#include <tvgutil/timing/Timer.h>
 
 class Dummy
 {
