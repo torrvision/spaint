@@ -10,19 +10,30 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SemanticVisualiser::SemanticVisualiser(const std::vector<Vector3u>& labelColours)
-: m_labelColoursMB(MemoryBlockFactory::instance().make_block<Vector3u>(labelColours.size()))
+SemanticVisualiser::SemanticVisualiser(size_t maxLabelCount)
+: m_labelColoursMB(MemoryBlockFactory::instance().make_block<Vector3u>(maxLabelCount))
+{}
+
+//#################### DESTRUCTOR ####################
+
+SemanticVisualiser::~SemanticVisualiser() {}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void SemanticVisualiser::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                                const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                                const std::vector<Vector3u>& labelColours, bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
 {
+  // Update the label colours in the memory block.
   Vector3u *labelColoursData = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = labelColours.size(); i < size; ++i)
   {
     labelColoursData[i] = labelColours[i];
   }
   m_labelColoursMB->UpdateDeviceFromHost();
+
+  // Render using the new label colours.
+  render_internal(scene, pose, intrinsics, renderState, usePhong, labelAlpha, outputImage);
 }
-
-//#################### DESTRUCTOR ####################
-
-SemanticVisualiser::~SemanticVisualiser() {}
 
 }

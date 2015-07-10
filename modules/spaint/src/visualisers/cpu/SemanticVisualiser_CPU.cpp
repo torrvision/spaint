@@ -10,15 +10,15 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SemanticVisualiser_CPU::SemanticVisualiser_CPU(const std::vector<Vector3u>& labelColours)
-: SemanticVisualiser(labelColours)
+SemanticVisualiser_CPU::SemanticVisualiser_CPU(size_t maxLabelCount)
+: SemanticVisualiser(maxLabelCount)
 {}
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SemanticVisualiser_CPU::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
-                                    const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                    bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
+void SemanticVisualiser_CPU::render_internal(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                                             const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                                             bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
 {
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;
