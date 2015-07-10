@@ -143,8 +143,13 @@ boost::optional<std::map<std::string,Eigen::Vector3f> > ViconTracker::try_get_ma
     std::string markerName = m_vicon.GetMarkerName(subjectName, i).MarkerName;
     Output_GetMarkerGlobalTranslation trans = m_vicon.GetMarkerGlobalTranslation(subjectName, markerName);
 
-    // If we can't currently get the position of the marker, early out.
-    if(trans.Occluded) return boost::none;
+    // If we can't currently get the position of the marker:
+    if(trans.Occluded)
+    {
+      // If the marker is essential, early out; if not, just skip it.
+      if(markerName == "centre" || markerName == "front" || markerName == "left" || markerName == "right") return boost::none;
+      else continue;
+    }
 
     // Transform the marker position from the Vicon coordinate system to our one (the Vicon coordinate system is in mm, whereas ours is in metres).
     Eigen::Vector3f pos(
