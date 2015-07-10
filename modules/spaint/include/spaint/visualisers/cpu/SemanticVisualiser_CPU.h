@@ -19,16 +19,16 @@ public:
   /**
    * \brief Constructs a CPU-based semantic visualiser.
    *
-   * \param labelColours  The colours to use for the semantic labels.
+   * \param maxLabelCount The maximum number of labels that can be in use.
    */
-  explicit SemanticVisualiser_CPU(const std::vector<Vector3u>& labelColours);
+  explicit SemanticVisualiser_CPU(size_t maxLabelCount);
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /** Override */
-  virtual void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
-                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                      bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const;
+  virtual void render_internal(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                               const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                               bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const;
 };
 
 }

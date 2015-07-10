@@ -23,15 +23,15 @@ __global__ void ck_render_semantic(Vector4u *outRendering, const Vector4f *ptsRa
 
 //#################### CONSTRUCTORS ####################
 
-SemanticVisualiser_CUDA::SemanticVisualiser_CUDA(const std::vector<Vector3u>& labelColours)
-: SemanticVisualiser(labelColours)
+SemanticVisualiser_CUDA::SemanticVisualiser_CUDA(size_t maxLabelCount)
+: SemanticVisualiser(maxLabelCount)
 {}
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SemanticVisualiser_CUDA::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
-                                     const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                     bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
+void SemanticVisualiser_CUDA::render_internal(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                                              const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                                              bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
 {
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).
   const float voxelSize = scene->sceneParams->voxelSize;

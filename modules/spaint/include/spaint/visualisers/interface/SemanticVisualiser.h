@@ -31,9 +31,9 @@ protected:
   /**
    * \brief Constructs a semantic visualiser.
    *
-   * \param labelColours  The colours to use for the semantic labels.
+   * \param maxLabelCount The maximum number of labels that can be in use.
    */
-  explicit SemanticVisualiser(const std::vector<Vector3u>& labelColours);
+  explicit SemanticVisualiser(size_t maxLabelCount);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -42,8 +42,8 @@ public:
    */
   virtual ~SemanticVisualiser();
 
-  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
-public:
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
   /**
    * \brief Renders a semantic view of the specified scene from the specified camera pose.
    *
@@ -55,9 +55,27 @@ public:
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
-  virtual void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
-                      const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                      bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
+  virtual void render_internal(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+                               const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+                               bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Renders a semantic view of the specified scene from the specified camera pose.
+   *
+   * \param scene         The scene.
+   * \param pose          The camera pose.
+   * \param intrinsics    The intrinsic parameters of the camera.
+   * \param renderState   The render state corresponding to the specified camera pose.
+   * \param labelColours  The colours to use for the semantic labels.
+   * \param usePhong      Whether or not to use Phong lighting.
+   * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
+   * \param outputImage   The image into which to write the semantic visualisation of the scene.
+   */
+  void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
+              const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
+              const std::vector<Vector3u>& labelColours, bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const;
 };
 
 }

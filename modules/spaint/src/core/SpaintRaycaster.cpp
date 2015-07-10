@@ -22,12 +22,12 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
 : m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
-  const std::vector<Vector3u>& labelColours = m_model->get_label_manager()->get_label_colours();
+  size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     // Use the CUDA implementations.
-    m_semanticVisualiser.reset(new SemanticVisualiser_CUDA(labelColours));
+    m_semanticVisualiser.reset(new SemanticVisualiser_CUDA(maxLabelCount));
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -36,7 +36,7 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
   else
   {
     // Use the CPU implementations.
-    m_semanticVisualiser.reset(new SemanticVisualiser_CPU(labelColours));
+    m_semanticVisualiser.reset(new SemanticVisualiser_CPU(maxLabelCount));
   }
 }
 
@@ -72,10 +72,12 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     case RT_SEMANTICLAMBERTIAN:
     case RT_SEMANTICPHONG:
     {
+      LabelManager_CPtr labelManager = m_model->get_label_manager();
+      const std::vector<Vector3u>& labelColours = labelManager->get_label_colours();
       bool usePhong = raycastType == RT_SEMANTICPHONG;
       float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
       m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), usePhong, labelAlpha, renderState->raycastImage);
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, usePhong, labelAlpha, renderState->raycastImage);
       break;
     }
     default:
