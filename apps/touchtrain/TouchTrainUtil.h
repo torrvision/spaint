@@ -16,12 +16,39 @@
 #include <spaint/touch/TouchUtil.h>
 
 /**
+ * \brief A struct that represents a labelled image path.
+ */
+template <typename Label>
+struct LabelledImagePath
+{
+  //#################### PUBLIC VARIABLES ####################
+
+  /** The path to an image. */
+  std::string m_imagePath;
+
+  /** The label associated with the image. */
+  Label m_label;
+
+  //#################### CONSTRUCTORS ####################
+
+  /**
+   * \brief Constructs the labelled image path.
+   *
+   * \param imagePath  The path the the image.
+   * \param label      The label associated with the specified image.
+   */
+  LabelledImagePath(const std::string& imagePath, const Label& label)
+  : m_imagePath(imagePath), m_label(label)
+  {}
+};
+
+/**
  * \brief This class contains functions that help us to load training annotation and generate examples from the annotation.
  */
-class TouchTrainUtil
+struct TouchTrainUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
+
   /**
    * \brief Generates an array of instance data in the following format: <path-to-image,label>
    *
@@ -33,9 +60,9 @@ public:
    * \return  An array containing the instance data.
    */
   template <typename Label>
-  static std::vector<std::pair<std::string, Label> > load_instances(const std::string& imagePath, const std::string& annotationPath)
+  static std::vector<LabelledImagePath<Label> > load_instances(const std::string& imagePath, const std::string& annotationPath)
   {
-    std::vector<std::pair<std::string, Label> > instances;
+    std::vector<LabelledImagePath<Label> > instances;
 
     std::ifstream fs(annotationPath.c_str());
     std::string line;
@@ -48,7 +75,7 @@ public:
 
       std::string imageName = tokens[0];
       Label label = boost::lexical_cast<Label>(tokens.back());
-      instances.push_back(std::make_pair(imagePath + "/" + imageName, label));
+      instances.push_back(LabelledImagePath<Label>(imagePath + "/" + imageName, label));
     }
 
     return instances;
@@ -61,7 +88,7 @@ public:
    * \return           The examples.
    */
   template <typename Label>
-  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<std::vector<std::pair<std::string, Label> > >& instances)
+  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<std::vector<LabelledImagePath<Label> > >& instances)
   {
     typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
     std::vector<Example_CPtr> result;
@@ -74,9 +101,9 @@ public:
         std::cout << "Filename: " << instances[i][j].first << " Label: " << instances[i][j].second << std::endl;
 #endif
 
-        af::array img = af::loadImage(instances[i][j].first.c_str());
+        af::array img = af::loadImage(instances[i][j].m_imagePath.c_str());
         rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::extract_touch_feature(img);
-        result.push_back(Example_CPtr(new Example<Label>(descriptor, instances[i][j].second)));
+        result.push_back(Example_CPtr(new Example<Label>(descriptor, instances[i][j].m_label)));
       }
     }
 

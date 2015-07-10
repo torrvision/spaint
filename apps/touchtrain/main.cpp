@@ -66,7 +66,7 @@ struct TouchTrainData
 {
   //#################### TYPEDEFS ####################
 
-  typedef std::vector<std::pair<std::string,Label> > Instances;
+  typedef std::vector<LabelledImagePath<Label> > InstanceSet;
 
   //#################### PUBLIC VARIABLES ####################
 
@@ -74,7 +74,7 @@ struct TouchTrainData
   std::string m_crossValidationResults;
 
   /** An array of instances, composed of <path-to-image,label>. */
-  std::vector<Instances> m_instances;
+  std::vector<InstanceSet> m_instanceSets;
 
   /** The directory where the forest models are stored. */
   std::string m_models;
@@ -87,11 +87,11 @@ struct TouchTrainData
   /**
    * \brief Constructs the paths and data relevant for touch training.
    *
-   * \param root  The root directory containing the touch training data.
+   * \param root             The root directory containing the touch training data.
    * \param sequenceNumbers  An array containing the sequence numbers to be included during training.
    */
   TouchTrainData(const std::string& root, std::vector<size_t> sequenceNumbers)
-  : m_instances(sequenceNumbers.size()), m_root(root)
+  : m_instanceSets(sequenceNumbers.size()), m_root(root)
   {
     size_t invalidCount = 0;
 
@@ -112,8 +112,8 @@ struct TouchTrainData
       if(!check_path_exists(imagePath)) ++invalidCount;
       if(!check_path_exists(annotationPath)) ++invalidCount;
 
-      m_instances[i] = TouchTrainUtil::load_instances<Label>(imagePath, annotationPath);
-      if(m_instances[i].empty())
+      m_instanceSets[i] = TouchTrainUtil::load_instances<Label>(imagePath, annotationPath);
+      if(m_instanceSets[i].empty())
       {
         std::cout << "[touchtrain] Expecting some data in: " << sequencePath << std::endl;
         ++invalidCount;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
   std::cout << "[touchtrain] Training set root: " << touchDataset.m_root << '\n';
 
   std::cout << "[touchtrain] Generating examples...\n";
-  std::vector<Example_CPtr> examples = TouchTrainUtil::generate_examples<Label>(touchDataset.m_instances);
+  std::vector<Example_CPtr> examples = TouchTrainUtil::generate_examples<Label>(touchDataset.m_instanceSets);
   std::cout << "[touchtrain] Number of examples = " << examples.size() << '\n';
 
   // Generate the parameter sets with which to test the random forest.
