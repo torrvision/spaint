@@ -24,8 +24,8 @@ using namespace rafl;
 #include <raflevaluation/RandomForestEvaluator.h>
 using namespace raflevaluation;
 
-#include <tvgutil/timers/Timer.h>
-#include <tvgutil/TimeUtil.h>
+#include <tvgutil/timing/Timer.h>
+#include <tvgutil/timing/TimeUtil.h>
 
 #include "TouchTrainUtil.h"
 
