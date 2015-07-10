@@ -10,7 +10,7 @@ namespace tvgutil {
 /**
  * \brief This class provides utility functions related to time.
  */
-class TimeUtil
+struct TimeUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
