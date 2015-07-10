@@ -35,9 +35,9 @@ include/tvgutil/commands/SeqCommand.h
 )
 
 ##
-SET(timers_headers
-include/tvgutil/timers/AverageTimer.h
-include/tvgutil/timers/Timer.h
+SET(timing_headers
+include/tvgutil/timing/AverageTimer.h
+include/tvgutil/timing/Timer.h
 )
 
 ##
@@ -69,7 +69,7 @@ ${toplevel_sources}
 
 SET(headers
 ${commands_headers}
-${timers_headers}
+${timing_headers}
 ${toplevel_headers}
 )
 
@@ -79,7 +79,7 @@ ${toplevel_headers}
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
-SOURCE_GROUP(timers FILES ${timers_headers})
+SOURCE_GROUP(timing FILES ${timing_headers})
 
 ##########################################
 # Specify additional include directories #

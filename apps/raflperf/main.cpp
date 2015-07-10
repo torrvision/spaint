@@ -17,7 +17,7 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
-#include <tvgutil/timers/Timer.h>
+#include <tvgutil/timing/Timer.h>
 
 #include "RandomForestEvaluator.h"
 
