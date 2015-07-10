@@ -38,6 +38,7 @@ include/tvgutil/commands/SeqCommand.h
 SET(timing_headers
 include/tvgutil/timing/AverageTimer.h
 include/tvgutil/timing/Timer.h
+include/tvgutil/timing/TimeUtil.h
 )
 
 ##
