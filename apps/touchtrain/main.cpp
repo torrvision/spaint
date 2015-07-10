@@ -5,7 +5,6 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 
