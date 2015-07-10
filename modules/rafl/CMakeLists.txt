@@ -68,11 +68,6 @@ include/rafl/examples/ExampleUtil.h
 include/rafl/examples/UnitCircleExampleGenerator.h
 )
 
-##
-SET(helpers_headers
-include/rafl/helpers/RandomForestEvaluator.h
-)
-
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -87,7 +82,6 @@ ${choppers_headers}
 ${core_headers}
 ${decisionfunctions_headers}
 ${examples_headers}
-${helpers_headers}
 )
 
 #############################
@@ -99,7 +93,6 @@ SOURCE_GROUP(choppers FILES ${choppers_headers})
 SOURCE_GROUP(core FILES ${core_headers})
 SOURCE_GROUP(decisionfunctions FILES ${decisionfunctions_sources} ${decisionfunctions_headers})
 SOURCE_GROUP(examples FILES ${examples_headers})
-SOURCE_GROUP(helpers FILES ${helpers_headers})
 
 ##########################################
 # Specify additional include directories #

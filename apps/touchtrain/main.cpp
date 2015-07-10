@@ -19,8 +19,10 @@ using namespace evaluation;
 
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
-#include <rafl/helpers/RandomForestEvaluator.h>
 using namespace rafl;
+
+#include <raflevaluation/RandomForestEvaluator.h>
+using namespace raflevaluation;
 
 #include <tvgutil/timers/Timer.h>
 #include <tvgutil/TimeUtil.h>

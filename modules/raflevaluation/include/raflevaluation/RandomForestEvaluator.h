@@ -1,10 +1,10 @@
 /**
- * rafl: RandomForestEvaluator.h
+ * raflevaluation: RandomForestEvaluator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_RAFL_RANDOMFORESTEVALUATOR
-#define H_RAFL_RANDOMFORESTEVALUATOR
+#ifndef H_RAFLEVALUATION_RANDOMFORESTEVALUATOR
+#define H_RAFLEVALUATION_RANDOMFORESTEVALUATOR
 
 #include <boost/assign/list_of.hpp>
 
@@ -12,11 +12,12 @@
 #include <evaluation/core/PerformanceMeasure.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
 
+#include <rafl/core/RandomForest.h>
+
 #include <tvgutil/MapUtil.h>
 
-#include "../core/RandomForest.h"
 
-namespace rafl {
+namespace raflevaluation {
 
 /**
  * \brief An instance of this class can be used to evaluate a random forest using approaches based on example set splitting.

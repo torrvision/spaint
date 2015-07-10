@@ -6,6 +6,7 @@ ADD_SUBDIRECTORY(tvgutil)
 
 IF(BUILD_EVALUATION)
   ADD_SUBDIRECTORY(evaluation)
+  ADD_SUBDIRECTORY(raflevaluation)
 ENDIF()
 
 ADD_SUBDIRECTORY(infermous)
