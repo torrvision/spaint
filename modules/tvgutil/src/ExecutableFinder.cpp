@@ -12,7 +12,7 @@
   #include <sstream>
   #include <unistd.h>
 #elif defined(__APPLE__)
-  // TODO
+  #include <mach-o/dyld.h>
 #endif
 
 namespace tvgutil {
@@ -24,6 +24,7 @@ boost::filesystem::path find_executable()
 
 #if defined(_WIN32)
   ::GetModuleFileName(NULL, &buffer[0], BUFFER_SIZE);
+
 #elif defined(__linux__)
   // Get the process ID.
   int pid = getpid();
@@ -38,8 +39,15 @@ boost::filesystem::path find_executable()
   int count = readlink(link.c_str(), &buffer[0], BUFFER_SIZE);
   if(count == -1) throw std::runtime_error("Could not read symbolic link");
   buffer[count] = '\0';
+
 #elif defined(__APPLE__)
-  #error Cannot yet find the executable on this platform
+  unsigned int bufferSize = BUFFER_SIZE;
+  if(_NSGetExecutablePath(&buffer[0], &bufferSize))
+  {
+    buffer.resize(bufferSize);
+    _NSGetExecutablePath(&buffer[0], &bufferSize);
+  }
+
 #else
   #error Cannot yet find the executable on this platform
 #endif
