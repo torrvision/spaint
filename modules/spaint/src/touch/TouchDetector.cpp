@@ -78,12 +78,13 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 
 
-  m_saveCandidateComponentsPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq003/images";
+  m_saveCandidateComponentsPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq005/images";
 
   // Register the relevant decision function generators with the factory.
   rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
-  m_forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150708T180339.rf";
+  m_forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150713T111402.rf";
+  //randomForest-20150708T180339.rf";
   if(!boost::filesystem::exists(m_forestPath)) throw std::runtime_error("Forest not found: " + m_forestPath);
 
   m_forest = tvgutil::SerializationUtil::load_text(m_forestPath, m_forest);
@@ -515,7 +516,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
 
   if(fileCount)
   {
-    throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + "images captured data in: " + m_saveCandidateComponentsPath);
+    throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + m_saveCandidateComponentsPath);
   }
   else
   {
@@ -524,16 +525,22 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
     const int *candidateIDs = candidateComponents.host<int>();
     const int candidateCount = candidateComponents.dims(0);
 
-    af::array mask(m_imageHeight, m_imageWidth, u8);
+    af::array maskAF(m_imageHeight, m_imageWidth, u8);
 
     boost::format fiveDigits("%05d");
     for(int i = 0; i < candidateCount; ++i)
     {
-      mask = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+      maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+      cv::Mat1b maskCV = OpenCVUtil::make_greyscale_image(maskAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 
-      std::string saveString = m_saveCandidateComponents + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
-
-      cv::imwrite(saveString, OpenCVUtil::make_greyscale_image(mask.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR));
+      if(imageCounter < 1e5)
+      {
+        std::string saveString = m_saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+        cv::imwrite(saveString, maskCV);
+      }
+#if 1
+      cv::imshow("candidate-component", maskCV);
+#endif
     }
   }
 }

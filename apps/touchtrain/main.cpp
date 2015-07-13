@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
   const size_t treeCount = 8;
   const size_t splitBudget = 1048576/2;
 
-  TouchTrainData touchDataset(argv[1],list_of(2)(3));
+  TouchTrainData touchDataset(argv[1],list_of(2)(3)(4)(5));
   std::cout << "[touchtrain] Training set root: " << touchDataset.m_root << '\n';
 
   std::cout << "[touchtrain] Generating examples...\n";
