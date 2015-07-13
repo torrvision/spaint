@@ -280,7 +280,9 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
 #ifdef WITH_ARRAYFIRE
   // TEMPORARY
   static ImageProcessor_CPtr imageProcessor(new ImageProcessor_CUDA);
+  m_image->UpdateDeviceFromHost();
   imageProcessor->median_filter(m_image, m_image);
+  m_image->UpdateHostFromDevice();
   // END TEMPORARY
 #endif
 
