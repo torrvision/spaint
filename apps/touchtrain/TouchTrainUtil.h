@@ -88,23 +88,23 @@ struct TouchTrainUtil
    * \return           The examples.
    */
   template <typename Label>
-  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<std::vector<LabelledImagePath<Label> > >& instances)
+  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<LabelledImagePath<Label> >& instances)
   {
     typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-    std::vector<Example_CPtr> result;
+    int instanceCount = static_cast<int>(instances.size());
+    std::vector<Example_CPtr> result(instanceCount);
 
-    for(size_t i = 0, iend = instances.size(); i < iend; ++i)
-    {
-      for(size_t j = 0, jend = instances[i].size(); j < jend; ++j)
-      {
-#if 0
-        std::cout << "Filename: " << instances[i][j].first << " Label: " << instances[i][j].second << std::endl;
+#ifdef WITH_OPENMP
+    //#pragma omp parallel for FIXME: check why does not work in multiple threads.
 #endif
-
-        af::array img = af::loadImage(instances[i][j].m_imagePath.c_str());
+    for(int i = 0; i < instanceCount; ++i)
+    {
+        af::array img = af::loadImage(instances[i].m_imagePath.c_str());
         rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::extract_touch_feature(img);
-        result.push_back(Example_CPtr(new Example<Label>(descriptor, instances[i][j].m_label)));
-      }
+        result[i].reset(new Example<Label>(descriptor, instances[i].m_label));
+#if 0
+        std::cout << "Filename: " << instances[i].m_imagePath << " Label: " << instances[i].m_label << std::endl;
+#endif
     }
 
     return result;
