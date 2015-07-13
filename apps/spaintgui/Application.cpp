@@ -18,6 +18,7 @@ using namespace rigging;
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
+#include <tvgutil/ExecutableFinder.h>
 #include <tvgutil/commands/NoOpCommand.h>
 using namespace tvgutil;
 
@@ -431,10 +432,18 @@ void Application::process_voice_input()
   }
 }
 
+boost::filesystem::path Application::resources_dir()
+{
+  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
+  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
+  p = p / "resources/";                          // spaint/build/bin/apps/spaintgui/resources/
+  return p;
+}
+
 void Application::setup_labels()
 {
   const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
-  std::ifstream fs("./resources/Labels.txt");
+  std::ifstream fs((resources_dir() / "Labels.txt").c_str());
   if(fs)
   {
     // If a labels file is present, load the labels from it.
