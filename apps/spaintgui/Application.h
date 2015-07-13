@@ -11,6 +11,7 @@
 #endif
 
 #include <boost/asio.hpp>
+#include <boost/filesystem.hpp>
 
 #ifdef _MSC_VER
   // Re-enable the VC++ warnings for the rest of the code.
@@ -154,6 +155,13 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
+
+  /**
+   * \brief Gets the path to the resources directory.
+   *
+   * \return  The path to the resources directory.
+   */
+  static boost::filesystem::path resources_dir();
 
   /**
    * \brief Sets up the semantic labels with which the user can label the scene.

@@ -7,7 +7,7 @@
 #include <vector>
 
 #if defined(_WIN32)
-  #include <Windows.h>
+  #include <windows.h>
 #elif defined(__linux__)
   #include <sstream>
   #include <unistd.h>
@@ -19,11 +19,11 @@ namespace tvgutil {
 
 boost::filesystem::path find_executable()
 {
-  const int BUFFER_SIZE = 512;
-  std::vector<char> buffer(BUFFER_SIZE + 1);
+  unsigned int bufferSize = 512;
+  std::vector<char> buffer(bufferSize + 1);
 
 #if defined(_WIN32)
-  ::GetModuleFileName(NULL, &buffer[0], BUFFER_SIZE);
+  ::GetModuleFileName(NULL, &buffer[0], bufferSize);
 
 #elif defined(__linux__)
   // Get the process ID.
@@ -36,12 +36,11 @@ boost::filesystem::path find_executable()
   std::string link = oss.str();
 
   // Read the contents of the link.
-  int count = readlink(link.c_str(), &buffer[0], BUFFER_SIZE);
+  int count = readlink(link.c_str(), &buffer[0], bufferSize);
   if(count == -1) throw std::runtime_error("Could not read symbolic link");
   buffer[count] = '\0';
 
 #elif defined(__APPLE__)
-  unsigned int bufferSize = BUFFER_SIZE;
   if(_NSGetExecutablePath(&buffer[0], &bufferSize))
   {
     buffer.resize(bufferSize);
