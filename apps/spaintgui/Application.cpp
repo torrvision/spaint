@@ -18,8 +18,8 @@ using namespace rigging;
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
-#include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/ExecutableFinder.h>
+#include <tvgutil/commands/NoOpCommand.h>
 using namespace tvgutil;
 
 #ifdef WITH_OVR
