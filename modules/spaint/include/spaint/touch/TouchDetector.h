@@ -66,7 +66,7 @@ private:
   int m_imageHeight;
 
   /** The image processor. */
-  boost::shared_ptr<const ImageProcessor> m_imageProcessor;
+  ImageProcessor_CPtr m_imageProcessor;
 
   /** The width of the images on which the touch detector is running. */
   int m_imageWidth;

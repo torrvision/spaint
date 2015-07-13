@@ -51,6 +51,20 @@ inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inpu
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
+inline void copy_af_pixel_to_itm(int columnMajorIndex,
+                                 const unsigned char *inputRedData, const unsigned char *inputGreenData,
+                                 const unsigned char *inputBlueData, const unsigned char *inputAlphaData,
+                                 int width, int height, Vector4u *outputData)
+{
+  int row = columnMajorIndex % height, col = columnMajorIndex / height;
+  int rowMajorIndex = row * width + col;
+  outputData[rowMajorIndex] = Vector4u(inputRedData[columnMajorIndex], inputGreenData[columnMajorIndex], inputBlueData[columnMajorIndex], inputAlphaData[columnMajorIndex]);
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
 inline void copy_itm_pixel_to_af(int rowMajorIndex, const Vector4u *inputData, int width, int height,
                                  unsigned char *outputRedData, unsigned char *outputGreenData,
                                  unsigned char *outputBlueData, unsigned char *outputAlphaData)

@@ -56,7 +56,28 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
 {
   check_image_size_equal(inputImage, outputImage);
 
-  // TODO
+  const af::array& inputRed = (*inputImage)(af::span, af::span, 0);
+  const af::array& inputGreen = (*inputImage)(af::span, af::span, 1);
+  const af::array& inputBlue = (*inputImage)(af::span, af::span, 2);
+  const af::array& inputAlpha = (*inputImage)(af::span, af::span, 3);
+
+  const unsigned char *inputRedData = inputRed.device<unsigned char>();
+  const unsigned char *inputGreenData = inputGreen.device<unsigned char>();
+  const unsigned char *inputBlueData = inputBlue.device<unsigned char>();
+  const unsigned char *inputAlphaData = inputAlpha.device<unsigned char>();
+  Vector4u *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
+
+  const int height = outputImage->noDims.y;
+  const int width = outputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
+  {
+    copy_af_pixel_to_itm(columnMajorIndex, inputRedData, inputGreenData, inputBlueData, inputAlphaData, width, height, outputData);
+  }
 }
 
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const

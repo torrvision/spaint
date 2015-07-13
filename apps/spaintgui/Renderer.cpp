@@ -6,14 +6,19 @@
 
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
+#include <spaint/selectors/PickingSelector.h>
+#include <spaint/util/CameraPoseConverter.h>
+
 #ifdef WITH_LEAP
 #include <spaint/selectors/LeapSelector.h>
 #endif
-#include <spaint/selectors/PickingSelector.h>
+
 #ifdef WITH_ARRAYFIRE
+#include <spaint/imageprocessing/cuda/ImageProcessor_CUDA.h>
+#include <spaint/imageprocessing/interface/ImageProcessor.h>
 #include <spaint/selectors/TouchSelector.h>
 #endif
-#include <spaint/util/CameraPoseConverter.h>
+
 using namespace spaint;
 
 //#################### LOCAL TYPES ####################
@@ -271,6 +276,13 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
 {
   // Raycast the scene.
   m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType);
+
+#ifdef WITH_ARRAYFIRE
+  // TEMPORARY
+  static ImageProcessor_CPtr imageProcessor(new ImageProcessor_CUDA);
+  imageProcessor->median_filter(m_image, m_image);
+  // END TEMPORARY
+#endif
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);

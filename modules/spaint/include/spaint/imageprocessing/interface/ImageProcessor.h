@@ -149,6 +149,10 @@ public:
   void median_filter(const ITMUChar4Image_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const ImageProcessor> ImageProcessor_CPtr;
+
 }
 
 #endif
