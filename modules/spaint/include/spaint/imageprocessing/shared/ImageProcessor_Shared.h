@@ -31,7 +31,7 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
- * \brief Copies a pixel value from an ArrayFire image to an InfiniTAM image.
+ * \brief Copies a greyscale pixel value from an ArrayFire image to an InfiniTAM image.
  *
  * \param columnMajorIndex  The column-major index of the pixel to be copied.
  * \param inputData         The data for the input image (in column-major format).
@@ -48,7 +48,16 @@ inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inpu
 }
 
 /**
- * \brief TODO
+ * \brief Copies an RGBA pixel value from an ArrayFire image to an InfiniTAM image.
+ *
+ * \param columnMajorIndex  The column-major index of the pixel to be copied.
+ * \param inputRedData      The data for the red channel of the input image (in column-major format).
+ * \param inputGreenData    The data for the green channel of the input image (in column-major format).
+ * \param inputBlueData     The data for the blue channel of the input image (in column-major format).
+ * \param inputAlphaData    The data for the alpha channel of the input image (in column-major format).
+ * \param width             The width of each image.
+ * \param height            The height of each image.
+ * \param outputData        The data for the output image (in row-major format).
  */
 _CPU_AND_GPU_CODE_
 inline void copy_af_pixel_to_itm(int columnMajorIndex,
@@ -62,7 +71,16 @@ inline void copy_af_pixel_to_itm(int columnMajorIndex,
 }
 
 /**
- * \brief TODO
+ * \brief Copies an RGBA pixel from an InfiniTAM image to an ArrayFire image.
+ *
+ * \param rowMajorIndex   The row-major index of the pixel to be copied.
+ * \param inputData       The data for the input image (in row-major format).
+ * \param width           The width of each image.
+ * \param height          The height of each image.
+ * \param outputRedData   The data for the red channel of the output image (in column-major format).
+ * \param outputGreenData The data for the green channel of the output image (in column-major format).
+ * \param outputBlueData  The data for the blue channel of the output image (in column-major format).
+ * \param outputAlphaData The data for the alpha channel of the output image (in column-major format).
  */
 _CPU_AND_GPU_CODE_
 inline void copy_itm_pixel_to_af(int rowMajorIndex, const Vector4u *inputData, int width, int height,
