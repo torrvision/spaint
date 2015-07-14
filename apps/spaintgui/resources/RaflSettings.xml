@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <candidateCount>256</candidateCount>
-<decisionFunctionGeneratorParams></decisionFunctionGeneratorParams>
-<decisionFunctionGeneratorType>FeatureThresholding</decisionFunctionGeneratorType>
+<decisionFunctionGeneratorParams>13</decisionFunctionGeneratorParams> <!-- patchSize -->
+<decisionFunctionGeneratorType>Spaint</decisionFunctionGeneratorType>
 <gainThreshold>0.0</gainThreshold>
 <maxClassSize>10000</maxClassSize>
 <maxTreeHeight>20</maxTreeHeight>

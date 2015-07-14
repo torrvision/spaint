@@ -107,8 +107,6 @@ try
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
-  boost::filesystem::path resourcesDir = Application::resources_dir();
-
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;
   if(argc == 4)

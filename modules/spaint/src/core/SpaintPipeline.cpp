@@ -270,6 +270,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_trainingVoxelCountsMB = mbf.make_block<unsigned int>(maxLabelCount);
   m_trainingVoxelLocationsMB = mbf.make_block<Vector3s>(maxTrainingVoxelCount);
 
+  // Register the relevant decision function generators with the factory.
+  //DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_rafl_makers();
+  DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(
+      SpaintDecisionFunctionGenerator::get_static_type(),
+      &SpaintDecisionFunctionGenerator::maker
+  );
+
   // Set up the random forest.
   // FIXME: These settings shouldn't be hard-coded here ultimately.
   const size_t treeCount = 5;
