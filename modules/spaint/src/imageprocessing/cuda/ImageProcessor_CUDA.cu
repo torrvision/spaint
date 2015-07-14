@@ -111,10 +111,8 @@ void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const I
 {
   check_image_size_equal(inputImage, outputImage);
 
-  af::array inputRed = (*inputImage)(af::span, af::span, 0);
-  af::array inputGreen = (*inputImage)(af::span, af::span, 1);
-  af::array inputBlue = (*inputImage)(af::span, af::span, 2);
-  af::array inputAlpha = (*inputImage)(af::span, af::span, 3);
+  af::array inputChannels[4];
+  for(int i = 0; i < 4; ++i) inputChannels[i] = (*inputImage)(af::span, af::span, i);
 
   const int height = outputImage->noDims.y;
   const int width = outputImage->noDims.x;
@@ -124,10 +122,10 @@ void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const I
   int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
-    inputRed.device<unsigned char>(),
-    inputGreen.device<unsigned char>(),
-    inputBlue.device<unsigned char>(),
-    inputAlpha.device<unsigned char>(),
+    inputChannels[0].device<unsigned char>(),
+    inputChannels[1].device<unsigned char>(),
+    inputChannels[2].device<unsigned char>(),
+    inputChannels[3].device<unsigned char>(),
     width,
     height,
     outputImage->GetData(MEMORYDEVICE_CUDA)
@@ -138,10 +136,8 @@ void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, 
 {
   check_image_size_equal(inputImage, outputImage);
 
-  af::array outputRed = (*outputImage)(af::span, af::span, 0);
-  af::array outputGreen = (*outputImage)(af::span, af::span, 1);
-  af::array outputBlue = (*outputImage)(af::span, af::span, 2);
-  af::array outputAlpha = (*outputImage)(af::span, af::span, 3);
+  af::array outputChannels[4];
+  for(int i = 0; i < 4; ++i) outputChannels[i] = (*outputImage)(af::span, af::span, i);
 
   const int height = inputImage->noDims.y;
   const int width = inputImage->noDims.x;
@@ -154,10 +150,10 @@ void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, 
     inputImage->GetData(MEMORYDEVICE_CUDA),
     width,
     height,
-    outputRed.device<unsigned char>(),
-    outputGreen.device<unsigned char>(),
-    outputBlue.device<unsigned char>(),
-    outputAlpha.device<unsigned char>()
+    outputChannels[0].device<unsigned char>(),
+    outputChannels[1].device<unsigned char>(),
+    outputChannels[2].device<unsigned char>(),
+    outputChannels[3].device<unsigned char>()
   );
 }
 
