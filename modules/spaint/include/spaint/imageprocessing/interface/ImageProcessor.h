@@ -142,11 +142,6 @@ public:
   {
     return img->noDims;
   }
-
-  /**
-   * \brief TODO
-   */
-  void median_filter(const ITMUChar4Image_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const;
 };
 
 //#################### TYPEDEFS ####################
