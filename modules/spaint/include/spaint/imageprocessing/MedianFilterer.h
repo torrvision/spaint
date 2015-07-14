@@ -12,7 +12,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to perform median filtering on images.
+ * \brief An instance of this class can be used to perform median filtering on RGBA images.
  */
 class MedianFilterer
 {
@@ -42,9 +42,12 @@ public:
   //#################### PUBLIC OPERATORS ####################
 public:
   /**
-   * \brief Performs median filtering on an input image to produce an output image.
+   * \brief Performs median filtering on an RGBA input image to produce an RGBA output image.
    *
    * The median filtering will be performed using the parameters provided when the filterer was constructed.
+   *
+   * FIXME: Median filtering can occasionally fail due to a possible crash bug in ArrayFire. If this happens,
+   *        we currently avoid throwing and instead treat this function as a no-op.
    *
    * \param input   The input image.
    * \param output  The output image.

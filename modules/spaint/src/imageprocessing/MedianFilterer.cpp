@@ -27,7 +27,8 @@ try
 }
 catch(af::exception&)
 {
-  // Prevent crashes when median filtering fails (it looks as if there may be a bug in ArrayFire).
+  // FIXME: Median filtering can occasionally fail due to a possible crash bug in ArrayFire. If this happens,
+  //        we currently avoid throwing and instead treat this function as a no-op.
 }
 
 }
