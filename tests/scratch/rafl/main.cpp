@@ -66,6 +66,9 @@ int main(int argc, char *argv[])
     std::cout << "Training set: " << trainingSetPath << "\n";
     std::cout << "Testing set: " << testingSetPath << "\n";
 
+    // Register the relevant decision function generators with the factory.
+    DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
+
     // Construct the random forest.
     Settings_Ptr settings;
     try

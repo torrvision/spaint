@@ -75,6 +75,15 @@ public:
    */
   void run();
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the path to the resources directory.
+   *
+   * \return  The path to the resources directory.
+   */
+  static boost::filesystem::path resources_dir();
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -155,13 +164,6 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
-
-  /**
-   * \brief Gets the path to the resources directory.
-   *
-   * \return  The path to the resources directory.
-   */
-  static boost::filesystem::path resources_dir();
 
   /**
    * \brief Sets up the semantic labels with which the user can label the scene.
