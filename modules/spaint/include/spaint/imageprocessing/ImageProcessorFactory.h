@@ -12,14 +12,17 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief This struct can be used to construct image processors.
  */
 struct ImageProcessorFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief TODO
+   * \brief Makes an image processor.
+   *
+   * \param deviceType  The device on which the image processor should operate.
+   * \return            The image processor.
    */
   static ImageProcessor_CPtr make_image_processor(ITMLibSettings::DeviceType deviceType);
 };
