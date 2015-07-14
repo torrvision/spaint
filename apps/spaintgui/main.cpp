@@ -107,12 +107,14 @@ try
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
+  boost::filesystem::path resourcesDir = Application::resources_dir();
+
   // Construct the spaint pipeline.
   SpaintPipeline_Ptr spaintPipeline;
   if(argc == 4)
   {
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, rgbImageMask, depthImageMask, settings));
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, rgbImageMask, depthImageMask, settings, Application::resources_dir().string()));
   }
   else
   {
@@ -120,7 +122,8 @@ try
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
     bool useInternalCalibration = true;
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, trackerType, trackerParams, useInternalCalibration));
+    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, Application::resources_dir().string(), trackerType,
+                                            trackerParams, useInternalCalibration));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif

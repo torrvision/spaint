@@ -60,6 +60,16 @@ void Application::run()
   }
 }
 
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+boost::filesystem::path Application::resources_dir()
+{
+  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
+  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
+  p = p / "resources/";                          // spaint/build/bin/apps/spaintgui/resources/
+  return p;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 Application::RenderState_CPtr Application::get_monocular_render_state() const
@@ -430,14 +440,6 @@ void Application::process_voice_input()
     if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
     if(command == "switch to training mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
   }
-}
-
-boost::filesystem::path Application::resources_dir()
-{
-  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
-  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
-  p = p / "resources/";                          // spaint/build/bin/apps/spaintgui/resources/
-  return p;
 }
 
 void Application::setup_labels()

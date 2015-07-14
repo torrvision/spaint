@@ -36,15 +36,17 @@ namespace spaint {
 
 #ifdef WITH_OPENNI
 SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                               TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
-: m_trackerParams(trackerParams), m_trackerType(trackerType)
+                               const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
+: m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration));
   initialise(settings);
 }
 #endif
 
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_Ptr& settings)
+SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+                               const Settings_Ptr& settings, const std::string& resourcesDir)
+: m_resourcesDir(resourcesDir)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
   initialise(settings);
@@ -271,6 +273,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the random forest.
   // FIXME: These settings shouldn't be hard-coded here ultimately.
   const size_t treeCount = 5;
+  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
+  /*
   DecisionTree<SpaintVoxel::Label>::Settings dtSettings;
   dtSettings.candidateCount = 256;
   dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(m_patchSize));
@@ -281,6 +285,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   dtSettings.seenExamplesThreshold = 50;
   dtSettings.splittabilityThreshold = 0.5f;
   dtSettings.usePMFReweighting = true;
+  */
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 
   m_featureInspectionWindowName = "Feature Inspection";

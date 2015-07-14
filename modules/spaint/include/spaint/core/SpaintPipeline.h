@@ -144,6 +144,9 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
+  /** The path to the resources directory. */
+  std::string m_resourcesDir;
+
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
@@ -191,12 +194,13 @@ public:
    * \param calibrationFilename     The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI         An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
    * \param settings                The settings to use for InfiniTAM.
+   * \param resourcesDir            The path to the resources directory.
    * \param trackerType             The type of tracker to use.
    * \param trackerParams           The parameters for the tracker (if any).
    * \param useInternalCalibration  A flag indicating whether or not to use internal calibration.
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                 TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "", bool useInternalCalibration = false);
+                 const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "", bool useInternalCalibration = false);
 #endif
 
   /**
@@ -206,8 +210,10 @@ public:
    * \param rgbImageMask        The mask for the RGB image filenames (e.g. "Teddy/Frames/%04i.ppm").
    * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
    * \param settings            The settings to use for InfiniTAM.
+   * \param resourcesDir        The path to the resources directory.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, const Settings_Ptr& settings);
+  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+                 const Settings_Ptr& settings, const std::string& resourcesDir);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
