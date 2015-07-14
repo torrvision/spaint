@@ -272,15 +272,28 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-struct MedianFilterer
+class MedianFilterer
 {
+private:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
+private:
+  unsigned int m_kernelWidth;
+
+public:
+  explicit MedianFilterer(unsigned int kernelWidth)
+  : m_kernelWidth(kernelWidth)
+  {}
+
+public:
   void operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const
   {
     static ImageProcessor_CPtr imageProcessor(new ImageProcessor_CUDA);
-    imageProcessor->median_filter(input, output);
+    static boost::shared_ptr<af::array> afImage(new af::array(input->noDims.y, input->noDims.x, 4, u8));
+    imageProcessor->copy_itm_to_af(input, afImage);
+    *afImage = af::medfilt(*afImage, m_kernelWidth, m_kernelWidth);
+    imageProcessor->copy_af_to_itm(afImage, output);
   }
 };
 
@@ -288,7 +301,8 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
 {
   // Determine how much median filtering to apply to the raycast result (if any).
 #ifndef USE_LOW_POWER_MODE
-  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer();
+  const unsigned int kernelWidth = 5;
+  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer(kernelWidth);
 #else
   static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
 #endif
