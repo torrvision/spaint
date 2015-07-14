@@ -305,7 +305,8 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   af::array touchIndicesImage = af::where(diffImage);
 
   // If there are too few touch indices, assume the user is not touching the scene in a meaningful way and early out.
-  const float touchAreaLowerThreshold = 0.0001f * m_imageWidth * m_imageHeight;
+  const float minTouchAreaFraction = 0.0001f;
+  const float touchAreaLowerThreshold = minTouchAreaFraction * m_imageWidth * m_imageHeight;
   if(touchIndicesImage.elements() <= touchAreaLowerThreshold) return std::vector<Eigen::Vector2i>();
 
   // Otherwise, convert the touch indices to touch points and return them.
