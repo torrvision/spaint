@@ -83,6 +83,8 @@ void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, c
 {
   check_image_size_equal(inputImage, outputImage);
 
+  const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
+
   af::array outputChannels[4];
   unsigned char *outputData[4];
   for(int i = 0; i < 4; ++i)
@@ -90,8 +92,6 @@ void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, c
     outputChannels[i] = (*outputImage)(af::span, af::span, i);
     outputData[i] = outputChannels[i].device<unsigned char>();
   }
-
-  const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
 
   const int height = inputImage->noDims.y;
   const int width = inputImage->noDims.x;
