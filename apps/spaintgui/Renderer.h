@@ -52,6 +52,9 @@ private:
   /** An image in which to temporarily store visualisations of the scene. */
   ITMUChar4Image_Ptr m_image;
 
+  /** A flag indicating whether or not to use median filtering when rendering the scene raycast. */
+  bool m_medianFilteringEnabled;
+
   /** The spaint model. */
   spaint::SpaintModel_CPtr m_model;
 
@@ -126,11 +129,25 @@ public:
   CameraMode get_camera_mode() const;
 
   /**
+   * \brief Gets whether or not to use median filtering when rendering the scene raycast.
+   *
+   * \return  A flag indicating whether or not to use median filtering when rendering the scene raycast.
+   */
+  bool get_median_filtering_enabled() const;
+
+  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
    */
   void set_camera_mode(CameraMode cameraMode);
+
+  /**
+   * \brief Sets whether or not to use median filtering when rendering the scene raycast.
+   *
+   * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
+   */
+  void set_median_filtering_enabled(bool medianFilteringEnabled);
 
   /**
    * \brief Sets the type of raycast to use.

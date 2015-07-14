@@ -159,7 +159,11 @@ private:
 //#################### CONSTRUCTORS ####################
 
 Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
-: m_cameraMode(CM_FOLLOW), m_model(model), m_raycaster(raycaster), m_raycastType(SpaintRaycaster::RT_SEMANTICLAMBERTIAN)
+: m_cameraMode(CM_FOLLOW),
+  m_medianFilteringEnabled(true),
+  m_model(model),
+  m_raycaster(raycaster),
+  m_raycastType(SpaintRaycaster::RT_SEMANTICLAMBERTIAN)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -173,9 +177,19 @@ Renderer::CameraMode Renderer::get_camera_mode() const
   return m_cameraMode;
 }
 
+bool Renderer::get_median_filtering_enabled() const
+{
+  return m_medianFilteringEnabled;
+}
+
 void Renderer::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
+}
+
+void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
+{
+  m_medianFilteringEnabled = medianFilteringEnabled;
 }
 
 void Renderer::set_raycast_type(SpaintRaycaster::RaycastType raycastType)
@@ -273,13 +287,19 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
 {
-  // Determine how much median filtering to apply to the raycast result (if any).
-#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
-  const unsigned int kernelWidth = 5;
-  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
-#else
+  // Set up any post-processing that needs to be applied to the raycast result.
   static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
+  if(!m_medianFilteringEnabled && postprocessor)
+  {
+    postprocessor.reset();
+  }
+  else if(m_medianFilteringEnabled && !postprocessor)
+  {
+#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
+    const unsigned int kernelWidth = 3;
+    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
 #endif
+  }
 
   // Raycast the scene.
   m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType, postprocessor);
