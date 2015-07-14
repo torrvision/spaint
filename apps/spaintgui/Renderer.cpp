@@ -272,19 +272,29 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+struct MedianFilterer
+{
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
+
+  void operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const
+  {
+    static ImageProcessor_CPtr imageProcessor(new ImageProcessor_CUDA);
+    imageProcessor->median_filter(input, output);
+  }
+};
+
 void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
 {
-  // Raycast the scene.
-  m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType);
-
-#ifdef WITH_ARRAYFIRE
-  // TEMPORARY
-  static ImageProcessor_CPtr imageProcessor(new ImageProcessor_CUDA);
-  m_image->UpdateDeviceFromHost();
-  imageProcessor->median_filter(m_image, m_image);
-  m_image->UpdateHostFromDevice();
-  // END TEMPORARY
+  // Determine how much median filtering to apply to the raycast result (if any).
+#ifndef USE_LOW_POWER_MODE
+  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer();
+#else
+  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
 #endif
+
+  // Raycast the scene.
+  m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType, postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);

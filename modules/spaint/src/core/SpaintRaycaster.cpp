@@ -42,7 +42,8 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType) const
+void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType,
+                                            const boost::optional<Postprocessor>& postprocessor) const
 {
   const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
   SpaintModel::Scene_CPtr scene = m_model->get_scene();
@@ -87,21 +88,12 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     }
   }
 
-  prepare_to_copy_visualisation(renderState->raycastImage->noDims, output);
-  output->SetFrom(
-    renderState->raycastImage,
-    settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
-  );
+  make_output_raycast(renderState->raycastImage, output, postprocessor);
 }
 
-void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output) const
+void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
 {
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
-  prepare_to_copy_visualisation(m_liveRenderState->raycastImage->noDims, output);
-  output->SetFrom(
-    m_liveRenderState->raycastImage,
-    settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
-  );
+  make_output_raycast(m_liveRenderState->raycastImage, output, postprocessor);
 }
 
 void SpaintRaycaster::get_depth_input(const UChar4Image_Ptr& output) const
@@ -129,6 +121,29 @@ const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisati
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void SpaintRaycaster::make_output_raycast(const ITMUChar4Image *input, const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
+{
+  prepare_to_copy_visualisation(input->noDims, output);
+
+  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
+  if(postprocessor)
+  {
+    output->SetFrom(
+      input,
+      settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+    );
+    (*postprocessor)(output, output);
+    output->UpdateHostFromDevice();
+  }
+  else
+  {
+    output->SetFrom(
+      input,
+      settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+    );
+  }
+}
 
 void SpaintRaycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const
 {
