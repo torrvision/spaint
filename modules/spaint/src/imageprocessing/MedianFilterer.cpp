@@ -2,7 +2,7 @@
  * spaint: MedianFilterer.cpp
  */
 
-#include "util/MedianFilterer.h"
+#include "imageprocessing/MedianFilterer.h"
 
 #include "imageprocessing/ImageProcessorFactory.h"
 

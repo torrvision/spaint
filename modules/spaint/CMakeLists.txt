@@ -113,6 +113,11 @@ SET(imageprocessing_headers
 include/spaint/imageprocessing/ImageProcessorFactory.h
 )
 
+IF(WITH_ARRAYFIRE)
+  SET(imageprocessing_sources ${imageprocessing_sources} src/imageprocessing/MedianFilterer.cpp)
+  SET(imageprocessing_headers ${imageprocessing_headers} include/spaint/imageprocessing/MedianFilterer.h)
+ENDIF()
+
 ##
 SET(imageprocessing_cpu_sources
 src/imageprocessing/cpu/ImageProcessor_CPU.cpp
@@ -388,11 +393,6 @@ include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintVoxel.h
 )
-
-IF(WITH_ARRAYFIRE)
-  SET(util_sources ${util_sources} src/util/MedianFilterer.cpp)
-  SET(util_headers ${util_headers} include/spaint/util/MedianFilterer.h)
-ENDIF()
 
 ##
 SET(visualisers_cpu_sources

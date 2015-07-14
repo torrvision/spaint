@@ -7,7 +7,7 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "../imageprocessing/interface/ImageProcessor.h"
+#include "interface/ImageProcessor.h"
 
 namespace spaint {
 

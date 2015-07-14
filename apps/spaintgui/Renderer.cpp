@@ -10,8 +10,8 @@
 #include <spaint/util/CameraPoseConverter.h>
 
 #ifdef WITH_ARRAYFIRE
+#include <spaint/imageprocessing/MedianFilterer.h>
 #include <spaint/selectors/TouchSelector.h>
-#include <spaint/util/MedianFilterer.h>
 #endif
 
 #ifdef WITH_LEAP
