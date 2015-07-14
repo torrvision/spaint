@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_MEDIANFILTERER
 #define H_SPAINT_MEDIANFILTERER
 
+#include <ITMLib/Utils/ITMLibSettings.h>
+
 #include "../imageprocessing/cuda/ImageProcessor_CUDA.h"
 #include "../imageprocessing/interface/ImageProcessor.h"
 
@@ -23,6 +25,9 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
+  ImageProcessor_CPtr m_imageProcessor;
+
+  /** TODO */
   unsigned int m_kernelWidth;
 
   //#################### CONSTRUCTORS ####################
@@ -30,7 +35,7 @@ public:
   /**
    * \brief TODO
    */
-  explicit MedianFilterer(unsigned int kernelWidth);
+  MedianFilterer(unsigned int kernelWidth, ITMLibSettings::DeviceType deviceType);
 
   //#################### PUBLIC OPERATORS ####################
 public:

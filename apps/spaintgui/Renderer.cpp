@@ -276,7 +276,7 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
   // Determine how much median filtering to apply to the raycast result (if any).
 #if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
   const unsigned int kernelWidth = 5;
-  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer(kernelWidth);
+  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
 #else
   static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
 #endif
