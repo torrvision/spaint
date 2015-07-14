@@ -56,15 +56,14 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
 {
   check_image_size_equal(inputImage, outputImage);
 
-  af::array inputRed = (*inputImage)(af::span, af::span, 0);
-  af::array inputGreen = (*inputImage)(af::span, af::span, 1);
-  af::array inputBlue = (*inputImage)(af::span, af::span, 2);
-  af::array inputAlpha = (*inputImage)(af::span, af::span, 3);
+  af::array inputChannels[4];
+  const unsigned char *inputData[4];
+  for(int i = 0; i < 4; ++i)
+  {
+    inputChannels[i] = (*inputImage)(af::span, af::span, i);
+    inputData[i] = inputChannels[i].device<unsigned char>();
+  }
 
-  const unsigned char *inputRedData = inputRed.device<unsigned char>();
-  const unsigned char *inputGreenData = inputGreen.device<unsigned char>();
-  const unsigned char *inputBlueData = inputBlue.device<unsigned char>();
-  const unsigned char *inputAlphaData = inputAlpha.device<unsigned char>();
   Vector4u *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
 
   const int height = outputImage->noDims.y;
@@ -76,7 +75,7 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
 #endif
   for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
   {
-    copy_af_pixel_to_itm(columnMajorIndex, inputRedData, inputGreenData, inputBlueData, inputAlphaData, width, height, outputData);
+    copy_af_pixel_to_itm(columnMajorIndex, inputData[0], inputData[1], inputData[2], inputData[3], width, height, outputData);
   }
 }
 
@@ -84,16 +83,15 @@ void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, c
 {
   check_image_size_equal(inputImage, outputImage);
 
-  af::array outputRed = (*outputImage)(af::span, af::span, 0);
-  af::array outputGreen = (*outputImage)(af::span, af::span, 1);
-  af::array outputBlue = (*outputImage)(af::span, af::span, 2);
-  af::array outputAlpha = (*outputImage)(af::span, af::span, 3);
+  af::array outputChannels[4];
+  unsigned char *outputData[4];
+  for(int i = 0; i < 4; ++i)
+  {
+    outputChannels[i] = (*outputImage)(af::span, af::span, i);
+    outputData[i] = outputChannels[i].device<unsigned char>();
+  }
 
   const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
-  unsigned char *outputRedData = outputRed.device<unsigned char>();
-  unsigned char *outputGreenData = outputGreen.device<unsigned char>();
-  unsigned char *outputBlueData = outputBlue.device<unsigned char>();
-  unsigned char *outputAlphaData = outputAlpha.device<unsigned char>();
 
   const int height = inputImage->noDims.y;
   const int width = inputImage->noDims.x;
@@ -104,7 +102,7 @@ void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, c
 #endif
   for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
   {
-    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputRedData, outputGreenData, outputBlueData, outputAlphaData);
+    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputData[0], outputData[1], outputData[2], outputData[3]);
   }
 }
 
