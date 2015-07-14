@@ -9,13 +9,13 @@
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
 
-#ifdef WITH_LEAP
-#include <spaint/selectors/LeapSelector.h>
-#endif
-
 #ifdef WITH_ARRAYFIRE
 #include <spaint/selectors/TouchSelector.h>
 #include <spaint/util/MedianFilterer.h>
+#endif
+
+#ifdef WITH_LEAP
+#include <spaint/selectors/LeapSelector.h>
 #endif
 
 using namespace spaint;
