@@ -271,28 +271,14 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_trainingVoxelLocationsMB = mbf.make_block<Vector3s>(maxTrainingVoxelCount);
 
   // Register the relevant decision function generators with the factory.
-  //DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_rafl_makers();
   DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(
       SpaintDecisionFunctionGenerator::get_static_type(),
       &SpaintDecisionFunctionGenerator::maker
   );
 
   // Set up the random forest.
-  // FIXME: These settings shouldn't be hard-coded here ultimately.
   const size_t treeCount = 5;
   DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
-  /*
-  DecisionTree<SpaintVoxel::Label>::Settings dtSettings;
-  dtSettings.candidateCount = 256;
-  dtSettings.decisionFunctionGenerator.reset(new SpaintDecisionFunctionGenerator(m_patchSize));
-  dtSettings.gainThreshold = 0.0f;
-  dtSettings.maxClassSize = 1000;
-  dtSettings.maxTreeHeight = 20;
-  dtSettings.randomNumberGenerator.reset(new tvgutil::RandomNumberGenerator(seed));
-  dtSettings.seenExamplesThreshold = 50;
-  dtSettings.splittabilityThreshold = 0.5f;
-  dtSettings.usePMFReweighting = true;
-  */
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 
   m_featureInspectionWindowName = "Feature Inspection";
