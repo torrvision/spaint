@@ -7,13 +7,12 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "../imageprocessing/cuda/ImageProcessor_CUDA.h"
 #include "../imageprocessing/interface/ImageProcessor.h"
 
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to perform median filtering on images.
  */
 class MedianFilterer
 {
@@ -24,23 +23,31 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The image processor. */
   ImageProcessor_CPtr m_imageProcessor;
 
-  /** TODO */
+  /** The kernel width to use for median filtering. */
   unsigned int m_kernelWidth;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a median filterer.
+   *
+   * \param kernelWidth The kernel width to use for median filtering.
+   * \param deviceType  The device on which the filterer should operate.
    */
   MedianFilterer(unsigned int kernelWidth, ITMLibSettings::DeviceType deviceType);
 
   //#################### PUBLIC OPERATORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Performs median filtering on an input image to produce an output image.
+   *
+   * The median filtering will be performed using the parameters provided when the filterer was constructed.
+   *
+   * \param input   The input image.
+   * \param output  The output image.
    */
   void operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const;
 };
