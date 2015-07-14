@@ -14,9 +14,8 @@
 #endif
 
 #ifdef WITH_ARRAYFIRE
-#include <spaint/imageprocessing/cuda/ImageProcessor_CUDA.h>
-#include <spaint/imageprocessing/interface/ImageProcessor.h>
 #include <spaint/selectors/TouchSelector.h>
+#include <spaint/util/MedianFilterer.h>
 #endif
 
 using namespace spaint;
@@ -272,40 +271,10 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-class MedianFilterer
-{
-private:
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-
-private:
-  unsigned int m_kernelWidth;
-
-public:
-  explicit MedianFilterer(unsigned int kernelWidth)
-  : m_kernelWidth(kernelWidth)
-  {}
-
-public:
-  void operator()(const ITMUChar4Image_CPtr& input, const ITMUChar4Image_Ptr& output) const
-  try
-  {
-    static ImageProcessor_CPtr imageProcessor(new ImageProcessor_CUDA);
-    static boost::shared_ptr<af::array> temp(new af::array(input->noDims.y, input->noDims.x, 4, u8));
-    imageProcessor->copy_itm_to_af(input, temp);
-    *temp = af::medfilt(*temp, m_kernelWidth, m_kernelWidth);
-    imageProcessor->copy_af_to_itm(temp, output);
-  }
-  catch(af::exception&)
-  {
-    // Prevent crashes when median filtering fails.
-  }
-};
-
 void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
 {
   // Determine how much median filtering to apply to the raycast result (if any).
-#ifndef USE_LOW_POWER_MODE
+#if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
   const unsigned int kernelWidth = 5;
   static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = MedianFilterer(kernelWidth);
 #else
