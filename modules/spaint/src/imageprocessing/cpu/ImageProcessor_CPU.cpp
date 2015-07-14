@@ -56,10 +56,10 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
 {
   check_image_size_equal(inputImage, outputImage);
 
-  const af::array& inputRed = (*inputImage)(af::span, af::span, 0);
-  const af::array& inputGreen = (*inputImage)(af::span, af::span, 1);
-  const af::array& inputBlue = (*inputImage)(af::span, af::span, 2);
-  const af::array& inputAlpha = (*inputImage)(af::span, af::span, 3);
+  af::array inputRed = (*inputImage)(af::span, af::span, 0);
+  af::array inputGreen = (*inputImage)(af::span, af::span, 1);
+  af::array inputBlue = (*inputImage)(af::span, af::span, 2);
+  af::array inputAlpha = (*inputImage)(af::span, af::span, 3);
 
   const unsigned char *inputRedData = inputRed.device<unsigned char>();
   const unsigned char *inputGreenData = inputGreen.device<unsigned char>();
