@@ -138,10 +138,10 @@ void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, 
 {
   check_image_size_equal(inputImage, outputImage);
 
-  af::array& outputRed = (*outputImage)(af::span, af::span, 0);
-  af::array& outputGreen = (*outputImage)(af::span, af::span, 1);
-  af::array& outputBlue = (*outputImage)(af::span, af::span, 2);
-  af::array& outputAlpha = (*outputImage)(af::span, af::span, 3);
+  af::array outputRed = (*outputImage)(af::span, af::span, 0);
+  af::array outputGreen = (*outputImage)(af::span, af::span, 1);
+  af::array outputBlue = (*outputImage)(af::span, af::span, 2);
+  af::array outputAlpha = (*outputImage)(af::span, af::span, 3);
 
   const int height = inputImage->noDims.y;
   const int width = inputImage->noDims.x;
