@@ -120,9 +120,13 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Makes a copy of an input raycast, optionally post-processes it and then ensures that it is accessible on the CPU.
+   *
+   * \param inputRaycast  The input raycast.
+   * \param postprocessor An optional function with which to postprocess the output raycast.
+   * \param outputRaycast The output raycast (guaranteed to be accessible on the CPU).
    */
-  void make_output_raycast(const ITMUChar4Image *input, const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const;
+  void make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const;
 
   /**
    * \brief Prepares to copy a visualisation image into the specified output image.

@@ -88,12 +88,12 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     }
   }
 
-  make_output_raycast(renderState->raycastImage, output, postprocessor);
+  make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
 void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
 {
-  make_output_raycast(m_liveRenderState->raycastImage, output, postprocessor);
+  make_postprocessed_cpu_copy(m_liveRenderState->raycastImage, postprocessor, output);
 }
 
 void SpaintRaycaster::get_depth_input(const UChar4Image_Ptr& output) const
@@ -122,24 +122,24 @@ const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisati
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::make_output_raycast(const ITMUChar4Image *input, const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
+void SpaintRaycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const
 {
-  prepare_to_copy_visualisation(input->noDims, output);
+  prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
 
   const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
   if(postprocessor)
   {
-    output->SetFrom(
-      input,
+    outputRaycast->SetFrom(
+      inputRaycast,
       settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
     );
-    (*postprocessor)(output, output);
-    output->UpdateHostFromDevice();
+    (*postprocessor)(outputRaycast, outputRaycast);
+    outputRaycast->UpdateHostFromDevice();
   }
   else
   {
-    output->SetFrom(
-      input,
+    outputRaycast->SetFrom(
+      inputRaycast,
       settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
     );
   }
