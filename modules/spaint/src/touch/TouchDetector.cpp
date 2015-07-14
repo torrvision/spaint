@@ -46,7 +46,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8))
 {
-  // Set up the depth visualiser and image processor.
+  // Set up the depth visualiser.
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
