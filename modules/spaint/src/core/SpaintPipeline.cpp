@@ -272,8 +272,8 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Register the relevant decision function generators with the factory.
   DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(
-      SpaintDecisionFunctionGenerator::get_static_type(),
-      &SpaintDecisionFunctionGenerator::maker
+    SpaintDecisionFunctionGenerator::get_static_type(),
+    &SpaintDecisionFunctionGenerator::maker
   );
 
   // Set up the random forest.

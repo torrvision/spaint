@@ -200,7 +200,8 @@ public:
    * \param useInternalCalibration  A flag indicating whether or not to use internal calibration.
    */
   SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                 const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "", bool useInternalCalibration = false);
+                 const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "",
+                 bool useInternalCalibration = false);
 #endif
 
   /**
