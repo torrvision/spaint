@@ -52,6 +52,60 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
   }
 }
 
+void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+
+  af::array inputChannels[4];
+  const unsigned char *inputData[4];
+  for(int i = 0; i < 4; ++i)
+  {
+    inputChannels[i] = (*inputImage)(af::span, af::span, i);
+    inputData[i] = inputChannels[i].device<unsigned char>();
+  }
+
+  Vector4u *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
+
+  const int height = outputImage->noDims.y;
+  const int width = outputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
+  {
+    copy_af_pixel_to_itm(columnMajorIndex, inputData[0], inputData[1], inputData[2], inputData[3], width, height, outputData);
+  }
+}
+
+void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+
+  const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
+
+  af::array outputChannels[4];
+  unsigned char *outputData[4];
+  for(int i = 0; i < 4; ++i)
+  {
+    outputChannels[i] = (*outputImage)(af::span, af::span, i);
+    outputData[i] = outputChannels[i].device<unsigned char>();
+  }
+
+  const int height = inputImage->noDims.y;
+  const int width = inputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
+  {
+    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputData[0], outputData[1], outputData[2], outputData[3]);
+  }
+}
+
 void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);

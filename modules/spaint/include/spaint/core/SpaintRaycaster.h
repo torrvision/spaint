@@ -5,6 +5,9 @@
 #ifndef H_SPAINT_SPAINTRAYCASTER
 #define H_SPAINT_SPAINTRAYCASTER
 
+#include <boost/function.hpp>
+#include <boost/optional.hpp>
+
 #include "SpaintModel.h"
 #include "../visualisers/interface/SemanticVisualiser.h"
 
@@ -18,7 +21,9 @@ class SpaintRaycaster
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> UChar4Image_CPtr;
 public:
+  typedef boost::function<void(const UChar4Image_CPtr&,const UChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
@@ -67,19 +72,22 @@ public:
   /**
    * \brief Generates a raycast of the scene from the specified pose.
    *
-   * \param output      The location into which to put the output image.
-   * \param renderState The render state to use for intermediate storage.
-   * \param pose        The pose from which to raycast the scene.
-   * \param raycastType The type of raycast to generate.
+   * \param output        The location into which to put the output image.
+   * \param renderState   The render state to use for intermediate storage.
+   * \param pose          The pose from which to raycast the scene.
+   * \param raycastType   The type of raycast to generate.
+   * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType = RT_LAMBERTIAN) const;
+  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType = RT_LAMBERTIAN,
+                             const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).
    *
-   * \param output  The location into which to put the output image.
+   * \param output        The location into which to put the output image.
+   * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const UChar4Image_Ptr& output) const;
+  void get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets the depth image from the most recently processed frame.
@@ -111,6 +119,15 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Makes a copy of an input raycast, optionally post-processes it and then ensures that it is accessible on the CPU.
+   *
+   * \param inputRaycast  The input raycast.
+   * \param postprocessor An optional function with which to postprocess the output raycast.
+   * \param outputRaycast The output raycast (guaranteed to be accessible on the CPU).
+   */
+  void make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const;
+
   /**
    * \brief Prepares to copy a visualisation image into the specified output image.
    *

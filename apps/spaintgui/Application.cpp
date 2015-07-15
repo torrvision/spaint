@@ -103,6 +103,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_commandManager.reset();
   }
 
+  // If the hash key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
+  if(keysym.sym == SDLK_HASH)
+  {
+    m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
+  }
+
   // If the H key is pressed, print out a list of keyboard controls.
   if(keysym.sym == SDLK_h)
   {
@@ -139,7 +145,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
               << "RShift + ] = To Next Semantic Label\n"
-              << "Backspace = Clear Semantic Labels\n";
+              << "Backspace = Clear Semantic Labels\n"
+              << "# = Toggle Median Filtering\n";
   }
 }
 

@@ -6,12 +6,11 @@
 
 #include <tvgutil/ArgUtil.h>
 
-#include "imageprocessing/cpu/ImageProcessor_CPU.h"
+#include "imageprocessing/ImageProcessorFactory.h"
 #include "util/RGBDUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
 
 #ifdef WITH_CUDA
-#include "imageprocessing/cuda/ImageProcessor_CUDA.h"
 #include "visualisers/cuda/DepthVisualiser_CUDA.h"
 #endif
 
@@ -39,6 +38,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
+  m_imageProcessor(ImageProcessorFactory::make_image_processor(settings->deviceType)),
   m_imageWidth(imgSize.x),
   m_lowerDepthThresholdMm(15),
   m_morphKernelSize(5),
@@ -46,12 +46,11 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8))
 {
-  // Set up the depth visualiser and image processor.
+  // Set up the depth visualiser.
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_depthVisualiser.reset(new DepthVisualiser_CUDA);
-    m_imageProcessor.reset(new ImageProcessor_CUDA);
 #else
     // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -60,7 +59,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   else
   {
     m_depthVisualiser.reset(new DepthVisualiser_CPU);
-    m_imageProcessor.reset(new ImageProcessor_CPU);
   }
 
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.

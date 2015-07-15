@@ -42,11 +42,11 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType) const
+void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType,
+                                            const boost::optional<Postprocessor>& postprocessor) const
 {
   const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
   SpaintModel::Scene_CPtr scene = m_model->get_scene();
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
   SpaintModel::View_CPtr view = m_model->get_view();
 
   if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(m_model->get_depth_image_size()));
@@ -87,21 +87,12 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
     }
   }
 
-  prepare_to_copy_visualisation(renderState->raycastImage->noDims, output);
-  output->SetFrom(
-    renderState->raycastImage,
-    settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
-  );
+  make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output) const
+void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
 {
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
-  prepare_to_copy_visualisation(m_liveRenderState->raycastImage->noDims, output);
-  output->SetFrom(
-    m_liveRenderState->raycastImage,
-    settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
-  );
+  make_postprocessed_cpu_copy(m_liveRenderState->raycastImage, postprocessor, output);
 }
 
 void SpaintRaycaster::get_depth_input(const UChar4Image_Ptr& output) const
@@ -129,6 +120,36 @@ const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisati
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void SpaintRaycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const
+{
+  // Make sure that the output raycast is of the right size.
+  prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
+
+  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
+  if(postprocessor)
+  {
+    // Copy the input raycast to the output raycast on the relevant device (e.g. on the GPU, if that's where the input currently resides).
+    outputRaycast->SetFrom(
+      inputRaycast,
+      settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+    );
+
+    // Post-process the output raycast.
+    (*postprocessor)(outputRaycast, outputRaycast);
+
+    // Transfer the output raycast to the CPU if necessary (if we're in CPU mode, this is a no-op).
+    outputRaycast->UpdateHostFromDevice();
+  }
+  else
+  {
+    // If there is no post-processing to be done, copy the input raycast directly into the CPU memory of the output raycast.
+    outputRaycast->SetFrom(
+      inputRaycast,
+      settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+    );
+  }
+}
 
 void SpaintRaycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const
 {
