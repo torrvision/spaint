@@ -65,11 +65,12 @@ public:
    * \brief Constructs a touch selector.
    *
    * \param settings            The settings to use for InfiniTAM.
+   * \param resourcesDir        The path to the resources directory.
    * \param trackingState       The InfiniTAM tracking state (contains the camera pose).
    * \param view                The InfiniTAM view (contains the raw depth image).
    * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  explicit TouchSelector(const Settings_CPtr& settings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
+  explicit TouchSelector(const Settings_CPtr& settings, const std::string& resourcesDir, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

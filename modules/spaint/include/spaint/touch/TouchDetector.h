@@ -15,6 +15,8 @@
 
 #include <rigging/SimpleCamera.h>
 
+#include <tvgutil/PropertyUtil.h>
+
 #include "../imageprocessing/interface/ImageProcessor.h"
 #include "../visualisers/interface/DepthVisualiser.h"
 
@@ -25,6 +27,68 @@ namespace spaint {
  */
 class TouchDetector
 {
+  //#################### NESTED TYPES ####################
+public:
+  /**
+   * \brief An instance of this calss can be used to provide the settings needed to configure a touch detector.
+   */
+  class Settings
+  {
+    //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
+  private:
+
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+  public:
+    /** The path to the random forest used to filter touch regions. */
+    std::string forestPath;
+
+    /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
+    int lowerDepthThresholdMm;
+
+    /** TODO. */
+    float minCandidateFraction;
+
+    /** TODO. */
+    float minTouchAreaFraction;
+
+    /** TODO. */
+    float maxCandidateFraction;
+
+    /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
+    int morphKernelSize;
+
+    /** A flag indicating whether to save images of the candidate connected components. */
+    bool saveCandidateComponents;
+
+    /** The path to use when saving the candidate components. */
+    std::string saveCandidateComponentsPath;
+
+    //~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+  public:
+    /**
+     * \brief Default constructor.
+     */
+    Settings();
+
+    /**
+     * \brief Attempts to load settings fromt he specifiedXML file.
+     *
+     * This will throw if the settings cannot be successfully loaded.
+     *
+     * \param filename The name of the file.
+     */
+    explicit Settings(const std::string& filename);
+
+    //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+  private:
+    /**
+     * \brief Load settings froma property map.
+     *
+     * \param properties  The property map.
+     */
+    void initialise(const std::map<std::string,std::string>& properties);
+  };
+
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
@@ -34,7 +98,7 @@ private:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMLibSettings> ITMSettings_CPtr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
   typedef int Label;
   typedef rafl::RandomForest<Label> RF;
@@ -71,9 +135,6 @@ private:
   /** A random forest used to score the candidate connected components. */
   RF_Ptr m_forest;
 
-  /** The path to the random forest used to filter touch regions. */
-  std::string m_forestPath;
-
   /** The height of the images on which the touch detector is running. */
   int m_imageHeight;
 
@@ -83,26 +144,14 @@ private:
   /** The width of the images on which the touch detector is running. */
   int m_imageWidth;
 
-  /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
-  int m_lowerDepthThresholdMm;
-
   /** The maximum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
   int m_maxCandidateArea;
 
   /** The minimum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
   int m_minCandidateArea;
 
-  /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
-  int m_morphKernelSize;
-
-  /** A flag indicating whether to save images of the candidate connected components. */
-  bool m_saveCandidateComponents;
-
-  /** The path to use when saving the candidate components. */
-  std::string m_saveCandidateComponentsPath;
-
   /** The settings to use for InfiniTAM. */
-  Settings_CPtr m_settings;
+  ITMSettings_CPtr m_itmSettings;
 
   /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
   ITMFloatImage_Ptr m_thresholdedRawDepth;
@@ -110,15 +159,19 @@ private:
   /** An image in which to store a mask denoting the detected touch region. */
   AFArray_Ptr m_touchMask;
 
+  /** The settings needed to configure the touch detector. */
+  Settings m_touchSettings;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a touch detector.
    *
-   * \param imgSize   The size of the images on which the touch detector is to run.
-   * \param settings  The settings to use for InfiniTAM.
+   * \param imgSize        The size of the images on which the touch detector is to run.
+   * \param itmSettings    The settings to use for InfiniTAM.
+   * \param touchSettings  The settings needed to configure the touch detector.
    */
-  TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings);
+  TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const Settings& touchSettings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -41,6 +41,9 @@ private:
   /** The label manager. */
   LabelManager_Ptr m_labelManager;
 
+  /** The path tot he resources directory. */
+  std::string m_resourcesDir;
+
   /** The dimensions of the RGB images from which the scene is being reconstructed. */
   Vector2i m_rgbImageSize;
 
@@ -66,9 +69,10 @@ public:
    * \param depthImageSize  The dimensions of the depth images from which the scene is being reconstructed.
    * \param trackingState   The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM).
    * \param settings        The settings to use for InfiniTAM.
+   * \param resourcesDir    The path to the resources directory.
    */
   SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-              const Settings_CPtr& settings);
+              const Settings_CPtr& settings, const std::string& resourcesDir);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -106,6 +110,13 @@ public:
    * \return  The current camera pose.
    */
   const ITMPose& get_pose() const;
+
+  /**
+   * \brief Gets the path to the resources directory.
+   *
+   * \return The path to the resources directory.
+   */
+  std::string get_resources_dir() const;
 
   /**
    * \brief Gets the dimensions of the RGB images from which the scene is being reconstructed.

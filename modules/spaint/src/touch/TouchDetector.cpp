@@ -30,9 +30,38 @@
 
 namespace spaint {
 
+//#################### NESTED TYPES ####################
+
+//~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
+
+TouchDetector::Settings::Settings(){}
+
+TouchDetector::Settings::Settings(const std::string& filename)
+{
+  using tvgutil::PropertyUtil;
+  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
+  initialise(PropertyUtil::make_property_map(tree));
+}
+
+void TouchDetector::Settings::initialise(const std::map<std::string,std::string>& properties)
+{
+  #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
+    GET_SETTING(forestPath);
+    GET_SETTING(lowerDepthThresholdMm);
+    GET_SETTING(minCandidateFraction);
+    GET_SETTING(minTouchAreaFraction);
+    GET_SETTING(maxCandidateFraction);
+    GET_SETTING(morphKernelSize);
+    GET_SETTING(saveCandidateComponents);
+    GET_SETTING(saveCandidateComponentsPath);
+  #undef GET_SETTING
+}
+
+//~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const Settings& touchSettings)
 :
   // Debugging variables.
   m_debugDelayMs(30),
@@ -45,17 +74,18 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
-  m_imageProcessor(ImageProcessorFactory::make_image_processor(settings->deviceType)),
+  m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThresholdMm(10),
-  m_morphKernelSize(5),
-  m_saveCandidateComponents(false),
-  m_settings(settings),
+  //m_touchSettings.lowerDepthThresholdMm(10),
+  //m_touchSettings.morphKernelSize(5),
+  //m_touchSettings.saveCandidateComponents(false),
+  m_itmSettings(itmSettings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
-  m_touchMask(new af::array(imgSize.y, imgSize.x, u8))
+  m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
+  m_touchSettings(touchSettings)
 {
   // Set up the depth visualiser.
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(itmSettings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_depthVisualiser.reset(new DepthVisualiser_CUDA);
@@ -72,22 +102,22 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.01f; // i.e. 1% of the image (determined empirically)
-  const float maxCandidateFraction = 0.2f;   // i.e. 20% of the image (determined empirically)
+  const float minCandidateFraction = m_touchSettings.minCandidateFraction; // 0.01f; // i.e. 1% of the image (determined empirically)
+  const float maxCandidateFraction = m_touchSettings.maxCandidateFraction; // 0.2f;   // i.e. 20% of the image (determined empirically)
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 
 
-  m_saveCandidateComponentsPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq005/images";
+  //m_touchSettings.saveCandidateComponentsPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq005/images";
 
   // Register the relevant decision function generators with the factory.
   rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
-  m_forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150713T111402.rf";
+  //m_touchSettings.forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150713T111402.rf";
   //randomForest-20150708T180339.rf";
-  if(!boost::filesystem::exists(m_forestPath)) throw std::runtime_error("Forest not found: " + m_forestPath);
+  if(!boost::filesystem::exists(m_touchSettings.forestPath)) throw std::runtime_error("Forest not found: " + m_touchSettings.forestPath);
 
-  m_forest = tvgutil::SerializationUtil::load_text(m_forestPath, m_forest);
+  m_forest = tvgutil::SerializationUtil::load_text(m_touchSettings.forestPath, m_forest);
 #if 1
   m_forest->output_statistics(std::cout);
 #endif
@@ -129,7 +159,7 @@ try
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
-  if(m_saveCandidateComponents)
+  if(m_touchSettings.saveCandidateComponents)
   {
     save_candidate_components(candidateComponents, diffRawRaycastInMm);
   }
@@ -254,7 +284,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > (m_lowerDepthThresholdMm / 1000.0f);
+  m_changeMask = *m_diffRawRaycast > (m_touchSettings.lowerDepthThresholdMm / 1000.0f);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
@@ -262,7 +292,7 @@ void TouchDetector::detect_changes()
 #endif
 
   // Apply a morphological opening operation to the change mask to reduce noise.
-  int morphKernelSize = m_morphKernelSize;
+  int morphKernelSize = m_touchSettings.morphKernelSize;
   if(morphKernelSize < 3) morphKernelSize = 3;
   if(morphKernelSize % 2 == 0) ++morphKernelSize;
   af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
@@ -285,8 +315,8 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   diffImage = (diffImage / 8).as(u8) * 8;
 
   // Threshold the difference image, keeping only parts that are close to the surface.
-  const int upperDepthThresholdMm = m_lowerDepthThresholdMm + 15;
-  diffImage = (diffImage > m_lowerDepthThresholdMm) && (diffImage < upperDepthThresholdMm);
+  const int upperDepthThresholdMm = m_touchSettings.lowerDepthThresholdMm + 15;
+  diffImage = (diffImage > m_touchSettings.lowerDepthThresholdMm) && (diffImage < upperDepthThresholdMm);
 
   // Apply a morphological opening operation to the difference image to reduce noise.
   af::array morphKernel = af::constant(1, 5, 5);
@@ -305,7 +335,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   af::array touchIndicesImage = af::where(diffImage);
 
   // If there are too few touch indices, assume the user is not touching the scene in a meaningful way and early out.
-  const float minTouchAreaFraction = 0.0001f;
+  const float minTouchAreaFraction = m_touchSettings.minTouchAreaFraction; // 0.0001f;
   const float touchAreaLowerThreshold = minTouchAreaFraction * m_imageWidth * m_imageHeight;
   if(touchIndicesImage.elements() <= touchAreaLowerThreshold) return std::vector<Eigen::Vector2i>();
 
@@ -416,7 +446,7 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
-    m_settings->sceneParams.voxelSize,
+    m_itmSettings->sceneParams.voxelSize,
     invalidDepthValue,
     m_depthRaycast
   );
@@ -431,24 +461,24 @@ void TouchDetector::process_debug_windows()
     const int imageArea = m_imageHeight * m_imageWidth;
 
     cv::namedWindow(m_debuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_lowerDepthThresholdMm, 50);
+    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_touchSettings.lowerDepthThresholdMm, 50);
     cv::createTrackbar("debugDelayMs", m_debuggingOutputWindowName, &m_debugDelayMs, 3000);
     cv::createTrackbar("minCandidateArea", m_debuggingOutputWindowName, &m_minCandidateArea, imageArea);
     cv::createTrackbar("maxCandidateArea", m_debuggingOutputWindowName, &m_maxCandidateArea, imageArea);
 
     cv::namedWindow(m_morphologicalOperatorWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("kernelSize", m_morphologicalOperatorWindowName, &m_morphKernelSize, 15);
+    cv::createTrackbar("kernelSize", m_morphologicalOperatorWindowName, &m_touchSettings.morphKernelSize, 15);
 
     initialised = true;
   }
 
   // Update the relevant variables based on the values of the trackbars.
-  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
+  m_touchSettings.lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
   m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_debuggingOutputWindowName);
   m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_debuggingOutputWindowName);
   m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_debuggingOutputWindowName);
 
-  m_morphKernelSize = cv::getTrackbarPos("kernelSize", m_morphologicalOperatorWindowName);
+  m_touchSettings.morphKernelSize = cv::getTrackbarPos("kernelSize", m_morphologicalOperatorWindowName);
 
   // Wait for the specified number of milliseconds (or until a key is pressed).
   cv::waitKey(m_debugDelayMs);
@@ -508,16 +538,16 @@ size_t TouchDetector::get_file_count(const std::string& path)
 
 void TouchDetector::save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
-  if(!boost::filesystem::exists(m_saveCandidateComponentsPath))
+  if(!boost::filesystem::exists(m_touchSettings.saveCandidateComponentsPath))
   {
-    throw std::runtime_error("Path not found: " + m_saveCandidateComponentsPath);
+    throw std::runtime_error("Path not found: " + m_touchSettings.saveCandidateComponentsPath);
   }
 
-  static size_t fileCount = get_file_count(m_saveCandidateComponentsPath);
+  static size_t fileCount = get_file_count(m_touchSettings.saveCandidateComponentsPath);
 
   if(fileCount)
   {
-    throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + m_saveCandidateComponentsPath);
+    throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + m_touchSettings.saveCandidateComponentsPath);
   }
   else
   {
@@ -536,7 +566,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
 
       if(imageCounter < 1e5)
       {
-        std::string saveString = m_saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+        std::string saveString = m_touchSettings.saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
         cv::imwrite(saveString, maskCV);
       }
 #if 1

@@ -117,7 +117,7 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
     else if(inputState.key_down(SDLK_4))
     {
       const size_t maxKeptTouchPoints = 50;
-      m_selector.reset(new TouchSelector(settings, m_model->get_tracking_state(), m_model->get_view(), maxKeptTouchPoints));
+      m_selector.reset(new TouchSelector(settings, m_model->get_resources_dir(), m_model->get_tracking_state(), m_model->get_view(), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_model->get_settings()->deviceType);

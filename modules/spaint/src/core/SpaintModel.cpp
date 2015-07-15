@@ -10,9 +10,10 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SpaintModel::SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-                         const Settings_CPtr& settings)
+                         const Settings_CPtr& settings, const std::string& resourcesDir)
 : m_depthImageSize(depthImageSize),
   m_labelManager(new LabelManager(10)),
+  m_resourcesDir(resourcesDir),
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),
   m_settings(settings),
@@ -44,6 +45,11 @@ LabelManager_CPtr SpaintModel::get_label_manager() const
 const ITMPose& SpaintModel::get_pose() const
 {
   return *m_trackingState->pose_d;
+}
+
+std::string SpaintModel::get_resources_dir() const
+{
+  return m_resourcesDir;
 }
 
 const Vector2i& SpaintModel::get_rgb_image_size() const

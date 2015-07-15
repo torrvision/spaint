@@ -249,7 +249,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
   m_tracker->UpdateInitialPose(trackingState.get());
-  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings));
+  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
 
