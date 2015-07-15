@@ -47,7 +47,6 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
 {
   const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
   SpaintModel::Scene_CPtr scene = m_model->get_scene();
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
   SpaintModel::View_CPtr view = m_model->get_view();
 
   if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(m_model->get_depth_image_size()));
