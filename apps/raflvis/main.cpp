@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
   // Create the tree chopper.
   const size_t maxTreeHeight = 5;
   const size_t timePeriod = 20;
-  TimeBasedTreeChopper<Label> treeChopper(TreeChopper_CPtr(new HeightLimitingTreeChopper<Label>(maxTreeHeight)), timePeriod);
+  TimeBasedTreeChopper<Label> treeChopper(TreeChopper_CPtr(new HeightLimitingTreeChopper<Label>(maxTreeHeight, seed)), timePeriod);
 
   // Generate the windows into which we will display the output of the random forest.
   PlotWindow accuracyPlot("ClassificationAccuracy");
