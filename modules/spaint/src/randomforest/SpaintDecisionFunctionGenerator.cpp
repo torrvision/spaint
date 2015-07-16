@@ -8,6 +8,8 @@
 #include <rafl/decisionfunctions/PairwiseOpAndThresholdDecisionFunctionGenerator.h>
 using namespace rafl;
 
+#define USE_HEIGHT_THRESHOLDING 0
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
@@ -17,13 +19,19 @@ SpaintDecisionFunctionGenerator::SpaintDecisionFunctionGenerator(size_t patchSiz
 {
   int vopFeatureCount = static_cast<int>(patchSize * patchSize * 3);
   std::pair<int,int> vopFeatureIndexRange(0, vopFeatureCount - 1);
+  std::pair<int,int> normalFeatureIndexRange(vopFeatureCount, vopFeatureCount + 2);
 
 #ifndef USE_LOW_POWER_MODE
   this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(vopFeatureIndexRange)));
   this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(vopFeatureIndexRange)));
 #endif
-  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(std::make_pair(vopFeatureCount, vopFeatureCount + 2))));
+
+  this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(normalFeatureIndexRange)));
+  this->add_generator(DecisionFunctionGenerator_CPtr(new PairwiseOpAndThresholdDecisionFunctionGenerator<Label>(normalFeatureIndexRange)));
+
+#if USE_HEIGHT_THRESHOLDING
   this->add_generator(DecisionFunctionGenerator_CPtr(new FeatureThresholdingDecisionFunctionGenerator<Label>(std::make_pair(vopFeatureCount + 3, vopFeatureCount + 3))));
+#endif
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
