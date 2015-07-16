@@ -6,4 +6,4 @@
 <maxCandidateFraction>0.2</maxCandidateFraction>
 <morphKernelSize>5</morphKernelSize>
 <saveCandidateComponents>0</saveCandidateComponents>
-<saveCandidateComponentsPath>/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150713T111402.rf</saveCandidateComponentsPath>
+<saveCandidateComponentsPath>/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq006/images</saveCandidateComponentsPath>
