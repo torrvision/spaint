@@ -10,7 +10,9 @@
 namespace rafl {
 
 /**
- * \brief An instance of this class represents a tree chopper that chops a randomly selected tree if its height (strictly) exceeds a specified threshold.
+ * \brief An instance of this class represents a tree chopper that finds all trees whose height (strictly) exceeds a specified threshold and randomly chops one.
+ *
+ * If there are no trees of sufficient height, the chopper leaves the forest unchanged.
  */
 template <typename Label>
 class HeightLimitingTreeChopper : public TreeChopper<Label>
@@ -43,14 +45,25 @@ public:
   /** Override */
   virtual boost::optional<size_t> choose_tree_to_chop(const RF_CPtr& forest) const
   {
-    int randomTree = m_rng.generate_int_from_uniform(0, static_cast<int>(forest->get_tree_count()) - 1);
-    if(forest->get_tree(randomTree)->get_tree_depth() > m_maxTreeHeight)
+    // Find all trees whose height exceeds the threshold.
+    std::vector<size_t> tallTrees;
+    for(size_t i = 0, count = forest->get_tree_count(); i < count; ++i)
     {
-      return randomTree;
+      if(forest->get_tree(i)->get_tree_depth() > m_maxTreeHeight)
+      {
+        tallTrees.push_back(i);
+      }
+    }
+
+    if(tallTrees.empty())
+    {
+      // If there are no trees of sufficient height, leave the forest unchanged.
+      return boost::none;
     }
     else
     {
-      return boost::none;
+      // Otherwise, randomly pick a tree of sufficient height for chopping.
+      return tallTrees[m_rng.generate_int_from_uniform(0, static_cast<int>(tallTrees.size()) - 1)];
     }
   }
 };
