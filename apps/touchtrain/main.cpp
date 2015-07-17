@@ -2,13 +2,13 @@
  * raflperf: main.cpp
  */
 
+#include "TouchTrainUtil.h"
+
 #include <boost/assign/list_of.hpp>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
-
-#include <tvgutil/SerializationUtil.h>
 
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
@@ -23,16 +23,14 @@ using namespace rafl;
 #include <raflevaluation/RandomForestEvaluator.h>
 using namespace raflevaluation;
 
+#include <tvgutil/SerializationUtil.h>
 #include <tvgutil/timing/Timer.h>
 #include <tvgutil/timing/TimeUtil.h>
-
-#include "TouchTrainUtil.h"
 
 //#################### TYPEDEFS ####################
 
 typedef int Label;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef std::vector<std::pair<std::string, Label> > Instances;
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################

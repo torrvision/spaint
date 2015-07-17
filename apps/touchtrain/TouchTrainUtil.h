@@ -88,9 +88,9 @@ struct TouchTrainUtil
    * \return                    The examples.
    */
   template <typename Label>
-  static std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<LabelledImagePath<Label> >& labelledImagePaths)
+  static std::vector<boost::shared_ptr<const rafl::Example<Label> > > generate_examples(const std::vector<LabelledImagePath<Label> >& labelledImagePaths)
   {
-    typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+    typedef boost::shared_ptr<const rafl::Example<Label> > Example_CPtr;
     int labelledImagePathCount = static_cast<int>(labelledImagePaths.size());
     std::vector<Example_CPtr> result(labelledImagePathCount);
 
@@ -101,7 +101,7 @@ struct TouchTrainUtil
     {
         af::array img = af::loadImage(labelledImagePaths[i].m_imagePath.c_str());
         rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::extract_touch_feature(img);
-        result[i].reset(new Example<Label>(descriptor, labelledImagePaths[i].m_label));
+        result[i].reset(new rafl::Example<Label>(descriptor, labelledImagePaths[i].m_label));
 #if 0
         std::cout << "Filename: " << labelledImagePaths[i].m_imagePath << " Label: " << labelledImagePaths[i].m_label << std::endl;
 #endif
