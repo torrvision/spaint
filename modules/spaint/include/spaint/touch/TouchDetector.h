@@ -259,14 +259,6 @@ private:
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
 
   /**
-   * \brief Gets the number of files contained in a specified directory.
-   *
-   * \param path  The path of the directory.
-   * \return      The number of files in the specified directory.
-   */
-  static size_t get_file_count(const std::string& path);
-
-  /**
    * \brief Saves the candidate component images to a directory.
    *
    * \param candidateComponents The candidate components denoting candidate touch interactions.
@@ -280,7 +272,7 @@ private:
    * \param v  The Eigen vector.
    * \return   The InfiniTAM vector.
    */
-  static Vector3f to_itm(const Eigen::Vector3f& v);
+  Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 }

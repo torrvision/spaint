@@ -6,13 +6,6 @@
 #include "touch/TouchDetector.h"
 #include "touch/TouchUtil.h"
 
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <tvgutil/ArgUtil.h>
-#include <tvgutil/SerializationUtil.h>
-
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "util/RGBDUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
@@ -24,6 +17,13 @@
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
 #endif
+
+#include <boost/format.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <tvgutil/ArgUtil.h>
+#include <tvgutil/SerializationUtil.h>
 
 //#define DEBUG_TOUCH_VERBOSE
 //#define DEBUG_TOUCH_DISPLAY
@@ -55,6 +55,8 @@ void TouchDetector::Settings::initialise(const std::map<std::string,std::string>
     GET_SETTING(saveCandidateComponents);
     GET_SETTING(saveCandidateComponentsPath);
   #undef GET_SETTING
+
+  if(!boost::filesystem::exists(forestPath)) throw std::runtime_error("Forest not found: " + forestPath);
 }
 
 //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
@@ -76,9 +78,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_imageHeight(imgSize.y),
   m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),
   m_imageWidth(imgSize.x),
-  //m_touchSettings.lowerDepthThresholdMm(10),
-  //m_touchSettings.morphKernelSize(5),
-  //m_touchSettings.saveCandidateComponents(false),
   m_itmSettings(itmSettings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
@@ -107,18 +106,12 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 
-
-  //m_touchSettings.saveCandidateComponentsPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq005/images";
-
   // Register the relevant decision function generators with the factory.
   rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
-  //m_touchSettings.forestPath = "/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150713T111402.rf";
-  //randomForest-20150708T180339.rf";
-  if(!boost::filesystem::exists(m_touchSettings.forestPath)) throw std::runtime_error("Forest not found: " + m_touchSettings.forestPath);
-
   m_forest = tvgutil::SerializationUtil::load_text(m_touchSettings.forestPath, m_forest);
-#if 1
+
+#if defined(DEBUG_TOUCH_VERBOSE)
   m_forest->output_statistics(std::cout);
 #endif
 }
@@ -335,8 +328,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   af::array touchIndicesImage = af::where(diffImage);
 
   // If there are too few touch indices, assume the user is not touching the scene in a meaningful way and early out.
-  const float minTouchAreaFraction = m_touchSettings.minTouchAreaFraction; // 0.0001f;
-  const float touchAreaLowerThreshold = minTouchAreaFraction * m_imageWidth * m_imageHeight;
+  const float touchAreaLowerThreshold = m_touchSettings.minTouchAreaFraction * m_imageWidth * m_imageHeight;
   if(touchIndicesImage.elements() <= touchAreaLowerThreshold) return std::vector<Eigen::Vector2i>();
 
   // Otherwise, convert the touch indices to touch points and return them.
@@ -402,9 +394,13 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
     mask = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
     rafl::Descriptor_CPtr d = TouchUtil::calculate_histogram_descriptor(mask);
     rafl::ProbabilityMassFunction<Label> pmf = m_forest->calculate_pmf(d);
-    std::cout << "The pmf is: " << pmf << std::endl;
     std::map<Label,float> masses = pmf.get_masses();
-    touchProb[i] = tvgutil::MapUtil::lookup(masses, 1);
+    const Label isTouchLabel = 1;
+    touchProb[i] = tvgutil::MapUtil::lookup(masses, isTouchLabel);
+
+#if defined (DEBUG_TOUCH_VERBOSE)
+    std::cout << "The pmf is: " << pmf << std::endl;
+#endif
   }
   size_t maxIndex = tvgutil::ArgUtil::argmin(touchProb);
   if(touchProb[maxIndex] > 0.5f)
@@ -529,21 +525,9 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
   return arrayCopy;
 }
 
-size_t TouchDetector::get_file_count(const std::string& path)
-{
-  size_t fileCount = 0;
-  for(boost::filesystem::directory_iterator it(path); it != boost::filesystem::directory_iterator(); ++it) ++fileCount;
-  return fileCount;
-}
-
 void TouchDetector::save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
-  if(!boost::filesystem::exists(m_touchSettings.saveCandidateComponentsPath))
-  {
-    throw std::runtime_error("Path not found: " + m_touchSettings.saveCandidateComponentsPath);
-  }
-
-  static size_t fileCount = get_file_count(m_touchSettings.saveCandidateComponentsPath);
+  static size_t fileCount = TouchUtil::get_file_count(m_touchSettings.saveCandidateComponentsPath);
 
   if(fileCount)
   {
@@ -569,9 +553,6 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
         std::string saveString = m_touchSettings.saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
         cv::imwrite(saveString, maskCV);
       }
-#if 1
-      cv::imshow("candidate-component", maskCV);
-#endif
     }
   }
 }
