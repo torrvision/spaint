@@ -89,6 +89,13 @@ SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
   return m_raycaster;
 }
 
+void SpaintPipeline::reset_forest()
+{
+  const size_t treeCount = 5;
+  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
+  m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
+}
+
 void SpaintPipeline::run_main_section()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
@@ -277,9 +284,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   );
 
   // Set up the random forest.
-  const size_t treeCount = 5;
-  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
-  m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
+  reset_forest();
 
   m_featureInspectionWindowName = "Feature Inspection";
   m_fusionEnabled = true;

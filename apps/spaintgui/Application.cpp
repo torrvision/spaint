@@ -96,10 +96,11 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
-  // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene and reset the command manager.
+  // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
   if(keysym.sym == SDLK_BACKSPACE)
   {
     m_spaintPipeline->get_interactor()->clear_labels();
+    m_spaintPipeline->reset_forest();
     m_commandManager.reset();
   }
 
@@ -145,7 +146,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
               << "RShift + ] = To Next Semantic Label\n"
-              << "Backspace = Clear Semantic Labels\n"
+              << "Backspace = Reset (Clear Labels and Forest)\n"
               << "# = Toggle Median Filtering\n";
   }
 }

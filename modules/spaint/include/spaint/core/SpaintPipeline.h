@@ -268,6 +268,11 @@ public:
   SpaintRaycaster_CPtr get_raycaster() const;
 
   /**
+   * \brief Resets the random forest.
+   */
+  void reset_forest();
+
+  /**
    * \brief Runs the main section of the pipeline.
    *
    * This involves processing the next frame from the image source engine.
