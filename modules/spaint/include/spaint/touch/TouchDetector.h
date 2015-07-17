@@ -6,6 +6,9 @@
 #ifndef H_SPAINT_TOUCHDETECTOR
 #define H_SPAINT_TOUCHDETECTOR
 
+#include "../imageprocessing/interface/ImageProcessor.h"
+#include "../visualisers/interface/DepthVisualiser.h"
+
 #include <arrayfire.h>
 
 #include <ITMLib/Objects/ITMRenderState.h>
@@ -16,9 +19,6 @@
 #include <rigging/SimpleCamera.h>
 
 #include <tvgutil/PropertyUtil.h>
-
-#include "../imageprocessing/interface/ImageProcessor.h"
-#include "../visualisers/interface/DepthVisualiser.h"
 
 namespace spaint {
 
@@ -34,9 +34,6 @@ public:
    */
   class Settings
   {
-    //~~~~~~~~~~~~~~~~~~~~ TYPEDEFS ~~~~~~~~~~~~~~~~~~~~
-  private:
-
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
   public:
     /** The path to the random forest used to filter touch regions. */
@@ -45,14 +42,14 @@ public:
     /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
     int lowerDepthThresholdMm;
 
-    /** TODO. */
+    /** The maximum fraction of the image that a connected change component can have if it is to be considered as a candidate touch interaction. */
+    float maxCandidateFraction;
+
+    /** The minimum fraction of the image that a connected change component can have if it is to be considered as a candidate touch interaction. */
     float minCandidateFraction;
 
-    /** TODO. */
+    /** The minimum fraction of the image that the part of the candidate touch interaction which is touching the scene can have if it is to be considered as a valid touch. */
     float minTouchAreaFraction;
-
-    /** TODO. */
-    float maxCandidateFraction;
 
     /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
     int morphKernelSize;
@@ -71,7 +68,7 @@ public:
     Settings();
 
     /**
-     * \brief Attempts to load settings fromt he specifiedXML file.
+     * \brief Attempts to load settings from the specified XML file.
      *
      * This will throw if the settings cannot be successfully loaded.
      *
@@ -82,7 +79,7 @@ public:
     //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
   private:
     /**
-     * \brief Load settings froma property map.
+     * \brief Load settings from a property map.
      *
      * \param properties  The property map.
      */
@@ -132,7 +129,7 @@ private:
   /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
 
-  /** A random forest used to score the candidate connected components. */
+  /** The random forest used to score the candidate connected components. */
   RF_Ptr m_forest;
 
   /** The height of the images on which the touch detector is running. */
@@ -262,7 +259,7 @@ private:
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
 
   /**
-   * \brief Gets the number of files contained in a directory.
+   * \brief Gets the number of files contained in a specified directory.
    *
    * \param path  The path of the directory.
    * \return      The number of files in the specified directory.
@@ -272,8 +269,8 @@ private:
   /**
    * \brief Saves the candidate component images to a directory.
    *
-   * \param candidateComponents The IDs of components in the connected component image that denote candidate touch interactions.
-   * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
+   * \param candidateComponents The candidate components denoting candidate touch interactions.
+   * \param diffRawRaycast      An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
    */
   void save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
