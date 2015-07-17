@@ -29,9 +29,9 @@ using namespace raflevaluation;
 
 //#################### TYPEDEFS ####################
 
+typedef int Label;
 typedef DecisionTree<Label> DT;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef int Label;
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<RF> RF_Ptr;
