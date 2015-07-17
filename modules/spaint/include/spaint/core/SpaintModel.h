@@ -41,7 +41,7 @@ private:
   /** The label manager. */
   LabelManager_Ptr m_labelManager;
 
-  /** The path tot he resources directory. */
+  /** The path to the resources directory. */
   std::string m_resourcesDir;
 
   /** The dimensions of the RGB images from which the scene is being reconstructed. */
