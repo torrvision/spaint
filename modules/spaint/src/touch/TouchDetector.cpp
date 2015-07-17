@@ -400,7 +400,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
   for(int i = 0; i < candidateCount; ++i)
   {
     mask = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
-    rafl::Descriptor_CPtr d = TouchUtil::extract_touch_feature(mask);
+    rafl::Descriptor_CPtr d = TouchUtil::calculate_histogram_descriptor(mask);
     rafl::ProbabilityMassFunction<Label> pmf = m_forest->calculate_pmf(d);
     std::cout << "The pmf is: " << pmf << std::endl;
     std::map<Label,float> masses = pmf.get_masses();

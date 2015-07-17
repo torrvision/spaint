@@ -100,7 +100,7 @@ struct TouchTrainUtil
     for(int i = 0; i < labelledImagePathCount; ++i)
     {
         af::array img = af::loadImage(labelledImagePaths[i].m_imagePath.c_str());
-        rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::extract_touch_feature(img);
+        rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::calculate_histogram_descriptor(img);
         result[i].reset(new rafl::Example<Label>(descriptor, labelledImagePaths[i].m_label));
 #if 0
         std::cout << "Filename: " << labelledImagePaths[i].m_imagePath << " Label: " << labelledImagePaths[i].m_label << std::endl;
