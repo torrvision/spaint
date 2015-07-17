@@ -29,16 +29,19 @@ using namespace raflevaluation;
 
 //#################### TYPEDEFS ####################
 
-typedef int Label;
+typedef DecisionTree<Label> DT;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+typedef int Label;
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
+typedef RandomForest<Label> RF;
+typedef boost::shared_ptr<RF> RF_Ptr;
 
 //#################### FUNCTIONS ####################
 
 /**
- * \brief Checks whether the specified path exists.
+ * \brief Checks whether a specified path exists.
  *
- * If the path is not found, it prints the expected path to std::cout.
+ * If the path is not found, it outputs the expected path to std::cout.
  *
  * \param path  The path.
  * \return      True, if the path exists, false otherwise.
@@ -70,10 +73,10 @@ struct TouchTrainData
   /** The directory containing tables of results generated during cross-validation. */
   std::string m_crossValidationResults;
 
-  /** An array of instances, composed of <path-to-image,label>. */
+  /** An array of labelled image paths. */
   LabelledImagePaths m_labelledImagePaths;
 
-  /** The directory where the forest models are stored. */
+  /** The directory where the random forest models are stored. */
   std::string m_models;
 
   /** The root directory in which the touch training data is stored. */
@@ -110,15 +113,14 @@ struct TouchTrainData
       if(!check_path_exists(annotationPath)) ++invalidCount;
 
       LabelledImagePaths labelledImagePathSet = TouchTrainUtil::generate_labelled_image_paths<Label>(imagePath, annotationPath);
-#if 0
-      m_instanceSets[i] = TouchTrainUtil::load_instances<Label>(imagePath, annotationPath);
-#endif
+
       if(labelledImagePathSet.empty())
       {
         std::cout << "[touchtrain] Expecting some data in: " << sequencePath << std::endl;
         ++invalidCount;
       }
 
+      // Append the labelled image paths from the current sequence directory to the global set.
       m_labelledImagePaths.insert(m_labelledImagePaths.end(), labelledImagePathSet.begin(), labelledImagePathSet.end());
     }
 
@@ -150,7 +152,6 @@ int main(int argc, char *argv[])
   std::cout << "[touchtrain] Training set root: " << touchDataset.m_root << '\n';
 
   std::cout << "[touchtrain] Generating examples...\n";
-///  std::vector<Example_CPtr> examples = TouchTrainUtil::generate_examples<Label>(touchDataset.m_instanceSets);
   std::vector<Example_CPtr> examples = TouchTrainUtil::generate_examples<Label>(touchDataset.m_labelledImagePaths);
   std::cout << "[touchtrain] Number of examples = " << examples.size() << '\n';
 
@@ -220,11 +221,6 @@ int main(int argc, char *argv[])
     results.output(resultsFile);
   }
 
-  // Now Train a classifier with the best settings selected during crossvalidation.
-  typedef DecisionTree<Label> DT;
-  typedef RandomForest<Label> RF;
-  typedef boost::shared_ptr<RF> RF_Ptr;
-
   std::cout << "[touchtrain] Training the forest with the best parameters selected during cross-validation...\n";
   ParamSet bestParams = results.find_best_param_set("Accuracy");
   DT::Settings settings(bestParams);
@@ -233,6 +229,7 @@ int main(int argc, char *argv[])
 
   std::cout << "[touchtrain] The final trained forest statistics:\n";
   if(randomForest->train(splitBudget)) randomForest->output_statistics(std::cout);
+
   std::string forestPath = touchDataset.m_models + "/randomForest-" + timeStamp + ".rf";
   std::cout << "[touchtrain] Saving the forest to: " << forestPath << "\n";
   tvgutil::SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + timeStamp + ".rf", *randomForest);
