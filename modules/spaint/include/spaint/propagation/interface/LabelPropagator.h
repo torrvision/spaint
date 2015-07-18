@@ -53,6 +53,10 @@ public:
                        ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const LabelPropagator> LabelPropagator_CPtr;
+
 }
 
 #endif

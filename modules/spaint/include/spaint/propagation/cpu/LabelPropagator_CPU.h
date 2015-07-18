@@ -14,6 +14,15 @@ namespace spaint {
  */
 class LabelPropagator_CPU : public LabelPropagator
 {
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a CPU-based label propagator.
+   *
+   * \param raycastResultSize The size of the raycast result (in pixels).
+   */
+  explicit LabelPropagator_CPU(size_t raycastResultSize);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
