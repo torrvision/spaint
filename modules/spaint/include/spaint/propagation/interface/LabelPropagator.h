@@ -32,6 +32,18 @@ protected:
    */
   explicit LabelPropagator(size_t raycastResultSize);
 
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void perform_propagation() const = 0;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**

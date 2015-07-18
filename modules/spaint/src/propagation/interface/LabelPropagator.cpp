@@ -19,7 +19,11 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize)
 void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                                       ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
-  // TODO
+  // Calculate the normals of the voxels in the raycast result.
+  calculate_normals(raycastResult, scene);
+
+  // Propagate the specified label across the scene, stopping at position or normal discontinuities.
+  perform_propagation();
 }
 
 }
