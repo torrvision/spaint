@@ -21,13 +21,13 @@ __global__ void ck_calculate_normals(const Vector4f *raycastResultData, int rayc
   }
 }
 
-__global__ void ck_perform_propagation(const Vector4f *raycastResultData, int raycastResultSize, const Vector3f *surfaceNormals,
+__global__ void ck_perform_propagation(const Vector4f *raycastResultData, int raycastResultSize, int width, int height, const Vector3f *surfaceNormals,
                                        SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
   {
-    propagate_from_neighbours(voxelIndex, raycastResultData, surfaceNormals, voxelData, indexData);
+    propagate_from_neighbours(voxelIndex, width, height, raycastResultData, surfaceNormals, voxelData, indexData);
   }
 }
 
@@ -66,6 +66,8 @@ void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const I
   ck_perform_propagation<<<numBlocks,threadsPerBlock>>>(
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     raycastResultSize,
+    raycastResult->noDims.x,
+    raycastResult->noDims.y,
     m_surfaceNormalsMB->GetData(MEMORYDEVICE_CUDA),
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData()

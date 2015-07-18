@@ -36,18 +36,20 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
 void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                                               ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
+  const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
   const size_t raycastResultSize = raycastResult->dataSize;
   const Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
   SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
+  const int width = raycastResult->noDims.x;
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    propagate_from_neighbours(voxelIndex, raycastResultData, surfaceNormals, voxelData, indexData);
+    propagate_from_neighbours(voxelIndex, width, height, raycastResultData, surfaceNormals, voxelData, indexData);
   }
 }
 

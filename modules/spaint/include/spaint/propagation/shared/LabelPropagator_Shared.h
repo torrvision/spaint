@@ -13,9 +13,13 @@ namespace spaint {
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void propagate_from_neighbours(int voxelIndex, const Vector4f *raycastResult, const Vector3f *surfaceNormals,
+inline void propagate_from_neighbours(int voxelIndex, int width, int height,
+                                      const Vector4f *raycastResult, const Vector3f *surfaceNormals,
                                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
+  int x = voxelIndex % width;
+  int y = voxelIndex / width;
+
   // TODO
 }
 
