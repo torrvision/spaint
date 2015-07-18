@@ -10,7 +10,7 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to propagate a specified label across surfaces in the scene using the CPU.
  */
 class LabelPropagator_CPU : public LabelPropagator
 {
