@@ -11,7 +11,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 LabelPropagator::LabelPropagator(size_t raycastResultSize)
-: m_normals(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
+: m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

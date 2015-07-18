@@ -21,7 +21,7 @@ class LabelPropagator
   //#################### PROTECTED VARIABLES ####################
 protected:
   /** TODO */
-  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_normals;
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_surfaceNormalsMB;
 
   //#################### CONSTRUCTORS ####################
 protected:
