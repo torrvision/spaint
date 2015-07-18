@@ -13,6 +13,16 @@ namespace spaint {
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
+inline void propagate_from_neighbours(int voxelIndex, const Vector4f *raycastResult, const Vector3f *surfaceNormals,
+                                      SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+{
+  // TODO
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
 inline void write_surface_normal(int voxelIndex, const Vector4f *raycastResult,
                                  const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                  Vector3f *surfaceNormals)

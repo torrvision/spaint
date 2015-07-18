@@ -42,7 +42,8 @@ private:
   /**
    * \brief TODO
    */
-  virtual void perform_propagation() const = 0;
+  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

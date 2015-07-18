@@ -18,11 +18,11 @@ LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize)
 
 void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
+  const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
   const size_t raycastResultSize = raycastResult->dataSize;
   Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
-  const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
@@ -30,6 +30,24 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
     write_surface_normal(voxelIndex, raycastResultData, voxelData, indexData, surfaceNormals);
+  }
+}
+
+void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+                                              ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+{
+  const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
+  const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
+  const size_t raycastResultSize = raycastResult->dataSize;
+  const Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
+  SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
+  {
+    propagate_from_neighbours(voxelIndex, raycastResultData, surfaceNormals, voxelData, indexData);
   }
 }
 
