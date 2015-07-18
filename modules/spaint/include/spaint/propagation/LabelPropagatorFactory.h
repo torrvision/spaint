@@ -5,6 +5,8 @@
 #ifndef H_SPAINT_LABELPROPAGATORFACTORY
 #define H_SPAINT_LABELPROPAGATORFACTORY
 
+#include <ITMLib/Utils/ITMLibSettings.h>
+
 #include "interface/LabelPropagator.h"
 
 namespace spaint {
@@ -19,7 +21,7 @@ struct LabelPropagatorFactory
   /**
    * \brief TODO
    */
-  static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize);
+  static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType);
 };
 
 }
