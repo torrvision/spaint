@@ -2,12 +2,12 @@
 # CMakeLists.txt for spaint/apps #
 ##################################
 
-IF(BUILD_EVALUATION)
+IF(BUILD_ALL_APPS AND BUILD_EVALUATION_MODULES)
   ADD_SUBDIRECTORY(raflperf)
-  ADD_SUBDIRECTORY(touchtrain)
 
   IF(WITH_OPENCV)
     ADD_SUBDIRECTORY(raflvis)
+    ADD_SUBDIRECTORY(touchtrain)
   ENDIF()
 ENDIF()
 
