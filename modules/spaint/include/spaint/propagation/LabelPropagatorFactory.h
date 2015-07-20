@@ -19,7 +19,11 @@ struct LabelPropagatorFactory
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief TODO
+   * \brief Makes a label propagator.
+   *
+   * \param raycastResultSize The size of the raycast result (in pixels).
+   * \param deviceType        The device on which the label propagator should operate.
+   * \return                  The label propagator.
    */
   static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType);
 };
