@@ -46,7 +46,7 @@ ${toplevel_headers}
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(toplevel FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 
 ##########################################
 # Specify additional include directories #
@@ -61,7 +61,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetLibTarget.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDALibTarget.cmake)
 
 #############################
 # Specify things to install #
