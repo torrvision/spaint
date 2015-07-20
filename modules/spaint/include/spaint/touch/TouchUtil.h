@@ -9,8 +9,6 @@
 
 #include <arrayfire.h>
 
-#include <boost/filesystem.hpp>
-
 #include <rafl/core/RandomForest.h>
 
 namespace spaint {
@@ -28,14 +26,6 @@ public:
    * \return     The histogram descriptor.
    */
   static rafl::Descriptor_CPtr calculate_histogram_descriptor(const af::array& img);
-
-  /**
-   * \brief Gets the number of files contained in the specified directory.
-   *
-   * \param dir  The path to the directory.
-   * \return      The number of files in the specified directory.
-   */
-  static size_t get_file_count(const std::string& dir);
 };
 
 }

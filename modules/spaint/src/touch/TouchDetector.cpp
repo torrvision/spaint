@@ -23,6 +23,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <tvgutil/ArgUtil.h>
+#include <tvgutil/DirectoryUtil.h>
 #include <tvgutil/SerializationUtil.h>
 
 //#define DEBUG_TOUCH_VERBOSE
@@ -65,7 +66,7 @@ void TouchDetector::Settings::initialise(const std::map<std::string,std::string>
       throw std::runtime_error("Save candidate components path not found: " + saveCandidateComponentsPath + ". Please add a valid path to the touch settings.");
     }
 
-    static size_t fileCount = TouchUtil::get_file_count(saveCandidateComponentsPath);
+    static size_t fileCount = tvgutil::DirectoryUtil::get_file_count(saveCandidateComponentsPath);
     if(fileCount) throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + saveCandidateComponentsPath);
   }
 }

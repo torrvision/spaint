@@ -4,6 +4,8 @@
 
 #include "touch/TouchUtil.h"
 
+#include <boost/filesystem.hpp>
+
 namespace spaint {
 
 rafl::Descriptor_CPtr TouchUtil::calculate_histogram_descriptor(const af::array& img)
@@ -19,18 +21,6 @@ rafl::Descriptor_CPtr TouchUtil::calculate_histogram_descriptor(const af::array&
 #endif
 
   return rafl::Descriptor_CPtr(new rafl::Descriptor(gHist, gHist + gHistLen));
-}
-
-size_t TouchUtil::get_file_count(const std::string& dir)
-{
-  if(!boost::filesystem::is_directory(dir))
-  {
-    throw std::runtime_error("Directory not found: " + dir);
-  }
-
-  size_t fileCount = 0;
-  for(boost::filesystem::directory_iterator it(dir); it != boost::filesystem::directory_iterator(); ++it) ++fileCount;
-  return fileCount;
 }
 
 }
