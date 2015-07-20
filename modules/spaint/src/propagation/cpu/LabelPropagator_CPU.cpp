@@ -33,7 +33,7 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
   }
 }
 
-void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+void LabelPropagator_CPU::perform_propagation(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
                                               ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int height = raycastResult->noDims.y;
@@ -49,7 +49,7 @@ void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const IT
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    propagate_from_neighbours(voxelIndex, width, height, raycastResultData, surfaceNormals, voxelData, indexData);
+    propagate_from_neighbours(voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData);
   }
 }
 

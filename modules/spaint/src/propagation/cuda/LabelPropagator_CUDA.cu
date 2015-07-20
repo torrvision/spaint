@@ -21,13 +21,13 @@ __global__ void ck_calculate_normals(const Vector4f *raycastResultData, int rayc
   }
 }
 
-__global__ void ck_perform_propagation(const Vector4f *raycastResultData, int raycastResultSize, int width, int height, const Vector3f *surfaceNormals,
-                                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+__global__ void ck_perform_propagation(SpaintVoxel::PackedLabel label, const Vector4f *raycastResultData, int raycastResultSize, int width, int height,
+                                       const Vector3f *surfaceNormals, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
   {
-    propagate_from_neighbours(voxelIndex, width, height, raycastResultData, surfaceNormals, voxelData, indexData);
+    propagate_from_neighbours(voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData);
   }
 }
 
@@ -55,7 +55,7 @@ void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult
   );
 }
 
-void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
                                                ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
@@ -64,6 +64,7 @@ void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const I
   int numBlocks = (raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
 
   ck_perform_propagation<<<numBlocks,threadsPerBlock>>>(
+    label,
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     raycastResultSize,
     raycastResult->noDims.x,

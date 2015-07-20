@@ -16,7 +16,7 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+void LabelPropagator::propagate_label(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
                                       ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   // Calculate the normals of the voxels in the raycast result.
