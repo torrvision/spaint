@@ -18,11 +18,12 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
-#include <tvgutil/timing/Timer.h>
-#include <tvgutil/timing/TimeUtil.h>
-
 #include <raflevaluation/RandomForestEvaluator.h>
 using namespace raflevaluation;
+
+#include <tvgutil/timing/Timer.h>
+#include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
 
 //#################### TYPEDEFS ####################
 
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
 #endif
 
   // Time the random forest.
-  tvgutil::Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
+  Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
 
   // Evaluate the random forest on the various different parameter sets.
   PerformanceTable results(list_of("Accuracy"));
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
   results.output(std::cout);
 
   // Time-stamp the results file.
-  outputResultPath += "-" + tvgutil::TimeUtil::get_iso_timestamp();
+  outputResultPath += "-" + TimeUtil::get_iso_timestamp();
 
   // Output the performance table to the results file.
   std::ofstream resultsFile(outputResultPath.c_str());

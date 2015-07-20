@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<forestPath>/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/models/randomForest-20150713T111402.rf</forestPath>
+<forestPath>./resources/DefaultRandomForest.rf</forestPath>
 <lowerDepthThresholdMm>10</lowerDepthThresholdMm>
 <minCandidateFraction>0.01</minCandidateFraction>
 <minTouchAreaFraction>0.0001</minTouchAreaFraction>
 <maxCandidateFraction>0.2</maxCandidateFraction>
 <morphKernelSize>5</morphKernelSize>
 <saveCandidateComponents>0</saveCandidateComponents>
-<saveCandidateComponentsPath>/media/mikesapi/DATADISK1/ms-workspace/SemanticPaint/TouchTrainData/seq006/images</saveCandidateComponentsPath>
+<saveCandidateComponentsPath>ENTER_PATH_HERE/seq000/images</saveCandidateComponentsPath>
