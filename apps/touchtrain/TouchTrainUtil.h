@@ -9,7 +9,7 @@
 
 #include <rafl/examples/Example.h>
 
-#include <spaint/touch/TouchUtil.h>
+#include <spaint/touch/TouchDescriptorCalculator.h>
 
 #include <tvgutil/WordExtractor.h>
 
@@ -71,7 +71,7 @@ struct TouchTrainUtil
     for(int i = 0; i < labelledImagePathCount; ++i)
     {
         af::array img = af::loadImage(labelledImagePaths[i].path.c_str());
-        rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::calculate_histogram_descriptor(img);
+        rafl::Descriptor_CPtr descriptor = spaint::TouchDescriptorCalculator::histogram(img);
         result[i].reset(new rafl::Example<Label>(descriptor, labelledImagePaths[i].label));
     }
 

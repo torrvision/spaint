@@ -1,14 +1,14 @@
 /**
- * spaint: TouchUtil.cpp
+ * spaint: TouchDescriptorCalculator.cpp
  */
 
-#include "touch/TouchUtil.h"
-
-#include <boost/filesystem.hpp>
+#include "touch/TouchDescriptorCalculator.h"
 
 namespace spaint {
 
-rafl::Descriptor_CPtr TouchUtil::calculate_histogram_descriptor(const af::array& img)
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+rafl::Descriptor_CPtr TouchDescriptorCalculator::histogram(const af::array& img)
 {
   af::array globalHistogram = af::histogram(img, 64, 0, 255);
   const float *gHist = globalHistogram.as(f32).host<float>();

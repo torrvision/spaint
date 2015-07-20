@@ -1,9 +1,9 @@
 /**
- * spaint: TouchUtil.h
+ * spaint: TouchDescriptorCalculator.h
  */
 
-#ifndef H_SPAINT_TOUCHUTIL
-#define H_SPAINT_TOUCHUTIL
+#ifndef H_SPAINT_TOUCHDESCRIPTORCALCULATOR
+#define H_SPAINT_TOUCHDESCRIPTORCALCULATOR
 
 #include "../ocv/OpenCVUtil.h"
 
@@ -16,8 +16,9 @@ namespace spaint {
 /**
  * \brief This class contains functions that help us to extract descriptors from candidate components.
  */
-class TouchUtil
+class TouchDescriptorCalculator
 {
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Calculates a global histogram descriptor from an image.
@@ -25,7 +26,7 @@ public:
    * \param img  The image from which to calculate a histogram descriptor.
    * \return     The histogram descriptor.
    */
-  static rafl::Descriptor_CPtr calculate_histogram_descriptor(const af::array& img);
+  static rafl::Descriptor_CPtr histogram(const af::array& img);
 };
 
 }
