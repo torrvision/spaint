@@ -15,6 +15,7 @@ using namespace rafl;
 using namespace InfiniTAM::Engine;
 
 #include "features/FeatureCalculatorFactory.h"
+#include "propagation/LabelPropagatorFactory.h"
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
@@ -147,6 +148,9 @@ void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& renderSta
     case MODE_PREDICTION:
       run_prediction_section(renderState);
       break;
+    case MODE_PROPAGATION:
+      run_propagation_section(renderState);
+      break;
     case MODE_TRAINING:
       run_training_section(renderState);
       break;
@@ -238,6 +242,10 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new SpaintInteractor(m_model));
 
+  // Set up the label propagator.
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
+
   // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
@@ -250,7 +258,6 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   const size_t maxTrainingVoxelCount = maxLabelCount * m_maxTrainingVoxelsPerLabel;
 
   // Set up the voxel samplers.
-  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
   const unsigned int seed = 12345;
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
@@ -366,6 +373,12 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
 
   // Mark the voxels with their predicted labels.
   m_interactor->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
+}
+
+void SpaintPipeline::run_propagation_section(const RenderState_CPtr& renderState)
+{
+  SpaintVoxel::PackedLabel packedLabel(m_interactor->get_semantic_label(), SpaintVoxel::LG_USER);
+  m_labelPropagator->propagate_label(packedLabel, renderState->raycastResult, m_model->get_scene().get());
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

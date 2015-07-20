@@ -9,8 +9,11 @@
 
 namespace spaint {
 
+/**
+ * \brief TODO
+ */
 _CPU_AND_GPU_CODE_
-bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int x, int y)
+inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int x, int y)
 {
   return true;
 }

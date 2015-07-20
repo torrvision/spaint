@@ -136,7 +136,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 1 = To Normal Mode\n"
               << "M + 2 = To Training Mode\n"
               << "M + 3 = To Prediction Mode\n"
-              << "M + 4 = To Feature Inspection Mode\n"
+              << "M + 4 = To Propagation Mode\n"
+              << "M + 5 = To Feature Inspection Mode\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
               << "R + 3 = To Rift Renderer (Fullscreen)\n"
@@ -363,7 +364,8 @@ void Application::process_mode_input()
     if(m_inputState.key_down(SDLK_1))      mode = SpaintPipeline::MODE_NORMAL;
     else if(m_inputState.key_down(SDLK_2)) mode = SpaintPipeline::MODE_TRAINING;
     else if(m_inputState.key_down(SDLK_3)) mode = SpaintPipeline::MODE_PREDICTION;
-    else if(m_inputState.key_down(SDLK_4)) mode = SpaintPipeline::MODE_FEATURE_INSPECTION;
+    else if(m_inputState.key_down(SDLK_4)) mode = SpaintPipeline::MODE_PROPAGATION;
+    else if(m_inputState.key_down(SDLK_5)) mode = SpaintPipeline::MODE_FEATURE_INSPECTION;
   }
   m_spaintPipeline->set_mode(mode);
 }
