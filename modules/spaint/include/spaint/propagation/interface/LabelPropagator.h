@@ -20,7 +20,7 @@ class LabelPropagator
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
-  /** TODO */
+  /** A memory block in which to store the surface normals of the voxels in the raycast result. */
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_surfaceNormalsMB;
 
   //#################### CONSTRUCTORS ####################
@@ -35,12 +35,19 @@ protected:
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Calculates the surface normals of the voxels in the raycast result.
+   *
+   * \param raycastResult The raycast result.
+   * \param scene         The scene.
    */
   virtual void calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 
   /**
-   * \brief TODO
+   * \brief Performs the propagation of the specified label across the scene in a device-specific way.
+   *
+   * \param label         The label to propagate.
+   * \param raycastResult The raycast result.
+   * \param scene         The scene.
    */
   virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
@@ -48,7 +55,11 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Propagates the specified label across the scene, stopping at position, normal or colour discontinuities.
+   *
+   * \param label         The label to propagate.
+   * \param raycastResult The raycast result.
+   * \param scene         The scene.
    */
   void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                        ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
