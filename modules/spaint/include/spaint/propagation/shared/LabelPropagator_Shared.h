@@ -14,7 +14,7 @@ namespace spaint {
  */
 _CPU_AND_GPU_CODE_
 inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::PackedLabel label,
-                                            const Vector3f& loc, const Vector3f& normal,
+                                            const Vector3f& loc, const Vector3f& normal, const Vector3u& colour,
                                             const Vector4f *raycastResult, const Vector3f *surfaceNormals,
                                             const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
@@ -31,12 +31,18 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   float angle = acosf(dot(normal, neighbourNormal) / (length(normal) * length(neighbourNormal)));
   const float ANGLE_THRESHOLD = static_cast<float>(2.0f * M_PI / 180.0f);
 
+  Vector3u neighbourColour = VoxelColourReader<SpaintVoxel::hasColorInformation>::read(neighbourVoxel);
+  float colourDistance = length((neighbourColour - colour).toFloat());
+  const float COLOUR_THRESHOLD = 400.0f;
+
   Vector3f posOffset = neighbourLoc - loc;
   float distanceSquared = dot(posOffset, posOffset);
+  const float DISTANCE_SQUARED_THRESHOLD = 10.0f;
 
-  //return distanceSquared < 10.0f;
   return neighbourVoxel.packedLabel == label &&
-         angle < ANGLE_THRESHOLD;
+         angle < ANGLE_THRESHOLD &&
+         colourDistance < COLOUR_THRESHOLD &&
+         distanceSquared < DISTANCE_SQUARED_THRESHOLD;
 }
 
 /**
@@ -53,10 +59,16 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
   Vector3f loc = raycastResult[voxelIndex].toVector3();
   Vector3f normal = surfaceNormals[voxelIndex];
 
-  if(should_propagate_from_neighbour(x - 1, y, width, height, label, loc, normal, raycastResult, surfaceNormals, voxelData, indexData) ||
-     should_propagate_from_neighbour(x + 1, y, width, height, label, loc, normal, raycastResult, surfaceNormals, voxelData, indexData) ||
-     should_propagate_from_neighbour(x, y - 1, width, height, label, loc, normal, raycastResult, surfaceNormals, voxelData, indexData) ||
-     should_propagate_from_neighbour(x, y + 1, width, height, label, loc, normal, raycastResult, surfaceNormals, voxelData, indexData))
+  bool foundPoint;
+  const SpaintVoxel voxel = readVoxel(voxelData, indexData, loc.toIntRound(), foundPoint);
+  if(!foundPoint) return;
+
+  Vector3u colour = VoxelColourReader<SpaintVoxel::hasColorInformation>::read(voxel);
+
+  if(should_propagate_from_neighbour(x - 1, y, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
+     should_propagate_from_neighbour(x + 1, y, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
+     should_propagate_from_neighbour(x, y - 1, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
+     should_propagate_from_neighbour(x, y + 1, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData))
   {
     mark_voxel(loc.toShortRound(), label, NULL, voxelData, indexData);
   }
