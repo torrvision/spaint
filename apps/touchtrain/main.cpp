@@ -2,6 +2,7 @@
  * raflperf: main.cpp
  */
 
+#include "LabelledPath.h"
 #include "TouchTrainUtil.h"
 
 #include <boost/assign/list_of.hpp>
@@ -26,6 +27,7 @@ using namespace raflevaluation;
 #include <tvgutil/SerializationUtil.h>
 #include <tvgutil/timing/Timer.h>
 #include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
 
 //#################### TYPEDEFS ####################
 
@@ -66,7 +68,7 @@ struct TouchTrainData
 {
   //#################### TYPEDEFS ####################
 
-  typedef std::vector<LabelledImagePath<Label> > LabelledImagePaths;
+  typedef std::vector<LabelledPath<Label> > LabelledImagePaths;
 
   //#################### PUBLIC VARIABLES ####################
 
@@ -185,7 +187,7 @@ int main(int argc, char *argv[])
 #endif
 
   // Time the random forest.
-  tvgutil::Timer<boost::chrono::seconds> timer("ForestEvaluationTime");
+  Timer<boost::chrono::seconds> timer("ForestEvaluationTime");
 
   // Evaluate the random forest on the various different parameter sets.
   std::cout << "[touchtrain] Cross-validating the performance of the forest on various parameter sets...\n";
@@ -205,7 +207,7 @@ int main(int argc, char *argv[])
   std::cout << "[touchtrain] " << timer << '\n';
 
   // Get a time-stamp for tagging the resulting files.
-  const std::string timeStamp = tvgutil::TimeUtil::get_iso_timestamp();
+  const std::string timeStamp = TimeUtil::get_iso_timestamp();
 
   // Time-stamp the results file.
   std::string textOutputResultPath =  touchDataset.m_crossValidationResults + "/crossvalidationresults-" + timeStamp + ".txt";
@@ -232,7 +234,7 @@ int main(int argc, char *argv[])
 
   std::string forestPath = touchDataset.m_models + "/randomForest-" + timeStamp + ".rf";
   std::cout << "[touchtrain] Saving the forest to: " << forestPath << "\n";
-  tvgutil::SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + timeStamp + ".rf", *randomForest);
+  SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + timeStamp + ".rf", *randomForest);
 
   return 0;
 }

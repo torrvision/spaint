@@ -27,11 +27,17 @@ SET(sources
 main.cpp
 )
 
+SET(headers
+LabelledPath.h
+TouchTrainUtil.h
+)
+
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(sources FILES ${sources})
+SOURCE_GROUP(headers FILES ${headers})
 
 ##########################################
 # Specify additional include directories #
