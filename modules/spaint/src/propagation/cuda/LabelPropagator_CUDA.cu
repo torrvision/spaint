@@ -6,6 +6,8 @@
 
 #include "propagation/shared/LabelPropagator_Shared.h"
 
+#define DEBUGGING 1
+
 namespace spaint {
 
 //#################### CUDA KERNELS ####################
@@ -53,6 +55,10 @@ void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult
     scene->index.getIndexData(),
     m_surfaceNormalsMB->GetData(MEMORYDEVICE_CUDA)
   );
+
+#if DEBUGGING
+  m_surfaceNormalsMB->UpdateHostFromDevice();
+#endif
 }
 
 void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
