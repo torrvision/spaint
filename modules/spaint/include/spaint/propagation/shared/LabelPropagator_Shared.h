@@ -109,12 +109,16 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
 }
 
 /**
- * \brief TODO
+ * \brief Calculates the normal of the specified voxel in the raycast result and writes it into the surface normals array.
+ *
+ * \param voxelIndex      The index of the voxel whose normal is to be calculated.
+ * \param raycastResult   The raycast result.
+ * \param voxelData       The scene's voxel data.
+ * \param indexData       The scene's index data.
+ * \param surfaceNormals  The array into which to write the calculated surface normal.
  */
 _CPU_AND_GPU_CODE_
-inline void write_surface_normal(int voxelIndex, const Vector4f *raycastResult,
-                                 const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                 Vector3f *surfaceNormals)
+inline void write_surface_normal(int voxelIndex, const Vector4f *raycastResult, const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, Vector3f *surfaceNormals)
 {
   Vector4f loc = raycastResult[voxelIndex];
 
