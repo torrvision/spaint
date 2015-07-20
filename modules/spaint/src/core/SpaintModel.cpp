@@ -47,7 +47,7 @@ const ITMPose& SpaintModel::get_pose() const
   return *m_trackingState->pose_d;
 }
 
-std::string SpaintModel::get_resources_dir() const
+const std::string& SpaintModel::get_resources_dir() const
 {
   return m_resourcesDir;
 }

@@ -116,7 +116,7 @@ public:
    *
    * \return The path to the resources directory.
    */
-  std::string get_resources_dir() const;
+  const std::string& get_resources_dir() const;
 
   /**
    * \brief Gets the dimensions of the RGB images from which the scene is being reconstructed.

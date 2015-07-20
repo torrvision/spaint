@@ -6,9 +6,6 @@
 #ifndef H_SPAINT_TOUCHDETECTOR
 #define H_SPAINT_TOUCHDETECTOR
 
-#include "../imageprocessing/interface/ImageProcessor.h"
-#include "../visualisers/interface/DepthVisualiser.h"
-
 #include <arrayfire.h>
 
 #include <ITMLib/Objects/ITMRenderState.h>
@@ -20,6 +17,9 @@
 
 #include <tvgutil/PropertyUtil.h>
 
+#include "../imageprocessing/interface/ImageProcessor.h"
+#include "../visualisers/interface/DepthVisualiser.h"
+
 namespace spaint {
 
 /**
@@ -30,7 +30,7 @@ class TouchDetector
   //#################### NESTED TYPES ####################
 public:
   /**
-   * \brief An instance of this calss can be used to provide the settings needed to configure a touch detector.
+   * \brief An instance of this class can be used to provide the settings needed to configure a touch detector.
    */
   class Settings
   {
