@@ -56,7 +56,18 @@ void TouchDetector::Settings::initialise(const std::map<std::string,std::string>
     GET_SETTING(saveCandidateComponentsPath);
   #undef GET_SETTING
 
-  if(!boost::filesystem::exists(forestPath)) throw std::runtime_error("Forest not found: " + forestPath);
+  if(!boost::filesystem::exists(forestPath)) throw std::runtime_error("Touch detection random forest not found: " + forestPath);
+
+  if(saveCandidateComponents)
+  {
+    if(!boost::filesystem::is_directory(saveCandidateComponentsPath))
+    {
+      throw std::runtime_error("Save candidate components path not found: " + saveCandidateComponentsPath + ". Please add a valid path to the touch settings.");
+    }
+
+    static size_t fileCount = TouchUtil::get_file_count(saveCandidateComponentsPath);
+    if(fileCount) throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + saveCandidateComponentsPath);
+  }
 }
 
 //~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
@@ -527,32 +538,23 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
 
 void TouchDetector::save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
-  static size_t fileCount = TouchUtil::get_file_count(m_touchSettings.saveCandidateComponentsPath);
+  static size_t imageCounter = 0;
 
-  if(fileCount)
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+
+  af::array maskAF(m_imageHeight, m_imageWidth, u8);
+
+  boost::format fiveDigits("%05d");
+  for(int i = 0; i < candidateCount; ++i)
   {
-    throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + m_touchSettings.saveCandidateComponentsPath);
-  }
-  else
-  {
-    static size_t imageCounter = 0;
+    maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    cv::Mat1b maskCV = OpenCVUtil::make_greyscale_image(maskAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 
-    const int *candidateIDs = candidateComponents.host<int>();
-    const int candidateCount = candidateComponents.dims(0);
-
-    af::array maskAF(m_imageHeight, m_imageWidth, u8);
-
-    boost::format fiveDigits("%05d");
-    for(int i = 0; i < candidateCount; ++i)
+    if(imageCounter < 1e5)
     {
-      maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
-      cv::Mat1b maskCV = OpenCVUtil::make_greyscale_image(maskAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
-
-      if(imageCounter < 1e5)
-      {
-        std::string saveString = m_touchSettings.saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
-        cv::imwrite(saveString, maskCV);
-      }
+      std::string saveString = m_touchSettings.saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+      cv::imwrite(saveString, maskCV);
     }
   }
 }
