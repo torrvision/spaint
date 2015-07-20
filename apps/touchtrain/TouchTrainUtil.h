@@ -5,49 +5,50 @@
 #ifndef H_TOUCHTRAINUTIL
 #define H_TOUCHTRAINUTIL
 
-#include <fstream>
-#include <string>
-
 #include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
 
 #include <rafl/examples/Example.h>
 
 #include <spaint/touch/TouchUtil.h>
 
+#include <tvgutil/WordExtractor.h>
+
 /**
- * \brief This class contains functions that help us to load labelled image paths and generate examples from them.
+ * \brief This class contains functions that help us to generate labelled image paths and generate examples from them.
  */
 struct TouchTrainUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief Generates an array of labelled image paths.
+   * \brief Generates a labelled path for each image in the specified images directory.
+   *        The labels for the various images are supplied in a separate annotation file.
    *
    * \param imagesPath      The path to the images directory.
-   * \param annotationPath  The path to the specified file containing the labels associated with each image in the images path.
+   * \param annotationPath  The path to a file containing the labels to associate with the images in the images path.
    *
    * The annotation is assumed to be in the following format: <imageName,label>
    *
-   * \return  An array containing the labelled image paths.
+   * \return   The labelled paths for all images in the specified images directory.
    */
   template <typename Label>
   static std::vector<LabelledPath<Label> > generate_labelled_image_paths(const std::string& imagesPath, const std::string& annotationPath)
   {
+    // FIXME: Make this robust to bad data.
+
     std::vector<LabelledPath<Label> > labelledImagePaths;
 
+    const std::string delimiter(", \r");
     std::ifstream fs(annotationPath.c_str());
-    std::string line;
-    while(std::getline(fs, line))
-    {
-      typedef boost::char_separator<char> sep;
-      typedef boost::tokenizer<sep> tokenizer;
-      tokenizer tok(line.begin(), line.end(), sep(", \r"));
-      std::vector<std::string> tokens(tok.begin(), tok.end());
+    if(!fs) throw std::runtime_error("The file: " + annotationPath + " could not be opened.");
 
-      std::string imageName = tokens[0];
-      Label label = boost::lexical_cast<Label>(tokens.back());
+    std::vector<std::vector<std::string> > lines = tvgutil::WordExtractor::extract_words(fs, delimiter);
+
+    for(size_t i = 0, size = lines.size(); i < size; ++i)
+    {
+      const std::vector<std::string>& words = lines[i];
+      std::string imageName = words[0];
+      Label label = boost::lexical_cast<Label>(words.back());
       labelledImagePaths.push_back(LabelledPath<Label>(imagesPath + "/" + imageName, label));
     }
 
