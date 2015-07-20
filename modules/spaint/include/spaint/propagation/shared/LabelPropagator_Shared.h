@@ -13,9 +13,23 @@ namespace spaint {
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int x, int y)
+inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::PackedLabel label,
+                                            const Vector3f& loc, const Vector4f *raycastResult, const Vector3f *surfaceNormals,
+                                            const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
-  return true;
+  if(neighbourX < 0 || neighbourX >= width || neighbourY < 0 || neighbourY >= height) return false;
+
+  Vector3f neighbourLoc = raycastResult[neighbourY * width + neighbourX].toVector3();
+
+  bool foundPoint;
+  const SpaintVoxel neighbourVoxel = readVoxel(voxelData, indexData, neighbourLoc.toIntRound(), foundPoint);
+  if(!foundPoint) return false;
+
+  Vector3f posOffset = neighbourLoc - loc;
+  float distanceSquared = dot(posOffset, posOffset);
+
+  //return distanceSquared < 10.0f;
+  return neighbourVoxel.packedLabel == label;
 }
 
 /**
@@ -29,14 +43,14 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
   int x = voxelIndex % width;
   int y = voxelIndex / width;
 
-  Vector3s loc = raycastResult[voxelIndex].toVector3().toShortRound();
+  Vector3f loc = raycastResult[voxelIndex].toVector3();
 
-  if(should_propagate_from_neighbour(x - 1, y, x, y) ||
-     should_propagate_from_neighbour(x + 1, y, x, y) ||
-     should_propagate_from_neighbour(x, y - 1, x, y) ||
-     should_propagate_from_neighbour(x, y + 1, x, y))
+  if(should_propagate_from_neighbour(x - 1, y, width, height, label, loc, raycastResult, surfaceNormals, voxelData, indexData) ||
+     should_propagate_from_neighbour(x + 1, y, width, height, label, loc, raycastResult, surfaceNormals, voxelData, indexData) ||
+     should_propagate_from_neighbour(x, y - 1, width, height, label, loc, raycastResult, surfaceNormals, voxelData, indexData) ||
+     should_propagate_from_neighbour(x, y + 1, width, height, label, loc, raycastResult, surfaceNormals, voxelData, indexData))
   {
-    mark_voxel(loc, label, NULL, voxelData, indexData);
+    mark_voxel(loc.toShortRound(), label, NULL, voxelData, indexData);
   }
 }
 
