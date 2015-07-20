@@ -96,6 +96,7 @@ private:
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> ITMSettings_CPtr;
+  typedef boost::shared_ptr<const Settings> TouchSettings_CPtr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
   typedef int Label;
   typedef rafl::RandomForest<Label> RF;
@@ -168,7 +169,7 @@ public:
    * \param itmSettings    The settings to use for InfiniTAM.
    * \param touchSettings  The settings needed to configure the touch detector.
    */
-  TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const Settings& touchSettings);
+  TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_CPtr& touchSettings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -63,7 +63,7 @@ void TouchDetector::Settings::initialise(const std::map<std::string,std::string>
 
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const Settings& touchSettings)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_CPtr& touchSettings)
 :
   // Debugging variables.
   m_debugDelayMs(30),
@@ -81,7 +81,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_itmSettings(itmSettings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
-  m_touchSettings(touchSettings)
+  m_touchSettings(*touchSettings)
 {
   // Set up the depth visualiser.
   if(itmSettings->deviceType == ITMLibSettings::DEVICE_CUDA)
