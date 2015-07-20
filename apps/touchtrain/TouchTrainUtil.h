@@ -68,17 +68,11 @@ struct TouchTrainUtil
     int labelledImagePathCount = static_cast<int>(labelledImagePaths.size());
     std::vector<Example_CPtr> result(labelledImagePathCount);
 
-#ifdef WITH_OPENMP
-    //#pragma omp parallel for FIXME: check why does not work in multiple threads.
-#endif
     for(int i = 0; i < labelledImagePathCount; ++i)
     {
         af::array img = af::loadImage(labelledImagePaths[i].path.c_str());
         rafl::Descriptor_CPtr descriptor = spaint::TouchUtil::calculate_histogram_descriptor(img);
         result[i].reset(new rafl::Example<Label>(descriptor, labelledImagePaths[i].label));
-#if 0
-        std::cout << "Filename: " << labelledImagePaths[i].m_imagePath << " Label: " << labelledImagePaths[i].m_label << std::endl;
-#endif
     }
 
     return result;
