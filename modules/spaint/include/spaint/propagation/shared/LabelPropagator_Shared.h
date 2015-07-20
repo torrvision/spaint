@@ -13,7 +13,7 @@ namespace spaint {
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::PackedLabel label,
+inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::Label label,
                                             const Vector3f& loc, const Vector3f& normal, const Vector3u& colour,
                                             const Vector4f *raycastResult, const Vector3f *surfaceNormals,
                                             const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
@@ -39,7 +39,7 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   float distanceSquared = dot(posOffset, posOffset);
   const float DISTANCE_SQUARED_THRESHOLD = 10.0f;
 
-  return neighbourVoxel.packedLabel == label &&
+  return neighbourVoxel.packedLabel.label == label &&
          angle < ANGLE_THRESHOLD &&
          colourDistance < COLOUR_THRESHOLD &&
          distanceSquared < DISTANCE_SQUARED_THRESHOLD;
@@ -49,7 +49,7 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
  * \brief TODO
  */
 _CPU_AND_GPU_CODE_
-inline void propagate_from_neighbours(int voxelIndex, int width, int height, SpaintVoxel::PackedLabel label,
+inline void propagate_from_neighbours(int voxelIndex, int width, int height, SpaintVoxel::Label label,
                                       const Vector4f *raycastResult, const Vector3f *surfaceNormals,
                                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
@@ -70,7 +70,7 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
      should_propagate_from_neighbour(x, y - 1, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
      should_propagate_from_neighbour(x, y + 1, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData))
   {
-    mark_voxel(loc.toShortRound(), label, NULL, voxelData, indexData);
+    mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }
 }
 

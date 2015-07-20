@@ -29,7 +29,7 @@ private:
   virtual void calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 
   /** Override */
-  virtual void perform_propagation(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
+  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 };
 

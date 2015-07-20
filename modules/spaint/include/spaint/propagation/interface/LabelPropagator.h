@@ -42,7 +42,7 @@ private:
   /**
    * \brief TODO
    */
-  virtual void perform_propagation(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
+  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                                    ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -50,7 +50,7 @@ public:
   /**
    * \brief TODO
    */
-  void propagate_label(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
+  void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                        ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 };
 

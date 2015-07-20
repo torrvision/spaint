@@ -377,8 +377,7 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
 
 void SpaintPipeline::run_propagation_section(const RenderState_CPtr& renderState)
 {
-  SpaintVoxel::PackedLabel packedLabel(m_interactor->get_semantic_label(), SpaintVoxel::LG_USER);
-  m_labelPropagator->propagate_label(packedLabel, renderState->raycastResult, m_model->get_scene().get());
+  m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
 }
 
 void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

@@ -6,7 +6,7 @@
 
 #include "propagation/shared/LabelPropagator_Shared.h"
 
-#define DEBUGGING 1
+#define DEBUGGING 0
 
 namespace spaint {
 
@@ -23,7 +23,7 @@ __global__ void ck_calculate_normals(const Vector4f *raycastResultData, int rayc
   }
 }
 
-__global__ void ck_perform_propagation(SpaintVoxel::PackedLabel label, const Vector4f *raycastResultData, int raycastResultSize, int width, int height,
+__global__ void ck_perform_propagation(SpaintVoxel::Label label, const Vector4f *raycastResultData, int raycastResultSize, int width, int height,
                                        const Vector3f *surfaceNormals, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
@@ -61,7 +61,7 @@ void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult
 #endif
 }
 
-void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::PackedLabel label, const ITMFloat4Image *raycastResult,
+void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
                                                ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
