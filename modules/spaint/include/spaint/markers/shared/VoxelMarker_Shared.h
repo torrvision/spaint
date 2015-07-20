@@ -28,8 +28,8 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
     // (a) The old label is the original (background) label.
     (oldLabel.label == 0 && oldLabel.group == SpaintVoxel::LG_USER) ||
 
-    // (b) The old label is not a user label and the new label is a forest prediction.
-    (oldLabel.group != SpaintVoxel::LG_USER && newLabel.group == SpaintVoxel::LG_FOREST) ||
+    // (b) The old and new labels are both non-user labels.
+    (oldLabel.group != SpaintVoxel::LG_USER && newLabel.group != SpaintVoxel::LG_USER) ||
 
     // (c) The new label was supplied by the user.
     newLabel.group == SpaintVoxel::LG_USER;
