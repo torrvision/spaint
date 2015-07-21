@@ -21,11 +21,17 @@ struct LabelPropagatorFactory
   /**
    * \brief Makes a label propagator.
    *
-   * \param raycastResultSize The size of the raycast result (in pixels).
-   * \param deviceType        The device on which the label propagator should operate.
-   * \return                  The label propagator.
+   * \param raycastResultSize                 The size of the raycast result (in pixels).
+   * \param deviceType                        The device on which the label propagator should operate.
+   * \param maxAngleBetweenNormals            The largest angle allowed between the normals of neighbouring voxels if propagation is to occur.
+   * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of neighbouring voxels if propagation is to occur.
+   * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if propagation is to occur.
+   * \return                                  The label propagator.
    */
-  static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType);
+  static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType,
+                                                    float maxAngleBetweenNormals = static_cast<float>(2.0f * M_PI / 180.0f),
+                                                    float maxSquaredDistanceBetweenColours = 160000.0f,
+                                                    float maxSquaredDistanceBetweenVoxels = 10.0f);
 };
 
 }

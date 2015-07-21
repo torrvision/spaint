@@ -12,25 +12,30 @@ namespace spaint {
 /**
  * \brief Determines whether or not the specified label should be propagated from a specified neighbouring voxel to the voxel of interest.
  *
- * \param neighbourX      The x coordinate of the neighbour in the raycast result.
- * \param neighbourY      The y coordinate of the neighbour in the raycast result.
- * \param width           The width of the raycast result.
- * \param height          The height of the raycast result.
- * \param label           The label being propagated.
- * \param loc             The position of the voxel of interest in the scene.
- * \param normal          The surface normal of the voxel of interest.
- * \param colour          The RGB colour of the voxel of interest.
- * \param raycastResult   The raycast result.
- * \param surfaceNormals  The surface normals for the voxels in the raycast result.
- * \param voxelData       The scene's voxel data.
- * \param indexData       The scene's index data.
- * \return                true, if the label should be propagated from the neighbour, or false otherwise.
+ * \param neighbourX                        The x coordinate of the neighbour in the raycast result.
+ * \param neighbourY                        The y coordinate of the neighbour in the raycast result.
+ * \param width                             The width of the raycast result.
+ * \param height                            The height of the raycast result.
+ * \param label                             The label being propagated.
+ * \param loc                               The position of the voxel of interest in the scene.
+ * \param normal                            The surface normal of the voxel of interest.
+ * \param colour                            The RGB colour of the voxel of interest.
+ * \param raycastResult                     The raycast result.
+ * \param surfaceNormals                    The surface normals for the voxels in the raycast result.
+ * \param voxelData                         The scene's voxel data.
+ * \param indexData                         The scene's index data.
+ * \param maxAngleBetweenNormals            The largest angle allowed between the normals of the neighbour and the voxel of interest if propagation is to occur.
+ * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of the neighbour and the voxel of interest if propagation is to occur.
+ * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of the neighbour and the voxel of interest if propagation is to occur.
+ * \return                                  true, if the label should be propagated from the neighbour, or false otherwise.
  */
 _CPU_AND_GPU_CODE_
 inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::Label label,
                                             const Vector3f& loc, const Vector3f& normal, const Vector3u& colour,
                                             const Vector4f *raycastResult, const Vector3f *surfaceNormals,
-                                            const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+                                            const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                            float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
+                                            float maxSquaredDistanceBetweenVoxels)
 {
   // If the neighbour is outside the raycast result, early out.
   if(neighbourX < 0 || neighbourX >= width || neighbourY < 0 || neighbourY >= height) return false;
@@ -47,42 +52,44 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   Vector3u neighbourColour = VoxelColourReader<SpaintVoxel::hasColorInformation>::read(neighbourVoxel);
 
   // Compute the angle between the neighbour's normal and the normal of the voxel of interest.
-  float angle = acosf(dot(normal, neighbourNormal) / (length(normal) * length(neighbourNormal)));
+  float angleBetweenNormals = acosf(dot(normal, neighbourNormal) / (length(normal) * length(neighbourNormal)));
 
   // Compute the distance between the neighbour's colour and the colour of the voxel of interest.
-  float colourDistance = length((neighbourColour - colour).toFloat());
+  Vector3f colourOffset = (neighbourColour - colour).toFloat();
+  float squaredDistanceBetweenColours = dot(colourOffset, colourOffset);
 
   // Compute the squared distance between the neighbour's position and the position of the voxel of interest.
   Vector3f posOffset = neighbourLoc - loc;
-  float distanceSquared = dot(posOffset, posOffset);
+  float squaredDistanceBetweenVoxels = dot(posOffset, posOffset);
 
   // Decide whether or not propagation should occur.
-  const float ANGLE_THRESHOLD = static_cast<float>(2.0f * M_PI / 180.0f);
-  const float COLOUR_THRESHOLD = 400.0f;
-  const float DISTANCE_SQUARED_THRESHOLD = 10.0f;
-
   return neighbourVoxel.packedLabel.label == label &&
-         angle < ANGLE_THRESHOLD &&
-         colourDistance < COLOUR_THRESHOLD &&
-         distanceSquared < DISTANCE_SQUARED_THRESHOLD;
+         angleBetweenNormals <= maxAngleBetweenNormals &&
+         squaredDistanceBetweenColours <= maxSquaredDistanceBetweenColours &&
+         squaredDistanceBetweenVoxels <= maxSquaredDistanceBetweenVoxels;
 }
 
 /**
  * \brief Propagates the specified label to the specified voxel as necessary, based on its own properties and those of its neighbours.
  *
- * \param voxelIndex      The index of the voxel in the raycast result.
- * \param width           The width of the raycast result.
- * \param height          The height of the raycast result.
- * \param label           The label being propagated.
- * \param raycastResult   The raycast result.
- * \param surfaceNormals  The surface normals for the voxels in the raycast result.
- * \param voxelData       The scene's voxel data.
- * \param indexData       The scene's index data.
+ * \param voxelIndex                        The index of the voxel in the raycast result.
+ * \param width                             The width of the raycast result.
+ * \param height                            The height of the raycast result.
+ * \param label                             The label being propagated.
+ * \param raycastResult                     The raycast result.
+ * \param surfaceNormals                    The surface normals for the voxels in the raycast result.
+ * \param voxelData                         The scene's voxel data.
+ * \param indexData                         The scene's index data.
+ * \param maxAngleBetweenNormals            The largest angle allowed between the normals of the neighbour and the voxel of interest if propagation is to occur.
+ * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of the neighbour and the voxel of interest if propagation is to occur.
+ * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of the neighbour and the voxel of interest if propagation is to occur.
  */
 _CPU_AND_GPU_CODE_
 inline void propagate_from_neighbours(int voxelIndex, int width, int height, SpaintVoxel::Label label,
                                       const Vector4f *raycastResult, const Vector3f *surfaceNormals,
-                                      SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+                                      SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                      float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
+                                      float maxSquaredDistanceBetweenVoxels)
 {
   // Look up the position, normal and colour of the specified voxel.
   Vector3f loc = raycastResult[voxelIndex].toVector3();
@@ -99,13 +106,18 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
   int x = voxelIndex % width;
   int y = voxelIndex / width;
 
-  if(should_propagate_from_neighbour(x - 1, y, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
-     should_propagate_from_neighbour(x + 1, y, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
-     should_propagate_from_neighbour(x, y - 1, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData) ||
-     should_propagate_from_neighbour(x, y + 1, width, height, label, loc, normal, colour, raycastResult, surfaceNormals, voxelData, indexData))
+#define SPFN(nx,ny) should_propagate_from_neighbour( \
+  nx, ny, width, height, label, loc, normal, colour, \
+  raycastResult, surfaceNormals, voxelData, indexData, \
+  maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, \
+  maxSquaredDistanceBetweenVoxels)
+
+  if(SPFN(x - 1, y) || SPFN(x + 1, y) || SPFN(x, y - 1) || SPFN(x, y + 1))
   {
     mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }
+
+#undef SPFN
 }
 
 /**

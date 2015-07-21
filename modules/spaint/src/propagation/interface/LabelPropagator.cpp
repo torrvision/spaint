@@ -10,8 +10,11 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator::LabelPropagator(size_t raycastResultSize)
-: m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
+LabelPropagator::LabelPropagator(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+: m_maxAngleBetweenNormals(maxAngleBetweenNormals),
+  m_maxSquaredDistanceBetweenColours(maxSquaredDistanceBetweenColours),
+  m_maxSquaredDistanceBetweenVoxels(maxSquaredDistanceBetweenVoxels),
+  m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

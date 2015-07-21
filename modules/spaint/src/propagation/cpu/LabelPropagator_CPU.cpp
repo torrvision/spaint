@@ -10,8 +10,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize)
-: LabelPropagator(raycastResultSize)
+LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+: LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -20,7 +20,7 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
 {
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
-  const size_t raycastResultSize = raycastResult->dataSize;
+  const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
   Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
   const SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
 
@@ -39,7 +39,7 @@ void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const IT
   const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
-  const size_t raycastResultSize = raycastResult->dataSize;
+  const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
   const Vector3f *surfaceNormals = m_surfaceNormalsMB->GetData(MEMORYDEVICE_CPU);
   SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
   const int width = raycastResult->noDims.x;
@@ -49,7 +49,10 @@ void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const IT
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    propagate_from_neighbours(voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData);
+    propagate_from_neighbours(
+      voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData,
+      m_maxAngleBetweenNormals, m_maxSquaredDistanceBetweenColours, m_maxSquaredDistanceBetweenVoxels
+    );
   }
 }
 

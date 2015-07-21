@@ -24,19 +24,23 @@ __global__ void ck_calculate_normals(const Vector4f *raycastResultData, int rayc
 }
 
 __global__ void ck_perform_propagation(SpaintVoxel::Label label, const Vector4f *raycastResultData, int raycastResultSize, int width, int height,
-                                       const Vector3f *surfaceNormals, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+                                       const Vector3f *surfaceNormals, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                       float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
   {
-    propagate_from_neighbours(voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData);
+    propagate_from_neighbours(
+      voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData,
+      maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels
+    );
   }
 }
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize)
-: LabelPropagator(raycastResultSize)
+LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+: LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -77,7 +81,10 @@ void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const I
     raycastResult->noDims.y,
     m_surfaceNormalsMB->GetData(MEMORYDEVICE_CUDA),
     scene->localVBA.GetVoxelBlocks(),
-    scene->index.getIndexData()
+    scene->index.getIndexData(),
+    m_maxAngleBetweenNormals,
+    m_maxSquaredDistanceBetweenColours,
+    m_maxSquaredDistanceBetweenVoxels
   );
 }
 

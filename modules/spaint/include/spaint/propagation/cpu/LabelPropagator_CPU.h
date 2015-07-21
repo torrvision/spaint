@@ -19,9 +19,12 @@ public:
   /**
    * \brief Constructs a CPU-based label propagator.
    *
-   * \param raycastResultSize The size of the raycast result (in pixels).
+   * \param raycastResultSize                 The size of the raycast result (in pixels).
+   * \param maxAngleBetweenNormals            The largest angle allowed between the normals of neighbouring voxels if propagation is to occur.
+   * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of neighbouring voxels if propagation is to occur.
+   * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if propagation is to occur.
    */
-  explicit LabelPropagator_CPU(size_t raycastResultSize);
+  LabelPropagator_CPU(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

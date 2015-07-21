@@ -20,6 +20,15 @@ class LabelPropagator
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** The largest angle allowed between the normals of neighbouring voxels if propagation is to occur. */
+  const float m_maxAngleBetweenNormals;
+
+  /** The maximum squared distance allowed between the colours of neighbouring voxels if propagation is to occur. */
+  const float m_maxSquaredDistanceBetweenColours;
+
+  /** The maximum squared distance allowed between the positions of neighbouring voxels if propagation is to occur. */
+  const float m_maxSquaredDistanceBetweenVoxels;
+
   /** A memory block in which to store the surface normals of the voxels in the raycast result. */
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_surfaceNormalsMB;
 
@@ -28,9 +37,12 @@ protected:
   /**
    * \brief Constructs a label propagator.
    *
-   * \param raycastResultSize The size of the raycast result (in pixels).
+   * \param raycastResultSize                 The size of the raycast result (in pixels).
+   * \param maxAngleBetweenNormals            The largest angle allowed between the normals of neighbouring voxels if propagation is to occur.
+   * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of neighbouring voxels if propagation is to occur.
+   * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if propagation is to occur.
    */
-  explicit LabelPropagator(size_t raycastResultSize);
+  LabelPropagator(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
 
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
