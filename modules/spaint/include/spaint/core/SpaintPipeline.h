@@ -66,6 +66,9 @@ public:
     /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
     MODE_PROPAGATION,
 
+    /** In train-and-predict mode, we alternate training and prediction to achieve a pleasing interactive effect. */
+    MODE_TRAIN_AND_PREDICT,
+
     /** In training mode, a random forest is trained using voxels sampled from the current raycast. */
     MODE_TRAINING
   };
