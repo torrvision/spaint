@@ -228,6 +228,47 @@ include/spaint/picking/shared/Picker_Shared.h
 )
 
 ##
+SET(propagation_sources
+src/propagation/LabelPropagatorFactory.cpp
+)
+
+SET(propagation_headers
+include/spaint/propagation/LabelPropagatorFactory.h
+)
+
+##
+SET(propagation_cpu_sources
+src/propagation/cpu/LabelPropagator_CPU.cpp
+)
+
+SET(propagation_cpu_headers
+include/spaint/propagation/cpu/LabelPropagator_CPU.h
+)
+
+##
+SET(propagation_cuda_sources
+src/propagation/cuda/LabelPropagator_CUDA.cu
+)
+
+SET(propagation_cuda_headers
+include/spaint/propagation/cuda/LabelPropagator_CUDA.h
+)
+
+##
+SET(propagation_interface_sources
+src/propagation/interface/LabelPropagator.cpp
+)
+
+SET(propagation_interface_headers
+include/spaint/propagation/interface/LabelPropagator.h
+)
+
+##
+SET(propagation_shared_headers
+include/spaint/propagation/shared/LabelPropagator_Shared.h
+)
+
+##
 SET(randomforest_sources
 src/randomforest/ForestUtil.cpp
 src/randomforest/SpaintDecisionFunctionGenerator.cpp
@@ -445,6 +486,9 @@ ${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
+${propagation_sources}
+${propagation_cpu_sources}
+${propagation_interface_sources}
 ${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
@@ -473,6 +517,10 @@ ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
+${propagation_headers}
+${propagation_cpu_headers}
+${propagation_interface_headers}
+${propagation_shared_headers}
 ${randomforest_headers}
 ${sampling_headers}
 ${sampling_cpu_headers}
@@ -511,6 +559,7 @@ IF(WITH_CUDA)
     ${features_cuda_sources}
     ${markers_cuda_sources}
     ${picking_cuda_sources}
+    ${propagation_cuda_sources}
     ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
     ${visualisers_cuda_sources}
@@ -520,6 +569,7 @@ IF(WITH_CUDA)
     ${features_cuda_headers}
     ${markers_cuda_headers}
     ${picking_cuda_headers}
+    ${propagation_cuda_headers}
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
     ${visualisers_cuda_headers}
@@ -562,6 +612,11 @@ SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
+SOURCE_GROUP(propagation FILES ${propagation_sources} ${propagation_headers})
+SOURCE_GROUP(propagation\\cpu FILES ${propagation_cpu_sources} ${propagation_cpu_headers})
+SOURCE_GROUP(propagation\\cuda FILES ${propagation_cuda_sources} ${propagation_cuda_headers})
+SOURCE_GROUP(propagation\\interface FILES ${propagation_interface_sources} ${propagation_interface_headers})
+SOURCE_GROUP(propagation\\shared FILES ${propagation_shared_headers})
 SOURCE_GROUP(randomforest FILES ${randomforest_sources} ${randomforest_headers})
 SOURCE_GROUP(sampling FILES ${sampling_sources} ${sampling_headers})
 SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers})

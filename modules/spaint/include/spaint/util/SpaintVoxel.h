@@ -38,6 +38,9 @@ struct SpaintVoxel
     /** Labels in the "forest" group are those that have been predicted by the random forest. They are assumed to be unreliable, and ignored for training purposes. */
     LG_FOREST,
 
+    /** Labels in the "propagated" group are those that have been propagated from user labels. They are assumed to be reliable enough for training, but can be overwritten. */
+    LG_PROPAGATED,
+
     /** Labels in the "user" group are those that have been supplied directly by the user. They are assumed to be correct enough to use for training. */
     LG_USER
   };

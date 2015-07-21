@@ -14,6 +14,7 @@
 #include "SpaintRaycaster.h"
 
 #include "../features/interface/FeatureCalculator.h"
+#include "../propagation/interface/LabelPropagator.h"
 #include "../sampling/interface/PerLabelVoxelSampler.h"
 #include "../sampling/interface/UniformVoxelSampler.h"
 
@@ -62,6 +63,9 @@ public:
     /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
     MODE_PREDICTION,
 
+    /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
+    MODE_PROPAGATION,
+
     /** In training mode, a random forest is trained using voxels sampled from the current raycast. */
     MODE_TRAINING
   };
@@ -107,6 +111,9 @@ private:
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
   SpaintInteractor_Ptr m_interactor;
+
+  /** The label propagator. */
+  LabelPropagator_CPtr m_labelPropagator;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
@@ -336,6 +343,13 @@ private:
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
    */
   void run_prediction_section(const RenderState_CPtr& samplingRenderState);
+
+  /**
+   * \brief Runs the section of the pipeline associated with propagation mode.
+   *
+   * \param renderState The render state associated with the camera position from which to propagate.
+   */
+  void run_propagation_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with training mode.
