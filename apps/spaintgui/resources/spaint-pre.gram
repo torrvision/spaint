@@ -12,6 +12,7 @@ public <commands> = <standard_commands> ;
 public <spaint> =
   disable fusion |
   enable fusion |
+  switch to combo mode |
   switch to normal mode |
   switch to prediction mode |
   switch to propagation mode |

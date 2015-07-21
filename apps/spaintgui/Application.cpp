@@ -452,6 +452,7 @@ void Application::process_voice_input()
     if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
     if(command == "switch to propagation mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PROPAGATION);
     if(command == "switch to training mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
+    if(command == "switch to combo mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAIN_AND_PREDICT);
   }
 }
 
