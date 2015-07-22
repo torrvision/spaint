@@ -48,6 +48,7 @@ src/ExecutableFinder.cpp
 src/IDAllocator.cpp
 src/PropertyUtil.cpp
 src/RandomNumberGenerator.cpp
+src/WordExtractor.cpp
 )
 
 SET(toplevel_headers
@@ -61,6 +62,7 @@ include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
 include/tvgutil/SerializationUtil.h
+include/tvgutil/WordExtractor.h
 )
 
 #################################################################
