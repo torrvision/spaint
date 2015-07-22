@@ -400,11 +400,13 @@ ENDIF()
 SET(touch_sources
 src/touch/TouchDescriptorCalculator.cpp
 src/touch/TouchDetector.cpp
+src/touch/TouchSettings.cpp
 )
 
 SET(touch_headers
 include/spaint/touch/TouchDescriptorCalculator.h
 include/spaint/touch/TouchDetector.h
+include/spaint/touch/TouchSettings.h
 )
 
 ##

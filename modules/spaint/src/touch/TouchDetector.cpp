@@ -24,54 +24,11 @@
 
 #include <tvgutil/ArgUtil.h>
 #include <tvgutil/DirectoryUtil.h>
-#include <tvgutil/SerializationUtil.h>
 
 //#define DEBUG_TOUCH_VERBOSE
 //#define DEBUG_TOUCH_DISPLAY
 
 namespace spaint {
-
-//#################### NESTED TYPES ####################
-
-//~~~~~~~~~~~~~~~~~~~~ CONSTRUCTORS ~~~~~~~~~~~~~~~~~~~~
-
-TouchDetector::Settings::Settings(){}
-
-TouchDetector::Settings::Settings(const std::string& filename)
-{
-  using tvgutil::PropertyUtil;
-  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
-  initialise(PropertyUtil::make_property_map(tree));
-}
-
-void TouchDetector::Settings::initialise(const std::map<std::string,std::string>& properties)
-{
-  #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
-    GET_SETTING(forestPath);
-    GET_SETTING(lowerDepthThresholdMm);
-    GET_SETTING(minCandidateFraction);
-    GET_SETTING(minTouchAreaFraction);
-    GET_SETTING(maxCandidateFraction);
-    GET_SETTING(morphKernelSize);
-    GET_SETTING(saveCandidateComponents);
-    GET_SETTING(saveCandidateComponentsPath);
-  #undef GET_SETTING
-
-  if(!boost::filesystem::exists(forestPath)) throw std::runtime_error("Touch detection random forest not found: " + forestPath);
-
-  if(saveCandidateComponents)
-  {
-    if(!boost::filesystem::is_directory(saveCandidateComponentsPath))
-    {
-      throw std::runtime_error("Save candidate components path not found: " + saveCandidateComponentsPath + ". Please add a valid path to the touch settings.");
-    }
-
-    static size_t fileCount = tvgutil::DirectoryUtil::get_file_count(saveCandidateComponentsPath);
-    if(fileCount) throw std::runtime_error("Will not overwrite the " + boost::lexical_cast<std::string>(fileCount) + " images captured data in: " + saveCandidateComponentsPath);
-  }
-}
-
-//~~~~~~~~~~~~~~~~~~~~ PRIVATE MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
 
 //#################### CONSTRUCTORS ####################
 
@@ -121,7 +78,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   // Register the relevant decision function generators with the factory.
   rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
-  m_forest = tvgutil::SerializationUtil::load_text(m_touchSettings.forestPath, m_forest);
+  m_forest = m_touchSettings.forest;
 
 #if defined(DEBUG_TOUCH_VERBOSE)
   m_forest->output_statistics(std::cout);
