@@ -2,8 +2,8 @@
  * touchtrain: LabelledPath.h
  */
 
-#ifndef H_LABELLEDPATH
-#define H_LABELLEDPATH
+#ifndef H_TOUCHTRAIN_LABELLEDPATH
+#define H_TOUCHTRAIN_LABELLEDPATH
 
 #include <iostream>
 
