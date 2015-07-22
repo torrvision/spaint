@@ -19,6 +19,26 @@ PerformanceTable::PerformanceTable(const std::vector<std::string>& measureNames)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+const PerformanceTable::ParamSet& PerformanceTable::find_best_param_set(const std::string& measureName) const
+{
+  size_t bestRow = 0;
+  float bestResult = static_cast<float>(INT_MIN);
+  for(size_t i = 0, size = m_results.size(); i < size; ++i)
+  {
+    const std::map<std::string,PerformanceMeasure>& measures = m_results[i].second;
+    const PerformanceMeasure& measure = MapUtil::lookup(measures, measureName);
+
+    float mean = measure.get_mean();
+    if(mean > bestResult)
+    {
+      bestResult = mean;
+      bestRow = i;
+    }
+  }
+
+  return m_results[bestRow].first;
+}
+
 void PerformanceTable::output(std::ostream& os, const std::string& delimiter) const
 {
   // Output the parameter names.

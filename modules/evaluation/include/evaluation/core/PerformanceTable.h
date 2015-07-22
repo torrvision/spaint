@@ -60,6 +60,14 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Finds the parameter set that results in the best performance on a specified measure.
+   *
+   * \param measureName  The name of the performance measure to use when comparing parameter sets.
+   * \return             The parameter set that results in the best performance on the specified measure.
+   */
+  const ParamSet& find_best_param_set(const std::string& measureName) const;
+
+  /**
    * \brief Outputs the table to a stream.
    *
    * \param os        The stream.
