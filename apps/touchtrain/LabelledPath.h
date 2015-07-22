@@ -5,32 +5,32 @@
 #ifndef H_TOUCHTRAIN_LABELLEDPATH
 #define H_TOUCHTRAIN_LABELLEDPATH
 
-#include <iostream>
+#include <string>
 
 /**
- * \brief A struct that represents a labelled path.
+ * \brief An instance of this struct represents a path with an associated label.
  */
 template <typename Label>
 struct LabelledPath
 {
   //#################### PUBLIC VARIABLES ####################
 
-  /** The path. */
-  std::string path;
-
   /** The label associated with the path. */
-  Label label;
+  const Label label;
+
+  /** The path. */
+  const std::string path;
 
   //#################### CONSTRUCTORS ####################
 
   /**
-   * \brief Constructs the labelled image path.
+   * \brief Constructs a labelled path.
    *
-   * \param path   The path.
-   * \param label  The label associated with the specified path.
+   * \param path  The path.
+   * \param label The label associated with the path.
    */
-  LabelledPath(const std::string& imagePath_, const Label& label_)
-  : path(imagePath_), label(label_)
+  LabelledPath(const std::string& path_, const Label& label_)
+  : label(label_), path(path_)
   {}
 };
 
