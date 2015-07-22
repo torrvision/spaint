@@ -2,7 +2,7 @@
 # CMakeLists.txt for spaint/apps #
 ##################################
 
-IF(BUILD_ALL_APPS AND BUILD_EVALUATION_MODULES)
+IF(BUILD_AUXILIARY_APPS AND BUILD_EVALUATION_MODULES)
   ADD_SUBDIRECTORY(raflperf)
 
   IF(WITH_OPENCV)
