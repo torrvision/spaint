@@ -16,10 +16,10 @@ struct LabelledPath
   //#################### PUBLIC VARIABLES ####################
 
   /** The label associated with the path. */
-  const Label label;
+  Label label;
 
   /** The path. */
-  const std::string path;
+  std::string path;
 
   //#################### CONSTRUCTORS ####################
 

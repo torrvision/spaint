@@ -38,11 +38,11 @@ struct TouchTrainUtil
 
     std::vector<LabelledPath<Label> > labelledImagePaths;
 
-    const std::string delimiter(", \r");
     std::ifstream fs(annotationPath.c_str());
     if(!fs) throw std::runtime_error("The file: " + annotationPath + " could not be opened.");
 
-    std::vector<std::vector<std::string> > lines = tvgutil::WordExtractor::extract_words(fs, delimiter);
+    const std::string delimiters(", \r");
+    std::vector<std::vector<std::string> > lines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
 
     for(size_t i = 0, size = lines.size(); i < size; ++i)
     {

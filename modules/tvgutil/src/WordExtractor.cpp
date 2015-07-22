@@ -11,9 +11,9 @@ namespace tvgutil {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-std::vector<std::vector<std::string> > WordExtractor::extract_words(std::istream& is, const std::string& delimiter)
+std::vector<std::vector<std::string> > WordExtractor::extract_word_lines(std::istream& is, const std::string& delimiters)
 {
-  std::vector<std::vector<std::string> > words;
+  std::vector<std::vector<std::string> > wordLines;
 
   std::string line;
   while(std::getline(is, line))
@@ -21,12 +21,12 @@ std::vector<std::vector<std::string> > WordExtractor::extract_words(std::istream
     typedef boost::char_separator<char> sep;
     typedef boost::tokenizer<sep> tokenizer;
 
-    tokenizer tok(line.begin(), line.end(), sep(delimiter.c_str()));
-    std::vector<std::string> tokens(tok.begin(), tok.end());
-    words.push_back(tokens);
+    tokenizer tok(line.begin(), line.end(), sep(delimiters.c_str()));
+    std::vector<std::string> words(tok.begin(), tok.end());
+    wordLines.push_back(words);
   }
 
-  return words;
+  return wordLines;
 }
 
 }
