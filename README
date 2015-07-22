@@ -1,0 +1,167 @@
+This is the software bundle "Semantic Paint", created by:
+
+Stuart Golodetz <sgolodetz@gxstudios.net>
+Michael Sapienza <michael.sapienza@eng.ox.ac.uk>
+Julien Valentin <julien.valentin@eng.ox.ac.uk>
+Vibhav Vineet <vibhav.vineet@gmail.com>
+Ming-Ming Cheng <cmm.thu@qq.com>
+Anurag Arnab <anurag.arnab@gmail.com>
+Shahram Izadi <shahrami@microsoft.com>
+Philip H.S. Torr<philip.torr@eng.ox.ac.uk>
+
+It is built on top of the InfiniTAM fusion engine, created by:
+
+Victor Adrian Prisacariu <victor@robots.ox.ac.uk>
+Olaf Kaehler <olaf@robots.ox.ac.uk>
+Ming-Ming Cheng <cmm.thu@gmail.com>
+Carl Yuheng Ren <carl@robots.ox.ac.uk>
+Julien Valentin <julien.valentin@eng.ox.ac.uk>
+Philip H.S. Torr <philip.torr@eng.ox.ac.uk>
+Ian D Reid <ian.reid@adelaide.edu.au>
+David W Murray <dwm@robots.ox.ac.uk>
+
+1. Building the System
+----------------------
+
+1.1 Overview
+
+Semantic Paint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
+It has been tested on recent versions of all three operating systems, but may
+require additional work to build on older versions.
+
+1.2 Dependencies
+
+Semantic Paint depends on various 3rd party libraries. Some of these are
+required, in the sense that Semantic Paint will not function without them;
+others are optional, but skipping them will reduce functionality.
+
+Suitable versions of the required dependencies and some of the optional
+dependencies have been included in the repository, so Semantic Paint should
+build "out of the box". However, most users will probably want to install
+the remaining optional libraries in order to enable full functionality.
+
+  - ArrayFire
+    Status: Optional (needed for touch interaction and median filtering)
+    Default: Disabled
+    Flag: WITH_ARRAYFIRE
+
+  - Boost (version 1.56.0)
+    Status: Required
+
+  - CUDA (version 6.5)
+    Status: Optional (needed for GPU acceleration)
+    Default: Enabled
+    Flag: WITH_CUDA
+
+  - Eigen (version 3.2.2)
+    Status: Required
+
+  - GLEW (version 1.12.0)
+    Status: Required on Windows/Ubuntu
+
+  - InfiniTAM (version 2)
+    Status: Required
+
+  - Leap Motion SDK (version 2.2.1.24116)
+    Status: Optional (needed for experimental Leap Motion support)
+    Default: Disabled
+    Flag: WITH_LEAP
+
+  - Oculus SDK (version 0.5.0.1)
+    Status: Optional (needed for Oculus Rift support)
+    Default: Disabled
+    Flag: WITH_OVR
+
+  - OpenCV (version 2.4.9)
+    Status: Optional (needed for feature inspection mode)
+    Default: Disabled
+    Flag: WITH_OPENCV
+
+  - OpenGL
+    Status: Required
+
+  - OpenMP
+    Status: Optional, but recommended (needed for faster training/prediction)
+    Default: Disabled
+    Flag: WITH_OPENMP
+    Notes: Doesn't work on Mac OS X
+
+  - OpenNI (version 2)
+    Status: Optional, but recommended (needed for live reconstruction)
+    Default: Disabled
+    Flag: WITH_OPENNI
+
+  - SDL (version 2-2.0.3)
+    Status: Required
+
+  - Vicon SDK
+    Status: Optional (needed for the Vicon tracker)
+    Default: Disabled
+    Flag: WITH_VICON
+
+1.3 Build Process (Windows)
+
+TODO
+
+1.4 Build Process (Unix)
+
+  a) Choose a root directory, hereafter referred to as <root>.
+
+  b) Clone the InfiniTAM repository into <root>/InfiniTAM.
+
+  c) Build InfiniTAM using CMake.
+
+  d) Clone Semantic Paint into <root>/spaint, e.g.
+
+     $ git clone git@bitbucket.org:sgolodetz/spaint.git spaint
+
+  e) Change to the spaint directory:
+
+     $ cd spaint
+
+  f) Run the top-level build script:
+
+     $ ./build-nix.sh "Unix Makefiles" Release
+
+  g) Change to the build directory and run ccmake:
+
+     $ cd build
+     $ ccmake ..
+
+  h) Enable any optional libraries you want and supply the paths.
+
+  i) Reconfigure and regenerate the makefiles.
+
+  j) Build with the optional libraries enabled, e.g.
+
+     $ make -j4
+
+2. Running the System
+---------------------
+
+The build process will build various applications, libraries and test
+programs in <root>/build. The main application can be found at:
+
+<root>/build/bin/apps/spaintgui/spaintgui
+
+It can be run "out of the box" from any working directory for live
+reconstruction, provided you have built with OpenNI support.
+
+If you want to reconstruct from data stored on disk (e.g. the Teddy
+sequence that is used in InfiniTAM), you can pass the same parameters
+that would normally be passed to InfiniTAM to spaintgui, e.g.:
+
+$ ./spaintgui Teddy/calib.txt Teddy/Frames/%04i.ppm Teddy/Frames/%04i.pgm
+
+The arguments specify a text file containing calibration parameters,
+and masks for the RGB and depth images in the input sequence.
+
+3. Additional Documentation
+---------------------------
+
+There will ultimately be a technical report shipped along with this
+package. It is currently in the process of being written.
+
+History:
+
+2015-JUL-23: initial draft
