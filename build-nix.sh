@@ -37,8 +37,10 @@ then
   mkdir build
   cd build
 
+  # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
   cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 ..
+  cmake ..
   cd ..
 fi
 
