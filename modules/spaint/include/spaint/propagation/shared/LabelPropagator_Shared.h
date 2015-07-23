@@ -113,7 +113,10 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
   maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, \
   maxSquaredDistanceBetweenVoxels)
 
-  if(SPFN(x - 1, y) || SPFN(x + 1, y) || SPFN(x, y - 1) || SPFN(x, y + 1))
+  if((SPFN(x - 2, y) && SPFN(x - 5, y)) ||
+     (SPFN(x + 2, y) && SPFN(x + 5, y)) ||
+     (SPFN(x, y - 2) && SPFN(x, y - 5)) ||
+     (SPFN(x, y + 2) && SPFN(x, y + 5)))
   {
     mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }

@@ -31,8 +31,8 @@ struct LabelPropagatorFactory
    */
   static LabelPropagator_CPtr make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType,
                                                     float maxAngleBetweenNormals = static_cast<float>(2.0f * M_PI / 180.0f),
-                                                    float maxSquaredDistanceBetweenColours = 160000.0f,
-                                                    float maxSquaredDistanceBetweenVoxels = 10.0f);
+                                                    float maxSquaredDistanceBetweenColours = static_cast<float>(INT_MAX),
+                                                    float maxSquaredDistanceBetweenVoxels = static_cast<float>(INT_MAX));
 };
 
 }
