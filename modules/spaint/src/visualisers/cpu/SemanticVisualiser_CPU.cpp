@@ -1,5 +1,6 @@
 /**
  * spaint: SemanticVisualiser_CPU.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "visualisers/cpu/SemanticVisualiser_CPU.h"

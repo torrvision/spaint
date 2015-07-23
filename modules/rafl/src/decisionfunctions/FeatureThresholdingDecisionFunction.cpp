@@ -1,5 +1,6 @@
 /**
  * rafl: FeatureThresholdingDecisionFunction.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "decisionfunctions/FeatureThresholdingDecisionFunction.h"

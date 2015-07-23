@@ -1,5 +1,6 @@
 /**
  * spaintgui: CUDAInstantiations.cu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include <ITMLib/Engine/DeviceSpecific/CUDA/ITMRenTracker_CUDA.cu>

@@ -1,5 +1,6 @@
 /**
  * spaint: DepthVisualiser_CPU.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "visualisers/cpu/DepthVisualiser_CPU.h"

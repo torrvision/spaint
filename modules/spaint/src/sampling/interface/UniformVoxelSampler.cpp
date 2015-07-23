@@ -1,5 +1,6 @@
 /**
  * spaint: UniformVoxelSampler.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "sampling/interface/UniformVoxelSampler.h"

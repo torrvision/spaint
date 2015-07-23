@@ -1,5 +1,6 @@
 /**
  * rigging: SimpleCamera.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "SimpleCamera.h"

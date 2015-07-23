@@ -1,5 +1,6 @@
 /**
  * spaint: Picker_CUDA.cu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include <stdexcept>
