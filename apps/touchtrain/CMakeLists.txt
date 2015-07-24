@@ -29,7 +29,6 @@ main.cpp
 
 SET(headers
 LabelledPath.h
-TouchTrainUtil.h
 )
 
 #############################
