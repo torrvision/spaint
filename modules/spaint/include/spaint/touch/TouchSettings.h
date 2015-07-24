@@ -22,11 +22,19 @@ private:
   typedef rafl::RandomForest<Label> RF;
   typedef boost::shared_ptr<RF> RF_Ptr;
 
-  //#################### PUBLIC VARIABLES ####################
-public:
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** The full path to the file containing the random forest used to filter touch regions. */
   boost::filesystem::path fullForestPath;
 
+  /** A flag indicating whether or not to save images of the candidate connected components. */
+  bool saveCandidateComponents;
+
+  /** The path to use when saving the candidate components. */
+  std::string saveCandidateComponentsPath;
+
+  //#################### PUBLIC VARIABLES ####################
+public:
   /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
   int lowerDepthThresholdMm;
 
@@ -42,12 +50,6 @@ public:
   /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
   int morphKernelSize;
 
-  /** A flag indicating whether or not to save images of the candidate connected components. */
-  bool saveCandidateComponents;
-
-  /** The path to use when saving the candidate components. */
-  std::string saveCandidateComponentsPath;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -62,6 +64,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets the path to use when saving the candidate components.
+   *
+   * \return  The path to use when saving the candidate components.
+   */
+  const std::string& get_save_candidate_components_path() const;
+
+  /**
    * \brief Loads a random forest from the file specified by the forest path.
    *
    * The loading is done in TouchSettings rather than TouchDetector to work around a weird compiler bug.
@@ -69,6 +78,13 @@ public:
    * \return  The random forest that has been loaded.
    */
   RF_Ptr load_forest() const;
+
+  /**
+   * \brief Gets whether or not to save images of the candidate connected components.
+   *
+   * \return  true, if we should save images of the candidate connected components, or false otherwise.
+   */
+  bool should_save_candidate_components() const;
 };
 
 }

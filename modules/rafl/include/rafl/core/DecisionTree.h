@@ -174,7 +174,7 @@ public:
       std::string decisionFunctionGeneratorType;
       unsigned int randomSeed = 0;
 
-      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
+      #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param)
         GET_SETTING(candidateCount);
         GET_SETTING(decisionFunctionGeneratorParams);
         GET_SETTING(decisionFunctionGeneratorType);

@@ -118,7 +118,7 @@ try
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
-  if(m_touchSettings->saveCandidateComponents)
+  if(m_touchSettings->should_save_candidate_components())
   {
     save_candidate_components(candidateComponents, diffRawRaycastInMm);
   }
@@ -508,7 +508,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
 
     if(imageCounter < 1e5)
     {
-      std::string saveString = m_touchSettings->saveCandidateComponentsPath + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+      std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
       cv::imwrite(saveString, maskCV);
     }
   }
