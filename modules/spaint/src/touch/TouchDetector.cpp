@@ -75,9 +75,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
   m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
 
-  // Register the relevant decision function generators with the factory.
-  rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
-
   m_forest = m_touchSettings.forest;
 
 #if defined(DEBUG_TOUCH_VERBOSE)

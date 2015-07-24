@@ -43,6 +43,9 @@ void TouchSettings::initialise(const std::map<std::string,std::string>& properti
   boost::filesystem::path fullForestPath = m_touchSettingsFile.branch_path() / forestPath;
   if(!boost::filesystem::exists(fullForestPath)) throw std::runtime_error("Touch detection random forest not found: " + forestPath);
 
+  // Register the relevant decision function generators with the factory.
+  rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
+
   forest = SerializationUtil::load_text(fullForestPath.string(), forest);
 
   if(saveCandidateComponents)
