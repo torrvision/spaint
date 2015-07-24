@@ -5,9 +5,6 @@
 #ifndef H_SPAINT_TOUCHSETTINGS
 #define H_SPAINT_TOUCHSETTINGS
 
-#include <map>
-#include <string>
-
 #include <boost/filesystem.hpp>
 
 #include <rafl/core/RandomForest.h>
@@ -58,7 +55,6 @@ public:
 
   //#################### CONSTRUCTORS ####################
 public:
-
   /**
    * \brief Attempts to load settings from the specified XML file.
    *
@@ -67,6 +63,12 @@ public:
    * \param touchSettingsFile The path to the XML file containing the touch settings.
    */
   explicit TouchSettings(const boost::filesystem::path& touchSettingsFile);
+
+  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
+private:
+  /** Deliberately private and unimplemented. */
+  TouchSettings(const TouchSettings&);
+  TouchSettings& operator=(const TouchSettings&);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

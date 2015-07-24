@@ -29,7 +29,7 @@ private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
-  typedef boost::shared_ptr<const TouchSettings> TouchSettings_CPtr;
+  typedef boost::shared_ptr<TouchSettings> TouchSettings_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMView> View_Ptr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
@@ -71,7 +71,7 @@ public:
    * \param view                The InfiniTAM view (contains the raw depth image).
    * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  explicit TouchSelector(const Settings_CPtr& settings, const TouchSettings_CPtr& touchSettings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
+  TouchSelector(const Settings_CPtr& settings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
