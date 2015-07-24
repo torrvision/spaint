@@ -22,15 +22,10 @@ private:
   typedef rafl::RandomForest<Label> RF;
   typedef boost::shared_ptr<RF> RF_Ptr;
 
-  //#################### PRIVATE VARIABLES ####################
-private:
-  /** The path to the XML file containing the touch settings. */
-  boost::filesystem::path m_touchSettingsFile;
-
   //#################### PUBLIC VARIABLES ####################
 public:
-  /** The path to the file containing the random forest used to filter touch regions. */
-  std::string forestPath;
+  /** The full path to the file containing the random forest used to filter touch regions. */
+  boost::filesystem::path fullForestPath;
 
   /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
   int lowerDepthThresholdMm;
@@ -47,7 +42,7 @@ public:
   /** The side length of the morphological opening kernel that is applied to the change mask to reduce noise. */
   int morphKernelSize;
 
-  /** A flag indicating whether to save images of the candidate connected components. */
+  /** A flag indicating whether or not to save images of the candidate connected components. */
   bool saveCandidateComponents;
 
   /** The path to use when saving the candidate components. */
@@ -56,7 +51,7 @@ public:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Attempts to load settings from the specified XML file.
+   * \brief Attempts to load touch settings from the specified XML file.
    *
    * This will throw if the settings cannot be successfully loaded.
    *
@@ -64,32 +59,16 @@ public:
    */
   explicit TouchSettings(const boost::filesystem::path& touchSettingsFile);
 
-  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
-private:
-  /** Deliberately private and unimplemented. */
-  TouchSettings(const TouchSettings&);
-  TouchSettings& operator=(const TouchSettings&);
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Loads a random forest from the file specified by the forest path.
+   *
+   * The loading is done in TouchSettings rather than TouchDetector to work around a weird compiler bug.
+   *
+   * \return  The random forest that has been loaded.
    */
   RF_Ptr load_forest() const;
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief TODO
-   */
-  boost::filesystem::path determine_full_forest_path() const;
-
-  /**
-   * \brief Load settings from a property map.
-   *
-   * \param properties  The property map.
-   */
-  void initialise(const std::map<std::string,std::string>& properties);
 };
 
 }
