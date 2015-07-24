@@ -16,7 +16,6 @@
 
 #include <tvgutil/MapUtil.h>
 
-
 namespace raflevaluation {
 
 /**
