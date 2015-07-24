@@ -16,9 +16,10 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchSettings::TouchSettings(const std::string& filename)
+TouchSettings::TouchSettings(const boost::filesystem::path& touchSettingsFile)
+: m_touchSettingsFile(touchSettingsFile)
 {
-  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
+  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(touchSettingsFile.string());
   initialise(PropertyUtil::make_property_map(tree));
 }
 
@@ -26,6 +27,8 @@ TouchSettings::TouchSettings(const std::string& filename)
 
 void TouchSettings::initialise(const std::map<std::string,std::string>& properties)
 {
+  std::string forestPath;
+
   #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
     GET_SETTING(forestPath);
     GET_SETTING(lowerDepthThresholdMm);
@@ -37,9 +40,10 @@ void TouchSettings::initialise(const std::map<std::string,std::string>& properti
     GET_SETTING(saveCandidateComponentsPath);
   #undef GET_SETTING
 
-  if(!boost::filesystem::exists(forestPath)) throw std::runtime_error("Touch detection random forest not found: " + forestPath);
+  boost::filesystem::path fullForestPath = m_touchSettingsFile.branch_path() / forestPath;
+  if(!boost::filesystem::exists(fullForestPath)) throw std::runtime_error("Touch detection random forest not found: " + forestPath);
 
-  forest = SerializationUtil::load_text(forestPath, forest);
+  forest = SerializationUtil::load_text(fullForestPath.string(), forest);
 
   if(saveCandidateComponents)
   {

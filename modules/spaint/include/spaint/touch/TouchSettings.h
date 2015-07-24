@@ -8,6 +8,8 @@
 #include <map>
 #include <string>
 
+#include <boost/filesystem.hpp>
+
 #include <rafl/core/RandomForest.h>
 
 namespace spaint {
@@ -23,13 +25,15 @@ private:
   typedef rafl::RandomForest<Label> RF;
   typedef boost::shared_ptr<RF> RF_Ptr;
 
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The path to the XML file containing the touch settings. */
+  boost::filesystem::path m_touchSettingsFile;
+
   //#################### PUBLIC VARIABLES ####################
 public:
   /** The random forest used to filter touch regions. */
   RF_Ptr forest;
-
-  /** The path to the random forest used to filter touch regions. */
-  std::string forestPath;
 
   /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
   int lowerDepthThresholdMm;
@@ -60,9 +64,9 @@ public:
    *
    * This will throw if the settings cannot be successfully loaded.
    *
-   * \param filename The name of the file.
+   * \param touchSettingsFile The path to the XML file containing the touch settings.
    */
-  explicit TouchSettings(const std::string& filename);
+  explicit TouchSettings(const boost::filesystem::path& touchSettingsFile);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<forestPath>./resources/DefaultRandomForest.rf</forestPath>
+<forestPath>DefaultRandomForest.rf</forestPath>
 <lowerDepthThresholdMm>10</lowerDepthThresholdMm>
 <minCandidateFraction>0.01</minCandidateFraction>
 <minTouchAreaFraction>0.00001</minTouchAreaFraction>
