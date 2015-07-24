@@ -38,7 +38,6 @@ private:
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> ITMSettings_CPtr;
-  typedef boost::shared_ptr<TouchSettings> TouchSettings_Ptr;
   typedef boost::shared_ptr<const ITMView> View_CPtr;
   typedef int Label;
   typedef rafl::RandomForest<Label> RF;

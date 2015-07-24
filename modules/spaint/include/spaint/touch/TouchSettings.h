@@ -87,6 +87,10 @@ public:
   bool should_save_candidate_components() const;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<TouchSettings> TouchSettings_Ptr;
+
 }
 
 #endif
