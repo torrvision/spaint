@@ -1,5 +1,6 @@
 /**
  * spaint: UniformVoxelSampler_CUDA.cu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "sampling/cuda/UniformVoxelSampler_CUDA.h"

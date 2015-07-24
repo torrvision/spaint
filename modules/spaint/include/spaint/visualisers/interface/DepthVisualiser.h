@@ -1,5 +1,6 @@
 /**
  * spaint: DepthVisualiser.h
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #ifndef H_SPAINT_DEPTHVISUALISER

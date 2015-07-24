@@ -1,5 +1,6 @@
 /**
  * infermous: CRF2D.h
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #ifndef H_INFERMOUS_CRF2D

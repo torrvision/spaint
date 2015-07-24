@@ -1,5 +1,6 @@
 /**
  * spaint: ImageProcessor_CUDA.cu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "imageprocessing/cuda/ImageProcessor_CUDA.h"

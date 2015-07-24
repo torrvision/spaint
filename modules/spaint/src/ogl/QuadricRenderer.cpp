@@ -1,5 +1,6 @@
 /**
  * spaint: QuadricRenderer.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "ogl/QuadricRenderer.h"
