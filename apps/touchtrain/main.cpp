@@ -75,18 +75,18 @@ int main(int argc, char *argv[])
 
   if(argc != 2)
   {
-    std::cerr << "Usage: raflperf [<touch training set path>]\n";
+    std::cerr << "Usage: touchtrain [<touch training set path>]\n";
     return EXIT_FAILURE;
   }
 
   const size_t treeCount = 8;
-  const size_t splitBudget = 1048576/2;
+  const size_t splitBudget = 1048576 / 2;
 
   TouchTrainData<Label> touchDataset(argv[1], list_of(2)(3)(4)(5));
-  std::cout << "[touchtrain] Training set root: " << touchDataset.m_root << '\n';
+  std::cout << "[touchtrain] Training set root: " << touchDataset.get_root_directory() << '\n';
 
   std::cout << "[touchtrain] Generating examples...\n";
-  std::vector<Example_CPtr> examples = generate_examples(touchDataset.m_labelledImagePaths);
+  std::vector<Example_CPtr> examples = generate_examples(touchDataset.get_labelled_image_paths());
   std::cout << "[touchtrain] Number of examples = " << examples.size() << '\n';
 
   // Generate the parameter sets with which to test the random forest.
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
   const std::string timeStamp = TimeUtil::get_iso_timestamp();
 
   // Time-stamp the results file.
-  std::string textOutputResultPath =  touchDataset.m_crossValidationResults + "/crossvalidationresults-" + timeStamp + ".txt";
+  std::string textOutputResultPath =  touchDataset.get_cross_validation_results_directory() + "/crossvalidationresults-" + timeStamp + ".txt";
 
   // Output the performance table to the results file.
   std::ofstream resultsFile(textOutputResultPath.c_str());
@@ -164,9 +164,9 @@ int main(int argc, char *argv[])
   std::cout << "[touchtrain] The final trained forest statistics:\n";
   if(randomForest->train(splitBudget)) randomForest->output_statistics(std::cout);
 
-  std::string forestPath = touchDataset.m_models + "/randomForest-" + timeStamp + ".rf";
+  std::string forestPath = touchDataset.get_models_directory() + "/randomForest-" + timeStamp + ".rf";
   std::cout << "[touchtrain] Saving the forest to: " << forestPath << "\n";
-  SerializationUtil::save_text(touchDataset.m_models + "/randomForest-" + timeStamp + ".rf", *randomForest);
+  SerializationUtil::save_text(forestPath, *randomForest);
 
   return 0;
 }

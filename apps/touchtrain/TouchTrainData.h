@@ -18,7 +18,7 @@
 #include "LabelledPath.h"
 
 /**
- * \brief A struct that represents the file structure for the touch training data.
+ * \brief An instance of an instantiation of this class template represents a disk-based dataset for touchtrain.
  */
 template <typename Label>
 class TouchTrainData
@@ -27,43 +27,43 @@ class TouchTrainData
 private:
   typedef std::vector<LabelledPath<Label> > LabelledImagePaths;
 
-  //#################### PUBLIC VARIABLES ####################
-public:
-  /** The directory containing tables of results generated during cross-validation. */
-  std::string m_crossValidationResults;
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The directory in which to store the tables of results generated during cross-validation. */
+  std::string m_crossValidationResultsDir;
 
   /** An array of labelled image paths. */
   LabelledImagePaths m_labelledImagePaths;
 
-  /** The directory where the random forest models are stored. */
-  std::string m_models;
+  /** The directory in which to store the output models (i.e. the random forests). */
+  std::string m_modelsDir;
 
-  /** The root directory in which the touch training data is stored. */
-  std::string m_root;
+  /** The root directory of the dataset. */
+  std::string m_rootDir;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs the paths and data relevant for touch training.
    *
-   * \param root             The root directory containing the touch training data.
+   * \param root             The root directory of the dataset.
    * \param sequenceNumbers  An array containing the sequence numbers to be included during training.
    */
-  TouchTrainData(const std::string& root, const std::vector<size_t>& sequenceNumbers)
-  : m_root(root)
+  TouchTrainData(const std::string& rootDir, const std::vector<size_t>& sequenceNumbers)
+  : m_rootDir(rootDir)
   {
     size_t invalidCount = 0;
 
-    m_crossValidationResults = root + "/crossvalidation-results";
-    if(!check_path_exists(m_crossValidationResults)) ++invalidCount;
+    m_crossValidationResultsDir = rootDir + "/crossvalidation-results";
+    if(!check_path_exists(m_crossValidationResultsDir)) ++invalidCount;
 
-    m_models = root + "/models";
-    if(!check_path_exists(m_models)) ++invalidCount;
+    m_modelsDir = rootDir + "/models";
+    if(!check_path_exists(m_modelsDir)) ++invalidCount;
 
     boost::format threeDigits("%03d");
     for(size_t i = 0, size = sequenceNumbers.size(); i < size; ++i)
     {
-      std::string sequencePath = root + "/seq" + (threeDigits % sequenceNumbers[i]).str();
+      std::string sequencePath = rootDir + "/seq" + (threeDigits % sequenceNumbers[i]).str();
       if(!check_path_exists(sequencePath)) ++invalidCount;
 
       std::string imagePath = sequencePath + "/images";
@@ -87,6 +87,46 @@ public:
     {
       throw std::runtime_error("The aforementioned directories were not found, please create and populate them.");
     }
+  }
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the directory in which to store the tables of results generated during cross-validation.
+   *
+   * \return  The directory in which to store the tables of results generated during cross-validation.
+   */
+  const std::string& get_cross_validation_results_directory() const
+  {
+    return m_crossValidationResultsDir;
+  }
+
+  /**
+   * \brief TODO
+   */
+  const LabelledImagePaths& get_labelled_image_paths() const
+  {
+    return m_labelledImagePaths;
+  }
+
+  /**
+   * \brief Gets the directory in which to store the output models.
+   *
+   * \return  The directory in which to store the output models.
+   */
+  const std::string& get_models_directory() const
+  {
+    return m_modelsDir;
+  }
+
+  /**
+   * \brief Gets the root directory of the dataset.
+   *
+   * \return  The root directory of the dataset.
+   */
+  const std::string& get_root_directory() const
+  {
+    return m_rootDir;
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
