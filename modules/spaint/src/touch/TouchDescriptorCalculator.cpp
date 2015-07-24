@@ -3,17 +3,23 @@
  */
 
 #include "touch/TouchDescriptorCalculator.h"
+using namespace rafl;
 
 namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-rafl::Descriptor_CPtr TouchDescriptorCalculator::histogram(const af::array& img)
+Descriptor_CPtr TouchDescriptorCalculator::calculate_histogram_descriptor(const af::array& img)
 {
-  af::array globalHistogram = af::histogram(img, 64, 0, 255);
-  const float *gHist = globalHistogram.as(f32).host<float>();
-  const int gHistLen = globalHistogram.dims(0);
-  return rafl::Descriptor_CPtr(new rafl::Descriptor(gHist, gHist + gHistLen));
+  // Calculate a histogram from the image using ArrayFire.
+  const unsigned int binCount = 64;
+  const double minVal = 0.0;
+  const double maxVal = 255.0;
+  af::array afHistogram = af::histogram(img, binCount, minVal, maxVal);
+
+  // Copy it across to a rafl feature descriptor.
+  const float *afHistogramPtr = afHistogram.as(f32).host<float>();
+  return Descriptor_CPtr(new Descriptor(afHistogramPtr, afHistogramPtr + binCount));
 }
 
 }
