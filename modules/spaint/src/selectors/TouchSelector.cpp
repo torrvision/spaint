@@ -26,7 +26,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchSelector::TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints)
+TouchSelector::TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
+                             const View_Ptr& view, size_t maxKeptTouchPoints)
 : Selector(itmSettings),
   m_keptTouchPointCount(0),  
   m_keptTouchPointsFloatMB(new ORUtils::MemoryBlock<Vector3f>(maxKeptTouchPoints, true, true)),

@@ -72,7 +72,8 @@ public:
    * \param view                The InfiniTAM view (contains the raw depth image).
    * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
+  TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
+                const View_Ptr& view, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
