@@ -29,8 +29,8 @@ private:
 
   //#################### PUBLIC VARIABLES ####################
 public:
-  /** The random forest used to filter touch regions. */
-  RF_Ptr forest;
+  /** The path to the file containing the random forest used to filter touch regions. */
+  std::string forestPath;
 
   /** The threshold (in mm) below which the raw and raycasted depths are assumed to be equal. */
   int lowerDepthThresholdMm;
@@ -70,8 +70,20 @@ private:
   TouchSettings(const TouchSettings&);
   TouchSettings& operator=(const TouchSettings&);
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  RF_Ptr load_forest() const;
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief TODO
+   */
+  boost::filesystem::path determine_full_forest_path() const;
+
   /**
    * \brief Load settings from a property map.
    *

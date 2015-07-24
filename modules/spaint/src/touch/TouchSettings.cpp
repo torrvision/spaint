@@ -23,12 +23,28 @@ TouchSettings::TouchSettings(const boost::filesystem::path& touchSettingsFile)
   initialise(PropertyUtil::make_property_map(tree));
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+TouchSettings::RF_Ptr TouchSettings::load_forest() const
+{
+  // Register the relevant decision function generators with the factory.
+  rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
+
+  // Load the forest.
+  RF_Ptr forest = SerializationUtil::load_text(determine_full_forest_path().string(), forest);
+
+  return forest;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+boost::filesystem::path TouchSettings::determine_full_forest_path() const
+{
+  return m_touchSettingsFile.branch_path() / forestPath;
+}
 
 void TouchSettings::initialise(const std::map<std::string,std::string>& properties)
 {
-  std::string forestPath;
-
   #define GET_SETTING(param) tvgutil::MapUtil::typed_lookup(properties, #param, param);
     GET_SETTING(forestPath);
     GET_SETTING(lowerDepthThresholdMm);
@@ -40,13 +56,10 @@ void TouchSettings::initialise(const std::map<std::string,std::string>& properti
     GET_SETTING(saveCandidateComponentsPath);
   #undef GET_SETTING
 
-  boost::filesystem::path fullForestPath = m_touchSettingsFile.branch_path() / forestPath;
-  if(!boost::filesystem::exists(fullForestPath)) throw std::runtime_error("Touch detection random forest not found: " + forestPath);
-
-  // Register the relevant decision function generators with the factory.
-  rafl::DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
-
-  forest = SerializationUtil::load_text(fullForestPath.string(), forest);
+  if(!boost::filesystem::exists(determine_full_forest_path()))
+  {
+    throw std::runtime_error("Touch detection random forest not found: " + forestPath);
+  }
 
   if(saveCandidateComponents)
   {
