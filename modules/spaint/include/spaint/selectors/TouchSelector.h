@@ -27,6 +27,7 @@ class TouchSelector : public Selector
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
+  typedef boost::shared_ptr<const ITMLibSettings> ITMSettings_CPtr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
   typedef boost::shared_ptr<TouchSettings> TouchSettings_Ptr;
@@ -65,13 +66,13 @@ public:
   /*
    * \brief Constructs a touch selector.
    *
-   * \param settings            The settings to use for InfiniTAM.
+   * \param itmSettings         The settings to use for InfiniTAM.
    * \param touchSettings       The settings to use for the touch detector.
    * \param trackingState       The InfiniTAM tracking state (contains the camera pose).
    * \param view                The InfiniTAM view (contains the raw depth image).
    * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  TouchSelector(const Settings_CPtr& settings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
+  TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState, const View_Ptr& view, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
