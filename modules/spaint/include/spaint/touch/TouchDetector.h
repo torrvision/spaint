@@ -182,6 +182,14 @@ private:
   void process_debug_windows();
 
   /**
+   * \brief Saves the candidate component images to a directory.
+   *
+   * \param candidateComponents The candidate components denoting candidate touch interactions.
+   * \param diffRawRaycast      An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
+   */
+  void save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
+
+  /**
    * \brief Select candidate connected components that fall within a certain size range.
    *
    * \return  The IDs of the candidate components.
@@ -201,20 +209,12 @@ private:
   static af::array clamp_to_range(const af::array& arr, float lower, float upper);
 
   /**
-   * \brief Saves the candidate component images to a directory.
-   *
-   * \param candidateComponents The candidate components denoting candidate touch interactions.
-   * \param diffRawRaycast      An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
-   */
-  void save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
-
-  /**
    * \brief Converts an Eigen Vector to an InfiniTAM vector.
    *
    * \param v  The Eigen vector.
    * \return   The InfiniTAM vector.
    */
-  Vector3f to_itm(const Eigen::Vector3f& v);
+  static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
 }

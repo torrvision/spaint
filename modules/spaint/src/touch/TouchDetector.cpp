@@ -446,6 +446,29 @@ void TouchDetector::process_debug_windows()
   cv::waitKey(m_debugDelayMs);
 }
 
+void TouchDetector::save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
+{
+  static size_t imageCounter = 0;
+
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+
+  af::array maskAF(m_imageHeight, m_imageWidth, u8);
+
+  boost::format fiveDigits("%05d");
+  for(int i = 0; i < candidateCount; ++i)
+  {
+    maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    cv::Mat1b maskCV = OpenCVUtil::make_greyscale_image(maskAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+
+    if(imageCounter < 1e5)
+    {
+      std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+      cv::imwrite(saveString, maskCV);
+    }
+  }
+}
+
 af::array TouchDetector::select_candidate_components()
 {
   // Add one to every pixel in the connected component image to allow for a special zero component.
@@ -489,29 +512,6 @@ af::array TouchDetector::clamp_to_range(const af::array& arr, float lower, float
   arrayCopy = arrayCopy - (upperMask * arrayCopy) + (upperMask * upper);
 
   return arrayCopy;
-}
-
-void TouchDetector::save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
-{
-  static size_t imageCounter = 0;
-
-  const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
-
-  af::array maskAF(m_imageHeight, m_imageWidth, u8);
-
-  boost::format fiveDigits("%05d");
-  for(int i = 0; i < candidateCount; ++i)
-  {
-    maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
-    cv::Mat1b maskCV = OpenCVUtil::make_greyscale_image(maskAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
-
-    if(imageCounter < 1e5)
-    {
-      std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
-      cv::imwrite(saveString, maskCV);
-    }
-  }
 }
 
 Vector3f TouchDetector::to_itm(const Eigen::Vector3f& v)
