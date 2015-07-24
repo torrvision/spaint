@@ -48,20 +48,21 @@ typedef boost::shared_ptr<RF> RF_Ptr;
  * \param labelledImagePaths  The array of labelled image paths.
  * \return                    The examples.
  */
-static std::vector<boost::shared_ptr<const rafl::Example<Label> > > generate_examples(const std::vector<LabelledPath<Label> >& labelledImagePaths)
+std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<LabelledPath<Label> >& labelledImagePaths)
 {
-  typedef boost::shared_ptr<const rafl::Example<Label> > Example_CPtr;
-  int labelledImagePathCount = static_cast<int>(labelledImagePaths.size());
-  std::vector<Example_CPtr> result(labelledImagePathCount);
+  const size_t labelledImagePathCount = labelledImagePaths.size();
 
-  for(int i = 0; i < labelledImagePathCount; ++i)
+  typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
+  std::vector<Example_CPtr> examples(labelledImagePathCount);
+
+  for(size_t i = 0; i < labelledImagePathCount; ++i)
   {
-      af::array img = af::loadImage(labelledImagePaths[i].path.c_str());
-      rafl::Descriptor_CPtr descriptor = TouchDescriptorCalculator::calculate_histogram_descriptor(img);
-      result[i].reset(new rafl::Example<Label>(descriptor, labelledImagePaths[i].label));
+    af::array img = af::loadImage(labelledImagePaths[i].path.c_str());
+    Descriptor_CPtr descriptor = TouchDescriptorCalculator::calculate_histogram_descriptor(img);
+    examples[i].reset(new Example<Label>(descriptor, labelledImagePaths[i].label));
   }
 
-  return result;
+  return examples;
 }
 
 int main(int argc, char *argv[])
