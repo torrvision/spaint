@@ -7,7 +7,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 using boost::assign::list_of;
-using boost::assign::map_list_of;
 
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
@@ -15,8 +14,7 @@ using boost::assign::map_list_of;
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
-#include <rafl/examples/ExampleUtil.h>
-#include <rafl/examples/UnitCircleExampleGenerator.h>
+#include <rafl/decisionfunctions/DecisionFunctionGeneratorFactory.h>
 using namespace rafl;
 
 #include <raflevaluation/RandomForestEvaluator.h>
@@ -83,7 +81,7 @@ int main(int argc, char *argv[])
   const size_t treeCount = 8;
   const size_t splitBudget = 1048576/2;
 
-  TouchTrainData<Label> touchDataset(argv[1],list_of(2)(3)(4)(5));
+  TouchTrainData<Label> touchDataset(argv[1], list_of(2)(3)(4)(5));
   std::cout << "[touchtrain] Training set root: " << touchDataset.m_root << '\n';
 
   std::cout << "[touchtrain] Generating examples...\n";

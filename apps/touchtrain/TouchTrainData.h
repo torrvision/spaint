@@ -49,7 +49,7 @@ public:
    * \param root             The root directory containing the touch training data.
    * \param sequenceNumbers  An array containing the sequence numbers to be included during training.
    */
-  TouchTrainData(const std::string& root, std::vector<size_t> sequenceNumbers)
+  TouchTrainData(const std::string& root, const std::vector<size_t>& sequenceNumbers)
   : m_root(root)
   {
     size_t invalidCount = 0;
