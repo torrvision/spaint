@@ -6,6 +6,8 @@
 #ifndef H_RAFL_EXAMPLEUTIL
 #define H_RAFL_EXAMPLEUTIL
 
+#include <fstream>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
