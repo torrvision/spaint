@@ -71,15 +71,16 @@ public:
     if(!fs) throw std::runtime_error("Error: '" + filename + "' could not be opened");
 
     const std::string delimiters(", \r");
-    std::vector<std::vector<std::string> > lines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
+    std::vector<std::vector<std::string> > wordLines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
 
-    for(size_t i = 0, size = lines.size(); i < size; ++i)
+    for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
-      const std::vector<std::string>& words = lines[i];
+      const std::vector<std::string>& words = wordLines[i];
+
       Descriptor_Ptr descriptor(new Descriptor);
-      for(int i = 0; i < words.size() - 1; ++i)
+      for(int j = 0; j < words.size() - 1; ++j)
       {
-        descriptor->push_back(boost::lexical_cast<float>(words[i]));
+        descriptor->push_back(boost::lexical_cast<float>(words[j]));
       }
 
       Label label = boost::lexical_cast<Label>(words.back());

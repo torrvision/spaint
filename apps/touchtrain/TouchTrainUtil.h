@@ -42,14 +42,14 @@ struct TouchTrainUtil
     if(!fs) throw std::runtime_error("The file: " + annotationPath + " could not be opened.");
 
     const std::string delimiters(", \r");
-    std::vector<std::vector<std::string> > lines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
+    std::vector<std::vector<std::string> > wordLines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
 
-    for(size_t i = 0, size = lines.size(); i < size; ++i)
+    for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
-      const std::vector<std::string>& words = lines[i];
-      std::string imageName = words[0];
+      const std::vector<std::string>& words = wordLines[i];
+      const std::string& imageFilename = words[0];
       Label label = boost::lexical_cast<Label>(words.back());
-      labelledImagePaths.push_back(LabelledPath<Label>(imagesPath + "/" + imageName, label));
+      labelledImagePaths.push_back(LabelledPath<Label>(imagesPath + "/" + imageFilename, label));
     }
 
     return labelledImagePaths;
