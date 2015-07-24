@@ -5,8 +5,6 @@
 #ifndef H_SPAINT_TOUCHDESCRIPTORCALCULATOR
 #define H_SPAINT_TOUCHDESCRIPTORCALCULATOR
 
-#include "../ocv/OpenCVUtil.h"
-
 #include <arrayfire.h>
 
 #include <rafl/core/RandomForest.h>
