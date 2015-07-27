@@ -29,7 +29,7 @@ main.cpp
 
 SET(headers
 LabelledPath.h
-TouchTrainData.h
+TouchTrainDataset.h
 )
 
 #############################

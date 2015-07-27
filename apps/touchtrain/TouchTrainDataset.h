@@ -1,10 +1,10 @@
 /**
- * touchtrain: TouchTrainData.h
+ * touchtrain: TouchTrainDataset.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_TOUCHTRAIN_TOUCHTRAINDATA
-#define H_TOUCHTRAIN_TOUCHTRAINDATA
+#ifndef H_TOUCHTRAIN_TOUCHTRAINDATASET
+#define H_TOUCHTRAIN_TOUCHTRAINDATASET
 
 #include <fstream>
 #include <iostream>
@@ -21,7 +21,7 @@
  * \brief An instance of an instantiation of this class template represents a disk-based dataset for touchtrain.
  */
 template <typename Label>
-class TouchTrainData
+class TouchTrainDataset
 {
   //#################### TYPEDEFS ####################
 private:
@@ -49,7 +49,7 @@ public:
    * \param root             The root directory of the dataset.
    * \param sequenceNumbers  An array containing the sequence numbers to be included during training.
    */
-  TouchTrainData(const std::string& rootDir, const std::vector<size_t>& sequenceNumbers)
+  TouchTrainDataset(const std::string& rootDir, const std::vector<size_t>& sequenceNumbers)
   : m_rootDir(rootDir)
   {
     size_t invalidCount = 0;
