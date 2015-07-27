@@ -19,11 +19,9 @@
 #endif
 
 #include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <tvgutil/ArgUtil.h>
-#include <tvgutil/DirectoryUtil.h>
+using namespace tvgutil;
 
 //#define DEBUG_TOUCH_VERBOSE
 //#define DEBUG_TOUCH_DISPLAY
@@ -70,14 +68,14 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = m_touchSettings->minCandidateFraction; // 0.01f; // i.e. 1% of the image (determined empirically)
-  const float maxCandidateFraction = m_touchSettings->maxCandidateFraction; // 0.2f;   // i.e. 20% of the image (determined empirically)
-  m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
-  m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
+  m_minCandidateArea = static_cast<int>(m_touchSettings->minCandidateFraction * imageArea);
+  m_maxCandidateArea = static_cast<int>(m_touchSettings->maxCandidateFraction * imageArea);
 
+  // Load the random forest used to score the candidate connected components.
   m_forest = m_touchSettings->load_forest();
 
 #if defined(DEBUG_TOUCH_VERBOSE)
+  // Output the statistics of the forest for debugging purposes.
   m_forest->output_statistics(std::cout);
 #endif
 }
@@ -118,6 +116,7 @@ try
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
+  // If desired, save the candidate connected components for use with the touchtrain application.
   if(m_touchSettings->should_save_candidate_components())
   {
     save_candidate_components(candidateComponents, diffRawRaycastInMm);
@@ -332,7 +331,7 @@ int TouchDetector::pick_best_candidate_component_based_on_distance(const af::arr
       mask = m_connectedComponentImage == candidateIDs[i];
       meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
     }
-    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
+    size_t minIndex = ArgUtil::argmin(meanDistances);
     bestCandidateID = candidateIDs[minIndex];
   }
 
@@ -368,7 +367,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
     std::cout << "The pmf is: " << pmf << std::endl;
 #endif
   }
-  size_t maxIndex = tvgutil::ArgUtil::argmin(touchProb);
+  size_t maxIndex = ArgUtil::argmin(touchProb);
   if(touchProb[maxIndex] > 0.5f)
   {
     bestCandidateID = candidateIDs[maxIndex];
@@ -452,10 +451,8 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
 
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);
-
   af::array maskAF(m_imageHeight, m_imageWidth, u8);
 
-  boost::format fiveDigits("%05d");
   for(int i = 0; i < candidateCount; ++i)
   {
     maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
@@ -463,7 +460,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
 
     if(imageCounter < 1e5)
     {
-      std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (fiveDigits % imageCounter++).str() + ".ppm";
+      std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (boost::format("%05d") % imageCounter++).str() + ".ppm";
       cv::imwrite(saveString, maskCV);
     }
   }
