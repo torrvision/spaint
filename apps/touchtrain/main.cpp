@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   std::cout << "[touchtrain] Training set root: " << touchDataset.get_root_directory() << '\n';
 
   std::cout << "[touchtrain] Generating examples...\n";
-  std::vector<Example_CPtr> examples = generate_examples(touchDataset.get_labelled_image_paths());
+  std::vector<Example_CPtr> examples = generate_examples(touchDataset.get_training_image_paths());
   std::cout << "[touchtrain] Number of examples = " << examples.size() << '\n';
 
   // Generate the parameter sets with which to test the random forest.

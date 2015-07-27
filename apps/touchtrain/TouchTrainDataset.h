@@ -23,17 +23,10 @@
 template <typename Label>
 class TouchTrainDataset
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef std::vector<LabelledPath<Label> > LabelledImagePaths;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The directory in which to store the tables of results generated during cross-validation. */
   std::string m_crossValidationResultsDir;
-
-  /** An array of labelled image paths. */
-  LabelledImagePaths m_labelledImagePaths;
 
   /** The directory in which to store the output models (i.e. the random forests). */
   std::string m_modelsDir;
@@ -41,51 +34,61 @@ private:
   /** The root directory of the dataset. */
   std::string m_rootDir;
 
+  /** The paths to the training images, together with their associated labels. */
+  std::vector<LabelledPath<Label> > m_trainingImagePaths;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs the paths and data relevant for touch training.
+   * \brief Constructs a touchtrain dataset.
    *
-   * \param root             The root directory of the dataset.
-   * \param sequenceNumbers  An array containing the sequence numbers to be included during training.
+   * \param root            The root directory of the dataset.
+   * \param sequenceNumbers The sequence numbers to be included during training.
    */
   TouchTrainDataset(const std::string& rootDir, const std::vector<size_t>& sequenceNumbers)
   : m_rootDir(rootDir)
   {
+    // Maintain a count of the files and directories that are unexpectedly not found.
     size_t invalidCount = 0;
 
+    // Find the cross-validation results directory.
     m_crossValidationResultsDir = rootDir + "/crossvalidation-results";
     if(!check_path_exists(m_crossValidationResultsDir)) ++invalidCount;
 
+    // Find the models directory.
     m_modelsDir = rootDir + "/models";
     if(!check_path_exists(m_modelsDir)) ++invalidCount;
 
+    // Find the sequence directories and check that they have the correct contents.
     boost::format threeDigits("%03d");
     for(size_t i = 0, size = sequenceNumbers.size(); i < size; ++i)
     {
-      std::string sequencePath = rootDir + "/seq" + (threeDigits % sequenceNumbers[i]).str();
-      if(!check_path_exists(sequencePath)) ++invalidCount;
+      // Find the sequence directory itself.
+      std::string sequenceDir = rootDir + "/seq" + (threeDigits % sequenceNumbers[i]).str();
+      if(!check_path_exists(sequenceDir)) ++invalidCount;
 
-      std::string imagePath = sequencePath + "/images";
-      std::string annotationPath = sequencePath + "/annotation.txt";
-      if(!check_path_exists(imagePath)) ++invalidCount;
-      if(!check_path_exists(annotationPath)) ++invalidCount;
+      // Check that it contains an images directory and a file containing the image labels.
+      std::string imagesDir = sequenceDir + "/images";
+      std::string annotationFile = sequenceDir + "/annotation.txt";
+      if(!check_path_exists(imagesDir)) ++invalidCount;
+      if(!check_path_exists(annotationFile)) ++invalidCount;
 
-      LabelledImagePaths labelledImagePathSet = generate_labelled_image_paths(imagePath, annotationPath);
-
-      if(labelledImagePathSet.empty())
+      // Generate a set of labelled paths for the sequence's training images and check that it is non-empty.
+      std::vector<LabelledPath<Label> > sequenceTrainingImagePaths = generate_labelled_image_paths(imagesDir, annotationFile);
+      if(sequenceTrainingImagePaths.empty())
       {
-        std::cout << "[touchtrain] Expecting some data in: " << sequencePath << std::endl;
+        std::cout << "[touchtrain] Expecting some data in: " << sequenceDir << std::endl;
         ++invalidCount;
       }
 
-      // Append the labelled image paths from the current sequence directory to the global set.
-      m_labelledImagePaths.insert(m_labelledImagePaths.end(), labelledImagePathSet.begin(), labelledImagePathSet.end());
+      // Append the paths for the current sequence to the global set.
+      m_trainingImagePaths.insert(m_trainingImagePaths.end(), sequenceTrainingImagePaths.begin(), sequenceTrainingImagePaths.end());
     }
 
+    // If any of the expected data was missing, throw an error.
     if(invalidCount > 0)
     {
-      throw std::runtime_error("The aforementioned directories were not found, please create and populate them.");
+      throw std::runtime_error("Error: The aforementioned files and directories were not found, please create and populate them");
     }
   }
 
@@ -99,14 +102,6 @@ public:
   const std::string& get_cross_validation_results_directory() const
   {
     return m_crossValidationResultsDir;
-  }
-
-  /**
-   * \brief TODO
-   */
-  const LabelledImagePaths& get_labelled_image_paths() const
-  {
-    return m_labelledImagePaths;
   }
 
   /**
@@ -129,6 +124,16 @@ public:
     return m_rootDir;
   }
 
+  /**
+   * \brief Gets the paths to the training images, together with their associated labels.
+   *
+   * \return  The paths to the training images, together with their associated labels.
+   */
+  const std::vector<LabelledPath<Label> >& get_training_image_paths() const
+  {
+    return m_trainingImagePaths;
+  }
+
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
@@ -137,7 +142,7 @@ private:
    * If the path is not found, it outputs the expected path to std::cout.
    *
    * \param path  The path.
-   * \return      True, if the path exists, false otherwise.
+   * \return      true, if the path exists, or false otherwise.
    */
   static bool check_path_exists(const std::string& path)
   {
@@ -146,31 +151,29 @@ private:
       std::cout << "[touchtrain] Expecting to see: " << path << std::endl;
       return false;
     }
-    else
-    {
-      return true;
-    }
+
+    return true;
   }
 
   /**
    * \brief Generates a labelled path for each image in the specified images directory.
    *        The labels for the various images are supplied in a separate annotation file.
    *
-   * \param imagesPath      The path to the images directory.
-   * \param annotationPath  The path to a file containing the labels to associate with the images in the images path.
+   * \param imagesDir       The path to the images directory.
+   * \param annotationFile  The path to a file containing the labels to associate with the images in the images directory.
    *
    * The annotation is assumed to be in the following format: <imageName,label>
    *
-   * \return   The labelled paths for all images in the specified images directory.
+   * \return  The labelled paths for all images in the specified images directory.
    */
-  static std::vector<LabelledPath<Label> > generate_labelled_image_paths(const std::string& imagesPath, const std::string& annotationPath)
+  static std::vector<LabelledPath<Label> > generate_labelled_image_paths(const std::string& imagesDir, const std::string& annotationFile)
   {
     // FIXME: Make this robust to bad data.
 
-    std::vector<LabelledPath<Label> > labelledImagePaths;
+    std::vector<LabelledPath<Label> > result;
 
-    std::ifstream fs(annotationPath.c_str());
-    if(!fs) throw std::runtime_error("The file: " + annotationPath + " could not be opened.");
+    std::ifstream fs(annotationFile.c_str());
+    if(!fs) throw std::runtime_error("Error: The file '" + annotationFile + "' could not be opened");
 
     const std::string delimiters(", \r");
     std::vector<std::vector<std::string> > wordLines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
@@ -180,10 +183,10 @@ private:
       const std::vector<std::string>& words = wordLines[i];
       const std::string& imageFilename = words[0];
       Label label = boost::lexical_cast<Label>(words.back());
-      labelledImagePaths.push_back(LabelledPath<Label>(imagesPath + "/" + imageFilename, label));
+      result.push_back(LabelledPath<Label>(imagesDir + "/" + imageFilename, label));
     }
 
-    return labelledImagePaths;
+    return result;
   }
 };
 
