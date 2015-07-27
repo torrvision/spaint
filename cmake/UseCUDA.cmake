@@ -23,12 +23,13 @@ IF(WITH_CUDA)
     SET(CUDA_NVCC_FLAGS -Xcompiler -stdlib=libstdc++; -Xlinker -stdlib=libstdc++; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
-  # If on Linux:
+  # If on Linux, make sure that C++11 support is enabled when compiling with nvcc.
   IF(${CMAKE_SYSTEM} MATCHES "Linux")
-    # Make sure that C++11 support is enabled when compiling with nvcc.
     SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
+  ENDIF()
 
-    # Disable some annoying nvcc warnings.
+  # If not on Windows, disable some annoying nvcc warnings.
+  IF(NOT MSVC_IDE)
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
 

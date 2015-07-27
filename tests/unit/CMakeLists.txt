@@ -2,7 +2,10 @@
 # CMakeLists.txt for tests/unit #
 #################################
 
-ADD_SUBDIRECTORY(evaluation)
+IF(BUILD_EVALUATION)
+  ADD_SUBDIRECTORY(evaluation)
+ENDIF()
+
 ADD_SUBDIRECTORY(infermous)
 ADD_SUBDIRECTORY(rafl)
 ADD_SUBDIRECTORY(rigging)
