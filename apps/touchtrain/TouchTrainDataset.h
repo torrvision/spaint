@@ -181,8 +181,13 @@ private:
     for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
       const std::vector<std::string>& words = wordLines[i];
+      if(words.size() != 2)
+      {
+        throw std::runtime_error("Error: Line " + boost::lexical_cast<std::string>(i) + " is not in the format <imageName,label>");
+      }
+
       const std::string& imageFilename = words[0];
-      Label label = boost::lexical_cast<Label>(words.back());
+      Label label = boost::lexical_cast<Label>(words[1]);
       result.push_back(LabelledPath<Label>(imagesDir + "/" + imageFilename, label));
     }
 
