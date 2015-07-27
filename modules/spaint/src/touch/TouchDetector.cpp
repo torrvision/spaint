@@ -310,7 +310,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   return touchPoints;
 }
 
-int TouchDetector::pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
+int TouchDetector::pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);
@@ -346,7 +346,7 @@ int TouchDetector::pick_best_candidate_component_based_on_distance(const af::arr
   return bestCandidateID;
 }
 
-int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
+int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);

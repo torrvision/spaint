@@ -38,10 +38,10 @@ private:
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> ITMSettings_CPtr;
-  typedef boost::shared_ptr<const ITMView> View_CPtr;
   typedef int Label;
   typedef rafl::RandomForest<Label> RF;
   typedef boost::shared_ptr<RF> RF_Ptr;
+  typedef boost::shared_ptr<const ITMView> View_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
@@ -149,22 +149,24 @@ private:
   std::vector<Eigen::Vector2i> extract_touch_points(int component, const af::array& diffRawRaycastInMm);
 
   /**
-   * Picks the candidate component most likely to correspond to a touch interaction.
+   * Picks the candidate component most likely to correspond to a touch interaction based on mean distance to the scene.
    *
    * \param candidateComponents The IDs of components in the connected component image that denote candidate touch interactions.
    * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
    * \return                    The ID of the best candidate component.
    */
-  int pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
+  int pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
   /**
    * \brief Picks the candidate component most likely to correspond to a touch interaction based on predictions made by a random forest.
    *
-   * \param candidateComponents The IDs of components in the connected omponent image that denote candidate touch interactions.
+   * If no candidates are classified as interactions by the forest, there is no best candidate and we return -1.
+   *
+   * \param candidateComponents The IDs of components in the connected component image that denote candidate touch interactions.
    * \param diffRawRaycastInMm  An image in which each pixel is the absolute difference in mm between the current and raycasted depths.
-   * \return                    The IS of the best candidate component, or -1 if none are found.
+   * \return                    The ID of the best candidate component, or -1 if no candidates are classified as interactions by the forest.
    */
-  int pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm);
+  int pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
 
   /**
    * \brief Prepares a thresholded version of the raw depth image and a depth raycast ready for change detection.
@@ -182,7 +184,7 @@ private:
   void process_debug_windows();
 
   /**
-   * \brief Saves the candidate component images to a directory.
+   * \brief Saves an image of each candidate component to disk for use with the touchtrain application.
    *
    * \param candidateComponents The candidate components denoting candidate touch interactions.
    * \param diffRawRaycast      An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
