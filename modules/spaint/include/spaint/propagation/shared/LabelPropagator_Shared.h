@@ -7,7 +7,7 @@
 #define H_SPAINT_LABELPROPAGATOR_SHARED
 
 #include "../../markers/shared/VoxelMarker_Shared.h"
-#include "../../util/ColourConverter_Shared.h"
+#include "../../util/ColourConversion_Shared.h"
 
 namespace spaint {
 

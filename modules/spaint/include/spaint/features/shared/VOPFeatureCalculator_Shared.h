@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_VOPFEATURECALCULATOR_SHARED
 #define H_SPAINT_VOPFEATURECALCULATOR_SHARED
 
-#include "../../util/ColourConverter_Shared.h"
+#include "../../util/ColourConversion_Shared.h"
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
