@@ -3,8 +3,10 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "touch/TouchDescriptorCalculator.h"
 #include "touch/TouchDetector.h"
+
+#include "touch/TouchDescriptorCalculator.h"
+using namespace rafl;
 
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "util/RGBDUtil.h"
@@ -349,37 +351,23 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
 {
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);
-
-  int bestCandidateID = -1;
-  af::array mask;
+  const Label isTouchLabel = 1;
 
   std::vector<float> touchProb(candidateCount);
+  af::array candidateDiff;
   for(int i = 0; i < candidateCount; ++i)
   {
-    mask = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
-    rafl::Descriptor_CPtr d = TouchDescriptorCalculator::calculate_histogram_descriptor(mask);
-    rafl::ProbabilityMassFunction<Label> pmf = m_forest->calculate_pmf(d);
-    std::map<Label,float> masses = pmf.get_masses();
-    const Label isTouchLabel = 1;
-    touchProb[i] = tvgutil::MapUtil::lookup(masses, isTouchLabel);
+    candidateDiff = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    Descriptor_CPtr descriptor = TouchDescriptorCalculator::calculate_histogram_descriptor(candidateDiff);
+    touchProb[i] = MapUtil::lookup(m_forest->calculate_pmf(descriptor).get_masses(), isTouchLabel);
+  }
 
-#if defined (DEBUG_TOUCH_VERBOSE)
-    std::cout << "The pmf is: " << pmf << std::endl;
-#endif
-  }
-  size_t maxIndex = ArgUtil::argmin(touchProb);
-  if(touchProb[maxIndex] > 0.5f)
-  {
-    bestCandidateID = candidateIDs[maxIndex];
-  }
-  else
-  {
-    bestCandidateID = -1;
-  }
+  const size_t maxIndex = ArgUtil::argmax(touchProb);
+  int bestCandidateID = touchProb[maxIndex] > 0.5f ? candidateIDs[maxIndex] : -1;
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the best candidate's mask and difference image.
-  mask = m_connectedComponentImage.as(s32) == bestCandidateID;
+  af::array mask = m_connectedComponentImage.as(s32) == bestCandidateID;
   OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
   OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
@@ -451,17 +439,17 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
 
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);
-  af::array maskAF(m_imageHeight, m_imageWidth, u8);
+  af::array candidateDiffAF(m_imageHeight, m_imageWidth, u8);
 
   for(int i = 0; i < candidateCount; ++i)
   {
-    maskAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
-    cv::Mat1b maskCV = OpenCVUtil::make_greyscale_image(maskAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+    candidateDiffAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    cv::Mat1b candidateDiffCV = OpenCVUtil::make_greyscale_image(candidateDiffAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 
     if(imageCounter < 1e5)
     {
       std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (boost::format("%05d") % imageCounter++).str() + ".ppm";
-      cv::imwrite(saveString, maskCV);
+      cv::imwrite(saveString, candidateDiffCV);
     }
   }
 }
