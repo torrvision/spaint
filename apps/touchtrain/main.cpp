@@ -4,13 +4,10 @@
  */
 
 #include <boost/assign/list_of.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 using boost::assign::list_of;
 
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
-#include <evaluation/splitgenerators/RandomPermutationAndDivisionSplitGenerator.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
@@ -45,7 +42,7 @@ typedef boost::shared_ptr<RF> RF_Ptr;
 /**
  * \brief Generates an array of examples given an array of labelled image paths.
  *
- * \param labelledImagePaths  The array of labelled image paths.
+ * \param labelledImagePaths  The labelled image paths.
  * \return                    The examples.
  */
 std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const std::vector<LabelledPath<Label> >& labelledImagePaths)
@@ -67,29 +64,28 @@ std::vector<boost::shared_ptr<const Example<Label> > > generate_examples(const s
 
 int main(int argc, char *argv[])
 {
-#if WITH_OPENMP
-  omp_set_nested(1);
-#endif
-
-  const unsigned int seed = 12345;
-
   if(argc != 2)
   {
     std::cerr << "Usage: touchtrain [<touch training set path>]\n";
     return EXIT_FAILURE;
   }
 
-  const size_t treeCount = 8;
-  const size_t splitBudget = 1048576 / 2;
+#if WITH_OPENMP
+  omp_set_nested(1);
+#endif
 
-  TouchTrainDataset<Label> touchDataset(argv[1], list_of(2)(3)(4)(5));
-  std::cout << "[touchtrain] Training set root: " << touchDataset.get_root_directory() << '\n';
+  TouchTrainDataset<Label> dataset(argv[1], list_of(2)(3)(4)(5));
+  std::cout << "[touchtrain] Training set root: " << dataset.get_root_directory() << '\n';
 
+  // Generate the examples with which to train the random forest.
   std::cout << "[touchtrain] Generating examples...\n";
-  std::vector<Example_CPtr> examples = generate_examples(touchDataset.get_training_image_paths());
+  std::vector<Example_CPtr> examples = generate_examples(dataset.get_training_image_paths());
   std::cout << "[touchtrain] Number of examples = " << examples.size() << '\n';
 
   // Generate the parameter sets with which to test the random forest.
+  const unsigned int seed = 12345;
+  const size_t splitBudget = 1048576 / 2;
+  const size_t treeCount = 8;
   std::vector<ParamSet> params = CartesianProductParameterSetGenerator()
     .add_param("treeCount", list_of<size_t>(treeCount))
     .add_param("splitBudget", list_of<size_t>(splitBudget))
@@ -109,14 +105,8 @@ int main(int argc, char *argv[])
   DecisionFunctionGeneratorFactory<Label>::instance().register_rafl_makers();
 
   // Construct the split generator.
-#if 1
   const size_t foldCount = 5;
   SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, foldCount));
-#else
-  const size_t splitCount = 5;
-  const float ratio = 0.5f;
-  SplitGenerator_Ptr splitGenerator(new RandomPermutationAndDivisionSplitGenerator(seed, splitCount, ratio));
-#endif
 
   // Time the random forest.
   Timer<boost::chrono::seconds> timer("ForestEvaluationTime");
@@ -133,38 +123,34 @@ int main(int argc, char *argv[])
   }
 
   // Output the performance table to the screen.
-  results.output(std::cout); std::cout << '\n';
+  results.output(std::cout);
+  std::cout << '\n';
 
   timer.stop();
   std::cout << "[touchtrain] " << timer << '\n';
 
-  // Get a time-stamp for tagging the resulting files.
-  const std::string timeStamp = TimeUtil::get_iso_timestamp();
-
-  // Time-stamp the results file.
-  std::string textOutputResultPath =  touchDataset.get_cross_validation_results_directory() + "/crossvalidationresults-" + timeStamp + ".txt";
+  // Construct a path to a results file (including a timestamp to distinguish it from other sets of results).
+  const std::string timestamp = TimeUtil::get_iso_timestamp();
+  std::string resultsPath =  dataset.get_cross_validation_results_directory() + "/crossvalidationresults-" + timestamp + ".txt";
 
   // Output the performance table to the results file.
-  std::ofstream resultsFile(textOutputResultPath.c_str());
-  if(!resultsFile)
-  {
-    std::cout << "[touchtrain] Warning could not open file for writing...\n";
-  }
-  else
-  {
-    results.output(resultsFile);
-  }
+  std::ofstream resultsFile(resultsPath.c_str());
+  if(resultsFile) results.output(resultsFile);
+  else std::cout << "[touchtrain] Warning could not open file for writing...\n";
 
+  // Train a forest with the best parameters selected during cross-validation.
   std::cout << "[touchtrain] Training the forest with the best parameters selected during cross-validation...\n";
   ParamSet bestParams = results.find_best_param_set("Accuracy");
   DT::Settings settings(bestParams);
   RF_Ptr randomForest(new RF(treeCount, settings));
   randomForest->add_examples(examples);
 
+  // Output the final statistics for the forest.
   std::cout << "[touchtrain] The final trained forest statistics:\n";
-  if(randomForest->train(splitBudget)) randomForest->output_statistics(std::cout);
+  if(randomForest->train(splitBudget) != 0) randomForest->output_statistics(std::cout);
 
-  std::string forestPath = touchDataset.get_models_directory() + "/randomForest-" + timeStamp + ".rf";
+  // Output the forest itself to a file.
+  std::string forestPath = dataset.get_models_directory() + "/randomForest-" + timestamp + ".rf";
   std::cout << "[touchtrain] Saving the forest to: " << forestPath << "\n";
   SerializationUtil::save_text(forestPath, *randomForest);
 
