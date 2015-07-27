@@ -6,8 +6,8 @@
 #ifndef H_SPAINT_LABELPROPAGATOR_SHARED
 #define H_SPAINT_LABELPROPAGATOR_SHARED
 
-#include "../../features/shared/VOPFeatureCalculator_Shared.h"
 #include "../../markers/shared/VoxelMarker_Shared.h"
+#include "../../util/ColourConverter_Shared.h"
 
 namespace spaint {
 
@@ -57,7 +57,7 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   float angleBetweenNormals = acosf(dot(normal, neighbourNormal) / (length(normal) * length(neighbourNormal)));
 
   // Compute the distance between the neighbour's colour and the colour of the voxel of interest.
-  Vector3f colourOffset = rgb_to_lab(neighbourColour.toFloat()) - rgb_to_lab(colour.toFloat());
+  Vector3f colourOffset = convert_rgb_to_lab(neighbourColour.toFloat()) - convert_rgb_to_lab(colour.toFloat());
   float squaredDistanceBetweenColours = dot(colourOffset, colourOffset);
 
   // Compute the squared distance between the neighbour's position and the position of the voxel of interest.
