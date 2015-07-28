@@ -12,6 +12,8 @@
 #include <ITMLib/Objects/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <rigging/SimpleCamera.h>
+
 #include "util/SpaintVoxel.h"
 
 namespace spaint {
@@ -59,6 +61,18 @@ public:
 
   /** Override */
   virtual void UpdateInitialPose(ITMTrackingState *trackingState);
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  static double angle_between(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
+
+  /**
+   * \brief TODO
+   */
+  static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2);
 };
 
 }
