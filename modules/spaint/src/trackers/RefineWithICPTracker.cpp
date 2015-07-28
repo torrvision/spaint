@@ -48,11 +48,11 @@ void RefineWithICPTracker::TrackCamera(ITMTrackingState *trackingState, const IT
 
   // Check whether ICP succeeded or not.
   SimpleCamera icpCam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
-  m_icpSucceeded = poses_are_similar(initialCam, icpCam, 0.1) & poses_are_similar(baseCam, icpCam, 0.1);
+  m_icpSucceeded = poses_are_similar(initialCam, icpCam, 0.3) & poses_are_similar(baseCam, icpCam, 0.3);
   std::cout << m_icpSucceeded << '\n';
 
   // If ICP failed, restore the pose from the base tracker.
-  if(!m_icpSucceeded) trackingState->pose_d->SetM(baseM);
+  //if(!m_icpSucceeded) trackingState->pose_d->SetM(baseM);
 }
 
 void RefineWithICPTracker::UpdateInitialPose(ITMTrackingState *trackingState)
@@ -77,7 +77,8 @@ bool RefineWithICPTracker::poses_are_similar(const SimpleCamera& cam1, const Sim
   std::cout << pDist << ' ' << nAngle << ' ' << uAngle << ' ' << vAngle << '\n';
 
   // TODO: Set appropriate thresholds.
-  return pDist < distanceThreshold;
+  double angleThreshold = 0.04;
+  return pDist < distanceThreshold && nAngle < angleThreshold && uAngle < angleThreshold && vAngle < angleThreshold;
 
   //return true;
 }
