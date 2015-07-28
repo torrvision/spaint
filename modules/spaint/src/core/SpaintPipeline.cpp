@@ -467,7 +467,7 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       m_tracker.reset(m_robustViconTracker);
       break;
 #else
-      // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.
+      // This should never happen as things stand - we never try to use the robust Vicon tracker if Vicon support isn't available.
       throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
 #endif
     }

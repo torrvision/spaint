@@ -70,7 +70,7 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_ROBUSTVICON;
+  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_INFINITAM;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
