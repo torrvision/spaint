@@ -34,6 +34,9 @@ private:
   Tracker_Ptr m_baseTracker;
 
   /** TODO */
+  bool m_icpSucceeded;
+
+  /** TODO */
   Tracker_Ptr m_icpTracker;
 
   //#################### CONSTRUCTORS ####################
