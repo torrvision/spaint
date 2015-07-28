@@ -20,6 +20,7 @@ using namespace InfiniTAM::Engine;
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
+#include "trackers/RefineWithICPTracker.h"
 #include "util/MemoryBlockFactory.h"
 
 #ifdef WITH_OPENCV
@@ -121,6 +122,9 @@ void SpaintPipeline::run_main_section()
   bool runFusion = m_fusionEnabled;
 #ifdef WITH_VICON
   if(m_trackerType == TRACKER_VICON && m_viconTracker->lost_tracking()) runFusion = false;
+
+  if(m_trackerType == TRACKER_VICON && dynamic_cast<const RefineWithICPTracker*>(m_tracker.get())->lost_tracking()) runFusion = false;
+  std::cout << "Run Fusion: " << runFusion << '\n';
 #endif
 
   if(runFusion)
@@ -463,7 +467,8 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
     {
 #ifdef WITH_VICON
       m_viconTracker = new ViconTracker(m_trackerParams, "kinect");
-      m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
+      //m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
+      m_tracker.reset(new RefineWithICPTracker(m_viconTracker, trackedImageSize, settings, m_lowLevelEngine, scene));
       break;
 #else
       // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.

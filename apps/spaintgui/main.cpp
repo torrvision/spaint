@@ -70,7 +70,7 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_INFINITAM;
+  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_VICON;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
@@ -91,7 +91,7 @@ try
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
     // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
-    trackerParams = "192.168.0.111:801";
+    trackerParams = "192.168.10.1:801";
 
     // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
     settings->noHierarchyLevels = 2;

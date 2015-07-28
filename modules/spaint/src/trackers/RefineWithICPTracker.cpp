@@ -17,7 +17,7 @@ namespace spaint {
 
 RefineWithICPTracker::RefineWithICPTracker(ITMLib::Engine::ITMTracker *baseTracker, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
                                            const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene)
-: m_baseTracker(baseTracker), m_icpSucceeded(false)
+: m_baseTracker(baseTracker), m_icpSucceeded(true)
 {
   m_icpTracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
     trackedImageSize, settings.get(), lowLevelEngine.get(), NULL, scene.get()
@@ -46,6 +46,7 @@ void RefineWithICPTracker::TrackCamera(ITMTrackingState *trackingState, const IT
   // Check whether ICP succeeded or not.
   SimpleCamera icpCam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
   m_icpSucceeded = poses_are_similar(baseCam, icpCam);
+  std::cout << m_icpSucceeded << '\n';
 
   // If ICP failed, restore the pose from the base tracker.
   if(!m_icpSucceeded) trackingState->pose_d->SetM(baseM);
@@ -73,8 +74,9 @@ bool RefineWithICPTracker::poses_are_similar(const SimpleCamera& cam1, const Sim
   std::cout << pDist << ' ' << nAngle << ' ' << uAngle << ' ' << vAngle << '\n';
 
   // TODO: Set appropriate thresholds.
+  return pDist < 0.1;
 
-  return true;
+  //return true;
 }
 
 }
