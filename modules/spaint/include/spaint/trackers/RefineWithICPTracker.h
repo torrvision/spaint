@@ -72,7 +72,7 @@ private:
   /**
    * \brief TODO
    */
-  static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2);
+  static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2, double distanceThreshold);
 };
 
 }

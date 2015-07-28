@@ -122,9 +122,7 @@ void SpaintPipeline::run_main_section()
   bool runFusion = m_fusionEnabled;
 #ifdef WITH_VICON
   if(m_trackerType == TRACKER_VICON && m_viconTracker->lost_tracking()) runFusion = false;
-
   if(m_trackerType == TRACKER_VICON && dynamic_cast<const RefineWithICPTracker*>(m_tracker.get())->lost_tracking()) runFusion = false;
-  std::cout << "Run Fusion: " << runFusion << '\n';
 #endif
 
   if(runFusion)
