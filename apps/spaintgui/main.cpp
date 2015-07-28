@@ -70,7 +70,7 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_VICON;
+  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_ROBUSTVICON;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
@@ -86,7 +86,7 @@ try
   }
 
   // If we're trying to use the Vicon tracker:
-  if(trackerType == SpaintPipeline::TRACKER_VICON)
+  if(trackerType == SpaintPipeline::TRACKER_VICON || trackerType == SpaintPipeline::TRACKER_ROBUSTVICON)
   {
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the

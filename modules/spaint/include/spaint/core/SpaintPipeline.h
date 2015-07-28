@@ -20,6 +20,7 @@
 #include "../sampling/interface/UniformVoxelSampler.h"
 
 #ifdef WITH_VICON
+#include "../trackers/RobustViconTracker.h"
 #include "../trackers/ViconTracker.h"
 #endif
 
@@ -81,6 +82,7 @@ public:
   {
     TRACKER_INFINITAM,
     TRACKER_RIFT,
+    TRACKER_ROBUSTVICON,
     TRACKER_VICON
   };
 
@@ -157,6 +159,11 @@ private:
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
+
+#ifdef WITH_VICON
+  /** The robust Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
+  RobustViconTracker *m_robustViconTracker;
+#endif
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;

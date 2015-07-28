@@ -20,7 +20,6 @@ using namespace InfiniTAM::Engine;
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
-#include "trackers/RefineWithICPTracker.h"
 #include "util/MemoryBlockFactory.h"
 
 #ifdef WITH_OPENCV
@@ -122,7 +121,7 @@ void SpaintPipeline::run_main_section()
   bool runFusion = m_fusionEnabled;
 #ifdef WITH_VICON
   if(m_trackerType == TRACKER_VICON && m_viconTracker->lost_tracking()) runFusion = false;
-  if(m_trackerType == TRACKER_VICON && dynamic_cast<const RefineWithICPTracker*>(m_tracker.get())->lost_tracking()) runFusion = false;
+  if(m_trackerType == TRACKER_ROBUSTVICON && m_robustViconTracker->lost_tracking()) runFusion = false;
 #endif
 
   if(runFusion)
@@ -461,12 +460,22 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
 #endif
     }
+    case TRACKER_ROBUSTVICON:
+    {
+#ifdef WITH_VICON
+      m_robustViconTracker = new RobustViconTracker(m_trackerParams, "kinect", trackedImageSize, settings, m_lowLevelEngine, scene);
+      m_tracker.reset(m_robustViconTracker);
+      break;
+#else
+      // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.
+      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+#endif
+    }
     case TRACKER_VICON:
     {
 #ifdef WITH_VICON
       m_viconTracker = new ViconTracker(m_trackerParams, "kinect");
-      //m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
-      m_tracker.reset(new RefineWithICPTracker(m_viconTracker, trackedImageSize, settings, m_lowLevelEngine, scene));
+      m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
       break;
 #else
       // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.

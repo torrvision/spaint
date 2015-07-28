@@ -1,10 +1,10 @@
 /**
- * spaint: RefineWithICPTracker.h
+ * spaint: RobustViconTracker.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_REFINEWITHICPTRACKER
-#define H_SPAINT_REFINEWITHICPTRACKER
+#ifndef H_SPAINT_ROBUSTVICONTRACKER
+#define H_SPAINT_ROBUSTVICONTRACKER
 
 #include <boost/shared_ptr.hpp>
 
@@ -14,45 +14,47 @@
 
 #include <rigging/SimpleCamera.h>
 
-#include "util/SpaintVoxel.h"
+#include "ViconTracker.h"
+#include "../util/SpaintVoxel.h"
 
 namespace spaint {
 
 /**
  * \brief TODO
  */
-class RefineWithICPTracker : public ITMLib::Engine::ITMTracker
+class RobustViconTracker : public ITMLib::Engine::ITMTracker
 {
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::Engine::ITMLowLevelEngine> LowLevelEngine_CPtr;
   typedef boost::shared_ptr<ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> > Scene_Ptr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
-  typedef boost::shared_ptr<ITMLib::Engine::ITMTracker> Tracker_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
-  Tracker_Ptr m_baseTracker;
+  boost::shared_ptr<ITMLib::Engine::ITMTracker> m_icpTracker;
+
+  /** A flag recording whether or not we have temporarily lost tracking. */
+  bool m_lostTracking;
 
   /** TODO */
-  bool m_icpSucceeded;
-
-  /** TODO */
-  Tracker_Ptr m_icpTracker;
+  boost::shared_ptr<ViconTracker> m_viconTracker;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief TODO
    */
-  RefineWithICPTracker(ITMLib::Engine::ITMTracker *baseTracker, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
-                       const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene);
+  RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
+                     const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets whether or not we have temporarily lost tracking.
+   *
+   * \return  true, if we have temporarily lost tracking, or false otherwise.
    */
   bool lost_tracking() const;
 
@@ -72,7 +74,8 @@ private:
   /**
    * \brief TODO
    */
-  static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2, double distanceThreshold);
+  static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2,
+                                double distanceThreshold = 0.3, double angleThreshold = 0.04);
 };
 
 }

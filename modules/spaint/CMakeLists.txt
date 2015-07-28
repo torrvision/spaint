@@ -411,13 +411,8 @@ include/spaint/touch/TouchSettings.h
 )
 
 ##
-SET(trackers_sources
-src/trackers/RefineWithICPTracker.cpp
-)
-
-SET(trackers_headers
-include/spaint/trackers/RefineWithICPTracker.h
-)
+SET(trackers_sources)
+SET(trackers_headers)
 
 IF(WITH_OVR)
   SET(trackers_sources ${trackers_sources} src/trackers/RiftTracker.cpp)
@@ -425,8 +420,15 @@ IF(WITH_OVR)
 ENDIF()
 
 IF(WITH_VICON)
-  SET(trackers_sources ${trackers_sources} src/trackers/ViconTracker.cpp)
-  SET(trackers_headers ${trackers_headers} include/spaint/trackers/ViconTracker.h)
+  SET(trackers_sources ${trackers_sources}
+    src/trackers/RobustViconTracker.cpp
+    src/trackers/ViconTracker.cpp
+  )
+
+  SET(trackers_headers ${trackers_headers}
+    include/spaint/trackers/RobustViconTracker.h
+    include/spaint/trackers/ViconTracker.h
+  )
 ENDIF()
 
 ##
