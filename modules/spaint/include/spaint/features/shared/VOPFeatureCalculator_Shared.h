@@ -6,20 +6,10 @@
 #ifndef H_SPAINT_VOPFEATURECALCULATOR_SHARED
 #define H_SPAINT_VOPFEATURECALCULATOR_SHARED
 
-#include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
-
+#include "../../util/ColourConversion_Shared.h"
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
-
-/**
- * \brief A helper function for the RGB to CIELab conversion.
- */
-_CPU_AND_GPU_CODE_
-inline float rgb_to_lab_f(float t)
-{
-  return t > 0.008856f ? pow(t, 1.0f / 3.0f) : 7.787f * t + 16.0f / 116.0f;
-}
 
 /**
  * \brief Converts the RGB patch for the specified voxel to the CIELab colour space.
@@ -33,37 +23,15 @@ inline float rgb_to_lab_f(float t)
 _CPU_AND_GPU_CODE_
 inline void convert_patch_to_lab(int voxelLocationIndex, size_t featureCount, float *features)
 {
-  const float EPSILON = 0.000001f;
-
   // Convert each RGB colour in the patch segment of the voxel's feature vector to the CIELab colour space.
   for(size_t i = voxelLocationIndex * featureCount, end = i + featureCount - 4; i != end; i += 3)
   {
-    // Equivalent Matlab code can be found at: https://www.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/code/Util/RGB2Lab.m
-    // See also: http://docs.opencv.org/modules/imgproc/doc/miscellaneous_transformations.html
-    float r = features[i] / 255.0f;
-    float g = features[i+1] / 255.0f;
-    float b = features[i+2] / 255.0f;
+    Vector3f rgb(features[i] / 255.0f, features[i+1] / 255.0f, features[i+2] / 255.0f);
+    Vector3f lab = convert_rgb_to_lab(rgb);
 
-    float x = 0.412453f * r + 0.357580f * g + 0.180423f * b;
-    float y = 0.212671f * r + 0.715160f * g + 0.072169f * b;
-    float z = 0.019334f * r + 0.119193f * g + 0.950227f * b;
-
-    x /= 0.950456f;
-    z /= 1.088754f;
-
-    float fx = rgb_to_lab_f(x);
-    float fy = rgb_to_lab_f(y);
-    float fz = rgb_to_lab_f(z);
-
-    float L = y > 0.008856f ? (116.0f * fy - 16.0f) : (903.3f * y);
-    float A = 500.0f * (fx - fy);
-    float B = 200.0f * (fy - fz);
-
-    float AplusB = fabs(A + B) + EPSILON;
-
-    features[i] = L;
-    features[i+1] = A / AplusB;
-    features[i+2] = B / AplusB;
+    features[i] = lab.x;
+    features[i+1] = lab.y;
+    features[i+2] = lab.z;
   }
 }
 
@@ -112,20 +80,6 @@ inline void compute_histogram_for_patch(int tid, size_t patchSize, const float *
     histogram[bin] += mag;
 #endif
   }
-}
-
-/**
- * \brief Converts an RGB colour to greyscale.
- *
- * The conversion formula is from OpenCV, and takes into account the fact that the human
- * eye is more sensitive to green than red or blue. See:
- *
- * http://docs.opencv.org/2.4.11/modules/imgproc/doc/miscellaneous_transformations.html.
- */
-_CPU_AND_GPU_CODE_
-inline float convert_rgb_to_grey(float r, float g, float b)
-{
-  return 0.299f * r + 0.587f * g + 0.114f * b;
 }
 
 /**

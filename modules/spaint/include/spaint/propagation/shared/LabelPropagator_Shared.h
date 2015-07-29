@@ -7,6 +7,7 @@
 #define H_SPAINT_LABELPROPAGATOR_SHARED
 
 #include "../../markers/shared/VoxelMarker_Shared.h"
+#include "../../util/ColourConversion_Shared.h"
 
 namespace spaint {
 
@@ -56,7 +57,7 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   float angleBetweenNormals = acosf(dot(normal, neighbourNormal) / (length(normal) * length(neighbourNormal)));
 
   // Compute the distance between the neighbour's colour and the colour of the voxel of interest.
-  Vector3f colourOffset = (neighbourColour - colour).toFloat();
+  Vector3f colourOffset = convert_rgb_to_lab(neighbourColour.toFloat()) - convert_rgb_to_lab(colour.toFloat());
   float squaredDistanceBetweenColours = dot(colourOffset, colourOffset);
 
   // Compute the squared distance between the neighbour's position and the position of the voxel of interest.
@@ -113,7 +114,10 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
   maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, \
   maxSquaredDistanceBetweenVoxels)
 
-  if(SPFN(x - 1, y) || SPFN(x + 1, y) || SPFN(x, y - 1) || SPFN(x, y + 1))
+  if((SPFN(x - 2, y) && SPFN(x - 5, y)) ||
+     (SPFN(x + 2, y) && SPFN(x + 5, y)) ||
+     (SPFN(x, y - 2) && SPFN(x, y - 5)) ||
+     (SPFN(x, y + 2) && SPFN(x, y + 5)))
   {
     mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }
