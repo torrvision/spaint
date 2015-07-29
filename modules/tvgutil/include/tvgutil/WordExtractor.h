@@ -20,13 +20,13 @@ struct WordExtractor
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief Extracts words from a stream and groups them by line.
+   * \brief Extracts lines of words from a stream.
    *
-   * \param stream    The stream.
-   * \param delimiter The delimiter to use to separate the words.
-   * \return          The extracted words, grouped by line.
+   * \param stream      The stream.
+   * \param delimiters  The delimiters which can separate words in the stream.
+   * \return            The lines of words.
    */
-  static std::vector<std::vector<std::string> > extract_words(std::istream& is, const std::string& delimiter);
+  static std::vector<std::vector<std::string> > extract_word_lines(std::istream& is, const std::string& delimiters);
 };
 
 }

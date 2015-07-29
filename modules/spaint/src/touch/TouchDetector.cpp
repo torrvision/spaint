@@ -5,11 +5,16 @@
 
 #include "touch/TouchDetector.h"
 
+#include <boost/format.hpp>
+
 #include <tvgutil/ArgUtil.h>
+using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"
+#include "touch/TouchDescriptorCalculator.h"
 #include "util/RGBDUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
+using namespace rafl;
 
 #ifdef WITH_CUDA
 #include "visualisers/cuda/DepthVisualiser_CUDA.h"
@@ -26,7 +31,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& settings)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
 :
   // Debugging variables.
   m_debugDelayMs(30),
@@ -39,16 +44,15 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
-  m_imageProcessor(ImageProcessorFactory::make_image_processor(settings->deviceType)),
+  m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),
   m_imageWidth(imgSize.x),
-  m_lowerDepthThresholdMm(15),
-  m_morphKernelSize(5),
-  m_settings(settings),
+  m_itmSettings(itmSettings),
   m_thresholdedRawDepth(new ITMFloatImage(imgSize, true, true)),
-  m_touchMask(new af::array(imgSize.y, imgSize.x, u8))
+  m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
+  m_touchSettings(touchSettings)
 {
   // Set up the depth visualiser.
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  if(itmSettings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     m_depthVisualiser.reset(new DepthVisualiser_CUDA);
@@ -65,10 +69,16 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& setti
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
-  const float minCandidateFraction = 0.016f; // i.e. 1.6% of the image (determined empirically)
-  const float maxCandidateFraction = 0.2f;   // i.e. 20% of the image (determined empirically)
-  m_minCandidateArea = static_cast<int>(minCandidateFraction * imageArea);
-  m_maxCandidateArea = static_cast<int>(maxCandidateFraction * imageArea);
+  m_minCandidateArea = static_cast<int>(m_touchSettings->minCandidateFraction * imageArea);
+  m_maxCandidateArea = static_cast<int>(m_touchSettings->maxCandidateFraction * imageArea);
+
+  // Load the random forest used to score the candidate connected components.
+  m_forest = m_touchSettings->load_forest();
+
+#if defined(DEBUG_TOUCH_VERBOSE)
+  // Output the statistics of the forest for debugging purposes.
+  m_forest->output_statistics(std::cout);
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -107,8 +117,19 @@ try
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
+  // If desired, save the candidate connected components for use with the touchtrain application.
+  if(m_touchSettings->should_save_candidate_components())
+  {
+    save_candidate_components(candidateComponents, diffRawRaycastInMm);
+  }
+
   // Pick the candidate component most likely to correspond to a touch interaction.
-  int bestConnectedComponent = pick_best_candidate_component(candidateComponents, diffRawRaycastInMm);
+  int bestConnectedComponent = pick_best_candidate_component_based_on_forest(candidateComponents, diffRawRaycastInMm);
+  if(bestConnectedComponent == -1)
+  {
+    *m_touchMask = 0;
+    return std::vector<Eigen::Vector2i>();
+  }
 
   // Extract a set of touch points from the chosen connected component that denote the parts of the scene touched by the user.
   // Note that the set of touch points may end up being empty if the user is not touching the scene.
@@ -222,7 +243,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > (m_lowerDepthThresholdMm / 1000.0f);
+  m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
@@ -230,7 +251,7 @@ void TouchDetector::detect_changes()
 #endif
 
   // Apply a morphological opening operation to the change mask to reduce noise.
-  int morphKernelSize = m_morphKernelSize;
+  int morphKernelSize = m_touchSettings->morphKernelSize;
   if(morphKernelSize < 3) morphKernelSize = 3;
   if(morphKernelSize % 2 == 0) ++morphKernelSize;
   af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
@@ -253,8 +274,8 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   diffImage = (diffImage / 8).as(u8) * 8;
 
   // Threshold the difference image, keeping only parts that are close to the surface.
-  const int upperDepthThresholdMm = m_lowerDepthThresholdMm + 15;
-  diffImage = (diffImage > m_lowerDepthThresholdMm) && (diffImage < upperDepthThresholdMm);
+  const int upperDepthThresholdMm = m_touchSettings->lowerDepthThresholdMm + 15;
+  diffImage = (diffImage > m_touchSettings->lowerDepthThresholdMm) && (diffImage < upperDepthThresholdMm);
 
   // Apply a morphological opening operation to the difference image to reduce noise.
   af::array morphKernel = af::constant(1, 5, 5);
@@ -273,7 +294,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   af::array touchIndicesImage = af::where(diffImage);
 
   // If there are too few touch indices, assume the user is not touching the scene in a meaningful way and early out.
-  const float touchAreaLowerThreshold = 0.0001f * m_imageWidth * m_imageHeight;
+  const float touchAreaLowerThreshold = m_touchSettings->minTouchAreaFraction * m_imageWidth * m_imageHeight;
   if(touchIndicesImage.elements() <= touchAreaLowerThreshold) return std::vector<Eigen::Vector2i>();
 
   // Otherwise, convert the touch indices to touch points and return them.
@@ -289,7 +310,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   return touchPoints;
 }
 
-int TouchDetector::pick_best_candidate_component(const af::array& candidateComponents, const af::array& diffRawRaycastInMm)
+int TouchDetector::pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
   const int candidateCount = candidateComponents.dims(0);
@@ -311,13 +332,41 @@ int TouchDetector::pick_best_candidate_component(const af::array& candidateCompo
       mask = m_connectedComponentImage == candidateIDs[i];
       meanDistances[i] = af::mean<float>(diffRawRaycastInMm * mask);
     }
-    size_t minIndex = tvgutil::ArgUtil::argmin(meanDistances);
+    size_t minIndex = ArgUtil::argmin(meanDistances);
     bestCandidateID = candidateIDs[minIndex];
   }
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the best candidate's mask and difference image.
   mask = m_connectedComponentImage.as(s32) == bestCandidateID;
+  OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+#endif
+
+  return bestCandidateID;
+}
+
+int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
+{
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+  const Label isTouchLabel = 1;
+
+  std::vector<float> touchProb(candidateCount);
+  af::array candidateDiff;
+  for(int i = 0; i < candidateCount; ++i)
+  {
+    candidateDiff = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    Descriptor_CPtr descriptor = TouchDescriptorCalculator::calculate_histogram_descriptor(candidateDiff);
+    touchProb[i] = MapUtil::lookup(m_forest->calculate_pmf(descriptor).get_masses(), isTouchLabel);
+  }
+
+  const size_t maxIndex = ArgUtil::argmax(touchProb);
+  int bestCandidateID = touchProb[maxIndex] > 0.5f ? candidateIDs[maxIndex] : -1;
+
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
+  // Display the best candidate's mask and difference image.
+  af::array mask = m_connectedComponentImage.as(s32) == bestCandidateID;
   OpenCVUtil::show_greyscale_figure("bestCandidateMask", (mask * 255).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
   OpenCVUtil::show_greyscale_figure("bestCandidateDiff", (diffRawRaycastInMm * mask).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
@@ -345,7 +394,7 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
-    m_settings->sceneParams.voxelSize,
+    m_itmSettings->sceneParams.voxelSize,
     invalidDepthValue,
     m_depthRaycast
   );
@@ -360,27 +409,48 @@ void TouchDetector::process_debug_windows()
     const int imageArea = m_imageHeight * m_imageWidth;
 
     cv::namedWindow(m_debuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_lowerDepthThresholdMm, 50);
+    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_touchSettings->lowerDepthThresholdMm, 50);
     cv::createTrackbar("debugDelayMs", m_debuggingOutputWindowName, &m_debugDelayMs, 3000);
     cv::createTrackbar("minCandidateArea", m_debuggingOutputWindowName, &m_minCandidateArea, imageArea);
     cv::createTrackbar("maxCandidateArea", m_debuggingOutputWindowName, &m_maxCandidateArea, imageArea);
 
     cv::namedWindow(m_morphologicalOperatorWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("kernelSize", m_morphologicalOperatorWindowName, &m_morphKernelSize, 15);
+    cv::createTrackbar("kernelSize", m_morphologicalOperatorWindowName, &m_touchSettings->morphKernelSize, 15);
 
     initialised = true;
   }
 
   // Update the relevant variables based on the values of the trackbars.
-  m_lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
+  m_touchSettings->lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
   m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_debuggingOutputWindowName);
   m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_debuggingOutputWindowName);
   m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_debuggingOutputWindowName);
 
-  m_morphKernelSize = cv::getTrackbarPos("kernelSize", m_morphologicalOperatorWindowName);
+  m_touchSettings->morphKernelSize = cv::getTrackbarPos("kernelSize", m_morphologicalOperatorWindowName);
 
   // Wait for the specified number of milliseconds (or until a key is pressed).
   cv::waitKey(m_debugDelayMs);
+}
+
+void TouchDetector::save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
+{
+  static size_t imageCounter = 0;
+
+  const int *candidateIDs = candidateComponents.host<int>();
+  const int candidateCount = candidateComponents.dims(0);
+  af::array candidateDiffAF(m_imageHeight, m_imageWidth, u8);
+
+  for(int i = 0; i < candidateCount; ++i)
+  {
+    candidateDiffAF = (m_connectedComponentImage == candidateIDs[i]) * diffRawRaycastInMm;
+    cv::Mat1b candidateDiffCV = OpenCVUtil::make_greyscale_image(candidateDiffAF.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+
+    if(imageCounter < 1e5)
+    {
+      std::string saveString = m_touchSettings->get_save_candidate_components_path() + "/img" + (boost::format("%05d") % imageCounter++).str() + ".ppm";
+      cv::imwrite(saveString, candidateDiffCV);
+    }
+  }
 }
 
 af::array TouchDetector::select_candidate_components()

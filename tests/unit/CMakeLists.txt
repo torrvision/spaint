@@ -2,7 +2,7 @@
 # CMakeLists.txt for tests/unit #
 #################################
 
-IF(BUILD_EVALUATION)
+IF(BUILD_EVALUATION_MODULES)
   ADD_SUBDIRECTORY(evaluation)
 ENDIF()
 

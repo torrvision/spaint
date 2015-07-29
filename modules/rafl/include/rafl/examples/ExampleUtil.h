@@ -7,11 +7,11 @@
 #define H_RAFL_EXAMPLEUTIL
 
 #include <fstream>
-#include <string>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
-#include <boost/tokenizer.hpp>
+
+#include <tvgutil/WordExtractor.h>
 
 #include "../base/ProbabilityMassFunction.h"
 #include "Example.h"
@@ -68,21 +68,22 @@ public:
     std::vector<Example_CPtr> result;
 
     std::ifstream fs(filename.c_str());
-    std::string line;
-    while(std::getline(fs, line))
+    if(!fs) throw std::runtime_error("Error: '" + filename + "' could not be opened");
+
+    const std::string delimiters(", \r");
+    std::vector<std::vector<std::string> > wordLines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
+
+    for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
-      typedef boost::char_separator<char> sep;
-      typedef boost::tokenizer<sep> tokenizer;
-      tokenizer tok(line.begin(), line.end(), sep(", \r"));
-      std::vector<std::string> tokens(tok.begin(), tok.end());
+      const std::vector<std::string>& words = wordLines[i];
 
       Descriptor_Ptr descriptor(new Descriptor);
-      for(int i = 0; i < tokens.size() - 1; ++i)
+      for(int j = 0; j < words.size() - 1; ++j)
       {
-        descriptor->push_back(boost::lexical_cast<float>(tokens[i]));
+        descriptor->push_back(boost::lexical_cast<float>(words[j]));
       }
 
-      Label label = boost::lexical_cast<Label>(tokens.back());
+      Label label = boost::lexical_cast<Label>(words.back());
       result.push_back(Example_CPtr(new Example<Label>(descriptor, label)));
     }
 

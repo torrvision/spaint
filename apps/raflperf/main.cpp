@@ -18,9 +18,12 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
-#include <tvgutil/timing/Timer.h>
+#include <raflevaluation/RandomForestEvaluator.h>
+using namespace raflevaluation;
 
-#include "RandomForestEvaluator.h"
+#include <tvgutil/timing/Timer.h>
+#include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
 
 //#################### TYPEDEFS ####################
 
@@ -29,17 +32,6 @@ typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################
-
-/**
- * \brief Gets the current time in ISO format.
- *
- * \return  The current time in ISO format.
- */
-std::string get_iso_timestamp()
-{
-  boost::posix_time::ptime currentDateTime(boost::posix_time::second_clock::local_time());
-  return boost::posix_time::to_iso_string(currentDateTime);
-}
 
 int main(int argc, char *argv[])
 {
@@ -151,7 +143,7 @@ int main(int argc, char *argv[])
 #endif
 
   // Time the random forest.
-  tvgutil::Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
+  Timer<boost::chrono::milliseconds> timer("ForestEvaluation");
 
   // Evaluate the random forest on the various different parameter sets.
   PerformanceTable results(list_of("Accuracy"));
@@ -170,7 +162,7 @@ int main(int argc, char *argv[])
   results.output(std::cout);
 
   // Time-stamp the results file.
-  outputResultPath += "-" + get_iso_timestamp();
+  outputResultPath += "-" + TimeUtil::get_iso_timestamp();
 
   // Output the performance table to the results file.
   std::ofstream resultsFile(outputResultPath.c_str());
