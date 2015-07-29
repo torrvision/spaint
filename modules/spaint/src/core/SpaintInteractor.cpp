@@ -82,14 +82,14 @@ SpaintVoxel::Label SpaintInteractor::get_semantic_label() const
   return m_semanticLabel;
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels, bool forceMarking)
 {
-  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get());
+  m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get(), forceMarking);
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels)
+void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, bool forceMarking)
 {
-  m_voxelMarker->mark_voxels(*selection, *labels, m_model->get_scene().get());
+  m_voxelMarker->mark_voxels(*selection, *labels, m_model->get_scene().get(), NULL, forceMarking);
 }
 
 bool SpaintInteractor::selector_is_active() const

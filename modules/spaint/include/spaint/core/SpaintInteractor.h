@@ -96,19 +96,21 @@ public:
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.
    *
-   * \param selection The selection of voxels.
-   * \param label     The semantic label with which to mark the voxels.
-   * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
+   * \param selection     The selection of voxels.
+   * \param label         The semantic label with which to mark the voxels.
+   * \param oldLabels     An optional memory block into which to store the old semantic labels of the voxels being marked.
+   * \param forceMarking  Whether or not to forcibly mark the voxels when marking would not normally succeed.
    */
-  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
+  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr(), bool forceMarking = false);
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic labels.
    *
-   * \param selection The selection of voxels.
-   * \param labels    The semantic labels with which to mark the voxels (one per voxel).
+   * \param selection     The selection of voxels.
+   * \param labels        The semantic labels with which to mark the voxels (one per voxel).
+   * \param forceMarking  Whether or not to forcibly mark the voxels when marking would not normally succeed.
    */
-  void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels);
+  void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, bool forceMarking = false);
 
   /**
    * \brief Gets whether or not the current selector is active.

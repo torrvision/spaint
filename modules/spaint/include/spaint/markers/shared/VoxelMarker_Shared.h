@@ -39,15 +39,16 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
 /**
  * \brief Marks a voxel in the scene with a semantic label.
  *
- * \param loc         The location of the voxel.
- * \param label       The semantic label with which to mark the voxel.
- * \param oldLabel    An optional location into which to store the old semantic label of the voxel.
- * \param voxelData   The scene's voxel data.
- * \param voxelIndex  The scene's voxel index.
+ * \param loc           The location of the voxel.
+ * \param label         The semantic label with which to mark the voxel.
+ * \param oldLabel      An optional location into which to store the old semantic label of the voxel.
+ * \param voxelData     The scene's voxel data.
+ * \param voxelIndex    The scene's voxel index.
+ * \param forceMarking  Whether or not to forcibly mark the voxels when marking would not normally succeed.
  */
 _CPU_AND_GPU_CODE_
 inline void mark_voxel(const Vector3s& loc, SpaintVoxel::PackedLabel label, SpaintVoxel::PackedLabel *oldLabel,
-                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex)
+                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex, bool forceMarking)
 {
   bool isFound;
   int voxelAddress = findVoxel(voxelIndex, loc.toInt(), isFound);
@@ -55,7 +56,10 @@ inline void mark_voxel(const Vector3s& loc, SpaintVoxel::PackedLabel label, Spai
   {
     SpaintVoxel::PackedLabel oldLabelLocal = voxelData[voxelAddress].packedLabel;
     if(oldLabel) *oldLabel = oldLabelLocal;
-    if(can_overwrite_label(oldLabelLocal, label)) voxelData[voxelAddress].packedLabel = label;
+    if(forceMarking || can_overwrite_label(oldLabelLocal, label))
+    {
+      voxelData[voxelAddress].packedLabel = label;
+    }
   }
 }
 
