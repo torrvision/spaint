@@ -40,12 +40,12 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
 /**
  * \brief Marks a voxel in the scene with a semantic label.
  *
- * \param loc           The location of the voxel.
- * \param label         The semantic label with which to mark the voxel.
- * \param oldLabel      An optional location into which to store the old semantic label of the voxel.
- * \param voxelData     The scene's voxel data.
- * \param voxelIndex    The scene's voxel index.
- * \param mode          The marking mode.
+ * \param loc         The location of the voxel.
+ * \param label       The semantic label with which to mark the voxel.
+ * \param oldLabel    An optional location into which to store the old semantic label of the voxel.
+ * \param voxelData   The scene's voxel data.
+ * \param voxelIndex  The scene's voxel index.
+ * \param mode        The marking mode.
  */
 _CPU_AND_GPU_CODE_
 inline void mark_voxel(const Vector3s& loc, SpaintVoxel::PackedLabel label, SpaintVoxel::PackedLabel *oldLabel,
