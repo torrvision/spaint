@@ -5,12 +5,16 @@
 
 #include "touch/TouchDetector.h"
 
-#include "touch/TouchDescriptorCalculator.h"
-using namespace rafl;
+#include <boost/format.hpp>
+
+#include <tvgutil/ArgUtil.h>
+using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"
+#include "touch/TouchDescriptorCalculator.h"
 #include "util/RGBDUtil.h"
 #include "visualisers/cpu/DepthVisualiser_CPU.h"
+using namespace rafl;
 
 #ifdef WITH_CUDA
 #include "visualisers/cuda/DepthVisualiser_CUDA.h"
@@ -19,11 +23,6 @@ using namespace rafl;
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
 #endif
-
-#include <boost/format.hpp>
-
-#include <tvgutil/ArgUtil.h>
-using namespace tvgutil;
 
 //#define DEBUG_TOUCH_VERBOSE
 //#define DEBUG_TOUCH_DISPLAY
