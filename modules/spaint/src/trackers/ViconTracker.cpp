@@ -19,7 +19,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 ViconTracker::ViconTracker(const std::string& host, const std::string& subjectName)
-: m_lostTracking(false), m_subjectName(subjectName)
+: m_subjectName(subjectName)
 {
   // Connect to the Vicon system.
   if(m_vicon.Connect(host).Result != Result::Success || !m_vicon.IsConnected().Connected)
@@ -46,11 +46,6 @@ ViconTracker::~ViconTracker()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-
-bool ViconTracker::lost_tracking() const
-{
-  return m_lostTracking;
-}
 
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {

@@ -86,12 +86,12 @@ try
   }
 
   // If we're trying to use the Vicon tracker:
-  if(trackerType == SpaintPipeline::TRACKER_VICON)
+  if(trackerType == SpaintPipeline::TRACKER_VICON || trackerType == SpaintPipeline::TRACKER_ROBUSTVICON)
   {
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
     // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
-    trackerParams = "192.168.0.111:801";
+    trackerParams = "192.168.10.1:801";
 
     // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
     settings->noHierarchyLevels = 2;

@@ -18,10 +18,7 @@
 #include "../propagation/interface/LabelPropagator.h"
 #include "../sampling/interface/PerLabelVoxelSampler.h"
 #include "../sampling/interface/UniformVoxelSampler.h"
-
-#ifdef WITH_VICON
-#include "../trackers/ViconTracker.h"
-#endif
+#include "../trackers/FallibleTracker.h"
 
 namespace spaint {
 
@@ -81,6 +78,7 @@ public:
   {
     TRACKER_INFINITAM,
     TRACKER_RIFT,
+    TRACKER_ROBUSTVICON,
     TRACKER_VICON
   };
 
@@ -88,6 +86,9 @@ public:
 private:
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
+
+  /** A pointer to a tracker that can detect tracking failures (if available). */
+  FallibleTracker *m_fallibleTracker;
 
   /** The feature calculator. */
   FeatureCalculator_CPtr m_featureCalculator;
@@ -187,11 +188,6 @@ private:
 
   /** A memory block in which to store the locations of the voxels sampled for training purposes. */
   Selector::Selection_Ptr m_trainingVoxelLocationsMB;
-
-#ifdef WITH_VICON
-  /** The Vicon tracker (we keep a pointer to it so that we can check whether tracking has been lost). */
-  ViconTracker *m_viconTracker;
-#endif
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;

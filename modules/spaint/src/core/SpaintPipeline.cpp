@@ -30,6 +30,11 @@ using namespace InfiniTAM::Engine;
 #include "trackers/RiftTracker.h"
 #endif
 
+#ifdef WITH_VICON
+#include "trackers/RobustViconTracker.h"
+#include "trackers/ViconTracker.h"
+#endif
+
 #define DEBUGGING 1
 
 namespace spaint {
@@ -119,9 +124,7 @@ void SpaintPipeline::run_main_section()
 
   // Determine whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-#ifdef WITH_VICON
-  if(m_trackerType == TRACKER_VICON && m_viconTracker->lost_tracking()) runFusion = false;
-#endif
+  if(m_fallibleTracker && m_fallibleTracker->lost_tracking()) runFusion = false;
 
   if(runFusion)
   {
@@ -447,6 +450,8 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
 
 void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
+  m_fallibleTracker = NULL;
+
   switch(m_trackerType)
   {
     case TRACKER_RIFT:
@@ -459,11 +464,22 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
 #endif
     }
+    case TRACKER_ROBUSTVICON:
+    {
+#ifdef WITH_VICON
+      m_fallibleTracker = new RobustViconTracker(m_trackerParams, "kinect", trackedImageSize, settings, m_lowLevelEngine, scene);
+      m_tracker.reset(m_fallibleTracker);
+      break;
+#else
+      // This should never happen as things stand - we never try to use the robust Vicon tracker if Vicon support isn't available.
+      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
+#endif
+    }
     case TRACKER_VICON:
     {
 #ifdef WITH_VICON
-      m_viconTracker = new ViconTracker(m_trackerParams, "kinect");
-      m_tracker.reset(make_hybrid_tracker(m_viconTracker, settings, scene, trackedImageSize));
+      m_fallibleTracker = new ViconTracker(m_trackerParams, "kinect");
+      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker, settings, scene, trackedImageSize));
       break;
 #else
       // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.

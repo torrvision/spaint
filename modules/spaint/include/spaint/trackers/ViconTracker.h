@@ -13,22 +13,22 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Engine/ITMTracker.h>
-
 #include <vicon/Client.h>
+
+#include "FallibleTracker.h"
 
 namespace spaint {
 
 /**
  * \brief An instance of this class can be used to track the camera pose using a Vicon system.
+ *
+ * Note that the Vicon tracker is capable of detecting tracking failures. These generally occur
+ * if we move out of range of the cameras or occlude the markers.
  */
-class ViconTracker : public ITMLib::Engine::ITMTracker
+class ViconTracker : public FallibleTracker
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A flag recording whether or not we have temporarily lost tracking. */
-  bool m_lostTracking;
-
   /** The name given to the camera subject in the Vicon software. */
   std::string m_subjectName;
 
@@ -60,15 +60,6 @@ private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets whether or not we have temporarily lost tracking.
-   *
-   * Tracking is most commonly lost due to either moving out of the range of the cameras or marker occlusion.
-   *
-   * \return  true, if we have temporarily lost tracking, or false otherwise.
-   */
-  bool lost_tracking() const;
-
   /** Override */
   virtual void TrackCamera(ITMTrackingState *trackingState, const ITMView *view);
 
