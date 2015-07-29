@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
   const size_t foldCount = 5;
   SplitGenerator_Ptr splitGenerator(new CrossValidationSplitGenerator(seed, foldCount));
 
-  // Time the random forest.
+  // Time the evaluation of the random forest.
   Timer<boost::chrono::seconds> timer("ForestEvaluationTime");
 
   // Evaluate the random forest on the various different parameter sets.
