@@ -22,8 +22,10 @@ namespace spaint {
 /**
  * \brief An instance of this class can be used to track the camera pose more robustly using a Vicon system.
  *
- * We first use the Vicon to obtain a coarse camera pose, and then refine it using ICP. If the two poses are
- * relatively similar, we then perform fusion; if not, we restore the Vicon pose and avoid fusing.
+ * We first use the Vicon to obtain a coarse camera pose, and then refine it using ICP. We then test this
+ * refined pose against both the pose from the previous frame and the Vicon pose, and fuse if and only if
+ * the refined pose is relatively similar to both. This allows us to avoid fusing (a) when the camera is
+ * moving too fast, and (b) when the ICP pose is likely to be unreliable.
  */
 class RobustViconTracker : public ITMLib::Engine::ITMTracker
 {

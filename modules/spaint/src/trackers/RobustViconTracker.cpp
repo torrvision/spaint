@@ -53,11 +53,6 @@ void RobustViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMV
   // whilst testing against the Vicon pose allows us to prevent fusion when the ICP fails.
   SimpleCamera icpCam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
   m_lostTracking = !poses_are_similar(initialCam, icpCam) || !poses_are_similar(viconCam, icpCam);
-
-#if 0
-  // If ICP failed, restore the pose from the base tracker.
-  if(m_lostTracking) trackingState->pose_d->SetM(baseM);
-#endif
 }
 
 void RobustViconTracker::UpdateInitialPose(ITMTrackingState *trackingState)
