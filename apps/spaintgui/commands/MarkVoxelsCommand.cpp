@@ -28,7 +28,7 @@ void MarkVoxelsCommand::execute() const
 
 void MarkVoxelsCommand::undo() const
 {
-  m_interactor->mark_voxels(m_voxelLocationsMB, m_oldVoxelLabelsMB, true);
+  m_interactor->mark_voxels(m_voxelLocationsMB, m_oldVoxelLabelsMB, FORCED_MARKING);
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

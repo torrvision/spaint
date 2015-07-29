@@ -8,6 +8,7 @@
 
 #include <ITMLib/Objects/ITMScene.h>
 
+#include "../shared/MarkingMode.h"
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -41,12 +42,12 @@ public:
    * \param label             The semantic label with which to mark the voxels.
    * \param scene             The scene.
    * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
-   * \param forceMarking      Whether or not to forcibly mark the voxels when marking would not normally succeed.
+   * \param mode              The marking mode.
    */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
-                           bool forceMarking = false) const = 0;
+                           MarkingMode mode = NORMAL_MARKING) const = 0;
 
   /**
    * \brief Marks a set of voxels in the scene with the specified semantic labels.
@@ -55,13 +56,13 @@ public:
    * \param voxelLabelsMB     A memory block containing the semantic labels with which to mark the voxels (one per voxel).
    * \param scene             The scene.
    * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
-   * \param forceMarking      Whether or not to forcibly mark the voxels when marking would not normally succeed.
+   * \param mode              The marking mode.
    */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                            const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
-                           bool forceMarking = false) const = 0;
+                           MarkingMode mode = NORMAL_MARKING) const = 0;
 };
 
 }

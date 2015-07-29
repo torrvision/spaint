@@ -8,6 +8,7 @@
 
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 
+#include "MarkingMode.h"
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -44,11 +45,12 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
  * \param oldLabel      An optional location into which to store the old semantic label of the voxel.
  * \param voxelData     The scene's voxel data.
  * \param voxelIndex    The scene's voxel index.
- * \param forceMarking  Whether or not to forcibly mark the voxels when marking would not normally succeed.
+ * \param mode          The marking mode.
  */
 _CPU_AND_GPU_CODE_
 inline void mark_voxel(const Vector3s& loc, SpaintVoxel::PackedLabel label, SpaintVoxel::PackedLabel *oldLabel,
-                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex, bool forceMarking)
+                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *voxelIndex,
+                       MarkingMode mode = NORMAL_MARKING)
 {
   bool isFound;
   int voxelAddress = findVoxel(voxelIndex, loc.toInt(), isFound);
@@ -56,7 +58,7 @@ inline void mark_voxel(const Vector3s& loc, SpaintVoxel::PackedLabel label, Spai
   {
     SpaintVoxel::PackedLabel oldLabelLocal = voxelData[voxelAddress].packedLabel;
     if(oldLabel) *oldLabel = oldLabelLocal;
-    if(forceMarking || can_overwrite_label(oldLabelLocal, label))
+    if(mode == FORCED_MARKING || can_overwrite_label(oldLabelLocal, label))
     {
       voxelData[voxelAddress].packedLabel = label;
     }

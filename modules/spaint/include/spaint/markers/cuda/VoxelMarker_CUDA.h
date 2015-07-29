@@ -24,14 +24,14 @@ public:
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB,
-                           bool forceMarking) const;
+                           MarkingMode mode) const;
 
   /** Override */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                            const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
                            ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB,
-                           bool forceMarking) const;
+                           MarkingMode mode) const;
 };
 
 }

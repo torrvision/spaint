@@ -119,7 +119,7 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
      (SPFN(x, y - 2) && SPFN(x, y - 5)) ||
      (SPFN(x, y + 2) && SPFN(x, y + 5)))
   {
-    mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData, false);
+    mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }
 
 #undef SPFN
