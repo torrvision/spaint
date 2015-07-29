@@ -27,7 +27,7 @@ namespace spaint {
  * the refined pose is relatively similar to both. This allows us to avoid fusing (a) when the camera is
  * moving too fast, and (b) when the ICP pose is likely to be unreliable.
  */
-class RobustViconTracker : public ITMLib::Engine::ITMTracker
+class RobustViconTracker : public FallibleTracker
 {
   //#################### TYPEDEFS ####################
 private:
@@ -39,9 +39,6 @@ private:
 private:
   /** The ICP tracker. */
   boost::shared_ptr<ITMLib::Engine::ITMTracker> m_icpTracker;
-
-  /** A flag recording whether or not we have temporarily lost tracking. */
-  bool m_lostTracking;
 
   /** The Vicon tracker. */
   boost::shared_ptr<ViconTracker> m_viconTracker;
@@ -63,18 +60,8 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets whether or not we have temporarily lost tracking.
-   *
-   * \return  true, if we have temporarily lost tracking, or false otherwise.
-   */
-  bool lost_tracking() const;
-
   /** Override */
   virtual void TrackCamera(ITMTrackingState *trackingState, const ITMView *view);
-
-  /** Override */
-  virtual void UpdateInitialPose(ITMTrackingState *trackingState);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
@@ -90,10 +77,10 @@ private:
   /**
    * \brief Determines whether or not the poses specified by two cameras are similar.
    *
-   * Similarity is based on the distance between the centres of the cameras and the
+   * Similarity is based on the distance between the positions of the cameras and the
    * angles between their corresponding axes.
    *
-   * \param distanceThreshold The maximum distance (in metres) allowed between the camera centres for the poses to be considered similar.
+   * \param distanceThreshold The maximum distance (in metres) allowed between the camera positions for the poses to be considered similar.
    * \param angleThreshold    The maximum angle (in radians) allowed between corresponding camera axes for the poses to be considered similar.
    */
   static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2,

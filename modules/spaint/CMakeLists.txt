@@ -412,7 +412,10 @@ include/spaint/touch/TouchSettings.h
 
 ##
 SET(trackers_sources)
-SET(trackers_headers)
+
+SET(trackers_headers
+include/spaint/trackers/FallibleTracker.h
+)
 
 IF(WITH_OVR)
   SET(trackers_sources ${trackers_sources} src/trackers/RiftTracker.cpp)

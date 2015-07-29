@@ -17,7 +17,6 @@ namespace spaint {
 
 RobustViconTracker::RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
                                        const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene)
-: m_lostTracking(false)
 {
   m_viconTracker.reset(new ViconTracker(host, subjectName));
   m_icpTracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
@@ -26,11 +25,6 @@ RobustViconTracker::RobustViconTracker(const std::string& host, const std::strin
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-
-bool RobustViconTracker::lost_tracking() const
-{
-  return m_lostTracking;
-}
 
 void RobustViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
@@ -53,11 +47,6 @@ void RobustViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMV
   // whilst testing against the Vicon pose allows us to prevent fusion when the ICP fails.
   SimpleCamera icpCam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
   m_lostTracking = !poses_are_similar(initialCam, icpCam) || !poses_are_similar(viconCam, icpCam);
-}
-
-void RobustViconTracker::UpdateInitialPose(ITMTrackingState *trackingState)
-{
-  m_viconTracker->UpdateInitialPose(trackingState);
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
