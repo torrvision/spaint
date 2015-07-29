@@ -20,7 +20,10 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to track the camera pose more robustly using a Vicon system.
+ *
+ * We first use the Vicon to obtain a coarse camera pose, and then refine it using ICP. If the two poses are
+ * relatively similar, we then perform fusion; if not, we restore the Vicon pose and avoid fusing.
  */
 class RobustViconTracker : public ITMLib::Engine::ITMTracker
 {
@@ -32,19 +35,26 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The ICP tracker. */
   boost::shared_ptr<ITMLib::Engine::ITMTracker> m_icpTracker;
 
   /** A flag recording whether or not we have temporarily lost tracking. */
   bool m_lostTracking;
 
-  /** TODO */
+  /** The Vicon tracker. */
   boost::shared_ptr<ViconTracker> m_viconTracker;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a robust Vicon tracker.
+   *
+   * \param host              The host on which the Vicon software is running (e.g. "<IP address>:<port>").
+   * \param subjectName       The name given to the camera subject in the Vicon software.
+   * \param trackedImageSize  The tracked image size.
+   * \param settings          The settings to use for InfiniTAM.
+   * \param lowLevelEngine    The engine used to perform low-level image processing operations.
+   * \param scene             The scene.
    */
   RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
                      const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene);
@@ -67,12 +77,22 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Computes the angle between the two specified vectors.
+   *
+   * \param v1  The first vector.
+   * \param v2  The second vector.
+   * \return    The angle between the two vectors.
    */
   static double angle_between(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
 
   /**
-   * \brief TODO
+   * \brief Determines whether or not the poses specified by two cameras are similar.
+   *
+   * Similarity is based on the distance between the centres of the cameras and the
+   * angles between their corresponding axes.
+   *
+   * \param distanceThreshold The maximum distance (in metres) allowed between the camera centres for the poses to be considered similar.
+   * \param angleThreshold    The maximum angle (in radians) allowed between corresponding camera axes for the poses to be considered similar.
    */
   static bool poses_are_similar(const rigging::SimpleCamera& cam1, const rigging::SimpleCamera& cam2,
                                 double distanceThreshold = 0.3, double angleThreshold = 0.04);
