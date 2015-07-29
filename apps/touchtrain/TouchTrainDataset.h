@@ -162,7 +162,7 @@ private:
    * \param imagesDir       The path to the images directory.
    * \param annotationFile  The path to a file containing the labels to associate with the images in the images directory.
    *
-   * The annotation is assumed to be in the following format: <imageName,label>
+   * Each line in the annotation file is assumed to be in the following format: <imageName,label>
    *
    * \return  The labelled paths for all images in the specified images directory.
    */
