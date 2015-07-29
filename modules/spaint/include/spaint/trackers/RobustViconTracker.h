@@ -6,8 +6,6 @@
 #ifndef H_SPAINT_ROBUSTVICONTRACKER
 #define H_SPAINT_ROBUSTVICONTRACKER
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Engine/ITMLowLevelEngine.h>
 #include <ITMLib/Objects/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
