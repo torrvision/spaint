@@ -22,8 +22,8 @@ namespace spaint {
 /**
  * \brief An instance of this class can be used to track the camera pose using a Vicon system.
  *
- * Note that although the Vicon system is a high-quality marker-based tracking system, it is still fallible.
- * In particular, it will fail if we move out of the range of the cameras or occlude the markers.
+ * Note that the Vicon tracker is capable of detecting tracking failures. These generally occur
+ * if we move out of range of the cameras or occlude the markers.
  */
 class ViconTracker : public FallibleTracker
 {

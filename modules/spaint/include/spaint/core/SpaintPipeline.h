@@ -87,7 +87,7 @@ private:
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
 
-  /** An optional pointer to a tracker that can detect tracking failures. */
+  /** A pointer to a tracker that can detect tracking failures (if available). */
   FallibleTracker *m_fallibleTracker;
 
   /** The feature calculator. */
