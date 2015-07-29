@@ -24,7 +24,8 @@ void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount) const
 
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const
+                                  ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB,
+                                  MarkingMode mode) const
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   SpaintVoxel::PackedLabel *oldVoxelLabels = oldVoxelLabelsMB ? oldVoxelLabelsMB->GetData(MEMORYDEVICE_CPU) : NULL;
@@ -38,14 +39,15 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
 #endif
   for(int i = 0; i < voxelCount; ++i)
   {
-    mark_voxel(voxelLocations[i], label, oldVoxelLabels ? &oldVoxelLabels[i] : NULL, voxelData, voxelIndex);
+    mark_voxel(voxelLocations[i], label, oldVoxelLabels ? &oldVoxelLabels[i] : NULL, voxelData, voxelIndex, mode);
   }
 }
 
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                                   const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const
+                                  ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB,
+                                  MarkingMode mode) const
 {
   const Vector3s *voxelLocations = voxelLocationsMB.GetData(MEMORYDEVICE_CPU);
   const SpaintVoxel::PackedLabel *voxelLabels = voxelLabelsMB.GetData(MEMORYDEVICE_CPU);
@@ -60,7 +62,7 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
 #endif
   for(int i = 0; i < voxelCount; ++i)
   {
-    mark_voxel(voxelLocations[i], voxelLabels[i], oldVoxelLabels ? &oldVoxelLabels[i] : NULL, voxelData, voxelIndex);
+    mark_voxel(voxelLocations[i], voxelLabels[i], oldVoxelLabels ? &oldVoxelLabels[i] : NULL, voxelData, voxelIndex, mode);
   }
 }
 

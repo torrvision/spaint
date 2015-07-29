@@ -99,16 +99,18 @@ public:
    * \param selection The selection of voxels.
    * \param label     The semantic label with which to mark the voxels.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
+   * \param mode      The marking mode.
    */
-  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
+  void mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr(), MarkingMode mode = NORMAL_MARKING);
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic labels.
    *
    * \param selection The selection of voxels.
    * \param labels    The semantic labels with which to mark the voxels (one per voxel).
+   * \param mode      The marking mode.
    */
-  void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels);
+  void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode = NORMAL_MARKING);
 
   /**
    * \brief Gets whether or not the current selector is active.
