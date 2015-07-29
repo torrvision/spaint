@@ -139,7 +139,7 @@ private:
   /**
    * \brief Checks whether a specified path exists.
    *
-   * If the path is not found, it outputs the expected path to std::cout.
+   * If the path is not found, we output it using std::cout.
    *
    * \param path  The path.
    * \return      true, if the path exists, or false otherwise.
