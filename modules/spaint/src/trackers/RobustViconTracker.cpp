@@ -29,14 +29,12 @@ RobustViconTracker::RobustViconTracker(const std::string& host, const std::strin
 void RobustViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   // Record the initial pose.
-  Matrix4f initialM = trackingState->pose_d->GetM();
   SimpleCamera initialCam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
 
   // Obtain a coarse pose using the Vicon tracker.
   m_viconTracker->TrackCamera(trackingState, view);
 
   // Record the Vicon pose.
-  Matrix4f viconM = trackingState->pose_d->GetM();
   SimpleCamera viconCam = CameraPoseConverter::pose_to_camera(*trackingState->pose_d);
 
   // Attempt to refine the Vicon pose using ICP.
