@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     results.record_performance(params[n], result);
   }
 
-  // Output the performance table to the screen.
+  // Output the performance table.
   results.output(std::cout);
   std::cout << '\n';
 
