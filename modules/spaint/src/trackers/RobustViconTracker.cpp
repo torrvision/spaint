@@ -57,13 +57,13 @@ double RobustViconTracker::angle_between(const Eigen::Vector3f& v1, const Eigen:
 bool RobustViconTracker::poses_are_similar(const SimpleCamera& cam1, const SimpleCamera& cam2, double distanceThreshold, double angleThreshold)
 {
   // Calculate the distance between the positions of the two cameras, and the angles between their corresponding camera axes.
-  double pDist = (cam1.p() - cam2.p()).norm();
+  double distance = (cam1.p() - cam2.p()).norm();
   double nAngle = angle_between(cam1.n(), cam2.n());
   double uAngle = angle_between(cam1.u(), cam2.u());
   double vAngle = angle_between(cam1.v(), cam2.v());
 
   // Check the similarity of the camera poses by comparing the aforementioned distance and angles to suitable thresholds.
-  return pDist < distanceThreshold && nAngle < angleThreshold && uAngle < angleThreshold && vAngle < angleThreshold;
+  return distance < distanceThreshold && nAngle < angleThreshold && uAngle < angleThreshold && vAngle < angleThreshold;
 }
 
 }
