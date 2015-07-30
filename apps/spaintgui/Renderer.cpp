@@ -103,6 +103,25 @@ public:
     {
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
+
+    // TEMPORARY
+    m_base->begin_2d();
+      static float angle = 0.0f;
+      angle += 5.0f;
+
+      glTranslatef(0.9f, 0.1f, 0.0f);
+      glScalef(1.0f, 640.0f/480, 1.0f);
+      glRotatef(angle, 1.0f, 1.0f, 0.0f);
+      glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+      glTranslatef(-0.9f, -0.1f, 0.0f);
+
+      render_orb(Eigen::Vector3f(0.9f, 0.1f, 0.0f), 0.05);
+      /*glColor3f(1.0f, 0.0f, 0.0f);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      QuadricRenderer::render_sphere(Eigen::Vector3f(0.9f, 0.1f, 0.0f), 0.05, 10, 10);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);*/
+    m_base->end_2d();
+    // END TEMPORARY
   }
 #endif
 
