@@ -22,8 +22,10 @@ then
   mkdir build
   cd build
 
+  # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
   cmake -G "Visual Studio $1 Win64" ..
+  cmake ..
 
   cd ..
 fi
