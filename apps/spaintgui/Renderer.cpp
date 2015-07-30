@@ -104,24 +104,24 @@ public:
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
 
-    // TEMPORARY
-    m_base->begin_2d();
-      static float angle = 0.0f;
-      angle += 5.0f;
+    // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
+    const Eigen::Vector3f labelOrbPos(0.9f, 0.1f, 0.0f);
+    const double labelOrbRadius = 0.05;
+    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
+    const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
 
-      glTranslatef(0.9f, 0.1f, 0.0f);
-      glScalef(1.0f, 640.0f/480, 1.0f);
+    static float angle = 0.0f;
+    angle += 5.0f;
+
+    m_base->begin_2d();
+      glTranslatef(labelOrbPos.x(), labelOrbPos.y(), labelOrbPos.z());
+      glScalef(1.0f, aspectRatio, 1.0f);
       glRotatef(angle, 1.0f, 1.0f, 0.0f);
       glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-      glTranslatef(-0.9f, -0.1f, 0.0f);
+      glTranslatef(-labelOrbPos.x(), -labelOrbPos.y(), -labelOrbPos.z());
 
-      render_orb(Eigen::Vector3f(0.9f, 0.1f, 0.0f), 0.05);
-      /*glColor3f(1.0f, 0.0f, 0.0f);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      QuadricRenderer::render_sphere(Eigen::Vector3f(0.9f, 0.1f, 0.0f), 0.05, 10, 10);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);*/
+      render_orb(labelOrbPos, labelOrbRadius);
     m_base->end_2d();
-    // END TEMPORARY
   }
 #endif
 
