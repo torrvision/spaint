@@ -112,7 +112,7 @@ public:
     const double labelOrbRadius = 0.05;
 
     static float angle = 0.0f;
-    angle += 5.0f;
+    angle = fmod(angle + 5.0f, 360.0f);
 
     m_base->begin_2d();
       glTranslatef(labelOrbPos.x(), labelOrbPos.y(), labelOrbPos.z());
