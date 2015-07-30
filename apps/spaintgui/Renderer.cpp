@@ -105,10 +105,11 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Eigen::Vector3f labelOrbPos(0.9f, 0.1f, 0.0f);
-    const double labelOrbRadius = 0.05;
     const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
     const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
+
+    const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
+    const double labelOrbRadius = 0.05;
 
     static float angle = 0.0f;
     angle += 5.0f;
