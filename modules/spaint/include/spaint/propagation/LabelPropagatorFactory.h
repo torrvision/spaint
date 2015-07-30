@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_LABELPROPAGATORFACTORY
 #define H_SPAINT_LABELPROPAGATORFACTORY
 
+#include <climits>
+
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "interface/LabelPropagator.h"
