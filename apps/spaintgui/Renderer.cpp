@@ -121,7 +121,10 @@ public:
       glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
       glTranslatef(-labelOrbPos.x(), -labelOrbPos.y(), -labelOrbPos.z());
 
-      render_orb(labelOrbPos, labelOrbRadius);
+      glPushAttrib(GL_LINE_WIDTH);
+      glLineWidth(2.0f);
+        render_orb(labelOrbPos, labelOrbRadius);
+      glPopAttrib();
     m_base->end_2d();
   }
 #endif
