@@ -38,10 +38,10 @@ struct ClearingSettings
   /** The label-clearing mode. */
   const ClearingMode mode;
 
-  /** The group to clear or preserve (only relevant in the CLEAR_EQ_GROUP or CLEAR_NEQ_GROUP modes). */
+  /** The group to clear or preserve (only relevant in group-based modes). */
   const unsigned char group;
 
-  /** The label to clear or preserve (only relevant in the CLEAR_EQ_LABEL or CLEAR_NEQ_LABEL modes). */
+  /** The label to clear or preserve (only relevant in label-based modes). */
   const unsigned char label;
 
   //#################### CONSTRUCTORS ####################
