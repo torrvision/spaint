@@ -100,7 +100,14 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == SDLK_BACKSPACE)
   {
     const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
-    if(m_inputState.key_down(SDLK_RCTRL))
+    if(m_inputState.key_down(SDLK_RCTRL) && m_inputState.key_down(SDLK_RSHIFT))
+    {
+      // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
+      interactor->clear_labels();
+      m_spaintPipeline->reset_forest();
+      m_commandManager.reset();
+    }
+    else if(m_inputState.key_down(SDLK_RCTRL))
     {
       // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
       interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, interactor->get_semantic_label()));
@@ -113,10 +120,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     }
     else
     {
-      // If backspace is pressed on its own, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
-      interactor->clear_labels();
-      m_spaintPipeline->reset_forest();
-      m_commandManager.reset();
+      // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
+      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, interactor->get_semantic_label()));
     }
   }
 
@@ -164,7 +169,10 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
               << "RShift + ] = To Next Semantic Label\n"
-              << "Backspace = Reset (Clear Labels and Forest)\n"
+              << "Backspace = Clear Current Label Propagation\n"
+              << "RShift + Backspace = Clear All Label Propagations\n"
+              << "RCtrl + Backspace = Clear Current Label\n"
+              << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
               << "# = Toggle Median Filtering\n";
   }
 }

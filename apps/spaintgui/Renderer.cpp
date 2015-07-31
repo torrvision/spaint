@@ -317,7 +317,7 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
   {
     postprocessor.reset();
   }
-  else if(m_medianFilteringEnabled && !postprocessor)
+  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
     const unsigned int kernelWidth = 3;

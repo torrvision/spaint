@@ -24,6 +24,9 @@ enum ClearingMode
   /** Only clear voxels that have a specific label. */
   CLEAR_EQ_LABEL,
 
+  /** Only clear voxels that have a specific label and are not in a specific group. */
+  CLEAR_EQ_LABEL_NEQ_GROUP,
+
   /** Only clear voxels whose labels are not in a specific group. */
   CLEAR_NEQ_GROUP,
 
