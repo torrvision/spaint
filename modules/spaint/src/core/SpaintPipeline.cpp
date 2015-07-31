@@ -443,7 +443,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   );
 
   // Train the forest.
-  const size_t splitBudget = 128;
+  const size_t splitBudget = 20;
   m_forest->add_examples(examples);
   m_forest->train(splitBudget);
 }

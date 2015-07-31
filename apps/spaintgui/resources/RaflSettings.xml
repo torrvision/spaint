@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<candidateCount>256</candidateCount>
+<candidateCount>128</candidateCount>
 <decisionFunctionGeneratorParams>13</decisionFunctionGeneratorParams> <!-- patchSize -->
 <decisionFunctionGeneratorType>Spaint</decisionFunctionGeneratorType>
 <gainThreshold>0.0</gainThreshold>
 <maxClassSize>10000</maxClassSize>
 <maxTreeHeight>20</maxTreeHeight>
 <randomSeed>1234</randomSeed>
-<seenExamplesThreshold>50</seenExamplesThreshold>
+<seenExamplesThreshold>512</seenExamplesThreshold>
 <splittabilityThreshold>0.5</splittabilityThreshold>
 <usePMFReweighting>1</usePMFReweighting>
