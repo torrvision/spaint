@@ -35,19 +35,19 @@ struct ClearingSettings
 {
   //#################### PUBLIC VARIABLES ####################
 
-  /** The label-clearing mode. */
-  const ClearingMode mode;
-
   /** The group to clear or preserve (only relevant in group-based modes). */
   const unsigned char group;
 
   /** The label to clear or preserve (only relevant in label-based modes). */
   const unsigned char label;
 
+  /** The label-clearing mode. */
+  const ClearingMode mode;
+
   //#################### CONSTRUCTORS ####################
 
   ClearingSettings(ClearingMode mode_, unsigned char group_, unsigned char label_)
-  : mode(mode_), group(group_), label(label_)
+  : group(group_), label(label_), mode(mode_)
   {}
 };
 
