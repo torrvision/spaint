@@ -175,7 +175,7 @@ include/spaint/markers/interface/VoxelMarker.h
 
 ##
 SET(markers_shared_headers
-include/spaint/markers/shared/MarkingMode.h
+include/spaint/markers/shared/VoxelMarker_Settings.h
 include/spaint/markers/shared/VoxelMarker_Shared.h
 )
 

@@ -8,7 +8,7 @@
 
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 
-#include "MarkingMode.h"
+#include "VoxelMarker_Settings.h"
 
 namespace spaint {
 

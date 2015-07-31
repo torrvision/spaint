@@ -102,8 +102,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
     if(m_inputState.key_down(SDLK_RCTRL))
     {
-      // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label.
+      // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
       interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, interactor->get_semantic_label()));
+      m_commandManager.reset();
     }
     else if(m_inputState.key_down(SDLK_RSHIFT))
     {

@@ -8,7 +8,7 @@
 
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "../shared/MarkingMode.h"
+#include "../shared/VoxelMarker_Settings.h"
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
