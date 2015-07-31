@@ -9,6 +9,7 @@
 #include <boost/optional.hpp>
 
 #include <rafl/core/RandomForest.h>
+#include <rafl/choppers/TreeChopper.h>
 
 #include "SpaintInteractor.h"
 #include "SpaintModel.h"
@@ -42,6 +43,7 @@ private:
   typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<const rafl::TreeChopper<SpaintVoxel::Label> > TreeChopper_CPtr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
@@ -185,6 +187,9 @@ private:
 
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
+
+  /** The tree chopper for the random forest. */
+  TreeChopper_CPtr m_treeChopper;
 
   /** A memory block in which to store the locations of the voxels sampled for training purposes. */
   Selector::Selection_Ptr m_trainingVoxelLocationsMB;

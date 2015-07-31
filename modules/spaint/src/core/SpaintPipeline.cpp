@@ -4,7 +4,6 @@
  */
 
 #include "core/SpaintPipeline.h"
-using namespace rafl;
 
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
@@ -21,6 +20,10 @@ using namespace InfiniTAM::Engine;
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
 #include "util/MemoryBlockFactory.h"
+
+#include <rafl/choppers/HeightLimitingTreeChopper.h>
+#include <rafl/choppers/TimeBasedTreeChopper.h>
+using namespace rafl;
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
@@ -304,6 +307,11 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     &SpaintDecisionFunctionGenerator::maker
   );
 
+  // Set up the tree chopper.
+  const size_t chopperMaxTreeHeight = 14;
+  const size_t chopperPeriod = 5;
+  m_treeChopper.reset(new TimeBasedTreeChopper<SpaintVoxel::Label>(TreeChopper_CPtr(new HeightLimitingTreeChopper<SpaintVoxel::Label>(chopperMaxTreeHeight, 1234)), chopperPeriod));
+
   // Set up the random forest.
   reset_forest();
 
@@ -442,8 +450,11 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
     maxLabelCount
   );
 
+  // Chop a tree if necessary.
+  m_treeChopper->chop_tree_if_necessary(m_forest);
+
   // Train the forest.
-  const size_t splitBudget = 128;
+  const size_t splitBudget = 5;
   m_forest->add_examples(examples);
   m_forest->train(splitBudget);
 }
