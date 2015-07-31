@@ -37,7 +37,10 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
 }
 
 /**
- * \brief TODO
+ * \brief Clears the label of the specified voxel as necessary depending on the settings specified.
+ *
+ * \param voxel     The voxel whose label may be cleared.
+ * \param settings  The settings to use for the label-clearing operation.
  */
 _CPU_AND_GPU_CODE_
 inline void clear_label(SpaintVoxel& voxel, ClearingSettings settings)

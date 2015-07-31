@@ -61,9 +61,9 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Clears the semantic labels of all the voxels in the scene.
+   * \brief Clears the semantic labels of some or all of voxels in the scene.
    *
-   * \param settings  TODO
+   * \param settings  The settings to use for the label-clearing operation.
    */
   void clear_labels(ClearingSettings settings = ClearingSettings(CLEAR_ALL, 0, 0));
 

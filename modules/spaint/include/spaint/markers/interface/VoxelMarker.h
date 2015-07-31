@@ -28,11 +28,11 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Clears the labels of the specified voxels.
+   * \brief Clears the labels of some or all of the voxels in an array, depending on the settings specified.
    *
-   * \param voxels      The voxels whose labels are to be cleared.
-   * \param voxelCount  The number of voxels.
-   * \param settings    TODO
+   * \param voxels      The array of voxels.
+   * \param voxelCount  The number of voxels in the array.
+   * \param settings    The settings to use for the label-clearing operation.
    */
   virtual void clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings) const = 0;
 
