@@ -4,6 +4,7 @@
  */
 
 #include "core/SpaintPipeline.h"
+using namespace rafl;
 
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
@@ -13,10 +14,6 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
-
-#include <rafl/choppers/HeightLimitingTreeChopper.h>
-#include <rafl/choppers/TimeBasedTreeChopper.h>
-using namespace rafl;
 
 #include "features/FeatureCalculatorFactory.h"
 #include "propagation/LabelPropagatorFactory.h"
@@ -310,11 +307,6 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the random forest.
   reset_forest();
 
-  // Set up the tree chopper.
-  const size_t chopperMaxTreeHeight = 14;
-  const size_t chopperPeriod = 5;
-  m_treeChopper.reset(new TimeBasedTreeChopper<SpaintVoxel::Label>(TreeChopper_CPtr(new HeightLimitingTreeChopper<SpaintVoxel::Label>(chopperMaxTreeHeight, seed)), chopperPeriod));
-
   m_featureInspectionWindowName = "Feature Inspection";
   m_fusionEnabled = true;
   m_mode = MODE_NORMAL;
@@ -450,11 +442,8 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
     maxLabelCount
   );
 
-  // Chop a tree if necessary.
-  m_treeChopper->chop_tree_if_necessary(m_forest);
-
   // Train the forest.
-  const size_t splitBudget = 5;
+  const size_t splitBudget = 20;
   m_forest->add_examples(examples);
   m_forest->train(splitBudget);
 }
