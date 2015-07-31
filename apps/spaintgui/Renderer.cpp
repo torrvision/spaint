@@ -103,6 +103,29 @@ public:
     {
       render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
     }
+
+    // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
+    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
+    const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
+
+    const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
+    const double labelOrbRadius = 0.05;
+
+    static float angle = 0.0f;
+    angle = fmod(angle + 5.0f, 360.0f);
+
+    m_base->begin_2d();
+      glTranslatef(labelOrbPos.x(), labelOrbPos.y(), labelOrbPos.z());
+      glScalef(1.0f, aspectRatio, 1.0f);
+      glRotatef(angle, 1.0f, 1.0f, 0.0f);
+      glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+      glTranslatef(-labelOrbPos.x(), -labelOrbPos.y(), -labelOrbPos.z());
+
+      glPushAttrib(GL_LINE_WIDTH);
+      glLineWidth(2.0f);
+        render_orb(labelOrbPos, labelOrbRadius);
+      glPopAttrib();
+    m_base->end_2d();
   }
 #endif
 
