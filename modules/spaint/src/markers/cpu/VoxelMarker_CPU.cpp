@@ -11,14 +11,14 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount) const
+void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings) const
 {
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int i = 0; i < voxelCount; ++i)
   {
-    voxels[i].packedLabel = SpaintVoxel::PackedLabel();
+    clear_label(voxels[i], settings);
   }
 }
 

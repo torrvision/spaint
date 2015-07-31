@@ -55,10 +55,10 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintInteractor::clear_labels()
+void SpaintInteractor::clear_labels(ClearingSettings settings)
 {
   ITMLocalVBA<SpaintVoxel>& localVBA = m_model->get_scene()->localVBA;
-  m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize);
+  m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
 SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const

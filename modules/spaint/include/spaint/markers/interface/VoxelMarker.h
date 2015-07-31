@@ -8,7 +8,7 @@
 
 #include <ITMLib/Objects/ITMScene.h>
 
-#include "../shared/MarkingMode.h"
+#include "../shared/VoxelMarker_Settings.h"
 #include "../../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -28,12 +28,13 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Clears the labels of the specified voxels.
+   * \brief Clears the labels of some or all of the voxels in an array, depending on the settings specified.
    *
-   * \param voxels      The voxels whose labels are to be cleared.
-   * \param voxelCount  The number of voxels.
+   * \param voxels      The array of voxels.
+   * \param voxelCount  The number of voxels in the array.
+   * \param settings    The settings to use for the label-clearing operation.
    */
-  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount) const = 0;
+  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings) const = 0;
 
   /**
    * \brief Marks a set of voxels in the scene with the specified semantic label.

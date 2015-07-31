@@ -97,12 +97,32 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
   }
 
-  // If the backspace key is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
   if(keysym.sym == SDLK_BACKSPACE)
   {
-    m_spaintPipeline->get_interactor()->clear_labels();
-    m_spaintPipeline->reset_forest();
-    m_commandManager.reset();
+    const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
+    if(m_inputState.key_down(SDLK_RCTRL) && m_inputState.key_down(SDLK_RSHIFT))
+    {
+      // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
+      interactor->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
+      m_spaintPipeline->reset_forest();
+      m_commandManager.reset();
+    }
+    else if(m_inputState.key_down(SDLK_RCTRL))
+    {
+      // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
+      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, interactor->get_semantic_label()));
+      m_commandManager.reset();
+    }
+    else if(m_inputState.key_down(SDLK_RSHIFT))
+    {
+      // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene that were not labelled by the user.
+      interactor->clear_labels(ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
+    }
+    else
+    {
+      // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
+      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, interactor->get_semantic_label()));
+    }
   }
 
   // If the hash key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
@@ -149,7 +169,10 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
               << "RShift + ] = To Next Semantic Label\n"
-              << "Backspace = Reset (Clear Labels and Forest)\n"
+              << "Backspace = Clear Current Label Propagation\n"
+              << "RShift + Backspace = Clear All Label Propagations\n"
+              << "RCtrl + Backspace = Clear Current Label\n"
+              << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
               << "# = Toggle Median Filtering\n";
   }
 }

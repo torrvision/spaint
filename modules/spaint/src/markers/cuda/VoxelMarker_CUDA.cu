@@ -11,10 +11,10 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_clear_labels(SpaintVoxel *voxels, int voxelCount)
+__global__ void ck_clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings)
 {
   int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  if(tid < voxelCount) voxels[tid].packedLabel = SpaintVoxel::PackedLabel();
+  if(tid < voxelCount) clear_label(voxels[tid], settings);
 }
 
 __global__ void ck_mark_voxels(const Vector3s *voxelLocations, SpaintVoxel::PackedLabel label, int voxelCount, SpaintVoxel::PackedLabel *oldVoxelLabels,
@@ -33,12 +33,12 @@ __global__ void ck_mark_voxels(const Vector3s *voxelLocations, const SpaintVoxel
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VoxelMarker_CUDA::clear_labels(SpaintVoxel *voxels, int voxelCount) const
+void VoxelMarker_CUDA::clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings) const
 {
   int threadsPerBlock = 256;
   int numBlocks = (voxelCount + threadsPerBlock - 1) / threadsPerBlock;
 
-  ck_clear_labels<<<numBlocks,threadsPerBlock>>>(voxels, voxelCount);
+  ck_clear_labels<<<numBlocks,threadsPerBlock>>>(voxels, voxelCount, settings);
 }
 
 void VoxelMarker_CUDA::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,

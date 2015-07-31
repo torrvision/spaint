@@ -61,9 +61,11 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Clears the semantic labels of all the voxels in the scene.
+   * \brief Clears the semantic labels of some or all of voxels in the scene.
+   *
+   * \param settings  The settings to use for the label-clearing operation.
    */
-  void clear_labels();
+  void clear_labels(ClearingSettings settings);
 
   /**
    * \brief Gets the voxels in the scene (if any) that were selected the last time the current selector was updated.
