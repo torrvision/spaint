@@ -312,6 +312,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
+  // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
   static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
   if(!m_medianFilteringEnabled && postprocessor)
   {
