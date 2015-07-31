@@ -46,6 +46,13 @@ struct ClearingSettings
 
   //#################### CONSTRUCTORS ####################
 
+  /**
+   * \brief Constructs a set of label-clearing settings.
+   *
+   * \param mode_   The label-clearing mode.
+   * \param group_  The group to clear or preserve (only relevant in group-based modes).
+   * \param label_  The label to clear or preserve (only relevant in label-based modes).
+   */
   ClearingSettings(ClearingMode mode_, unsigned char group_, unsigned char label_)
   : group(group_), label(label_), mode(mode_)
   {}
