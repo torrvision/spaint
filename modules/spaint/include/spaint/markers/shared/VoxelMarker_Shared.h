@@ -50,11 +50,9 @@ inline void clear_label(SpaintVoxel& voxel, ClearingSettings settings)
   bool shouldClear = false;
   switch(settings.mode)
   {
-    case CLEAR_EQ_GROUP:            shouldClear = packedLabel.group == settings.group; break;
     case CLEAR_EQ_LABEL:            shouldClear = packedLabel.label == settings.label; break;
     case CLEAR_EQ_LABEL_NEQ_GROUP:  shouldClear = packedLabel.label == settings.label && packedLabel.group != settings.group; break;
     case CLEAR_NEQ_GROUP:           shouldClear = packedLabel.group != settings.group; break;
-    case CLEAR_NEQ_LABEL:           shouldClear = packedLabel.label != settings.label; break;
     default:                        shouldClear = true; break;
   }
 

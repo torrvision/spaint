@@ -15,11 +15,8 @@ namespace spaint {
  */
 enum ClearingMode
 {
-  /** All voxels are cleared regardless of their current labels. */
+  /** Clear all voxels regardless of their current labels. */
   CLEAR_ALL,
-
-  /** Only clear voxels whose labels are in a specific group. */
-  CLEAR_EQ_GROUP,
 
   /** Only clear voxels that have a specific label. */
   CLEAR_EQ_LABEL,
@@ -28,10 +25,7 @@ enum ClearingMode
   CLEAR_EQ_LABEL_NEQ_GROUP,
 
   /** Only clear voxels whose labels are not in a specific group. */
-  CLEAR_NEQ_GROUP,
-
-  /** Only clear voxels that do not have a specific label. */
-  CLEAR_NEQ_LABEL
+  CLEAR_NEQ_GROUP
 };
 
 /**
