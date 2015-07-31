@@ -103,7 +103,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     if(m_inputState.key_down(SDLK_RCTRL) && m_inputState.key_down(SDLK_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
-      interactor->clear_labels();
+      interactor->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
       m_spaintPipeline->reset_forest();
       m_commandManager.reset();
     }

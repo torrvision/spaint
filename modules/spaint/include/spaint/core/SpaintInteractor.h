@@ -65,7 +65,7 @@ public:
    *
    * \param settings  The settings to use for the label-clearing operation.
    */
-  void clear_labels(ClearingSettings settings = ClearingSettings(CLEAR_ALL, 0, 0));
+  void clear_labels(ClearingSettings settings);
 
   /**
    * \brief Gets the voxels in the scene (if any) that were selected the last time the current selector was updated.
