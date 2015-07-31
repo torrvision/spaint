@@ -8,7 +8,6 @@
 
 #include <boost/optional.hpp>
 
-#include <rafl/core/RandomForest.h>
 #include <rafl/choppers/TreeChopper.h>
 
 #include "SpaintInteractor.h"

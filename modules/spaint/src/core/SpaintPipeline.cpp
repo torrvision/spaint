@@ -14,16 +14,16 @@
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
+#include <rafl/choppers/HeightLimitingTreeChopper.h>
+#include <rafl/choppers/TimeBasedTreeChopper.h>
+using namespace rafl;
+
 #include "features/FeatureCalculatorFactory.h"
 #include "propagation/LabelPropagatorFactory.h"
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
 #include "util/MemoryBlockFactory.h"
-
-#include <rafl/choppers/HeightLimitingTreeChopper.h>
-#include <rafl/choppers/TimeBasedTreeChopper.h>
-using namespace rafl;
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
@@ -307,13 +307,13 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
     &SpaintDecisionFunctionGenerator::maker
   );
 
+  // Set up the random forest.
+  reset_forest();
+
   // Set up the tree chopper.
   const size_t chopperMaxTreeHeight = 14;
   const size_t chopperPeriod = 5;
-  m_treeChopper.reset(new TimeBasedTreeChopper<SpaintVoxel::Label>(TreeChopper_CPtr(new HeightLimitingTreeChopper<SpaintVoxel::Label>(chopperMaxTreeHeight, 1234)), chopperPeriod));
-
-  // Set up the random forest.
-  reset_forest();
+  m_treeChopper.reset(new TimeBasedTreeChopper<SpaintVoxel::Label>(TreeChopper_CPtr(new HeightLimitingTreeChopper<SpaintVoxel::Label>(chopperMaxTreeHeight, seed)), chopperPeriod));
 
   m_featureInspectionWindowName = "Feature Inspection";
   m_fusionEnabled = true;
