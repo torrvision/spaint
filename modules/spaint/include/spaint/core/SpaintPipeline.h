@@ -188,11 +188,11 @@ private:
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
 
-  /** The tree chopper for the random forest. */
-  TreeChopper_CPtr m_treeChopper;
-
   /** A memory block in which to store the locations of the voxels sampled for training purposes. */
   Selector::Selection_Ptr m_trainingVoxelLocationsMB;
+
+  /** The tree chopper for the random forest. */
+  TreeChopper_CPtr m_treeChopper;
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
