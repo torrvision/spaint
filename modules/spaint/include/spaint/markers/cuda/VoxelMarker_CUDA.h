@@ -18,7 +18,7 @@ class VoxelMarker_CUDA : public VoxelMarker
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount) const;
+  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings) const;
 
   /** Override */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,

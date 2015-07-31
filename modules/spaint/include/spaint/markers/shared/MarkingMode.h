@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_MARKINGMODE
 #define H_SPAINT_MARKINGMODE
 
+#include "../../util/SpaintVoxel.h"
+
 namespace spaint {
 
 /**
@@ -18,6 +20,32 @@ enum MarkingMode
 
   /** In normal marking mode, an old label is only overwritten with a new one if the two labels pass a test. */
   NORMAL_MARKING
+};
+
+enum ClearingMode
+{
+  CLEAR_ALL,
+
+  CLEAR_EQ_GROUP,
+
+  CLEAR_EQ_LABEL,
+
+  CLEAR_NEQ_GROUP,
+
+  CLEAR_NEQ_LABEL
+};
+
+struct ClearingSettings
+{
+  ClearingMode mode;
+
+  unsigned char group;
+
+  unsigned char label;
+
+  ClearingSettings(ClearingMode mode_, unsigned char group_, unsigned char label_)
+  : mode(mode_), group(group_), label(label_)
+  {}
 };
 
 }

@@ -9,7 +9,6 @@
 #include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
 
 #include "MarkingMode.h"
-#include "../../util/SpaintVoxel.h"
 
 namespace spaint {
 
@@ -35,6 +34,27 @@ inline bool can_overwrite_label(SpaintVoxel::PackedLabel oldLabel, SpaintVoxel::
 
     // (c) The new label was supplied by the user.
     newLabel.group == SpaintVoxel::LG_USER;
+}
+
+/**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void clear_label(SpaintVoxel& voxel, ClearingSettings settings)
+{
+  SpaintVoxel::PackedLabel& packedLabel = voxel.packedLabel;
+
+  bool shouldClear = false;
+  switch(settings.mode)
+  {
+    case CLEAR_EQ_GROUP:  shouldClear = packedLabel.group == settings.group; break;
+    case CLEAR_EQ_LABEL:  shouldClear = packedLabel.label == settings.label; break;
+    case CLEAR_NEQ_GROUP: shouldClear = packedLabel.group != settings.group; break;
+    case CLEAR_NEQ_LABEL: shouldClear = packedLabel.label != settings.label; break;
+    default:              shouldClear = true; break;
+  }
+
+  if(shouldClear) packedLabel = SpaintVoxel::PackedLabel();
 }
 
 /**

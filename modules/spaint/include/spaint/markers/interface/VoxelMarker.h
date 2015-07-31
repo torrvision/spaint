@@ -32,8 +32,9 @@ public:
    *
    * \param voxels      The voxels whose labels are to be cleared.
    * \param voxelCount  The number of voxels.
+   * \param settings    TODO
    */
-  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount) const = 0;
+  virtual void clear_labels(SpaintVoxel *voxels, int voxelCount, ClearingSettings settings) const = 0;
 
   /**
    * \brief Marks a set of voxels in the scene with the specified semantic label.
