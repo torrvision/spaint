@@ -177,6 +177,7 @@ private:
    */
   void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
 
+#ifdef WITH_OPENCV
   /**
    * \brief Sets up some debugging windows containing trackbars that can be used to control the values of
    *        various member variables, and updates those variables based on the current trackbar positions.
@@ -190,6 +191,7 @@ private:
    * \param diffRawRaycast      An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
    */
   void save_candidate_components(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const;
+#endif
 
   /**
    * \brief Select candidate connected components that fall within a certain size range.

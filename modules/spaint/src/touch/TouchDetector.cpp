@@ -117,11 +117,13 @@ try
   // Convert the differences between the raw depth image and the depth raycast to millimetres.
   af::array diffRawRaycastInMm = clamp_to_range(*m_diffRawRaycast * 1000.0f, 0.0f, 255.0f).as(u8);
 
+#ifdef WITH_OPENCV
   // If desired, save the candidate connected components for use with the touchtrain application.
   if(m_touchSettings->should_save_candidate_components())
   {
     save_candidate_components(candidateComponents, diffRawRaycastInMm);
   }
+#endif
 
   // Pick the candidate component most likely to correspond to a touch interaction.
   int bestConnectedComponent = pick_best_candidate_component_based_on_forest(candidateComponents, diffRawRaycastInMm);
@@ -400,6 +402,7 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   );
 }
 
+#ifdef WITH_OPENCV
 void TouchDetector::process_debug_windows()
 {
   // If this is the first iteration, create debugging windows with trackbars that can be used to control the touch detection.
@@ -452,6 +455,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
     }
   }
 }
+#endif
 
 af::array TouchDetector::select_candidate_components()
 {
