@@ -126,8 +126,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     }
   }
 
-  // If the hash key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
-  if(keysym.sym == SDLK_HASH)
+  // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
+  if(keysym.sym == SDLK_SEMICOLON)
   {
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
@@ -174,7 +174,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RShift + Backspace = Clear All Label Propagations\n"
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
-              << "# = Toggle Median Filtering\n";
+              << "; = Toggle Median Filtering\n";
   }
 }
 
