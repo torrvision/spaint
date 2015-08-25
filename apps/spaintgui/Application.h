@@ -26,11 +26,11 @@
 #undef M_PI
 #endif
 
-#include <spaint/core/SpaintPipeline.h>
 #include <spaint/input/InputState.h>
 
 #include <tvgutil/commands/CommandManager.h>
 
+#include "Pipeline.h"
 #include "Renderer.h"
 
 /**
@@ -51,11 +51,11 @@ private:
   /** The current state of the keyboard and mouse. */
   spaint::InputState m_inputState;
 
+  /** The pipeline that the application should use. */
+  Pipeline_Ptr m_pipeline;
+
   /** The current renderer. */
   Renderer_Ptr m_renderer;
-
-  /** The spaint pipeline that the application should use. */
-  spaint::SpaintPipeline_Ptr m_spaintPipeline;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
@@ -65,9 +65,9 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param spaintPipeline  The spaint pipeline that the application should use.
+   * \param pipeline  The pipeline that the application should use.
    */
-  explicit Application(const spaint::SpaintPipeline_Ptr& spaintPipeline);
+  explicit Application(const Pipeline_Ptr& pipeline);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

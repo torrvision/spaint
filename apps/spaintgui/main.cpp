@@ -21,9 +21,10 @@ using namespace InfiniTAM::Engine;
   #include <OVR_CAPI.h>
 #endif
 
-#include <spaint/core/SpaintPipeline.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
+
+#include "Pipeline.h"
 
 //#################### FUNCTIONS ####################
 
@@ -70,23 +71,23 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  SpaintPipeline::TrackerType trackerType = SpaintPipeline::TRACKER_INFINITAM;
+  Pipeline::TrackerType trackerType = Pipeline::TRACKER_INFINITAM;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
-  if(trackerType == SpaintPipeline::TRACKER_RIFT)
+  if(trackerType == Pipeline::TRACKER_RIFT)
   {
 #ifdef WITH_OVR
     // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0) trackerType = SpaintPipeline::TRACKER_INFINITAM;
+    if(ovrHmd_Detect() == 0) trackerType = Pipeline::TRACKER_INFINITAM;
 #else
     // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
-    trackerType = SpaintPipeline::TRACKER_INFINITAM;
+    trackerType = Pipeline::TRACKER_INFINITAM;
 #endif
   }
 
   // If we're trying to use the Vicon tracker:
-  if(trackerType == SpaintPipeline::TRACKER_VICON || trackerType == SpaintPipeline::TRACKER_ROBUSTVICON)
+  if(trackerType == Pipeline::TRACKER_VICON || trackerType == Pipeline::TRACKER_ROBUSTVICON)
   {
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
@@ -101,20 +102,20 @@ try
     settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = SpaintPipeline::TRACKER_INFINITAM;
+    trackerType = Pipeline::TRACKER_INFINITAM;
 #endif
   }
 
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
-  // Construct the spaint pipeline.
-  SpaintPipeline_Ptr spaintPipeline;
+  // Construct the pipeline.
+  Pipeline_Ptr pipeline;
   std::string resourcesDir = Application::resources_dir().string();
   if(argc == 4)
   {
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, rgbImageMask, depthImageMask, settings, resourcesDir));
+    pipeline.reset(new Pipeline(calibrationFilename, rgbImageMask, depthImageMask, settings, resourcesDir));
   }
   else
   {
@@ -122,14 +123,14 @@ try
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
     bool useInternalCalibration = true;
-    spaintPipeline.reset(new SpaintPipeline(calibrationFilename, uri, settings, resourcesDir, trackerType, trackerParams, useInternalCalibration));
+    pipeline.reset(new Pipeline(calibrationFilename, uri, settings, resourcesDir, trackerType, trackerParams, useInternalCalibration));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
   }
 
   // Run the application.
-  Application app(spaintPipeline);
+  Application app(pipeline);
   app.run();
 
 #ifdef WITH_OVR

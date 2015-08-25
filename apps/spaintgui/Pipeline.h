@@ -1,41 +1,39 @@
 /**
- * spaint: SpaintPipeline.h
+ * spaintgui: Pipeline.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_SPAINTPIPELINE
-#define H_SPAINT_SPAINTPIPELINE
+#ifndef H_SPAINTGUI_PIPELINE
+#define H_SPAINTGUI_PIPELINE
 
 #include <boost/optional.hpp>
 
 #include <rafl/core/RandomForest.h>
 
-#include "SpaintInteractor.h"
-#include "SpaintModel.h"
-#include "SpaintRaycaster.h"
+#include <spaint/core/SpaintInteractor.h>
+#include <spaint/core/SpaintModel.h>
+#include <spaint/core/SpaintRaycaster.h>
 
-#include "../features/interface/FeatureCalculator.h"
-#include "../propagation/interface/LabelPropagator.h"
-#include "../sampling/interface/PerLabelVoxelSampler.h"
-#include "../sampling/interface/UniformVoxelSampler.h"
-#include "../trackers/FallibleTracker.h"
-
-namespace spaint {
+#include <spaint/features/interface/FeatureCalculator.h>
+#include <spaint/propagation/interface/LabelPropagator.h>
+#include <spaint/sampling/interface/PerLabelVoxelSampler.h>
+#include <spaint/sampling/interface/UniformVoxelSampler.h>
+#include <spaint/trackers/FallibleTracker.h>
 
 /**
- * \brief An instance of this class is used to represent the spaint processing pipeline.
+ * \brief An instance of this class is used to represent the spaintgui processing pipeline.
  */
-class SpaintPipeline
+class Pipeline
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
+  typedef boost::shared_ptr<ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::Label> > RandomForest_Ptr;
+  typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
   typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
@@ -43,7 +41,7 @@ private:
   typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
-  typedef boost::shared_ptr<ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -88,10 +86,10 @@ private:
   DenseMapper_Ptr m_denseMapper;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
-  FallibleTracker *m_fallibleTracker;
+  spaint::FallibleTracker *m_fallibleTracker;
 
   /** The feature calculator. */
-  FeatureCalculator_CPtr m_featureCalculator;
+  spaint::FeatureCalculator_CPtr m_featureCalculator;
 
   /** The name to give the featuere inspection window. */
   std::string m_featureInspectionWindowName;
@@ -115,10 +113,10 @@ private:
   ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
-  SpaintInteractor_Ptr m_interactor;
+  spaint::SpaintInteractor_Ptr m_interactor;
 
   /** The label propagator. */
-  LabelPropagator_CPtr m_labelPropagator;
+  spaint::LabelPropagator_CPtr m_labelPropagator;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
@@ -133,7 +131,7 @@ private:
   Mode m_mode;
 
   /** The spaint model. */
-  SpaintModel_Ptr m_model;
+  spaint::SpaintModel_Ptr m_model;
 
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
@@ -142,16 +140,16 @@ private:
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
   /** A memory block in which to store the labels predicted for the various voxels. */
-  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
 
   /** The voxel sampler used in prediction mode. */
-  UniformVoxelSampler_CPtr m_predictionSampler;
+  spaint::UniformVoxelSampler_CPtr m_predictionSampler;
 
   /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
-  Selector::Selection_Ptr m_predictionVoxelLocationsMB;
+  spaint::Selector::Selection_Ptr m_predictionVoxelLocationsMB;
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
-  SpaintRaycaster_Ptr m_raycaster;
+  spaint::SpaintRaycaster_Ptr m_raycaster;
 
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
@@ -181,13 +179,13 @@ private:
   boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
 
   /** The voxel sampler used in training mode. */
-  PerLabelVoxelSampler_CPtr m_trainingSampler;
+  spaint::PerLabelVoxelSampler_CPtr m_trainingSampler;
 
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
 
   /** A memory block in which to store the locations of the voxels sampled for training purposes. */
-  Selector::Selection_Ptr m_trainingVoxelLocationsMB;
+  spaint::Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
@@ -196,7 +194,7 @@ private:
 public:
 #ifdef WITH_OPENNI
   /**
-   * \brief Constructs an instance of the spaint pipeline that uses an OpenNI device as its image source.
+   * \brief Constructs an instance of the pipeline that uses an OpenNI device as its image source.
    *
    * \param calibrationFilename     The name of a file containing InfiniTAM calibration settings.
    * \param openNIDeviceURI         An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
@@ -206,13 +204,13 @@ public:
    * \param trackerParams           The parameters for the tracker (if any).
    * \param useInternalCalibration  A flag indicating whether or not to use internal calibration.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                 const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "",
-                 bool useInternalCalibration = false);
+  Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
+           const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "",
+           bool useInternalCalibration = false);
 #endif
 
   /**
-   * \brief Constructs an instance of the spaint pipeline that uses images on disk as its image source.
+   * \brief Constructs an instance of the pipeline that uses images on disk as its image source.
    *
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param rgbImageMask        The mask for the RGB image filenames (e.g. "Teddy/Frames/%04i.ppm").
@@ -220,8 +218,8 @@ public:
    * \param settings            The settings to use for InfiniTAM.
    * \param resourcesDir        The path to the resources directory.
    */
-  SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-                 const Settings_Ptr& settings, const std::string& resourcesDir);
+  Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+           const Settings_Ptr& settings, const std::string& resourcesDir);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -237,7 +235,7 @@ public:
    *
    * \return  The interactor that is used to interact with the InfiniTAM scene.
    */
-  const SpaintInteractor_Ptr& get_interactor();
+  const spaint::SpaintInteractor_Ptr& get_interactor();
 
   /**
    * \brief Gets the mode in which the pipeline is currently running.
@@ -251,28 +249,28 @@ public:
    *
    * \return  The spaint model.
    */
-  const SpaintModel_Ptr& get_model();
+  const spaint::SpaintModel_Ptr& get_model();
 
   /**
    * \brief Gets the spaint model.
    *
    * \return  The spaint model.
    */
-  SpaintModel_CPtr get_model() const;
+  spaint::SpaintModel_CPtr get_model() const;
 
   /**
    * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
    *
    * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
    */
-  const SpaintRaycaster_Ptr& get_raycaster();
+  const spaint::SpaintRaycaster_Ptr& get_raycaster();
 
   /**
    * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
    *
    * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
    */
-  SpaintRaycaster_CPtr get_raycaster() const;
+  spaint::SpaintRaycaster_CPtr get_raycaster() const;
 
   /**
    * \brief Resets the random forest.
@@ -328,7 +326,7 @@ private:
    * \param trackedImageSize  The tracked image size.
    * \return                  The hybrid tracker.
    */
-  ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
+  ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const spaint::SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
 
   /**
    * \brief Runs the section of the pipeline associated with feature inspection mode.
@@ -365,14 +363,12 @@ private:
    * \param scene             The scene.
    * \param trackedImageSize  The tracked image size.
    */
-  void setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
+  void setup_tracker(const Settings_Ptr& settings, const spaint::SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
 };
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<SpaintPipeline> SpaintPipeline_Ptr;
-typedef boost::shared_ptr<const SpaintPipeline> SpaintPipeline_CPtr;
-
-}
+typedef boost::shared_ptr<Pipeline> Pipeline_Ptr;
+typedef boost::shared_ptr<const Pipeline> Pipeline_CPtr;
 
 #endif

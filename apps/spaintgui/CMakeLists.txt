@@ -51,12 +51,14 @@ SET(toplevel_sources
 main.cpp
 Application.cpp
 CPUInstantiations.cpp
+Pipeline.cpp
 Renderer.cpp
 WindowedRenderer.cpp
 )
 
 SET(toplevel_headers
 Application.h
+Pipeline.h
 Renderer.h
 WindowedRenderer.h
 )
