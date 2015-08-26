@@ -275,7 +275,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
 {
   // Set the viewport.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
@@ -341,7 +341,7 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr& interactor) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -369,7 +369,7 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteracto
       Vector3u labelColour = m_model->get_label_manager()->get_label_colour(interactor->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
-      SpaintInteractor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      Interactor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
       if(transformer) transformer->accept(selectorRenderer);
       interactor->get_selector()->accept(selectorRenderer);
     }

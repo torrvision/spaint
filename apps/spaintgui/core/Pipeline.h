@@ -10,7 +10,6 @@
 
 #include <rafl/core/RandomForest.h>
 
-#include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
 
@@ -19,6 +18,8 @@
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
 #include <spaint/trackers/FallibleTracker.h>
+
+#include "Interactor.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -113,7 +114,7 @@ private:
   ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
-  spaint::SpaintInteractor_Ptr m_interactor;
+  Interactor_Ptr m_interactor;
 
   /** The label propagator. */
   spaint::LabelPropagator_CPtr m_labelPropagator;
@@ -235,7 +236,7 @@ public:
    *
    * \return  The interactor that is used to interact with the InfiniTAM scene.
    */
-  const spaint::SpaintInteractor_Ptr& get_interactor();
+  const Interactor_Ptr& get_interactor();
 
   /**
    * \brief Gets the mode in which the pipeline is currently running.

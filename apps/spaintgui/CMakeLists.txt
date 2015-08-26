@@ -47,18 +47,27 @@ commands/MarkVoxelsCommand.h
 )
 
 ##
+SET(core_sources
+core/Interactor.cpp
+core/Pipeline.cpp
+)
+
+SET(core_headers
+core/Interactor.h
+core/Pipeline.h
+)
+
+##
 SET(toplevel_sources
 main.cpp
 Application.cpp
 CPUInstantiations.cpp
-Pipeline.cpp
 Renderer.cpp
 WindowedRenderer.cpp
 )
 
 SET(toplevel_headers
 Application.h
-Pipeline.h
 Renderer.h
 WindowedRenderer.h
 )
@@ -78,11 +87,13 @@ ENDIF()
 
 SET(sources
 ${commands_sources}
+${core_sources}
 ${toplevel_sources}
 )
 
 SET(headers
 ${commands_headers}
+${core_headers}
 ${toplevel_headers}
 )
 
@@ -91,6 +102,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
+SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(headers FILES ${toplevel_headers})
 SOURCE_GROUP(sources FILES ${toplevel_sources})
 

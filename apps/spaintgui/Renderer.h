@@ -10,10 +10,11 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/core/SpaintInteractor.h>
 #include <spaint/core/SpaintModel.h>
 #include <spaint/core/SpaintRaycaster.h>
 #include <spaint/ogl/WrappedGL.h>
+
+#include "core/Interactor.h"
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -118,7 +119,7 @@ public:
    *
    * \param interactor  The interactor that is being used to interact with the scene.
    */
-  virtual void render(const spaint::SpaintInteractor_CPtr& interactor) const = 0;
+  virtual void render(const Interactor_CPtr& interactor) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -200,7 +201,7 @@ protected:
    * \param interactor  The interactor that is being used to interact with the scene.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
+  void render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -225,7 +226,7 @@ private:
    * \param pose        The camera pose.
    * \param interactor  The interactor that is being used to interact with the scene.
    */
-  void render_synthetic_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor) const;
+  void render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr& interactor) const;
 
   /**
    * \brief Renders a quad textured with the specified texture.

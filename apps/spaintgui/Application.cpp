@@ -99,7 +99,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 
   if(keysym.sym == SDLK_BACKSPACE)
   {
-    const SpaintInteractor_Ptr& interactor = m_pipeline->get_interactor();
+    const Interactor_Ptr& interactor = m_pipeline->get_interactor();
     if(m_inputState.key_down(SDLK_RCTRL) && m_inputState.key_down(SDLK_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
@@ -322,7 +322,7 @@ void Application::process_labelling_input()
 {
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
-  const SpaintInteractor_Ptr& interactor = m_pipeline->get_interactor();
+  const Interactor_Ptr& interactor = m_pipeline->get_interactor();
   LabelManager_CPtr labelManager = m_pipeline->get_model()->get_label_manager();
   SpaintVoxel::Label semanticLabel = interactor->get_semantic_label();
 

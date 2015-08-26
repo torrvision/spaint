@@ -24,7 +24,7 @@ using namespace InfiniTAM::Engine;
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
-#include "Pipeline.h"
+#include "core/Pipeline.h"
 
 //#################### FUNCTIONS ####################
 

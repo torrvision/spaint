@@ -6,9 +6,9 @@
 #ifndef H_SPAINTGUI_MARKVOXELSCOMMAND
 #define H_SPAINTGUI_MARKVOXELSCOMMAND
 
-#include <spaint/core/SpaintInteractor.h>
-
 #include <tvgutil/commands/Command.h>
+
+#include "../core/Interactor.h"
 
 /**
  * \brief An instance of this class represents a command that can be used to mark voxels in the scene.
@@ -17,8 +17,8 @@ class MarkVoxelsCommand : public tvgutil::Command
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The spaint interactor that is used to interact with the scene. */
-  spaint::SpaintInteractor_Ptr m_interactor;
+  /** The interactor that is used to interact with the scene. */
+  Interactor_Ptr m_interactor;
 
   /** The semantic label with which to mark the voxels. */
   spaint::SpaintVoxel::PackedLabel m_label;
@@ -36,10 +36,9 @@ public:
    *
    * \param voxelLocationsMB  The locations of the voxels in the scene to mark.
    * \param label             The semantic label with which to mark the voxels.
-   * \param interactor        The spaint interactor that is used to interact with the scene.
+   * \param interactor        The interactor that is used to interact with the scene.
    */
-  MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, spaint::SpaintVoxel::PackedLabel label,
-                    const spaint::SpaintInteractor_Ptr& interactor);
+  MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, spaint::SpaintVoxel::PackedLabel label, const Interactor_Ptr& interactor);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

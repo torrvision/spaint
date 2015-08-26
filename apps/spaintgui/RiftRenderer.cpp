@@ -143,7 +143,7 @@ bool RiftRenderer::is_mono() const
   return false;
 }
 
-void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
+void RiftRenderer::render(const Interactor_CPtr& interactor) const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);

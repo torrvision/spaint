@@ -30,7 +30,7 @@
 
 #include <tvgutil/commands/CommandManager.h>
 
-#include "Pipeline.h"
+#include "core/Pipeline.h"
 #include "Renderer.h"
 
 /**

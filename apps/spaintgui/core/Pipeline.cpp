@@ -65,7 +65,7 @@ bool Pipeline::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
-const SpaintInteractor_Ptr& Pipeline::get_interactor()
+const Interactor_Ptr& Pipeline::get_interactor()
 {
   return m_interactor;
 }
@@ -253,7 +253,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   m_tracker->UpdateInitialPose(trackingState.get());
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
   m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
-  m_interactor.reset(new SpaintInteractor(m_model));
+  m_interactor.reset(new Interactor(m_model));
 
   // Set up the label propagator.
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;

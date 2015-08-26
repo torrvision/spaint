@@ -68,7 +68,7 @@ bool WindowedRenderer::is_mono() const
   return true;
 }
 
-void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
+void WindowedRenderer::render(const Interactor_CPtr& interactor) const
 {
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());
