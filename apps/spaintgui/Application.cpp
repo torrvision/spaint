@@ -436,9 +436,9 @@ void Application::process_renderer_input()
   // Allow the user to switch raycast type.
   if(m_inputState.key_down(SDLK_c))
   {
-    if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICCOLOUR);
+    if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
   }
 }
 

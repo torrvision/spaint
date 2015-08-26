@@ -44,7 +44,7 @@ private:
   ovrHmd m_hmd;
 
   /** The render states for the two eye views. */
-  mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderStates[ovrEye_Count];
+  mutable Raycaster::RenderState_Ptr m_renderStates[ovrEye_Count];
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -56,7 +56,7 @@ public:
    * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
    * \param renderingMode The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster, RiftRenderingMode renderingMode);
+  RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

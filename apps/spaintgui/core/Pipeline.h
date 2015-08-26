@@ -11,7 +11,6 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/core/SpaintModel.h>
-#include <spaint/core/SpaintRaycaster.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
 #include <spaint/propagation/interface/LabelPropagator.h>
@@ -20,6 +19,7 @@
 #include <spaint/trackers/FallibleTracker.h>
 
 #include "Interactor.h"
+#include "Raycaster.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -150,7 +150,7 @@ private:
   spaint::Selector::Selection_Ptr m_predictionVoxelLocationsMB;
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
-  spaint::SpaintRaycaster_Ptr m_raycaster;
+  Raycaster_Ptr m_raycaster;
 
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
@@ -264,14 +264,14 @@ public:
    *
    * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
    */
-  const spaint::SpaintRaycaster_Ptr& get_raycaster();
+  const Raycaster_Ptr& get_raycaster();
 
   /**
    * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
    *
    * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
    */
-  spaint::SpaintRaycaster_CPtr get_raycaster() const;
+  Raycaster_CPtr get_raycaster() const;
 
   /**
    * \brief Resets the random forest.

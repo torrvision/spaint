@@ -182,12 +182,12 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
+Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
   m_raycaster(raycaster),
-  m_raycastType(SpaintRaycaster::RT_SEMANTICLAMBERTIAN)
+  m_raycastType(Raycaster::RT_SEMANTICLAMBERTIAN)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -216,7 +216,7 @@ void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
   m_medianFilteringEnabled = medianFilteringEnabled;
 }
 
-void Renderer::set_raycast_type(SpaintRaycaster::RaycastType raycastType)
+void Renderer::set_raycast_type(Raycaster::RaycastType raycastType)
 {
   m_raycastType = raycastType;
 }
@@ -275,7 +275,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set the viewport.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
@@ -309,11 +309,11 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+void Renderer::render_reconstructed_scene(const ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
+  static boost::optional<Raycaster::Postprocessor> postprocessor = boost::none;
   if(!m_medianFilteringEnabled && postprocessor)
   {
     postprocessor.reset();

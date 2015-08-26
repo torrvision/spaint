@@ -21,7 +21,7 @@ private:
   rigging::MoveableCamera_Ptr m_camera;
 
   /** The render state for the free camera view. */
-  mutable spaint::SpaintRaycaster::RenderState_Ptr m_renderState;
+  mutable Raycaster::RenderState_Ptr m_renderState;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -32,7 +32,7 @@ public:
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  WindowedRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster);
+  WindowedRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:

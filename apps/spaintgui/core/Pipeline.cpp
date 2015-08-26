@@ -85,12 +85,12 @@ SpaintModel_CPtr Pipeline::get_model() const
   return m_model;
 }
 
-const SpaintRaycaster_Ptr& Pipeline::get_raycaster()
+const Raycaster_Ptr& Pipeline::get_raycaster()
 {
   return m_raycaster;
 }
 
-SpaintRaycaster_CPtr Pipeline::get_raycaster() const
+Raycaster_CPtr Pipeline::get_raycaster() const
 {
   return m_raycaster;
 }
@@ -106,7 +106,7 @@ void Pipeline::run_main_section()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
-  const SpaintRaycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
+  const Raycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
   const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
   const SpaintModel::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
   const SpaintModel::View_Ptr& view = m_model->get_view();
@@ -252,7 +252,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
   m_tracker->UpdateInitialPose(trackingState.get());
   m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
-  m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
+  m_raycaster.reset(new Raycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new Interactor(m_model));
 
   // Set up the label propagator.

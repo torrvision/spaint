@@ -11,10 +11,10 @@
 #include <rigging/MoveableCamera.h>
 
 #include <spaint/core/SpaintModel.h>
-#include <spaint/core/SpaintRaycaster.h>
 #include <spaint/ogl/WrappedGL.h>
 
 #include "core/Interactor.h"
+#include "core/Raycaster.h"
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -61,10 +61,10 @@ private:
   spaint::SpaintModel_CPtr m_model;
 
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
-  spaint::SpaintRaycaster_CPtr m_raycaster;
+  Raycaster_CPtr m_raycaster;
 
   /** The type of raycast to use. */
-  spaint::SpaintRaycaster::RaycastType m_raycastType;
+  Raycaster::RaycastType m_raycastType;
 
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
@@ -80,7 +80,7 @@ protected:
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster);
+  Renderer(const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -156,7 +156,7 @@ public:
    *
    * \param raycastType The type of raycast to use.
    */
-  void set_raycast_type(spaint::SpaintRaycaster::RaycastType raycastType);
+  void set_raycast_type(Raycaster::RaycastType raycastType);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -201,7 +201,7 @@ protected:
    * \param interactor  The interactor that is being used to interact with the scene.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
+  void render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -218,7 +218,7 @@ private:
    * \param pose        The camera pose.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const;
+  void render_reconstructed_scene(const ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
