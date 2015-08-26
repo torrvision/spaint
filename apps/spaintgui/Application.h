@@ -31,7 +31,7 @@
 #include <tvgutil/commands/CommandManager.h>
 
 #include "core/Pipeline.h"
-#include "Renderer.h"
+#include "renderers/Renderer.h"
 
 /**
  * \brief The main application class for spaintgui.

@@ -12,8 +12,8 @@
 
 #include <spaint/ogl/WrappedGL.h>
 
-#include "core/Interactor.h"
-#include "core/Raycaster.h"
+#include "../core/Interactor.h"
+#include "../core/Raycaster.h"
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.

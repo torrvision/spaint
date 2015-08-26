@@ -24,9 +24,9 @@ using namespace spaint;
 using namespace tvgutil;
 
 #ifdef WITH_OVR
-#include "RiftRenderer.h"
+#include "renderers/RiftRenderer.h"
 #endif
-#include "WindowedRenderer.h"
+#include "renderers/WindowedRenderer.h"
 
 #include "commands/MarkVoxelsCommand.h"
 
