@@ -8,10 +8,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <spaint/core/SpaintModel.h>
 #include <spaint/markers/interface/VoxelMarker.h>
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
+
+#include "Model.h"
 
 /**
  * \brief An instance of this class can be used to interact with the InfiniTAM scene in an spaint model.
@@ -33,7 +34,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The spaint model. */
-  spaint::SpaintModel_Ptr m_model;
+  Model_Ptr m_model;
 
   /** The selection transformer to use. */
   SelectionTransformer_Ptr m_selectionTransformer;
@@ -54,7 +55,7 @@ public:
    *
    * \param model The spaint model.
    */
-  explicit Interactor(const spaint::SpaintModel_Ptr& model);
+  explicit Interactor(const Model_Ptr& model);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

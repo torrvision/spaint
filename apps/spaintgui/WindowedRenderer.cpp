@@ -15,7 +15,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster)
+WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster)
 : Renderer(model, raycaster)
 {
   // Create the window into which to render.

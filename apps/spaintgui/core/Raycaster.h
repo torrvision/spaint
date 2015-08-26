@@ -9,8 +9,9 @@
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
 
-#include <spaint/core/SpaintModel.h>
 #include <spaint/visualisers/interface/SemanticVisualiser.h>
+
+#include "Model.h"
 
 /**
  * \brief An instance of this class can be used to raycast the InfiniTAM scene in an spaint model.
@@ -47,7 +48,7 @@ private:
   RenderState_Ptr m_liveRenderState;
 
   /** The spaint model. */
-  spaint::SpaintModel_CPtr m_model;
+  Model_CPtr m_model;
 
   /** The platform-specific semantic visualiser. */
   boost::shared_ptr<const spaint::SemanticVisualiser> m_semanticVisualiser;
@@ -64,7 +65,7 @@ public:
    * \param visualisationEngine The InfiniTAM engine used for raycasting the scene.
    * \param liveRenderState     The render state corresponding to the live camera pose.
    */
-  Raycaster(const spaint::SpaintModel_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState);
+  Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

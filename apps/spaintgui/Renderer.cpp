@@ -182,7 +182,7 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster)
+Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
@@ -256,7 +256,7 @@ void Renderer::end_2d()
   glPopMatrix();
 }
 
-SpaintModel_CPtr Renderer::get_model() const
+Model_CPtr Renderer::get_model() const
 {
   return m_model;
 }

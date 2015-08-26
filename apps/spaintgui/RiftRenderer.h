@@ -56,7 +56,7 @@ public:
    * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
    * \param renderingMode The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode);
+  RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

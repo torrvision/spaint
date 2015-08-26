@@ -38,15 +38,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 #############################
 
 ##
-SET(core_sources
-src/core/SpaintModel.cpp
-)
-
-SET(core_headers
-include/spaint/core/SpaintModel.h
-)
-
-##
 SET(features_sources
 src/features/FeatureCalculatorFactory.cpp
 )
@@ -488,7 +479,6 @@ include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 #################################################################
 
 SET(sources
-${core_sources}
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
@@ -514,7 +504,6 @@ ${visualisers_interface_sources}
 )
 
 SET(headers
-${core_headers}
 ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
@@ -600,7 +589,6 @@ ENDIF()
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})

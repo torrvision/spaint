@@ -32,7 +32,7 @@ public:
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  WindowedRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster);
+  WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:

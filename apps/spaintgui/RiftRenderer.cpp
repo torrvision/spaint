@@ -39,7 +39,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode)
+RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode)
 : Renderer(model, raycaster)
 {
   // Get a handle to the Rift.

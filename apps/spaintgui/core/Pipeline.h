@@ -10,8 +10,6 @@
 
 #include <rafl/core/RandomForest.h>
 
-#include <spaint/core/SpaintModel.h>
-
 #include <spaint/features/interface/FeatureCalculator.h>
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
@@ -19,6 +17,7 @@
 #include <spaint/trackers/FallibleTracker.h>
 
 #include "Interactor.h"
+#include "Model.h"
 #include "Raycaster.h"
 
 /**
@@ -132,7 +131,7 @@ private:
   Mode m_mode;
 
   /** The spaint model. */
-  spaint::SpaintModel_Ptr m_model;
+  Model_Ptr m_model;
 
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
@@ -250,14 +249,14 @@ public:
    *
    * \return  The spaint model.
    */
-  const spaint::SpaintModel_Ptr& get_model();
+  const Model_Ptr& get_model();
 
   /**
    * \brief Gets the spaint model.
    *
    * \return  The spaint model.
    */
-  spaint::SpaintModel_CPtr get_model() const;
+  Model_CPtr get_model() const;
 
   /**
    * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
@@ -327,7 +326,7 @@ private:
    * \param trackedImageSize  The tracked image size.
    * \return                  The hybrid tracker.
    */
-  ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const spaint::SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
+  ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
 
   /**
    * \brief Runs the section of the pipeline associated with feature inspection mode.
@@ -364,7 +363,7 @@ private:
    * \param scene             The scene.
    * \param trackedImageSize  The tracked image size.
    */
-  void setup_tracker(const Settings_Ptr& settings, const spaint::SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize);
+  void setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize);
 };
 
 //#################### TYPEDEFS ####################

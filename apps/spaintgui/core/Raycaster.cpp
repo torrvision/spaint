@@ -18,7 +18,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Raycaster::Raycaster(const SpaintModel_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
+Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
 : m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
@@ -46,8 +46,8 @@ void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState
                                       const boost::optional<Postprocessor>& postprocessor) const
 {
   const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
-  SpaintModel::Scene_CPtr scene = m_model->get_scene();
-  SpaintModel::View_CPtr view = m_model->get_view();
+  Model::Scene_CPtr scene = m_model->get_scene();
+  Model::View_CPtr view = m_model->get_view();
 
   if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(m_model->get_depth_image_size()));
 
@@ -126,7 +126,7 @@ void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, 
   // Make sure that the output raycast is of the right size.
   prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
 
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
+  const Model::Settings_CPtr& settings = m_model->get_settings();
   if(postprocessor)
   {
     // Copy the input raycast to the output raycast on the relevant device (e.g. on the GPU, if that's where the input currently resides).

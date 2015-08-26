@@ -75,12 +75,12 @@ Pipeline::Mode Pipeline::get_mode() const
   return m_mode;
 }
 
-const SpaintModel_Ptr& Pipeline::get_model()
+const Model_Ptr& Pipeline::get_model()
 {
   return m_model;
 }
 
-SpaintModel_CPtr Pipeline::get_model() const
+Model_CPtr Pipeline::get_model() const
 {
   return m_model;
 }
@@ -107,9 +107,9 @@ void Pipeline::run_main_section()
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
   const Raycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
-  const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
-  const SpaintModel::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
-  const SpaintModel::View_Ptr& view = m_model->get_view();
+  const Model::Scene_Ptr& scene = m_model->get_scene();
+  const Model::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
+  const Model::View_Ptr& view = m_model->get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
@@ -214,7 +214,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  SpaintModel::Scene_Ptr scene(new SpaintModel::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
+  Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
   // Set up the InfiniTAM engines and view builder.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
@@ -251,7 +251,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
   m_tracker->UpdateInitialPose(trackingState.get());
-  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
+  m_model.reset(new Model(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
   m_raycaster.reset(new Raycaster(m_model, visualisationEngine, liveRenderState));
   m_interactor.reset(new Interactor(m_model));
 
@@ -312,7 +312,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   m_reconstructionStarted = false;
 }
 
-ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
+ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
 {
   ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
   compositeTracker->SetTracker(primaryTracker, 0);
@@ -447,7 +447,7 @@ void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
   m_forest->train(splitBudget);
 }
 
-void Pipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
+void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
   m_fallibleTracker = NULL;
 

@@ -25,7 +25,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Interactor::Interactor(const SpaintModel_Ptr& model)
+Interactor::Interactor(const Model_Ptr& model)
 : m_model(model),
   m_selector(new NullSelector(model->get_settings())),
   m_semanticLabel(0)
@@ -104,7 +104,7 @@ void Interactor::set_semantic_label(SpaintVoxel::Label semanticLabel)
 void Interactor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
 {
   // Allow the user to switch between different selectors.
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
+  const Model::Settings_CPtr& settings = m_model->get_settings();
   if(inputState.key_down(SDLK_i))
   {
     if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector(settings));

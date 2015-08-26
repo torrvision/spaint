@@ -10,7 +10,6 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/core/SpaintModel.h>
 #include <spaint/ogl/WrappedGL.h>
 
 #include "core/Interactor.h"
@@ -58,7 +57,7 @@ private:
   bool m_medianFilteringEnabled;
 
   /** The spaint model. */
-  spaint::SpaintModel_CPtr m_model;
+  Model_CPtr m_model;
 
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   Raycaster_CPtr m_raycaster;
@@ -80,7 +79,7 @@ protected:
    * \param model     The spaint model.
    * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
    */
-  Renderer(const spaint::SpaintModel_CPtr& model, const Raycaster_CPtr& raycaster);
+  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -180,7 +179,7 @@ protected:
    *
    * \return  The spaint model.
    */
-  spaint::SpaintModel_CPtr get_model() const;
+  Model_CPtr get_model() const;
 
   /**
    * \brief Gets the window into which to render.
