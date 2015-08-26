@@ -114,11 +114,10 @@ ${toplevel_headers}
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
-SOURCE_GROUP(headers FILES ${toplevel_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
-SOURCE_GROUP(sources FILES ${toplevel_sources})
 
 ##########################################
 # Specify additional include directories #
