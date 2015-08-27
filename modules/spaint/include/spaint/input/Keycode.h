@@ -1,6 +1,33 @@
 /**
  * spaint: Keycode.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
+ *
+ * Notice: This file contains an altered version of code borrowed from SDL_scancode.h and
+ *         SDL_keycode.h of the SDL 2.0 library. From a licensing point of view, SDL 2.0
+ *         itself is available under the zlib licence, which reads as follows:
+ *
+ *         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *         This software is provided 'as-is', without any express or implied
+ *         warranty.  In no event will the authors be held liable for any damages
+ *         arising from the use of this software.
+ *
+ *         Permission is granted to anyone to use this software for any purpose,
+ *         including commercial applications, and to alter it and redistribute it
+ *         freely, subject to the following restrictions:
+ *
+ *         1. The origin of this software must not be misrepresented; you must not
+ *            claim that you wrote the original software. If you use this software
+ *            in a product, an acknowledgment in the product documentation would be
+ *            appreciated but is not required.
+ *         2. Altered source versions must be plainly marked as such, and must not be
+ *            misrepresented as being the original software.
+ *         3. This notice may not be removed or altered from any source distribution.
+ *         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ *         This notice constitutes our compliance with the terms of this licence.
+ *
+ * From a practical perspective, the advantage of borrowing the scancode and keycode enums
+ * from SDL is that we avoid forcing an SDL dependency on clients of our library, whilst
+ * simultaneously being able to make easy use of SDL in our own applications.
  */
 
 #ifndef H_SPAINT_KEYCODE
@@ -13,10 +40,10 @@ enum Scancode
   SCANCODE_UNKNOWN = 0,
 
   /**
-    *  \name Usage page 0x07
-    *
-    *  These values are from usage page 0x07 (USB keyboard page).
-    */
+   *  \name Usage page 0x07
+   *
+   *  These values are from usage page 0x07 (USB keyboard page).
+   */
   /* @{ */
 
   SCANCODE_A = 4,
@@ -68,50 +95,50 @@ enum Scancode
   SCANCODE_LEFTBRACKET = 47,
   SCANCODE_RIGHTBRACKET = 48,
   SCANCODE_BACKSLASH = 49, /**< Located at the lower left of the return
-                                *   key on ISO keyboards and at the right end
-                                *   of the QWERTY row on ANSI keyboards.
-                                *   Produces REVERSE SOLIDUS (backslash) and
-                                *   VERTICAL LINE in a US layout, REVERSE
-                                *   SOLIDUS and VERTICAL LINE in a UK Mac
-                                *   layout, NUMBER SIGN and TILDE in a UK
-                                *   Windows layout, DOLLAR SIGN and POUND SIGN
-                                *   in a Swiss German layout, NUMBER SIGN and
-                                *   APOSTROPHE in a German layout, GRAVE
-                                *   ACCENT and POUND SIGN in a French Mac
-                                *   layout, and ASTERISK and MICRO SIGN in a
-                                *   French Windows layout.
-                                */
+                            *   key on ISO keyboards and at the right end
+                            *   of the QWERTY row on ANSI keyboards.
+                            *   Produces REVERSE SOLIDUS (backslash) and
+                            *   VERTICAL LINE in a US layout, REVERSE
+                            *   SOLIDUS and VERTICAL LINE in a UK Mac
+                            *   layout, NUMBER SIGN and TILDE in a UK
+                            *   Windows layout, DOLLAR SIGN and POUND SIGN
+                            *   in a Swiss German layout, NUMBER SIGN and
+                            *   APOSTROPHE in a German layout, GRAVE
+                            *   ACCENT and POUND SIGN in a French Mac
+                            *   layout, and ASTERISK and MICRO SIGN in a
+                            *   French Windows layout.
+                            */
   SCANCODE_NONUSHASH = 50, /**< ISO USB keyboards actually use this code
-                                *   instead of 49 for the same key, but all
-                                *   OSes I've seen treat the two codes
-                                *   identically. So, as an implementor, unless
-                                *   your keyboard generates both of those
-                                *   codes and your OS treats them differently,
-                                *   you should generate SCANCODE_BACKSLASH
-                                *   instead of this code. As a user, you
-                                *   should not rely on this code because SDL
-                                *   will never generate it with most (all?)
-                                *   keyboards.
-                                */
+                            *   instead of 49 for the same key, but all
+                            *   OSes I've seen treat the two codes
+                            *   identically. So, as an implementor, unless
+                            *   your keyboard generates both of those
+                            *   codes and your OS treats them differently,
+                            *   you should generate SCANCODE_BACKSLASH
+                            *   instead of this code. As a user, you
+                            *   should not rely on this code because SDL
+                            *   will never generate it with most (all?)
+                            *   keyboards.
+                            */
   SCANCODE_SEMICOLON = 51,
   SCANCODE_APOSTROPHE = 52,
   SCANCODE_GRAVE = 53, /**< Located in the top left corner (on both ANSI
-                            *   and ISO keyboards). Produces GRAVE ACCENT and
-                            *   TILDE in a US Windows layout and in US and UK
-                            *   Mac layouts on ANSI keyboards, GRAVE ACCENT
-                            *   and NOT SIGN in a UK Windows layout, SECTION
-                            *   SIGN and PLUS-MINUS SIGN in US and UK Mac
-                            *   layouts on ISO keyboards, SECTION SIGN and
-                            *   DEGREE SIGN in a Swiss German layout (Mac:
-                            *   only on ISO keyboards), CIRCUMFLEX ACCENT and
-                            *   DEGREE SIGN in a German layout (Mac: only on
-                            *   ISO keyboards), SUPERSCRIPT TWO and TILDE in a
-                            *   French Windows layout, COMMERCIAL AT and
-                            *   NUMBER SIGN in a French Mac layout on ISO
-                            *   keyboards, and LESS-THAN SIGN and GREATER-THAN
-                            *   SIGN in a Swiss German, German, or French Mac
-                            *   layout on ANSI keyboards.
-                            */
+                        *   and ISO keyboards). Produces GRAVE ACCENT and
+                        *   TILDE in a US Windows layout and in US and UK
+                        *   Mac layouts on ANSI keyboards, GRAVE ACCENT
+                        *   and NOT SIGN in a UK Windows layout, SECTION
+                        *   SIGN and PLUS-MINUS SIGN in US and UK Mac
+                        *   layouts on ISO keyboards, SECTION SIGN and
+                        *   DEGREE SIGN in a Swiss German layout (Mac:
+                        *   only on ISO keyboards), CIRCUMFLEX ACCENT and
+                        *   DEGREE SIGN in a German layout (Mac: only on
+                        *   ISO keyboards), SUPERSCRIPT TWO and TILDE in a
+                        *   French Windows layout, COMMERCIAL AT and
+                        *   NUMBER SIGN in a French Mac layout on ISO
+                        *   keyboards, and LESS-THAN SIGN and GREATER-THAN
+                        *   SIGN in a Swiss German, German, or French Mac
+                        *   layout on ANSI keyboards.
+                        */
   SCANCODE_COMMA = 54,
   SCANCODE_PERIOD = 55,
   SCANCODE_SLASH = 56,
@@ -135,7 +162,7 @@ enum Scancode
   SCANCODE_SCROLLLOCK = 71,
   SCANCODE_PAUSE = 72,
   SCANCODE_INSERT = 73, /**< insert on PC, help on some Mac keyboards (but
-                                  does send code 73, not 117) */
+                             does send code 73, not 117) */
   SCANCODE_HOME = 74,
   SCANCODE_PAGEUP = 75,
   SCANCODE_DELETE = 76,
@@ -147,7 +174,7 @@ enum Scancode
   SCANCODE_UP = 82,
 
   SCANCODE_NUMLOCKCLEAR = 83, /**< num lock on PC, clear on Mac keyboards
-                                    */
+                               */
   SCANCODE_KP_DIVIDE = 84,
   SCANCODE_KP_MULTIPLY = 85,
   SCANCODE_KP_MINUS = 86,
@@ -166,15 +193,15 @@ enum Scancode
   SCANCODE_KP_PERIOD = 99,
 
   SCANCODE_NONUSBACKSLASH = 100, /**< This is the additional key that ISO
-                                      *   keyboards have over ANSI ones,
-                                      *   located between left shift and Y.
-                                      *   Produces GRAVE ACCENT and TILDE in a
-                                      *   US or UK Mac layout, REVERSE SOLIDUS
-                                      *   (backslash) and VERTICAL LINE in a
-                                      *   US or UK Windows layout, and
-                                      *   LESS-THAN SIGN and GREATER-THAN SIGN
-                                      *   in a Swiss German, German, or French
-                                      *   layout. */
+                                  *   keyboards have over ANSI ones,
+                                  *   located between left shift and Y.
+                                  *   Produces GRAVE ACCENT and TILDE in a
+                                  *   US or UK Mac layout, REVERSE SOLIDUS
+                                  *   (backslash) and VERTICAL LINE in a
+                                  *   US or UK Windows layout, and
+                                  *   LESS-THAN SIGN and GREATER-THAN SIGN
+                                  *   in a Swiss German, German, or French
+                                  *   layout. */
   SCANCODE_APPLICATION = 101, /**< windows contextual menu, compose */
   SCANCODE_POWER = 102, /**< The USB document says this is a status flag,
                          *   not a physical key - but some Mac keyboards
@@ -310,10 +337,10 @@ enum Scancode
   /* @} *//* Usage page 0x07 */
 
   /**
-    *  \name Usage page 0x0C
-    *
-    *  These values are mapped from usage page 0x0C (USB consumer page).
-    */
+   *  \name Usage page 0x0C
+   *
+   *  These values are mapped from usage page 0x0C (USB consumer page).
+   */
   /* @{ */
 
   SCANCODE_AUDIONEXT = 258,
@@ -337,10 +364,10 @@ enum Scancode
   /* @} *//* Usage page 0x0C */
 
   /**
-    *  \name Walther keys
-    *
-    *  These are values that Christian Walther added (for mac keyboard?).
-    */
+   *  \name Walther keys
+   *
+   *  These are values that Christian Walther added (for mac keyboard?).
+   */
   /* @{ */
 
   SCANCODE_BRIGHTNESSDOWN = 275,
