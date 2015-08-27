@@ -16,9 +16,9 @@ InputState::InputState()
 }
 
 //#################### PUBLIC METHODS ####################
-bool InputState::key_down(SDL_Keycode key) const
+bool InputState::key_down(Keycode key) const
 {
-  std::map<SDL_Keycode,bool>::const_iterator it = m_keyDown.find(key);
+  std::map<Keycode,bool>::const_iterator it = m_keyDown.find(key);
   return it != m_keyDown.end() ? it->second : false;
 }
 
@@ -67,7 +67,7 @@ int InputState::mouse_pressed_y(MouseButton button) const
   else throw std::runtime_error("The specified mouse button is not currently pressed");
 }
 
-void InputState::press_key(SDL_Keycode key)
+void InputState::press_key(Keycode key)
 {
   m_keyDown[key] = true;
 }
@@ -79,7 +79,7 @@ void InputState::press_mouse_button(MouseButton button, int x, int y)
   m_mousePressedY[button] = y;
 }
 
-void InputState::release_key(SDL_Keycode key)
+void InputState::release_key(Keycode key)
 {
   m_keyDown[key] = false;
 }
