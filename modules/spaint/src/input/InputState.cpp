@@ -10,12 +10,14 @@
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
+
 InputState::InputState()
 {
   reset();
 }
 
 //#################### PUBLIC METHODS ####################
+
 bool InputState::key_down(Keycode key) const
 {
   std::map<Keycode,bool>::const_iterator it = m_keyDown.find(key);
