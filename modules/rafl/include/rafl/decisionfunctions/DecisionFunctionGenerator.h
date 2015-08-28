@@ -12,7 +12,6 @@
 #include <omp.h>
 #endif
 
-#include "../base/ProbabilityMassFunction.h"
 #include "../examples/ExampleReservoir.h"
 #include "../examples/ExampleUtil.h"
 #include "DecisionFunction.h"

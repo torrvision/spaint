@@ -13,8 +13,6 @@
 #include <tvgutil/PropertyUtil.h>
 
 #include "../decisionfunctions/DecisionFunctionGeneratorFactory.h"
-#include "../examples/ExampleReservoir.h"
-#include "../examples/ExampleUtil.h"
 
 namespace rafl {
 
