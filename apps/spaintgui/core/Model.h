@@ -1,18 +1,16 @@
 /**
- * spaint: SpaintModel
+ * spaintgui: Model.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_SPAINTMODEL
-#define H_SPAINT_SPAINTMODEL
+#ifndef H_SPAINTGUI_MODEL
+#define H_SPAINTGUI_MODEL
 
 #include <boost/shared_ptr.hpp>
 
 #include <Engine/ImageSourceEngine.h>
 
-#include "../util/LabelManager.h"
-
-namespace spaint {
+#include <spaint/util/LabelManager.h>
 
 /**
  * \brief An instance of this class represents our model of the spaint scenario.
@@ -20,11 +18,11 @@ namespace spaint {
  * The scenario we model is one of reconstructing a scene from a series of RGB-D images with known (tracked) pose,
  * and labelling it interactively using various user input modalities.
  */
-class SpaintModel
+class Model
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
@@ -39,7 +37,7 @@ private:
   Vector2i m_depthImageSize;
 
   /** The label manager. */
-  LabelManager_Ptr m_labelManager;
+  spaint::LabelManager_Ptr m_labelManager;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
@@ -71,8 +69,8 @@ public:
    * \param settings        The settings to use for InfiniTAM.
    * \param resourcesDir    The path to the resources directory.
    */
-  SpaintModel(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-              const Settings_CPtr& settings, const std::string& resourcesDir);
+  Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
+        const Settings_CPtr& settings, const std::string& resourcesDir);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -95,14 +93,14 @@ public:
    *
    * \return  The label manager.
    */
-  const LabelManager_Ptr& get_label_manager();
+  const spaint::LabelManager_Ptr& get_label_manager();
 
   /**
    * \brief Gets the label manager.
    *
    * \return  The label manager.
    */
-  LabelManager_CPtr get_label_manager() const;
+  spaint::LabelManager_CPtr get_label_manager() const;
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
@@ -184,9 +182,7 @@ public:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<SpaintModel> SpaintModel_Ptr;
-typedef boost::shared_ptr<const SpaintModel> SpaintModel_CPtr;
-
-}
+typedef boost::shared_ptr<Model> Model_Ptr;
+typedef boost::shared_ptr<const Model> Model_CPtr;
 
 #endif

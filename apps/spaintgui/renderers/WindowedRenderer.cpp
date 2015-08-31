@@ -15,7 +15,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
+WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster)
 : Renderer(model, raycaster)
 {
   // Create the window into which to render.
@@ -68,7 +68,7 @@ bool WindowedRenderer::is_mono() const
   return true;
 }
 
-void WindowedRenderer::render(const SpaintInteractor_CPtr& interactor) const
+void WindowedRenderer::render(const Interactor_CPtr& interactor) const
 {
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());

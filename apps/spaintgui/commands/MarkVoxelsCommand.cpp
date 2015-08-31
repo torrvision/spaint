@@ -11,7 +11,7 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::MemoryBlock<Vector3s> >& voxelLocationsMB, SpaintVoxel::PackedLabel label,
-                                     const spaint::SpaintInteractor_Ptr& interactor)
+                                     const Interactor_Ptr& interactor)
 : Command(get_static_description()),
   m_interactor(interactor),
   m_label(label),

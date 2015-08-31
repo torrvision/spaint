@@ -182,12 +182,12 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster)
+Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
   m_raycaster(raycaster),
-  m_raycastType(SpaintRaycaster::RT_SEMANTICLAMBERTIAN)
+  m_raycastType(Raycaster::RT_SEMANTICLAMBERTIAN)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -216,7 +216,7 @@ void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
   m_medianFilteringEnabled = medianFilteringEnabled;
 }
 
-void Renderer::set_raycast_type(SpaintRaycaster::RaycastType raycastType)
+void Renderer::set_raycast_type(Raycaster::RaycastType raycastType)
 {
   m_raycastType = raycastType;
 }
@@ -256,7 +256,7 @@ void Renderer::end_2d()
   glPopMatrix();
 }
 
-SpaintModel_CPtr Renderer::get_model() const
+Model_CPtr Renderer::get_model() const
 {
   return m_model;
 }
@@ -275,7 +275,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const ITMPose& pose, const spaint::SpaintInteractor_CPtr& interactor, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set the viewport.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
@@ -309,11 +309,11 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRaycaster::RenderState_Ptr& renderState) const
+void Renderer::render_reconstructed_scene(const ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<SpaintRaycaster::Postprocessor> postprocessor = boost::none;
+  static boost::optional<Raycaster::Postprocessor> postprocessor = boost::none;
   if(!m_medianFilteringEnabled && postprocessor)
   {
     postprocessor.reset();
@@ -341,7 +341,7 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, spaint::SpaintRay
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteractor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr& interactor) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -369,7 +369,7 @@ void Renderer::render_synthetic_scene(const ITMPose& pose, const SpaintInteracto
       Vector3u labelColour = m_model->get_label_manager()->get_label_colour(interactor->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
-      SpaintInteractor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      Interactor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
       if(transformer) transformer->accept(selectorRenderer);
       interactor->get_selector()->accept(selectorRenderer);
     }

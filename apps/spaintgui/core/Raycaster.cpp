@@ -1,25 +1,24 @@
 /**
- * spaint: SpaintRaycaster.cpp
+ * spaintgui: Raycaster.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "core/SpaintRaycaster.h"
+#include "Raycaster.h"
 
 #include <stdexcept>
 
 #include <ITMLib/Engine/ITMVisualisationEngine.cpp>
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
 
-#include "visualisers/cpu/SemanticVisualiser_CPU.h"
+#include <spaint/visualisers/cpu/SemanticVisualiser_CPU.h>
 #ifdef WITH_CUDA
-#include "visualisers/cuda/SemanticVisualiser_CUDA.h"
+#include <spaint/visualisers/cuda/SemanticVisualiser_CUDA.h>
 #endif
-
-namespace spaint {
+using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
+Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
 : m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
@@ -43,12 +42,12 @@ SpaintRaycaster::SpaintRaycaster(const SpaintModel_CPtr& model, const Visualisat
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType,
-                                            const boost::optional<Postprocessor>& postprocessor) const
+void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType,
+                                      const boost::optional<Postprocessor>& postprocessor) const
 {
   const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
-  SpaintModel::Scene_CPtr scene = m_model->get_scene();
-  SpaintModel::View_CPtr view = m_model->get_view();
+  Model::Scene_CPtr scene = m_model->get_scene();
+  Model::View_CPtr view = m_model->get_view();
 
   if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(m_model->get_depth_image_size()));
 
@@ -91,43 +90,43 @@ void SpaintRaycaster::generate_free_raycast(const UChar4Image_Ptr& output, Rende
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void SpaintRaycaster::get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
+void Raycaster::get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
 {
   make_postprocessed_cpu_copy(m_liveRenderState->raycastImage, postprocessor, output);
 }
 
-void SpaintRaycaster::get_depth_input(const UChar4Image_Ptr& output) const
+void Raycaster::get_depth_input(const UChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_model->get_view()->depth->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->depth->UpdateHostFromDevice();
   m_visualisationEngine->DepthToUchar4(output.get(), m_model->get_view()->depth);
 }
 
-const SpaintRaycaster::RenderState_Ptr& SpaintRaycaster::get_live_render_state()
+const Raycaster::RenderState_Ptr& Raycaster::get_live_render_state()
 {
   return m_liveRenderState;
 }
 
-void SpaintRaycaster::get_rgb_input(const UChar4Image_Ptr& output) const
+void Raycaster::get_rgb_input(const UChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_model->get_view()->rgb->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->rgb->UpdateHostFromDevice();
   output->SetFrom(m_model->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
-const SpaintRaycaster::VisualisationEngine_Ptr& SpaintRaycaster::get_visualisation_engine()
+const Raycaster::VisualisationEngine_Ptr& Raycaster::get_visualisation_engine()
 {
   return m_visualisationEngine;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintRaycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const
+void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const
 {
   // Make sure that the output raycast is of the right size.
   prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
 
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
+  const Model::Settings_CPtr& settings = m_model->get_settings();
   if(postprocessor)
   {
     // Copy the input raycast to the output raycast on the relevant device (e.g. on the GPU, if that's where the input currently resides).
@@ -152,10 +151,8 @@ void SpaintRaycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRay
   }
 }
 
-void SpaintRaycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const
+void Raycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const
 {
   output->Clear();
   output->ChangeDims(inputSize);
-}
-
 }

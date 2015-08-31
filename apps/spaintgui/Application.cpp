@@ -24,20 +24,20 @@ using namespace spaint;
 using namespace tvgutil;
 
 #ifdef WITH_OVR
-#include "RiftRenderer.h"
+#include "renderers/RiftRenderer.h"
 #endif
-#include "WindowedRenderer.h"
+#include "renderers/WindowedRenderer.h"
 
 #include "commands/MarkVoxelsCommand.h"
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const SpaintPipeline_Ptr& spaintPipeline)
+Application::Application(const Pipeline_Ptr& pipeline)
 : m_commandManager(10),
-  m_spaintPipeline(spaintPipeline),
+  m_pipeline(pipeline),
   m_voiceCommandStream("localhost", "23984")
 {
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", spaintPipeline->get_model(), spaintPipeline->get_raycaster()));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", pipeline->get_model(), pipeline->get_raycaster()));
   setup_labels();
 }
 
@@ -53,11 +53,11 @@ void Application::run()
     process_input();
 
     // Process and render the next frame.
-    m_spaintPipeline->run_main_section();
-    m_renderer->render(m_spaintPipeline->get_interactor());
+    m_pipeline->run_main_section();
+    m_renderer->render(m_pipeline->get_interactor());
 
     // Run the mode-specific section of the pipeline.
-    m_spaintPipeline->run_mode_specific_section(get_monocular_render_state());
+    m_pipeline->run_mode_specific_section(get_monocular_render_state());
   }
 }
 
@@ -78,7 +78,7 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
   switch(m_renderer->get_camera_mode())
   {
     case Renderer::CM_FOLLOW:
-      return m_spaintPipeline->get_raycaster()->get_live_render_state();
+      return m_pipeline->get_raycaster()->get_live_render_state();
     case Renderer::CM_FREE:
       return m_renderer->get_monocular_render_state();
     default:
@@ -94,17 +94,17 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
   if(keysym.sym == SDLK_f)
   {
-    m_spaintPipeline->set_fusion_enabled(!m_spaintPipeline->get_fusion_enabled());
+    m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
   }
 
   if(keysym.sym == SDLK_BACKSPACE)
   {
-    const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
+    const Interactor_Ptr& interactor = m_pipeline->get_interactor();
     if(m_inputState.key_down(SDLK_RCTRL) && m_inputState.key_down(SDLK_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
       interactor->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
-      m_spaintPipeline->reset_forest();
+      m_pipeline->reset_forest();
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(SDLK_RCTRL))
@@ -322,8 +322,8 @@ void Application::process_labelling_input()
 {
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
-  const SpaintInteractor_Ptr& interactor = m_spaintPipeline->get_interactor();
-  LabelManager_CPtr labelManager = m_spaintPipeline->get_model()->get_label_manager();
+  const Interactor_Ptr& interactor = m_pipeline->get_interactor();
+  LabelManager_CPtr labelManager = m_pipeline->get_model()->get_label_manager();
   SpaintVoxel::Label semanticLabel = interactor->get_semantic_label();
 
   if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
@@ -383,17 +383,17 @@ void Application::process_labelling_input()
 
 void Application::process_mode_input()
 {
-  SpaintPipeline::Mode mode = m_spaintPipeline->get_mode();
+  Pipeline::Mode mode = m_pipeline->get_mode();
   if(m_inputState.key_down(SDLK_m))
   {
-    if(m_inputState.key_down(SDLK_1))      mode = SpaintPipeline::MODE_NORMAL;
-    else if(m_inputState.key_down(SDLK_2)) mode = SpaintPipeline::MODE_TRAINING;
-    else if(m_inputState.key_down(SDLK_3)) mode = SpaintPipeline::MODE_PREDICTION;
-    else if(m_inputState.key_down(SDLK_4)) mode = SpaintPipeline::MODE_TRAIN_AND_PREDICT;
-    else if(m_inputState.key_down(SDLK_5)) mode = SpaintPipeline::MODE_PROPAGATION;
-    else if(m_inputState.key_down(SDLK_6)) mode = SpaintPipeline::MODE_FEATURE_INSPECTION;
+    if(m_inputState.key_down(SDLK_1))      mode = Pipeline::MODE_NORMAL;
+    else if(m_inputState.key_down(SDLK_2)) mode = Pipeline::MODE_TRAINING;
+    else if(m_inputState.key_down(SDLK_3)) mode = Pipeline::MODE_PREDICTION;
+    else if(m_inputState.key_down(SDLK_4)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
+    else if(m_inputState.key_down(SDLK_5)) mode = Pipeline::MODE_PROPAGATION;
+    else if(m_inputState.key_down(SDLK_6)) mode = Pipeline::MODE_FEATURE_INSPECTION;
   }
-  m_spaintPipeline->set_mode(mode);
+  m_pipeline->set_mode(mode);
 }
 
 void Application::process_renderer_input()
@@ -407,7 +407,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(SDLK_1))
       {
-        m_renderer.reset(new WindowedRenderer("Semantic Paint", m_spaintPipeline->get_model(), m_spaintPipeline->get_raycaster()));
+        m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster()));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
@@ -417,8 +417,8 @@ void Application::process_renderer_input()
         {
           m_renderer.reset(new RiftRenderer(
             "Semantic Paint",
-            m_spaintPipeline->get_model(),
-            m_spaintPipeline->get_raycaster(),
+            m_pipeline->get_model(),
+            m_pipeline->get_raycaster(),
             m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
           ));
           framesTillSwitchAllowed = SWITCH_DELAY;
@@ -436,9 +436,9 @@ void Application::process_renderer_input()
   // Allow the user to switch raycast type.
   if(m_inputState.key_down(SDLK_c))
   {
-    if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(SpaintRaycaster::RT_SEMANTICCOLOUR);
+    if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
   }
 }
 
@@ -459,30 +459,30 @@ void Application::process_voice_input()
     std::cout << "Voice Command: " << command << '\n';
 
     // Process any requests to change label.
-    const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+    const LabelManager_Ptr& labelManager = m_pipeline->get_model()->get_label_manager();
     for(size_t i = 0, labelCount = labelManager->get_label_count(); i < labelCount; ++i)
     {
       SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(i);
       std::string changeLabelCommand = "label " + labelManager->get_label_name(label);
-      if(command == changeLabelCommand) m_spaintPipeline->get_interactor()->set_semantic_label(label);
+      if(command == changeLabelCommand) m_pipeline->get_interactor()->set_semantic_label(label);
     }
 
     // Process any requests to disable/enable fusion.
-    if(command == "disable fusion") m_spaintPipeline->set_fusion_enabled(false);
-    if(command == "enable fusion") m_spaintPipeline->set_fusion_enabled(true);
+    if(command == "disable fusion") m_pipeline->set_fusion_enabled(false);
+    if(command == "enable fusion") m_pipeline->set_fusion_enabled(true);
 
     // Process any requests to change pipeline mode.
-    if(command == "switch to normal mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_NORMAL);
-    if(command == "switch to prediction mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PREDICTION);
-    if(command == "switch to propagation mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_PROPAGATION);
-    if(command == "switch to training mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAINING);
-    if(command == "switch to combo mode") m_spaintPipeline->set_mode(SpaintPipeline::MODE_TRAIN_AND_PREDICT);
+    if(command == "switch to normal mode") m_pipeline->set_mode(Pipeline::MODE_NORMAL);
+    if(command == "switch to prediction mode") m_pipeline->set_mode(Pipeline::MODE_PREDICTION);
+    if(command == "switch to propagation mode") m_pipeline->set_mode(Pipeline::MODE_PROPAGATION);
+    if(command == "switch to training mode") m_pipeline->set_mode(Pipeline::MODE_TRAINING);
+    if(command == "switch to combo mode") m_pipeline->set_mode(Pipeline::MODE_TRAIN_AND_PREDICT);
   }
 }
 
 void Application::setup_labels()
 {
-  const LabelManager_Ptr& labelManager = m_spaintPipeline->get_model()->get_label_manager();
+  const LabelManager_Ptr& labelManager = m_pipeline->get_model()->get_label_manager();
   std::ifstream fs((resources_dir() / "Labels.txt").c_str());
   if(fs)
   {
@@ -515,5 +515,5 @@ void Application::setup_labels()
   }
 
   // Set the initial semantic label to use for painting.
-  m_spaintPipeline->get_interactor()->set_semantic_label(1);
+  m_pipeline->get_interactor()->set_semantic_label(1);
 }

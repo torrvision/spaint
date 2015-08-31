@@ -39,8 +39,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, const spaint::SpaintModel_CPtr& model, const spaint::SpaintRaycaster_CPtr& raycaster,
-                           RiftRenderingMode renderingMode)
+RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode)
 : Renderer(model, raycaster)
 {
   // Get a handle to the Rift.
@@ -143,7 +142,7 @@ bool RiftRenderer::is_mono() const
   return false;
 }
 
-void RiftRenderer::render(const SpaintInteractor_CPtr& interactor) const
+void RiftRenderer::render(const Interactor_CPtr& interactor) const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);

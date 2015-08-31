@@ -47,27 +47,49 @@ commands/MarkVoxelsCommand.h
 )
 
 ##
+SET(core_sources
+core/Interactor.cpp
+core/Model.cpp
+core/Pipeline.cpp
+core/Raycaster.cpp
+)
+
+SET(core_headers
+core/Interactor.h
+core/Model.h
+core/Pipeline.h
+core/Raycaster.h
+)
+
+##
+SET(renderers_sources
+renderers/Renderer.cpp
+renderers/WindowedRenderer.cpp
+)
+
+SET(renderers_headers
+renderers/Renderer.h
+renderers/WindowedRenderer.h
+)
+
+IF(WITH_OVR)
+  SET(renderers_sources ${renderers_sources} renderers/RiftRenderer.cpp)
+  SET(renderers_headers ${renderers_headers} renderers/RiftRenderer.h)
+ENDIF()
+
+##
 SET(toplevel_sources
 main.cpp
 Application.cpp
 CPUInstantiations.cpp
-Renderer.cpp
-WindowedRenderer.cpp
 )
 
 SET(toplevel_headers
 Application.h
-Renderer.h
-WindowedRenderer.h
 )
 
 IF(WITH_CUDA)
   SET(toplevel_sources ${toplevel_sources} CUDAInstantiations.cu)
-ENDIF()
-
-IF(WITH_OVR)
-  SET(toplevel_sources ${toplevel_sources} RiftRenderer.cpp)
-  SET(toplevel_headers ${toplevel_headers} RiftRenderer.h)
 ENDIF()
 
 #################################################################
@@ -76,11 +98,15 @@ ENDIF()
 
 SET(sources
 ${commands_sources}
+${core_sources}
+${renderers_sources}
 ${toplevel_sources}
 )
 
 SET(headers
 ${commands_headers}
+${core_headers}
+${renderers_headers}
 ${toplevel_headers}
 )
 
@@ -88,9 +114,10 @@ ${toplevel_headers}
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
-SOURCE_GROUP(headers FILES ${toplevel_headers})
-SOURCE_GROUP(sources FILES ${toplevel_sources})
+SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
 
 ##########################################
 # Specify additional include directories #

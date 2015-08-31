@@ -1,10 +1,11 @@
 /**
- * spaint: SpaintPipeline.cpp
+ * spaintgui: Pipeline.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "core/SpaintPipeline.h"
+#include "Pipeline.h"
 using namespace rafl;
+using namespace spaint;
 
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
@@ -15,35 +16,33 @@ using namespace rafl;
 #include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
 using namespace InfiniTAM::Engine;
 
-#include "features/FeatureCalculatorFactory.h"
-#include "propagation/LabelPropagatorFactory.h"
-#include "randomforest/ForestUtil.h"
-#include "randomforest/SpaintDecisionFunctionGenerator.h"
-#include "sampling/VoxelSamplerFactory.h"
-#include "util/MemoryBlockFactory.h"
+#include <spaint/features/FeatureCalculatorFactory.h>
+#include <spaint/propagation/LabelPropagatorFactory.h>
+#include <spaint/randomforest/ForestUtil.h>
+#include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
+#include <spaint/sampling/VoxelSamplerFactory.h>
+#include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
-#include "ocv/OpenCVUtil.h"
+#include <spaint/ocv/OpenCVUtil.h>
 #endif
 
 #ifdef WITH_OVR
-#include "trackers/RiftTracker.h"
+#include <spaint/trackers/RiftTracker.h>
 #endif
 
 #ifdef WITH_VICON
-#include "trackers/RobustViconTracker.h"
-#include "trackers/ViconTracker.h"
+#include <spaint/trackers/RobustViconTracker.h>
+#include <spaint/trackers/ViconTracker.h>
 #endif
 
 #define DEBUGGING 1
 
-namespace spaint {
-
 //#################### CONSTRUCTORS ####################
 
 #ifdef WITH_OPENNI
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                               const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
+Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
+                   const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
 : m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
   m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration));
@@ -51,8 +50,8 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const boo
 }
 #endif
 
-SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-                               const Settings_Ptr& settings, const std::string& resourcesDir)
+Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+                   const Settings_Ptr& settings, const std::string& resourcesDir)
 : m_resourcesDir(resourcesDir)
 {
   m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
@@ -61,56 +60,56 @@ SpaintPipeline::SpaintPipeline(const std::string& calibrationFilename, const std
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool SpaintPipeline::get_fusion_enabled() const
+bool Pipeline::get_fusion_enabled() const
 {
   return m_fusionEnabled;
 }
 
-const SpaintInteractor_Ptr& SpaintPipeline::get_interactor()
+const Interactor_Ptr& Pipeline::get_interactor()
 {
   return m_interactor;
 }
 
-SpaintPipeline::Mode SpaintPipeline::get_mode() const
+Pipeline::Mode Pipeline::get_mode() const
 {
   return m_mode;
 }
 
-const SpaintModel_Ptr& SpaintPipeline::get_model()
+const Model_Ptr& Pipeline::get_model()
 {
   return m_model;
 }
 
-SpaintModel_CPtr SpaintPipeline::get_model() const
+Model_CPtr Pipeline::get_model() const
 {
   return m_model;
 }
 
-const SpaintRaycaster_Ptr& SpaintPipeline::get_raycaster()
+const Raycaster_Ptr& Pipeline::get_raycaster()
 {
   return m_raycaster;
 }
 
-SpaintRaycaster_CPtr SpaintPipeline::get_raycaster() const
+Raycaster_CPtr Pipeline::get_raycaster() const
 {
   return m_raycaster;
 }
 
-void SpaintPipeline::reset_forest()
+void Pipeline::reset_forest()
 {
   const size_t treeCount = 5;
   DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 }
 
-void SpaintPipeline::run_main_section()
+void Pipeline::run_main_section()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return;
 
-  const SpaintRaycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
-  const SpaintModel::Scene_Ptr& scene = m_model->get_scene();
-  const SpaintModel::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
-  const SpaintModel::View_Ptr& view = m_model->get_view();
+  const Raycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
+  const Model::Scene_Ptr& scene = m_model->get_scene();
+  const Model::TrackingState_Ptr& trackingState = m_model->get_tracking_state();
+  const Model::View_Ptr& view = m_model->get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
@@ -142,7 +141,7 @@ void SpaintPipeline::run_main_section()
   m_trackingController->Prepare(trackingState.get(), view.get(), liveRenderState.get());
 }
 
-void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
+void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 {
   switch(m_mode)
   {
@@ -173,12 +172,12 @@ void SpaintPipeline::run_mode_specific_section(const RenderState_CPtr& renderSta
   }
 }
 
-void SpaintPipeline::set_fusion_enabled(bool fusionEnabled)
+void Pipeline::set_fusion_enabled(bool fusionEnabled)
 {
   m_fusionEnabled = fusionEnabled;
 }
 
-void SpaintPipeline::set_mode(Mode mode)
+void Pipeline::set_mode(Mode mode)
 {
 #ifdef WITH_OPENCV
   // If we are switching out of feature inspection mode, destroy the feature inspection window.
@@ -193,7 +192,7 @@ void SpaintPipeline::set_mode(Mode mode)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SpaintPipeline::initialise(const Settings_Ptr& settings)
+void Pipeline::initialise(const Settings_Ptr& settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -215,7 +214,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  SpaintModel::Scene_Ptr scene(new SpaintModel::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
+  Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
   // Set up the InfiniTAM engines and view builder.
   const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
@@ -252,9 +251,9 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
   m_tracker->UpdateInitialPose(trackingState.get());
-  m_model.reset(new SpaintModel(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
-  m_raycaster.reset(new SpaintRaycaster(m_model, visualisationEngine, liveRenderState));
-  m_interactor.reset(new SpaintInteractor(m_model));
+  m_model.reset(new Model(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
+  m_raycaster.reset(new Raycaster(m_model, visualisationEngine, liveRenderState));
+  m_interactor.reset(new Interactor(m_model));
 
   // Set up the label propagator.
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
@@ -313,7 +312,7 @@ void SpaintPipeline::initialise(const Settings_Ptr& settings)
   m_reconstructionStarted = false;
 }
 
-ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
+ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize) const
 {
   ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
   compositeTracker->SetTracker(primaryTracker, 0);
@@ -329,7 +328,7 @@ ITMTracker *SpaintPipeline::make_hybrid_tracker(ITMTracker *primaryTracker, cons
   return compositeTracker;
 }
 
-void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
+void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
   Selector::Selection_CPtr selection = m_interactor->get_selector()->get_selection();
@@ -357,7 +356,7 @@ void SpaintPipeline::run_feature_inspection_section(const RenderState_CPtr& rend
 #endif
 }
 
-void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
+void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
@@ -389,12 +388,12 @@ void SpaintPipeline::run_prediction_section(const RenderState_CPtr& samplingRend
   m_interactor->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
 }
 
-void SpaintPipeline::run_propagation_section(const RenderState_CPtr& renderState)
+void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 {
   m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
 }
 
-void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
+void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
@@ -448,7 +447,7 @@ void SpaintPipeline::run_training_section(const RenderState_CPtr& samplingRender
   m_forest->train(splitBudget);
 }
 
-void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintModel::Scene_Ptr& scene, const Vector2i& trackedImageSize)
+void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize)
 {
   m_fallibleTracker = NULL;
 
@@ -494,6 +493,4 @@ void SpaintPipeline::setup_tracker(const Settings_Ptr& settings, const SpaintMod
       ));
     }
   }
-}
-
 }

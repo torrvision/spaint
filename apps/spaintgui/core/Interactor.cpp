@@ -1,32 +1,31 @@
 /**
- * spaint: SpaintInteractor.cpp
+ * spaintgui: Interactor.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "core/SpaintInteractor.h"
+#include "Interactor.h"
 
-#include "markers/cpu/VoxelMarker_CPU.h"
-#include "selectiontransformers/SelectionTransformerFactory.h"
-#include "selectors/NullSelector.h"
-#include "selectors/PickingSelector.h"
+#include <spaint/markers/cpu/VoxelMarker_CPU.h>
+#include <spaint/selectiontransformers/SelectionTransformerFactory.h>
+#include <spaint/selectors/NullSelector.h>
+#include <spaint/selectors/PickingSelector.h>
+using namespace spaint;
 
 #ifdef WITH_CUDA
-#include "markers/cuda/VoxelMarker_CUDA.h"
+#include <spaint/markers/cuda/VoxelMarker_CUDA.h>
 #endif
 
 #ifdef WITH_LEAP
-#include "selectors/LeapSelector.h"
+#include <spaint/selectors/LeapSelector.h>
 #endif
 
 #ifdef WITH_ARRAYFIRE
-#include "selectors/TouchSelector.h"
+#include <spaint/selectors/TouchSelector.h>
 #endif
-
-namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
+Interactor::Interactor(const Model_Ptr& model)
 : m_model(model),
   m_selector(new NullSelector(model->get_settings())),
   m_semanticLabel(0)
@@ -55,57 +54,57 @@ SpaintInteractor::SpaintInteractor(const SpaintModel_Ptr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SpaintInteractor::clear_labels(ClearingSettings settings)
+void Interactor::clear_labels(ClearingSettings settings)
 {
   ITMLocalVBA<SpaintVoxel>& localVBA = m_model->get_scene()->localVBA;
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
-SpaintInteractor::Selection_CPtr SpaintInteractor::get_selection() const
+Interactor::Selection_CPtr Interactor::get_selection() const
 {
   Selection_CPtr selection = m_selector->get_selection();
   return selection && m_selectionTransformer ? Selection_CPtr(m_selectionTransformer->transform_selection(*selection)) : selection;
 }
 
-SpaintInteractor::SelectionTransformer_CPtr SpaintInteractor::get_selection_transformer() const
+Interactor::SelectionTransformer_CPtr Interactor::get_selection_transformer() const
 {
   return m_selectionTransformer;
 }
 
-Selector_CPtr SpaintInteractor::get_selector() const
+Selector_CPtr Interactor::get_selector() const
 {
   return m_selector;
 }
 
-SpaintVoxel::Label SpaintInteractor::get_semantic_label() const
+SpaintVoxel::Label Interactor::get_semantic_label() const
 {
   return m_semanticLabel;
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels, MarkingMode mode)
+void Interactor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels, MarkingMode mode)
 {
   m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get(), mode);
 }
 
-void SpaintInteractor::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
+void Interactor::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
 {
   m_voxelMarker->mark_voxels(*selection, *labels, m_model->get_scene().get(), NULL, mode);
 }
 
-bool SpaintInteractor::selector_is_active() const
+bool Interactor::selector_is_active() const
 {
   return m_selector->is_active();
 }
 
-void SpaintInteractor::set_semantic_label(SpaintVoxel::Label semanticLabel)
+void Interactor::set_semantic_label(SpaintVoxel::Label semanticLabel)
 {
   m_semanticLabel = semanticLabel;
 }
 
-void SpaintInteractor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
+void Interactor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
 {
   // Allow the user to switch between different selectors.
-  const SpaintModel::Settings_CPtr& settings = m_model->get_settings();
+  const Model::Settings_CPtr& settings = m_model->get_settings();
   if(inputState.key_down(SDLK_i))
   {
     if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector(settings));
@@ -131,6 +130,4 @@ void SpaintInteractor::update_selector(const InputState& inputState, const Rende
 
   // Update the current selector.
   m_selector->update(inputState, renderState, renderingInMono);
-}
-
 }
