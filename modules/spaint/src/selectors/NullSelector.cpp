@@ -4,6 +4,7 @@
  */
 
 #include "selectors/NullSelector.h"
+using namespace tvginput;
 
 namespace spaint {
 

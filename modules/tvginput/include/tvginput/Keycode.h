@@ -1,5 +1,5 @@
 /**
- * spaint: Keycode.h
+ * tvginput: Keycode.h
  *
  * Notice: This file contains an altered version of code borrowed from SDL_scancode.h and
  *         SDL_keycode.h of the SDL 2.0 library. From a licensing point of view, SDL 2.0
@@ -30,10 +30,10 @@
  * simultaneously being able to make easy use of SDL in our own applications.
  */
 
-#ifndef H_SPAINT_KEYCODE
-#define H_SPAINT_KEYCODE
+#ifndef H_TVGINPUT_KEYCODE
+#define H_TVGINPUT_KEYCODE
 
-namespace spaint {
+namespace tvginput {
 
 enum Scancode
 {

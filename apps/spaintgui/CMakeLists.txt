@@ -126,6 +126,7 @@ SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvginput/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
@@ -139,7 +140,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)

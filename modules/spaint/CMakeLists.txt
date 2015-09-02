@@ -80,17 +80,6 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
-SET(input_sources
-src/input/InputState.cpp
-)
-
-SET(input_headers
-include/spaint/input/InputState.h
-include/spaint/input/Keycode.h
-include/spaint/input/MouseButton.h
-)
-
-##
 SET(imageprocessing_sources
 src/imageprocessing/ImageProcessorFactory.cpp
 )
@@ -483,7 +472,6 @@ SET(sources
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
-${input_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
@@ -509,7 +497,6 @@ ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
-${input_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
@@ -600,7 +587,6 @@ SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imagepr
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
 SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
 SOURCE_GROUP(imageprocessing\\shared FILES ${imageprocessing_shared_headers})
-SOURCE_GROUP(input FILES ${input_sources} ${input_headers})
 SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
@@ -643,6 +629,7 @@ SOURCE_GROUP(visualisers\\shared FILES ${visualisers_shared_headers})
 INCLUDE_DIRECTORIES(include/spaint)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvginput/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################

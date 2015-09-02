@@ -46,7 +46,7 @@ public:
   int get_radius() const;
 
   /** Override */
-  virtual void update(const InputState& inputState);
+  virtual void update(const tvginput::InputState& inputState);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

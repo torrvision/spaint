@@ -1,12 +1,12 @@
 /**
- * spaint: MouseButton.h
+ * tvginput: MouseButton.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_MOUSEBUTTON
-#define H_SPAINT_MOUSEBUTTON
+#ifndef H_TVGINPUT_MOUSEBUTTON
+#define H_TVGINPUT_MOUSEBUTTON
 
-namespace spaint {
+namespace tvginput {
 
 enum MouseButton
 {

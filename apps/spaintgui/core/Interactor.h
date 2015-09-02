@@ -135,7 +135,7 @@ public:
    * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  void update_selector(const spaint::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  void update_selector(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
 };
 
 //#################### TYPEDEFS ####################
