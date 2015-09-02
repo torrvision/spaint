@@ -1,5 +1,8 @@
 #! /bin/bash -e
 
+# Check that msbuild is on the system path.
+../require-msbuild.sh
+
 LOG=../../../build-glew-1.12.0.log
 
 # Build glew.
