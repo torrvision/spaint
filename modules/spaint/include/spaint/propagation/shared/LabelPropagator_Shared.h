@@ -66,8 +66,8 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
 
   // Decide whether or not propagation should occur.
   return neighbourVoxel.packedLabel.label == label &&
-         angleBetweenNormals <= maxAngleBetweenNormals &&
-         squaredDistanceBetweenColours <= maxSquaredDistanceBetweenColours &&
+         angleBetweenNormals <= maxAngleBetweenNormals * sqrt(squaredDistanceBetweenVoxels) &&
+         squaredDistanceBetweenColours <= maxSquaredDistanceBetweenColours * sqrt(squaredDistanceBetweenVoxels) &&
          squaredDistanceBetweenVoxels <= maxSquaredDistanceBetweenVoxels;
 }
 
