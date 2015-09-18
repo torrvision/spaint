@@ -245,6 +245,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the dense mapper and tracking controller.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
+  m_denseMapper->ResetScene(scene.get());
   setup_tracker(settings, scene, trackedImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), m_lowLevelEngine.get(), settings.get()));
 
