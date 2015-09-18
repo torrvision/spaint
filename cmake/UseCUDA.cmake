@@ -9,6 +9,12 @@ IF(WITH_CUDA)
 
   SET(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" FORCE)
 
+  # Auto-detect the CUDA compute capability.
+  SET(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+  IF(NOT DEFINED CUDA_COMPUTE_CAPABILITY)
+    INCLUDE("${CMAKE_MODULE_PATH}/CUDACheckCompute.cmake")
+  ENDIF()
+
   # If on Windows, make it possible to enable GPU debug information.
   IF(MSVC_IDE)
     OPTION(ENABLE_CUDA_DEBUGGING "Enable CUDA debugging?" OFF)
