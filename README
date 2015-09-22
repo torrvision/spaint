@@ -176,6 +176,15 @@ and masks for the RGB and depth images in the input sequence.
 There will ultimately be a technical report shipped along with this
 package. It is currently in the process of being written.
 
+4. Troubleshooting Tips
+-----------------------
+
+If you have any trouble with the build, here are some of the likely causes:
+
+* The CMake executable is not on your path.
+* The MSBuild executable is not on your path. (Windows)
+* The Visual C++ compiler (cl.exe) is not on your path. (Windows)
+
 History:
 
 2015-JUL-23: initial draft
