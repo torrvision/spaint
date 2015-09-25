@@ -39,12 +39,12 @@ void VoxelToCubeSelectionTransformer::update(const InputState& inputState)
   const int maxRadius = 10;
   static bool canChange = true;
 
-  if(!inputState.key_down(SDLK_RSHIFT) && inputState.key_down(SDLK_LEFTBRACKET))
+  if(!inputState.key_down(KEYCODE_RSHIFT) && inputState.key_down(KEYCODE_LEFTBRACKET))
   {
     if(canChange && m_radius > minRadius) --m_radius;
     canChange = false;
   }
-  else if(!inputState.key_down(SDLK_RSHIFT) && inputState.key_down(SDLK_RIGHTBRACKET))
+  else if(!inputState.key_down(KEYCODE_RSHIFT) && inputState.key_down(KEYCODE_RIGHTBRACKET))
   {
     if(canChange && m_radius < maxRadius) ++m_radius;
     canChange = false;

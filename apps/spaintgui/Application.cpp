@@ -47,7 +47,7 @@ void Application::run()
 {
   for(;;)
   {
-    if(!process_events() || m_inputState.key_down(SDLK_ESCAPE)) return;
+    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE)) return;
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -89,7 +89,7 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
 
 void Application::handle_key_down(const SDL_Keysym& keysym)
 {
-  m_inputState.press_key(keysym.sym);
+  m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
   // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
   if(keysym.sym == SDLK_f)
@@ -100,20 +100,20 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == SDLK_BACKSPACE)
   {
     const Interactor_Ptr& interactor = m_pipeline->get_interactor();
-    if(m_inputState.key_down(SDLK_RCTRL) && m_inputState.key_down(SDLK_RSHIFT))
+    if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
       interactor->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
       m_pipeline->reset_forest();
       m_commandManager.reset();
     }
-    else if(m_inputState.key_down(SDLK_RCTRL))
+    else if(m_inputState.key_down(KEYCODE_RCTRL))
     {
       // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
       interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, interactor->get_semantic_label()));
       m_commandManager.reset();
     }
-    else if(m_inputState.key_down(SDLK_RSHIFT))
+    else if(m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene that were not labelled by the user.
       interactor->clear_labels(ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
@@ -179,7 +179,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 
 void Application::handle_key_up(const SDL_Keysym& keysym)
 {
-  m_inputState.release_key(keysym.sym);
+  m_inputState.release_key(static_cast<Keycode>(keysym.sym));
 }
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
@@ -221,10 +221,10 @@ void Application::handle_mousebutton_up(const SDL_MouseButtonEvent& e)
 void Application::process_camera_input()
 {
   // Allow the user to switch camera modes.
-  if(m_inputState.key_down(SDLK_v))
+  if(m_inputState.key_down(KEYCODE_v))
   {
-    if(m_inputState.key_down(SDLK_1)) m_renderer->set_camera_mode(Renderer::CM_FOLLOW);
-    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
+    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_camera_mode(Renderer::CM_FOLLOW);
+    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
   }
 
   // If we're in free camera mode, allow the user to move the camera around.
@@ -236,24 +236,24 @@ void Application::process_camera_input()
 
     MoveableCamera_Ptr camera = m_renderer->get_camera();
 
-    if(m_inputState.key_down(SDLK_w)) camera->move_n(SPEED);
-    if(m_inputState.key_down(SDLK_s)) camera->move_n(-SPEED);
-    if(m_inputState.key_down(SDLK_d)) camera->move_u(-SPEED);
-    if(m_inputState.key_down(SDLK_a)) camera->move_u(SPEED);
-    if(m_inputState.key_down(SDLK_q)) camera->move(UP, SPEED);
-    if(m_inputState.key_down(SDLK_e)) camera->move(UP, -SPEED);
+    if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
+    if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
+    if(m_inputState.key_down(KEYCODE_d)) camera->move_u(-SPEED);
+    if(m_inputState.key_down(KEYCODE_a)) camera->move_u(SPEED);
+    if(m_inputState.key_down(KEYCODE_q)) camera->move(UP, SPEED);
+    if(m_inputState.key_down(KEYCODE_e)) camera->move(UP, -SPEED);
 
-    if(m_inputState.key_down(SDLK_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
-    if(m_inputState.key_down(SDLK_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
-    if(m_inputState.key_down(SDLK_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
-    if(m_inputState.key_down(SDLK_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_RIGHT)) camera->rotate(UP, -ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
+    if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
   }
 }
 
 void Application::process_command_input()
 {
   static bool blockUndo = false;
-  if(m_inputState.key_down(SDLK_LCTRL) && m_inputState.key_down(SDLK_z))
+  if(m_inputState.key_down(KEYCODE_LCTRL) && m_inputState.key_down(KEYCODE_z))
   {
     if(!blockUndo && m_commandManager.can_undo())
     {
@@ -264,7 +264,7 @@ void Application::process_command_input()
   else blockUndo = false;
 
   static bool blockRedo = false;
-  if(m_inputState.key_down(SDLK_LCTRL) && m_inputState.key_down(SDLK_y))
+  if(m_inputState.key_down(KEYCODE_LCTRL) && m_inputState.key_down(KEYCODE_y))
   {
     if(!blockRedo && m_commandManager.can_redo())
     {
@@ -326,12 +326,12 @@ void Application::process_labelling_input()
   LabelManager_CPtr labelManager = m_pipeline->get_model()->get_label_manager();
   SpaintVoxel::Label semanticLabel = interactor->get_semantic_label();
 
-  if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_RIGHTBRACKET))
+  if(m_inputState.key_down(KEYCODE_RSHIFT) && m_inputState.key_down(KEYCODE_RIGHTBRACKET))
   {
     if(canChangeLabel) semanticLabel = labelManager->get_next_label(semanticLabel);
     canChangeLabel = false;
   }
-  else if(m_inputState.key_down(SDLK_RSHIFT) && m_inputState.key_down(SDLK_LEFTBRACKET))
+  else if(m_inputState.key_down(KEYCODE_RSHIFT) && m_inputState.key_down(KEYCODE_LEFTBRACKET))
   {
     if(canChangeLabel) semanticLabel = labelManager->get_previous_label(semanticLabel);
     canChangeLabel = false;
@@ -384,14 +384,14 @@ void Application::process_labelling_input()
 void Application::process_mode_input()
 {
   Pipeline::Mode mode = m_pipeline->get_mode();
-  if(m_inputState.key_down(SDLK_m))
+  if(m_inputState.key_down(KEYCODE_m))
   {
-    if(m_inputState.key_down(SDLK_1))      mode = Pipeline::MODE_NORMAL;
-    else if(m_inputState.key_down(SDLK_2)) mode = Pipeline::MODE_TRAINING;
-    else if(m_inputState.key_down(SDLK_3)) mode = Pipeline::MODE_PREDICTION;
-    else if(m_inputState.key_down(SDLK_4)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
-    else if(m_inputState.key_down(SDLK_5)) mode = Pipeline::MODE_PROPAGATION;
-    else if(m_inputState.key_down(SDLK_6)) mode = Pipeline::MODE_FEATURE_INSPECTION;
+    if(m_inputState.key_down(KEYCODE_1))      mode = Pipeline::MODE_NORMAL;
+    else if(m_inputState.key_down(KEYCODE_2)) mode = Pipeline::MODE_TRAINING;
+    else if(m_inputState.key_down(KEYCODE_3)) mode = Pipeline::MODE_PREDICTION;
+    else if(m_inputState.key_down(KEYCODE_4)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
+    else if(m_inputState.key_down(KEYCODE_5)) mode = Pipeline::MODE_PROPAGATION;
+    else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_FEATURE_INSPECTION;
   }
   m_pipeline->set_mode(mode);
 }
@@ -403,14 +403,14 @@ void Application::process_renderer_input()
   const int SWITCH_DELAY = 20;
   if(framesTillSwitchAllowed == 0)
   {
-    if(m_inputState.key_down(SDLK_r))
+    if(m_inputState.key_down(KEYCODE_r))
     {
-      if(m_inputState.key_down(SDLK_1))
+      if(m_inputState.key_down(KEYCODE_1))
       {
         m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster()));
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
-      else if(m_inputState.key_down(SDLK_2) || m_inputState.key_down(SDLK_3))
+      else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
       {
 #ifdef WITH_OVR
         try
@@ -419,7 +419,7 @@ void Application::process_renderer_input()
             "Semantic Paint",
             m_pipeline->get_model(),
             m_pipeline->get_raycaster(),
-            m_inputState.key_down(SDLK_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
+            m_inputState.key_down(KEYCODE_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
           ));
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
@@ -434,11 +434,11 @@ void Application::process_renderer_input()
   else --framesTillSwitchAllowed;
 
   // Allow the user to switch raycast type.
-  if(m_inputState.key_down(SDLK_c))
+  if(m_inputState.key_down(KEYCODE_c))
   {
-    if(m_inputState.key_down(SDLK_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(SDLK_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(SDLK_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
+    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
   }
 }
 

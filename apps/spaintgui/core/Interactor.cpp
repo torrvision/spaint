@@ -105,15 +105,15 @@ void Interactor::update_selector(const InputState& inputState, const RenderState
 {
   // Allow the user to switch between different selectors.
   const Model::Settings_CPtr& settings = m_model->get_settings();
-  if(inputState.key_down(SDLK_i))
+  if(inputState.key_down(KEYCODE_i))
   {
-    if(inputState.key_down(SDLK_1)) m_selector.reset(new NullSelector(settings));
-    else if(inputState.key_down(SDLK_2)) m_selector.reset(new PickingSelector(settings));
+    if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(settings));
+    else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(settings));
 #ifdef WITH_LEAP
-    else if(inputState.key_down(SDLK_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
+    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(settings, m_model->get_scene()));
 #endif
 #ifdef WITH_ARRAYFIRE
-    else if(inputState.key_down(SDLK_4))
+    else if(inputState.key_down(KEYCODE_4))
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;

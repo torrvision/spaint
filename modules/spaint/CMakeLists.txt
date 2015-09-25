@@ -86,6 +86,7 @@ src/input/InputState.cpp
 
 SET(input_headers
 include/spaint/input/InputState.h
+include/spaint/input/Keycode.h
 include/spaint/input/MouseButton.h
 )
 

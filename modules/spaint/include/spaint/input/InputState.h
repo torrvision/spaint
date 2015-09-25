@@ -9,8 +9,7 @@
 #include <map>
 #include <vector>
 
-#include <SDL_keyboard.h>
-
+#include "Keycode.h"
 #include "MouseButton.h"
 
 namespace spaint {
@@ -22,7 +21,7 @@ class InputState
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  std::map<SDL_Keycode,bool> m_keyDown;
+  std::map<Keycode,bool> m_keyDown;
   std::map<MouseButton,bool> m_mouseButtonDown;
   int m_mouseMotionX, m_mouseMotionY;
   int m_mousePositionX, m_mousePositionY;
@@ -39,7 +38,7 @@ private:
 
   //#################### PUBLIC METHODS ####################
 public:
-  bool key_down(SDL_Keycode key) const;
+  bool key_down(Keycode key) const;
   bool mouse_button_down(MouseButton button) const;
   int mouse_motion_x() const;
   int mouse_motion_y() const;
@@ -48,9 +47,9 @@ public:
   int mouse_position_y() const;
   int mouse_pressed_x(MouseButton button) const;
   int mouse_pressed_y(MouseButton button) const;
-  void press_key(SDL_Keycode key);
+  void press_key(Keycode key);
   void press_mouse_button(MouseButton button, int x, int y);
-  void release_key(SDL_Keycode key);
+  void release_key(Keycode key);
   void release_mouse_button(MouseButton button);
   void reset();
   void set_mouse_motion(int x, int y);
