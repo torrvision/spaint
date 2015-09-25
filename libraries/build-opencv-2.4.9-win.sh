@@ -1,5 +1,8 @@
 #! /bin/bash -e
 
+# Check that msbuild is on the system path.
+../require-msbuild.sh
+
 LOG=../../build-opencv-2.4.9.log
 
 # Check that valid parameters have been specified.

@@ -7,6 +7,9 @@ then
   exit
 fi
 
+# Check that msbuild is on the system path.
+./require-msbuild.sh
+
 cd libraries
 ./build-boost_1_56_0-win.sh "msvc-$1.0"
 ./build-glew-1.12.0-win.sh
