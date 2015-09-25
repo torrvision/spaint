@@ -26,7 +26,7 @@
 #undef M_PI
 #endif
 
-#include <spaint/input/InputState.h>
+#include <tvginput/InputState.h>
 
 #include <tvgutil/commands/CommandManager.h>
 
@@ -49,7 +49,7 @@ private:
   tvgutil::CommandManager m_commandManager;
 
   /** The current state of the keyboard and mouse. */
-  spaint::InputState m_inputState;
+  tvginput::InputState m_inputState;
 
   /** The pipeline that the application should use. */
   Pipeline_Ptr m_pipeline;

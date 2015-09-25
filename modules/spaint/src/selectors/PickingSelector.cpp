@@ -4,6 +4,7 @@
  */
 
 #include "selectors/PickingSelector.h"
+using namespace tvginput;
 
 #include "picking/cpu/Picker_CPU.h"
 

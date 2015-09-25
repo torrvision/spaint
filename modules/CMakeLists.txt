@@ -2,6 +2,7 @@
 # CMakeLists.txt for spaint/modules #
 #####################################
 
+ADD_SUBDIRECTORY(tvginput)
 ADD_SUBDIRECTORY(tvgutil)
 
 IF(BUILD_EVALUATION_MODULES)

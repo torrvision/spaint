@@ -1,10 +1,10 @@
 /**
- * spaint: InputState.h
+ * tvginput: InputState.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_INPUTSTATE
-#define H_SPAINT_INPUTSTATE
+#ifndef H_TVGINPUT_INPUTSTATE
+#define H_TVGINPUT_INPUTSTATE
 
 #include <map>
 #include <vector>
@@ -12,7 +12,7 @@
 #include "Keycode.h"
 #include "MouseButton.h"
 
-namespace spaint {
+namespace tvginput {
 
 /**
  * \brief An instance of this class maintains the current state of the keyboard and mouse.
@@ -36,7 +36,7 @@ private:
   InputState(const InputState&);
   InputState& operator=(const InputState&);
 
-  //#################### PUBLIC METHODS ####################
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   bool key_down(Keycode key) const;
   bool mouse_button_down(MouseButton button) const;

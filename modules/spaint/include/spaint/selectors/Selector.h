@@ -12,8 +12,9 @@
 #include <ITMLib/Objects/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <tvginput/InputState.h>
+
 #include "SelectorVisitor.h"
-#include "../input/InputState.h"
 
 namespace spaint {
 
@@ -89,7 +90,7 @@ public:
    * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono) = 0;
+  virtual void update(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono) = 0;
 };
 
 //#################### TYPEDEFS ####################

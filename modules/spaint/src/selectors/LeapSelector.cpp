@@ -4,6 +4,7 @@
  */
 
 #include "selectors/LeapSelector.h"
+using namespace tvginput;
 
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "util/MemoryBlockFactory.h"

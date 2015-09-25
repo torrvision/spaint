@@ -9,8 +9,9 @@
 #include <ITMLib/Objects/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <tvginput/InputState.h>
+
 #include "SelectionTransformerVisitor.h"
-#include "../../input/InputState.h"
 
 namespace spaint {
 
@@ -74,7 +75,7 @@ public:
    *
    * \param inputState  The current input state.
    */
-  virtual void update(const InputState& inputState) = 0;
+  virtual void update(const tvginput::InputState& inputState) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

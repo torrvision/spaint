@@ -19,6 +19,7 @@
 #endif
 
 using namespace rigging;
+using namespace tvginput;
 
 #define DEBUGGING 0
 

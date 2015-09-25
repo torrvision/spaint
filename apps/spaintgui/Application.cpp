@@ -4,6 +4,7 @@
  */
 
 #include "Application.h"
+using namespace tvginput;
 
 #include <fstream>
 #include <stdexcept>

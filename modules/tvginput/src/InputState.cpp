@@ -1,13 +1,13 @@
 /**
- * spaint: InputState.cpp
+ * tvginput: InputState.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "input/InputState.h"
+#include "InputState.h"
 
 #include <stdexcept>
 
-namespace spaint {
+namespace tvginput {
 
 //#################### CONSTRUCTORS ####################
 
