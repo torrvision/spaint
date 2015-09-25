@@ -13,3 +13,14 @@ ADD_DEFINITIONS(-DUSING_CMAKE)
 IF(NOT(WITH_CUDA))
   ADD_DEFINITIONS(-DCOMPILE_WITHOUT_CUDA)
 ENDIF()
+
+# Search for libpng and automatically use it if found - this mirrors what is done by InfiniTAM.
+FIND_PACKAGE(PNG)
+
+IF(PNG_FOUND)
+  INCLUDE_DIRECTORIES(${PNG_INCLUDE_DIRS})
+  ADD_DEFINITIONS(${PNG_DEFINITIONS})
+
+  # Note: This preprocessor flag is used within InfiniTAM to control the conditional compilation of code using libpng.
+  ADD_DEFINITIONS(-DUSE_LIBPNG)
+ENDIF()
