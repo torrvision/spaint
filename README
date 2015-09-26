@@ -6,6 +6,7 @@ Julien Valentin <julien.valentin@eng.ox.ac.uk>
 Vibhav Vineet <vibhav.vineet@gmail.com>
 Ming-Ming Cheng <cmm.thu@qq.com>
 Anurag Arnab <anurag.arnab@gmail.com>
+Stephen Hicks <stephen.hicks@ndcn.ox.ac.uk>
 Shahram Izadi <shahrami@microsoft.com>
 Philip H S Torr <philip.torr@eng.ox.ac.uk>
 
@@ -188,3 +189,4 @@ If you have any trouble with the build, here are some of the likely causes:
 History:
 
 2015-JUL-23: initial draft
+2015-SEP-26: first public release
