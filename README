@@ -1,4 +1,4 @@
-This is the software bundle "Semantic Paint", created by:
+This is the software bundle "SemanticPaint", created by:
 
 Stuart Golodetz <stuart.golodetz@eng.ox.ac.uk>
 Michael Sapienza <michael.sapienza@eng.ox.ac.uk>
@@ -27,18 +27,18 @@ David W Murray <dwm@robots.ox.ac.uk>
 
 1.1 Overview
 
-Semantic Paint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
+SemanticPaint builds with CMake 2.8 and above on Windows, Ubuntu and Mac OS X.
 It has been tested on recent versions of all three operating systems, but may
 require additional work to build on older versions.
 
 1.2 Dependencies
 
-Semantic Paint depends on various 3rd party libraries. Some of these are
-required, in the sense that Semantic Paint will not function without them;
+SemanticPaint depends on various 3rd party libraries. Some of these are
+required, in the sense that SemanticPaint will not function without them;
 others are optional, but skipping them will reduce functionality.
 
 Suitable versions of the required dependencies and some of the optional
-dependencies have been included in the repository, so Semantic Paint should
+dependencies have been included in the repository, so SemanticPaint should
 build "out of the box". However, most users will probably want to install
 the remaining optional libraries in order to enable full functionality.
 
@@ -111,7 +111,7 @@ Common steps on all platforms:
 
   c) Build the spaint_v2 branch of InfiniTAM using CMake (using <root>/InfiniTAM/InfiniTAM/build as your build directory).
 
-  d) Clone Semantic Paint into <root>/spaint, e.g.
+  d) Clone SemanticPaint into <root>/spaint, e.g.
 
      $ git clone git@bitbucket.org:sgolodetz/spaint.git spaint
 
