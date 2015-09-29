@@ -174,8 +174,16 @@ and masks for the RGB and depth images in the input sequence.
 3. Additional Documentation
 ---------------------------
 
-There will ultimately be a technical report shipped along with this
-package. It is currently in the process of being written.
+Further details about the original concept for SemanticPaint can be
+found in the following paper:
+
+SemanticPaint: Interactive 3D Labeling and Learning at your Fingertips.
+ACM Transactions on Graphics, 34(5), August 2015.
+
+There will shortly be a technical report shipped along with this
+package to describe the details of our open-source implementation
+of the SemanticPaint framework. It is currently in the process of
+being written.
 
 4. Troubleshooting Tips
 -----------------------
