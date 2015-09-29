@@ -150,9 +150,11 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       break;
     case MODE_PREDICTION:
       run_prediction_section(renderState);
+      run_smoothing_section(renderState);
       break;
     case MODE_PROPAGATION:
       run_propagation_section(renderState);
+      run_smoothing_section(renderState);
       break;
     case MODE_SMOOTHING:
       run_smoothing_section(renderState);
@@ -162,8 +164,15 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) run_training_section(renderState);
-      else run_prediction_section(renderState);
+      if(trainThisFrame)
+      {
+        run_training_section(renderState);
+      }
+      else
+      {
+        run_prediction_section(renderState);
+        run_smoothing_section(renderState);
+      }
 
       break;
     }
