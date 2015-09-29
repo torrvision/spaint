@@ -143,6 +143,8 @@ inline void smooth_from_neighbours(int voxelIndex, int width, int height, int ma
       if(dx == 0 && dy == 0) continue;
 
       int neighbourX = x + dx, neighbourY = y + dy;
+      if(neighbourX < 0 || neighbourX >= width || neighbourY < 0 || neighbourY >= height) continue;
+
       int neighbourVoxelIndex = neighbourY * width + neighbourX;
       Vector3f neighbourLoc = raycastResult[neighbourVoxelIndex].toVector3();
       const SpaintVoxel neighbourVoxel = readVoxel(voxelData, indexData, neighbourLoc.toIntRound(), foundPoint);
