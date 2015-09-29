@@ -63,11 +63,12 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   // Compute the squared distance between the neighbour's position and the position of the voxel of interest.
   Vector3f posOffset = neighbourLoc - loc;
   float squaredDistanceBetweenVoxels = dot(posOffset, posOffset);
+  float distanceBetweenVoxels = sqrt(squaredDistanceBetweenVoxels);
 
   // Decide whether or not propagation should occur.
   return neighbourVoxel.packedLabel.label == label &&
-         angleBetweenNormals <= maxAngleBetweenNormals * sqrt(squaredDistanceBetweenVoxels) &&
-         squaredDistanceBetweenColours <= maxSquaredDistanceBetweenColours * sqrt(squaredDistanceBetweenVoxels) &&
+         angleBetweenNormals <= maxAngleBetweenNormals * distanceBetweenVoxels &&
+         squaredDistanceBetweenColours <= maxSquaredDistanceBetweenColours * distanceBetweenVoxels &&
          squaredDistanceBetweenVoxels <= maxSquaredDistanceBetweenVoxels;
 }
 
