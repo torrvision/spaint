@@ -62,6 +62,9 @@ public:
     /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
     MODE_PROPAGATION,
 
+    /** TODO */
+    MODE_SMOOTHING,
+
     /** In train-and-predict mode, we alternate training and prediction to achieve a pleasing interactive effect. */
     MODE_TRAIN_AND_PREDICT,
 
@@ -348,6 +351,11 @@ private:
    * \param renderState The render state associated with the camera position from which to propagate.
    */
   void run_propagation_section(const RenderState_CPtr& renderState);
+
+  /**
+   * \brief TODO
+   */
+  void run_smoothing_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with training mode.

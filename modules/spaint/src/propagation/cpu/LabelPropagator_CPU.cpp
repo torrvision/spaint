@@ -15,6 +15,27 @@ LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize, float maxAngl
 : LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void LabelPropagator_CPU::smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+{
+  const int height = raycastResult->noDims.y;
+  const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
+  const int maxLabelCount = 10; // TEMPORARY
+  const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
+  const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
+  SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
+  const int width = raycastResult->noDims.x;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
+  {
+    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData);
+  }
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const

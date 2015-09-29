@@ -392,7 +392,8 @@ void Application::process_mode_input()
     else if(m_inputState.key_down(KEYCODE_3)) mode = Pipeline::MODE_PREDICTION;
     else if(m_inputState.key_down(KEYCODE_4)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
     else if(m_inputState.key_down(KEYCODE_5)) mode = Pipeline::MODE_PROPAGATION;
-    else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_FEATURE_INSPECTION;
+    else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_SMOOTHING;
+    else if(m_inputState.key_down(KEYCODE_7)) mode = Pipeline::MODE_FEATURE_INSPECTION;
   }
   m_pipeline->set_mode(mode);
 }

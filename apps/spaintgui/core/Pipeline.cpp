@@ -154,6 +154,9 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
     case MODE_PROPAGATION:
       run_propagation_section(renderState);
       break;
+    case MODE_SMOOTHING:
+      run_smoothing_section(renderState);
+      break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
@@ -392,6 +395,11 @@ void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderStat
 void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 {
   m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+}
+
+void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
+{
+  m_labelPropagator->smooth_labels(renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

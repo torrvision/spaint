@@ -126,6 +126,50 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
 #undef SPFN
 }
 
+_CPU_AND_GPU_CODE_
+inline void smooth_from_neighbours(int voxelIndex, int width, int height, int maxLabelCount, const Vector4f *raycastResult,
+                                   SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+{
+  unsigned char labelCounts[32] = {0,};
+
+  int x = voxelIndex % width;
+  int y = voxelIndex / width;
+
+  bool foundPoint;
+  for(int dx = -1; dx <= 1; ++dx)
+  {
+    for(int dy = -1; dy <= 1; ++dy)
+    {
+      if(dx == 0 && dy == 0) continue;
+
+      int neighbourX = x + dx, neighbourY = y + dy;
+      int neighbourVoxelIndex = neighbourY * width + neighbourX;
+      Vector3f neighbourLoc = raycastResult[neighbourVoxelIndex].toVector3();
+      const SpaintVoxel neighbourVoxel = readVoxel(voxelData, indexData, neighbourLoc.toIntRound(), foundPoint);
+      if(!foundPoint) continue;
+
+      ++labelCounts[neighbourVoxel.packedLabel.label];
+    }
+  }
+
+  SpaintVoxel::Label bestLabel(0);
+  int bestLabelCount = 0;
+  for(int i = 1; i < maxLabelCount; ++i)
+  {
+    if(labelCounts[i] > bestLabelCount)
+    {
+      bestLabel = i;
+      bestLabelCount = labelCounts[i];
+    }
+  }
+
+  if(bestLabel != 0 && bestLabelCount > 5)
+  {
+    Vector3f loc = raycastResult[voxelIndex].toVector3();
+    mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(bestLabel, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
+  }
+}
+
 /**
  * \brief Calculates the normal of the specified voxel in the raycast result and writes it into the surface normals array.
  *

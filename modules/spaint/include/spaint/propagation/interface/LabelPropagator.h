@@ -45,6 +45,13 @@ protected:
    */
   LabelPropagator(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  virtual void smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**
@@ -62,8 +69,7 @@ private:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -74,8 +80,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                       ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
+  void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 };
 
 //#################### TYPEDEFS ####################

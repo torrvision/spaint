@@ -38,11 +38,43 @@ __global__ void ck_perform_propagation(SpaintVoxel::Label label, const Vector4f 
   }
 }
 
+__global__ void ck_smooth_from_neighbours(const Vector4f *raycastResultData, int raycastResultSize, int width, int height, int maxLabelCount,
+                                          SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+{
+  int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
+  if(voxelIndex < raycastResultSize)
+  {
+    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData);
+  }
+}
+
 //#################### CONSTRUCTORS ####################
 
 LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
 : LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void LabelPropagator_CUDA::smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+{
+  const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
+
+  int threadsPerBlock = 256;
+  int numBlocks = (raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
+
+  const int maxLabelCount = 10; // TEMPORARY
+
+  ck_smooth_from_neighbours<<<numBlocks,threadsPerBlock>>>(
+    raycastResult->GetData(MEMORYDEVICE_CUDA),
+    raycastResultSize,
+    raycastResult->noDims.x,
+    raycastResult->noDims.y,
+    maxLabelCount,
+    scene->localVBA.GetVoxelBlocks(),
+    scene->index.getIndexData()
+  );
+}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
