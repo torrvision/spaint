@@ -10,7 +10,8 @@ Stephen Hicks <stephen.hicks@ndcn.ox.ac.uk>
 Shahram Izadi <shahrami@microsoft.com>
 Philip H S Torr <philip.torr@eng.ox.ac.uk>
 
-It is built on top of the InfiniTAM fusion engine, created by:
+It is built on top of the InfiniTAM fusion engine,
+the current version of which is maintained by:
 
 Victor Adrian Prisacariu <victor@robots.ox.ac.uk>
 Olaf Kaehler <olaf@robots.ox.ac.uk>
