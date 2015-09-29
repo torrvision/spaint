@@ -128,10 +128,12 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
 
 _CPU_AND_GPU_CODE_
 inline void smooth_from_neighbours(int voxelIndex, int width, int height, int maxLabelCount, const Vector4f *raycastResult,
-                                   SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+                                   SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                   float maxSquaredDistanceBetweenVoxels)
 {
   unsigned char labelCounts[32] = {0,};
 
+  Vector3f loc = raycastResult[voxelIndex].toVector3();
   int x = voxelIndex % width;
   int y = voxelIndex / width;
 
@@ -150,7 +152,13 @@ inline void smooth_from_neighbours(int voxelIndex, int width, int height, int ma
       const SpaintVoxel neighbourVoxel = readVoxel(voxelData, indexData, neighbourLoc.toIntRound(), foundPoint);
       if(!foundPoint) continue;
 
-      ++labelCounts[neighbourVoxel.packedLabel.label];
+      Vector3f posOffset = neighbourLoc - loc;
+      float squaredDistanceBetweenVoxels = dot(posOffset, posOffset);
+
+      if(squaredDistanceBetweenVoxels <= maxSquaredDistanceBetweenVoxels)
+      {
+        ++labelCounts[neighbourVoxel.packedLabel.label];
+      }
     }
   }
 
@@ -167,7 +175,6 @@ inline void smooth_from_neighbours(int voxelIndex, int width, int height, int ma
 
   if(bestLabel != 0 && bestLabelCount > 5)
   {
-    Vector3f loc = raycastResult[voxelIndex].toVector3();
     mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(bestLabel, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }
 }

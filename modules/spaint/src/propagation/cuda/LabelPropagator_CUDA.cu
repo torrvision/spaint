@@ -39,12 +39,13 @@ __global__ void ck_perform_propagation(SpaintVoxel::Label label, const Vector4f 
 }
 
 __global__ void ck_smooth_from_neighbours(const Vector4f *raycastResultData, int raycastResultSize, int width, int height, int maxLabelCount,
-                                          SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData)
+                                          SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                          float maxSquaredDistanceBetweenVoxels)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
   {
-    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData);
+    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData, maxSquaredDistanceBetweenVoxels);
   }
 }
 
@@ -72,7 +73,8 @@ void LabelPropagator_CUDA::smooth_labels(const ITMFloat4Image *raycastResult, IT
     raycastResult->noDims.y,
     maxLabelCount,
     scene->localVBA.GetVoxelBlocks(),
-    scene->index.getIndexData()
+    scene->index.getIndexData(),
+    m_maxSquaredDistanceBetweenVoxels
   );
 }
 

@@ -154,7 +154,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       break;
     case MODE_PROPAGATION:
       run_propagation_section(renderState);
-      run_smoothing_section(renderState);
+      //run_smoothing_section(renderState);
       break;
     case MODE_SMOOTHING:
       run_smoothing_section(renderState);

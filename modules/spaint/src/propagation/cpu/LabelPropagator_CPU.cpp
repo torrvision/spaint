@@ -32,7 +32,7 @@ void LabelPropagator_CPU::smooth_labels(const ITMFloat4Image *raycastResult, ITM
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData);
+    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData, m_maxSquaredDistanceBetweenVoxels);
   }
 }
 
