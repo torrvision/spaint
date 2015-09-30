@@ -110,7 +110,7 @@ Common steps on all platforms:
 
   d) Clone SemanticPaint into <root>/spaint, e.g.
 
-     $ git clone git@bitbucket.org:sgolodetz/spaint.git spaint
+     $ git clone git@github.com:torrvision/spaint.git spaint
 
   e) Change to the spaint directory:
 
