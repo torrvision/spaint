@@ -75,7 +75,10 @@ __global__ void ck_update_coordinate_systems(const int voxelLocationCount, const
   __shared__ float intensities[256];
 
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
-  int voxelLocationIndex = tid / (patchSize * patchSize);
+
+  // Initialise the histogram.
+  if(tid < 64) histogram[tid] = 0.0f;
+  __syncthreads();
 
   // Convert the voxel's RGB patch to an intensity patch.
   compute_intensities_for_patch(tid, features, featureCount, patchSize, intensities);
@@ -86,6 +89,7 @@ __global__ void ck_update_coordinate_systems(const int voxelLocationCount, const
   __syncthreads();
 
   // Calculate the dominant orientation for the voxel and rotate its coordinate system to align with that as necessary.
+  int voxelLocationIndex = tid / (patchSize * patchSize);
   update_coordinate_system(tid, patchSize * patchSize, histogram, binCount, &xAxes[voxelLocationIndex], &yAxes[voxelLocationIndex]);
 }
 
