@@ -23,8 +23,8 @@ using namespace rigging;
 using namespace spaint;
 
 #include <tvgutil/ExecutableFinder.h>
-#include <tvgutil/timing/TimeUtil.h>
 #include <tvgutil/commands/NoOpCommand.h>
+#include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
 #ifdef WITH_OVR
