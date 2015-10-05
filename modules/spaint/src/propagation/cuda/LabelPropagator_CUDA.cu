@@ -25,8 +25,7 @@ __global__ void ck_calculate_normals(const Vector4f *raycastResultData, int rayc
 }
 
 __global__ void ck_interpolate_from_neighbours(const Vector4f *raycastResultData, int raycastResultSize, int width, int height, int maxLabelCount,
-                                          SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                          float maxSquaredDistanceBetweenVoxels)
+                                               SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, float maxSquaredDistanceBetweenVoxels)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
