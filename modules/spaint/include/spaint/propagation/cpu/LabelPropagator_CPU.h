@@ -21,11 +21,12 @@ public:
    * \brief Constructs a CPU-based label propagator.
    *
    * \param raycastResultSize                 The size of the raycast result (in pixels).
+   * \param maxLabelCount                     The maximum number of labels that can be in use.
    * \param maxAngleBetweenNormals            The largest angle allowed between the normals of neighbouring voxels if extrapolation is to occur.
    * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of neighbouring voxels if extrapolation is to occur.
    * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if extrapolation or interpolation are to occur.
    */
-  LabelPropagator_CPU(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
+  LabelPropagator_CPU(size_t raycastResultSize, size_t maxLabelCount, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

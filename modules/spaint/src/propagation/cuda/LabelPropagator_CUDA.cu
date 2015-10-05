@@ -51,8 +51,8 @@ __global__ void ck_perform_extrapolation(SpaintVoxel::Label label, const Vector4
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
-: LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
+LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, size_t maxLabelCount, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+: LabelPropagator(raycastResultSize, maxLabelCount, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -64,14 +64,12 @@ void LabelPropagator_CUDA::interpolate_labels(const ITMFloat4Image *raycastResul
   int threadsPerBlock = 256;
   int numBlocks = (raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
 
-  const int maxLabelCount = 10; // TEMPORARY
-
   ck_interpolate_from_neighbours<<<numBlocks,threadsPerBlock>>>(
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     raycastResultSize,
     raycastResult->noDims.x,
     raycastResult->noDims.y,
-    maxLabelCount,
+    static_cast<int>(m_maxLabelCount),
     scene->localVBA.GetVoxelBlocks(),
     scene->index.getIndexData(),
     m_maxSquaredDistanceBetweenVoxels

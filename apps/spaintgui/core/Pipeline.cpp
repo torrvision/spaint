@@ -261,11 +261,11 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the label propagator.
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
+  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
+  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, maxLabelCount, settings->deviceType);
 
   // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
-  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
 #ifndef USE_LOW_POWER_MODE
   m_maxPredictionVoxelCount = 8192;
 #else

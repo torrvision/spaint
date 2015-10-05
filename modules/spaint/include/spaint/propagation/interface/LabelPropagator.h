@@ -24,6 +24,9 @@ protected:
   /** The largest angle allowed between the normals of neighbouring voxels if extrapolation is to occur. */
   const float m_maxAngleBetweenNormals;
 
+  /** The maximum number of labels that can be in use. */
+  const size_t m_maxLabelCount;
+
   /** The maximum squared distance allowed between the colours of neighbouring voxels if extrapolation is to occur. */
   const float m_maxSquaredDistanceBetweenColours;
 
@@ -39,11 +42,12 @@ protected:
    * \brief Constructs a label propagator.
    *
    * \param raycastResultSize                 The size of the raycast result (in pixels).
+   * \param maxLabelCount                     The maximum number of labels that can be in use.
    * \param maxAngleBetweenNormals            The largest angle allowed between the normals of neighbouring voxels if extrapolation is to occur.
    * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of neighbouring voxels if extrapolation is to occur.
    * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if extrapolation or interpolation are to occur.
    */
-  LabelPropagator(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
+  LabelPropagator(size_t raycastResultSize, size_t maxLabelCount, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

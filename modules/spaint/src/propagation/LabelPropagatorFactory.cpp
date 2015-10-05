@@ -15,7 +15,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-LabelPropagator_CPtr LabelPropagatorFactory::make_label_propagator(size_t raycastResultSize, ITMLibSettings::DeviceType deviceType,
+LabelPropagator_CPtr LabelPropagatorFactory::make_label_propagator(size_t raycastResultSize, size_t maxLabelCount,  ITMLibSettings::DeviceType deviceType,
                                                                    float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
                                                                    float maxSquaredDistanceBetweenVoxels)
 {
@@ -24,14 +24,14 @@ LabelPropagator_CPtr LabelPropagatorFactory::make_label_propagator(size_t raycas
   if(deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    propagator.reset(new LabelPropagator_CUDA(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels));
+    propagator.reset(new LabelPropagator_CUDA(raycastResultSize, maxLabelCount, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    propagator.reset(new LabelPropagator_CPU(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels));
+    propagator.reset(new LabelPropagator_CPU(raycastResultSize, maxLabelCount, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels));
   }
 
   return propagator;
