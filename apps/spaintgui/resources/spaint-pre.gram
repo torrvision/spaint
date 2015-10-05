@@ -13,7 +13,8 @@ public <spaint> =
   disable fusion |
   enable fusion |
   switch to combo mode |
+  switch to extrapolation mode |
   switch to normal mode |
   switch to prediction mode |
-  switch to propagation mode |
+  switch to smoothing mode |
   switch to training mode |
