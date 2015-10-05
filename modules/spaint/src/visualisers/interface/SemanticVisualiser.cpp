@@ -23,7 +23,8 @@ SemanticVisualiser::~SemanticVisualiser() {}
 
 void SemanticVisualiser::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                 const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                                const std::vector<Vector3u>& labelColours, bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const
+                                const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha,
+                                ITMUChar4Image *outputImage) const
 {
   // Update the label colours in the memory block.
   Vector3u *labelColoursData = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);
@@ -34,7 +35,7 @@ void SemanticVisualiser::render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMV
   m_labelColoursMB->UpdateDeviceFromHost();
 
   // Render using the new label colours.
-  render_internal(scene, pose, intrinsics, renderState, usePhong, labelAlpha, outputImage);
+  render_internal(scene, pose, intrinsics, renderState, lightingType, labelAlpha, outputImage);
 }
 
 }

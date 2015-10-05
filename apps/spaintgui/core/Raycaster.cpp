@@ -69,15 +69,20 @@ void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState
       break;
     }
     case RT_SEMANTICCOLOUR:
+    case RT_SEMANTICFLAT:
     case RT_SEMANTICLAMBERTIAN:
     case RT_SEMANTICPHONG:
     {
       LabelManager_CPtr labelManager = m_model->get_label_manager();
       const std::vector<Vector3u>& labelColours = labelManager->get_label_colours();
-      bool usePhong = raycastType == RT_SEMANTICPHONG;
+
+      LightingType lightingType = LT_LAMBERTIAN;
+      if(raycastType == RT_SEMANTICFLAT) lightingType = LT_FLAT;
+      else if(raycastType == RT_SEMANTICPHONG) lightingType = LT_PHONG;
+
       float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
       m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, usePhong, labelAlpha, renderState->raycastImage);
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
     default:

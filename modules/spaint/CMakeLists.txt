@@ -461,6 +461,7 @@ include/spaint/visualisers/interface/SemanticVisualiser.h
 ##
 SET(visualisers_shared_headers
 include/spaint/visualisers/shared/DepthVisualiser_Shared.h
+include/spaint/visualisers/shared/SemanticVisualiser_Settings.h
 include/spaint/visualisers/shared/SemanticVisualiser_Shared.h
 )
 
