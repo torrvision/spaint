@@ -477,9 +477,9 @@ void Application::process_voice_input()
 
     // Process any requests to change pipeline mode.
     if(command == "switch to extrapolation mode") m_pipeline->set_mode(Pipeline::MODE_EXTRAPOLATION);
+    if(command == "switch to smoothing mode") m_pipeline->set_mode(Pipeline::MODE_INTERPOLATION);
     if(command == "switch to normal mode") m_pipeline->set_mode(Pipeline::MODE_NORMAL);
     if(command == "switch to prediction mode") m_pipeline->set_mode(Pipeline::MODE_PREDICTION);
-    if(command == "switch to smoothing mode") m_pipeline->set_mode(Pipeline::MODE_INTERPOLATION);
     if(command == "switch to training mode") m_pipeline->set_mode(Pipeline::MODE_TRAINING);
     if(command == "switch to combo mode") m_pipeline->set_mode(Pipeline::MODE_TRAIN_AND_PREDICT);
   }
