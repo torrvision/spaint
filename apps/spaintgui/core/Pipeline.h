@@ -50,20 +50,20 @@ public:
    */
   enum Mode
   {
+    /** In extrapolation mode, labels supplied by the user are extrapolated across surfaces in the scene. */
+    MODE_EXTRAPOLATION,
+
     /** In feature inspection mode, the user can move the mouse around and visualise the features at particular points in the scene. */
     MODE_FEATURE_INSPECTION,
+
+    /** In interpolation mode, voxel labels are filled in based on the labels of neighbouring voxels. */
+    MODE_INTERPOLATION,
 
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
 
     /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
     MODE_PREDICTION,
-
-    /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
-    MODE_PROPAGATION,
-
-    /** TODO */
-    MODE_SMOOTHING,
 
     /** In train-and-predict mode, we alternate training and prediction to achieve a pleasing interactive effect. */
     MODE_TRAIN_AND_PREDICT,
@@ -332,6 +332,13 @@ private:
   ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
 
   /**
+   * \brief Runs the section of the pipeline associated with extrapolation mode.
+   *
+   * \param renderState The render state associated with the camera position from which to extrapolate.
+   */
+  void run_extrapolation_section(const RenderState_CPtr& renderState);
+
+  /**
    * \brief Runs the section of the pipeline associated with feature inspection mode.
    *
    * \param renderState The render state associated with the camera position from which the user is picking voxels.
@@ -339,23 +346,18 @@ private:
   void run_feature_inspection_section(const RenderState_CPtr& renderState);
 
   /**
+   * \brief Runs the section of the pipeline associated with interpolation mode.
+   *
+   * \param renderState The render state associated with the camera position from which to interpolate.
+   */
+  void run_interpolation_section(const RenderState_CPtr& renderState);
+
+  /**
    * \brief Runs the section of the pipeline associated with prediction mode.
    *
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
    */
   void run_prediction_section(const RenderState_CPtr& samplingRenderState);
-
-  /**
-   * \brief Runs the section of the pipeline associated with propagation mode.
-   *
-   * \param renderState The render state associated with the camera position from which to propagate.
-   */
-  void run_propagation_section(const RenderState_CPtr& renderState);
-
-  /**
-   * \brief TODO
-   */
-  void run_smoothing_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with training mode.

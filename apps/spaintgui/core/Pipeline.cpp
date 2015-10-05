@@ -145,34 +145,25 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 {
   switch(m_mode)
   {
+    case MODE_EXTRAPOLATION:
+      run_extrapolation_section(renderState);
+      break;
     case MODE_FEATURE_INSPECTION:
       run_feature_inspection_section(renderState);
       break;
+    case MODE_INTERPOLATION:
+      run_interpolation_section(renderState);
+      break;
     case MODE_PREDICTION:
       run_prediction_section(renderState);
-      //run_smoothing_section(renderState);
-      break;
-    case MODE_PROPAGATION:
-      run_propagation_section(renderState);
-      //run_smoothing_section(renderState);
-      break;
-    case MODE_SMOOTHING:
-      run_smoothing_section(renderState);
       break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame)
-      {
-        run_training_section(renderState);
-      }
-      else
-      {
-        run_prediction_section(renderState);
-        //run_smoothing_section(renderState);
-      }
+      if(trainThisFrame) run_training_section(renderState);
+      else run_prediction_section(renderState);
 
       break;
     }
@@ -341,6 +332,11 @@ ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Sett
   return compositeTracker;
 }
 
+void Pipeline::run_extrapolation_section(const RenderState_CPtr& renderState)
+{
+  m_labelPropagator->extrapolate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+}
+
 void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
@@ -367,6 +363,11 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
   const int delayMs = 1;
   cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
 #endif
+}
+
+void Pipeline::run_interpolation_section(const RenderState_CPtr& renderState)
+{
+  m_labelPropagator->interpolate_labels(renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
@@ -399,16 +400,6 @@ void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderStat
 
   // Mark the voxels with their predicted labels.
   m_interactor->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
-}
-
-void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
-{
-  m_labelPropagator->extrapolate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
-}
-
-void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
-{
-  m_labelPropagator->interpolate_labels(renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
