@@ -68,6 +68,9 @@ void Application::run()
     // If the application is unpaused, run the mode-specific section of the pipeline.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
 
+    // If we're currently recording a video, save the next frame of it to disk.
+    if(m_videoPath) save_video_frame();
+
     // If desired, pause at the end of each frame for debugging purposes.
     if(m_pauseBetweenFrames) m_paused = true;
   }
@@ -171,7 +174,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 
   if(keysym.sym == SDLK_SLASH)
   {
-    save_screenshot();
+    if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_video_recording();
+    else save_screenshot();
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
@@ -551,11 +555,18 @@ void Application::process_voice_input()
   }
 }
 
-void Application::save_screenshot()
+void Application::save_screenshot() const
 {
   boost::filesystem::path p = app_dir("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
   boost::filesystem::create_directories(p.parent_path());
   std::cout << "[spaint] Saving screenshot to " << p << "...\n";
+  PNGUtil::save_image(m_renderer->capture_screenshot(), p.string());
+}
+
+void Application::save_video_frame()
+{
+  ++m_videoFrameNumber;
+  boost::filesystem::path p = *m_videoPath / (boost::format("%06i.png") % m_videoFrameNumber).str();
   PNGUtil::save_image(m_renderer->capture_screenshot(), p.string());
 }
 
@@ -618,6 +629,22 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
+}
+
+void Application::toggle_video_recording()
+{
+  if(m_videoPath)
+  {
+    std::cout << "[spaint] Stopped saving video.\n";
+    m_videoPath.reset();
+  }
+  else
+  {
+    m_videoPath.reset(app_dir("videos") / (TimeUtil::get_iso_timestamp()));
+    m_videoFrameNumber = 0;
+    boost::filesystem::create_directories(*m_videoPath);
+    std::cout << "[spaint] Started saving video to " << *m_videoPath << "...\n";
+  }
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

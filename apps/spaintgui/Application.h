@@ -74,6 +74,12 @@ private:
   /** A set of sub-window configurations that the user can switch between as desired. */
   mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
+  /** The frame number of the current video (if any). */
+  int m_videoFrameNumber;
+
+  /** The path to which the current video is being saved (if any). */
+  boost::optional<boost::filesystem::path> m_videoPath;
+
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
 
@@ -194,7 +200,12 @@ private:
   /**
    * \brief Saves a screenshot to disk.
    */
-  void save_screenshot();
+  void save_screenshot() const;
+
+  /**
+   * \brief Saves the next frame of the video being recorded to disk.
+   */
+  void save_video_frame();
 
   /**
    * \brief Sets up the semantic labels with which the user can label the scene.
@@ -216,6 +227,11 @@ private:
    * \param subwindowConfigurationIndex The index of the sub-window configuration to use.
    */
   void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
+
+  /**
+   * \brief Toggles video recording on or off.
+   */
+  void toggle_video_recording();
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
