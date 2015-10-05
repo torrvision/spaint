@@ -440,6 +440,7 @@ void Application::process_renderer_input()
     if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
     else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
     else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
+    else if(m_inputState.key_down(KEYCODE_4)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICFLAT);
   }
 }
 

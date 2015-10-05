@@ -29,7 +29,7 @@ private:
   /** Override */
   virtual void render_internal(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                               bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const;
+                               LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const;
 };
 
 }

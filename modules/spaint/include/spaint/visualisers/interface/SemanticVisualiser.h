@@ -11,6 +11,7 @@
 #include <ITMLib/Objects/ITMRenderState.h>
 #include <ITMLib/Objects/ITMScene.h>
 
+#include "../shared/SemanticVisualiser_Settings.h"
 #include "../../util/LabelManager.h"
 
 namespace spaint {
@@ -52,13 +53,13 @@ private:
    * \param pose          The camera pose.
    * \param intrinsics    The intrinsic parameters of the camera.
    * \param renderState   The render state corresponding to the specified camera pose.
-   * \param usePhong      Whether or not to use Phong lighting.
+   * \param lightingType  The type of lighting to use.
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
   virtual void render_internal(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
                                const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-                               bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
+                               LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -70,13 +71,14 @@ public:
    * \param intrinsics    The intrinsic parameters of the camera.
    * \param renderState   The render state corresponding to the specified camera pose.
    * \param labelColours  The colours to use for the semantic labels.
-   * \param usePhong      Whether or not to use Phong lighting.
+   * \param lightingType  The type of lighting to use.
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
   void render(const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::Objects::ITMPose *pose,
               const ITMLib::Objects::ITMIntrinsics *intrinsics, const ITMLib::Objects::ITMRenderState *renderState,
-              const std::vector<Vector3u>& labelColours, bool usePhong, float labelAlpha, ITMUChar4Image *outputImage) const;
+              const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha,
+              ITMUChar4Image *outputImage) const;
 };
 
 }
