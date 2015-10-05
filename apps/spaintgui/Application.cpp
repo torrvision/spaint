@@ -9,6 +9,7 @@ using namespace tvginput;
 #include <fstream>
 #include <stdexcept>
 
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
@@ -17,10 +18,12 @@ using boost::assign::map_list_of;
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
+#include <spaint/imageprocessing/PNGUtil.h>
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
 #include <tvgutil/ExecutableFinder.h>
+#include <tvgutil/timing/TimeUtil.h>
 #include <tvgutil/commands/NoOpCommand.h>
 using namespace tvgutil;
 
@@ -74,10 +77,7 @@ void Application::run()
 
 boost::filesystem::path Application::resources_dir()
 {
-  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
-  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
-  p = p / "resources/";                          // spaint/build/bin/apps/spaintgui/resources/
-  return p;
+  return app_dir("resources");
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -167,6 +167,11 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == KEYCODE_SEMICOLON)
   {
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
+  }
+
+  if(keysym.sym == SDLK_SLASH)
+  {
+    save_screenshot();
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
@@ -546,6 +551,14 @@ void Application::process_voice_input()
   }
 }
 
+void Application::save_screenshot()
+{
+  boost::filesystem::path p = app_dir("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
+  boost::filesystem::create_directories(p.parent_path());
+  std::cout << "[spaint] Saving screenshot to " << p << "...\n";
+  PNGUtil::save_image(m_renderer->capture_screenshot(), p.string());
+}
+
 void Application::setup_labels()
 {
   const LabelManager_Ptr& labelManager = m_pipeline->get_model()->get_label_manager();
@@ -605,4 +618,14 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+boost::filesystem::path Application::app_dir(const std::string& name)
+{
+  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
+  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
+  p = p / name;                                  // spaint/build/bin/apps/spaintgui/<name>/
+  return p;
 }

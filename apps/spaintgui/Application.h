@@ -192,6 +192,11 @@ private:
   void process_voice_input();
 
   /**
+   * \brief Saves a screenshot to disk.
+   */
+  void save_screenshot();
+
+  /**
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
@@ -211,6 +216,16 @@ private:
    * \param subwindowConfigurationIndex The index of the sub-window configuration to use.
    */
   void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Gets the path to the application directory with the specified name.
+   *
+   * \param name  The name of the application directory whose path we want to get.
+   * \return      The path to the application directory with the specified name.
+   */
+  static boost::filesystem::path app_dir(const std::string& name);
 };
 
 #endif
