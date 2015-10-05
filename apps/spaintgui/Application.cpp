@@ -224,7 +224,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
-              << "/ = Capture Screenshot\n"
+              << "/ = Save Screenshot\n"
               << "RShift + / = Toggle Video Recording\n";
   }
 }
@@ -637,8 +637,8 @@ void Application::toggle_video_recording()
 {
   if(m_videoPath)
   {
-    std::cout << "[spaint] Stopped saving video.\n";
     m_videoPath.reset();
+    std::cout << "[spaint] Stopped saving video.\n";
   }
   else
   {
@@ -655,6 +655,6 @@ boost::filesystem::path Application::app_dir(const std::string& name)
 {
   boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
   p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
-  p = p / name;                                  // spaint/build/bin/apps/spaintgui/<name>/
+  p = p / name;                                  // spaint/build/bin/apps/spaintgui/<name>
   return p;
 }

@@ -77,7 +77,7 @@ private:
   /** The frame number of the current video (if any). */
   int m_videoFrameNumber;
 
-  /** The path to which the current video is being saved (if any). */
+  /** The path to which the current video (if any) is being saved. */
   boost::optional<boost::filesystem::path> m_videoPath;
 
   /** The stream of commands being sent from the voice command server. */
