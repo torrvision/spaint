@@ -12,7 +12,7 @@
 namespace spaint {
 
 /**
- * \brief Determines whether or not the specified label should be propagated from a specified neighbouring voxel to the voxel of interest.
+ * \brief Determines whether or not the specified label should be extrapolated from a specified neighbouring voxel to the voxel of interest.
  *
  * \param neighbourX                        The x coordinate of the neighbour in the raycast result.
  * \param neighbourY                        The y coordinate of the neighbour in the raycast result.
@@ -26,18 +26,18 @@ namespace spaint {
  * \param surfaceNormals                    The surface normals for the voxels in the raycast result.
  * \param voxelData                         The scene's voxel data.
  * \param indexData                         The scene's index data.
- * \param maxAngleBetweenNormals            The largest angle allowed between the normals of the neighbour and the voxel of interest if propagation is to occur.
- * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of the neighbour and the voxel of interest if propagation is to occur.
- * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of the neighbour and the voxel of interest if propagation is to occur.
+ * \param maxAngleBetweenNormals            The largest angle allowed between the normals of the neighbour and the voxel of interest if extrapolation is to occur.
+ * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of the neighbour and the voxel of interest if extrapolation is to occur.
+ * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of the neighbour and the voxel of interest if extrapolation is to occur.
  * \return                                  true, if the label should be propagated from the neighbour, or false otherwise.
  */
 _CPU_AND_GPU_CODE_
-inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::Label label,
-                                            const Vector3f& loc, const Vector3f& normal, const Vector3u& colour,
-                                            const Vector4f *raycastResult, const Vector3f *surfaceNormals,
-                                            const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                            float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
-                                            float maxSquaredDistanceBetweenVoxels)
+inline bool should_extrapolate_from_neighbour(int neighbourX, int neighbourY, int width, int height, SpaintVoxel::Label label,
+                                              const Vector3f& loc, const Vector3f& normal, const Vector3u& colour,
+                                              const Vector4f *raycastResult, const Vector3f *surfaceNormals,
+                                              const SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                              float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
+                                              float maxSquaredDistanceBetweenVoxels)
 {
   // If the neighbour is outside the raycast result, early out.
   if(neighbourX < 0 || neighbourX >= width || neighbourY < 0 || neighbourY >= height) return false;
@@ -65,7 +65,7 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
   float squaredDistanceBetweenVoxels = dot(posOffset, posOffset);
   float distanceBetweenVoxels = sqrt(squaredDistanceBetweenVoxels);
 
-  // Decide whether or not propagation should occur.
+  // Decide whether or not extrapolation should occur.
   return neighbourVoxel.packedLabel.label == label &&
          angleBetweenNormals <= maxAngleBetweenNormals * distanceBetweenVoxels &&
          squaredDistanceBetweenColours <= maxSquaredDistanceBetweenColours * distanceBetweenVoxels &&
@@ -73,26 +73,26 @@ inline bool should_propagate_from_neighbour(int neighbourX, int neighbourY, int 
 }
 
 /**
- * \brief Propagates the specified label to the specified voxel as necessary, based on its own properties and those of its neighbours.
+ * \brief Extrapolates the specified label to the specified voxel as necessary, based on its own properties and those of its neighbours.
  *
  * \param voxelIndex                        The index of the voxel in the raycast result.
  * \param width                             The width of the raycast result.
  * \param height                            The height of the raycast result.
- * \param label                             The label being propagated.
+ * \param label                             The label being extrapolated.
  * \param raycastResult                     The raycast result.
  * \param surfaceNormals                    The surface normals for the voxels in the raycast result.
  * \param voxelData                         The scene's voxel data.
  * \param indexData                         The scene's index data.
- * \param maxAngleBetweenNormals            The largest angle allowed between the normals of the neighbour and the voxel of interest if propagation is to occur.
- * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of the neighbour and the voxel of interest if propagation is to occur.
- * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of the neighbour and the voxel of interest if propagation is to occur.
+ * \param maxAngleBetweenNormals            The largest angle allowed between the normals of the neighbour and the voxel of interest if extrapolation is to occur.
+ * \param maxSquaredDistanceBetweenColours  The maximum squared distance allowed between the colours of the neighbour and the voxel of interest if extrapolation is to occur.
+ * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of the neighbour and the voxel of interest if extrapolation is to occur.
  */
 _CPU_AND_GPU_CODE_
-inline void propagate_from_neighbours(int voxelIndex, int width, int height, SpaintVoxel::Label label,
-                                      const Vector4f *raycastResult, const Vector3f *surfaceNormals,
-                                      SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                      float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
-                                      float maxSquaredDistanceBetweenVoxels)
+inline void extrapolate_from_neighbours(int voxelIndex, int width, int height, SpaintVoxel::Label label,
+                                        const Vector4f *raycastResult, const Vector3f *surfaceNormals,
+                                        SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                        float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours,
+                                        float maxSquaredDistanceBetweenVoxels)
 {
   // Look up the position, normal and colour of the specified voxel.
   Vector3f loc = raycastResult[voxelIndex].toVector3();
@@ -105,20 +105,20 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
   Vector3u colour = VoxelColourReader<SpaintVoxel::hasColorInformation>::read(voxel);
 
   // Based on these properties and the properties of the neighbouring voxels, decide whether or not
-  // the specified voxel should be marked with the label being propagated, and mark it if so.
+  // the specified voxel should be marked with the label being extrapolated, and mark it if so.
   int x = voxelIndex % width;
   int y = voxelIndex / width;
 
-#define SPFN(nx,ny) should_propagate_from_neighbour( \
+#define SEFN(nx,ny) should_extrapolate_from_neighbour( \
   nx, ny, width, height, label, loc, normal, colour, \
   raycastResult, surfaceNormals, voxelData, indexData, \
   maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, \
   maxSquaredDistanceBetweenVoxels)
 
-  if((SPFN(x - 2, y) && SPFN(x - 5, y)) ||
-     (SPFN(x + 2, y) && SPFN(x + 5, y)) ||
-     (SPFN(x, y - 2) && SPFN(x, y - 5)) ||
-     (SPFN(x, y + 2) && SPFN(x, y + 5)))
+  if((SEFN(x - 2, y) && SEFN(x - 5, y)) ||
+     (SEFN(x + 2, y) && SEFN(x + 5, y)) ||
+     (SEFN(x, y - 2) && SEFN(x, y - 5)) ||
+     (SEFN(x, y + 2) && SEFN(x, y + 5)))
   {
     mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(label, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }
@@ -126,10 +126,13 @@ inline void propagate_from_neighbours(int voxelIndex, int width, int height, Spa
 #undef SPFN
 }
 
+/**
+ * \brief TODO
+ */
 _CPU_AND_GPU_CODE_
-inline void smooth_from_neighbours(int voxelIndex, int width, int height, int maxLabelCount, const Vector4f *raycastResult,
-                                   SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
-                                   float maxSquaredDistanceBetweenVoxels)
+inline void interpolate_from_neighbours(int voxelIndex, int width, int height, int maxLabelCount, const Vector4f *raycastResult,
+                                       SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
+                                       float maxSquaredDistanceBetweenVoxels)
 {
   unsigned char labelCounts[32] = {0,};
 

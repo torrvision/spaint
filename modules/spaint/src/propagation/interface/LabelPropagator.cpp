@@ -20,13 +20,13 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize, float maxAngleBetween
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator::extrapolate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   // Calculate the normals of the voxels in the raycast result.
   calculate_normals(raycastResult, scene);
 
-  // Propagate the specified label across the scene, stopping at position, normal or colour discontinuities.
-  perform_propagation(label, raycastResult, scene);
+  // Extrapolate the specified label across the scene, stopping at position, normal or colour discontinuities.
+  perform_extrapolation(label, raycastResult, scene);
 }
 
 }

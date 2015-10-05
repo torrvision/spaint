@@ -403,12 +403,12 @@ void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderStat
 
 void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+  m_labelPropagator->extrapolate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->smooth_labels(renderState->raycastResult, m_model->get_scene().get());
+  m_labelPropagator->interpolate_labels(renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

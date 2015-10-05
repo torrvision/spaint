@@ -17,7 +17,7 @@ LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize, float maxAngl
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelPropagator_CPU::smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator_CPU::interpolate_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
@@ -32,7 +32,7 @@ void LabelPropagator_CPU::smooth_labels(const ITMFloat4Image *raycastResult, ITM
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    smooth_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData, m_maxSquaredDistanceBetweenVoxels);
+    interpolate_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData, m_maxSquaredDistanceBetweenVoxels);
   }
 }
 
@@ -55,8 +55,7 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
   }
 }
 
-void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                              ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator_CPU::perform_extrapolation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
@@ -71,7 +70,7 @@ void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const IT
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    propagate_from_neighbours(
+    extrapolate_from_neighbours(
       voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData,
       m_maxAngleBetweenNormals, m_maxSquaredDistanceBetweenColours, m_maxSquaredDistanceBetweenVoxels
     );
