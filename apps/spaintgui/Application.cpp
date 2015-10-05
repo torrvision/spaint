@@ -223,7 +223,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RShift + Backspace = Clear All Label Propagations\n"
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
-              << "; = Toggle Median Filtering\n";
+              << "; = Toggle Median Filtering\n"
+              << "/ = Capture Screenshot\n"
+              << "RShift + / = Toggle Video Recording\n";
   }
 }
 
