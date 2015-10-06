@@ -24,12 +24,12 @@ using namespace rafl;
 #include "ocv/OpenCVUtil.h"
 #endif
 
-//#define DEBUG_TOUCH_DISPLAY
+#define DEBUG_TOUCH_DISPLAY
 //#define DEBUG_TOUCH_OUTPUT_FOREST_STATISTICS 
 //#define DEBUG_TOUCH_DISPLAY_CONNECTED_COMPONENTS
 //#define DEBUG_TOUCH_DISPLAY_TOUCH_POINTS
 //#define DEBUG_TOUCH_DISPLAY_RAW_DEPTH_AND_DEPTH_RAYCAST
-//#define DEBUG_TOUCH_DISPLAY_CHANGE_MASK
+#define DEBUG_TOUCH_DISPLAY_CHANGE_MASK
 //#define DEBUG_TOUCH_DISPLAY_DENOISED_CHANGE_MASK
 //#define DEBUG_TOUCH_DISPLAY_TOUCH_PIXELS
 //#define DEBUG_TOUCH_DISPLAY_BEST_CANDIDATE_MASK_AND_DIFF
@@ -256,10 +256,9 @@ void TouchDetector::detect_changes()
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
   m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
 
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_CHANGE_MASK)
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
-  af::array changeMaskCopy = m_changeMask.copy();
-  OpenCVUtil::show_greyscale_figure(m_touchDebuggingOutputWindowName, (changeMaskCopy * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure(m_touchDebuggingOutputWindowName, (m_changeMask.copy() * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 
   // Apply a morphological opening operation to the change mask to reduce noise.
@@ -375,7 +374,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
     touchProb[i] = MapUtil::lookup(m_forest->calculate_pmf(descriptor).get_masses(), isTouchLabel);
 
 #if defined(DEBUG_TOUCH_OUTPUT_PMF)
-    std::cout << "The pmf is: " << m_forest->calculate_pmf(descriptor) << std::endl;
+    std::cout << "The PMF is: " << m_forest->calculate_pmf(descriptor) << std::endl;
 #endif
 
 #if defined(WITH_OPENCV) && (DEBUG_TOUCH_DISPLAY_CANDIDATE_COMPONENTS)
@@ -395,7 +394,6 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
 
   return bestCandidateID;
 }
-
 
 void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 {
