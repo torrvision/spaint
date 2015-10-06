@@ -25,7 +25,9 @@ using namespace rafl;
 #endif
 
 //#define DEBUG_TOUCH_VERBOSE
-//#define DEBUG_TOUCH_DISPLAY
+#define DEBUG_TOUCH_DISPLAY
+#define DEBUG_TOUCH_ON 1
+#define DEBUG_TOUCH_OFF 0
 
 namespace spaint {
 
@@ -35,7 +37,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
 :
   // Debugging variables.
   m_debugDelayMs(30),
-  m_debuggingOutputWindowName("TouchDebuggingOutputWindow"),
+  m_touchDebuggingOutputWindowName("TouchDebuggingOutputWindow"),
 
   // Normal variables.
   m_changeMask(imgSize.y, imgSize.x),
@@ -85,7 +87,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
 std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
 try
 {
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY defined(DEBUG_TOUCH_DISPLAY)defined(DEBUG_TOUCH_DISPLAY) DEBUG_TOUCH_OFF
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY) && DEBUG_TOUCH_OFF
   process_debug_windows();
 #endif
 
@@ -249,7 +251,7 @@ void TouchDetector::detect_changes()
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY) && DEBUG_TOUCH_ON
   // Display the change mask.
   af::array changeMaskCopy = m_changeMask.copy();
-  OpenCVUtil::show_greyscale_figure(m_debuggingOutputWindowName, (m_changeMaskCopy * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure(m_touchDebuggingOutputWindowName, (changeMaskCopy * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 
   // Apply a morphological opening operation to the change mask to reduce noise.
@@ -262,7 +264,8 @@ void TouchDetector::detect_changes()
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY) && DEBUG_TOUCH_OFF
   // Display the thresholded image after applying morphological operations.
-  OpenCVUtil::show_greyscale_figure(m_morphologicalOperatorWindowName, (m_changeMask * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  af::array changeMaskMorphCopy = m_changeMask.copy();
+  OpenCVUtil::show_greyscale_figure(m_morphologicalOperatorWindowName, (changeMaskMorphCopy * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 }
 
@@ -382,6 +385,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
 #endif
 
   return bestCandidateID;
+}
 
 
 void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
@@ -419,21 +423,20 @@ void TouchDetector::process_debug_windows()
   {
     const int imageArea = m_imageHeight * m_imageWidth;
 
-    cv::namedWindow(m_debuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("lowerDepthThresholdMm", m_debuggingOutputWindowName, &m_touchSettings->lowerDepthThresholdMm, 50);
-    cv::createTrackbar("debugDelayMs", m_debuggingOutputWindowName, &m_debugDelayMs, 3000);
-    cv::createTrackbar("minCandidateArea", m_debuggingOutputWindowName, &m_minCandidateArea, imageArea);
-    cv::createTrackbar("maxCandidateArea", m_debuggingOutputWindowName, &m_maxCandidateArea, imageArea);
+    cv::namedWindow(m_touchDebuggingOutputWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("lowerDepthThresholdMm", m_touchDebuggingOutputWindowName, &m_touchSettings->lowerDepthThresholdMm, 50);
+    cv::createTrackbar("debugDelayMs", m_touchDebuggingOutputWindowName, &m_debugDelayMs, 3000);
+    cv::createTrackbar("minCandidateArea", m_touchDebuggingOutputWindowName, &m_minCandidateArea, imageArea);
+    cv::createTrackbar("maxCandidateArea", m_touchDebuggingOutputWindowName, &m_maxCandidateArea, imageArea);
 
-    cv::createTrackbar("kernelSize", m_debuggingOutputWindowName, &m_touchSettings->morphKernelSize, 15);
+    cv::createTrackbar("kernelSize", m_touchDebuggingOutputWindowName, &m_touchSettings->morphKernelSize, 15);
 
   // Update the relevant variables based on the values of the trackbars.
-  m_touchSettings->lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_debuggingOutputWindowName);
-  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_debuggingOutputWindowName);
-  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_debuggingOutputWindowName);
-  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_debuggingOutputWindowName);
-
-  m_touchSettings->morphKernelSize = cv::getTrackbarPos("kernelSize", m_morphologicalOperatorWindowName);
+  m_touchSettings->lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_touchDebuggingOutputWindowName);
+  m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_touchDebuggingOutputWindowName);
+  m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_touchDebuggingOutputWindowName);
+  m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_touchDebuggingOutputWindowName);
+  m_touchSettings->morphKernelSize = cv::getTrackbarPos("kernelSize", m_touchDebuggingOutputWindowName);
 
     initialised = true;
   }
@@ -486,7 +489,7 @@ af::array TouchDetector::select_candidate_components()
   // Keep the remaining non-zero components as candidates.
   af::array candidates = af::where(componentAreas).as(s32);
 
-#ifdef defined(DEBUG_TOUCH_VERBOSE) && DEBUG_TOUCH_OFF
+#if defined(DEBUG_TOUCH_VERBOSE) && DEBUG_TOUCH_OFF
   af::print("componentAreas", componentAreas);
   if(candidates.elements() > 0) af::print("candidates", candidates);
 #endif
