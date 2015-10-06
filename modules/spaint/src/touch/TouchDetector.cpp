@@ -25,7 +25,7 @@ using namespace rafl;
 #endif
 
 //#define DEBUG_TOUCH_VERBOSE
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_DISPLAY
 #define DEBUG_TOUCH_ON 1
 #define DEBUG_TOUCH_OFF 0
 
