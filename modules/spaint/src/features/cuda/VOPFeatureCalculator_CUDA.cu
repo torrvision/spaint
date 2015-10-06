@@ -79,7 +79,7 @@ __global__ void ck_update_coordinate_systems(const int voxelLocationCount, const
   // Initialise the histogram.
   if(blockDim.x >= 64)
   {
-    // If there enough threads in the block, initialise the histogram in parallel.
+    // If there are enough threads in the block, initialise the histogram in parallel.
     if(tid < 64) histogram[tid] = 0.0f;
   }
   else if(threadIdx.x == 0)
