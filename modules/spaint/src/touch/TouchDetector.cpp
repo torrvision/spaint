@@ -430,13 +430,6 @@ void TouchDetector::process_debug_windows()
     cv::createTrackbar("maxCandidateArea", m_touchDebuggingOutputWindowName, &m_maxCandidateArea, imageArea);
     cv::createTrackbar("kernelSize", m_touchDebuggingOutputWindowName, &m_touchSettings->morphKernelSize, 15);
 
-    // Update the relevant variables based on the values of the trackbars.
-    m_touchSettings->lowerDepthThresholdMm = cv::getTrackbarPos("lowerDepthThresholdMm", m_touchDebuggingOutputWindowName);
-    m_debugDelayMs = cv::getTrackbarPos("debugDelayMs", m_touchDebuggingOutputWindowName);
-    m_minCandidateArea = cv::getTrackbarPos("minCandidateArea", m_touchDebuggingOutputWindowName);
-    m_maxCandidateArea = cv::getTrackbarPos("maxCandidateArea", m_touchDebuggingOutputWindowName);
-    m_touchSettings->morphKernelSize = cv::getTrackbarPos("kernelSize", m_touchDebuggingOutputWindowName);
-
     initialised = true;
   }
 
