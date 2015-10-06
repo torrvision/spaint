@@ -270,8 +270,7 @@ void TouchDetector::detect_changes()
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_DENOISED_CHANGE_MASK)
   // Display the change mask after applying morphological operations.
-  af::array changeMaskMorphCopy = m_changeMask.copy();
-  OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", (changeMaskMorphCopy * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
+  OpenCVUtil::show_greyscale_figure("MorphologicalOperatorWindow", (m_changeMask.copy() * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
 }
 
