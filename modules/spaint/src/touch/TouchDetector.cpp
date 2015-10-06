@@ -248,7 +248,7 @@ void TouchDetector::detect_changes()
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
   m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
 
-#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY) && DEBUG_TOUCH_ON
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
   af::array changeMaskCopy = m_changeMask.copy();
   OpenCVUtil::show_greyscale_figure(m_touchDebuggingOutputWindowName, (changeMaskCopy * 255.0f).as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
