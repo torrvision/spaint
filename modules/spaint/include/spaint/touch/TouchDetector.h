@@ -49,10 +49,7 @@ private:
   int m_debugDelayMs;
 
   /** The name of the debugging output window. */
-  std::string m_debuggingOutputWindowName;
-
-  /** The name of the morphological operator output window. */
-  std::string m_morphologicalOperatorWindowName;
+  std::string m_touchDebuggingOutputWindowName;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -83,14 +80,14 @@ private:
   /** The width of the images on which the touch detector is running. */
   int m_imageWidth;
 
+  /** The settings to use for InfiniTAM. */
+  ITMSettings_CPtr m_itmSettings;
+
   /** The maximum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
   int m_maxCandidateArea;
 
   /** The minimum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
   int m_minCandidateArea;
-
-  /** The settings to use for InfiniTAM. */
-  ITMSettings_CPtr m_itmSettings;
 
   /** A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out. */
   ITMFloatImage_Ptr m_thresholdedRawDepth;
