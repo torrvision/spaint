@@ -375,7 +375,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
     std::cout << "The PMF is: " << m_forest->calculate_pmf(descriptor) << std::endl;
 #endif
 
-#if defined(WITH_OPENCV) && (DEBUG_TOUCH_DISPLAY_CANDIDATE_COMPONENTS)
+#if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_CANDIDATE_COMPONENTS)
     OpenCVUtil::show_greyscale_figure("diff mask[" + boost::lexical_cast<std::string>(i) + "]", candidateDiff.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
   }
