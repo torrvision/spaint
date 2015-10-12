@@ -262,10 +262,10 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the label propagator.
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
-  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, maxLabelCount, settings->deviceType);
+  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
 
   // Set up the label smoother.
+  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
 
   // Set the maximum numbers of voxels to use for prediction and training.
@@ -338,7 +338,7 @@ ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Sett
 
 void Pipeline::run_extrapolation_section(const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->extrapolate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+  m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)

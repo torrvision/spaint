@@ -11,29 +11,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize, size_t maxLabelCount, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
-: LabelPropagator(raycastResultSize, maxLabelCount, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
+LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+: LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
-
-//#################### PUBLIC MEMBER FUNCTIONS ####################
-
-void LabelPropagator_CPU::interpolate_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
-{
-  const int height = raycastResult->noDims.y;
-  const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
-  const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
-  const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
-  SpaintVoxel *voxelData = scene->localVBA.GetVoxelBlocks();
-  const int width = raycastResult->noDims.x;
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
-  {
-    interpolate_from_neighbours(voxelIndex, width, height, static_cast<int>(m_maxLabelCount), raycastResultData, voxelData, indexData, m_maxSquaredDistanceBetweenVoxels);
-  }
-}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
@@ -54,7 +34,8 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
   }
 }
 
-void LabelPropagator_CPU::perform_extrapolation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+                                              ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
@@ -69,7 +50,7 @@ void LabelPropagator_CPU::perform_extrapolation(SpaintVoxel::Label label, const 
 #endif
   for(int voxelIndex = 0; voxelIndex < raycastResultSize; ++voxelIndex)
   {
-    extrapolate_from_neighbours(
+    propagate_from_neighbours(
       voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData,
       m_maxAngleBetweenNormals, m_maxSquaredDistanceBetweenColours, m_maxSquaredDistanceBetweenVoxels
     );

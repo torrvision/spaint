@@ -11,9 +11,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator::LabelPropagator(size_t raycastResultSize, size_t maxLabelCount, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+LabelPropagator::LabelPropagator(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
 : m_maxAngleBetweenNormals(maxAngleBetweenNormals),
-  m_maxLabelCount(maxLabelCount),
   m_maxSquaredDistanceBetweenColours(maxSquaredDistanceBetweenColours),
   m_maxSquaredDistanceBetweenVoxels(maxSquaredDistanceBetweenVoxels),
   m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
@@ -21,13 +20,14 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize, size_t maxLabelCount,
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelPropagator::extrapolate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+                                      ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   // Calculate the normals of the voxels in the raycast result.
   calculate_normals(raycastResult, scene);
 
-  // Extrapolate the specified label across the scene, stopping at position, normal or colour discontinuities.
-  perform_extrapolation(label, raycastResult, scene);
+  // Propagate the specified label across the scene, stopping at position, normal or colour discontinuities.
+  perform_propagation(label, raycastResult, scene);
 }
 
 }

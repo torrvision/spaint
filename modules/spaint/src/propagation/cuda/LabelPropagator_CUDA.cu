@@ -24,24 +24,14 @@ __global__ void ck_calculate_normals(const Vector4f *raycastResultData, int rayc
   }
 }
 
-__global__ void ck_interpolate_from_neighbours(const Vector4f *raycastResultData, int raycastResultSize, int width, int height, int maxLabelCount,
-                                               SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData, float maxSquaredDistanceBetweenVoxels)
-{
-  int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
-  if(voxelIndex < raycastResultSize)
-  {
-    interpolate_from_neighbours(voxelIndex, width, height, maxLabelCount, raycastResultData, voxelData, indexData, maxSquaredDistanceBetweenVoxels);
-  }
-}
-
-__global__ void ck_perform_extrapolation(SpaintVoxel::Label label, const Vector4f *raycastResultData, int raycastResultSize, int width, int height,
+__global__ void ck_perform_propagation(SpaintVoxel::Label label, const Vector4f *raycastResultData, int raycastResultSize, int width, int height,
                                        const Vector3f *surfaceNormals, SpaintVoxel *voxelData, const ITMVoxelIndex::IndexData *indexData,
                                        float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
 {
   int voxelIndex = threadIdx.x + blockDim.x * blockIdx.x;
   if(voxelIndex < raycastResultSize)
   {
-    extrapolate_from_neighbours(
+    propagate_from_neighbours(
       voxelIndex, width, height, label, raycastResultData, surfaceNormals, voxelData, indexData,
       maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels
     );
@@ -50,30 +40,9 @@ __global__ void ck_perform_extrapolation(SpaintVoxel::Label label, const Vector4
 
 //#################### CONSTRUCTORS ####################
 
-LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, size_t maxLabelCount, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
-: LabelPropagator(raycastResultSize, maxLabelCount, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
+LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels)
+: LabelPropagator(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels)
 {}
-
-//#################### PUBLIC MEMBER FUNCTIONS ####################
-
-void LabelPropagator_CUDA::interpolate_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
-{
-  const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
-
-  int threadsPerBlock = 256;
-  int numBlocks = (raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
-
-  ck_interpolate_from_neighbours<<<numBlocks,threadsPerBlock>>>(
-    raycastResult->GetData(MEMORYDEVICE_CUDA),
-    raycastResultSize,
-    raycastResult->noDims.x,
-    raycastResult->noDims.y,
-    static_cast<int>(m_maxLabelCount),
-    scene->localVBA.GetVoxelBlocks(),
-    scene->index.getIndexData(),
-    m_maxSquaredDistanceBetweenVoxels
-  );
-}
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
@@ -97,14 +66,15 @@ void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult
 #endif
 }
 
-void LabelPropagator_CUDA::perform_extrapolation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
+                                               ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
 
   int threadsPerBlock = 256;
   int numBlocks = (raycastResultSize + threadsPerBlock - 1) / threadsPerBlock;
 
-  ck_perform_extrapolation<<<numBlocks,threadsPerBlock>>>(
+  ck_perform_propagation<<<numBlocks,threadsPerBlock>>>(
     label,
     raycastResult->GetData(MEMORYDEVICE_CUDA),
     raycastResultSize,
