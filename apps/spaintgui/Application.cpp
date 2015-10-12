@@ -156,11 +156,11 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "I + 3 = To Leap Selector\n"
               << "I + 4 = To Touch Selector\n"
               << "M + 1 = To Normal Mode\n"
-              << "M + 2 = To Extrapolation Mode\n"
+              << "M + 2 = To Propagation Mode\n"
               << "M + 3 = To Training Mode\n"
               << "M + 4 = To Prediction Mode\n"
               << "M + 5 = To Train And Predict Mode\n"
-              << "M + 6 = To Interpolation Mode\n"
+              << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
               << "R + 1 = To Windowed Renderer\n"
               << "R + 2 = To Rift Renderer (Windowed)\n"
@@ -389,11 +389,11 @@ void Application::process_mode_input()
   if(m_inputState.key_down(KEYCODE_m))
   {
     if(m_inputState.key_down(KEYCODE_1))      mode = Pipeline::MODE_NORMAL;
-    else if(m_inputState.key_down(KEYCODE_2)) mode = Pipeline::MODE_EXTRAPOLATION;
+    else if(m_inputState.key_down(KEYCODE_2)) mode = Pipeline::MODE_PROPAGATION;
     else if(m_inputState.key_down(KEYCODE_3)) mode = Pipeline::MODE_TRAINING;
     else if(m_inputState.key_down(KEYCODE_4)) mode = Pipeline::MODE_PREDICTION;
     else if(m_inputState.key_down(KEYCODE_5)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
-    else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_INTERPOLATION;
+    else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_SMOOTHING;
     else if(m_inputState.key_down(KEYCODE_7)) mode = Pipeline::MODE_FEATURE_INSPECTION;
   }
   m_pipeline->set_mode(mode);
@@ -476,12 +476,12 @@ void Application::process_voice_input()
     if(command == "enable fusion") m_pipeline->set_fusion_enabled(true);
 
     // Process any requests to change pipeline mode.
-    if(command == "switch to extrapolation mode") m_pipeline->set_mode(Pipeline::MODE_EXTRAPOLATION);
-    if(command == "switch to smoothing mode") m_pipeline->set_mode(Pipeline::MODE_INTERPOLATION);
     if(command == "switch to normal mode") m_pipeline->set_mode(Pipeline::MODE_NORMAL);
-    if(command == "switch to prediction mode") m_pipeline->set_mode(Pipeline::MODE_PREDICTION);
+    if(command == "switch to propagation mode") m_pipeline->set_mode(Pipeline::MODE_PROPAGATION);
     if(command == "switch to training mode") m_pipeline->set_mode(Pipeline::MODE_TRAINING);
-    if(command == "switch to combo mode") m_pipeline->set_mode(Pipeline::MODE_TRAIN_AND_PREDICT);
+    if(command == "switch to prediction mode") m_pipeline->set_mode(Pipeline::MODE_PREDICTION);
+    if(command == "switch to correction mode") m_pipeline->set_mode(Pipeline::MODE_TRAIN_AND_PREDICT);
+    if(command == "switch to smoothing mode") m_pipeline->set_mode(Pipeline::MODE_SMOOTHING);
   }
 }
 
