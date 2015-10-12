@@ -14,6 +14,7 @@
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
+#include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
 
 #include "Interactor.h"
@@ -120,6 +121,9 @@ private:
 
   /** The label propagator. */
   spaint::LabelPropagator_CPtr m_labelPropagator;
+
+  /** The label smoother. */
+  spaint::LabelSmoother_CPtr m_labelSmoother;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;

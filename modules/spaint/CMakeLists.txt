@@ -373,6 +373,47 @@ IF(WITH_ARRAYFIRE)
 ENDIF()
 
 ##
+SET(smoothing_sources
+src/smoothing/LabelSmootherFactory.cpp
+)
+
+SET(smoothing_headers
+include/spaint/smoothing/LabelSmootherFactory.h
+)
+
+##
+SET(smoothing_cpu_sources
+src/smoothing/cpu/LabelSmoother_CPU.cpp
+)
+
+SET(smoothing_cpu_headers
+include/spaint/smoothing/cpu/LabelSmoother_CPU.h
+)
+
+##
+SET(smoothing_cuda_sources
+src/smoothing/cuda/LabelSmoother_CUDA.cu
+)
+
+SET(smoothing_cuda_headers
+include/spaint/smoothing/cuda/LabelSmoother_CUDA.h
+)
+
+##
+SET(smoothing_interface_sources
+src/smoothing/interface/LabelSmoother.cpp
+)
+
+SET(smoothing_interface_headers
+include/spaint/smoothing/interface/LabelSmoother.h
+)
+
+##
+SET(smoothing_shared_headers
+include/spaint/smoothing/shared/LabelSmoother_Shared.h
+)
+
+##
 SET(touch_sources
 src/touch/TouchDescriptorCalculator.cpp
 src/touch/TouchDetector.cpp
@@ -487,6 +528,9 @@ ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
 ${selectors_sources}
+${smoothing_sources}
+${smoothing_cpu_sources}
+${smoothing_interface_sources}
 ${trackers_sources}
 ${util_sources}
 ${visualisers_cpu_sources}
@@ -519,6 +563,10 @@ ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
 ${selectors_headers}
+${smoothing_headers}
+${smoothing_cpu_headers}
+${smoothing_interface_headers}
+${smoothing_shared_headers}
 ${trackers_headers}
 ${util_headers}
 ${visualisers_cpu_headers}
@@ -550,6 +598,7 @@ IF(WITH_CUDA)
     ${propagation_cuda_sources}
     ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
+    ${smoothing_cuda_sources}
     ${visualisers_cuda_sources}
   )
 
@@ -560,6 +609,7 @@ IF(WITH_CUDA)
     ${propagation_cuda_headers}
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
+    ${smoothing_cuda_headers}
     ${visualisers_cuda_headers}
   )
 
@@ -615,6 +665,11 @@ SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sour
 SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_sources} ${selectiontransformers_interface_headers})
 SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
 SOURCE_GROUP(selectors FILES ${selectors_sources} ${selectors_headers})
+SOURCE_GROUP(smoothing FILES ${smoothing_sources} ${smoothing_headers})
+SOURCE_GROUP(smoothing\\cpu FILES ${smoothing_cpu_sources} ${smoothing_cpu_headers})
+SOURCE_GROUP(smoothing\\cuda FILES ${smoothing_cuda_sources} ${smoothing_cuda_headers})
+SOURCE_GROUP(smoothing\\interface FILES ${smoothing_interface_sources} ${smoothing_interface_headers})
+SOURCE_GROUP(smoothing\\shared FILES ${smoothing_shared_headers})
 SOURCE_GROUP(touch FILES ${touch_sources} ${touch_headers})
 SOURCE_GROUP(trackers FILES ${trackers_sources} ${trackers_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})

@@ -21,6 +21,7 @@ using namespace InfiniTAM::Engine;
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
+#include <spaint/smoothing/LabelSmootherFactory.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
@@ -264,6 +265,9 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, maxLabelCount, settings->deviceType);
 
+  // Set up the label smoother.
+  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
+
   // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
 #ifndef USE_LOW_POWER_MODE
@@ -367,7 +371,7 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 
 void Pipeline::run_interpolation_section(const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->interpolate_labels(renderState->raycastResult, m_model->get_scene().get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
