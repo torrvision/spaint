@@ -77,8 +77,10 @@ inline void smooth_from_neighbours(int voxelIndex, int width, int height, int ma
     }
   }
 
-  // If the best label has enough support, use it to update the label of the target voxel.
-  if(bestLabel != 0 && bestLabelCount > 5)
+  // If there is a best label, and at least a specified number of the neigbouring voxels are labelled with it,
+  // use it to update the label of the target voxel.
+  const int bestLabelThreshold = 6;
+  if(bestLabel != 0 && bestLabelCount >= bestLabelThreshold)
   {
     mark_voxel(loc.toShortRound(), SpaintVoxel::PackedLabel(bestLabel, SpaintVoxel::LG_PROPAGATED), NULL, voxelData, indexData);
   }

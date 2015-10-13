@@ -359,7 +359,7 @@ private:
   /**
    * \brief Runs the section of the pipeline associated with smoothing mode.
    *
-   * \param renderState The render state associated with the camera position from which to smooth.
+   * \param renderState The render state associated with the camera position from which to smoothe.
    */
   void run_smoothing_section(const RenderState_CPtr& renderState);
 

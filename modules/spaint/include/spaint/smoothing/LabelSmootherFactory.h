@@ -25,8 +25,8 @@ struct LabelSmootherFactory
    * \brief Makes a label smoother.
    *
    * \param maxLabelCount                     The maximum number of labels that can be in use.
-   * \param deviceType                        The device on which the label propagator should operate.
-   * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if propagation is to occur.
+   * \param deviceType                        The device on which the label smoother should operate.
+   * \param maxSquaredDistanceBetweenVoxels   The maximum squared distance allowed between the positions of neighbouring voxels if smoothing is to occur.
    * \return                                  The label smoother.
    */
   static LabelSmoother_CPtr make_label_smoother(size_t maxLabelCount, ITMLibSettings::DeviceType deviceType, float maxSquaredDistanceBetweenVoxels = 10.0f * 10.0f);

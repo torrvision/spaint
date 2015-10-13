@@ -5,8 +5,6 @@
 
 #include "smoothing/interface/LabelSmoother.h"
 
-#include "util/MemoryBlockFactory.h"
-
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
