@@ -21,6 +21,7 @@ using namespace InfiniTAM::Engine;
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
+#include <spaint/smoothing/LabelSmootherFactory.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
@@ -154,6 +155,9 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
     case MODE_PROPAGATION:
       run_propagation_section(renderState);
       break;
+    case MODE_SMOOTHING:
+      run_smoothing_section(renderState);
+      break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
@@ -260,9 +264,12 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
   m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
 
+  // Set up the label smoother.
+  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
+  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
+
   // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
-  const size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
 #ifndef USE_LOW_POWER_MODE
   m_maxPredictionVoxelCount = 8192;
 #else
@@ -392,6 +399,11 @@ void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderStat
 void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 {
   m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+}
+
+void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
+{
+  m_labelSmoother->smooth_labels(renderState->raycastResult, m_model->get_scene().get());
 }
 
 void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

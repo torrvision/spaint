@@ -14,6 +14,7 @@
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
+#include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
 
 #include "Interactor.h"
@@ -61,6 +62,9 @@ public:
 
     /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
     MODE_PROPAGATION,
+
+    /** In smoothing mode, voxel labels are filled in based on the labels of neighbouring voxels. */
+    MODE_SMOOTHING,
 
     /** In train-and-predict mode, we alternate training and prediction to achieve a pleasing interactive effect. */
     MODE_TRAIN_AND_PREDICT,
@@ -117,6 +121,9 @@ private:
 
   /** The label propagator. */
   spaint::LabelPropagator_CPtr m_labelPropagator;
+
+  /** The label smoother. */
+  spaint::LabelSmoother_CPtr m_labelSmoother;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
@@ -348,6 +355,13 @@ private:
    * \param renderState The render state associated with the camera position from which to propagate.
    */
   void run_propagation_section(const RenderState_CPtr& renderState);
+
+  /**
+   * \brief Runs the section of the pipeline associated with smoothing mode.
+   *
+   * \param renderState The render state associated with the camera position from which to smoothe.
+   */
+  void run_smoothing_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with training mode.
