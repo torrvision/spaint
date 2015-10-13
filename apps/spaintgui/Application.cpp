@@ -159,7 +159,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 2 = To Propagation Mode\n"
               << "M + 3 = To Training Mode\n"
               << "M + 4 = To Prediction Mode\n"
-              << "M + 5 = To Train And Predict Mode\n"
+              << "M + 5 = To Correction Mode\n"
               << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
               << "R + 1 = To Windowed Renderer\n"
