@@ -24,7 +24,7 @@ using namespace rafl;
 #include "ocv/OpenCVUtil.h"
 #endif
 
-#define DEBUG_TOUCH_DISPLAY
+//#define DEBUG_TOUCH_DISPLAY
 //#define DEBUG_TOUCH_OUTPUT_FOREST_STATISTICS 
 //#define DEBUG_TOUCH_DISPLAY_CONNECTED_COMPONENTS
 //#define DEBUG_TOUCH_DISPLAY_TOUCH_POINTS
@@ -372,10 +372,11 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
     touchProb[i] = MapUtil::lookup(m_forest->calculate_pmf(descriptor).get_masses(), isTouchLabel);
 
 #if defined(DEBUG_TOUCH_OUTPUT_PMF)
-    std::cout << "The PMF is: " << m_forest->calculate_pmf(descriptor) << std::endl;
+    std::cout << "The PMF is: " << m_forest->calculate_pmf(descriptor) << '\n';
 #endif
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_CANDIDATE_COMPONENTS)
+    // Display each candidate difference image.
     OpenCVUtil::show_greyscale_figure("diff mask[" + boost::lexical_cast<std::string>(i) + "]", candidateDiff.as(u8).host<unsigned char>(), m_imageWidth, m_imageHeight, OpenCVUtil::COL_MAJOR);
 #endif
   }
