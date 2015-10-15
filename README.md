@@ -8,7 +8,7 @@ This is an open-source, real-time implementation of the interactive *SemanticPai
 
 This version of the *SemanticPaint* concept was implemented by [Stuart Golodetz](http://research.gxstudios.net) and [Michael Sapienza](http://sites.google.com/site/mikesapi), under the supervision of [Professor Philip Torr](http://www.robots.ox.ac.uk/~tvg).
 
-It is built on top of [InfiniTAM v2](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact either [Victor Adrian Prisacariu](victor@viprad.net) or [Olaf Kaehler](olaf@robots.ox.ac.uk).
+It is built on top of [InfiniTAM v2](http://www.robots.ox.ac.uk/~victor/infinitam/index.html), a highly efficient, open-source 3D reconstruction engine developed by Oxford's [Active Vision Group](http://www.robots.ox.ac.uk/OxVisionLib). Anyone interested in InfiniTAM should contact either [Victor Adrian Prisacariu](mailto:victor@viprad.net) or [Olaf Kaehler](mailto:olaf@robots.ox.ac.uk).
 
 The original concept for *SemanticPaint* was developed by a large number of people both at the University of Oxford and at Microsoft Research: Julien Valentin, Vibhav Vineet, Ming-Ming Cheng, David Kim, Shahram Izadi, Jamie Shotton, Pushmeet Kohli, Matthias Niessner, Antonio Criminisi and Philip H S Torr.
 
