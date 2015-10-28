@@ -25,11 +25,11 @@ class Selector
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef ORUtils::MemoryBlock<Vector3s> Selection;
   typedef boost::shared_ptr<Selection> Selection_Ptr;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### PROTECTED VARIABLES ####################
 protected:

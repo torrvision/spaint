@@ -4,6 +4,7 @@
  */
 
 #include "trackers/ViconTracker.h"
+using namespace ITMLib;
 using namespace ViconDataStreamSDK::CPP;
 
 #include <fstream>
@@ -46,6 +47,16 @@ ViconTracker::~ViconTracker()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool ViconTracker::requiresColourRendering() const
+{
+  return false;
+}
+
+bool ViconTracker::requiresDepthReliability() const
+{
+  return false;
+}
 
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {

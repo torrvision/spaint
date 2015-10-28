@@ -6,7 +6,7 @@
 #include "trackers/RobustViconTracker.h"
 
 #include <ITMLib/Engine/ITMTrackerFactory.h>
-using namespace ITMLib::Engine;
+using namespace ITMLib;
 
 #include "util/CameraPoseConverter.h"
 using namespace rigging;
@@ -15,16 +15,26 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-RobustViconTracker::RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& trackedImageSize, const Settings_CPtr& settings,
-                                       const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene)
+RobustViconTracker::RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                                       const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene)
 {
   m_viconTracker.reset(new ViconTracker(host, subjectName));
   m_icpTracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-    trackedImageSize, settings.get(), lowLevelEngine.get(), NULL, scene.get()
+    rgbImageSize, depthImageSize, settings.get(), lowLevelEngine.get(), NULL, scene.get()
   ));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool RobustViconTracker::requiresColourRendering() const
+{
+  return false;
+}
+
+bool RobustViconTracker::requiresDepthReliability() const
+{
+  return false;
+}
 
 void RobustViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {

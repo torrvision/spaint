@@ -4,6 +4,7 @@
  */
 
 #include "imageprocessing/ImageProcessorFactory.h"
+using namespace ITMLib;
 
 #include "imageprocessing/cpu/ImageProcessor_CPU.h"
 

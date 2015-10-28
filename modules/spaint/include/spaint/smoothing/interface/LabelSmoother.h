@@ -45,7 +45,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+  virtual void smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 };
 
 //#################### TYPEDEFS ####################

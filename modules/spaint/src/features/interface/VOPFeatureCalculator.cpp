@@ -35,7 +35,7 @@ VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                              const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                              const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                               ORUtils::MemoryBlock<float>& featuresMB) const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY

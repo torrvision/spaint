@@ -4,6 +4,7 @@
  */
 
 #include "selectiontransformers/interface/SelectionTransformer.h"
+using namespace ITMLib;
 
 namespace spaint {
 

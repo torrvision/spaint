@@ -4,6 +4,7 @@
  */
 
 #include "Renderer.h"
+using namespace ITMLib;
 
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>

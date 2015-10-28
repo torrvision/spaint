@@ -24,9 +24,9 @@ private:
   typedef boost::shared_ptr<const ITMUChar4Image> UChar4Image_CPtr;
 public:
   typedef boost::function<void(const UChar4Image_CPtr&,const UChar4Image_Ptr&)> Postprocessor;
-  typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -79,7 +79,7 @@ public:
    * \param raycastType   The type of raycast to generate.
    * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType = RT_LAMBERTIAN,
+  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMLib::ITMPose& pose, RaycastType = RT_LAMBERTIAN,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**

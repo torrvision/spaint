@@ -25,7 +25,7 @@ struct CameraPoseConverter
    * \param camera  The camera.
    * \return        The pose of the camera.
    */
-  static ITMLib::Objects::ITMPose camera_to_pose(const rigging::Camera& camera);
+  static ITMLib::ITMPose camera_to_pose(const rigging::Camera& camera);
 
   /**
    * \brief Converts an InfiniTAM pose to a camera.
@@ -33,7 +33,7 @@ struct CameraPoseConverter
    * \param pose  The pose.
    * \return      A camera with the specified pose.
    */
-  static rigging::SimpleCamera pose_to_camera(const ITMLib::Objects::ITMPose& pose);
+  static rigging::SimpleCamera pose_to_camera(const ITMLib::ITMPose& pose);
 
   /**
    * \brief Converts an InfiniTAM pose to a model-view matrix.
@@ -41,7 +41,7 @@ struct CameraPoseConverter
    * \param pose  The pose.
    * \return      The model-view matrix.
    */
-  static Eigen::Matrix4f pose_to_modelview(const ITMLib::Objects::ITMPose& pose);
+  static Eigen::Matrix4f pose_to_modelview(const ITMLib::ITMPose& pose);
 };
 
 }

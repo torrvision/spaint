@@ -36,12 +36,12 @@ private:
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-  typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLibSettings> ITMSettings_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
   typedef int Label;
   typedef rafl::RandomForest<Label> RF;
   typedef boost::shared_ptr<RF> RF_Ptr;
-  typedef boost::shared_ptr<const ITMView> View_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:

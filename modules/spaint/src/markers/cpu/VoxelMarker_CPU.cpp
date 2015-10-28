@@ -23,7 +23,7 @@ void VoxelMarker_CPU::clear_labels(SpaintVoxel *voxels, int voxelCount, Clearing
 }
 
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
-                                  ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                  ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                   ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB,
                                   MarkingMode mode) const
 {
@@ -45,7 +45,7 @@ void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLoc
 
 void VoxelMarker_CPU::mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                                   const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
-                                  ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                  ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                   ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB,
                                   MarkingMode mode) const
 {

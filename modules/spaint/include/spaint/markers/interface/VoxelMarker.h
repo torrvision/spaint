@@ -46,7 +46,7 @@ public:
    * \param mode              The marking mode.
    */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
-                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                           ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
                            MarkingMode mode = NORMAL_MARKING) const = 0;
 
@@ -61,7 +61,7 @@ public:
    */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
                            const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
-                           ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                           ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
                            MarkingMode mode = NORMAL_MARKING) const = 0;
 };

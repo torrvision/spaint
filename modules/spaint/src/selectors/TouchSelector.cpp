@@ -18,6 +18,7 @@
 #include "picking/cuda/Picker_CUDA.h"
 #endif
 
+using namespace ITMLib;
 using namespace rigging;
 using namespace tvginput;
 

@@ -15,7 +15,7 @@ namespace spaint {
 /**
  * \brief An instance of a class deriving from this one can be used to track the camera pose in a way that allows it to detect tracking failures.
  */
-class FallibleTracker : public ITMLib::Engine::ITMTracker
+class FallibleTracker : public ITMLib::ITMTracker
 {
   //#################### PROTECTED VARIABLES ####################
 protected:

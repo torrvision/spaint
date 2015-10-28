@@ -9,7 +9,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-Matrix4f RGBDUtil::calculate_depth_to_rgb_matrix_3D(const ITMLib::Objects::ITMRGBDCalib& calib)
+Matrix4f RGBDUtil::calculate_depth_to_rgb_matrix_3D(const ITMLib::ITMRGBDCalib& calib)
 {
   // Calculate the transformation from 3D world coordinates (depth) to 3D image coordinates (depth).
   Matrix4f depthCalib = make_calibration_matrix(calib.intrinsics_d);
@@ -27,7 +27,7 @@ Matrix4f RGBDUtil::calculate_depth_to_rgb_matrix_3D(const ITMLib::Objects::ITMRG
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-Matrix4f RGBDUtil::make_calibration_matrix(const ITMLib::Objects::ITMIntrinsics& intrinsics)
+Matrix4f RGBDUtil::make_calibration_matrix(const ITMLib::ITMIntrinsics& intrinsics)
 {
   /*
   The indices here are column-first not row-first, thus:

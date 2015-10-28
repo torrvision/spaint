@@ -117,7 +117,7 @@ private:
 public:
   /** Override */
   virtual void calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                  const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                  const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                   ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */

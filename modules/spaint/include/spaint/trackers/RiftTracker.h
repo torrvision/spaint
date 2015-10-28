@@ -15,7 +15,7 @@ namespace spaint {
 /**
  * \brief An instance of this class can be used to track the rotation of the camera using an Oculus Rift.
  */
-class RiftTracker : public ITMLib::Engine::ITMTracker
+class RiftTracker : public ITMLib::ITMTracker
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -32,10 +32,16 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void TrackCamera(ITMTrackingState *trackingState, const ITMView *view);
+  virtual bool requiresColourRendering() const;
 
   /** Override */
-  virtual void UpdateInitialPose(ITMTrackingState *trackingState);
+  virtual bool requiresDepthReliability() const;
+
+  /** Override */
+  virtual void TrackCamera(ITMLib::ITMTrackingState *trackingState, const ITMLib::ITMView *view);
+
+  /** Override */
+  virtual void UpdateInitialPose(ITMLib::ITMTrackingState *trackingState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -55,7 +61,7 @@ private:
    * \param trackingState The InfiniTAM tracking state.
    * \return              true, if the update succeeded, or false otherwise.
    */
-  bool try_update_tracking_state(ITMTrackingState *trackingState) const;
+  bool try_update_tracking_state(ITMLib::ITMTrackingState *trackingState) const;
 };
 
 }

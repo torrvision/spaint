@@ -27,7 +27,7 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The device on which the transformer is operating. */
-  const ITMLibSettings::DeviceType m_deviceType;
+  const ITMLib::ITMLibSettings::DeviceType m_deviceType;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -36,7 +36,7 @@ protected:
    *
    * \param deviceType  The device on which the transformer is operating.
    */
-  explicit SelectionTransformer(ITMLibSettings::DeviceType deviceType);
+  explicit SelectionTransformer(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   //#################### DESTRUCTOR ####################
 public:

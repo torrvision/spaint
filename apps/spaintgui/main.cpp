@@ -16,6 +16,7 @@
 
 #include <Engine/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
+using namespace ITMLib;
 
 #ifdef WITH_OVR
   #include <OVR_CAPI.h>
@@ -94,12 +95,14 @@ try
     // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
     trackerParams = "192.168.10.1:801";
 
+#if 0
     // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
     settings->noHierarchyLevels = 2;
     delete [] settings->trackingRegime;
     settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
     settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
     settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
+#endif
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
     trackerType = Pipeline::TRACKER_INFINITAM;

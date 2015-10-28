@@ -58,7 +58,7 @@ public:
    * \param invalidDepthValue The depth value to use for pixels whose rays do not intersect the scene.
    * \param outputImage       The image into which to write the depth visualisation of the scene.
    */
-  virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::Objects::ITMRenderState *renderState,
+  virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::ITMRenderState *renderState,
                             float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const = 0;
 };
 

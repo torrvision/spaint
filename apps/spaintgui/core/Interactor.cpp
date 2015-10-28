@@ -4,6 +4,7 @@
  */
 
 #include "Interactor.h"
+using namespace ITMLib;
 using namespace tvginput;
 
 #include <spaint/markers/cpu/VoxelMarker_CPU.h>

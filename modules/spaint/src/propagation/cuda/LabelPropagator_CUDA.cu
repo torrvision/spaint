@@ -46,7 +46,7 @@ LabelPropagator_CUDA::LabelPropagator_CUDA(size_t raycastResultSize, float maxAn
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
 
@@ -67,7 +67,7 @@ void LabelPropagator_CUDA::calculate_normals(const ITMFloat4Image *raycastResult
 }
 
 void LabelPropagator_CUDA::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                               ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+                                               ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
 

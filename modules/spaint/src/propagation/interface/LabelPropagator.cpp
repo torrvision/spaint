@@ -21,7 +21,7 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize, float maxAngleBetween
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                      ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+                                      ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   // Calculate the normals of the voxels in the raycast result.
   calculate_normals(raycastResult, scene);

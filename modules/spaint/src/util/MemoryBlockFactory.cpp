@@ -4,6 +4,7 @@
  */
 
 #include "util/MemoryBlockFactory.h"
+using namespace ITMLib;
 
 namespace spaint {
 

@@ -22,14 +22,14 @@ class Model
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
-  typedef boost::shared_ptr<const ITMLibSettings> Settings_CPtr;
-  typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
-  typedef boost::shared_ptr<const ITMTrackingState> TrackingState_CPtr;
-  typedef boost::shared_ptr<ITMView> View_Ptr;
-  typedef boost::shared_ptr<const ITMView> View_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -86,7 +86,7 @@ public:
    *
    * \return  The intrinsic parameters for the camera.
    */
-  const ITMIntrinsics& get_intrinsics() const;
+  const ITMLib::ITMIntrinsics& get_intrinsics() const;
 
   /**
    * \brief Gets the label manager.
@@ -107,7 +107,7 @@ public:
    *
    * \return  The current camera pose.
    */
-  const ITMPose& get_pose() const;
+  const ITMLib::ITMPose& get_pose() const;
 
   /**
    * \brief Gets the path to the resources directory.
@@ -177,7 +177,7 @@ public:
    *
    * \param view  The new current view of the scene.
    */
-  void set_view(ITMView *view);
+  void set_view(ITMLib::ITMView *view);
 };
 
 //#################### TYPEDEFS ####################

@@ -36,7 +36,7 @@ public:
    * \param featuresMB        A memory block into which to store the calculated feature descriptors (packed sequentially).
    */
   virtual void calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                  const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+                                  const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
                                   ORUtils::MemoryBlock<float>& featuresMB) const = 0;
 
   /**

@@ -23,7 +23,7 @@ class Interactor
 private:
   typedef boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_Ptr;
   typedef boost::shared_ptr<const ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
-  typedef boost::shared_ptr<const ITMLib::Objects::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<spaint::SelectionTransformer> SelectionTransformer_Ptr;

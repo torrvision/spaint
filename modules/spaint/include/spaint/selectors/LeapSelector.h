@@ -28,7 +28,7 @@ class LeapSelector : public Selector
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
 
   //#################### PRIVATE VARIABLES ####################

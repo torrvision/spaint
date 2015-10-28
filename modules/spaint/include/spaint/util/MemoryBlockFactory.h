@@ -20,7 +20,7 @@ class MemoryBlockFactory
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The type of device on which the memory blocks will primarily be used. */
-  ITMLibSettings::DeviceType m_deviceType;
+  ITMLib::ITMLibSettings::DeviceType m_deviceType;
 
   //#################### SINGLETON IMPLEMENTATION ####################
 private:
@@ -48,7 +48,7 @@ public:
   template <typename T>
   boost::shared_ptr<ORUtils::MemoryBlock<T> > make_block(size_t dataSize) const
   {
-    bool allocateGPU = m_deviceType == ITMLibSettings::DEVICE_CUDA;
+    bool allocateGPU = m_deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA;
     return boost::shared_ptr<ORUtils::MemoryBlock<T> >(new ORUtils::MemoryBlock<T>(dataSize, true, allocateGPU));
   }
 
@@ -60,7 +60,7 @@ public:
    *
    * \param deviceType  The type of device on which the memory blocks made by the factory will primarily be used.
    */
-  void set_device_type(ITMLibSettings::DeviceType deviceType);
+  void set_device_type(ITMLib::ITMLibSettings::DeviceType deviceType);
 };
 
 }

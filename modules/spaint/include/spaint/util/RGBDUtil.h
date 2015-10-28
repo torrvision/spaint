@@ -23,7 +23,7 @@ public:
    * \param calib The RGBD calibration parameters.
    * \return      A matrix mapping points from 3D depth image coordinates to 3D RGB image coordinates.
    */
-  static Matrix4f calculate_depth_to_rgb_matrix_3D(const ITMLib::Objects::ITMRGBDCalib& calib);
+  static Matrix4f calculate_depth_to_rgb_matrix_3D(const ITMLib::ITMRGBDCalib& calib);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
@@ -35,7 +35,7 @@ private:
    * \param intrinsics  The intrinsic camera parameters.
    * \return            The corresponding 4x4 calibration matrix.
    */
-  static Matrix4f make_calibration_matrix(const ITMLib::Objects::ITMIntrinsics& intrinsics);
+  static Matrix4f make_calibration_matrix(const ITMLib::ITMIntrinsics& intrinsics);
 };
 
 }

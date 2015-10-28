@@ -2,6 +2,6 @@
 
 int main()
 {
-  ITMLib::Objects::ITMPose pose;
+  ITMLib::ITMPose pose;
   return 0;
 }

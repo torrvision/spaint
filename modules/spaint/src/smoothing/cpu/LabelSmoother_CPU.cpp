@@ -17,7 +17,7 @@ LabelSmoother_CPU::LabelSmoother_CPU(size_t maxLabelCount, float maxSquaredDista
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelSmoother_CPU::smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelSmoother_CPU::smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();

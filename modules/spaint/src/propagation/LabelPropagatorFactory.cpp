@@ -4,6 +4,7 @@
  */
 
 #include "propagation/LabelPropagatorFactory.h"
+using namespace ITMLib;
 
 #include "propagation/cpu/LabelPropagator_CPU.h"
 

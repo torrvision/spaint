@@ -31,7 +31,7 @@ public:
    * \param deviceType  The device on which the transformer should operate.
    * \return            The selection transformer.
    */
-  static SelectionTransformer_Ptr make_voxel_to_cube(int radius, ITMLibSettings::DeviceType deviceType);
+  static SelectionTransformer_Ptr make_voxel_to_cube(int radius, ITMLib::ITMLibSettings::DeviceType deviceType);
 };
 
 }

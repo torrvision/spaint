@@ -53,7 +53,7 @@ private:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 
   /**
    * \brief Performs the propagation of the specified label across the scene in a device-specific way.
@@ -63,7 +63,7 @@ private:
    * \param scene         The scene.
    */
   virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                   ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+                                   ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -75,7 +75,7 @@ public:
    * \param scene         The scene.
    */
   void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                       ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
+                       ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -4,6 +4,7 @@
  */
 
 #include "trackers/RiftTracker.h"
+using namespace ITMLib;
 
 #include <stdexcept>
 
@@ -25,6 +26,16 @@ RiftTracker::RiftTracker()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool RiftTracker::requiresColourRendering() const
+{
+  return false;
+}
+
+bool RiftTracker::requiresDepthReliability() const
+{
+  return false;
+}
 
 void RiftTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {

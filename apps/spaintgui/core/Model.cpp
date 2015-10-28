@@ -4,6 +4,7 @@
  */
 
 #include "Model.h"
+using namespace ITMLib;
 using namespace spaint;
 
 //#################### CONSTRUCTORS ####################

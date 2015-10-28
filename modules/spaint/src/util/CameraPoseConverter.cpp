@@ -4,7 +4,7 @@
  */
 
 #include "util/CameraPoseConverter.h"
-using namespace ITMLib::Objects;
+using namespace ITMLib;
 using namespace rigging;
 
 namespace spaint {
@@ -75,7 +75,7 @@ ITMPose CameraPoseConverter::camera_to_pose(const Camera& camera)
   return pose;
 }
 
-SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::Objects::ITMPose& pose)
+SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::ITMPose& pose)
 {
   // Note: This can be derived by looking at the matrices in camera_to_pose.
   const Matrix4f& M = pose.GetM();
@@ -86,7 +86,7 @@ SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::Objects::ITMPose&
   return SimpleCamera(p, n, v);
 }
 
-Eigen::Matrix4f CameraPoseConverter::pose_to_modelview(const ITMLib::Objects::ITMPose& pose)
+Eigen::Matrix4f CameraPoseConverter::pose_to_modelview(const ITMLib::ITMPose& pose)
 {
   /*
   Calculate the model-view matrix corresponding to the specified InfiniTAM pose. The pose matrix transforms

@@ -35,7 +35,7 @@ public:
    * \param offset        The offset into the memory block at which to write.
    * \return              true, if the ray hit the scene, or false otherwise.
    */
-  virtual bool pick(int x, int y, const ITMLib::Objects::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset = 0) const = 0;
+  virtual bool pick(int x, int y, const ITMLib::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset = 0) const = 0;
 
   /**
    * \brief Converts one or more pick points in Vector3f format into Vector3s format.

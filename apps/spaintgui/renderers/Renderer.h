@@ -40,7 +40,7 @@ protected:
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 public:
-  typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -200,7 +200,7 @@ protected:
    * \param interactor  The interactor that is being used to interact with the scene.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
+  void render_scene(const ITMLib::ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -217,7 +217,7 @@ private:
    * \param pose        The camera pose.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_reconstructed_scene(const ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const;
+  void render_reconstructed_scene(const ITMLib::ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
@@ -225,7 +225,7 @@ private:
    * \param pose        The camera pose.
    * \param interactor  The interactor that is being used to interact with the scene.
    */
-  void render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr& interactor) const;
+  void render_synthetic_scene(const ITMLib::ITMPose& pose, const Interactor_CPtr& interactor) const;
 
   /**
    * \brief Renders a quad textured with the specified texture.
@@ -241,7 +241,7 @@ private:
    * \param width       The width of the viewport.
    * \param height      The height of the viewport.
    */
-  static void set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height);
+  static void set_projection_matrix(const ITMLib::ITMIntrinsics& intrinsics, int width, int height);
 
   //#################### FRIENDS ####################
 

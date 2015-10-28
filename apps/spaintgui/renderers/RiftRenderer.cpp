@@ -4,6 +4,7 @@
  */
 
 #include "RiftRenderer.h"
+using namespace ITMLib;
 
 #include <stdexcept>
 

@@ -28,21 +28,21 @@ class Pipeline
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
-  typedef boost::shared_ptr<ITMIMUCalibrator> IMUCalibrator_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
-  typedef boost::shared_ptr<ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<ITMLibSettings> Settings_Ptr;
-  typedef boost::shared_ptr<ITMTracker> ITMTracker_Ptr;
-  typedef boost::shared_ptr<ITMTrackingController> TrackingController_Ptr;
-  typedef boost::shared_ptr<ITMTrackingState> TrackingState_Ptr;
-  typedef boost::shared_ptr<ITMViewBuilder> ViewBuilder_Ptr;
-  typedef boost::shared_ptr<ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMLibSettings> Settings_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -330,10 +330,12 @@ private:
    * \param primaryTracker    The primary tracker (e.g. a Rift or Vicon tracker).
    * \param settings          The settings to use for InfiniTAM.
    * \param scene             The scene.
-   * \param trackedImageSize  The tracked image size.
+   * \param rgbImageSize      The RGB image size.
+   * \param depthImageSize    The depth image size.
    * \return                  The hybrid tracker.
    */
-  ITMTracker *make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize) const;
+  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,
+                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
 
   /**
    * \brief Runs the section of the pipeline associated with feature inspection mode.
@@ -375,9 +377,10 @@ private:
    *
    * \param settings          The settings to use for InfiniTAM.
    * \param scene             The scene.
-   * \param trackedImageSize  The tracked image size.
+   * \param rgbImageSize      The RGB image size.
+   * \param depthImageSize    The depth image size.
    */
-  void setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& trackedImageSize);
+  void setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
 };
 
 //#################### TYPEDEFS ####################

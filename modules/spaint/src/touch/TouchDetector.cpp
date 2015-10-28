@@ -4,6 +4,7 @@
  */
 
 #include "touch/TouchDetector.h"
+using namespace ITMLib;
 
 #include <boost/format.hpp>
 

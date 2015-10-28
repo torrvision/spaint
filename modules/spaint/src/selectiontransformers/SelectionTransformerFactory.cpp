@@ -4,6 +4,7 @@
  */
 
 #include "selectiontransformers/SelectionTransformerFactory.h"
+using namespace ITMLib;
 
 #include "selectiontransformers/cpu/VoxelToCubeSelectionTransformer_CPU.h"
 

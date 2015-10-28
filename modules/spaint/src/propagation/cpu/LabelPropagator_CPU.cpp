@@ -17,7 +17,7 @@ LabelPropagator_CPU::LabelPropagator_CPU(size_t raycastResultSize, float maxAngl
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult, const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();
   const Vector4f *raycastResultData = raycastResult->GetData(MEMORYDEVICE_CPU);
@@ -35,7 +35,7 @@ void LabelPropagator_CPU::calculate_normals(const ITMFloat4Image *raycastResult,
 }
 
 void LabelPropagator_CPU::perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult,
-                                              ITMLib::Objects::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
+                                              ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const
 {
   const int height = raycastResult->noDims.y;
   const ITMVoxelIndex::IndexData *indexData = scene->index.getIndexData();

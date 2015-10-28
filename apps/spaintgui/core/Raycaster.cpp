@@ -49,23 +49,23 @@ void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState
   Model::Scene_CPtr scene = m_model->get_scene();
   Model::View_CPtr view = m_model->get_view();
 
-  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(m_model->get_depth_image_size()));
+  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), m_model->get_depth_image_size()));
 
-  m_visualisationEngine->FindVisibleBlocks(&pose, intrinsics, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(&pose, intrinsics, renderState.get());
+  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 
   switch(raycastType)
   {
     case RT_COLOUR:
     {
-      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::Engine::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case RT_LAMBERTIAN:
     {
-      m_visualisationEngine->RenderImage(&pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::Engine::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
     case RT_SEMANTICCOLOUR:
@@ -81,7 +81,7 @@ void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState
       else if(raycastType == RT_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_visualisationEngine->FindSurface(&pose, intrinsics, renderState.get());
+      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }

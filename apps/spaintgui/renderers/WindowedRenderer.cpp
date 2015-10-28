@@ -4,6 +4,7 @@
  */
 
 #include "WindowedRenderer.h"
+using namespace ITMLib;
 
 #include <stdexcept>
 
