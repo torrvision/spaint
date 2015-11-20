@@ -12,7 +12,8 @@ IF(WITH_LEAP)
     FIND_PATH(LEAP_ROOT head_sha.txt HINTS ~/Downloads/LeapDeveloperKit_2.2.1+24116_mac/LeapSDK)
     FIND_LIBRARY(LEAP_LIBRARY Leap HINTS "${LEAP_ROOT}/lib")
   ELSEIF("${CMAKE_SYSTEM}" MATCHES "Linux")
-    FIND_PATH(LEAP_ROOT head_sha.txt HINTS ~/Software/LeapDeveloperKit_2.2.1+24116_linux/LeapSDK)
+    FIND_PATH(LEAP_ROOT head_sha.txt HINTS ~/software/LeapDeveloperKit_2.2.1+24116_linux/LeapSDK
+                                           ~/Software/LeapDeveloperKit_2.2.1+24116_linux/LeapSDK)
     FIND_LIBRARY(LEAP_LIBRARY Leap HINTS "${LEAP_ROOT}/lib/x64")
   ENDIF()
 
