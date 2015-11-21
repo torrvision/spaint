@@ -35,6 +35,8 @@ using namespace tvgutil;
 
 Application::Application(const Pipeline_Ptr& pipeline)
 : m_commandManager(10),
+  m_pauseBetweenFrames(true),
+  m_paused(false),
   m_pipeline(pipeline),
   m_voiceCommandStream("localhost", "23984")
 {
@@ -53,12 +55,17 @@ void Application::run()
     // Take action as relevant based on the current input state.
     process_input();
 
-    // Process and render the next frame.
-    m_pipeline->run_main_section();
+    // If the application is unpaused, process a new frame.
+    if(!m_paused) m_pipeline->run_main_section();
+
+    // Render the scene.
     m_renderer->render(m_pipeline->get_interactor());
 
-    // Run the mode-specific section of the pipeline.
-    m_pipeline->run_mode_specific_section(get_monocular_render_state());
+    // If the application is unpaused, run the mode-specific section of the pipeline.
+    if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
+
+    // If desired, pause at the end of each frame for debugging purposes.
+    if(m_pauseBetweenFrames) m_paused = true;
   }
 }
 
@@ -92,10 +99,24 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
+  // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
+  if(keysym.sym == SDLK_b)
+  {
+    m_pauseBetweenFrames = false;
+    m_paused = false;
+  }
+
   // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
   if(keysym.sym == SDLK_f)
   {
     m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
+  }
+
+  // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
+  if(keysym.sym == SDLK_n)
+  {
+    m_pauseBetweenFrames = true;
+    m_paused = false;
   }
 
   if(keysym.sym == SDLK_BACKSPACE)
@@ -167,6 +188,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "R + 3 = To Rift Renderer (Fullscreen)\n"
               << "V + 1 = To Follow Camera Mode\n"
               << "V + 2 = To Free Camera Mode\n"
+              << "B = Process All Frames\n"
+              << "N = Process Next Frame\n"
               << "[ = Decrease Picking Selection Radius\n"
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
