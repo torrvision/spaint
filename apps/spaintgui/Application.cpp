@@ -36,7 +36,7 @@ using namespace tvgutil;
 Application::Application(const Pipeline_Ptr& pipeline)
 : m_commandManager(10),
   m_pauseBetweenFrames(true),
-  m_paused(false),
+  m_paused(true),
   m_pipeline(pipeline),
   m_voiceCommandStream("localhost", "23984")
 {

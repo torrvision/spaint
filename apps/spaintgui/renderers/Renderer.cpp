@@ -286,9 +286,12 @@ void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interact
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // Render the reconstructed scene, then render a synthetic scene over the top of it.
-  render_reconstructed_scene(pose, renderState);
-  render_synthetic_scene(pose, interactor);
+  // If we have started reconstruction, render the reconstructed scene, then render a synthetic scene over the top of it.
+  if(m_model->get_view())
+  {
+    render_reconstructed_scene(pose, renderState);
+    render_synthetic_scene(pose, interactor);
+  }
 }
 
 void Renderer::set_window(const SDL_Window_Ptr& window)
