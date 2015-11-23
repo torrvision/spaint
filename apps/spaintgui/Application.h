@@ -51,6 +51,12 @@ private:
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 
+  /** Whether or not to pause between frames (for debugging purposes). */
+  bool m_pauseBetweenFrames;
+
+  /** Whether or not the application is currently paused. */
+  bool m_paused;
+
   /** The pipeline that the application should use. */
   Pipeline_Ptr m_pipeline;
 

@@ -45,9 +45,9 @@ Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& vis
 void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType,
                                       const boost::optional<Postprocessor>& postprocessor) const
 {
-  const ITMIntrinsics *intrinsics = &m_model->get_view()->calib->intrinsics_d;
-  Model::Scene_CPtr scene = m_model->get_scene();
   Model::View_CPtr view = m_model->get_view();
+  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
+  Model::Scene_CPtr scene = m_model->get_scene();
 
   if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), m_model->get_depth_image_size()));
 
