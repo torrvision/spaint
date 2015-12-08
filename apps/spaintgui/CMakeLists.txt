@@ -8,11 +8,12 @@
 
 SET(targetname spaintgui)
 
-###########################
-# Offer low-power support #
-###########################
+#########################################################################
+# Offer support for low power machines and those with low USB bandwidth #
+#########################################################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowUSBBandwidthSupport.cmake)
 
 ################################
 # Specify the libraries to use #

@@ -47,7 +47,13 @@ Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional
                    const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
 : m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
-  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration));
+  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
+#if USE_LOW_USB_BANDWIDTH_MODE
+    // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
+    , Vector2i(320, 240)
+#endif
+  ));
+
   initialise(settings);
 }
 #endif
