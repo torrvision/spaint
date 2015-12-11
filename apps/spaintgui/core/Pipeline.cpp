@@ -62,7 +62,8 @@ Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rg
                    const Settings_Ptr& settings, const std::string& resourcesDir)
 : m_resourcesDir(resourcesDir)
 {
-  m_imageSourceEngine.reset(new ImageFileReader(calibrationFilename.c_str(), rgbImageMask.c_str(), depthImageMask.c_str()));
+  ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+  m_imageSourceEngine.reset(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator));
   initialise(settings);
 }
 
