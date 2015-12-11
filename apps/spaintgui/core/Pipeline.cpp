@@ -153,7 +153,7 @@ void Pipeline::run_main_section()
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), liveRenderState.get());
+  m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
@@ -261,14 +261,14 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
   m_denseMapper->ResetScene(scene.get());
   setup_tracker(settings, scene, rgbImageSize, depthImageSize);
-  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), visualisationEngine.get(), settings.get()));
+  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
 
   // Set up the live render state.
-  Vector2i trackedImageSize = ITMTrackingController::GetTrackedImageSize(m_tracker.get(), rgbImageSize, depthImageSize);
+  Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
 
   // Set up the spaint model, raycaster and interactor.
-  TrackingState_Ptr trackingState(m_trackingController->BuildTrackingState(trackedImageSize));
+  TrackingState_Ptr trackingState(new ITMTrackingState(trackedImageSize, memoryType));
   m_tracker->UpdateInitialPose(trackingState.get());
   m_model.reset(new Model(scene, rgbImageSize, depthImageSize, trackingState, settings, m_resourcesDir));
   m_raycaster.reset(new Raycaster(m_model, visualisationEngine, liveRenderState));
