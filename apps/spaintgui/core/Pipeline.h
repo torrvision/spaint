@@ -8,6 +8,12 @@
 
 #include <boost/optional.hpp>
 
+#include <ITMLib/Core/ITMDenseMapper.h>
+#include <ITMLib/Core/ITMTrackingController.h>
+#include <ITMLib/LowLevel/Interface/ITMLowLevelEngine.h>
+#include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
+#include <ITMLib/ViewBuilding/Interface/ITMViewBuilder.h>
+
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>

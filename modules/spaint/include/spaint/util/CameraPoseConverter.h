@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_CAMERAPOSECONVERTER
 #define H_SPAINT_CAMERAPOSECONVERTER
 
-#include <ITMLib/Objects/ITMPose.h>
+#include <ITMLib/Objects/Camera/ITMPose.h>
 
 #include <rigging/SimpleCamera.h>
 

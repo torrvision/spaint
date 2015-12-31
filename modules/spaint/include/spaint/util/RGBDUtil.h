@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_RGBDUTIL
 #define H_SPAINT_RGBDUTIL
 
-#include <ITMLib/Objects/ITMRGBDCalib.h>
+#include <ITMLib/Objects/Camera/ITMRGBDCalib.h>
 
 namespace spaint {
 

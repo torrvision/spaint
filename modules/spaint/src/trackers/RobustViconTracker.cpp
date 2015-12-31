@@ -5,7 +5,7 @@
 
 #include "trackers/RobustViconTracker.h"
 
-#include <ITMLib/Engine/ITMTrackerFactory.h>
+#include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace ITMLib;
 
 #include "util/CameraPoseConverter.h"

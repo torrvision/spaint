@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_SPAINTVOXEL
 #define H_SPAINT_SPAINTVOXEL
 
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include <ITMLib/ITMLibDefines.h>
 
 namespace spaint {
 

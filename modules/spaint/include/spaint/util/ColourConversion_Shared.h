@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_COLOURCONVERSION_SHARED
 #define H_SPAINT_COLOURCONVERSION_SHARED
 
-#include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
+#include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
 
 namespace spaint {
 

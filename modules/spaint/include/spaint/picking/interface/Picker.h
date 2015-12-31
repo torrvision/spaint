@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_PICKER
 #define H_SPAINT_PICKER
 
-#include <ITMLib/Objects/ITMRenderState.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
 namespace spaint {
 

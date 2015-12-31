@@ -9,6 +9,7 @@ using namespace ViconDataStreamSDK::CPP;
 
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 
 #include <tvgutil/MapUtil.h>
 using namespace tvgutil;

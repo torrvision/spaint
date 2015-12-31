@@ -8,8 +8,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Objects/ITMRenderState.h>
-#include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <tvginput/InputState.h>

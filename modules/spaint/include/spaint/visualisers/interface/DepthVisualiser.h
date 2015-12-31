@@ -8,10 +8,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Objects/ITMIntrinsics.h>
-#include <ITMLib/Objects/ITMPose.h>
-#include <ITMLib/Objects/ITMRenderState.h>
-#include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Objects/Camera/ITMIntrinsics.h>
+#include <ITMLib/Objects/Camera/ITMPose.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Objects/Scene/ITMScene.h>
+#include <ITMLib/Utils/ITMImageTypes.h>
 
 namespace spaint {
 

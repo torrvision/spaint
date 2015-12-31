@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include <ITMLib/Engine/DeviceAgnostic/ITMRepresentationAccess.h>
+#include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
 
 #include "features/shared/VOPFeatureCalculator_Shared.h"
 

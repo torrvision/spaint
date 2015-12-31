@@ -6,6 +6,7 @@
 #include "RiftRenderer.h"
 using namespace ITMLib;
 
+#include <iostream>
 #include <stdexcept>
 
 #ifdef __linux__

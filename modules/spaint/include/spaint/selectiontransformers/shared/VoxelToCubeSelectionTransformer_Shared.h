@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_VOXELTOCUBESELECTIONTRANSFORMER_SHARED
 #define H_SPAINT_VOXELTOCUBESELECTIONTRANSFORMER_SHARED
 
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include <ITMLib/ITMLibDefines.h>
 
 namespace spaint {
 
