@@ -28,7 +28,7 @@ void SemanticVisualiser::render(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex
 {
   // Update the label colours in the memory block.
   Vector3u *labelColoursData = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0, size = labelColours.size(); i < size; ++i)
+  for(size_t i = 0, size = std::min(m_labelColoursMB->dataSize, labelColours.size()); i < size; ++i)
   {
     labelColoursData[i] = labelColours[i];
   }
