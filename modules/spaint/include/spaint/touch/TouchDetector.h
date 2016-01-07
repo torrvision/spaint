@@ -8,7 +8,8 @@
 
 #include <arrayfire.h>
 
-#include <ITMLib/Objects/ITMRenderState.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Objects/Views/ITMView.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <rafl/core/RandomForest.h>

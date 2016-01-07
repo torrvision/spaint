@@ -10,7 +10,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMLibDefines.h>
+#include <ITMLib/ITMLibDefines.h>
+#include <ITMLib/Utils/ITMImageTypes.h>
 
 namespace spaint {
 

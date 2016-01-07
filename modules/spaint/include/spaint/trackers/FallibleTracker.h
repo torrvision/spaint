@@ -8,7 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Engine/ITMTracker.h>
+#include <ITMLib/Trackers/Interface/ITMTracker.h>
 
 namespace spaint {
 

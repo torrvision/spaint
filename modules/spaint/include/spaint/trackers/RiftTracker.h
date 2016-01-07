@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_RIFTTRACKER
 #define H_SPAINT_RIFTTRACKER
 
-#include <ITMLib/Engine/ITMTracker.h>
+#include <ITMLib/Trackers/Interface/ITMTracker.h>
 
 #include <OVR_CAPI.h>
 

@@ -7,8 +7,8 @@
 
 #include <stdexcept>
 
-#include <ITMLib/Engine/ITMVisualisationEngine.cpp>
-#include <ITMLib/Engine/DeviceSpecific/CPU/ITMVisualisationEngine_CPU.cpp>
+#include <ITMLib/Utils/ITMLibSettings.h>
+using namespace ITMLib;
 
 #include <spaint/visualisers/cpu/SemanticVisualiser_CPU.h>
 #ifdef WITH_CUDA

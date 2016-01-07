@@ -1,4 +1,4 @@
-#include "ITMLib/ITMLib.h"
+#include "ITMLib/Objects/Camera/ITMPose.h"
 
 int main()
 {

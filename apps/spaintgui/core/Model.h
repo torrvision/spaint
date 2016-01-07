@@ -10,6 +10,11 @@
 
 #include <Engine/ImageSourceEngine.h>
 
+#include <ITMLib/Objects/Scene/ITMScene.h>
+#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
+#include <ITMLib/Objects/Views/ITMView.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
+
 #include <spaint/util/LabelManager.h>
 
 /**

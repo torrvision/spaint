@@ -10,10 +10,12 @@ using namespace spaint;
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
 #endif
-#include <ITMLib/Engine/ITMRenTracker.cpp>
-#include <ITMLib/Engine/DeviceSpecific/CPU/ITMRenTracker_CPU.cpp>
-#include <ITMLib/Engine/DeviceSpecific/CPU/ITMSceneReconstructionEngine_CPU.cpp>
-#include <ITMLib/Engine/DeviceSpecific/CPU/ITMSwappingEngine_CPU.cpp>
+#include <ITMLib/LowLevel/ITMLowLevelEngineFactory.h>
+#include <ITMLib/Reconstruction/ITMSceneReconstructionEngineFactory.h>
+#include <ITMLib/Swapping/ITMSwappingEngineFactory.h>
+#include <ITMLib/Trackers/ITMTrackerFactory.h>
+#include <ITMLib/ViewBuilding/ITMViewBuilderFactory.h>
+#include <ITMLib/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace InfiniTAM::Engine;
 using namespace ITMLib;
 
@@ -236,27 +238,9 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
 
   // Set up the InfiniTAM engines and view builder.
-  const ITMRGBDCalib *calib = &m_imageSourceEngine->calib;
-  VisualisationEngine_Ptr visualisationEngine;
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    // Use the CUDA implementations.
-    m_lowLevelEngine.reset(new ITMLowLevelEngine_CUDA);
-    m_viewBuilder.reset(new ITMViewBuilder_CUDA(calib));
-    visualisationEngine.reset(new ITMVisualisationEngine_CUDA<SpaintVoxel,ITMVoxelIndex>());
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    // Use the CPU implementations.
-    m_lowLevelEngine.reset(new ITMLowLevelEngine_CPU);
-    m_viewBuilder.reset(new ITMViewBuilder_CPU(calib));
-    visualisationEngine.reset(new ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>());
-  }
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
+  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->calib, settings->deviceType));
+  VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
 
   // Set up the dense mapper and tracking controller.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));

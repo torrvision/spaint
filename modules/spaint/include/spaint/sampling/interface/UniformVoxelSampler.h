@@ -8,7 +8,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Objects/Scene/ITMScene.h>
+#include <ITMLib/Utils/ITMImageTypes.h>
 
 #include "../../util/SpaintVoxel.h"
 

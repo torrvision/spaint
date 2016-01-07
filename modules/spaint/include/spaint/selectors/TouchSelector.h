@@ -8,8 +8,8 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Objects/ITMTrackingState.h>
-#include <ITMLib/Objects/ITMView.h>
+#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
+#include <ITMLib/Objects/Views/ITMView.h>
 
 #include "Selector.h"
 #include "../picking/interface/Picker.h"

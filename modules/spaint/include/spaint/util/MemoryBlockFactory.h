@@ -10,6 +10,8 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <ORUtils/MemoryBlock.h>
+
 namespace spaint {
 
 /**

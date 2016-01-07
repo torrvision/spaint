@@ -8,7 +8,7 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Objects/Scene/ITMScene.h>
 
 // This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
 // Since the Leap SDK defines PI as a float (static const float PI = ...), things would break if we didn't do this.

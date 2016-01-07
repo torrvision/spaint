@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_VOXELMARKER
 #define H_SPAINT_VOXELMARKER
 
-#include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Objects/Scene/ITMScene.h>
 
 #include "../shared/VoxelMarker_Settings.h"
 #include "../../util/SpaintVoxel.h"

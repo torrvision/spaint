@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_SELECTIONTRANSFORMER
 #define H_SPAINT_SELECTIONTRANSFORMER
 
-#include <ITMLib/Objects/ITMScene.h>
+#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <tvginput/InputState.h>
