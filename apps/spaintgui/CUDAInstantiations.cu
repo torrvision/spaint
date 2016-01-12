@@ -3,10 +3,10 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include <ITMLib/Reconstruction/CUDA/ITMSceneReconstructionEngine_CUDA.tcu>
-#include <ITMLib/Swapping/CUDA/ITMSwappingEngine_CUDA.tcu>
+#include <ITMLib/Engines/Reconstruction/CUDA/ITMSceneReconstructionEngine_CUDA.tcu>
+#include <ITMLib/Engines/Swapping/CUDA/ITMSwappingEngine_CUDA.tcu>
+#include <ITMLib/Engines/Visualisation/CUDA/ITMVisualisationEngine_CUDA.tcu>
 #include <ITMLib/Trackers/CUDA/ITMRenTracker_CUDA.tcu>
-#include <ITMLib/Visualisation/CUDA/ITMVisualisationEngine_CUDA.tcu>
 #include <spaint/util/SpaintVoxel.h>
 using namespace spaint;
 

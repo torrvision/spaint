@@ -9,7 +9,7 @@
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
 
-#include <ITMLib/Visualisation/Interface/ITMVisualisationEngine.h>
+#include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
 #include <spaint/visualisers/interface/SemanticVisualiser.h>
 

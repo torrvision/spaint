@@ -4,11 +4,11 @@
  */
 
 #include <ITMLib/Core/ITMDenseMapper.tpp>
-#include <ITMLib/Reconstruction/CPU/ITMSceneReconstructionEngine_CPU.tpp>
-#include <ITMLib/Swapping/CPU/ITMSwappingEngine_CPU.tpp>
+#include <ITMLib/Engines/Reconstruction/CPU/ITMSceneReconstructionEngine_CPU.tpp>
+#include <ITMLib/Engines/Swapping/CPU/ITMSwappingEngine_CPU.tpp>
+#include <ITMLib/Engines/Visualisation/CPU/ITMVisualisationEngine_CPU.tpp>
 #include <ITMLib/Trackers/CPU/ITMRenTracker_CPU.tpp>
 #include <ITMLib/Trackers/Interface/ITMRenTracker.tpp>
-#include <ITMLib/Visualisation/CPU/ITMVisualisationEngine_CPU.tpp>
 #include <spaint/util/SpaintVoxel.h>
 using namespace spaint;
 

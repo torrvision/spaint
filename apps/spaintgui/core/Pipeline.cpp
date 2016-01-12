@@ -10,12 +10,12 @@ using namespace spaint;
 #ifdef WITH_OPENNI
 #include <Engine/OpenNIEngine.h>
 #endif
-#include <ITMLib/LowLevel/ITMLowLevelEngineFactory.h>
-#include <ITMLib/Reconstruction/ITMSceneReconstructionEngineFactory.h>
-#include <ITMLib/Swapping/ITMSwappingEngineFactory.h>
+#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
+#include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
+#include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
+#include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
-#include <ITMLib/ViewBuilding/ITMViewBuilderFactory.h>
-#include <ITMLib/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace InfiniTAM::Engine;
 using namespace ITMLib;
 

@@ -8,8 +8,8 @@
 
 #include <cmath>
 
+#include <ITMLib/Engines/Visualisation/Shared/ITMVisualisationEngine_Shared.h>
 #include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
-#include <ITMLib/Visualisation/Shared/ITMVisualisationEngine_Shared.h>
 
 namespace spaint {
 

@@ -6,8 +6,8 @@
 #ifndef H_SPAINT_SEMANTICVISUALISER_SHARED
 #define H_SPAINT_SEMANTICVISUALISER_SHARED
 
+#include <ITMLib/Engines/Visualisation/Shared/ITMVisualisationEngine_Shared.h>
 #include <ITMLib/Objects/Scene/ITMRepresentationAccess.h>
-#include <ITMLib/Visualisation/Shared/ITMVisualisationEngine_Shared.h>
 
 #include "SemanticVisualiser_Settings.h"
 #include "../../util/SpaintVoxel.h"
