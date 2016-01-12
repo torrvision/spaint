@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_ROBUSTVICONTRACKER
 #define H_SPAINT_ROBUSTVICONTRACKER
 
-#include <ITMLib/LowLevel/Interface/ITMLowLevelEngine.h>
+#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
