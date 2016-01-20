@@ -81,9 +81,6 @@ private:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
-  /** An image in which to temporarily store visualisations of the scene. */
-  ITMUChar4Image_Ptr m_image;
-
   /** A flag indicating whether or not to use median filtering when rendering the scene raycast. */
   bool m_medianFilteringEnabled;
 
@@ -92,9 +89,6 @@ private:
 
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   Raycaster_CPtr m_raycaster;
-
-  /** The type of raycast to use. */
-  Raycaster::RaycastType m_raycastType;
 
   /** A set of saved sub-window configurations that the user can switch between as desired. */
   std::vector<SubwindowConfiguration_Ptr> m_savedSubwindowConfigurations;
@@ -191,13 +185,6 @@ public:
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
    */
   void set_median_filtering_enabled(bool medianFilteringEnabled);
-
-  /**
-   * \brief Sets the type of raycast to use.
-   *
-   * \param raycastType The type of raycast to use.
-   */
-  void set_raycast_type(Raycaster::RaycastType raycastType);
 
   /**
    * \brief Sets the sub-window configuration to use for visualising the scene.

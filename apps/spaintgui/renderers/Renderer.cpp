@@ -189,8 +189,7 @@ Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
-  m_raycaster(raycaster),
-  m_raycastType(Raycaster::RT_SEMANTICLAMBERTIAN)
+  m_raycaster(raycaster)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -222,11 +221,6 @@ void Renderer::set_camera_mode(CameraMode cameraMode)
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
-}
-
-void Renderer::set_raycast_type(Raycaster::RaycastType raycastType)
-{
-  m_raycastType = raycastType;
 }
 
 void Renderer::set_subwindow_configuration(size_t i)
@@ -273,7 +267,6 @@ void Renderer::begin_2d()
 
 void Renderer::destroy_common()
 {
-  m_image.reset();
   m_subwindowConfiguration.reset();
   std::vector<SubwindowConfiguration_Ptr>().swap(m_savedSubwindowConfigurations);
   glDeleteTextures(1, &m_textureID);
@@ -302,10 +295,7 @@ SDL_Window *Renderer::get_window() const
 
 void Renderer::initialise_common()
 {
-  // Create an image into which to temporarily store visualisations of the scene.
-  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
-
-  // Set up a texture in which to temporarily store the scene raycast and touch image when rendering.
+  // Set up a texture in which to temporarily store scene visualisations and the touch image when rendering.
   glGenTextures(1, &m_textureID);
 
   // Set up the sub-window configurations.
@@ -314,6 +304,7 @@ void Renderer::initialise_common()
     m_savedSubwindowConfigurations.push_back(make_default_subwindow_configuration(i));
   }
 
+  // Set the initial sub-window configuration.
   set_subwindow_configuration(3);
 }
 
@@ -371,10 +362,10 @@ Renderer::SubwindowConfiguration_Ptr Renderer::make_default_subwindow_configurat
     case 3:
     {
       const float x = 0.665f;
-      const float y = 1 - x;
+      const float y = 0.5f;
       config.reset(new SubwindowConfiguration(3));
       (*config)[0].m_topLeft = Vector2f(0, 0);
-      (*config)[0].m_bottomRight = Vector2f(x, x);
+      (*config)[0].m_bottomRight = Vector2f(x, y * 2);
       (*config)[0].m_type = Raycaster::RT_SEMANTICLAMBERTIAN;
       (*config)[1].m_topLeft = Vector2f(x, 0);
       (*config)[1].m_bottomRight = Vector2f(1, y);
@@ -438,22 +429,6 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   }
 
   end_2d();
-
-#if 0
-  // Raycast the scene.
-  m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType, postprocessor);
-
-  // Copy the raycasted scene to a texture.
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-  // Render a quad textured with the raycasted scene.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
-#endif
 }
 
 void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor) const

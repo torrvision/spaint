@@ -459,13 +459,13 @@ void Application::process_renderer_input()
   }
   else --framesTillSwitchAllowed;
 
-  // Allow the user to switch raycast type.
+  // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
-    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
-    else if(m_inputState.key_down(KEYCODE_4)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICFLAT);
+    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICCOLOUR);
+    else if(m_inputState.key_down(KEYCODE_4)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICFLAT);
   }
 }
 
