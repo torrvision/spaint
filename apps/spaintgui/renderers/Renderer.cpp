@@ -208,6 +208,11 @@ bool Renderer::get_median_filtering_enabled() const
   return m_medianFilteringEnabled;
 }
 
+void Renderer::reset_subwindow_configuration()
+{
+  m_subwindowConfiguration = make_default_subwindow_configuration(m_subwindowConfiguration->size());
+}
+
 void Renderer::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
@@ -221,6 +226,30 @@ void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 void Renderer::set_raycast_type(Raycaster::RaycastType raycastType)
 {
   m_raycastType = raycastType;
+}
+
+void Renderer::set_subwindow_configuration(size_t i)
+{
+  // If the saved configuration index is valid:
+  if(i < m_savedSubwindowConfigurations.size())
+  {
+    // If the saved configuration is null, try to create a default one of the right size.
+    if(!m_savedSubwindowConfigurations[i]) m_savedSubwindowConfigurations[i] = make_default_subwindow_configuration(i);
+
+    // If the saved configuration was already or is now valid, use it.
+    if(m_savedSubwindowConfigurations[i]) m_subwindowConfiguration = m_savedSubwindowConfigurations[i];
+  }
+}
+
+void Renderer::set_subwindow_type(size_t subwindowIndex, Raycaster::RaycastType type)
+{
+  // Note: A null sub-window configuration should never be active.
+  assert(m_subwindowConfiguration);
+
+  if(subwindowIndex < m_subwindowConfiguration->size())
+  {
+    (*m_subwindowConfiguration)[subwindowIndex].m_type = type;
+  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -275,6 +304,14 @@ void Renderer::initialise_common()
 
   // Set up a texture in which to temporarily store the scene raycast and touch image when rendering.
   glGenTextures(1, &m_textureID);
+
+  // Set up the sub-window configurations.
+  for(int i = 0; i <= 3; ++i)
+  {
+    m_savedSubwindowConfigurations.push_back(make_default_subwindow_configuration(i));
+  }
+
+  set_subwindow_configuration(1);
 }
 
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
@@ -313,6 +350,35 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+Renderer::SubwindowConfiguration_Ptr Renderer::make_default_subwindow_configuration(size_t subwindowCount) const
+{
+  SubwindowConfiguration_Ptr config;
+
+  switch(subwindowCount)
+  {
+    case 1:
+    {
+      config.reset(new SubwindowConfiguration(1));
+      (*config)[0].m_topLeft = Vector2f(0, 0);
+      (*config)[0].m_bottomRight = Vector2f(1, 1);
+      (*config)[0].m_type = Raycaster::RT_SEMANTICLAMBERTIAN;
+      break;
+    }
+    default:
+      break;
+  }
+
+  if(config)
+  {
+    for(size_t i = 0; i < config->size(); ++i)
+    {
+      (*config)[i].m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
+    }
+  }
+
+  return config;
+}
 
 void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const
 {

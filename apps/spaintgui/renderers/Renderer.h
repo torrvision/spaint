@@ -45,6 +45,34 @@ protected:
 public:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
 
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief An instance of this struct can be used to represent a sub-window into
+   *        which different types of scene visualisation can be rendered.
+   */
+  struct Subwindow
+  {
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
+    /** The location of the bottom-right of the subwindow (each component is expressed as a fraction in the range [0,1]). */
+    Vector2f m_bottomRight;
+
+    /** An image in which to store the scene visualisation for the sub-window. */
+    ITMUChar4Image_Ptr m_image;
+
+    /** The location of the top-left of the subwindow (each component is expressed as a fraction in the range [0,1]). */
+    Vector2f m_topLeft;
+
+    /** The type of scene visualisation to render in the sub-window. */
+    Raycaster::RaycastType m_type;
+  };
+
+  //#################### TYPEDEFS ####################
+private:
+  typedef std::vector<struct Subwindow> SubwindowConfiguration;
+  typedef boost::shared_ptr<SubwindowConfiguration> SubwindowConfiguration_Ptr;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The current camera mode. */
@@ -67,6 +95,12 @@ private:
 
   /** The type of raycast to use. */
   Raycaster::RaycastType m_raycastType;
+
+  /** A set of saved sub-window configurations that the user can switch between as desired. */
+  std::vector<SubwindowConfiguration_Ptr> m_savedSubwindowConfigurations;
+
+  /** The current sub-window configuration. */
+  SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
@@ -140,6 +174,11 @@ public:
   bool get_median_filtering_enabled() const;
 
   /**
+   * \brief Resets the current sub-window configuration to its default settings.
+   */
+  void reset_subwindow_configuration();
+
+  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
@@ -159,6 +198,21 @@ public:
    * \param raycastType The type of raycast to use.
    */
   void set_raycast_type(Raycaster::RaycastType raycastType);
+
+  /**
+   * \brief Sets the sub-window configuration to use for visualising the scene.
+   *
+   * \param i The index of the sub-window configuration to use for visualising the scene.
+   */
+  void set_subwindow_configuration(size_t i);
+
+  /**
+   * \brief Sets the type of a sub-window that is being used to visualise the scene.
+   *
+   * \param subwindowIndex  The index of the subwindow whose type is to be set.
+   * \param type            The new type of visualisation to use.
+   */
+  void set_subwindow_type(size_t subwindowIndex, Raycaster::RaycastType type);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -214,6 +268,14 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * Makes a default sub-window configuration with the specified number of sub-windows.
+   *
+   * \param subwindowCount  The number of sub-windows the configuration should have (must be in the set {1,3}).
+   * \return                The sub-window configuration, if the sub-window count was valid, or null otherwise.
+   */
+  SubwindowConfiguration_Ptr make_default_subwindow_configuration(size_t subwindowCount) const;
+
   /**
    * \brief Renders the reconstructed scene.
    *
