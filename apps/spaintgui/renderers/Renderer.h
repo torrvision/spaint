@@ -163,6 +163,15 @@ public:
   boost::optional<Vector2f> compute_fractional_position(int x, int y) const;
 
   /**
+   * \brief Determines the sub-window (if any) containing the specified (x,y) point in the window.
+   *
+   * \param x The x coordinate of the point whose sub-window index is to be determined.
+   * \param y The y coordinate of the point whose sub-window index is to be determined.
+   * \return  The sub-window index of the point, if any, or nothing otherwise.
+   */
+  boost::optional<size_t> determine_subwindow_index(int x, int y) const;
+
+  /**
    * \brief Gets the current camera mode.
    *
    * \return  The current camera mode.

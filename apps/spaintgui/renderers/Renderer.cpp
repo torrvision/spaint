@@ -199,6 +199,25 @@ Renderer::~Renderer() {}
 
 boost::optional<Vector2f> Renderer::compute_fractional_position(int x, int y) const
 {
+  boost::optional<size_t> subwindowIndex = determine_subwindow_index(x, y);
+  if(!subwindowIndex) return boost::none;
+
+  // FIXME: This is the same as in determine_subwindow_index. It should be factored out.
+  const Vector2f viewportSize = m_model->get_depth_image_size().toFloat();
+  const float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
+
+  const Subwindow& subwindow = (*m_subwindowConfiguration)[*subwindowIndex];
+  const Vector2f& tl = subwindow.m_topLeft;
+  const Vector2f& br = subwindow.m_bottomRight;
+
+  return Vector2f(
+    CLAMP((viewportFracX - tl.x) / (br.x - tl.x), 0.0f, 1.0f),
+    CLAMP((viewportFracY - tl.y) / (br.y - tl.y), 0.0f, 1.0f)
+  );
+}
+
+boost::optional<size_t> Renderer::determine_subwindow_index(int x, int y) const
+{
   Vector2f viewportSize = m_model->get_depth_image_size().toFloat();
   float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
 
@@ -210,10 +229,7 @@ boost::optional<Vector2f> Renderer::compute_fractional_position(int x, int y) co
     if(tl.x <= viewportFracX && viewportFracX <= br.x &&
        tl.y <= viewportFracY && viewportFracY <= br.y)
     {
-      return Vector2f(
-        CLAMP((viewportFracX - tl.x) / (br.x - tl.x), 0.0f, 1.0f),
-        CLAMP((viewportFracY - tl.y) / (br.y - tl.y), 0.0f, 1.0f)
-      );
+      return i;
     }
   }
 
@@ -353,7 +369,7 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
       // Set the viewport for the sub-window.
       const Subwindow& subwindow = (*m_subwindowConfiguration)[subwindowIndex];
       int x = (int)ROUND(subwindow.m_topLeft.x * depthImageSize.width);
-      int y = (int)ROUND(subwindow.m_topLeft.y * depthImageSize.height);
+      int y = (int)ROUND((1 - subwindow.m_bottomRight.y) * depthImageSize.height);
       int width = (int)ROUND((subwindow.m_bottomRight.x - subwindow.m_topLeft.x) * depthImageSize.width);
       int height = (int)ROUND((subwindow.m_bottomRight.y - subwindow.m_topLeft.y) * depthImageSize.height);
       glViewport(x, y, width, height);

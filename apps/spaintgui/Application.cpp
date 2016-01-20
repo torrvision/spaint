@@ -101,26 +101,26 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
-  if(keysym.sym == SDLK_b)
+  if(keysym.sym == KEYCODE_b)
   {
     m_pauseBetweenFrames = false;
     m_paused = false;
   }
 
   // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
-  if(keysym.sym == SDLK_f)
+  if(keysym.sym == KEYCODE_f)
   {
     m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
   }
 
   // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
-  if(keysym.sym == SDLK_n)
+  if(keysym.sym == KEYCODE_n)
   {
     m_pauseBetweenFrames = true;
     m_paused = false;
   }
 
-  if(keysym.sym == SDLK_BACKSPACE)
+  if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Interactor_Ptr& interactor = m_pipeline->get_interactor();
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
@@ -149,13 +149,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   }
 
   // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
-  if(keysym.sym == SDLK_SEMICOLON)
+  if(keysym.sym == KEYCODE_SEMICOLON)
   {
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
-  if(keysym.sym == SDLK_h)
+  if(keysym.sym == KEYCODE_h)
   {
     std::cout << "\nControls:\n\n"
               << "W = Forwards\n"
@@ -325,8 +325,14 @@ bool Application::process_events()
         break;
       case SDL_MOUSEMOTION:
       {
+        // Allow the user to change the active sub-window.
+        boost::optional<size_t> subwindowIndex = m_renderer->determine_subwindow_index(event.motion.x, event.motion.y);
+        if(subwindowIndex) m_activeSubwindowIndex = *subwindowIndex;
+
+        // Update the fractional position of the mouse.
         boost::optional<Vector2f> fracPos = m_renderer->compute_fractional_position(event.motion.x, event.motion.y);
         if(fracPos) m_inputState.set_mouse_position(fracPos->x, fracPos->y);
+
         break;
       }
       case SDL_QUIT:
@@ -464,15 +470,6 @@ void Application::process_renderer_input()
     }
   }
   else --framesTillSwitchAllowed;
-
-  // Allow the user to change the active sub-window.
-  if(m_inputState.key_down(KEYCODE_k))
-  {
-    for(size_t i = 0, count = m_renderer->get_subwindow_count(); i < count; ++i)
-    {
-      if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i))) m_activeSubwindowIndex = i;
-    }
-  }
 
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
