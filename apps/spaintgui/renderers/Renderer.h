@@ -154,6 +154,15 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Computes the fractional position within the relevant sub-window (if any) of a point (x,y) in the window.
+   *
+   * \param x The x coordinate of the point whose fractional coordinates are to be computed.
+   * \param y The y coordinate of the point whose fractional coordinates are to be computed.
+   * \return  The fractional position of the specified point, if it is inside a sub-window, or nothing otherwise.
+   */
+  boost::optional<Vector2f> compute_fractional_position(int x, int y) const;
+
+  /**
    * \brief Gets the current camera mode.
    *
    * \return  The current camera mode.

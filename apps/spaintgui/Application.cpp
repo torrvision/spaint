@@ -210,16 +210,19 @@ void Application::handle_key_up(const SDL_Keysym& keysym)
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
 {
+  boost::optional<Vector2f> fracPos = m_renderer->compute_fractional_position(e.x, e.y);
+  if(!fracPos) return;
+
   switch(e.button)
   {
     case SDL_BUTTON_LEFT:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, fracPos->x, fracPos->y);
       break;
     case SDL_BUTTON_MIDDLE:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, fracPos->x, fracPos->y);
       break;
     case SDL_BUTTON_RIGHT:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, fracPos->x, fracPos->y);
       break;
     default:
       break;
@@ -321,9 +324,11 @@ bool Application::process_events()
         handle_mousebutton_up(event.button);
         break;
       case SDL_MOUSEMOTION:
-        m_inputState.set_mouse_position(event.motion.x, event.motion.y);
-        m_inputState.set_mouse_motion(event.motion.xrel, event.motion.yrel);
+      {
+        boost::optional<Vector2f> fracPos = m_renderer->compute_fractional_position(event.motion.x, event.motion.y);
+        if(fracPos) m_inputState.set_mouse_position(fracPos->x, fracPos->y);
         break;
+      }
       case SDL_QUIT:
         return false;
       default:

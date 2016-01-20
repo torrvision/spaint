@@ -198,6 +198,29 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+boost::optional<Vector2f> Renderer::compute_fractional_position(int x, int y) const
+{
+  Vector2f viewportSize = m_model->get_depth_image_size().toFloat();
+  float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
+
+  for(size_t i = 0, count = m_subwindowConfiguration->size(); i < count; ++i)
+  {
+    const Subwindow& subwindow = (*m_subwindowConfiguration)[i];
+    const Vector2f& tl = subwindow.m_topLeft;
+    const Vector2f& br = subwindow.m_bottomRight;
+    if(tl.x <= viewportFracX && viewportFracX <= br.x &&
+       tl.y <= viewportFracY && viewportFracY <= br.y)
+    {
+      return Vector2f(
+        CLAMP((viewportFracX - tl.x) / (br.x - tl.x), 0.0f, 1.0f),
+        CLAMP((viewportFracY - tl.y) / (br.y - tl.y), 0.0f, 1.0f)
+      );
+    }
+  }
+
+  return boost::none;
+}
+
 Renderer::CameraMode Renderer::get_camera_mode() const
 {
   return m_cameraMode;
