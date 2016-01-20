@@ -5,6 +5,7 @@
 
 #include "Renderer.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
@@ -276,7 +277,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set the viewport.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
@@ -313,7 +314,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::render_reconstructed_scene(const ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -345,7 +346,7 @@ void Renderer::render_reconstructed_scene(const ITMPose& pose, Raycaster::Render
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const ITMPose& pose, const Interactor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);

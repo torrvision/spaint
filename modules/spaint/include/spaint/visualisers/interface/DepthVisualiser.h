@@ -9,10 +9,11 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
-#include <ITMLib/Objects/Camera/ITMPose.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
+
+#include <ORUtils/SE3Pose.h>
 
 namespace spaint {
 

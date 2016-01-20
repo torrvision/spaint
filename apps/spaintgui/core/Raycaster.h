@@ -81,7 +81,7 @@ public:
    * \param raycastType   The type of raycast to generate.
    * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMLib::ITMPose& pose, RaycastType = RT_LAMBERTIAN,
+  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ORUtils::SE3Pose& pose, RaycastType = RT_LAMBERTIAN,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**

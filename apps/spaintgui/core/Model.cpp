@@ -5,6 +5,7 @@
 
 #include "Model.h"
 using namespace ITMLib;
+using namespace ORUtils;
 using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
@@ -42,7 +43,7 @@ LabelManager_CPtr Model::get_label_manager() const
   return m_labelManager;
 }
 
-const ITMPose& Model::get_pose() const
+const SE3Pose& Model::get_pose() const
 {
   return *m_trackingState->pose_d;
 }

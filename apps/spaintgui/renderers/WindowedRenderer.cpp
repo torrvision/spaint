@@ -5,6 +5,7 @@
 
 #include "WindowedRenderer.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include <stdexcept>
 
@@ -75,7 +76,7 @@ void WindowedRenderer::render(const Interactor_CPtr& interactor) const
   SDL_RaiseWindow(get_window());
 
   // Determine the camera pose.
-  ITMPose pose;
+  SE3Pose pose;
   switch(get_camera_mode())
   {
     case CM_FOLLOW:

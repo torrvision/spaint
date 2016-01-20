@@ -17,7 +17,7 @@ SemanticVisualiser_CPU::SemanticVisualiser_CPU(size_t maxLabelCount)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SemanticVisualiser_CPU::render_internal(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::ITMPose *pose,
+void SemanticVisualiser_CPU::render_internal(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ORUtils::SE3Pose *pose,
                                              const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
                                              LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const
 {

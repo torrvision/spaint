@@ -21,7 +21,7 @@ SemanticVisualiser::~SemanticVisualiser() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SemanticVisualiser::render(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::ITMPose *pose,
+void SemanticVisualiser::render(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ORUtils::SE3Pose *pose,
                                 const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
                                 const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha,
                                 ITMUChar4Image *outputImage) const

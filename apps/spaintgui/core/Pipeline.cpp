@@ -18,6 +18,7 @@ using namespace spaint;
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace InfiniTAM::Engine;
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include <spaint/features/FeatureCalculatorFactory.h>
 #include <spaint/propagation/LabelPropagatorFactory.h>
@@ -130,7 +131,7 @@ void Pipeline::run_main_section()
   m_model->set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
-  ITMPose oldPose(*trackingState->pose_d);
+  SE3Pose oldPose(*trackingState->pose_d);
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
 
   // Determine whether or not fusion should be run.

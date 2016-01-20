@@ -4,16 +4,18 @@
  */
 
 #include "util/CameraPoseConverter.h"
-using namespace ITMLib;
+using namespace ORUtils;
 using namespace rigging;
+
+#include <ITMLib/Utils/ITMMath.h>
 
 namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ITMPose CameraPoseConverter::camera_to_pose(const Camera& camera)
+SE3Pose CameraPoseConverter::camera_to_pose(const Camera& camera)
 {
-  ITMPose pose;
+  SE3Pose pose;
 
   const Eigen::Vector3f& n = camera.n();
   const Eigen::Vector3f& p = camera.p();
@@ -75,7 +77,7 @@ ITMPose CameraPoseConverter::camera_to_pose(const Camera& camera)
   return pose;
 }
 
-SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::ITMPose& pose)
+SimpleCamera CameraPoseConverter::pose_to_camera(const SE3Pose& pose)
 {
   // Note: This can be derived by looking at the matrices in camera_to_pose.
   const Matrix4f& M = pose.GetM();
@@ -86,7 +88,7 @@ SimpleCamera CameraPoseConverter::pose_to_camera(const ITMLib::ITMPose& pose)
   return SimpleCamera(p, n, v);
 }
 
-Eigen::Matrix4f CameraPoseConverter::pose_to_modelview(const ITMLib::ITMPose& pose)
+Eigen::Matrix4f CameraPoseConverter::pose_to_modelview(const SE3Pose& pose)
 {
   /*
   Calculate the model-view matrix corresponding to the specified InfiniTAM pose. The pose matrix transforms

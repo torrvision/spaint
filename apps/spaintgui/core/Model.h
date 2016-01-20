@@ -112,7 +112,7 @@ public:
    *
    * \return  The current camera pose.
    */
-  const ITMLib::ITMPose& get_pose() const;
+  const ORUtils::SE3Pose& get_pose() const;
 
   /**
    * \brief Gets the path to the resources directory.

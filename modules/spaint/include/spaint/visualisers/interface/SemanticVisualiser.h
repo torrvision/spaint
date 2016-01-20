@@ -7,10 +7,11 @@
 #define H_SPAINT_SEMANTICVISUALISER
 
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
-#include <ITMLib/Objects/Camera/ITMPose.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
+
+#include <ORUtils/SE3Pose.h>
 
 #include "../shared/SemanticVisualiser_Settings.h"
 #include "../../util/LabelManager.h"
@@ -58,7 +59,7 @@ private:
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
-  virtual void render_internal(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::ITMPose *pose,
+  virtual void render_internal(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ORUtils::SE3Pose *pose,
                                const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
                                LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
 
@@ -76,7 +77,7 @@ public:
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
-  void render(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ITMLib::ITMPose *pose,
+  void render(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ORUtils::SE3Pose *pose,
               const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
               const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha,
               ITMUChar4Image *outputImage) const;

@@ -200,7 +200,7 @@ protected:
    * \param interactor  The interactor that is being used to interact with the scene.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_scene(const ITMLib::ITMPose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
+  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -217,7 +217,7 @@ private:
    * \param pose        The camera pose.
    * \param renderState The render state corresponding to the camera pose.
    */
-  void render_reconstructed_scene(const ITMLib::ITMPose& pose, Raycaster::RenderState_Ptr& renderState) const;
+  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
@@ -225,7 +225,7 @@ private:
    * \param pose        The camera pose.
    * \param interactor  The interactor that is being used to interact with the scene.
    */
-  void render_synthetic_scene(const ITMLib::ITMPose& pose, const Interactor_CPtr& interactor) const;
+  void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor) const;
 
   /**
    * \brief Renders a quad textured with the specified texture.

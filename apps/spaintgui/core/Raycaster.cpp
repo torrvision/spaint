@@ -9,6 +9,7 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include <spaint/visualisers/cpu/SemanticVisualiser_CPU.h>
 #ifdef WITH_CUDA
@@ -42,7 +43,7 @@ Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& vis
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ITMPose& pose, RaycastType raycastType,
+void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const SE3Pose& pose, RaycastType raycastType,
                                       const boost::optional<Postprocessor>& postprocessor) const
 {
   Model::View_CPtr view = m_model->get_view();

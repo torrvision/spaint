@@ -5,6 +5,7 @@
 
 #include "RiftRenderer.h"
 using namespace ITMLib;
+using namespace ORUtils;
 
 #include <iostream>
 #include <stdexcept>
@@ -159,7 +160,7 @@ void RiftRenderer::render(const Interactor_CPtr& interactor) const
   }
 
   // Calculate the left and right eye poses.
-  ITMPose poses[] =
+  SE3Pose poses[] =
   {
     CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left")),
     CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"))

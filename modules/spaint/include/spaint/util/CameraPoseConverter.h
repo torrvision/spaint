@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_CAMERAPOSECONVERTER
 #define H_SPAINT_CAMERAPOSECONVERTER
 
-#include <ITMLib/Objects/Camera/ITMPose.h>
+#include <ORUtils/SE3Pose.h>
 
 #include <rigging/SimpleCamera.h>
 
@@ -25,7 +25,7 @@ struct CameraPoseConverter
    * \param camera  The camera.
    * \return        The pose of the camera.
    */
-  static ITMLib::ITMPose camera_to_pose(const rigging::Camera& camera);
+  static ORUtils::SE3Pose camera_to_pose(const rigging::Camera& camera);
 
   /**
    * \brief Converts an InfiniTAM pose to a camera.
@@ -33,7 +33,7 @@ struct CameraPoseConverter
    * \param pose  The pose.
    * \return      A camera with the specified pose.
    */
-  static rigging::SimpleCamera pose_to_camera(const ITMLib::ITMPose& pose);
+  static rigging::SimpleCamera pose_to_camera(const ORUtils::SE3Pose& pose);
 
   /**
    * \brief Converts an InfiniTAM pose to a model-view matrix.
@@ -41,7 +41,7 @@ struct CameraPoseConverter
    * \param pose  The pose.
    * \return      The model-view matrix.
    */
-  static Eigen::Matrix4f pose_to_modelview(const ITMLib::ITMPose& pose);
+  static Eigen::Matrix4f pose_to_modelview(const ORUtils::SE3Pose& pose);
 };
 
 }
