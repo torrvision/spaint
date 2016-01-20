@@ -174,8 +174,7 @@ private:
 
     // Render a semi-transparent quad textured with the touch image over the top of the existing scene.
     m_base->begin_2d();
-      // FIXME: Use the coordinates of the first subwindow.
-      m_base->render_textured_quad(Vector2f(0,0), Vector2f(1,1), m_base->m_textureID);
+      m_base->render_textured_quad(m_base->m_textureID);
     m_base->end_2d();
 
     // Disable blending again.
@@ -338,7 +337,7 @@ void Renderer::initialise_common()
 
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
 {
-  // Set the viewport.
+  // Set the viewport for the window.
   ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
   glViewport(0, 0, depthImageSize.width, depthImageSize.height);
 
@@ -346,11 +345,23 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // If we have started reconstruction, render the reconstructed scene, then render a synthetic scene over the top of it.
+  // If we have started reconstruction, render all the sub-windows.
   if(m_model->get_view())
   {
-    render_reconstructed_scene(pose, renderState);
-    render_synthetic_scene(pose, interactor);
+    for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->size(); subwindowIndex < count; ++subwindowIndex)
+    {
+      // Set the viewport for the sub-window.
+      const Subwindow& subwindow = (*m_subwindowConfiguration)[subwindowIndex];
+      int x = (int)ROUND(subwindow.m_topLeft.x * depthImageSize.width);
+      int y = (int)ROUND(subwindow.m_topLeft.y * depthImageSize.height);
+      int width = (int)ROUND((subwindow.m_bottomRight.x - subwindow.m_topLeft.x) * depthImageSize.width);
+      int height = (int)ROUND((subwindow.m_bottomRight.y - subwindow.m_topLeft.y) * depthImageSize.height);
+      glViewport(x, y, width, height);
+
+      // Render the reconstructed scene, then render a synthetic scene over the top of it.
+      render_reconstructed_scene(pose, renderState, subwindowIndex);
+      render_synthetic_scene(pose, interactor, subwindowIndex);
+    }
   }
 }
 
@@ -418,7 +429,7 @@ Renderer::SubwindowConfiguration_Ptr Renderer::make_default_subwindow_configurat
   return config;
 }
 
-void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, size_t subwindowIndex) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -437,29 +448,26 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
 
   begin_2d();
 
-  for(size_t i = 0, size = m_subwindowConfiguration->size(); i < size; ++i)
-  {
-    // Generate the subwindow image.
-    Subwindow& subwindow = (*m_subwindowConfiguration)[i];
-    m_raycaster->generate_free_raycast(subwindow.m_image, renderState, pose, subwindow.m_type, postprocessor);
+  // Generate the subwindow image.
+  const Subwindow& subwindow = (*m_subwindowConfiguration)[subwindowIndex];
+  m_raycaster->generate_free_raycast(subwindow.m_image, renderState, pose, subwindow.m_type, postprocessor);
 
-    // Copy the raycasted scene to a texture.
-    glBindTexture(GL_TEXTURE_2D, m_textureID);
-    glTexImage2D(
-      GL_TEXTURE_2D, 0, GL_RGBA, subwindow.m_image->noDims.x, subwindow.m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-      subwindow.m_image->GetData(MEMORYDEVICE_CPU)
-    );
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  // Copy the raycasted scene to a texture.
+  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glTexImage2D(
+    GL_TEXTURE_2D, 0, GL_RGBA, subwindow.m_image->noDims.x, subwindow.m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+    subwindow.m_image->GetData(MEMORYDEVICE_CPU)
+  );
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    // Render a quad textured with the subwindow image.
-    render_textured_quad(subwindow.m_topLeft, subwindow.m_bottomRight, m_textureID);
-  }
+  // Render a quad textured with the subwindow image.
+  render_textured_quad(m_textureID);
 
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, size_t subwindowIndex) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -499,7 +507,7 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
   glDisable(GL_DEPTH_TEST);
 }
 
-void Renderer::render_textured_quad(const Vector2f& topLeft, const Vector2f& bottomRight, GLuint textureID)
+void Renderer::render_textured_quad(GLuint textureID)
 {
   glEnable(GL_TEXTURE_2D);
   {
@@ -507,10 +515,10 @@ void Renderer::render_textured_quad(const Vector2f& topLeft, const Vector2f& bot
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
     {
-      glTexCoord2f(0, 0); glVertex2f(topLeft.x, topLeft.y);
-      glTexCoord2f(1, 0); glVertex2f(bottomRight.x, topLeft.y);
-      glTexCoord2f(1, 1); glVertex2f(bottomRight.x, bottomRight.y);
-      glTexCoord2f(0, 1); glVertex2f(topLeft.x, bottomRight.y);
+      glTexCoord2f(0, 0); glVertex2f(0, 0);
+      glTexCoord2f(1, 0); glVertex2f(1, 0);
+      glTexCoord2f(1, 1); glVertex2f(1, 1);
+      glTexCoord2f(0, 1); glVertex2f(0, 1);
     }
     glEnd();
   }

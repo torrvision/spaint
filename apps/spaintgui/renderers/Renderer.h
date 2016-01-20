@@ -280,29 +280,29 @@ private:
   SubwindowConfiguration_Ptr make_default_subwindow_configuration(size_t subwindowCount) const;
 
   /**
-   * \brief Renders the reconstructed scene.
+   * \brief Renders the reconstructed scene into a sub-window.
    *
-   * \param pose        The camera pose.
-   * \param renderState The render state corresponding to the camera pose.
+   * \param pose            The camera pose.
+   * \param renderState     The render state corresponding to the camera pose.
+   * \param subwindowIndex  The index of the sub-window into which to render.
    */
-  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const;
+  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, size_t subwindowIndex) const;
 
   /**
-   * \brief Renders a synthetic scene to augment what actually exists in the real world.
+   * \brief Renders a synthetic scene into a sub-window to augment what actually exists in the real world.
    *
-   * \param pose        The camera pose.
-   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param pose            The camera pose.
+   * \param interactor      The interactor that is being used to interact with the scene.
+   * \param subwindowIndex  The index of the sub-window into which to render.
    */
-  void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor) const;
+  void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, size_t subwindowIndex) const;
 
   /**
    * \brief Renders a quad textured with the specified texture.
    *
-   * \param topLeft     TODO
-   * \param bottomRight TODO
    * \param textureID   The ID of the texture to apply to the quad.
    */
-  static void render_textured_quad(const Vector2f& topLeft, const Vector2f& bottomRight, GLuint textureID);
+  static void render_textured_quad(GLuint textureID);
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
