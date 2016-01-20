@@ -295,9 +295,11 @@ private:
   /**
    * \brief Renders a quad textured with the specified texture.
    *
-   * \param textureID The ID of the texture to apply to the quad.
+   * \param topLeft     TODO
+   * \param bottomRight TODO
+   * \param textureID   The ID of the texture to apply to the quad.
    */
-  static void render_textured_quad(GLuint textureID);
+  static void render_textured_quad(const Vector2f& topLeft, const Vector2f& bottomRight, GLuint textureID);
 
   /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
