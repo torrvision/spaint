@@ -168,6 +168,13 @@ public:
   bool get_median_filtering_enabled() const;
 
   /**
+   * \brief Gets the number of sub-windows in the active configuration.
+   *
+   * \return  The number of sub-windows in the active configuration.
+   */
+  size_t get_subwindow_count() const;
+
+  /**
    * \brief Resets the current sub-window configuration to its default settings.
    */
   void reset_subwindow_configuration();

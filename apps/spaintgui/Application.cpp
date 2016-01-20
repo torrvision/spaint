@@ -34,7 +34,8 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const Pipeline_Ptr& pipeline)
-: m_commandManager(10),
+: m_activeSubwindowIndex(0),
+  m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
@@ -459,13 +460,22 @@ void Application::process_renderer_input()
   }
   else --framesTillSwitchAllowed;
 
+  // Allow the user to change the active sub-window.
+  if(m_inputState.key_down(KEYCODE_k))
+  {
+    for(size_t i = 0, count = m_renderer->get_subwindow_count(); i < count; ++i)
+    {
+      if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i))) m_activeSubwindowIndex = i;
+    }
+  }
+
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
-    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICCOLOUR);
-    else if(m_inputState.key_down(KEYCODE_4)) m_renderer->set_subwindow_type(0, Raycaster::RT_SEMANTICFLAT);
+    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_subwindow_type(m_activeSubwindowIndex, Raycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_subwindow_type(m_activeSubwindowIndex, Raycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_subwindow_type(m_activeSubwindowIndex, Raycaster::RT_SEMANTICCOLOUR);
+    else if(m_inputState.key_down(KEYCODE_4)) m_renderer->set_subwindow_type(m_activeSubwindowIndex, Raycaster::RT_SEMANTICFLAT);
   }
 }
 

@@ -43,6 +43,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The index of the sub-window that will be affected by visualisation type changes. */
+  size_t m_activeSubwindowIndex;
+
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 

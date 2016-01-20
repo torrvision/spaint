@@ -208,6 +208,11 @@ bool Renderer::get_median_filtering_enabled() const
   return m_medianFilteringEnabled;
 }
 
+size_t Renderer::get_subwindow_count() const
+{
+  return m_subwindowConfiguration->size();
+}
+
 void Renderer::reset_subwindow_configuration()
 {
   m_subwindowConfiguration = make_default_subwindow_configuration(m_subwindowConfiguration->size());
