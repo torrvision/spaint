@@ -471,6 +471,19 @@ void Application::process_renderer_input()
   }
   else --framesTillSwitchAllowed;
 
+  // Allow the user to change the sub-window configuration.
+  if(m_inputState.key_down(KEYCODE_k))
+  {
+    for(size_t i = 0; i <= 9; ++i)
+    {
+      if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
+      {
+        m_renderer->set_subwindow_configuration(i);
+        break;
+      }
+    }
+  }
+
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
