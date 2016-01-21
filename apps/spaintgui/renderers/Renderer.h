@@ -16,7 +16,7 @@
 #include <spaint/ogl/WrappedGL.h>
 
 #include "../core/Interactor.h"
-#include "../core/Raycaster.h"
+#include "../subwindows/Subwindow.h"
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -45,32 +45,9 @@ protected:
 public:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
 
-  //#################### NESTED TYPES ####################
-private:
-  /**
-   * \brief An instance of this struct can be used to represent a sub-window into
-   *        which different types of scene visualisation can be rendered.
-   */
-  struct Subwindow
-  {
-    //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
-
-    /** The location of the bottom-right of the subwindow (each component is expressed as a fraction in the range [0,1]). */
-    Vector2f m_bottomRight;
-
-    /** An image in which to store the scene visualisation for the sub-window. */
-    ITMUChar4Image_Ptr m_image;
-
-    /** The location of the top-left of the subwindow (each component is expressed as a fraction in the range [0,1]). */
-    Vector2f m_topLeft;
-
-    /** The type of scene visualisation to render in the sub-window. */
-    Raycaster::RaycastType m_type;
-  };
-
   //#################### TYPEDEFS ####################
 private:
-  typedef std::vector<struct Subwindow> SubwindowConfiguration;
+  typedef std::vector<Subwindow> SubwindowConfiguration;
   typedef boost::shared_ptr<SubwindowConfiguration> SubwindowConfiguration_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
