@@ -167,11 +167,6 @@ public:
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
 
   /**
-   * \brief Resets the current sub-window configuration to its default settings.
-   */
-  void reset_subwindow_configuration();
-
-  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.

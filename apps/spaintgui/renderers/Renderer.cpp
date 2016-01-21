@@ -224,11 +224,6 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
   return m_subwindowConfiguration;
 }
 
-void Renderer::reset_subwindow_configuration()
-{
-  m_subwindowConfiguration = SubwindowConfiguration::make_default(m_subwindowConfiguration->subwindow_count(), m_model->get_depth_image_size());
-}
-
 void Renderer::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
