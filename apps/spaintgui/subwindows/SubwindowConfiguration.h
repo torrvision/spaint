@@ -19,6 +19,17 @@ private:
   /** The subwindows in the configuration. */
   std::vector<Subwindow> m_subwindows;
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * Makes a default sub-window configuration with the specified number of sub-windows.
+   *
+   * \param subwindowCount  The number of sub-windows the configuration should have (must be in the set {1,3}).
+   * \param imgSize         The size of image needed to store the scene visualisation for each sub-window.
+   * \return                The sub-window configuration, if the sub-window count was valid, or null otherwise.
+   */
+  static boost::shared_ptr<SubwindowConfiguration> make_default(size_t subwindowCount, const Vector2i& imgSize);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**

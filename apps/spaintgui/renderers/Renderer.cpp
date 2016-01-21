@@ -221,7 +221,7 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
 
 void Renderer::reset_subwindow_configuration()
 {
-  m_subwindowConfiguration = make_default_subwindow_configuration(m_subwindowConfiguration->subwindow_count());
+  m_subwindowConfiguration = SubwindowConfiguration::make_default(m_subwindowConfiguration->subwindow_count(), m_model->get_depth_image_size());
 }
 
 void Renderer::set_camera_mode(CameraMode cameraMode)
@@ -240,7 +240,7 @@ void Renderer::set_subwindow_configuration(size_t i)
   if(i < m_savedSubwindowConfigurations.size())
   {
     // If the saved configuration is null, try to create a default one of the right size.
-    if(!m_savedSubwindowConfigurations[i]) m_savedSubwindowConfigurations[i] = make_default_subwindow_configuration(i);
+    if(!m_savedSubwindowConfigurations[i]) m_savedSubwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_model->get_depth_image_size());
 
     // If the saved configuration was already or is now valid, use it.
     if(m_savedSubwindowConfigurations[i]) m_subwindowConfiguration = m_savedSubwindowConfigurations[i];
@@ -317,7 +317,7 @@ void Renderer::initialise_common()
   // Set up the sub-window configurations.
   for(int i = 0; i <= 3; ++i)
   {
-    m_savedSubwindowConfigurations.push_back(make_default_subwindow_configuration(i));
+    m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, m_model->get_depth_image_size()));
   }
 
   // Set the initial sub-window configuration.
@@ -372,36 +372,6 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
-
-SubwindowConfiguration_Ptr Renderer::make_default_subwindow_configuration(size_t subwindowCount) const
-{
-  SubwindowConfiguration_Ptr config;
-  const Vector2i& imgSize = m_model->get_depth_image_size();
-
-  switch(subwindowCount)
-  {
-    case 1:
-    {
-      config.reset(new SubwindowConfiguration);
-      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(1, 1), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
-      break;
-    }
-    case 3:
-    {
-      const float x = 0.665f;
-      const float y = 0.5f;
-      config.reset(new SubwindowConfiguration);
-      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y * 2), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), Raycaster::RT_SEMANTICCOLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), Raycaster::RT_SEMANTICPHONG, imgSize));
-      break;
-    }
-    default:
-      break;
-  }
-
-  return config;
-}
 
 void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, size_t subwindowIndex) const
 {

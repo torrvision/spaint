@@ -255,14 +255,6 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * Makes a default sub-window configuration with the specified number of sub-windows.
-   *
-   * \param subwindowCount  The number of sub-windows the configuration should have (must be in the set {1,3}).
-   * \return                The sub-window configuration, if the sub-window count was valid, or null otherwise.
-   */
-  SubwindowConfiguration_Ptr make_default_subwindow_configuration(size_t subwindowCount) const;
-
-  /**
    * \brief Renders the reconstructed scene into a sub-window.
    *
    * \param pose            The camera pose.
