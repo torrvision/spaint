@@ -348,7 +348,7 @@ void Renderer::initialise_common()
   }
 
   // Set the initial sub-window configuration.
-  set_subwindow_configuration(3);
+  set_subwindow_configuration(1);
 }
 
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
