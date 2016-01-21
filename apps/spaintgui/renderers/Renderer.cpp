@@ -107,8 +107,8 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
-    const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
+    const Vector2i& viewportSize = m_base->get_viewport_size();
+    const float aspectRatio = static_cast<float>(viewportSize.x) / viewportSize.y;
 
     const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
     const double labelOrbRadius = 0.05;
@@ -184,11 +184,12 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
+Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const boost::optional<Vector2i>& viewportSize)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
-  m_raycaster(raycaster)
+  m_raycaster(raycaster),
+  m_viewportSize(viewportSize ? *viewportSize : model->get_depth_image_size())
 {}
 
 //#################### DESTRUCTOR ####################
@@ -203,7 +204,7 @@ boost::optional<Vector2f> Renderer::compute_fractional_position(int x, int y) co
   if(!subwindowIndex) return boost::none;
 
   // FIXME: This is the same as in determine_subwindow_index. It should be factored out.
-  const Vector2f viewportSize = m_model->get_depth_image_size().toFloat();
+  const Vector2f viewportSize = get_viewport_size().toFloat();
   const float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
 
   const Subwindow& subwindow = (*m_subwindowConfiguration)[*subwindowIndex];
@@ -218,7 +219,7 @@ boost::optional<Vector2f> Renderer::compute_fractional_position(int x, int y) co
 
 boost::optional<size_t> Renderer::determine_subwindow_index(int x, int y) const
 {
-  Vector2f viewportSize = m_model->get_depth_image_size().toFloat();
+  Vector2f viewportSize = get_viewport_size().toFloat();
   float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
 
   for(size_t i = 0, count = m_subwindowConfiguration->size(); i < count; ++i)
@@ -336,6 +337,11 @@ SDL_Window *Renderer::get_window() const
   return m_window.get();
 }
 
+const Vector2i& Renderer::get_viewport_size() const
+{
+  return m_viewportSize;
+}
+
 void Renderer::initialise_common()
 {
   // Set up a texture in which to temporarily store scene visualisations and the touch image when rendering.
@@ -354,8 +360,8 @@ void Renderer::initialise_common()
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
 {
   // Set the viewport for the window.
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-  glViewport(0, 0, depthImageSize.width, depthImageSize.height);
+  const Vector2i& viewportSize = get_viewport_size();
+  glViewport(0, 0, viewportSize.width, viewportSize.height);
 
   // Clear the frame buffer.
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -368,10 +374,10 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
     {
       // Set the viewport for the sub-window.
       const Subwindow& subwindow = (*m_subwindowConfiguration)[subwindowIndex];
-      int x = (int)ROUND(subwindow.m_topLeft.x * depthImageSize.width);
-      int y = (int)ROUND((1 - subwindow.m_bottomRight.y) * depthImageSize.height);
-      int width = (int)ROUND((subwindow.m_bottomRight.x - subwindow.m_topLeft.x) * depthImageSize.width);
-      int height = (int)ROUND((subwindow.m_bottomRight.y - subwindow.m_topLeft.y) * depthImageSize.height);
+      int x = (int)ROUND(subwindow.m_topLeft.x * viewportSize.width);
+      int y = (int)ROUND((1 - subwindow.m_bottomRight.y) * viewportSize.height);
+      int width = (int)ROUND((subwindow.m_bottomRight.x - subwindow.m_topLeft.x) * viewportSize.width);
+      int height = (int)ROUND((subwindow.m_bottomRight.y - subwindow.m_topLeft.y) * viewportSize.height);
       glViewport(x, y, width, height);
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.

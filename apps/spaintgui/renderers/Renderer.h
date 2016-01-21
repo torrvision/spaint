@@ -99,6 +99,9 @@ private:
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
 
+  /** The size of the window's viewport. */
+  Vector2i m_viewportSize;
+
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
 
@@ -107,10 +110,11 @@ protected:
   /**
    * \brief Constructs a renderer.
    *
-   * \param model     The spaint model.
-   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param model         The spaint model.
+   * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param viewportSize  The size of the window's viewport.
    */
-  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster);
+  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const boost::optional<Vector2i>& viewportSize = boost::none);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -249,6 +253,13 @@ protected:
    * \return  The spaint model.
    */
   Model_CPtr get_model() const;
+
+  /**
+   * \brief Gets the size of the window's viewport.
+   *
+   * \return  The size of the window's viewport.
+   */
+  const Vector2i& get_viewport_size() const;
 
   /**
    * \brief Gets the window into which to render.

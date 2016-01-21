@@ -17,23 +17,20 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster)
-: Renderer(model, raycaster)
+WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, const boost::optional<Vector2i>& viewportSize)
+: Renderer(model, raycaster, viewportSize)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
-  int width = depthImageSize.width, height = depthImageSize.height;
 
   set_window(SDL_Window_Ptr(
     SDL_CreateWindow(
       title.c_str(),
       SDL_WINDOWPOS_UNDEFINED,
       SDL_WINDOWPOS_UNDEFINED,
-      width,
-      height,
+      get_viewport_size().width,
+      get_viewport_size().height,
       SDL_WINDOW_OPENGL
     ),
     &SDL_DestroyWindow
