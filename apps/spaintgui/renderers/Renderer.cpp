@@ -234,17 +234,9 @@ void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
   m_medianFilteringEnabled = medianFilteringEnabled;
 }
 
-void Renderer::set_subwindow_configuration(size_t i)
+void Renderer::set_subwindow_configuration(const SubwindowConfiguration_Ptr& subwindowConfiguration)
 {
-  // If the saved configuration index is valid:
-  if(i < m_savedSubwindowConfigurations.size())
-  {
-    // If the saved configuration is null, try to create a default one of the right size.
-    if(!m_savedSubwindowConfigurations[i]) m_savedSubwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_model->get_depth_image_size());
-
-    // If the saved configuration was already or is now valid, use it.
-    if(m_savedSubwindowConfigurations[i]) m_subwindowConfiguration = m_savedSubwindowConfigurations[i];
-  }
+  m_subwindowConfiguration = subwindowConfiguration;
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -267,8 +259,6 @@ void Renderer::begin_2d()
 
 void Renderer::destroy_common()
 {
-  m_subwindowConfiguration.reset();
-  std::vector<SubwindowConfiguration_Ptr>().swap(m_savedSubwindowConfigurations);
   glDeleteTextures(1, &m_textureID);
 }
 
@@ -302,15 +292,6 @@ void Renderer::initialise_common()
 {
   // Set up a texture in which to temporarily store scene visualisations and the touch image when rendering.
   glGenTextures(1, &m_textureID);
-
-  // Set up the sub-window configurations.
-  for(int i = 0; i <= 3; ++i)
-  {
-    m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, m_model->get_depth_image_size()));
-  }
-
-  // Set the initial sub-window configuration.
-  set_subwindow_configuration(1);
 }
 
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const

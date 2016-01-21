@@ -43,6 +43,15 @@ Application::Application(const Pipeline_Ptr& pipeline)
 {
   m_renderer.reset(new WindowedRenderer("Semantic Paint", pipeline->get_model(), pipeline->get_raycaster()));
   setup_labels();
+
+  // Set up the sub-window configurations.
+  for(int i = 0; i <= 3; ++i)
+  {
+    m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, pipeline->get_model()->get_depth_image_size()));
+  }
+
+  // Set the initial sub-window configuration.
+  set_subwindow_configuration(1);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -482,7 +491,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
       {
-        m_renderer->set_subwindow_configuration(i);
+        set_subwindow_configuration(i);
         break;
       }
     }
@@ -536,6 +545,19 @@ void Application::process_voice_input()
     if(command == "switch to prediction mode") m_pipeline->set_mode(Pipeline::MODE_PREDICTION);
     if(command == "switch to correction mode") m_pipeline->set_mode(Pipeline::MODE_TRAIN_AND_PREDICT);
     if(command == "switch to smoothing mode") m_pipeline->set_mode(Pipeline::MODE_SMOOTHING);
+  }
+}
+
+void Application::set_subwindow_configuration(size_t i)
+{
+  // If the saved configuration index is valid:
+  if(i < m_savedSubwindowConfigurations.size())
+  {
+    // If the saved configuration is null, try to create a default one of the right size.
+    if(!m_savedSubwindowConfigurations[i]) m_savedSubwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+
+    // If the saved configuration was already or is now valid, use it.
+    if(m_savedSubwindowConfigurations[i]) m_renderer->set_subwindow_configuration(m_savedSubwindowConfigurations[i]);
   }
 }
 

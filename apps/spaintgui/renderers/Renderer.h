@@ -62,9 +62,6 @@ private:
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   Raycaster_CPtr m_raycaster;
 
-  /** A set of saved sub-window configurations that the user can switch between as desired. */
-  std::vector<SubwindowConfiguration_Ptr> m_savedSubwindowConfigurations;
-
   /** The current sub-window configuration. */
   SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
@@ -183,9 +180,9 @@ public:
   /**
    * \brief Sets the sub-window configuration to use for visualising the scene.
    *
-   * \param i The index of the sub-window configuration to use for visualising the scene.
+   * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    */
-  void set_subwindow_configuration(size_t i);
+  void set_subwindow_configuration(const SubwindowConfiguration_Ptr& subwindowConfiguration);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

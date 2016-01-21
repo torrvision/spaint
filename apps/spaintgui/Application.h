@@ -64,6 +64,9 @@ private:
   /** The current renderer. */
   Renderer_Ptr m_renderer;
 
+  /** A set of saved sub-window configurations that the user can switch between as desired. */
+  std::vector<SubwindowConfiguration_Ptr> m_savedSubwindowConfigurations;
+
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
 
@@ -172,6 +175,13 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
+
+  /**
+   * \brief Sets the sub-window configuration to use for visualising the scene.
+   *
+   * \param i The index of the saved sub-window configuration to use for visualising the scene.
+   */
+  void set_subwindow_configuration(size_t i);
 
   /**
    * \brief Sets up the semantic labels with which the user can label the scene.
