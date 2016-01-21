@@ -16,7 +16,7 @@
 #include <spaint/ogl/WrappedGL.h>
 
 #include "../core/Interactor.h"
-#include "../subwindows/Subwindow.h"
+#include "../subwindows/SubwindowConfiguration.h"
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -44,11 +44,6 @@ protected:
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 public:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-
-  //#################### TYPEDEFS ####################
-private:
-  typedef std::vector<Subwindow> SubwindowConfiguration;
-  typedef boost::shared_ptr<SubwindowConfiguration> SubwindowConfiguration_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -135,22 +130,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Computes the fractional position within the relevant sub-window (if any) of a point (x,y) in the window.
+   * \brief Computes the fractional position of point (x,y) in the viewport.
    *
-   * \param x The x coordinate of the point whose fractional coordinates are to be computed.
-   * \param y The y coordinate of the point whose fractional coordinates are to be computed.
-   * \return  The fractional position of the specified point, if it is inside a sub-window, or nothing otherwise.
+   * \param x The x coordinate of the point whose fractional position is to be computed.
+   * \param y The y coordinate of the point whose fractional position is to be computed.
+   * \return  The fractional position of the specified point in the viewport.
    */
-  boost::optional<Vector2f> compute_fractional_position(int x, int y) const;
-
-  /**
-   * \brief Determines the sub-window (if any) containing the specified (x,y) point in the window.
-   *
-   * \param x The x coordinate of the point whose sub-window index is to be determined.
-   * \param y The y coordinate of the point whose sub-window index is to be determined.
-   * \return  The sub-window index of the point, if any, or nothing otherwise.
-   */
-  boost::optional<size_t> determine_subwindow_index(int x, int y) const;
+  Vector2f compute_fractional_viewport_position(int x, int y) const;
 
   /**
    * \brief Gets the current camera mode.
@@ -167,11 +153,11 @@ public:
   bool get_median_filtering_enabled() const;
 
   /**
-   * \brief Gets the number of sub-windows in the active configuration.
+   * \brief Gets the active sub-window configuration.
    *
-   * \return  The number of sub-windows in the active configuration.
+   * \return  The active sub-window configuration.
    */
-  size_t get_subwindow_count() const;
+  SubwindowConfiguration_CPtr get_subwindow_configuration() const;
 
   /**
    * \brief Resets the current sub-window configuration to its default settings.

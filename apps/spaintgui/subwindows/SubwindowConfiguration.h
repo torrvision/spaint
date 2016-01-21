@@ -31,20 +31,32 @@ public:
   /**
    * \brief Computes the fractional position of the specified point in the viewport within the sub-window containing it (if any).
    *
-   * \param viewportFracX The fractional x coordinate of the point in the viewport (in the range [0,1]).
-   * \param viewportFracY The fractional y coordinate of the point in the viewport (in the range [0,1]).
-   * \return              The fractional position of the point in its sub-window (if any), or nothing otherwise.
+   * \param fractionalViewportPos The fractional position of the point in the viewport (with components in the range [0,1]).
+   * \return                      The fractional position of the point in its sub-window (if any), or nothing otherwise.
    */
-  boost::optional<Vector2f> compute_fractional_subwindow_position(float viewportFracX, float viewportFracY) const;
+  boost::optional<Vector2f> compute_fractional_subwindow_position(const Vector2f& fractionalViewportPos) const;
 
   /**
    * \brief Determines the index of the sub-window (if any) containing the specified point in the viewport.
    *
-   * \param viewportFracX The fractional x coordinate of the point in the viewport (in the range [0,1]).
-   * \param viewportFracY The fractional y coordinate of the point in the viewport (in the range [0,1]).
-   * \return              The sub-window index (if any) of the point, or nothing otherwise.
+   * \param fractionalViewportPos The fractional position of the point in the viewport (with components in the range [0,1]).
+   * \return                      The sub-window index (if any) of the point, or nothing otherwise.
    */
-  boost::optional<size_t> determine_subwindow_index(float viewportFracX, float viewportFracY) const;
+  boost::optional<size_t> determine_subwindow_index(const Vector2f& fractionalViewportPos) const;
+
+  /**
+   * \brief Gets the i'th sub-window in the configuration.
+   *
+   * \return  The i'th sub-window in the configuration.
+   */
+  Subwindow& subwindow(size_t i);
+
+  /**
+   * \brief Gets the i'th sub-window in the configuration.
+   *
+   * \return  The i'th sub-window in the configuration.
+   */
+  const Subwindow& subwindow(size_t i) const;
 
   /**
    * \brief Gets the number of sub-windows in the configuration.
@@ -53,5 +65,10 @@ public:
    */
   size_t subwindow_count() const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SubwindowConfiguration> SubwindowConfiguration_Ptr;
+typedef boost::shared_ptr<const SubwindowConfiguration> SubwindowConfiguration_CPtr;
 
 #endif

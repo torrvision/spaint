@@ -33,6 +33,18 @@ public:
 
   /** The type of scene visualisation to render in the sub-window. */
   Raycaster::RaycastType m_type;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a sub-window.
+   *
+   * \param topLeft     The location of the top-left of the subwindow (each component is expressed as a fraction in the range [0,1]).
+   * \param bottomRight The location of the bottom-right of the subwindow (each component is expressed as a fraction in the range [0,1]).
+   * \param type        The type of scene visualisation to render in the sub-window.
+   * \param imgSize     The size of image needed to store the scene visualisation for the sub-window.
+   */
+  Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, Raycaster::RaycastType type, const Vector2i& imgSize);
 };
 
 #endif

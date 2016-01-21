@@ -198,43 +198,10 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-boost::optional<Vector2f> Renderer::compute_fractional_position(int x, int y) const
+Vector2f Renderer::compute_fractional_viewport_position(int x, int y) const
 {
-  boost::optional<size_t> subwindowIndex = determine_subwindow_index(x, y);
-  if(!subwindowIndex) return boost::none;
-
-  // FIXME: This is the same as in determine_subwindow_index. It should be factored out.
   const Vector2f viewportSize = get_viewport_size().toFloat();
-  const float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
-
-  const Subwindow& subwindow = (*m_subwindowConfiguration)[*subwindowIndex];
-  const Vector2f& tl = subwindow.m_topLeft;
-  const Vector2f& br = subwindow.m_bottomRight;
-
-  return Vector2f(
-    CLAMP((viewportFracX - tl.x) / (br.x - tl.x), 0.0f, 1.0f),
-    CLAMP((viewportFracY - tl.y) / (br.y - tl.y), 0.0f, 1.0f)
-  );
-}
-
-boost::optional<size_t> Renderer::determine_subwindow_index(int x, int y) const
-{
-  Vector2f viewportSize = get_viewport_size().toFloat();
-  float viewportFracX = x / (viewportSize.x - 1), viewportFracY = y / (viewportSize.y - 1);
-
-  for(size_t i = 0, count = m_subwindowConfiguration->size(); i < count; ++i)
-  {
-    const Subwindow& subwindow = (*m_subwindowConfiguration)[i];
-    const Vector2f& tl = subwindow.m_topLeft;
-    const Vector2f& br = subwindow.m_bottomRight;
-    if(tl.x <= viewportFracX && viewportFracX <= br.x &&
-       tl.y <= viewportFracY && viewportFracY <= br.y)
-    {
-      return i;
-    }
-  }
-
-  return boost::none;
+  return Vector2f(x / (viewportSize.x - 1), y / (viewportSize.y - 1));
 }
 
 Renderer::CameraMode Renderer::get_camera_mode() const
@@ -247,14 +214,14 @@ bool Renderer::get_median_filtering_enabled() const
   return m_medianFilteringEnabled;
 }
 
-size_t Renderer::get_subwindow_count() const
+SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
 {
-  return m_subwindowConfiguration->size();
+  return m_subwindowConfiguration;
 }
 
 void Renderer::reset_subwindow_configuration()
 {
-  m_subwindowConfiguration = make_default_subwindow_configuration(m_subwindowConfiguration->size());
+  m_subwindowConfiguration = make_default_subwindow_configuration(m_subwindowConfiguration->subwindow_count());
 }
 
 void Renderer::set_camera_mode(CameraMode cameraMode)
@@ -285,9 +252,9 @@ void Renderer::set_subwindow_type(size_t subwindowIndex, Raycaster::RaycastType 
   // Note: A null sub-window configuration should never be active.
   assert(m_subwindowConfiguration);
 
-  if(subwindowIndex < m_subwindowConfiguration->size())
+  if(subwindowIndex < m_subwindowConfiguration->subwindow_count())
   {
-    (*m_subwindowConfiguration)[subwindowIndex].m_type = type;
+    m_subwindowConfiguration->subwindow(subwindowIndex).m_type = type;
   }
 }
 
@@ -370,10 +337,10 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
   // If we have started reconstruction, render all the sub-windows.
   if(m_model->get_view())
   {
-    for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->size(); subwindowIndex < count; ++subwindowIndex)
+    for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
     {
       // Set the viewport for the sub-window.
-      const Subwindow& subwindow = (*m_subwindowConfiguration)[subwindowIndex];
+      const Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
       int x = (int)ROUND(subwindow.m_topLeft.x * viewportSize.width);
       int y = (int)ROUND((1 - subwindow.m_bottomRight.y) * viewportSize.height);
       int width = (int)ROUND((subwindow.m_bottomRight.x - subwindow.m_topLeft.x) * viewportSize.width);
@@ -406,46 +373,31 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-Renderer::SubwindowConfiguration_Ptr Renderer::make_default_subwindow_configuration(size_t subwindowCount) const
+SubwindowConfiguration_Ptr Renderer::make_default_subwindow_configuration(size_t subwindowCount) const
 {
   SubwindowConfiguration_Ptr config;
+  const Vector2i& imgSize = m_model->get_depth_image_size();
 
   switch(subwindowCount)
   {
     case 1:
     {
-      config.reset(new SubwindowConfiguration(1));
-      (*config)[0].m_topLeft = Vector2f(0, 0);
-      (*config)[0].m_bottomRight = Vector2f(1, 1);
-      (*config)[0].m_type = Raycaster::RT_SEMANTICLAMBERTIAN;
+      config.reset(new SubwindowConfiguration);
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(1, 1), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
       break;
     }
     case 3:
     {
       const float x = 0.665f;
       const float y = 0.5f;
-      config.reset(new SubwindowConfiguration(3));
-      (*config)[0].m_topLeft = Vector2f(0, 0);
-      (*config)[0].m_bottomRight = Vector2f(x, y * 2);
-      (*config)[0].m_type = Raycaster::RT_SEMANTICLAMBERTIAN;
-      (*config)[1].m_topLeft = Vector2f(x, 0);
-      (*config)[1].m_bottomRight = Vector2f(1, y);
-      (*config)[1].m_type = Raycaster::RT_SEMANTICCOLOUR;
-      (*config)[2].m_topLeft = Vector2f(x, y);
-      (*config)[2].m_bottomRight = Vector2f(1, y * 2);
-      (*config)[2].m_type = Raycaster::RT_SEMANTICPHONG;
+      config.reset(new SubwindowConfiguration);
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y * 2), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), Raycaster::RT_SEMANTICCOLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), Raycaster::RT_SEMANTICPHONG, imgSize));
       break;
     }
     default:
       break;
-  }
-
-  if(config)
-  {
-    for(size_t i = 0; i < config->size(); ++i)
-    {
-      (*config)[i].m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
-    }
   }
 
   return config;
@@ -471,7 +423,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   begin_2d();
 
   // Generate the subwindow image.
-  const Subwindow& subwindow = (*m_subwindowConfiguration)[subwindowIndex];
+  const Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
   m_raycaster->generate_free_raycast(subwindow.m_image, renderState, pose, subwindow.m_type, postprocessor);
 
   // Copy the raycasted scene to a texture.

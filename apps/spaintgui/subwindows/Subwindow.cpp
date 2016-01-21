@@ -5,4 +5,11 @@
 
 #include "Subwindow.h"
 
-// TODO
+//#################### CONSTRUCTORS ####################
+
+Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, Raycaster::RaycastType type, const Vector2i& imgSize)
+: m_bottomRight(bottomRight),
+  m_image(new ITMUChar4Image(imgSize, true, true)),
+  m_topLeft(topLeft),
+  m_type(type)
+{}
