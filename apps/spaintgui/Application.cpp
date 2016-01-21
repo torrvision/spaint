@@ -41,13 +41,13 @@ Application::Application(const Pipeline_Ptr& pipeline)
   m_pipeline(pipeline),
   m_voiceCommandStream("localhost", "23984")
 {
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", pipeline->get_model(), pipeline->get_raycaster()));
   setup_labels();
 
   // Set up the sub-window configurations.
+  const Vector2i& imgSize = pipeline->get_model()->get_depth_image_size();
   for(int i = 0; i <= 3; ++i)
   {
-    m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, pipeline->get_model()->get_depth_image_size()));
+    m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, imgSize));
   }
 
   // Set the initial sub-window configuration.
@@ -458,7 +458,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(KEYCODE_1))
       {
-        m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster()));
+        set_subwindow_configuration(1);
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
@@ -553,11 +553,26 @@ void Application::set_subwindow_configuration(size_t i)
   // If the saved configuration index is valid:
   if(i < m_savedSubwindowConfigurations.size())
   {
-    // If the saved configuration is null, try to create a default one of the right size.
-    if(!m_savedSubwindowConfigurations[i]) m_savedSubwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+    // If the saved configuration is null, try to create a default one.
+    if(!m_savedSubwindowConfigurations[i])
+    {
+      const Vector2i& imgSize = m_pipeline->get_model()->get_depth_image_size();
+      m_savedSubwindowConfigurations[i] = SubwindowConfiguration::make_default(i, imgSize);
+    }
 
     // If the saved configuration was already or is now valid, use it.
-    if(m_savedSubwindowConfigurations[i]) m_renderer->set_subwindow_configuration(m_savedSubwindowConfigurations[i]);
+    if(m_savedSubwindowConfigurations[i])
+    {
+      Vector2i viewportSize;
+      switch(i)
+      {
+        case 3:   viewportSize = Vector2i(960, 480); break;
+        default:  viewportSize = Vector2i(640, 480); break;
+      }
+
+      m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), viewportSize));
+      m_renderer->set_subwindow_configuration(m_savedSubwindowConfigurations[i]);
+    }
   }
 }
 
