@@ -214,6 +214,11 @@ bool Renderer::get_median_filtering_enabled() const
   return m_medianFilteringEnabled;
 }
 
+const SubwindowConfiguration_Ptr& Renderer::get_subwindow_configuration()
+{
+  return m_subwindowConfiguration;
+}
+
 SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
 {
   return m_subwindowConfiguration;
@@ -244,17 +249,6 @@ void Renderer::set_subwindow_configuration(size_t i)
 
     // If the saved configuration was already or is now valid, use it.
     if(m_savedSubwindowConfigurations[i]) m_subwindowConfiguration = m_savedSubwindowConfigurations[i];
-  }
-}
-
-void Renderer::set_subwindow_type(size_t subwindowIndex, Raycaster::RaycastType type)
-{
-  // Note: A null sub-window configuration should never be active.
-  assert(m_subwindowConfiguration);
-
-  if(subwindowIndex < m_subwindowConfiguration->subwindow_count())
-  {
-    m_subwindowConfiguration->subwindow(subwindowIndex).m_type = type;
   }
 }
 

@@ -157,6 +157,13 @@ public:
    *
    * \return  The active sub-window configuration.
    */
+  const SubwindowConfiguration_Ptr& get_subwindow_configuration();
+
+  /**
+   * \brief Gets the active sub-window configuration.
+   *
+   * \return  The active sub-window configuration.
+   */
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
 
   /**
@@ -184,14 +191,6 @@ public:
    * \param i The index of the sub-window configuration to use for visualising the scene.
    */
   void set_subwindow_configuration(size_t i);
-
-  /**
-   * \brief Sets the type of a sub-window that is being used to visualise the scene.
-   *
-   * \param subwindowIndex  The index of the subwindow whose type is to be set.
-   * \param type            The new type of visualisation to use.
-   */
-  void set_subwindow_type(size_t subwindowIndex, Raycaster::RaycastType type);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
