@@ -50,8 +50,8 @@ Application::Application(const Pipeline_Ptr& pipeline)
     m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, imgSize));
   }
 
-  // Set the initial sub-window configuration.
-  set_subwindow_configuration(1);
+  // Set up the renderer.
+  switch_to_windowed_renderer(1);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -458,7 +458,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(KEYCODE_1))
       {
-        set_subwindow_configuration(1);
+        switch_to_windowed_renderer(1);
         framesTillSwitchAllowed = SWITCH_DELAY;
       }
       else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
@@ -466,12 +466,7 @@ void Application::process_renderer_input()
 #ifdef WITH_OVR
         try
         {
-          m_renderer.reset(new RiftRenderer(
-            "Semantic Paint",
-            m_pipeline->get_model(),
-            m_pipeline->get_raycaster(),
-            m_inputState.key_down(KEYCODE_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
-          ));
+          switch_to_rift_renderer(m_inputState.key_down(KEYCODE_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE);
           framesTillSwitchAllowed = SWITCH_DELAY;
         }
         catch(std::runtime_error& e)
@@ -491,7 +486,7 @@ void Application::process_renderer_input()
     {
       if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
       {
-        set_subwindow_configuration(i);
+        switch_to_windowed_renderer(i);
         break;
       }
     }
@@ -563,14 +558,6 @@ void Application::set_subwindow_configuration(size_t i)
     // If the saved configuration was already or is now valid, use it.
     if(m_savedSubwindowConfigurations[i])
     {
-      Vector2i viewportSize;
-      switch(i)
-      {
-        case 3:   viewportSize = Vector2i(960, 480); break;
-        default:  viewportSize = Vector2i(640, 480); break;
-      }
-
-      m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), viewportSize));
       m_renderer->set_subwindow_configuration(m_savedSubwindowConfigurations[i]);
     }
   }
@@ -612,4 +599,25 @@ void Application::setup_labels()
 
   // Set the initial semantic label to use for painting.
   m_pipeline->get_interactor()->set_semantic_label(1);
+}
+
+#ifdef WITH_OVR
+void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
+{
+  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), mode));
+  set_subwindow_configuration(1);
+}
+#endif
+
+void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex)
+{
+  Vector2i viewportSize;
+  switch(subwindowConfigurationIndex)
+  {
+    case 3:   viewportSize = Vector2i(960, 480); break;
+    default:  viewportSize = Vector2i(640, 480); break;
+  }
+
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), viewportSize));
+  set_subwindow_configuration(subwindowConfigurationIndex);
 }

@@ -31,6 +31,10 @@
 #include "core/Pipeline.h"
 #include "renderers/Renderer.h"
 
+#ifdef WITH_OVR
+#include "renderers/RiftRenderer.h"
+#endif
+
 /**
  * \brief The main application class for spaintgui.
  */
@@ -187,6 +191,22 @@ private:
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
+
+#ifdef WITH_OVR
+  /**
+   * \brief Switches to a Rift renderer.
+   *
+   * \param mode  The Rift rendering mode to use.
+   */
+  void switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode);
+#endif
+
+  /**
+   * \brief Switches to a windowed renderer that uses the specified sub-window configuration.
+   *
+   * \param subwindowConfigurationIndex The index of the saved sub-window configuration to use.
+   */
+  void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
 };
 
 #endif
