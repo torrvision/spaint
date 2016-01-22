@@ -502,12 +502,14 @@ void Application::process_renderer_input()
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
-    const SubwindowConfiguration_Ptr& config = m_renderer->get_subwindow_configuration();
-    Subwindow& subwindow = config->subwindow(m_activeSubwindowIndex);
-    if(m_inputState.key_down(KEYCODE_1)) subwindow.set_type(Raycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(KEYCODE_2)) subwindow.set_type(Raycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(KEYCODE_3)) subwindow.set_type(Raycaster::RT_SEMANTICCOLOUR);
-    else if(m_inputState.key_down(KEYCODE_4)) subwindow.set_type(Raycaster::RT_SEMANTICFLAT);
+    Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+    subwindow.set_type(
+      m_inputState.key_down(KEYCODE_1) ? Raycaster::RT_SEMANTICLAMBERTIAN :
+      m_inputState.key_down(KEYCODE_2) ? Raycaster::RT_SEMANTICPHONG :
+      m_inputState.key_down(KEYCODE_3) ? Raycaster::RT_SEMANTICCOLOUR :
+      m_inputState.key_down(KEYCODE_4) ? Raycaster::RT_SEMANTICFLAT :
+      subwindow.get_type()
+    );
   }
 }
 
