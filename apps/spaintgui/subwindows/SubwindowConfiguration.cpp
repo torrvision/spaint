@@ -49,12 +49,11 @@ boost::optional<Vector2f> SubwindowConfiguration::compute_fractional_subwindow_p
   if(!subwindowIndex) return boost::none;
 
   const Subwindow& subwindow = m_subwindows[*subwindowIndex];
-  const Vector2f& tl = subwindow.m_topLeft;
-  const Vector2f& br = subwindow.m_bottomRight;
+  const Vector2f& tl = subwindow.top_left();
 
   return Vector2f(
-    CLAMP((fractionalViewportPos.x - tl.x) / (br.x - tl.x), 0.0f, 1.0f),
-    CLAMP((fractionalViewportPos.y - tl.y) / (br.y - tl.y), 0.0f, 1.0f)
+    CLAMP((fractionalViewportPos.x - tl.x) / subwindow.width(), 0.0f, 1.0f),
+    CLAMP((fractionalViewportPos.y - tl.y) / subwindow.height(), 0.0f, 1.0f)
   );
 }
 
@@ -63,8 +62,8 @@ boost::optional<size_t> SubwindowConfiguration::determine_subwindow_index(const 
   for(size_t i = 0, count = m_subwindows.size(); i < count; ++i)
   {
     const Subwindow& subwindow = m_subwindows[i];
-    const Vector2f& tl = subwindow.m_topLeft;
-    const Vector2f& br = subwindow.m_bottomRight;
+    const Vector2f& tl = subwindow.top_left();
+    const Vector2f& br = subwindow.bottom_right();
     if(tl.x <= fractionalViewportPos.x && fractionalViewportPos.x <= br.x &&
        tl.y <= fractionalViewportPos.y && fractionalViewportPos.y <= br.y)
     {

@@ -308,10 +308,10 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
     {
       // Set the viewport for the sub-window.
       const Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-      int x = (int)ROUND(subwindow.m_topLeft.x * viewportSize.width);
-      int y = (int)ROUND((1 - subwindow.m_bottomRight.y) * viewportSize.height);
-      int width = (int)ROUND((subwindow.m_bottomRight.x - subwindow.m_topLeft.x) * viewportSize.width);
-      int height = (int)ROUND((subwindow.m_bottomRight.y - subwindow.m_topLeft.y) * viewportSize.height);
+      int x = (int)ROUND(subwindow.top_left().x * viewportSize.width);
+      int y = (int)ROUND((1 - subwindow.bottom_right().y) * viewportSize.height);
+      int width = (int)ROUND(subwindow.width() * viewportSize.width);
+      int height = (int)ROUND(subwindow.height() * viewportSize.height);
       glViewport(x, y, width, height);
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
@@ -360,15 +360,13 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   begin_2d();
 
   // Generate the subwindow image.
-  const Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-  m_raycaster->generate_free_raycast(subwindow.m_image, renderState, pose, subwindow.m_type, postprocessor);
+  Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
+  const ITMUChar4Image_Ptr& image = subwindow.get_image();
+  m_raycaster->generate_free_raycast(image, renderState, pose, subwindow.get_type(), postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(
-    GL_TEXTURE_2D, 0, GL_RGBA, subwindow.m_image->noDims.x, subwindow.m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-    subwindow.m_image->GetData(MEMORYDEVICE_CPU)
-  );
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 

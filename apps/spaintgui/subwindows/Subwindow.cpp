@@ -13,3 +13,45 @@ Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, Rayca
   m_topLeft(topLeft),
   m_type(type)
 {}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+const Vector2f& Subwindow::bottom_right() const
+{
+  return m_bottomRight;
+}
+
+const Subwindow::ITMUChar4Image_Ptr& Subwindow::get_image()
+{
+  return m_image;
+}
+
+Subwindow::ITMUChar4Image_CPtr Subwindow::get_image() const
+{
+  return m_image;
+}
+
+Raycaster::RaycastType Subwindow::get_type() const
+{
+  return m_type;
+}
+
+float Subwindow::height() const
+{
+  return m_bottomRight.y - m_topLeft.y;
+}
+
+void Subwindow::set_type(Raycaster::RaycastType type)
+{
+  m_type = type;
+}
+
+const Vector2f& Subwindow::top_left() const
+{
+  return m_topLeft;
+}
+
+float Subwindow::width() const
+{
+  return m_bottomRight.x - m_topLeft.x;
+}

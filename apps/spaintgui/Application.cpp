@@ -504,10 +504,10 @@ void Application::process_renderer_input()
   {
     const SubwindowConfiguration_Ptr& config = m_renderer->get_subwindow_configuration();
     Subwindow& subwindow = config->subwindow(m_activeSubwindowIndex);
-    if(m_inputState.key_down(KEYCODE_1)) subwindow.m_type = Raycaster::RT_SEMANTICLAMBERTIAN;
-    else if(m_inputState.key_down(KEYCODE_2)) subwindow.m_type = Raycaster::RT_SEMANTICPHONG;
-    else if(m_inputState.key_down(KEYCODE_3)) subwindow.m_type = Raycaster::RT_SEMANTICCOLOUR;
-    else if(m_inputState.key_down(KEYCODE_4)) subwindow.m_type = Raycaster::RT_SEMANTICFLAT;
+    if(m_inputState.key_down(KEYCODE_1)) subwindow.set_type(Raycaster::RT_SEMANTICLAMBERTIAN);
+    else if(m_inputState.key_down(KEYCODE_2)) subwindow.set_type(Raycaster::RT_SEMANTICPHONG);
+    else if(m_inputState.key_down(KEYCODE_3)) subwindow.set_type(Raycaster::RT_SEMANTICCOLOUR);
+    else if(m_inputState.key_down(KEYCODE_4)) subwindow.set_type(Raycaster::RT_SEMANTICFLAT);
   }
 }
 
