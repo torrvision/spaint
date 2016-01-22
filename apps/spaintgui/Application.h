@@ -68,8 +68,8 @@ private:
   /** The current renderer. */
   Renderer_Ptr m_renderer;
 
-  /** A set of saved sub-window configurations that the user can switch between as desired. */
-  std::vector<SubwindowConfiguration_Ptr> m_savedSubwindowConfigurations;
+  /** A set of sub-window configurations that the user can switch between as desired. */
+  std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
@@ -109,6 +109,14 @@ private:
    * \return  The current monocular render state.
    */
   Renderer::RenderState_CPtr get_monocular_render_state() const;
+
+  /**
+   * \brief Gets the specified sub-window configuration.
+   *
+   * \param i The index of the sub-window configuration to get.
+   * \return  The specified sub-window configuration, if valid, or null otherwise.
+   */
+  SubwindowConfiguration_Ptr get_subwindow_configuration(size_t i) const;
 
   /**
    * \brief Handle key down events.
@@ -181,13 +189,6 @@ private:
   void process_voice_input();
 
   /**
-   * \brief Sets the sub-window configuration to use for visualising the scene.
-   *
-   * \param i The index of the saved sub-window configuration to use for visualising the scene.
-   */
-  void set_subwindow_configuration(size_t i);
-
-  /**
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
@@ -204,7 +205,7 @@ private:
   /**
    * \brief Switches to a windowed renderer that uses the specified sub-window configuration.
    *
-   * \param subwindowConfigurationIndex The index of the saved sub-window configuration to use.
+   * \param subwindowConfigurationIndex The index of the sub-window configuration to use.
    */
   void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
 };

@@ -51,12 +51,14 @@ public:
   /**
    * \brief Constructs a Rift renderer.
    *
-   * \param title         The title of the window.
-   * \param model         The spaint model.
-   * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param renderingMode The rendering mode to use.
+   * \param title                   The title of the window.
+   * \param model                   The spaint model.
+   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
+   * \param renderingMode           The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, RiftRenderingMode renderingMode);
+  RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
+               RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

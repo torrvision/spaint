@@ -184,11 +184,13 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const boost::optional<Vector2i>& viewportSize)
+Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
+                   const boost::optional<Vector2i>& viewportSize)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
   m_raycaster(raycaster),
+  m_subwindowConfiguration(subwindowConfiguration),
   m_viewportSize(viewportSize ? *viewportSize : model->get_depth_image_size())
 {}
 
@@ -232,11 +234,6 @@ void Renderer::set_camera_mode(CameraMode cameraMode)
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
-}
-
-void Renderer::set_subwindow_configuration(const SubwindowConfiguration_Ptr& subwindowConfiguration)
-{
-  m_subwindowConfiguration = subwindowConfiguration;
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################

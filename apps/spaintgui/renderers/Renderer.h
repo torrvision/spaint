@@ -62,7 +62,7 @@ private:
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   Raycaster_CPtr m_raycaster;
 
-  /** The current sub-window configuration. */
+  /** The sub-window configuration to use for visualising the scene. */
   SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
@@ -79,11 +79,12 @@ protected:
   /**
    * \brief Constructs a renderer.
    *
-   * \param model         The spaint model.
-   * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param viewportSize  The size of the window's viewport.
+   * \param model                   The spaint model.
+   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
+   * \param viewportSize            The size of the window's viewport.
    */
-  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const boost::optional<Vector2i>& viewportSize = boost::none);
+  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration, const boost::optional<Vector2i>& viewportSize = boost::none);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -176,13 +177,6 @@ public:
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
    */
   void set_median_filtering_enabled(bool medianFilteringEnabled);
-
-  /**
-   * \brief Sets the sub-window configuration to use for visualising the scene.
-   *
-   * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
-   */
-  void set_subwindow_configuration(const SubwindowConfiguration_Ptr& subwindowConfiguration);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:

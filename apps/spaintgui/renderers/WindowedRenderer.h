@@ -28,12 +28,14 @@ public:
   /**
    * \brief Constructs a windowed renderer.
    *
-   * \param title         The title of the window.
-   * \param model         The spaint model.
-   * \param raycaster     The raycaster to use in order to cast rays into the InfiniTAM scene.
-   * \param viewportSize  The size of the window's viewport.
+   * \param title                   The title of the window.
+   * \param model                   The spaint model.
+   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
+   * \param viewportSize            The size of the window's viewport.
    */
-  WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, const boost::optional<Vector2i>& viewportSize = boost::none);
+  WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
+                   const boost::optional<Vector2i>& viewportSize = boost::none);
 
   //#################### DESTRUCTOR ####################
 public:

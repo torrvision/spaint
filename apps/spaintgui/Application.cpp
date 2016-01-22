@@ -47,7 +47,7 @@ Application::Application(const Pipeline_Ptr& pipeline)
   const Vector2i& imgSize = pipeline->get_model()->get_depth_image_size();
   for(int i = 0; i <= 3; ++i)
   {
-    m_savedSubwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, imgSize));
+    m_subwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, imgSize));
   }
 
   // Set up the renderer.
@@ -103,6 +103,13 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
       // This should never happen.
       throw std::runtime_error("Unknown camera mode");
   }
+}
+
+SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) const
+{
+  SubwindowConfiguration_Ptr result;
+  if(i < m_subwindowConfigurations.size()) result = m_subwindowConfigurations[i];
+  return result;
 }
 
 void Application::handle_key_down(const SDL_Keysym& keysym)
@@ -543,26 +550,6 @@ void Application::process_voice_input()
   }
 }
 
-void Application::set_subwindow_configuration(size_t i)
-{
-  // If the saved configuration index is valid:
-  if(i < m_savedSubwindowConfigurations.size())
-  {
-    // If the saved configuration is null, try to create a default one.
-    if(!m_savedSubwindowConfigurations[i])
-    {
-      const Vector2i& imgSize = m_pipeline->get_model()->get_depth_image_size();
-      m_savedSubwindowConfigurations[i] = SubwindowConfiguration::make_default(i, imgSize);
-    }
-
-    // If the saved configuration was already or is now valid, use it.
-    if(m_savedSubwindowConfigurations[i])
-    {
-      m_renderer->set_subwindow_configuration(m_savedSubwindowConfigurations[i]);
-    }
-  }
-}
-
 void Application::setup_labels()
 {
   const LabelManager_Ptr& labelManager = m_pipeline->get_model()->get_label_manager();
@@ -604,13 +591,17 @@ void Application::setup_labels()
 #ifdef WITH_OVR
 void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
 {
-  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), mode));
-  set_subwindow_configuration(1);
+  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(1);
+  if(!subwindowConfiguration) return;
+  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, mode));
 }
 #endif
 
 void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex)
 {
+  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(subwindowConfigurationIndex);
+  if(!subwindowConfiguration) return;
+
   Vector2i viewportSize;
   switch(subwindowConfigurationIndex)
   {
@@ -618,6 +609,5 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
     default:  viewportSize = Vector2i(640, 480); break;
   }
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), viewportSize));
-  set_subwindow_configuration(subwindowConfigurationIndex);
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, viewportSize));
 }
