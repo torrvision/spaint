@@ -307,7 +307,7 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
     for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
     {
       // Set the viewport for the sub-window.
-      const Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
+      Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
       int x = (int)ROUND(subwindow.top_left().x * viewportSize.width);
       int y = (int)ROUND((1 - subwindow.bottom_right().y) * viewportSize.height);
       int width = (int)ROUND(subwindow.width() * viewportSize.width);
@@ -315,7 +315,7 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
       glViewport(x, y, width, height);
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
-      render_reconstructed_scene(pose, renderState, subwindowIndex);
+      render_reconstructed_scene(pose, renderState, subwindow);
       render_synthetic_scene(pose, interactor);
     }
   }
@@ -340,7 +340,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, size_t subwindowIndex) const
+void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -360,7 +360,6 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   begin_2d();
 
   // Generate the subwindow image.
-  Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
   m_raycaster->generate_free_raycast(image, renderState, pose, subwindow.get_type(), postprocessor);
 

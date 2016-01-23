@@ -242,11 +242,11 @@ private:
   /**
    * \brief Renders the reconstructed scene into a sub-window.
    *
-   * \param pose            The camera pose.
-   * \param renderState     The render state corresponding to the camera pose.
-   * \param subwindowIndex  The index of the sub-window into which to render.
+   * \param pose        The camera pose.
+   * \param renderState The render state corresponding to the camera pose.
+   * \param subwindow   The sub-window into which to render.
    */
-  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, size_t subwindowIndex) const;
+  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
