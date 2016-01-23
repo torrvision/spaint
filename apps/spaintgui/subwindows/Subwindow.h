@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_SUBWINDOW
 #define H_SPAINTGUI_SUBWINDOW
 
-#include <ITMLib/Utils/ITMMath.h>
-
 #include "../core/Raycaster.h"
 
 /**
