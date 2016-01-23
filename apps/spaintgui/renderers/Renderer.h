@@ -151,16 +151,16 @@ public:
   bool get_median_filtering_enabled() const;
 
   /**
-   * \brief Gets the active sub-window configuration.
+   * \brief Gets the renderer's sub-window configuration.
    *
-   * \return  The active sub-window configuration.
+   * \return  The renderer's sub-window configuration.
    */
   const SubwindowConfiguration_Ptr& get_subwindow_configuration();
 
   /**
-   * \brief Gets the active sub-window configuration.
+   * \brief Gets the renderer's sub-window configuration.
    *
-   * \return  The active sub-window configuration.
+   * \return  The renderer's sub-window configuration.
    */
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
 
@@ -260,7 +260,7 @@ private:
   /**
    * \brief Renders a quad textured with the specified texture.
    *
-   * \param textureID   The ID of the texture to apply to the quad.
+   * \param textureID The ID of the texture to apply to the quad.
    */
   static void render_textured_quad(GLuint textureID);
 
