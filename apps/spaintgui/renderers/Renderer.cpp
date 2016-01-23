@@ -357,8 +357,6 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
 #endif
   }
 
-  begin_2d();
-
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
   m_raycaster->generate_free_raycast(image, renderState, pose, subwindow.get_type(), postprocessor);
@@ -370,8 +368,8 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
   // Render a quad textured with the subwindow image.
-  render_textured_quad(m_textureID);
-
+  begin_2d();
+    render_textured_quad(m_textureID);
   end_2d();
 }
 
