@@ -316,7 +316,7 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
       render_reconstructed_scene(pose, renderState, subwindowIndex);
-      render_synthetic_scene(pose, interactor, subwindowIndex);
+      render_synthetic_scene(pose, interactor);
     }
   }
 }
@@ -376,7 +376,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, size_t subwindowIndex) const
+void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
