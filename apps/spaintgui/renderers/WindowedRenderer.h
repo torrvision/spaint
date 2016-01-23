@@ -34,8 +34,8 @@ public:
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    * \param viewportSize            The size of the window's viewport.
    */
-  WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-                   const boost::optional<Vector2i>& viewportSize = boost::none);
+  WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster,
+                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& viewportSize);
 
   //#################### DESTRUCTOR ####################
 public:

@@ -185,13 +185,13 @@ private:
 //#################### CONSTRUCTORS ####################
 
 Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-                   const boost::optional<Vector2i>& viewportSize)
+                   const Vector2i& viewportSize)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
   m_raycaster(raycaster),
   m_subwindowConfiguration(subwindowConfiguration),
-  m_viewportSize(viewportSize ? *viewportSize : model->get_depth_image_size())
+  m_viewportSize(viewportSize)
 {}
 
 //#################### DESTRUCTOR ####################
