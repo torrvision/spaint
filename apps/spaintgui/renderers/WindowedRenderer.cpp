@@ -30,8 +30,8 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
       title.c_str(),
       SDL_WINDOWPOS_UNDEFINED,
       SDL_WINDOWPOS_UNDEFINED,
-      get_viewport_size().width,
-      get_viewport_size().height,
+      viewportSize.width,
+      viewportSize.height,
       SDL_WINDOW_OPENGL
     ),
     &SDL_DestroyWindow
