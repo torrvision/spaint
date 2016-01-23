@@ -463,41 +463,38 @@ void Application::process_renderer_input()
   {
     if(m_inputState.key_down(KEYCODE_r))
     {
-      if(m_inputState.key_down(KEYCODE_1))
-      {
-        switch_to_windowed_renderer(1);
-        framesTillSwitchAllowed = SWITCH_DELAY;
-      }
-      else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
+      if(m_inputState.key_down(KEYCODE_LSHIFT))
       {
 #ifdef WITH_OVR
-        try
+        if(m_inputState.key_down(KEYCODE_1) || m_inputState.key_down(KEYCODE_2))
         {
-          switch_to_rift_renderer(m_inputState.key_down(KEYCODE_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE);
-          framesTillSwitchAllowed = SWITCH_DELAY;
-        }
-        catch(std::runtime_error& e)
-        {
-          std::cerr << e.what() << '\n';
+          try
+          {
+            switch_to_rift_renderer(m_inputState.key_down(KEYCODE_1) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE);
+            framesTillSwitchAllowed = SWITCH_DELAY;
+          }
+          catch(std::runtime_error& e)
+          {
+            std::cerr << e.what() << '\n';
+          }
         }
 #endif
+      }
+      else
+      {
+        for(size_t i = 0; i <= 9; ++i)
+        {
+          if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
+          {
+            switch_to_windowed_renderer(i);
+            framesTillSwitchAllowed = SWITCH_DELAY;
+            break;
+          }
+        }
       }
     }
   }
   else --framesTillSwitchAllowed;
-
-  // Allow the user to change the sub-window configuration.
-  if(m_inputState.key_down(KEYCODE_k))
-  {
-    for(size_t i = 0; i <= 9; ++i)
-    {
-      if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
-      {
-        switch_to_windowed_renderer(i);
-        break;
-      }
-    }
-  }
 
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
