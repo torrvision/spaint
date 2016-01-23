@@ -24,8 +24,8 @@ namespace spaint {
 _CPU_AND_GPU_CODE_
 inline bool get_pick_point(float fracX, float fracY, int width, int height, const Vector4f *pointImage, Vector3f& pickPoint)
 {
-  int x = static_cast<int>(fracX * (width - 1) + 0.5f);
-  int y = static_cast<int>(fracY * (height - 1) + 0.5f);
+  int x = (int)ROUND(fracX * (width - 1));
+  int y = (int)ROUND(fracY * (height - 1));
   Vector4f p = pointImage[y * width + x];
   pickPoint = Vector3f(p.x, p.y, p.z);
   return p.w > 0;
