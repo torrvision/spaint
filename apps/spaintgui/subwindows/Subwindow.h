@@ -21,13 +21,13 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The location of the bottom-right of the subwindow (each component is expressed as a fraction in the range [0,1]). */
+  /** The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_bottomRight;
 
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
 
-  /** The location of the top-left of the subwindow (each component is expressed as a fraction in the range [0,1]). */
+  /** The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_topLeft;
 
   /** The type of scene visualisation to render in the sub-window. */
@@ -38,8 +38,8 @@ public:
   /**
    * \brief Constructs a sub-window.
    *
-   * \param topLeft     The location of the top-left of the subwindow (each component is expressed as a fraction in the range [0,1]).
-   * \param bottomRight The location of the bottom-right of the subwindow (each component is expressed as a fraction in the range [0,1]).
+   * \param topLeft     The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]).
+   * \param bottomRight The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]).
    * \param type        The type of scene visualisation to render in the sub-window.
    * \param imgSize     The size of image needed to store the scene visualisation for the sub-window.
    */
