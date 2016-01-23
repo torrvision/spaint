@@ -604,12 +604,8 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(subwindowConfigurationIndex);
   if(!subwindowConfiguration) return;
 
-  Vector2i viewportSize;
-  switch(subwindowConfigurationIndex)
-  {
-    case 3:   viewportSize = Vector2i(960, 480); break;
-    default:  viewportSize = Vector2i(640, 480); break;
-  }
+  const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
+  Vector2i viewportSize((int)ROUND(640 / mainSubwindow.width()), (int)ROUND(480 / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, viewportSize));
 }

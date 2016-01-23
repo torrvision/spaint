@@ -10,20 +10,26 @@
 SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindowCount, const Vector2i& imgSize)
 {
   SubwindowConfiguration_Ptr config;
+  if(subwindowCount > 0) config.reset(new SubwindowConfiguration);
 
   switch(subwindowCount)
   {
     case 1:
     {
-      config.reset(new SubwindowConfiguration);
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(1, 1), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
+      break;
+    }
+    case 2:
+    {
+      const float x = 0.5f;
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), Raycaster::RT_SEMANTICCOLOUR, imgSize));
       break;
     }
     case 3:
     {
       const float x = 0.665f;
       const float y = 0.5f;
-      config.reset(new SubwindowConfiguration);
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y * 2), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
       config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), Raycaster::RT_SEMANTICCOLOUR, imgSize));
       config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), Raycaster::RT_SEMANTICPHONG, imgSize));
