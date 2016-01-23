@@ -6,6 +6,9 @@
 #ifndef H_SPAINTGUI_RENDERER
 #define H_SPAINTGUI_RENDERER
 
+// Prevent SDL from trying to define M_PI.
+#define HAVE_M_PI
+
 #include <SDL.h>
 
 #include <rigging/MoveableCamera.h>

@@ -8,7 +8,7 @@
 
 #ifdef _MSC_VER
   // Suppress some VC++ warnings that are produced by boost/asio.hpp.
-  #pragma warning(disable:4267)
+  #pragma warning(disable:4267 4996)
 #endif
 
 #include <boost/asio.hpp>
@@ -16,15 +16,13 @@
 
 #ifdef _MSC_VER
   // Re-enable the VC++ warnings for the rest of the code.
-  #pragma warning(default:4267)
+  #pragma warning(default:4267 4996)
 #endif
+
+// Prevent SDL from trying to define M_PI.
+#define HAVE_M_PI
 
 #include <SDL.h>
-
-// Suppress the definition of M_PI provided by SDL - we want the one in <cmath>.
-#ifdef M_PI
-#undef M_PI
-#endif
 
 #include <tvginput/InputState.h>
 
