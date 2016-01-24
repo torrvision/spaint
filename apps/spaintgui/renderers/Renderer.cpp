@@ -310,36 +310,35 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
     {
       // Set the viewport for the sub-window.
       Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-      int x = (int)ROUND(subwindow.top_left().x * viewportSize.width);
-      int y = (int)ROUND((1 - subwindow.bottom_right().y) * viewportSize.height);
+      int left = (int)ROUND(subwindow.top_left().x * viewportSize.width);
+      int top = (int)ROUND((1 - subwindow.bottom_right().y) * viewportSize.height);
       int width = (int)ROUND(subwindow.width() * viewportSize.width);
       int height = (int)ROUND(subwindow.height() * viewportSize.height);
-      glViewport(x, y, width, height);
+      glViewport(left, top, width, height);
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
       render_reconstructed_scene(pose, renderState, subwindow);
       render_synthetic_scene(pose, interactor);
-    }
 
 #if WITH_GLUT && 1
-    // Render the value of the pixel to which the user is pointing (for debugging purposes).
-    boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracViewportPos);
-    if(fracSubwindowPos)
-    {
-      ITMUChar4Image_CPtr image = m_subwindowConfiguration->subwindow(fracSubwindowPos->first).get_image();
-      int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
-      int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
-      Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
+      // Render the value of the pixel to which the user is pointing in the active subwindow (for debugging purposes).
+      boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracViewportPos);
+      if(fracSubwindowPos)
+      {
+        ITMUChar4Image_CPtr image = subwindow.get_image();
+        int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
+        int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
+        Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
 
-      std::ostringstream oss;
-      oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
+        std::ostringstream oss;
+        oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
 
-      glViewport(0, 0, viewportSize.width, viewportSize.height);
-      begin_2d();
-        render_text(oss.str(), Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0.02f, 0.95f));
-      end_2d();
-    }
+        begin_2d();
+          render_text(oss.str(), Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0.025f, 0.95f));
+        end_2d();
+      }
 #endif
+    }
   }
 }
 
