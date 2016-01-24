@@ -413,6 +413,18 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
   glDisable(GL_DEPTH_TEST);
 }
 
+#ifdef WITH_GLUT
+void Renderer::render_text(const std::string& text, const Vector3f& colour, const Vector2f& pos, void *font)
+{
+  glColor3f(colour.r, colour.g, colour.b);
+  glRasterPos2f(pos.x, pos.y);
+  for(size_t i = 0, len = text.length(); i < len; ++i)
+  {
+    glutBitmapCharacter(font, text[i]);
+  }
+}
+#endif
+
 void Renderer::render_textured_quad(GLuint textureID)
 {
   glEnable(GL_TEXTURE_2D);

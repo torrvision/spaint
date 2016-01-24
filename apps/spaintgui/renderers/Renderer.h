@@ -11,6 +11,11 @@
 
 #include <SDL.h>
 
+#ifdef WITH_GLUT
+  #include <spaint/ogl/WrappedGL.h>
+  #include <GL/glut.h>
+#endif
+
 #include <rigging/MoveableCamera.h>
 
 #include <spaint/ogl/WrappedGL.h>
@@ -256,6 +261,18 @@ private:
    * \param interactor  The interactor that is being used to interact with the scene.
    */
   void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor) const;
+
+#ifdef WITH_GLUT
+  /**
+   * \brief Renders some text in a specified colour and at a specified position.
+   *
+   * \param text    The text to render.
+   * \param colour  The colour in which to render the text.
+   * \param pos     The position at which to render the text.
+   * \param font    The font in which to render the text.
+   */
+  static void render_text(const std::string& text, const Vector3f& colour, const Vector2f& pos, void *font = GLUT_BITMAP_HELVETICA_18);
+#endif
 
   /**
    * \brief Renders a quad textured with the specified texture.
