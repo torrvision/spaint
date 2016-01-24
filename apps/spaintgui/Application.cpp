@@ -227,19 +227,20 @@ void Application::handle_key_up(const SDL_Keysym& keysym)
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
 {
   Vector2f fracViewportPos = m_renderer->compute_fractional_viewport_position(e.x, e.y);
-  boost::optional<Vector2f> fracSubwindowPos = m_renderer->get_subwindow_configuration()->compute_fractional_subwindow_position(fracViewportPos);
+  SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracViewportPos);
   if(!fracSubwindowPos) return;
 
   switch(e.button)
   {
     case SDL_BUTTON_LEFT:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, fracSubwindowPos->x, fracSubwindowPos->y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, fracSubwindowPos->second.x, fracSubwindowPos->second.y);
       break;
     case SDL_BUTTON_MIDDLE:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, fracSubwindowPos->x, fracSubwindowPos->y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, fracSubwindowPos->second.x, fracSubwindowPos->second.y);
       break;
     case SDL_BUTTON_RIGHT:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, fracSubwindowPos->x, fracSubwindowPos->y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, fracSubwindowPos->second.x, fracSubwindowPos->second.y);
       break;
     default:
       break;
@@ -344,15 +345,12 @@ bool Application::process_events()
       {
         Vector2f fracViewportPos = m_renderer->compute_fractional_viewport_position(event.motion.x, event.motion.y);
         SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-
-        // Allow the user to change the active sub-window.
-        boost::optional<size_t> subwindowIndex = config->determine_subwindow_index(fracViewportPos);
-        if(subwindowIndex) m_activeSubwindowIndex = *subwindowIndex;
-
-        // Update the fractional position of the mouse.
-        boost::optional<Vector2f> fracSubwindowPos = config->compute_fractional_subwindow_position(fracViewportPos);
-        if(fracSubwindowPos) m_inputState.set_mouse_position(fracSubwindowPos->x, fracSubwindowPos->y);
-
+        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracViewportPos);
+        if(fracSubwindowPos)
+        {
+          m_activeSubwindowIndex = fracSubwindowPos->first;
+          m_inputState.set_mouse_position(fracSubwindowPos->second.x, fracSubwindowPos->second.y);
+        }
         break;
       }
       case SDL_QUIT:

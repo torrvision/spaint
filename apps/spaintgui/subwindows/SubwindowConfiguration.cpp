@@ -49,7 +49,7 @@ void SubwindowConfiguration::add_subwindow(const Subwindow& subwindow)
   m_subwindows.push_back(subwindow);
 }
 
-boost::optional<Vector2f> SubwindowConfiguration::compute_fractional_subwindow_position(const Vector2f& fractionalViewportPos) const
+boost::optional<std::pair<size_t,Vector2f> > SubwindowConfiguration::compute_fractional_subwindow_position(const Vector2f& fractionalViewportPos) const
 {
   boost::optional<size_t> subwindowIndex = determine_subwindow_index(fractionalViewportPos);
   if(!subwindowIndex) return boost::none;
@@ -57,11 +57,28 @@ boost::optional<Vector2f> SubwindowConfiguration::compute_fractional_subwindow_p
   const Subwindow& subwindow = m_subwindows[*subwindowIndex];
   const Vector2f& tl = subwindow.top_left();
 
-  return Vector2f(
+  return std::make_pair(*subwindowIndex, Vector2f(
     CLAMP((fractionalViewportPos.x - tl.x) / subwindow.width(), 0.0f, 1.0f),
     CLAMP((fractionalViewportPos.y - tl.y) / subwindow.height(), 0.0f, 1.0f)
-  );
+  ));
 }
+
+Subwindow& SubwindowConfiguration::subwindow(size_t i)
+{
+  return m_subwindows[i];
+}
+
+const Subwindow& SubwindowConfiguration::subwindow(size_t i) const
+{
+  return m_subwindows[i];
+}
+
+size_t SubwindowConfiguration::subwindow_count() const
+{
+  return m_subwindows.size();
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 boost::optional<size_t> SubwindowConfiguration::determine_subwindow_index(const Vector2f& fractionalViewportPos) const
 {
@@ -78,19 +95,4 @@ boost::optional<size_t> SubwindowConfiguration::determine_subwindow_index(const 
   }
 
   return boost::none;
-}
-
-Subwindow& SubwindowConfiguration::subwindow(size_t i)
-{
-  return m_subwindows[i];
-}
-
-const Subwindow& SubwindowConfiguration::subwindow(size_t i) const
-{
-  return m_subwindows[i];
-}
-
-size_t SubwindowConfiguration::subwindow_count() const
-{
-  return m_subwindows.size();
 }
