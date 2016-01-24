@@ -14,6 +14,7 @@
 #ifdef WITH_GLUT
   #include <spaint/ogl/WrappedGL.h>
   #include <GL/glut.h>
+  #undef WIN32_LEAN_AND_MEAN
 #endif
 
 #include <rigging/MoveableCamera.h>
@@ -45,6 +46,7 @@ public:
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 public:
@@ -127,9 +129,10 @@ public:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
-   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param interactor      The interactor that is being used to interact with the scene.
+   * \param fracViewportPos The fractional position of the mouse within the viewport.
    */
-  virtual void render(const Interactor_CPtr& interactor) const = 0;
+  virtual void render(const Interactor_CPtr& interactor, const Vector2f& fracViewportPos) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -230,11 +233,13 @@ protected:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
    *
-   * \param pose        The camera pose.
-   * \param interactor  The interactor that is being used to interact with the scene.
-   * \param renderState The render state corresponding to the camera pose.
+   * \param pose            The camera pose.
+   * \param interactor      The interactor that is being used to interact with the scene.
+   * \param renderState     The render state corresponding to the camera pose.
+   * \param fracViewportPos The fractional position of the mouse within the viewport.
    */
-  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
+  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
+                    const Vector2f& fracViewportPos) const;
 
   /**
    * \brief Sets the window into which to render.

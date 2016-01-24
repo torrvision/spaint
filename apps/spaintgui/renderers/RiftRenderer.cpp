@@ -146,7 +146,7 @@ bool RiftRenderer::is_mono() const
   return false;
 }
 
-void RiftRenderer::render(const Interactor_CPtr& interactor) const
+void RiftRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fracViewportPos) const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);
@@ -173,7 +173,7 @@ void RiftRenderer::render(const Interactor_CPtr& interactor) const
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
     glUseProgram(0);
 
-    render_scene(poses[i], interactor, m_renderStates[i]);
+    render_scene(poses[i], interactor, m_renderStates[i], fracViewportPos);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }

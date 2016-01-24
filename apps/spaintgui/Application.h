@@ -53,6 +53,9 @@ private:
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
+  /** The fractional position of the mouse within the viewport. */
+  Vector2f m_fracViewportPos;
+
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 

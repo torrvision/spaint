@@ -291,7 +291,8 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
+                            const Vector2f& fracViewportPos) const
 {
   // Set the viewport for the window.
   const Vector2i& viewportSize = get_viewport_size();
@@ -301,9 +302,10 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // If we have started reconstruction, render all the sub-windows.
+  // If we have started reconstruction:
   if(m_model->get_view())
   {
+    // Render all the sub-windows.
     for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
     {
       // Set the viewport for the sub-window.
@@ -318,6 +320,26 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
       render_reconstructed_scene(pose, renderState, subwindow);
       render_synthetic_scene(pose, interactor);
     }
+
+#if WITH_GLUT && 1
+    // Render the value of the pixel to which the user is pointing (for debugging purposes).
+    boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracViewportPos);
+    if(fracSubwindowPos)
+    {
+      ITMUChar4Image_CPtr image = m_subwindowConfiguration->subwindow(fracSubwindowPos->first).get_image();
+      int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
+      int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
+      Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
+
+      std::ostringstream oss;
+      oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
+
+      glViewport(0, 0, viewportSize.width, viewportSize.height);
+      begin_2d();
+        render_text(oss.str(), Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0.02f, 0.95f));
+      end_2d();
+    }
+#endif
   }
 }
 

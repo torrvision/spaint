@@ -68,7 +68,7 @@ bool WindowedRenderer::is_mono() const
   return true;
 }
 
-void WindowedRenderer::render(const Interactor_CPtr& interactor) const
+void WindowedRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fracViewportPos) const
 {
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());
@@ -89,7 +89,7 @@ void WindowedRenderer::render(const Interactor_CPtr& interactor) const
   }
 
   // Render the scene from that camera pose.
-  render_scene(pose, interactor, m_renderState);
+  render_scene(pose, interactor, m_renderState, fracViewportPos);
 
   // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());

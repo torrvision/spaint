@@ -62,7 +62,7 @@ public:
   virtual bool is_mono() const;
 
   /** Override */
-  virtual void render(const Interactor_CPtr& interactor) const;
+  virtual void render(const Interactor_CPtr& interactor, const Vector2f& fracViewportPos) const;
 };
 
 #endif
