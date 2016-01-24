@@ -250,6 +250,16 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+  /**
+   * \brief Renders the value of a pixel in the specified sub-window.
+   *
+   * \param fracViewportPos The fractional position of the mouse within the viewport.
+   * \param subwindow       The sub-window.
+   */
+  void render_pixel_value(const Vector2f& fracViewportPos, const Subwindow& subwindow) const;
+#endif
+
   /**
    * \brief Renders the reconstructed scene into a sub-window.
    *

@@ -14,6 +14,7 @@ SET(targetname spaintgui)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowUSBBandwidthSupport.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferPixelDebugging.cmake)
 
 ################################
 # Specify the libraries to use #
