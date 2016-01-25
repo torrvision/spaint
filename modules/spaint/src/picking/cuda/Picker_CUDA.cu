@@ -13,9 +13,9 @@ namespace spaint {
 
 //#################### CUDA KERNELS ####################
 
-__global__ void ck_get_pick_point(float fracX, float fracY, int width, int height, const Vector4f *imageData, Vector3f *pickPoint, bool *result)
+__global__ void ck_get_pick_point(int x, int y, int width, const Vector4f *imageData, Vector3f *pickPoint, bool *result)
 {
-  *result = get_pick_point(fracX, fracY, width, height, imageData, *pickPoint);
+  *result = get_pick_point(x, y, width, imageData, *pickPoint);
 }
 
 __global__ void ck_to_short(const Vector3f *pickPointsFloat, Vector3s *pickPointsShort, int pointCount)
@@ -26,7 +26,7 @@ __global__ void ck_to_short(const Vector3f *pickPointsFloat, Vector3s *pickPoint
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool Picker_CUDA::pick(float fracX, float fracY, const ITMLib::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset) const
+bool Picker_CUDA::pick(int x, int y, const ITMLib::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset) const
 {
   if(offset >= pickPointsMB.dataSize)
   {
@@ -35,9 +35,8 @@ bool Picker_CUDA::pick(float fracX, float fracY, const ITMLib::ITMRenderState *r
 
   static ORUtils::MemoryBlock<bool> result(1, true, true);
   ck_get_pick_point<<<1,1>>>(
-    fracX, fracY,
+    x, y,
     renderState->raycastResult->noDims.x,
-    renderState->raycastResult->noDims.y,
     renderState->raycastResult->GetData(MEMORYDEVICE_CUDA),
     pickPointsMB.GetData(MEMORYDEVICE_CUDA) + offset,
     result.GetData(MEMORYDEVICE_CUDA)
