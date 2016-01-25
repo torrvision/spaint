@@ -13,7 +13,7 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool Picker_CPU::pick(float fracX, float fracY, const ITMLib::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset) const
+bool Picker_CPU::pick(int x, int y, const ITMLib::ITMRenderState *renderState, ORUtils::MemoryBlock<Vector3f>& pickPointsMB, size_t offset) const
 {
   if(offset >= pickPointsMB.dataSize)
   {
@@ -21,9 +21,8 @@ bool Picker_CPU::pick(float fracX, float fracY, const ITMLib::ITMRenderState *re
   }
 
   return get_pick_point(
-    fracX, fracY,
+    x, y,
     renderState->raycastResult->noDims.x,
-    renderState->raycastResult->noDims.y,
     renderState->raycastResult->GetData(MEMORYDEVICE_CPU),
     *(pickPointsMB.GetData(MEMORYDEVICE_CPU) + offset)
   );
