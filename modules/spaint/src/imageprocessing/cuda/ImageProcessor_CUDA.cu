@@ -93,6 +93,8 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
+
+  af::array temp = (*inputImage)(af::span, af::span);
   
   Vector2i imgSize = outputImage->noDims;
   int pixelCount = imgSize.x * imgSize.y;
@@ -101,7 +103,7 @@ void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const I
   int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
   
   ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
-    inputImage->device<unsigned char>(),
+    temp.device<unsigned char>(),
     imgSize.x,
     imgSize.y,
     outputImage->GetData(MEMORYDEVICE_CUDA)
