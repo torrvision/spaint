@@ -184,12 +184,14 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
+Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
+                   const Vector2i& windowViewportSize)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
   m_raycaster(raycaster),
-  m_raycastType(Raycaster::RT_SEMANTICLAMBERTIAN)
+  m_subwindowConfiguration(subwindowConfiguration),
+  m_windowViewportSize(windowViewportSize)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -197,6 +199,12 @@ Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster)
 Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+Vector2f Renderer::compute_fractional_window_position(int x, int y) const
+{
+  const Vector2f windowViewportSize = get_window_viewport_size().toFloat();
+  return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
+}
 
 Renderer::CameraMode Renderer::get_camera_mode() const
 {
@@ -208,6 +216,16 @@ bool Renderer::get_median_filtering_enabled() const
   return m_medianFilteringEnabled;
 }
 
+const SubwindowConfiguration_Ptr& Renderer::get_subwindow_configuration()
+{
+  return m_subwindowConfiguration;
+}
+
+SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
+{
+  return m_subwindowConfiguration;
+}
+
 void Renderer::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
@@ -216,11 +234,6 @@ void Renderer::set_camera_mode(CameraMode cameraMode)
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
 {
   m_medianFilteringEnabled = medianFilteringEnabled;
-}
-
-void Renderer::set_raycast_type(Raycaster::RaycastType raycastType)
-{
-  m_raycastType = raycastType;
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -243,7 +256,6 @@ void Renderer::begin_2d()
 
 void Renderer::destroy_common()
 {
-  m_image.reset();
   glDeleteTextures(1, &m_textureID);
 }
 
@@ -268,30 +280,44 @@ SDL_Window *Renderer::get_window() const
   return m_window.get();
 }
 
+const Vector2i& Renderer::get_window_viewport_size() const
+{
+  return m_windowViewportSize;
+}
+
 void Renderer::initialise_common()
 {
-  // Create an image into which to temporarily store visualisations of the scene.
-  m_image.reset(new ITMUChar4Image(m_model->get_depth_image_size(), true, true));
-
-  // Set up a texture in which to temporarily store the scene raycast and touch image when rendering.
+  // Set up a texture in which to temporarily store scene visualisations and the touch image when rendering.
   glGenTextures(1, &m_textureID);
 }
 
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
 {
-  // Set the viewport.
-  ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-  glViewport(0, 0, depthImageSize.width, depthImageSize.height);
+  // Set the viewport for the window.
+  const Vector2i& windowViewportSize = get_window_viewport_size();
+  glViewport(0, 0, windowViewportSize.width, windowViewportSize.height);
 
   // Clear the frame buffer.
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // If we have started reconstruction, render the reconstructed scene, then render a synthetic scene over the top of it.
+  // If we have started reconstruction, render all the sub-windows.
   if(m_model->get_view())
   {
-    render_reconstructed_scene(pose, renderState);
-    render_synthetic_scene(pose, interactor);
+    for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
+    {
+      // Set the viewport for the sub-window.
+      Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
+      int x = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
+      int y = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
+      int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
+      int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
+      glViewport(x, y, width, height);
+
+      // Render the reconstructed scene, then render a synthetic scene over the top of it.
+      render_reconstructed_scene(pose, renderState, subwindow);
+      render_synthetic_scene(pose, interactor);
+    }
   }
 }
 
@@ -314,7 +340,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const
 {
   // Set up any post-processing that needs to be applied to the raycast result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -331,16 +357,17 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
 #endif
   }
 
-  // Raycast the scene.
-  m_raycaster->generate_free_raycast(m_image, renderState, pose, m_raycastType, postprocessor);
+  // Generate the subwindow image.
+  const ITMUChar4Image_Ptr& image = subwindow.get_image();
+  m_raycaster->generate_free_raycast(image, renderState, pose, subwindow.get_type(), postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_image->noDims.x, m_image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image->GetData(MEMORYDEVICE_CPU));
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->noDims.x, image->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetData(MEMORYDEVICE_CPU));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-  // Render a quad textured with the raycasted scene.
+  // Render a quad textured with the subwindow image.
   begin_2d();
     render_textured_quad(m_textureID);
   end_2d();

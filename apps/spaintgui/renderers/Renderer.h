@@ -16,7 +16,7 @@
 #include <spaint/ogl/WrappedGL.h>
 
 #include "../core/Interactor.h"
-#include "../core/Raycaster.h"
+#include "../subwindows/SubwindowConfiguration.h"
 
 /**
  * \brief An instance of a class deriving from this one can be used to render the spaint scene to a given target.
@@ -53,9 +53,6 @@ private:
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
-  /** An image in which to temporarily store visualisations of the scene. */
-  ITMUChar4Image_Ptr m_image;
-
   /** A flag indicating whether or not to use median filtering when rendering the scene raycast. */
   bool m_medianFilteringEnabled;
 
@@ -65,8 +62,8 @@ private:
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   Raycaster_CPtr m_raycaster;
 
-  /** The type of raycast to use. */
-  Raycaster::RaycastType m_raycastType;
+  /** The sub-window configuration to use for visualising the scene. */
+  SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
@@ -74,15 +71,21 @@ private:
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
 
+  /** The size of the window's viewport. */
+  Vector2i m_windowViewportSize;
+
   //#################### CONSTRUCTORS ####################
 protected:
   /**
    * \brief Constructs a renderer.
    *
-   * \param model     The spaint model.
-   * \param raycaster The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param model                   The spaint model.
+   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
+   * \param windowViewportSize      The size of the window's viewport.
    */
-  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster);
+  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
+           const Vector2i& windowViewportSize);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -126,6 +129,15 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Computes the fractional position of point (x,y) in the window.
+   *
+   * \param x The x coordinate of the point whose fractional position is to be computed.
+   * \param y The y coordinate of the point whose fractional position is to be computed.
+   * \return  The fractional position of the specified point in the window.
+   */
+  Vector2f compute_fractional_window_position(int x, int y) const;
+
+  /**
    * \brief Gets the current camera mode.
    *
    * \return  The current camera mode.
@@ -140,6 +152,20 @@ public:
   bool get_median_filtering_enabled() const;
 
   /**
+   * \brief Gets the renderer's sub-window configuration.
+   *
+   * \return  The renderer's sub-window configuration.
+   */
+  const SubwindowConfiguration_Ptr& get_subwindow_configuration();
+
+  /**
+   * \brief Gets the renderer's sub-window configuration.
+   *
+   * \return  The renderer's sub-window configuration.
+   */
+  SubwindowConfiguration_CPtr get_subwindow_configuration() const;
+
+  /**
    * \brief Sets the current camera mode.
    *
    * \param cameraMode  The new camera mode.
@@ -152,13 +178,6 @@ public:
    * \param medianFilteringEnabled  A flag indicating whether or not to use median filtering when rendering the scene raycast.
    */
   void set_median_filtering_enabled(bool medianFilteringEnabled);
-
-  /**
-   * \brief Sets the type of raycast to use.
-   *
-   * \param raycastType The type of raycast to use.
-   */
-  void set_raycast_type(Raycaster::RaycastType raycastType);
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
@@ -192,6 +211,13 @@ protected:
   SDL_Window *get_window() const;
 
   /**
+   * \brief Gets the size of the window's viewport.
+   *
+   * \return  The size of the window's viewport.
+   */
+  const Vector2i& get_window_viewport_size() const;
+
+  /**
    * \brief Initialises the temporary image and texture used for visualising the scene.
    */
   void initialise_common();
@@ -215,12 +241,13 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Renders the reconstructed scene.
+   * \brief Renders the reconstructed scene into a sub-window.
    *
    * \param pose        The camera pose.
    * \param renderState The render state corresponding to the camera pose.
+   * \param subwindow   The sub-window into which to render.
    */
-  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState) const;
+  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.

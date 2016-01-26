@@ -79,6 +79,17 @@ IF(WITH_OVR)
 ENDIF()
 
 ##
+SET(subwindows_sources
+subwindows/Subwindow.cpp
+subwindows/SubwindowConfiguration.cpp
+)
+
+SET(subwindows_headers
+subwindows/Subwindow.h
+subwindows/SubwindowConfiguration.h
+)
+
+##
 SET(toplevel_sources
 main.cpp
 Application.cpp
@@ -101,6 +112,7 @@ SET(sources
 ${commands_sources}
 ${core_sources}
 ${renderers_sources}
+${subwindows_sources}
 ${toplevel_sources}
 )
 
@@ -108,6 +120,7 @@ SET(headers
 ${commands_headers}
 ${core_headers}
 ${renderers_headers}
+${subwindows_headers}
 ${toplevel_headers}
 )
 
@@ -119,6 +132,7 @@ SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
+SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 
 ##########################################
 # Specify additional include directories #

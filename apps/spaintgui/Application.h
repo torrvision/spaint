@@ -31,6 +31,10 @@
 #include "core/Pipeline.h"
 #include "renderers/Renderer.h"
 
+#ifdef WITH_OVR
+#include "renderers/RiftRenderer.h"
+#endif
+
 /**
  * \brief The main application class for spaintgui.
  */
@@ -43,6 +47,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The index of the sub-window that will be affected by visualisation type changes. */
+  size_t m_activeSubwindowIndex;
+
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
@@ -60,6 +67,9 @@ private:
 
   /** The current renderer. */
   Renderer_Ptr m_renderer;
+
+  /** A set of sub-window configurations that the user can switch between as desired. */
+  mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
@@ -99,6 +109,14 @@ private:
    * \return  The current monocular render state.
    */
   Renderer::RenderState_CPtr get_monocular_render_state() const;
+
+  /**
+   * \brief Gets the specified sub-window configuration.
+   *
+   * \param i The index of the sub-window configuration to get.
+   * \return  The specified sub-window configuration, if valid, or null otherwise.
+   */
+  SubwindowConfiguration_Ptr get_subwindow_configuration(size_t i) const;
 
   /**
    * \brief Handle key down events.
@@ -174,6 +192,22 @@ private:
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
+
+#ifdef WITH_OVR
+  /**
+   * \brief Switches to a Rift renderer.
+   *
+   * \param mode  The Rift rendering mode to use.
+   */
+  void switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode);
+#endif
+
+  /**
+   * \brief Switches to a windowed renderer that uses the specified sub-window configuration.
+   *
+   * \param subwindowConfigurationIndex The index of the sub-window configuration to use.
+   */
+  void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
 };
 
 #endif

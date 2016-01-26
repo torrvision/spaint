@@ -34,14 +34,15 @@ using namespace tvgutil;
 //#################### CONSTRUCTORS ####################
 
 Application::Application(const Pipeline_Ptr& pipeline)
-: m_commandManager(10),
+: m_activeSubwindowIndex(0),
+  m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
   m_voiceCommandStream("localhost", "23984")
 {
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", pipeline->get_model(), pipeline->get_raycaster()));
   setup_labels();
+  switch_to_windowed_renderer(1);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -95,31 +96,46 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
   }
 }
 
+SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) const
+{
+  if(m_subwindowConfigurations.size() < i + 1)
+  {
+    m_subwindowConfigurations.resize(i + 1);
+  }
+
+  if(!m_subwindowConfigurations[i])
+  {
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+  }
+
+  return m_subwindowConfigurations[i];
+}
+
 void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
-  if(keysym.sym == SDLK_b)
+  if(keysym.sym == KEYCODE_b)
   {
     m_pauseBetweenFrames = false;
     m_paused = false;
   }
 
   // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
-  if(keysym.sym == SDLK_f)
+  if(keysym.sym == KEYCODE_f)
   {
     m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
   }
 
   // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
-  if(keysym.sym == SDLK_n)
+  if(keysym.sym == KEYCODE_n)
   {
     m_pauseBetweenFrames = true;
     m_paused = false;
   }
 
-  if(keysym.sym == SDLK_BACKSPACE)
+  if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Interactor_Ptr& interactor = m_pipeline->get_interactor();
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
@@ -148,13 +164,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   }
 
   // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
-  if(keysym.sym == SDLK_SEMICOLON)
+  if(keysym.sym == KEYCODE_SEMICOLON)
   {
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
-  if(keysym.sym == SDLK_h)
+  if(keysym.sym == KEYCODE_h)
   {
     std::cout << "\nControls:\n\n"
               << "W = Forwards\n"
@@ -209,16 +225,21 @@ void Application::handle_key_up(const SDL_Keysym& keysym)
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
 {
+  Vector2f fracWindowPos = m_renderer->compute_fractional_window_position(e.x, e.y);
+  SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracWindowPos);
+  if(!fracSubwindowPos) return;
+
   switch(e.button)
   {
     case SDL_BUTTON_LEFT:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_LEFT, fracSubwindowPos->second.x, fracSubwindowPos->second.y);
       break;
     case SDL_BUTTON_MIDDLE:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_MIDDLE, fracSubwindowPos->second.x, fracSubwindowPos->second.y);
       break;
     case SDL_BUTTON_RIGHT:
-      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, e.x, e.y);
+      m_inputState.press_mouse_button(MOUSE_BUTTON_RIGHT, fracSubwindowPos->second.x, fracSubwindowPos->second.y);
       break;
     default:
       break;
@@ -320,9 +341,17 @@ bool Application::process_events()
         handle_mousebutton_up(event.button);
         break;
       case SDL_MOUSEMOTION:
-        m_inputState.set_mouse_position(event.motion.x, event.motion.y);
-        m_inputState.set_mouse_motion(event.motion.xrel, event.motion.yrel);
+      {
+        Vector2f fracWindowPos = m_renderer->compute_fractional_window_position(event.motion.x, event.motion.y);
+        SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
+        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracWindowPos);
+        if(fracSubwindowPos)
+        {
+          m_activeSubwindowIndex = fracSubwindowPos->first;
+          m_inputState.set_mouse_position(fracSubwindowPos->second.x, fracSubwindowPos->second.y);
+        }
         break;
+      }
       case SDL_QUIT:
         return false;
       default:
@@ -431,41 +460,50 @@ void Application::process_renderer_input()
   {
     if(m_inputState.key_down(KEYCODE_r))
     {
-      if(m_inputState.key_down(KEYCODE_1))
-      {
-        m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster()));
-        framesTillSwitchAllowed = SWITCH_DELAY;
-      }
-      else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
+      if(m_inputState.key_down(KEYCODE_LSHIFT))
       {
 #ifdef WITH_OVR
-        try
+        if(m_inputState.key_down(KEYCODE_1) || m_inputState.key_down(KEYCODE_2))
         {
-          m_renderer.reset(new RiftRenderer(
-            "Semantic Paint",
-            m_pipeline->get_model(),
-            m_pipeline->get_raycaster(),
-            m_inputState.key_down(KEYCODE_2) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE
-          ));
-          framesTillSwitchAllowed = SWITCH_DELAY;
-        }
-        catch(std::runtime_error& e)
-        {
-          std::cerr << e.what() << '\n';
+          try
+          {
+            switch_to_rift_renderer(m_inputState.key_down(KEYCODE_1) ? RiftRenderer::WINDOWED_MODE : RiftRenderer::FULLSCREEN_MODE);
+            framesTillSwitchAllowed = SWITCH_DELAY;
+          }
+          catch(std::runtime_error& e)
+          {
+            std::cerr << e.what() << '\n';
+          }
         }
 #endif
+      }
+      else
+      {
+        for(size_t subwindowConfigurationIndex = 0; subwindowConfigurationIndex <= 9; ++subwindowConfigurationIndex)
+        {
+          if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + subwindowConfigurationIndex)))
+          {
+            switch_to_windowed_renderer(subwindowConfigurationIndex);
+            framesTillSwitchAllowed = SWITCH_DELAY;
+            break;
+          }
+        }
       }
     }
   }
   else --framesTillSwitchAllowed;
 
-  // Allow the user to switch raycast type.
+  // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
-    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICLAMBERTIAN);
-    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICPHONG);
-    else if(m_inputState.key_down(KEYCODE_3)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICCOLOUR);
-    else if(m_inputState.key_down(KEYCODE_4)) m_renderer->set_raycast_type(Raycaster::RT_SEMANTICFLAT);
+    Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+    subwindow.set_type(
+      m_inputState.key_down(KEYCODE_1) ? Raycaster::RT_SEMANTICLAMBERTIAN :
+      m_inputState.key_down(KEYCODE_2) ? Raycaster::RT_SEMANTICPHONG :
+      m_inputState.key_down(KEYCODE_3) ? Raycaster::RT_SEMANTICCOLOUR :
+      m_inputState.key_down(KEYCODE_4) ? Raycaster::RT_SEMANTICFLAT :
+      subwindow.get_type()
+    );
   }
 }
 
@@ -544,4 +582,27 @@ void Application::setup_labels()
 
   // Set the initial semantic label to use for painting.
   m_pipeline->get_interactor()->set_semantic_label(1);
+}
+
+#ifdef WITH_OVR
+void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
+{
+  const size_t riftSubwindowConfigurationIndex = 1;
+  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(riftSubwindowConfigurationIndex);
+  if(!subwindowConfiguration) return;
+
+  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, mode));
+}
+#endif
+
+void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex)
+{
+  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(subwindowConfigurationIndex);
+  if(!subwindowConfiguration) return;
+
+  const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size();
+  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
+
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
 }
