@@ -76,7 +76,7 @@ public:
   Raycaster::RaycastType get_type() const;
 
   /**
-   * \brief Gets the height of the sub-window (as a fraction of the viewport height, in the range [0,1]).
+   * \brief Gets the height of the sub-window (as a fraction of the window viewport height, in the range [0,1]).
    *
    * \return  The height of the sub-window.
    */
@@ -97,7 +97,7 @@ public:
   const Vector2f& top_left() const;
 
   /**
-   * \brief Gets the width of the sub-window (as a fraction of the viewport width, in the range [0,1]).
+   * \brief Gets the width of the sub-window (as a fraction of the window viewport width, in the range [0,1]).
    *
    * \return  The width of the sub-window.
    */

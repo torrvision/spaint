@@ -68,11 +68,11 @@ private:
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
 
-  /** The size of the window's viewport. */
-  Vector2i m_viewportSize;
-
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
+
+  /** The size of the window's viewport. */
+  Vector2i m_windowViewportSize;
 
   //#################### CONSTRUCTORS ####################
 protected:
@@ -82,10 +82,10 @@ protected:
    * \param model                   The spaint model.
    * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
-   * \param viewportSize            The size of the window's viewport.
+   * \param windowViewportSize      The size of the window's viewport.
    */
   Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-           const Vector2i& viewportSize);
+           const Vector2i& windowViewportSize);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -129,13 +129,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Computes the fractional position of point (x,y) in the viewport.
+   * \brief Computes the fractional position of point (x,y) in the window.
    *
    * \param x The x coordinate of the point whose fractional position is to be computed.
    * \param y The y coordinate of the point whose fractional position is to be computed.
-   * \return  The fractional position of the specified point in the viewport.
+   * \return  The fractional position of the specified point in the window.
    */
-  Vector2f compute_fractional_viewport_position(int x, int y) const;
+  Vector2f compute_fractional_window_position(int x, int y) const;
 
   /**
    * \brief Gets the current camera mode.
@@ -204,18 +204,18 @@ protected:
   Model_CPtr get_model() const;
 
   /**
-   * \brief Gets the size of the window's viewport.
-   *
-   * \return  The size of the window's viewport.
-   */
-  const Vector2i& get_viewport_size() const;
-
-  /**
    * \brief Gets the window into which to render.
    *
    * \return  The window into which to render.
    */
   SDL_Window *get_window() const;
+
+  /**
+   * \brief Gets the size of the window's viewport.
+   *
+   * \return  The size of the window's viewport.
+   */
+  const Vector2i& get_window_viewport_size() const;
 
   /**
    * \brief Initialises the temporary image and texture used for visualising the scene.

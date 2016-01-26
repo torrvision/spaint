@@ -225,9 +225,9 @@ void Application::handle_key_up(const SDL_Keysym& keysym)
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
 {
-  Vector2f fracViewportPos = m_renderer->compute_fractional_viewport_position(e.x, e.y);
+  Vector2f fracWindowPos = m_renderer->compute_fractional_window_position(e.x, e.y);
   SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracViewportPos);
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracWindowPos);
   if(!fracSubwindowPos) return;
 
   switch(e.button)
@@ -342,9 +342,9 @@ bool Application::process_events()
         break;
       case SDL_MOUSEMOTION:
       {
-        Vector2f fracViewportPos = m_renderer->compute_fractional_viewport_position(event.motion.x, event.motion.y);
+        Vector2f fracWindowPos = m_renderer->compute_fractional_window_position(event.motion.x, event.motion.y);
         SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracViewportPos);
+        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracWindowPos);
         if(fracSubwindowPos)
         {
           m_activeSubwindowIndex = fracSubwindowPos->first;
@@ -599,7 +599,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  Vector2i viewportSize((int)ROUND(640 / mainSubwindow.width()), (int)ROUND(480 / mainSubwindow.height()));
+  Vector2i windowViewportSize((int)ROUND(640 / mainSubwindow.width()), (int)ROUND(480 / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, viewportSize));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
 }

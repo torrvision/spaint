@@ -18,8 +18,8 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster,
-                                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& viewportSize)
-: Renderer(model, raycaster, subwindowConfiguration, viewportSize)
+                                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+: Renderer(model, raycaster, subwindowConfiguration, windowViewportSize)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -30,8 +30,8 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
       title.c_str(),
       SDL_WINDOWPOS_UNDEFINED,
       SDL_WINDOWPOS_UNDEFINED,
-      viewportSize.width,
-      viewportSize.height,
+      windowViewportSize.width,
+      windowViewportSize.height,
       SDL_WINDOW_OPENGL
     ),
     &SDL_DestroyWindow
