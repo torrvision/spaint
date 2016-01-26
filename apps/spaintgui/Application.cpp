@@ -42,15 +42,6 @@ Application::Application(const Pipeline_Ptr& pipeline)
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
-
-  // Set up the sub-window configurations.
-  const Vector2i& imgSize = pipeline->get_model()->get_depth_image_size();
-  for(int i = 0; i <= 3; ++i)
-  {
-    m_subwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, imgSize));
-  }
-
-  // Set up the renderer.
   switch_to_windowed_renderer(1);
 }
 
@@ -107,9 +98,17 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
 
 SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) const
 {
-  SubwindowConfiguration_Ptr result;
-  if(i < m_subwindowConfigurations.size()) result = m_subwindowConfigurations[i];
-  return result;
+  if(m_subwindowConfigurations.size() < i + 1)
+  {
+    m_subwindowConfigurations.resize(i + 1);
+  }
+
+  if(!m_subwindowConfigurations[i])
+  {
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+  }
+
+  return m_subwindowConfigurations[i];
 }
 
 void Application::handle_key_down(const SDL_Keysym& keysym)

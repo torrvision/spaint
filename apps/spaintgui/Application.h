@@ -69,7 +69,7 @@ private:
   Renderer_Ptr m_renderer;
 
   /** A set of sub-window configurations that the user can switch between as desired. */
-  std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
+  mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
