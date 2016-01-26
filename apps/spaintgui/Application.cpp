@@ -42,15 +42,6 @@ Application::Application(const Pipeline_Ptr& pipeline)
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
-
-  // Set up the sub-window configurations.
-  const Vector2i& imgSize = pipeline->get_model()->get_depth_image_size();
-  for(int i = 0; i <= 3; ++i)
-  {
-    m_subwindowConfigurations.push_back(SubwindowConfiguration::make_default(i, imgSize));
-  }
-
-  // Set up the renderer.
   switch_to_windowed_renderer(1);
 }
 
@@ -69,7 +60,7 @@ void Application::run()
     if(!m_paused) m_pipeline->run_main_section();
 
     // Render the scene.
-    m_renderer->render(m_pipeline->get_interactor(), m_fracViewportPos);
+    m_renderer->render(m_pipeline->get_interactor(), m_fracWindowPos);
 
     // If the application is unpaused, run the mode-specific section of the pipeline.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
@@ -107,9 +98,17 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
 
 SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) const
 {
-  SubwindowConfiguration_Ptr result;
-  if(i < m_subwindowConfigurations.size()) result = m_subwindowConfigurations[i];
-  return result;
+  if(m_subwindowConfigurations.size() < i + 1)
+  {
+    m_subwindowConfigurations.resize(i + 1);
+  }
+
+  if(!m_subwindowConfigurations[i])
+  {
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+  }
+
+  return m_subwindowConfigurations[i];
 }
 
 void Application::handle_key_down(const SDL_Keysym& keysym)
@@ -226,9 +225,9 @@ void Application::handle_key_up(const SDL_Keysym& keysym)
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
 {
-  m_fracViewportPos = m_renderer->compute_fractional_viewport_position(e.x, e.y);
+  m_fracWindowPos = m_renderer->compute_fractional_window_position(e.x, e.y);
   SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(m_fracViewportPos);
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(m_fracWindowPos);
   if(!fracSubwindowPos) return;
 
   switch(e.button)
@@ -343,9 +342,9 @@ bool Application::process_events()
         break;
       case SDL_MOUSEMOTION:
       {
-        m_fracViewportPos = m_renderer->compute_fractional_viewport_position(event.motion.x, event.motion.y);
+        m_fracWindowPos = m_renderer->compute_fractional_window_position(event.motion.x, event.motion.y);
         SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(m_fracViewportPos);
+        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(m_fracWindowPos);
         if(fracSubwindowPos)
         {
           m_activeSubwindowIndex = fracSubwindowPos->first;
@@ -480,11 +479,11 @@ void Application::process_renderer_input()
       }
       else
       {
-        for(size_t i = 0; i <= 9; ++i)
+        for(size_t subwindowConfigurationIndex = 0; subwindowConfigurationIndex <= 9; ++subwindowConfigurationIndex)
         {
-          if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
+          if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + subwindowConfigurationIndex)))
           {
-            switch_to_windowed_renderer(i);
+            switch_to_windowed_renderer(subwindowConfigurationIndex);
             framesTillSwitchAllowed = SWITCH_DELAY;
             break;
           }
@@ -588,8 +587,10 @@ void Application::setup_labels()
 #ifdef WITH_OVR
 void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
 {
-  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(1);
+  const size_t riftSubwindowConfigurationIndex = 1;
+  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(riftSubwindowConfigurationIndex);
   if(!subwindowConfiguration) return;
+
   m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, mode));
 }
 #endif
@@ -600,7 +601,8 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  Vector2i viewportSize((int)ROUND(640 / mainSubwindow.width()), (int)ROUND(480 / mainSubwindow.height()));
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size();
+  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, viewportSize));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
 }

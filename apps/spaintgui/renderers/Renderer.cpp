@@ -185,13 +185,13 @@ private:
 //#################### CONSTRUCTORS ####################
 
 Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-                   const Vector2i& viewportSize)
+                   const Vector2i& windowViewportSize)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
   m_raycaster(raycaster),
   m_subwindowConfiguration(subwindowConfiguration),
-  m_viewportSize(viewportSize)
+  m_windowViewportSize(windowViewportSize)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -200,10 +200,10 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Vector2f Renderer::compute_fractional_viewport_position(int x, int y) const
+Vector2f Renderer::compute_fractional_window_position(int x, int y) const
 {
-  const Vector2f viewportSize = get_viewport_size().toFloat();
-  return Vector2f(x / (viewportSize.x - 1), y / (viewportSize.y - 1));
+  const Vector2f windowViewportSize = get_window_viewport_size().toFloat();
+  return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
 }
 
 Renderer::CameraMode Renderer::get_camera_mode() const
@@ -280,9 +280,9 @@ SDL_Window *Renderer::get_window() const
   return m_window.get();
 }
 
-const Vector2i& Renderer::get_viewport_size() const
+const Vector2i& Renderer::get_window_viewport_size() const
 {
-  return m_viewportSize;
+  return m_windowViewportSize;
 }
 
 void Renderer::initialise_common()
@@ -292,11 +292,11 @@ void Renderer::initialise_common()
 }
 
 void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
-                            const Vector2f& fracViewportPos) const
+                            const Vector2f& fracWindowPos) const
 {
   // Set the viewport for the window.
-  const Vector2i& viewportSize = get_viewport_size();
-  glViewport(0, 0, viewportSize.width, viewportSize.height);
+  const Vector2i& windowViewportSize = get_window_viewport_size();
+  glViewport(0, 0, windowViewportSize.width, windowViewportSize.height);
 
   // Clear the frame buffer.
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -310,10 +310,10 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
     {
       // Set the viewport for the sub-window.
       Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-      int left = (int)ROUND(subwindow.top_left().x * viewportSize.width);
-      int top = (int)ROUND((1 - subwindow.bottom_right().y) * viewportSize.height);
-      int width = (int)ROUND(subwindow.width() * viewportSize.width);
-      int height = (int)ROUND(subwindow.height() * viewportSize.height);
+      int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
+      int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
+      int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
+      int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
       glViewport(left, top, width, height);
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
@@ -322,7 +322,7 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
       // Render the value of the pixel to which the user is pointing (for debugging purposes).
-      render_pixel_value(fracViewportPos, subwindow);
+      render_pixel_value(fracWindowPos, subwindow);
 #endif
     }
   }
@@ -348,9 +348,9 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
-void Renderer::render_pixel_value(const Vector2f& fracViewportPos, const Subwindow& subwindow) const
+void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const
 {
-  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracViewportPos);
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracWindowPos);
   if(!fracSubwindowPos) return;
 
   ITMUChar4Image_CPtr image = subwindow.get_image();

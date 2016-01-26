@@ -53,8 +53,8 @@ private:
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
-  /** The fractional position of the mouse within the viewport. */
-  Vector2f m_fracViewportPos;
+  /** The fractional position of the mouse within the window's viewport. */
+  Vector2f m_fracWindowPos;
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
@@ -72,7 +72,7 @@ private:
   Renderer_Ptr m_renderer;
 
   /** A set of sub-window configurations that the user can switch between as desired. */
-  std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
+  mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;

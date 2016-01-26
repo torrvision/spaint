@@ -18,8 +18,8 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster,
-                                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& viewportSize)
-: Renderer(model, raycaster, subwindowConfiguration, viewportSize)
+                                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+: Renderer(model, raycaster, subwindowConfiguration, windowViewportSize)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -30,8 +30,8 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
       title.c_str(),
       SDL_WINDOWPOS_UNDEFINED,
       SDL_WINDOWPOS_UNDEFINED,
-      viewportSize.width,
-      viewportSize.height,
+      windowViewportSize.width,
+      windowViewportSize.height,
       SDL_WINDOW_OPENGL
     ),
     &SDL_DestroyWindow
@@ -68,7 +68,7 @@ bool WindowedRenderer::is_mono() const
   return true;
 }
 
-void WindowedRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fracViewportPos) const
+void WindowedRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const
 {
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());
@@ -89,7 +89,7 @@ void WindowedRenderer::render(const Interactor_CPtr& interactor, const Vector2f&
   }
 
   // Render the scene from that camera pose.
-  render_scene(pose, interactor, m_renderState, fracViewportPos);
+  render_scene(pose, interactor, m_renderState, fracWindowPos);
 
   // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());

@@ -40,14 +40,14 @@ public:
   void add_subwindow(const Subwindow& subwindow);
 
   /**
-   * \brief Computes the fractional position of the specified point in the viewport within the sub-window containing it (if any).
+   * \brief Computes the fractional position of the specified point in the window within the sub-window containing it (if any).
    *
-   * \param fractionalViewportPos The fractional position of the point in the viewport (with components in the range [0,1]).
-   * \return                      If the point is within a sub-window, then a pair, the first component of which is the index
-   *                              of the sub-window containing the point, and the second component of which is the fractional
-   *                              position of the point in the sub-window. If the point is not within a sub-window, then nothing.
+   * \param fractionalWindowPos The fractional position of the point in the window (with components in the range [0,1]).
+   * \return                    If the point is within a sub-window, then a pair, the first component of which is the index
+   *                            of the sub-window containing the point, and the second component of which is the fractional
+   *                            position of the point in the sub-window. If the point is not within a sub-window, then nothing.
    */
-  boost::optional<std::pair<size_t,Vector2f> > compute_fractional_subwindow_position(const Vector2f& fractionalViewportPos) const;
+  boost::optional<std::pair<size_t,Vector2f> > compute_fractional_subwindow_position(const Vector2f& fractionalWindowPos) const;
 
   /**
    * \brief Gets the i'th sub-window in the configuration.
@@ -73,12 +73,12 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Determines the index of the sub-window (if any) containing the specified point in the viewport.
+   * \brief Determines the index of the sub-window (if any) containing the specified point in the window.
    *
-   * \param fractionalViewportPos The fractional position of the point in the viewport (with components in the range [0,1]).
-   * \return                      The sub-window index (if any) of the point, or nothing otherwise.
+   * \param fractionalWindowPos The fractional position of the point in the window (with components in the range [0,1]).
+   * \return                    The sub-window index (if any) of the point, or nothing otherwise.
    */
-  boost::optional<size_t> determine_subwindow_index(const Vector2f& fractionalViewportPos) const;
+  boost::optional<size_t> determine_subwindow_index(const Vector2f& fractionalWindowPos) const;
 };
 
 //#################### TYPEDEFS ####################
