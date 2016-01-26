@@ -479,11 +479,11 @@ void Application::process_renderer_input()
       }
       else
       {
-        for(size_t i = 0; i <= 9; ++i)
+        for(size_t subwindowConfigurationIndex = 0; subwindowConfigurationIndex <= 9; ++subwindowConfigurationIndex)
         {
-          if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + i)))
+          if(m_inputState.key_down(static_cast<Keycode>(KEYCODE_0 + subwindowConfigurationIndex)))
           {
-            switch_to_windowed_renderer(i);
+            switch_to_windowed_renderer(subwindowConfigurationIndex);
             framesTillSwitchAllowed = SWITCH_DELAY;
             break;
           }
@@ -587,8 +587,10 @@ void Application::setup_labels()
 #ifdef WITH_OVR
 void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
 {
-  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(1);
+  const size_t riftSubwindowConfigurationIndex = 1;
+  SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(riftSubwindowConfigurationIndex);
   if(!subwindowConfiguration) return;
+
   m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, mode));
 }
 #endif
@@ -599,7 +601,8 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  Vector2i windowViewportSize((int)ROUND(640 / mainSubwindow.width()), (int)ROUND(480 / mainSubwindow.height()));
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size();
+  Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
 }
