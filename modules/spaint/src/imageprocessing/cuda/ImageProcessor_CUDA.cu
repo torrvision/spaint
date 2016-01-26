@@ -156,6 +156,8 @@ void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, 
     outputChannels[2].device<unsigned char>(),
     outputChannels[3].device<unsigned char>()
   );
+
+  for(int i = 0; i < 4; ++i) (*outputImage)(af::span, af::span, i) = outputChannels[i];
 }
 
 void ImageProcessor_CUDA::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
