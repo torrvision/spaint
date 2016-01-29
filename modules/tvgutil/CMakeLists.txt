@@ -58,6 +58,7 @@ include/tvgutil/ExecutableFinder.h
 include/tvgutil/IDAllocator.h
 include/tvgutil/LimitedContainer.h
 include/tvgutil/MapUtil.h
+include/tvgutil/NumberSequenceGenerator.h
 include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
