@@ -1,10 +1,10 @@
 /**
- * tvgutil: WordExtractor.h
+ * tvgutil: IOUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_WORDEXTRACTOR
-#define H_TVGUTIL_WORDEXTRACTOR
+#ifndef H_TVGUTIL_IOUTIL
+#define H_TVGUTIL_IOUTIL
 
 #include <iosfwd>
 #include <string>
@@ -13,11 +13,19 @@
 namespace tvgutil {
 
 /**
- * \brief This struct contains utility functions that allow us to extract words from a stream.
+ * \brief This struct contains I/O utility functions.
  */
-struct WordExtractor
+struct IOUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief Extracts lines from a stream.
+   *
+   * \param is  The stream.
+   * \return    The lines.
+   */
+  static std::vector<std::string> extract_lines(std::istream& is);
 
   /**
    * \brief Extracts lines of words from a stream.
@@ -27,6 +35,14 @@ struct WordExtractor
    * \return            The lines of words.
    */
   static std::vector<std::vector<std::string> > extract_word_lines(std::istream& is, const std::string& delimiters);
+
+  /**
+   * \brief Output lines to a stream.
+   *
+   * \param os     The stream.
+   * \param lines  The lines.
+   */
+  static void output_lines(std::ostream& os, const std::vector<std::string>& lines);
 };
 
 }

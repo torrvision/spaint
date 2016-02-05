@@ -14,7 +14,7 @@ namespace evaluation {
 
 /**
  * \brief An instance of this class represents a measure quantifying the performance of an algorithm.
-  */
+ */
 class PerformanceMeasure
 {
   //#################### PRIVATE MEMBER VARIABLES ####################
@@ -37,7 +37,6 @@ public:
    */
   PerformanceMeasure(float value);
 
-private:
   /**
    * \brief Constructs an arbitrary performance measure.
    *
