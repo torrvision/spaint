@@ -46,9 +46,9 @@ SET(toplevel_sources
 src/DirectoryUtil.cpp
 src/ExecutableFinder.cpp
 src/IDAllocator.cpp
+src/IOUtil.cpp
 src/PropertyUtil.cpp
 src/RandomNumberGenerator.cpp
-src/WordExtractor.cpp
 )
 
 SET(toplevel_headers
@@ -56,6 +56,7 @@ include/tvgutil/ArgUtil.h
 include/tvgutil/DirectoryUtil.h
 include/tvgutil/ExecutableFinder.h
 include/tvgutil/IDAllocator.h
+include/tvgutil/IOUtil.h
 include/tvgutil/LimitedContainer.h
 include/tvgutil/MapUtil.h
 include/tvgutil/NumberSequenceGenerator.h
@@ -63,7 +64,6 @@ include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
 include/tvgutil/SerializationUtil.h
-include/tvgutil/WordExtractor.h
 )
 
 #################################################################

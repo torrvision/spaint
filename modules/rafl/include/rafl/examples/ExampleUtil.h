@@ -11,7 +11,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
-#include <tvgutil/WordExtractor.h>
+#include <tvgutil/IOUtil.h>
 
 #include "../base/ProbabilityMassFunction.h"
 #include "Example.h"
@@ -71,7 +71,7 @@ public:
     if(!fs) throw std::runtime_error("Error: '" + filename + "' could not be opened");
 
     const std::string delimiters(", \r");
-    std::vector<std::vector<std::string> > wordLines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
+    std::vector<std::vector<std::string> > wordLines = tvgutil::IOUtil::extract_word_lines(fs, delimiters);
 
     for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
