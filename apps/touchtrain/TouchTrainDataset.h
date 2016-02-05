@@ -13,7 +13,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include <tvgutil/WordExtractor.h>
+#include <tvgutil/IOUtil.h>
 
 #include "LabelledPath.h"
 
@@ -176,7 +176,7 @@ private:
     if(!fs) throw std::runtime_error("Error: The file '" + annotationFile + "' could not be opened");
 
     const std::string delimiters(", \r");
-    std::vector<std::vector<std::string> > wordLines = tvgutil::WordExtractor::extract_word_lines(fs, delimiters);
+    std::vector<std::vector<std::string> > wordLines = tvgutil::IOUtil::extract_word_lines(fs, delimiters);
 
     for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
