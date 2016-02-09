@@ -60,7 +60,7 @@ void Application::run()
     if(!m_paused) m_pipeline->run_main_section();
 
     // Render the scene.
-    m_renderer->render(m_pipeline->get_interactor());
+    m_renderer->render(m_pipeline->get_interactor(), m_fracWindowPos);
 
     // If the application is unpaused, run the mode-specific section of the pipeline.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
@@ -225,9 +225,9 @@ void Application::handle_key_up(const SDL_Keysym& keysym)
 
 void Application::handle_mousebutton_down(const SDL_MouseButtonEvent& e)
 {
-  Vector2f fracWindowPos = m_renderer->compute_fractional_window_position(e.x, e.y);
+  m_fracWindowPos = m_renderer->compute_fractional_window_position(e.x, e.y);
   SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracWindowPos);
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(m_fracWindowPos);
   if(!fracSubwindowPos) return;
 
   switch(e.button)
@@ -342,9 +342,9 @@ bool Application::process_events()
         break;
       case SDL_MOUSEMOTION:
       {
-        Vector2f fracWindowPos = m_renderer->compute_fractional_window_position(event.motion.x, event.motion.y);
+        m_fracWindowPos = m_renderer->compute_fractional_window_position(event.motion.x, event.motion.y);
         SubwindowConfiguration_CPtr config = m_renderer->get_subwindow_configuration();
-        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(fracWindowPos);
+        boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = config->compute_fractional_subwindow_position(m_fracWindowPos);
         if(fracSubwindowPos)
         {
           m_activeSubwindowIndex = fracSubwindowPos->first;

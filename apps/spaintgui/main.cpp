@@ -18,6 +18,12 @@
 using namespace InfiniTAM::Engine;
 using namespace ITMLib;
 
+#ifdef WITH_GLUT
+  #include <spaint/ogl/WrappedGL.h>
+  #include <GL/glut.h>
+  #undef WIN32_LEAN_AND_MEAN
+#endif
+
 #ifdef WITH_OVR
   #include <OVR_CAPI.h>
 #endif
@@ -44,6 +50,11 @@ try
   {
     quit("Error: Failed to initialise SDL.");
   }
+
+#ifdef WITH_GLUT
+  // Initialise GLUT (used for text rendering only).
+  glutInit(&argc, argv);
+#endif
 
 #ifdef WITH_ARRAYFIRE
   // Choose a device for ArrayFire.

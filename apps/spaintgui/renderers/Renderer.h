@@ -11,9 +11,14 @@
 
 #include <SDL.h>
 
-#include <rigging/MoveableCamera.h>
-
 #include <spaint/ogl/WrappedGL.h>
+
+#ifdef WITH_GLUT
+  #include <GL/glut.h>
+  #undef WIN32_LEAN_AND_MEAN
+#endif
+
+#include <rigging/MoveableCamera.h>
 
 #include "../core/Interactor.h"
 #include "../subwindows/SubwindowConfiguration.h"
@@ -40,6 +45,7 @@ public:
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
 public:
@@ -122,9 +128,10 @@ public:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
-   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param interactor    The interactor that is being used to interact with the scene.
+   * \param fracWindowPos The fractional position of the mouse within the window's viewport.
    */
-  virtual void render(const Interactor_CPtr& interactor) const = 0;
+  virtual void render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -225,11 +232,13 @@ protected:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
    *
-   * \param pose        The camera pose.
-   * \param interactor  The interactor that is being used to interact with the scene.
-   * \param renderState The render state corresponding to the camera pose.
+   * \param pose          The camera pose.
+   * \param interactor    The interactor that is being used to interact with the scene.
+   * \param renderState   The render state corresponding to the camera pose.
+   * \param fracWindowPos The fractional position of the mouse within the window's viewport.
    */
-  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const;
+  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
+                    const Vector2f& fracWindowPos) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -240,6 +249,16 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+  /**
+   * \brief Renders the value of a pixel in the specified sub-window.
+   *
+   * \param fracWindowPos The fractional position of the mouse within the window's viewport.
+   * \param subwindow     The sub-window.
+   */
+  void render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const;
+#endif
+
   /**
    * \brief Renders the reconstructed scene into a sub-window.
    *
@@ -256,6 +275,18 @@ private:
    * \param interactor  The interactor that is being used to interact with the scene.
    */
   void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor) const;
+
+#ifdef WITH_GLUT
+  /**
+   * \brief Renders some text in a specified colour and at a specified position.
+   *
+   * \param text    The text to render.
+   * \param colour  The colour in which to render the text.
+   * \param pos     The position at which to render the text.
+   * \param font    The font in which to render the text.
+   */
+  static void render_text(const std::string& text, const Vector3f& colour, const Vector2f& pos, void *font = GLUT_BITMAP_HELVETICA_18);
+#endif
 
   /**
    * \brief Renders a quad textured with the specified texture.

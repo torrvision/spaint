@@ -291,7 +291,8 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState) const
+void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
+                            const Vector2f& fracWindowPos) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -301,22 +302,28 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // If we have started reconstruction, render all the sub-windows.
+  // If we have started reconstruction:
   if(m_model->get_view())
   {
+    // Render all the sub-windows.
     for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
     {
       // Set the viewport for the sub-window.
       Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-      int x = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
-      int y = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
+      int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
+      int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
       int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
       int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
-      glViewport(x, y, width, height);
+      glViewport(left, top, width, height);
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
       render_reconstructed_scene(pose, renderState, subwindow);
       render_synthetic_scene(pose, interactor);
+
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+      // Render the value of the pixel to which the user is pointing (for debugging purposes).
+      render_pixel_value(fracWindowPos, subwindow);
+#endif
     }
   }
 }
@@ -339,6 +346,26 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+#if WITH_GLUT && USE_PIXEL_DEBUGGING
+void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const
+{
+  boost::optional<std::pair<size_t,Vector2f> > fracSubwindowPos = m_subwindowConfiguration->compute_fractional_subwindow_position(fracWindowPos);
+  if(!fracSubwindowPos) return;
+
+  ITMUChar4Image_CPtr image = subwindow.get_image();
+  int x = (int)ROUND(fracSubwindowPos->second.x * (image->noDims.x - 1));
+  int y = (int)ROUND(fracSubwindowPos->second.y * (image->noDims.y - 1));
+  Vector4u v = image->GetData(MEMORYDEVICE_CPU)[y * image->noDims.x + x];
+
+  std::ostringstream oss;
+  oss << x << ',' << y << ": " << (int)v.r << ',' << (int)v.g << ',' << (int)v.b << ',' << (int)v.a;
+
+  begin_2d();
+    render_text(oss.str(), Vector3f(1.0f, 0.0f, 0.0f), Vector2f(0.025f, 0.95f));
+  end_2d();
+}
+#endif
 
 void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const
 {
@@ -412,6 +439,18 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
 
   glDisable(GL_DEPTH_TEST);
 }
+
+#ifdef WITH_GLUT
+void Renderer::render_text(const std::string& text, const Vector3f& colour, const Vector2f& pos, void *font)
+{
+  glColor3f(colour.r, colour.g, colour.b);
+  glRasterPos2f(pos.x, pos.y);
+  for(size_t i = 0, len = text.length(); i < len; ++i)
+  {
+    glutBitmapCharacter(font, text[i]);
+  }
+}
+#endif
 
 void Renderer::render_textured_quad(GLuint textureID)
 {
