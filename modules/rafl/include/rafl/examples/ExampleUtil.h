@@ -70,7 +70,7 @@ public:
     std::ifstream fs(filename.c_str());
     if(!fs) throw std::runtime_error("Error: '" + filename + "' could not be opened");
 
-    const std::string delimiters(", \r");
+    const std::string delimiters(", ");
     std::vector<std::vector<std::string> > wordLines = tvgutil::IOUtil::extract_word_lines(fs, delimiters);
 
     for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
