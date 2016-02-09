@@ -32,13 +32,15 @@ std::vector<std::vector<std::string> > IOUtil::extract_word_lines(std::istream& 
 {
   std::vector<std::vector<std::string> > wordLines;
 
+  std::string internalDelimiters = delimiters + '\r';
+
   std::string line;
   while(std::getline(is, line))
   {
     typedef boost::char_separator<char> sep;
     typedef boost::tokenizer<sep> tokenizer;
 
-    tokenizer tok(line.begin(), line.end(), sep(delimiters.c_str()));
+    tokenizer tok(line.begin(), line.end(), sep(internalDelimiters.c_str()));
     std::vector<std::string> words(tok.begin(), tok.end());
     wordLines.push_back(words);
   }
