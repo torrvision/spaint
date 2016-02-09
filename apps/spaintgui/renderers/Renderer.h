@@ -11,15 +11,14 @@
 
 #include <SDL.h>
 
+#include <spaint/ogl/WrappedGL.h>
+
 #ifdef WITH_GLUT
-  #include <spaint/ogl/WrappedGL.h>
   #include <GL/glut.h>
   #undef WIN32_LEAN_AND_MEAN
 #endif
 
 #include <rigging/MoveableCamera.h>
-
-#include <spaint/ogl/WrappedGL.h>
 
 #include "../core/Interactor.h"
 #include "../subwindows/SubwindowConfiguration.h"
