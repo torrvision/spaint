@@ -139,36 +139,82 @@ public:
   template <typename T>
   static void rotation_vector_to_quaternion(const T *rv, T *q)
   {
-    static const T minval = 1e-20;
-    size_t elementCount = 3;
-
-    // First extract the axis-angle representation.
-    T rTheta = l2_norm(rv, elementCount);
-
-    // Clip the magnitude to a minimum value to prevent division by zero.
-    if(rTheta < minval) rTheta = minval;
-
-    std::vector<T> rUnit(elementCount);
-    for(size_t i = 0; i < elementCount; ++i)
-    {
-      rUnit[i] = rv[i] / rTheta;
-    }
+    float axis[3];
+    float angle;
+    rotation_vector_to_axis_angle(rv, axis, &angle);
 
     // Create the quaternion.
-    T sinHalfTheta = sin(rTheta/2.0f);
-    q[0] = cos(rTheta/2.0f);
-    q[1] = rUnit[0] * sinHalfTheta;
-    q[2] = rUnit[1] * sinHalfTheta;
-    q[3] = rUnit[2] * sinHalfTheta;
+    T sinHalfTheta = sin(angle/2.0f);
+    q[0] = cos(angle/2.0f);
+    q[1] = axis[0] * sinHalfTheta;
+    q[2] = axis[1] * sinHalfTheta;
+    q[3] = axis[2] * sinHalfTheta;
   }
 
   template <typename T>
   static void quaternion_to_rotation_vector(const T *q, T *rv)
   {
-    T multiplier = (2.0f * acos(q[0]))/sqrt(1.0f - q[0]*q[0]);
-    rv[0] = multiplier * q[1];
-    rv[1] = multiplier * q[2];
-    rv[2] = multiplier * q[3];
+    T axis[3];
+    T angle;
+    quaternion_to_axis_angle(q, axis, &angle);
+    axis_angle_to_rotation_vector(axis, &angle, rv);
+  }
+
+  template <typename T>
+  static void axis_angle_to_rotation_vector(const T *axis, const T *angle, T *rv)
+  {
+    rv[0] = axis[0] * *angle;
+    rv[1] = axis[1] * *angle;
+    rv[2] = axis[2] * *angle;
+  }
+
+  template <typename T>
+  static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
+  {
+    *angle = 2.0f * acos(q[0]);
+
+    T multiplier = 1.0f / sqrt(1.0f - q[0] * q[0]);
+    axis[0] = q[1] * multiplier;
+    axis[1] = q[2] * multiplier;
+    axis[2] = q[3] * multiplier;
+  }
+
+  template <typename T>
+  static void rotation_matrix_to_axis_angle(const T *matrix, T *axis, T *angle)
+  {
+    T q[4];
+    rotation_matrix_to_quaternion(matrix, q);
+    quaternion_to_axis_angle(q, axis, angle);
+  }
+
+  template <typename T>
+  static void rotation_vector_to_axis_angle(const T *rv, T *axis, T *angle)
+  {
+    const T minval = 1e-20;
+    size_t elementCount = 3;
+    T rTheta = l2_norm(rv, elementCount);
+
+    // Clip the magnitude to a minimum value to prevent division by zero.
+    if(rTheta < minval) rTheta = minval;
+    *angle = rTheta;
+
+    std::vector<T> rUnit(elementCount);
+    for(size_t i = 0; i < elementCount; ++i)
+    {
+      axis[i] = rv[i] / rTheta;
+    }
+  }
+
+  template <typename T>
+  static void axis_angle_to_rotation_matrix(const T *axis, const T *angle, T *matrix)
+  {
+    float rv[3];
+    axis_angle_to_rotation_vector(axis, angle, rv);
+
+    float q[4];
+    rotation_vector_to_quaternion(rv, q);
+
+    quaternion_to_rotation_matrix(q, matrix);
   }
 };
 

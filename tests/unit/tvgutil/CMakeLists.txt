@@ -14,6 +14,7 @@ SET(suitename tvgutil)
 
 SET(testnames
 ArgUtil
+AttitudeUtil
 CommandManager
 LimitedContainer
 PriorityQueue
@@ -29,6 +30,7 @@ SET(targetname "unittest_${suitename}_${testname}")
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -62,5 +64,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetUnitTestTarget.cmake)
 
 TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
+#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 
 ENDFOREACH()
