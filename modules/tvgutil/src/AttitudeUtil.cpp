@@ -5,6 +5,10 @@
 
 #include "AttitudeUtil.h"
 
+namespace tvgutil {
+
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 //EMPTY
+
+}

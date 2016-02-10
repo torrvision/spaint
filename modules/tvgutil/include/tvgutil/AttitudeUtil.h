@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <cmath>
 
+namespace tvgutil {
+
 /**
  * \brief This struct may be used to convert between various 3D attitude representations.
  */
@@ -169,5 +171,7 @@ public:
     rv[2] = multiplier * q[3];
   }
 };
+
+}
 
 #endif
