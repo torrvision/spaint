@@ -43,6 +43,7 @@ include/tvgutil/timing/TimeUtil.h
 
 ##
 SET(toplevel_sources
+src/AttitudeUtil.cpp
 src/DirectoryUtil.cpp
 src/ExecutableFinder.cpp
 src/IDAllocator.cpp
@@ -53,6 +54,7 @@ src/RandomNumberGenerator.cpp
 
 SET(toplevel_headers
 include/tvgutil/ArgUtil.h
+include/tvgutil/AttitudeUtil.h
 include/tvgutil/DirectoryUtil.h
 include/tvgutil/ExecutableFinder.h
 include/tvgutil/IDAllocator.h
