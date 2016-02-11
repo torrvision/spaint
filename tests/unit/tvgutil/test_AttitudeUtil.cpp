@@ -49,14 +49,16 @@ BOOST_AUTO_TEST_CASE(test_conversions)
 
   Matrix3f rotationMatrix;
   AttitudeUtil::quaternion_to_rotation_matrix(quaternion.v, rotationMatrix.m);
+  rotationMatrix = rotationMatrix.t();
   //std::cout << "Rotation matrix: \n" << rotationMatrix << '\n';
 
   Matrix3f rotationMatrix2;
   AttitudeUtil::axis_angle_to_rotation_matrix(axis.v, &angle, rotationMatrix2.m);
+  rotationMatrix2 = rotationMatrix2.t();
   //std::cout << "Rotation matrix: \n" << rotationMatrix2 << '\n';
 
   Vector4f quaternion2;
-  AttitudeUtil::rotation_matrix_to_quaternion(rotationMatrix.m, quaternion2.v);
+  AttitudeUtil::rotation_matrix_to_quaternion(rotationMatrix.t().getValues(), quaternion2.v);
   //std::cout << "Quaternion: " << quaternion2 << '\n';
 
   Vector3f axis2;
@@ -66,7 +68,7 @@ BOOST_AUTO_TEST_CASE(test_conversions)
 
   Vector3f axis3;
   float angle3;
-  AttitudeUtil::rotation_matrix_to_axis_angle(rotationMatrix.m, axis3.v, &angle3);
+  AttitudeUtil::rotation_matrix_to_axis_angle(rotationMatrix.t().getValues(), axis3.v, &angle3);
   //std::cout << "Axis: " << axis3 << " Angle: " << angle3 << '\n';
 
   Vector3f axis4;
@@ -76,7 +78,7 @@ BOOST_AUTO_TEST_CASE(test_conversions)
 
   // Check conversions.
   check_close(rotationVector.v, rotationVector2.v, rotationVector.size(), TOL);
-  check_close(rotationMatrix.m, rotationMatrix.m, 9, TOL);
+  check_close(rotationMatrix.m, rotationMatrix2.m, 9, TOL);
   check_close(quaternion.v, quaternion2.v, quaternion.size(), TOL);
   check_close(&angle, &angle2, 1, TOL);
   check_close(&angle, &angle3, 1, TOL);
