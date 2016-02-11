@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstdlib>
 #include <cmath>
+#include <stdexcept>
 
 namespace tvgutil {
 
@@ -173,10 +174,26 @@ public:
   {
     *angle = 2.0f * acos(q[0]);
 
-    T multiplier = 1.0f / sqrt(1.0f - q[0] * q[0]);
-    axis[0] = q[1] * multiplier;
-    axis[1] = q[2] * multiplier;
-    axis[2] = q[3] * multiplier;
+    // If the real part is one, a zero will appear in the denominator of the multiplier.
+    T realSquared = q[0] * q[0];
+    if(realSquared < 1.0f)
+    {
+      T multiplier = 1.0f / sqrt(1.0f - realSquared);
+      axis[0] = q[1] * multiplier;
+      axis[1] = q[2] * multiplier;
+      axis[2] = q[3] * multiplier;
+    }
+    else if(realSquared == 1.0f)
+    {
+      *angle = 0.0f;
+      axis[0] = 1.0f;
+      axis[1] = 0.0f;
+      axis[2] = 0.0f;
+    }
+    else
+    {
+      throw std::runtime_error("Input not a unit quaternion");
+    }
   }
 
   template <typename T>
