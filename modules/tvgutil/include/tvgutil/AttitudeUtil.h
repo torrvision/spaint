@@ -77,18 +77,19 @@ public:
   template <typename T>
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
   {
+    const T TOL = 1e-20;
     *angle = 2.0f * acos(q[0]);
 
     // If the real part is one, a zero will appear in the denominator of the multiplier.
     T realSquared = q[0] * q[0];
-    if(realSquared < 1.0f)
+    if(realSquared < 1.0f - TOL)
     {
       T multiplier = 1.0f / sqrt(1.0f - realSquared);
       axis[0] = q[1] * multiplier;
       axis[1] = q[2] * multiplier;
       axis[2] = q[3] * multiplier;
     }
-    else if(realSquared == 1.0f)
+    else if(realSquared >= 1.0f - TOL || realSquared <= 1.0f + TOL)
     {
       *angle = 0.0f;
       axis[0] = 1.0f;
