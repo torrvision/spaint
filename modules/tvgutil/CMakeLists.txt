@@ -43,7 +43,6 @@ include/tvgutil/timing/TimeUtil.h
 
 ##
 SET(toplevel_sources
-src/AttitudeUtil.cpp
 src/DirectoryUtil.cpp
 src/ExecutableFinder.cpp
 src/IDAllocator.cpp

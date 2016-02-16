@@ -122,23 +122,6 @@ public:
     }
   }
 
-  /*
-  template <typename T>
-  static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
-  {
-    if
-      matrix[0] = q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3];
-      matrix[4] = q[0]*q[0] - q[1]*q[1] + q[2]*q[2] - q[3]*q[3];
-      matrix[8] = q[0]*q[0] - q[1]*q[1] - q[2]*q[2] + q[3]*q[3];
-      matrix[3] = 2*(q[1]*q[2] - q[0]*q[3]);
-      matrix[1] = 2*(q[1]*q[2] + q[0]*q[3]);
-      matrix[6] = 2*(q[1]*q[3] + q[0]*q[2]);
-      matrix[2] = 2*(q[1]*q[3] - q[0]*q[2]);
-      matrix[7] = 2*(q[2]*q[3] - q[0]*q[1]);
-      matrix[5] = 2*(q[2]*q[3] + q[0]*q[1]);
-  }
-  */
-
   /**
    * \brief Converts a unit quaternion to a rotation vector.
    *
