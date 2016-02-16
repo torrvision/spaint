@@ -9,7 +9,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>
-#include <vector>
 
 namespace tvgutil {
 
@@ -39,6 +38,7 @@ public:
    * \param axis   The axis of rotation.
    * \param angle  The angle of rotation.
    * \param matrix The rotation matrix.
+   * \param order  Whether the rotation matrix is in row-major or column-major order.
    */
   template <typename T>
   static void axis_angle_to_rotation_matrix(const T *axis, const T *angle, T *matrix, Order order)
@@ -106,6 +106,7 @@ public:
    *
    * \param q      The unit quaternion, where q[0] is the real part and q[1-3] are the imaginary parts.
    * \param matrix The rotation matrix in row-major format.
+   * \param order  Whether the rotation matrix is in row-major or column-major order.
    */
   template <typename T>
   static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
@@ -143,6 +144,7 @@ public:
    * \param matrix  The rotation matrix.
    * \param axis    The axis of the rotation.
    * \param angle   The angle of the rotation.
+   * \param order   Whether the rotation matrix is in row-major or column-major order.
    */
   template <typename T>
   static void rotation_matrix_to_axis_angle(const T *matrix, T *axis, T *angle, Order order)
@@ -152,7 +154,13 @@ public:
     quaternion_to_axis_angle(q, axis, angle);
   }
 
-
+  /**
+   * \brief COnverts a rotation matrix to a unit quaternion.
+   *
+   * \param matrix  The rotation matrix.
+   * \param q       The unit quaternion.
+   * \param order   Whether the rotation matrix is in row-major or column-major order.
+   */
   template <typename T>
   static void rotation_matrix_to_quaternion(const T *matrix, T *q, Order order)
   {
@@ -168,7 +176,6 @@ public:
     }
   }
 
-
   /**
    * \brief Converts a rotation vector to an axis-angle representation.
    *
@@ -180,14 +187,13 @@ public:
   static void rotation_vector_to_axis_angle(const T *rv, T *axis, T *angle)
   {
     const T minval = 1e-20;
-    size_t elementCount = 3;
+    const size_t elementCount = 3;
     T rTheta = l2_norm(rv, elementCount);
 
     // Clip the magnitude to a minimum value to prevent division by zero.
     if(rTheta < minval) rTheta = minval;
     *angle = rTheta;
 
-    std::vector<T> rUnit(elementCount);
     for(size_t i = 0; i < elementCount; ++i)
     {
       axis[i] = rv[i] / rTheta;
@@ -216,8 +222,7 @@ public:
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-//private:
-public:
+private:
   /**
    * \brief Calculates the L2 norm of a vector.
    *
@@ -235,12 +240,12 @@ public:
     return sqrt(sumSquares);
   }
 
-  template <typename T>
-  static T l2_norm(const std::vector<T>& v)
-  {
-    return l2_norm(&v.front(), v.size());
-  }
-
+  /**
+   * \brief Converts a unit quaternion to a rotation matrix arranged in row-major format.
+   *
+   * \param q      The unit quaternion, where q[0] is the real part and q[1-3] are the imaginary parts.
+   * \param matrix The rotation matrix in row-major format.
+   */
   template <typename T>
   static void quaternion_to_rotation_matrix_row_major(const T *q, T *matrix)
   {
@@ -252,7 +257,7 @@ public:
     matrix[0] = q0Sq + q1Sq - q2Sq - q3Sq;
     matrix[1] = 2.0f * (q[1]*q[2] + q[0]*q[3]);
     matrix[2] = 2.0f * (q[1]*q[3] - q[0]*q[2]);
-    matrix[3] = 2.0f * (q[1]*q[2] - q[0]*q[3]); 
+    matrix[3] = 2.0f * (q[1]*q[2] - q[0]*q[3]);
     matrix[4] = q0Sq - q1Sq + q2Sq - q3Sq;
     matrix[5] = 2.0f * (q[2]*q[3] + q[0]*q[1]);
     matrix[6] = 2.0f * (q[1]*q[3] + q[0]*q[2]);
@@ -261,7 +266,7 @@ public:
   }
 
   /**
-   * \brief Converts a rotation matrix to a quaternion.
+   * \brief Converts a rotation matrix arranged in row-major format to a unit quaternion.
    *
    * \param matrix   The rotation matrix in row-major format.
    * \param q        The unit quaternion.
@@ -318,19 +323,6 @@ public:
   /**
    * \brief Calculates the transpose of a 3x3 matrix.
    *
-   * \param matrix  The matrix to transpose.
-   */
-  template <typename T>
-  static void transpose_matrix3_in_place(T *matrix)
-  {
-    std::swap(matrix[1], matrix[3]);
-    std::swap(matrix[2], matrix[6]);
-    std::swap(matrix[5], matrix[7]);
-  }
-
-  /**
-   * \brief Calculates the transpose of a 3x3 matrix.
-   *
    * \param matrix  The original matrix.
    * \param matrixT The transpose of the original matrix.
    */
@@ -342,6 +334,19 @@ public:
 
     // Swap off-diagonal elements.
     transpose_matrix3_in_place(matrixT);
+  }
+
+  /**
+   * \brief Calculates the transpose of a 3x3 matrix.
+   *
+   * \param matrix  The matrix to transpose.
+   */
+  template <typename T>
+  static void transpose_matrix3_in_place(T *matrix)
+  {
+    std::swap(matrix[1], matrix[3]);
+    std::swap(matrix[2], matrix[6]);
+    std::swap(matrix[5], matrix[7]);
   }
 };
 
