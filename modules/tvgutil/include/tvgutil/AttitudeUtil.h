@@ -6,10 +6,10 @@
 #ifndef H_TVGUTIL_ATTITUDEUTIL
 #define H_TVGUTIL_ATTITUDEUTIL
 
-#include <vector>
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
 #include <stdexcept>
+#include <vector>
 
 namespace tvgutil {
 
@@ -20,6 +20,17 @@ namespace tvgutil {
  */
 class AttitudeUtil
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief An enumeration containing two possible ways of arranging the rotation matrix in a single linear array.
+   */
+  enum Order
+  {
+    COL_MAJOR,
+    ROW_MAJOR
+  };
+
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -30,7 +41,7 @@ public:
    * \param matrix The rotation matrix.
    */
   template <typename T>
-  static void axis_angle_to_rotation_matrix(const T *axis, const T *angle, T *matrix)
+  static void axis_angle_to_rotation_matrix(const T *axis, const T *angle, T *matrix, Order order)
   {
     float rv[3];
     axis_angle_to_rotation_vector(axis, angle, rv);
@@ -38,7 +49,7 @@ public:
     float q[4];
     rotation_vector_to_quaternion(rv, q);
 
-    quaternion_to_rotation_matrix(q, matrix);
+    quaternion_to_rotation_matrix(q, matrix, order);
   }
 
   /**
@@ -97,18 +108,36 @@ public:
    * \param matrix The rotation matrix in row-major format.
    */
   template <typename T>
-  static void quaternion_to_rotation_matrix(const T *q, T *matrix)
+  static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
   {
-          matrix[0] = q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3];
-          matrix[4] = q[0]*q[0] - q[1]*q[1] + q[2]*q[2] - q[3]*q[3];
-          matrix[8] = q[0]*q[0] - q[1]*q[1] - q[2]*q[2] + q[3]*q[3];
-          matrix[3] = 2*(q[1]*q[2] - q[0]*q[3]);
-          matrix[1] = 2*(q[1]*q[2] + q[0]*q[3]);
-          matrix[6] = 2*(q[1]*q[3] + q[0]*q[2]);
-          matrix[2] = 2*(q[1]*q[3] - q[0]*q[2]);
-          matrix[7] = 2*(q[2]*q[3] - q[0]*q[1]);
-          matrix[5] = 2*(q[2]*q[3] + q[0]*q[1]);
+    if(order == COL_MAJOR)
+    {
+      // Assume memory is row-major for calculation then transpose.
+      quaternion_to_rotation_matrix_row_major(q, matrix);
+      transpose_matrix3_in_place(matrix);
+    }
+    else // if ROW_MAJOR
+    {
+      quaternion_to_rotation_matrix_row_major(q, matrix);
+    }
   }
+
+  /*
+  template <typename T>
+  static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
+  {
+    if
+      matrix[0] = q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3];
+      matrix[4] = q[0]*q[0] - q[1]*q[1] + q[2]*q[2] - q[3]*q[3];
+      matrix[8] = q[0]*q[0] - q[1]*q[1] - q[2]*q[2] + q[3]*q[3];
+      matrix[3] = 2*(q[1]*q[2] - q[0]*q[3]);
+      matrix[1] = 2*(q[1]*q[2] + q[0]*q[3]);
+      matrix[6] = 2*(q[1]*q[3] + q[0]*q[2]);
+      matrix[2] = 2*(q[1]*q[3] - q[0]*q[2]);
+      matrix[7] = 2*(q[2]*q[3] - q[0]*q[1]);
+      matrix[5] = 2*(q[2]*q[3] + q[0]*q[1]);
+  }
+  */
 
   /**
    * \brief Converts a unit quaternion to a rotation vector.
@@ -133,67 +162,29 @@ public:
    * \param angle   The angle of the rotation.
    */
   template <typename T>
-  static void rotation_matrix_to_axis_angle(const T *matrix, T *axis, T *angle)
+  static void rotation_matrix_to_axis_angle(const T *matrix, T *axis, T *angle, Order order)
   {
     T q[4];
-    rotation_matrix_to_quaternion(matrix, q);
+    rotation_matrix_to_quaternion(matrix, q, order);
     quaternion_to_axis_angle(q, axis, angle);
   }
 
-  /**
-   * \brief Converts a rotation matrix to a quaternion.
-   *
-   * \param matrix   The rotation matrix in row-major format.
-   * \param q        The unit quaternion.
-   */
+
   template <typename T>
-  static void rotation_matrix_to_quaternion(const T *matrix, T *q)
+  static void rotation_matrix_to_quaternion(const T *matrix, T *q, Order order)
   {
-    int variant = 0;
-
-    if(     (matrix[4] > -matrix[8]) && (matrix[0] > -matrix[4]) && (matrix[0] > -matrix[8])) variant = 0;
-    else if((matrix[4] < -matrix[8]) && (matrix[0] >  matrix[4]) && (matrix[0] >  matrix[8])) variant = 1;
-    else if((matrix[4] >  matrix[8]) && (matrix[0] <  matrix[4]) && (matrix[0] < -matrix[8])) variant = 2;
-    else if((matrix[4] <  matrix[8]) && (matrix[0] < -matrix[4]) && (matrix[0] <  matrix[8])) variant = 3;
-
-    double denominator;
-
-    // Choose the best variant.
-    switch(variant)
+    if(order == COL_MAJOR)
     {
-      case 0:
-        denominator =  2.0f * sqrt(1.0f + matrix[0] + matrix[4] + matrix[8]);
-        q[0] = denominator / 4.0f;
-        q[1] = (matrix[5] - matrix[7]) / denominator;
-        q[2] = (matrix[6] - matrix[2]) / denominator;
-        q[3] = (matrix[1] - matrix[3]) / denominator;
-        break;
-
-      case 1:
-        denominator =  2.0f * sqrt(1.0f + matrix[0] - matrix[4] - matrix[8]);
-        q[0] = (matrix[5] - matrix[7]) / denominator;
-        q[1] = denominator / 4.0f;
-        q[2] = (matrix[1] + matrix[3]) / denominator;
-        q[3] = (matrix[6] + matrix[2]) / denominator;
-        break;
-
-      case 2:
-        denominator = 2.0f * sqrt(1.0f - matrix[0] + matrix[4] - matrix[8]);
-        q[0] = (matrix[6] - matrix[2]) / denominator;
-        q[1] = (matrix[1] + matrix[3]) / denominator;
-        q[2] = denominator / 4.0f;
-        q[3] = (matrix[5] + matrix[7]) / denominator;
-        break;
-
-      case 3:
-        denominator = 2.0f * sqrt(1.0f - matrix[0] - matrix[4] + matrix[8]);
-        q[0] = (matrix[1] - matrix[3]) / denominator;
-        q[1] = (matrix[6] + matrix[2]) / denominator;
-        q[2] = (matrix[5] + matrix[7]) / denominator;
-        q[3] = denominator / 4.0f;
-        break;
+      float matrixT[9];
+      transpose_matrix3(matrix, matrixT);
+      rotation_matrix_row_major_to_quaternion(matrixT, q);
+    }
+    else
+    {
+      rotation_matrix_row_major_to_quaternion(matrix, q);
     }
   }
+
 
   /**
    * \brief Converts a rotation vector to an axis-angle representation.
@@ -242,7 +233,8 @@ public:
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
+//private:
+public:
   /**
    * \brief Calculates the L2 norm of a vector.
    *
@@ -264,6 +256,109 @@ private:
   static T l2_norm(const std::vector<T>& v)
   {
     return l2_norm(&v.front(), v.size());
+  }
+
+  template <typename T>
+  static void quaternion_to_rotation_matrix_row_major(const T *q, T *matrix)
+  {
+    T q0Sq = q[0]*q[0];
+    T q1Sq = q[1]*q[1];
+    T q2Sq = q[2]*q[2];
+    T q3Sq = q[3]*q[3];
+
+    matrix[0] = q0Sq + q1Sq - q2Sq - q3Sq;
+    matrix[1] = 2.0f * (q[1]*q[2] + q[0]*q[3]);
+    matrix[2] = 2.0f * (q[1]*q[3] - q[0]*q[2]);
+    matrix[3] = 2.0f * (q[1]*q[2] - q[0]*q[3]); 
+    matrix[4] = q0Sq - q1Sq + q2Sq - q3Sq;
+    matrix[5] = 2.0f * (q[2]*q[3] + q[0]*q[1]);
+    matrix[6] = 2.0f * (q[1]*q[3] + q[0]*q[2]);
+    matrix[7] = 2.0f * (q[2]*q[3] - q[0]*q[1]);
+    matrix[8] = q0Sq - q1Sq - q2Sq + q3Sq;
+  }
+
+  /**
+   * \brief Converts a rotation matrix to a quaternion.
+   *
+   * \param matrix   The rotation matrix in row-major format.
+   * \param q        The unit quaternion.
+   */
+  template <typename T>
+  static void rotation_matrix_row_major_to_quaternion(const T *matrix, T *q)
+  {
+    int variant = 0;
+
+    if(     (matrix[4] > -matrix[8]) && (matrix[0] > -matrix[4]) && (matrix[0] > -matrix[8])) variant = 0;
+    else if((matrix[4] < -matrix[8]) && (matrix[0] >  matrix[4]) && (matrix[0] >  matrix[8])) variant = 1;
+    else if((matrix[4] >  matrix[8]) && (matrix[0] <  matrix[4]) && (matrix[0] < -matrix[8])) variant = 2;
+    else if((matrix[4] <  matrix[8]) && (matrix[0] < -matrix[4]) && (matrix[0] <  matrix[8])) variant = 3;
+
+    double denominator;
+
+    // Choose the best variant.
+    switch(variant)
+    {
+      case 0:
+        denominator =  2.0f * sqrt(1.0f + matrix[0] + matrix[4] + matrix[8]);
+        q[0] = denominator / 4.0f;
+        q[1] = (matrix[5] - matrix[7]) / denominator;
+        q[2] = (matrix[6] - matrix[2]) / denominator;
+        q[3] = (matrix[1] - matrix[3]) / denominator;
+        break;
+
+      case 1:
+        denominator =  2.0f * sqrt(1.0f + matrix[0] - matrix[4] - matrix[8]);
+        q[0] = (matrix[5] - matrix[7]) / denominator;
+        q[1] = denominator / 4.0f;
+        q[2] = (matrix[1] + matrix[3]) / denominator;
+        q[3] = (matrix[6] + matrix[2]) / denominator;
+        break;
+
+      case 2:
+        denominator = 2.0f * sqrt(1.0f - matrix[0] + matrix[4] - matrix[8]);
+        q[0] = (matrix[6] - matrix[2]) / denominator;
+        q[1] = (matrix[1] + matrix[3]) / denominator;
+        q[2] = denominator / 4.0f;
+        q[3] = (matrix[5] + matrix[7]) / denominator;
+        break;
+
+      case 3:
+        denominator = 2.0f * sqrt(1.0f - matrix[0] - matrix[4] + matrix[8]);
+        q[0] = (matrix[1] - matrix[3]) / denominator;
+        q[1] = (matrix[6] + matrix[2]) / denominator;
+        q[2] = (matrix[5] + matrix[7]) / denominator;
+        q[3] = denominator / 4.0f;
+        break;
+    }
+  }
+
+  /**
+   * \brief Calculates the transpose of a 3x3 matrix.
+   *
+   * \param matrix  The matrix to transpose.
+   */
+  template <typename T>
+  static void transpose_matrix3_in_place(T *matrix)
+  {
+    std::swap(matrix[1], matrix[3]);
+    std::swap(matrix[2], matrix[6]);
+    std::swap(matrix[5], matrix[7]);
+  }
+
+  /**
+   * \brief Calculates the transpose of a 3x3 matrix.
+   *
+   * \param matrix  The original matrix.
+   * \param matrixT The transpose of the original matrix.
+   */
+  template <typename T>
+  static void transpose_matrix3(const T *matrix, T *matrixT)
+  {
+    // Copy the elements across.
+    for(size_t i = 0; i < 9; ++i) matrixT[i] = matrix[i];
+
+    // Swap off-diagonal elements.
+    transpose_matrix3_in_place(matrixT);
   }
 };
 

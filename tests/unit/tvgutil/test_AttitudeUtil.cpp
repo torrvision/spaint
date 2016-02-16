@@ -6,10 +6,8 @@
 #include <tvgutil/AttitudeUtil.h>
 using namespace tvgutil;
 
-//TO REMOVE
-#include <iostream>
-
 //#################### HELPER FUNCTIONS ####################
+
 void check_close(const float *v1, const float *v2, size_t size, float tolerance)
 {
   for(size_t i = 0; i < size; ++i)
@@ -48,17 +46,15 @@ BOOST_AUTO_TEST_CASE(test_conversions)
   //std::cout << "Rotation vector: " << rotationVector2 << '\n';
 
   Matrix3f rotationMatrix;
-  AttitudeUtil::quaternion_to_rotation_matrix(quaternion.v, rotationMatrix.m);
-  rotationMatrix = rotationMatrix.t();
+  AttitudeUtil::quaternion_to_rotation_matrix(quaternion.v, rotationMatrix.m, AttitudeUtil::COL_MAJOR);
   //std::cout << "Rotation matrix: \n" << rotationMatrix << '\n';
 
   Matrix3f rotationMatrix2;
-  AttitudeUtil::axis_angle_to_rotation_matrix(axis.v, &angle, rotationMatrix2.m);
-  rotationMatrix2 = rotationMatrix2.t();
+  AttitudeUtil::axis_angle_to_rotation_matrix(axis.v, &angle, rotationMatrix2.m, AttitudeUtil::COL_MAJOR);
   //std::cout << "Rotation matrix: \n" << rotationMatrix2 << '\n';
 
   Vector4f quaternion2;
-  AttitudeUtil::rotation_matrix_to_quaternion(rotationMatrix.t().getValues(), quaternion2.v);
+  AttitudeUtil::rotation_matrix_to_quaternion(rotationMatrix.m, quaternion2.v, AttitudeUtil::COL_MAJOR);
   //std::cout << "Quaternion: " << quaternion2 << '\n';
 
   Vector3f axis2;
@@ -68,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_conversions)
 
   Vector3f axis3;
   float angle3;
-  AttitudeUtil::rotation_matrix_to_axis_angle(rotationMatrix.t().getValues(), axis3.v, &angle3);
+  AttitudeUtil::rotation_matrix_to_axis_angle(rotationMatrix.t().getValues(), axis3.v, &angle3, AttitudeUtil::ROW_MAJOR);
   //std::cout << "Axis: " << axis3 << " Angle: " << angle3 << '\n';
 
   Vector3f axis4;
@@ -76,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_conversions)
   AttitudeUtil::rotation_vector_to_axis_angle(rotationVector.v, axis4.v, &angle4);
   //std::cout << "Axis: " << axis4 << " Angle: " << angle4 << '\n';
 
-  // Check conversions.
+  // Check conversions are consistent.
   check_close(rotationVector.v, rotationVector2.v, rotationVector.size(), TOL);
   check_close(rotationMatrix.m, rotationMatrix2.m, 9, TOL);
   check_close(quaternion.v, quaternion2.v, quaternion.size(), TOL);
