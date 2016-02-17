@@ -7,6 +7,7 @@
 #define H_TVGUTIL_DIRECTORYUTIL
 
 #include <string>
+#include <vector>
 
 namespace tvgutil {
 
@@ -16,6 +17,13 @@ namespace tvgutil {
 struct DirectoryUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief Creates the directories specified by a list of paths.
+   *
+   * \param dirs  The directories to create.
+   */
+  static void create_directories(const std::vector<std::string>& dirs);
 
   /**
    * \brief Gets the number of files (including directories) contained in the specified directory.

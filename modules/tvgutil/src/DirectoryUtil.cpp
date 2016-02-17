@@ -13,6 +13,14 @@ namespace tvgutil {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
+void DirectoryUtil::create_directories(const std::vector<std::string>& dirs)
+{
+  for(std::vector<std::string>::const_iterator it = dirs.begin(), iend = dirs.end(); it != iend; ++it)
+  {
+    if(!boost::filesystem::exists(*it)) boost::filesystem::create_directory(*it);
+  }
+}
+
 size_t DirectoryUtil::get_file_count(const std::string& dir)
 {
   if(!boost::filesystem::is_directory(dir))
