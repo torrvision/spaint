@@ -5,6 +5,7 @@
 
 #include "DatasetUtil.h"
 
+#include <iostream>
 #include <stdexcept>
 
 #include <boost/filesystem.hpp>

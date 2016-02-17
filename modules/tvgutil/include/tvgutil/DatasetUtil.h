@@ -6,6 +6,10 @@
 #ifndef H_TVGUTIL_DATASETUTIL
 #define H_TVGUTIL_DATASETUTIL
 
+#include <cstdlib>
+#include <string>
+#include <vector>
+
 namespace tvgutil {
 
 /**
