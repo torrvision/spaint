@@ -15,14 +15,15 @@ namespace tvgutil {
 /**
  * \brief This class may be used to convert between various 3D attitude representations.
  *
- * Note: The conversions were taken from "James Diebel. Representing Attitude: Euler Angles, Quaternions, and Rotation Vectors. Technical Report, Stanford University, Palo Alto, CA."
+ * Note: The conversions were taken from "James Diebel. Representing Attitude: Euler Angles,
+ * Quaternions, and Rotation Vectors. Technical Report, Stanford University, Palo Alto, CA."
  */
 class AttitudeUtil
 {
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief An enumeration containing two possible ways of arranging the rotation matrix in a single linear array.
+   * \brief The values of this enumeration denote the two standard orders in which a rotation matrix can be laid out in a linear array.
    */
   enum Order
   {
@@ -36,17 +37,17 @@ public:
    * \brief Converts from an axis-angle representation to a rotation matrix.
    *
    * \param axis   The axis of rotation.
-   * \param angle  The angle of rotation.
+   * \param angle  The angle of rotation (in radians).
    * \param matrix The rotation matrix.
-   * \param order  Whether the rotation matrix is in row-major or column-major order.
+   * \param order  The order in which to linearise the elements of the rotation matrix.
    */
   template <typename T>
   static void axis_angle_to_rotation_matrix(const T *axis, const T *angle, T *matrix, Order order)
   {
-    float rv[3];
+    T rv[3];
     axis_angle_to_rotation_vector(axis, angle, rv);
 
-    float q[4];
+    T q[4];
     rotation_vector_to_quaternion(rv, q);
 
     quaternion_to_rotation_matrix(q, matrix, order);
@@ -56,7 +57,7 @@ public:
    * \brief Converts from an axis-angle representation to a rotation vector.
    *
    * \param axis  The axis of rotation.
-   * \param angle The angle of rotation.
+   * \param angle The angle of rotation (in radians).
    * \param rv    The rotation vector.
    */
   template <typename T>
@@ -78,17 +79,19 @@ public:
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
   {
     const T TOL = 1e-20;
-    *angle = 2.0f * acos(q[0]);
 
-    // If the real part is one, a zero will appear in the denominator of the multiplier.
+    // If the real part of the unit quaternion one (identity quaternion [1 0 0 0])
+    // then a zero will appear in the denominator of the multiplier.
     T realSquared = q[0] * q[0];
     if(realSquared < 1.0f - TOL)
     {
+      *angle = 2.0f * acos(q[0]);
       T multiplier = 1.0f / sqrt(1.0f - realSquared);
       axis[0] = q[1] * multiplier;
       axis[1] = q[2] * multiplier;
       axis[2] = q[3] * multiplier;
     }
+    // The identity quaternion corresponds to a zero rotation around an arbitrary axis.
     else if(realSquared >= 1.0f - TOL || realSquared <= 1.0f + TOL)
     {
       *angle = 0.0f;
@@ -96,32 +99,21 @@ public:
       axis[1] = 0.0f;
       axis[2] = 0.0f;
     }
-    else
-    {
-      throw std::runtime_error("Input not a unit quaternion");
-    }
+    else throw std::runtime_error("Input not a unit quaternion");
   }
 
   /**
    * \brief Converts a unit quaternion to a rotation matrix.
    *
-   * \param q      The unit quaternion, where q[0] is the real part and q[1-3] are the imaginary parts.
-   * \param matrix The rotation matrix in row-major format.
-   * \param order  Whether the rotation matrix is in row-major or column-major order.
+   * \param q      The unit quaternion.
+   * \param matrix The rotation matrix.
+   * \param order  The order in which to linearise the elements of the rotation matrix.
    */
   template <typename T>
   static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
   {
-    if(order == COL_MAJOR)
-    {
-      // Assume memory is row-major for calculation then transpose.
-      quaternion_to_rotation_matrix_row_major(q, matrix);
-      transpose_matrix3_in_place(matrix);
-    }
-    else // if ROW_MAJOR
-    {
-      quaternion_to_rotation_matrix_row_major(q, matrix);
-    }
+    quaternion_to_rotation_matrix_row_major(q, matrix);
+    if(order == COL_MAJOR) transpose_matrix3_in_place(matrix);
   }
 
   /**
@@ -145,7 +137,7 @@ public:
    * \param matrix  The rotation matrix.
    * \param axis    The axis of the rotation.
    * \param angle   The angle of the rotation.
-   * \param order   Whether the rotation matrix is in row-major or column-major order.
+   * \param order   The order in which to linearise the elements of the rotation matrix.
    */
   template <typename T>
   static void rotation_matrix_to_axis_angle(const T *matrix, T *axis, T *angle, Order order)
@@ -156,25 +148,23 @@ public:
   }
 
   /**
-   * \brief COnverts a rotation matrix to a unit quaternion.
+   * \brief Converts a rotation matrix to a unit quaternion.
    *
    * \param matrix  The rotation matrix.
    * \param q       The unit quaternion.
-   * \param order   Whether the rotation matrix is in row-major or column-major order.
+   * \param order   The order in which to linearise the elements of the rotation matrix.
    */
   template <typename T>
   static void rotation_matrix_to_quaternion(const T *matrix, T *q, Order order)
   {
+    const T *rowMajorMatrix = matrix;
+    T temp[9];
     if(order == COL_MAJOR)
     {
-      float matrixT[9];
-      transpose_matrix3(matrix, matrixT);
-      rotation_matrix_row_major_to_quaternion(matrixT, q);
+      transpose_matrix3(matrix, temp);
+      rowMajorMatrix = temp;
     }
-    else
-    {
-      rotation_matrix_row_major_to_quaternion(matrix, q);
-    }
+    rotation_matrix_row_major_to_quaternion(rowMajorMatrix, q);
   }
 
   /**
@@ -182,7 +172,7 @@ public:
    *
    * \param rv    The rotation vector.
    * \param axis  The axis of rotation.
-   * \param angle The angle of rotation.
+   * \param angle The angle of rotation (in radians).
    */
   template <typename T>
   static void rotation_vector_to_axis_angle(const T *rv, T *axis, T *angle)
@@ -210,13 +200,14 @@ public:
   template <typename T>
   static void rotation_vector_to_quaternion(const T *rv, T *q)
   {
-    float axis[3];
-    float angle;
+    T axis[3];
+    T angle;
     rotation_vector_to_axis_angle(rv, axis, &angle);
 
     // Create the quaternion.
-    T sinHalfTheta = sin(angle/2.0f);
-    q[0] = cos(angle/2.0f);
+    T halfAngle = angle / 2.0f;
+    T sinHalfTheta = sin(halfAngle);
+    q[0] = cos(halfAngle);
     q[1] = axis[0] * sinHalfTheta;
     q[2] = axis[1] * sinHalfTheta;
     q[3] = axis[2] * sinHalfTheta;

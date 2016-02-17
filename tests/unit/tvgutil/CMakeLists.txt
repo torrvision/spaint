@@ -64,6 +64,5 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetUnitTestTarget.cmake)
 
 TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
-#INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
 
 ENDFOREACH()
