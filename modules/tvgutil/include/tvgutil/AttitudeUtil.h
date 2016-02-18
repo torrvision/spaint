@@ -13,7 +13,7 @@
 namespace tvgutil {
 
 /**
- * \brief This class may be used to convert between various 3D attitude representations.
+ * \brief This class can be used to convert between various 3D attitude representations.
  *
  * Note: The conversions were taken from "James Diebel. Representing Attitude: Euler Angles,
  * Quaternions, and Rotation Vectors. Technical Report, Stanford University, Palo Alto, CA."
@@ -74,6 +74,8 @@ public:
    * \param q       The unit quaternion.
    * \param axis    The normalised axis of rotation.
    * \param angle   The angle of the rotation (in radians).
+   *
+   * Note: If the quaternion is the identity quaternion, a zero rotation around the x-axis is returned.
    */
   template <typename T>
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
@@ -176,20 +178,21 @@ public:
    * \param rv    The rotation vector.
    * \param axis  The normalised axis of rotation.
    * \param angle The angle of rotation (in radians).
+   *
+   * Note: If the rotation vector is all zeros, a zero rotation around the x-axis is returned.
    */
   template <typename T>
   static void rotation_vector_to_axis_angle(const T *rv, T *axis, T *angle)
   {
-    const T minval = 1e-20f;
     const size_t elementCount = 3;
     T magnitude = l2_norm(rv, elementCount);
 
-    // If the magnitude is close to zero then this corresponds to a zero rotation around an arbitrary.
+    // If the magnitude is close to zero then this corresponds to a zero rotation around an arbitrary axis.
     // Here we return a zero rotation around the x-axis.
-    if(magnitude > minval)
+    const T TOL = 1e-4f;
+    if(magnitude > TOL)
     {
       *angle = magnitude;
-
       for(size_t i = 0; i < elementCount; ++i)
       {
         axis[i] = rv[i] / magnitude;
@@ -202,7 +205,6 @@ public:
       axis[1] = 0.0f;
       axis[2] = 0.0f;
     }
-
   }
 
   /**
@@ -336,8 +338,6 @@ private:
   static void transpose_matrix3(const T *matrix, T *matrixTranspose)
   {
     std::copy(matrix, matrix + 9, matrixTranspose);
-
-    // Swap off-diagonal elements.
     transpose_matrix3_in_place(matrixTranspose);
   }
 
