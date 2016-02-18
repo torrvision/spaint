@@ -53,6 +53,7 @@ src/RandomNumberGenerator.cpp
 
 SET(toplevel_headers
 include/tvgutil/ArgUtil.h
+include/tvgutil/AttitudeUtil.h
 include/tvgutil/DirectoryUtil.h
 include/tvgutil/ExecutableFinder.h
 include/tvgutil/IDAllocator.h
