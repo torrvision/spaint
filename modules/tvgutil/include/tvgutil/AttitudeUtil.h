@@ -73,7 +73,7 @@ public:
    *
    * \param q       The unit quaternion.
    * \param axis    The normalised axis of rotation.
-   * \param angle   The angle of the rotation.
+   * \param angle   The angle of the rotation (in radians).
    */
   template <typename T>
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
