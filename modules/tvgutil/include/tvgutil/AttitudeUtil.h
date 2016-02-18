@@ -71,11 +71,11 @@ public:
   /**
    * \brief Converts from a unit quaternion to an axis-angle representation.
    *
+   * Note: If the quaternion is the identity quaternion, a zero rotation around the x-axis is returned.
+   *
    * \param q       The unit quaternion.
    * \param axis    The normalised axis of rotation.
    * \param angle   The angle of the rotation (in radians).
-   *
-   * Note: If the quaternion is the identity quaternion, a zero rotation around the x-axis is returned.
    */
   template <typename T>
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
@@ -175,11 +175,11 @@ public:
   /**
    * \brief Converts a rotation vector to an axis-angle representation.
    *
+   * Note: If the rotation vector is zero, a zero rotation around the x-axis is returned.
+   *
    * \param rv    The rotation vector.
    * \param axis  The normalised axis of rotation.
    * \param angle The angle of rotation (in radians).
-   *
-   * Note: If the rotation vector is all zeros, a zero rotation around the x-axis is returned.
    */
   template <typename T>
   static void rotation_vector_to_axis_angle(const T *rv, T *axis, T *angle)
