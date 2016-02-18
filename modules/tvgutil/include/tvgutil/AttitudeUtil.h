@@ -115,7 +115,7 @@ public:
   template <typename T>
   static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
   {
-    quaternion_to_rotation_matrix_row_major(q, matrix);
+    quaternion_to_row_major_rotation_matrix(q, matrix);
     if(order == COL_MAJOR) transpose_matrix3_in_place(matrix);
   }
 
@@ -167,7 +167,7 @@ public:
       transpose_matrix3(matrix, temp);
       rowMajorMatrix = temp;
     }
-    rotation_matrix_row_major_to_quaternion(rowMajorMatrix, q);
+    row_major_rotation_matrix_to_quaternion(rowMajorMatrix, q);
   }
 
   /**
@@ -220,11 +220,11 @@ public:
 
     // Create the quaternion.
     T halfAngle = angle / 2.0f;
-    T sinHalfTheta = sin(halfAngle);
+    T sinHalfAngle = sin(halfAngle);
     q[0] = cos(halfAngle);
-    q[1] = axis[0] * sinHalfTheta;
-    q[2] = axis[1] * sinHalfTheta;
-    q[3] = axis[2] * sinHalfTheta;
+    q[1] = axis[0] * sinHalfAngle;
+    q[2] = axis[1] * sinHalfAngle;
+    q[3] = axis[2] * sinHalfAngle;
   }
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
@@ -249,11 +249,11 @@ private:
   /**
    * \brief Converts a unit quaternion to a rotation matrix arranged in row-major format.
    *
-   * \param q      The unit quaternion, where q[0] is the real part and q[1-3] are the imaginary parts.
+   * \param q      The unit quaternion.
    * \param matrix The rotation matrix in row-major format.
    */
   template <typename T>
-  static void quaternion_to_rotation_matrix_row_major(const T *q, T *matrix)
+  static void quaternion_to_row_major_rotation_matrix(const T *q, T *matrix)
   {
     T q0Sq = q[0]*q[0];
     T q1Sq = q[1]*q[1];
@@ -278,10 +278,11 @@ private:
    * \param q        The unit quaternion.
    */
   template <typename T>
-  static void rotation_matrix_row_major_to_quaternion(const T *matrix, T *q)
+  static void row_major_rotation_matrix_to_quaternion(const T *matrix, T *q)
   {
     int variant = 0;
 
+    // Choose the best variant.
     if(     (matrix[4] > -matrix[8]) && (matrix[0] > -matrix[4]) && (matrix[0] > -matrix[8])) variant = 0;
     else if((matrix[4] < -matrix[8]) && (matrix[0] >  matrix[4]) && (matrix[0] >  matrix[8])) variant = 1;
     else if((matrix[4] >  matrix[8]) && (matrix[0] <  matrix[4]) && (matrix[0] < -matrix[8])) variant = 2;
@@ -289,7 +290,6 @@ private:
 
     double denominator;
 
-    // Choose the best variant.
     switch(variant)
     {
       case 0:
@@ -329,21 +329,20 @@ private:
   /**
    * \brief Calculates the transpose of a 3x3 matrix.
    *
-   * \param matrix  The original matrix.
-   * \param matrixT The transpose of the original matrix.
+   * \param matrix          The original matrix.
+   * \param matrixTranspose The transpose of the original matrix.
    */
   template <typename T>
-  static void transpose_matrix3(const T *matrix, T *matrixT)
+  static void transpose_matrix3(const T *matrix, T *matrixTranspose)
   {
-    // Copy the elements across.
-    for(size_t i = 0; i < 9; ++i) matrixT[i] = matrix[i];
+    std::copy(matrix, matrix + 9, matrixTranspose);
 
     // Swap off-diagonal elements.
-    transpose_matrix3_in_place(matrixT);
+    transpose_matrix3_in_place(matrixTranspose);
   }
 
   /**
-   * \brief Calculates the transpose of a 3x3 matrix.
+   * \brief Overwrites a 3x3 matrix with its transpose.
    *
    * \param matrix  The matrix to transpose.
    */
