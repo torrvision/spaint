@@ -36,10 +36,10 @@ public:
   /**
    * \brief Converts from an axis-angle representation to a rotation matrix.
    *
-   * \param axis   The axis of rotation.
+   * \param axis   The normalised axis of rotation.
    * \param angle  The angle of rotation (in radians).
    * \param matrix The rotation matrix.
-   * \param order  The order in which to linearise the elements of the rotation matrix.
+   * \param order  The order in which the elements of the rotation matrix are linearised.
    */
   template <typename T>
   static void axis_angle_to_rotation_matrix(const T *axis, const T *angle, T *matrix, Order order)
@@ -56,7 +56,7 @@ public:
   /**
    * \brief Converts from an axis-angle representation to a rotation vector.
    *
-   * \param axis  The axis of rotation.
+   * \param axis  The normalised axis of rotation.
    * \param angle The angle of rotation (in radians).
    * \param rv    The rotation vector.
    */
@@ -72,17 +72,21 @@ public:
    * \brief Converts from a unit quaternion to an axis-angle representation.
    *
    * \param q       The unit quaternion.
-   * \param axis    The axis of the rotation.
+   * \param axis    The normalised axis of rotation.
    * \param angle   The angle of the rotation.
    */
   template <typename T>
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
   {
-    const T TOL = 1e-20;
-
-    // If the real part of the unit quaternion one (identity quaternion [1 0 0 0])
-    // then a zero will appear in the denominator of the multiplier.
+    const T TOL = 1e-20f;
     T realSquared = q[0] * q[0];
+
+    // A special case is required when the real part of the unit quaternion is one:
+    // q = [1 0 0 0] (the identity quaternion), to avoid a division by zero.
+    // Note: since the quaternion is normalised to unit length and the real part is one,
+    // the imaginary parts must be zero.
+    // The identity quaternion corresponds to a zero rotation around an arbitrary axis,
+    // and here we return a zero rotation around the x-axis.
     if(realSquared < 1.0f - TOL)
     {
       *angle = 2.0f * acos(q[0]);
@@ -91,8 +95,7 @@ public:
       axis[1] = q[2] * multiplier;
       axis[2] = q[3] * multiplier;
     }
-    // The identity quaternion corresponds to a zero rotation around an arbitrary axis.
-    else if(realSquared >= 1.0f - TOL || realSquared <= 1.0f + TOL)
+    else if(fabs(realSquared - 1.0f) <= TOL)
     {
       *angle = 0.0f;
       axis[0] = 1.0f;
@@ -107,7 +110,7 @@ public:
    *
    * \param q      The unit quaternion.
    * \param matrix The rotation matrix.
-   * \param order  The order in which to linearise the elements of the rotation matrix.
+   * \param order  The order in which the elements of the rotation matrix are linearised.
    */
   template <typename T>
   static void quaternion_to_rotation_matrix(const T *q, T *matrix, Order order)
@@ -135,9 +138,9 @@ public:
    * \brief Converts a rotation matrix to an axis-angle representation.
    *
    * \param matrix  The rotation matrix.
-   * \param axis    The axis of the rotation.
-   * \param angle   The angle of the rotation.
-   * \param order   The order in which to linearise the elements of the rotation matrix.
+   * \param axis    The normalised axis of rotation.
+   * \param angle   The angle of rotation (in radians).
+   * \param order   The order in which the elements of the rotation matrix are linearised.
    */
   template <typename T>
   static void rotation_matrix_to_axis_angle(const T *matrix, T *axis, T *angle, Order order)
@@ -152,7 +155,7 @@ public:
    *
    * \param matrix  The rotation matrix.
    * \param q       The unit quaternion.
-   * \param order   The order in which to linearise the elements of the rotation matrix.
+   * \param order   The order in which the elements of the rotation matrix are linearised.
    */
   template <typename T>
   static void rotation_matrix_to_quaternion(const T *matrix, T *q, Order order)
@@ -171,24 +174,35 @@ public:
    * \brief Converts a rotation vector to an axis-angle representation.
    *
    * \param rv    The rotation vector.
-   * \param axis  The axis of rotation.
+   * \param axis  The normalised axis of rotation.
    * \param angle The angle of rotation (in radians).
    */
   template <typename T>
   static void rotation_vector_to_axis_angle(const T *rv, T *axis, T *angle)
   {
-    const T minval = 1e-20;
+    const T minval = 1e-20f;
     const size_t elementCount = 3;
-    T rTheta = l2_norm(rv, elementCount);
+    T magnitude = l2_norm(rv, elementCount);
 
-    // Clip the magnitude to a minimum value to prevent division by zero.
-    if(rTheta < minval) rTheta = minval;
-    *angle = rTheta;
-
-    for(size_t i = 0; i < elementCount; ++i)
+    // If the magnitude is close to zero then this corresponds to a zero rotation around an arbitrary.
+    // Here we return a zero rotation around the x-axis.
+    if(magnitude > minval)
     {
-      axis[i] = rv[i] / rTheta;
+      *angle = magnitude;
+
+      for(size_t i = 0; i < elementCount; ++i)
+      {
+        axis[i] = rv[i] / magnitude;
+      }
     }
+    else
+    {
+      *angle = 0.0f;
+      axis[0] = 1.0f;
+      axis[1] = 0.0f;
+      axis[2] = 0.0f;
+    }
+
   }
 
   /**
