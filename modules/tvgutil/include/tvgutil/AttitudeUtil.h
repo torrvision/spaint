@@ -78,7 +78,7 @@ public:
   template <typename T>
   static void quaternion_to_axis_angle(const T *q, T *axis, T *angle)
   {
-    const T TOL = 1e-5f;
+    const T TOL = 1e-4f;
     T realSquared = q[0] * q[0];
 
     // A special case is required when the real part of the unit quaternion is one:
