@@ -21,14 +21,14 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 
 ##
 SET(core_sources
-src/core/ParamSet.cpp
+src/core/ParamSetUtil.cpp
 src/core/PerformanceMeasure.cpp
 src/core/PerformanceTable.cpp
 )
 
 SET(core_headers
 include/evaluation/core/LearnerEvaluator.h
-include/evaluation/core/ParamSet.h
+include/evaluation/core/ParamSetUtil.h
 include/evaluation/core/PerformanceMeasure.h
 include/evaluation/core/PerformanceTable.h
 )

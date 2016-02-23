@@ -14,7 +14,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/assign/list_of.hpp>
 
-#include "ParamSet.h"
+#include "ParamSetUtil.h"
 #include "PerformanceMeasure.h"
 
 namespace evaluation {
