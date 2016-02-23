@@ -6,13 +6,8 @@
 #ifndef H_EVALUATION_PARAMSETUTIL
 #define H_EVALUATION_PARAMSETUTIL
 
-#include <iosfwd>
 #include <map>
 #include <string>
-
-#include <boost/assign/list_of.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/export.hpp>
 
 namespace evaluation {
 
