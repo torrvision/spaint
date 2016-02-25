@@ -42,8 +42,7 @@ std::string CartesianProductParameterSetGenerator::param_set_to_string(const Par
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-std::vector<ParamSet>
-CartesianProductParameterSetGenerator::generate_partial_param_sets_for_param(const std::string& param, const std::vector<hold_any>& values)
+std::vector<ParamSet> CartesianProductParameterSetGenerator::generate_partial_param_sets_for_param(const std::string& param, const std::vector<hold_any>& values)
 {
   std::vector<ParamSet> result;
   for(std::vector<hold_any>::const_iterator it = values.begin(), iend = values.end(); it != iend; ++it)
@@ -53,8 +52,7 @@ CartesianProductParameterSetGenerator::generate_partial_param_sets_for_param(con
   return result;
 }
 
-std::vector<ParamSet>
-CartesianProductParameterSetGenerator::generate_partial_param_sets_for_params(size_t from) const
+std::vector<ParamSet> CartesianProductParameterSetGenerator::generate_partial_param_sets_for_params(size_t from) const
 {
   if(from == m_paramValues.size())
   {
