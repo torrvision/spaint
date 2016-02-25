@@ -9,19 +9,18 @@
 
 namespace evaluation {
 
-//#################### STREAM OPERATORS ####################
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 std::string ParamSetUtil::param_set_to_string(const ParamSet& params)
 {
   std::string paramString;
-  size_t mapSize = params.size();
-  size_t sizeCount = 0;
+  size_t paramCount = params.size();
+  size_t paramIndex = 0;
   for(std::map<std::string,std::string>::const_iterator it = params.begin(), iend = params.end(); it != iend; ++it)
   {
     paramString += it->first + "-" + it->second;
-    if(++sizeCount != mapSize) paramString += "_";
+    if(++paramIndex != paramCount) paramString += "_";
   }
-
   return paramString;
 }
 

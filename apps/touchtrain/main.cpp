@@ -6,6 +6,7 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
+#include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
@@ -33,7 +34,6 @@ using namespace tvgutil;
 typedef int Label;
 typedef DecisionTree<Label> DT;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<RF> RF_Ptr;
 

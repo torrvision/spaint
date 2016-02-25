@@ -8,6 +8,7 @@
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 
+#include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceTable.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomPermutationAndDivisionSplitGenerator.h>
@@ -29,7 +30,6 @@ using namespace tvgutil;
 
 typedef int Label;
 typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### FUNCTIONS ####################
 
