@@ -1,9 +1,9 @@
 /**
- * tvgutil: DirectoryUtil.cpp
+ * tvgutil: FilesystemUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "DirectoryUtil.h"
+#include "FilesystemUtil.h"
 
 #include <stdexcept>
 
@@ -13,7 +13,7 @@ namespace tvgutil {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-void DirectoryUtil::create_directories(const std::vector<std::string>& dirs)
+void FilesystemUtil::create_directories(const std::vector<std::string>& dirs)
 {
   for(std::vector<std::string>::const_iterator it = dirs.begin(), iend = dirs.end(); it != iend; ++it)
   {
@@ -21,7 +21,7 @@ void DirectoryUtil::create_directories(const std::vector<std::string>& dirs)
   }
 }
 
-size_t DirectoryUtil::get_file_count(const std::string& dir)
+size_t FilesystemUtil::get_file_count(const std::string& dir)
 {
   if(!boost::filesystem::is_directory(dir))
   {
@@ -35,6 +35,21 @@ size_t DirectoryUtil::get_file_count(const std::string& dir)
   }
 
   return fileCount;
+}
+
+std::vector<std::string> FilesystemUtil::get_missing_paths(const std::vector<std::string>& paths)
+{
+  std::vector<std::string> missingPaths;
+
+  for(std::vector<std::string>::const_iterator it = paths.begin(), iend = paths.end(); it != iend; ++it)
+  {
+    if(!boost::filesystem::exists(*it))
+    {
+      missingPaths.push_back(*it);
+    }
+  }
+
+  return missingPaths;
 }
 
 }
