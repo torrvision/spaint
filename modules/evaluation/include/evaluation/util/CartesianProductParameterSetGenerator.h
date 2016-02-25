@@ -6,6 +6,8 @@
 #ifndef H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 #define H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 
+#include "../core/ParamSetUtil.h"
+
 #include <map>
 #include <string>
 #include <utility>
@@ -24,10 +26,6 @@ namespace evaluation {
  */
 class CartesianProductParameterSetGenerator
 {
-  //#################### PUBLIC TYPEDEFS ####################
-public:
-  typedef std::map<std::string,std::string> ParamSet;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** A list of the possible values for each parameter (e.g. [("A", [1,2]), ("B", [3,4])]). */

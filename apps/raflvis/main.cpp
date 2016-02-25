@@ -12,6 +12,7 @@ using namespace tvgutil;
 
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
+#include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceMeasure.h>
 using namespace evaluation;
 
@@ -37,8 +38,6 @@ typedef RandomForest<Label> RF;
 typedef boost::shared_ptr<RF> RF_Ptr;
 
 typedef boost::shared_ptr<const TreeChopper<Label> > TreeChopper_CPtr;
-
-typedef CartesianProductParameterSetGenerator::ParamSet ParamSet;
 
 //#################### TYPES ####################
 

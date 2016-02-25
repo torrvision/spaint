@@ -14,6 +14,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/assign/list_of.hpp>
 
+#include "ParamSetUtil.h"
 #include "PerformanceMeasure.h"
 
 namespace evaluation {
@@ -23,10 +24,6 @@ namespace evaluation {
  */
 class PerformanceTable
 {
-  //#################### TYPEDEFS ####################
-public:
-  typedef std::map<std::string,std::string> ParamSet;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The names of the measures (e.g. "Accuracy") that are recorded in the table. */
