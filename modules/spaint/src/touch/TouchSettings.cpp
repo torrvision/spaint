@@ -4,7 +4,7 @@
 
 #include "touch/TouchSettings.h"
 
-#include <tvgutil/DirectoryUtil.h>
+#include <tvgutil/FilesystemUtil.h>
 #include <tvgutil/MapUtil.h>
 #include <tvgutil/PropertyUtil.h>
 #include <tvgutil/SerializationUtil.h>
@@ -48,7 +48,7 @@ TouchSettings::TouchSettings(const boost::filesystem::path& touchSettingsFile)
       throw std::runtime_error("Save candidate components path not found: " + saveCandidateComponentsPath + ". Please add a valid path to the touch settings.");
     }
 
-    static size_t fileCount = tvgutil::DirectoryUtil::get_file_count(saveCandidateComponentsPath);
+    static size_t fileCount = tvgutil::FilesystemUtil::get_file_count(saveCandidateComponentsPath);
     if(fileCount > 0)
     {
       throw std::runtime_error("Error: " + saveCandidateComponentsPath + " already contains " + boost::lexical_cast<std::string>(fileCount) + " files");
