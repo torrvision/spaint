@@ -17,7 +17,10 @@ void FilesystemUtil::create_directories(const std::vector<std::string>& dirs)
 {
   for(std::vector<std::string>::const_iterator it = dirs.begin(), iend = dirs.end(); it != iend; ++it)
   {
-    if(!boost::filesystem::exists(*it)) boost::filesystem::create_directory(*it);
+    if(!boost::filesystem::exists(*it))
+    {
+      boost::filesystem::create_directory(*it);
+    }
   }
 }
 

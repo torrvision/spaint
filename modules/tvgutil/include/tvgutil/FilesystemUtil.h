@@ -12,7 +12,7 @@
 namespace tvgutil {
 
 /**
- * \brief This struct contains utility functions for working with file systems.
+ * \brief This struct contains utility functions for working with the file system.
  */
 struct FilesystemUtil
 {
@@ -37,7 +37,7 @@ struct FilesystemUtil
    * \brief Checks if a list of paths exist and returns the missing paths.
    *
    * \param paths  The paths to check.
-   * \return       The paths which are missing.
+   * \return       The paths that are missing.
    */
   static std::vector<std::string> get_missing_paths(const std::vector<std::string>& paths);
 };
