@@ -13,9 +13,9 @@ namespace tvgutil {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-void FilesystemUtil::create_directories(const std::vector<std::string>& dirs)
+void FilesystemUtil::create_directories(const std::list<std::string>& dirs)
 {
-  for(std::vector<std::string>::const_iterator it = dirs.begin(), iend = dirs.end(); it != iend; ++it)
+  for(std::list<std::string>::const_iterator it = dirs.begin(), iend = dirs.end(); it != iend; ++it)
   {
     if(!boost::filesystem::exists(*it))
     {
@@ -40,11 +40,11 @@ size_t FilesystemUtil::get_file_count(const std::string& dir)
   return fileCount;
 }
 
-std::vector<std::string> FilesystemUtil::get_missing_paths(const std::vector<std::string>& paths)
+std::list<std::string> FilesystemUtil::get_missing_paths(const std::list<std::string>& paths)
 {
-  std::vector<std::string> missingPaths;
+  std::list<std::string> missingPaths;
 
-  for(std::vector<std::string>::const_iterator it = paths.begin(), iend = paths.end(); it != iend; ++it)
+  for(std::list<std::string>::const_iterator it = paths.begin(), iend = paths.end(); it != iend; ++it)
   {
     if(!boost::filesystem::exists(*it))
     {
