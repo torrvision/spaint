@@ -7,7 +7,7 @@
 #define H_TVGUTIL_FILESYSTEMUTIL
 
 #include <string>
-#include <vector>
+#include <list>
 
 namespace tvgutil {
 
@@ -23,7 +23,7 @@ struct FilesystemUtil
    *
    * \param dirs  The directories to create.
    */
-  static void create_directories(const std::vector<std::string>& dirs);
+  static void create_directories(const std::list<std::string>& dirs);
 
   /**
    * \brief Gets the number of files (including directories) contained in the specified directory.
@@ -39,7 +39,7 @@ struct FilesystemUtil
    * \param paths  The paths to check.
    * \return       The paths that are missing.
    */
-  static std::vector<std::string> get_missing_paths(const std::vector<std::string>& paths);
+  static std::list<std::string> get_missing_paths(const std::list<std::string>& paths);
 };
 
 }
