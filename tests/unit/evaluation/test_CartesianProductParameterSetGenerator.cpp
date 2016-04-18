@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/lexical_cast.hpp>
 using boost::assign::list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
@@ -23,7 +24,7 @@ BOOST_AUTO_TEST_CASE(param_set_to_string_test)
   std::vector<std::string> actualStrings;
   for(size_t i = 0, size = settings.size(); i < size; ++i)
   {
-    actualStrings.push_back(CartesianProductParameterSetGenerator::param_set_to_string(settings[i]));
+    actualStrings.push_back(ParamSetUtil::param_set_to_string(settings[i]));
   }
 
   std::vector<std::string> expectedStrings = list_of
