@@ -8,7 +8,7 @@ using namespace rafl;
 using namespace spaint;
 
 #ifdef WITH_OPENNI
-#include <Engine/OpenNIEngine.h>
+#include <InputSource/OpenNIEngine.h>
 #endif
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
@@ -136,7 +136,7 @@ void Pipeline::run_main_section()
 
   // Determine whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-  if(trackingState->poseQuality < 0.5f) runFusion = false;
+  if(trackingState->trackerResult != ITMTrackingState::TRACKING_GOOD) runFusion = false;
   if(m_fallibleTracker && m_fallibleTracker->lost_tracking()) runFusion = false;
 
   if(runFusion)
@@ -145,9 +145,9 @@ void Pipeline::run_main_section()
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
     m_reconstructionStarted = true;
   }
-  else if(trackingState->poseQuality > 0.4f)
+  else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
-    // If we're not fusing, but the tracking is reasonably ok, update the list of visible blocks so that things are kept up to date.
+    // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
     m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
   }
   else

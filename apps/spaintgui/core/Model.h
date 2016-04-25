@@ -8,7 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <Engine/ImageSourceEngine.h>
+#include <InputSource/ImageSourceEngine.h>
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Objects/Tracking/ITMTrackingState.h>

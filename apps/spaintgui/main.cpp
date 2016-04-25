@@ -14,7 +14,7 @@
   #include <arrayfire.h>
 #endif
 
-#include <Engine/OpenNIEngine.h>
+#include <InputSource/OpenNIEngine.h>
 using namespace InfiniTAM::Engine;
 using namespace ITMLib;
 

@@ -25,6 +25,8 @@ struct SpaintVoxel
   static const bool hasColorInformation = false;
 #endif
 
+  static const bool hasConfidenceInformation = false;
+
   //#################### TYPEDEFS ####################
 
   typedef uchar Label;
@@ -120,8 +122,8 @@ struct SpaintVoxel
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   _CPU_AND_GPU_CODE_ static short SDF_initialValue() { return 32767; }
-  _CPU_AND_GPU_CODE_ static float SDF_valueToFloat(float x) { return (float)(x) / 32767.0f; }
-  _CPU_AND_GPU_CODE_ static short SDF_floatToValue(float x) { return (short)((x) * 32767.0f); }
+  _CPU_AND_GPU_CODE_ static float valueToFloat(float x) { return (float)(x) / 32767.0f; }
+  _CPU_AND_GPU_CODE_ static short floatToValue(float x) { return (short)((x) * 32767.0f); }
 };
 
 //#################### COLOUR READING ####################
