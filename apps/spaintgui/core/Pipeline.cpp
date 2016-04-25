@@ -16,7 +16,7 @@ using namespace spaint;
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
-using namespace InfiniTAM::Engine;
+using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 

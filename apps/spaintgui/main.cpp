@@ -15,7 +15,7 @@
 #endif
 
 #include <InputSource/OpenNIEngine.h>
-using namespace InfiniTAM::Engine;
+using namespace InputSource;
 using namespace ITMLib;
 
 #ifdef WITH_GLUT

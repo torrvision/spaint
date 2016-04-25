@@ -8,6 +8,8 @@
 
 #include <boost/optional.hpp>
 
+#include <InputSource/ImageSourceEngine.h>
+
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
@@ -35,7 +37,7 @@ class Pipeline
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
-  typedef boost::shared_ptr<InfiniTAM::Engine::ImageSourceEngine> ImageSourceEngine_Ptr;
+  typedef boost::shared_ptr<InputSource::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
