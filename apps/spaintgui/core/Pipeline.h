@@ -169,6 +169,17 @@ private:
   /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
   bool m_reconstructionStarted;
 
+  /** The number of fused frames since the beginning. */
+  size_t m_fusedFramesCount;
+
+  /**
+   * The minimum number of frames that will be fused regardless of their tracking quality.
+   * After this number of frames only frames with a GOOD tracking result will be fused.
+   * This allows the integration of poorly tracked frames due to the low reconstruction quality
+   * at the beginning of the execution.
+   */
+  size_t m_fusedFramesMin;
+
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 

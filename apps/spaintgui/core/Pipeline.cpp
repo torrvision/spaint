@@ -133,10 +133,19 @@ void Pipeline::run_main_section()
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
+  trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
 
   // Determine whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-  if(trackingState->trackerResult != ITMTrackingState::TRACKING_GOOD) runFusion = false;
+
+  // Do not fuse if the tracking has FAILED or has given POOR results, but in this case only
+  // after a minimum number of frames have been fused. This allows the correct initialization of the reconstructed scene.
+  if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED /*||
+     (trackingState->trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount > m_fusedFramesMin)*/)
+  {
+    runFusion = false;
+  }
+
   if(m_fallibleTracker && m_fallibleTracker->lost_tracking()) runFusion = false;
 
   if(runFusion)
@@ -144,6 +153,7 @@ void Pipeline::run_main_section()
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
     m_reconstructionStarted = true;
+    m_fusedFramesCount++;
   }
   else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
@@ -318,6 +328,10 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   m_fusionEnabled = true;
   m_mode = MODE_NORMAL;
   m_reconstructionStarted = false;
+
+  m_fusedFramesCount = 0;
+  //FIXME: These values shouldn't be hard-coded here ultimately.
+  m_fusedFramesMin = 50;
 }
 
 ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,
