@@ -133,15 +133,32 @@ void Pipeline::run_main_section()
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
-  trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
+
+  ITMTrackingState::TrackingResult trackerResult = ITMTrackingState::TRACKING_GOOD;
+  switch (m_trackerFailureMode)
+  {
+    case ITMLibSettings::FAILUREMODE_RELOCALISE:
+      // FIXME: relocalization is not implemented in spaint
+      trackerResult = trackingState->trackerResult;
+      break;
+    case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
+      if (trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
+        trackerResult = trackingState->trackerResult;
+      else trackerResult = ITMTrackingState::TRACKING_POOR;
+      break;
+    case ITMLibSettings::FAILUREMODE_IGNORE:
+    default:
+      // Always integrate (trackerResult forcefully set to GOOD)
+      break;
+  }
 
   // Determine whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
 
   // Do not fuse if the tracking has FAILED or has given POOR results, but in this case only
   // after a minimum number of frames have been fused. This allows the correct initialization of the reconstructed scene.
-  if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED /*||
-     (trackingState->trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount > m_fusedFramesMin)*/)
+  if(trackerResult == ITMTrackingState::TRACKING_FAILED ||
+      (trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount > m_fusedFramesMin))
   {
     runFusion = false;
   }
@@ -155,7 +172,7 @@ void Pipeline::run_main_section()
     m_reconstructionStarted = true;
     m_fusedFramesCount++;
   }
-  else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
+  else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
     m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
@@ -474,6 +491,7 @@ void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
 void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
   m_fallibleTracker = NULL;
+  m_trackerFailureMode = settings->behaviourOnFailure;
 
   switch(m_trackerType)
   {

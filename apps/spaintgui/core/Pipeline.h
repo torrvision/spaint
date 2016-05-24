@@ -51,6 +51,7 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef ITMLib::ITMLibSettings::FailureMode FailureMode;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -197,6 +198,9 @@ private:
 
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
+
+  /** The tracker failure mode. */
+  FailureMode m_trackerFailureMode;
 
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
