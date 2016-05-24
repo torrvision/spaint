@@ -2,13 +2,17 @@
 # UseInfiniTAM.cmake #
 ######################
 
-SET(InfiniTAM_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM" CACHE FILEPATH "The InfiniTAM include directory")
-SET(InfiniTAM_InputSource_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/InputSource" CACHE FILEPATH "The directory containing the InputSource library")
-SET(InfiniTAM_ITMLib_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/ITMLib" CACHE FILEPATH "The directory containing the ITMLib library")
-SET(InfiniTAM_ORUtils_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/ORUtils" CACHE FILEPATH "The directory containing the ORUtils library")
-SET(InfiniTAM_RelocLib_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/RelocLib" CACHE FILEPATH "The directory containing the RelocLib library")
+SET(InfiniTAM_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM" CACHE PATH "The InfiniTAM include directory")
+SET(InfiniTAM_BUILD_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build" CACHE PATH "The InfiniTAM build directory")
+
+FIND_LIBRARY(InfiniTAM_InputSource_LIBRARY InputSource HINTS "${InfiniTAM_BUILD_DIR}/InputSource")
+FIND_LIBRARY(InfiniTAM_ITMLib_LIBRARY ITMLib HINTS "${InfiniTAM_BUILD_DIR}/ITMLib")
+FIND_LIBRARY(InfiniTAM_ORUtils_LIBRARY ORUtils HINTS "${InfiniTAM_BUILD_DIR}/ORUtils")
+FIND_LIBRARY(InfiniTAM_RelocLib_LIBRARY RelocLib HINTS "${InfiniTAM_BUILD_DIR}/RelocLib")
+SET(InfiniTAM_LIBRARIES ${InfiniTAM_InputSource_LIBRARY} ${InfiniTAM_ITMLib_LIBRARY} ${InfiniTAM_ORUtils_LIBRARY} ${InfiniTAM_RelocLib_LIBRARY})
+
 INCLUDE_DIRECTORIES(${InfiniTAM_INCLUDE_DIR})
-LINK_DIRECTORIES(${InfiniTAM_InputSource_LIBRARY_DIR} ${InfiniTAM_ITMLib_LIBRARY_DIR} ${InfiniTAM_ORUtils_LIBRARY_DIR} ${InfiniTAM_RelocLib_LIBRARY_DIR})
+
 ADD_DEFINITIONS(-DUSING_CMAKE)
 
 IF(NOT(WITH_CUDA))
