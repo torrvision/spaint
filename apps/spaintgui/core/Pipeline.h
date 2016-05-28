@@ -51,7 +51,6 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
-  typedef ITMLib::ITMLibSettings::FailureMode FailureMode;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -110,6 +109,9 @@ private:
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
+  /** The number of frames for which fusion has been run. */
+  size_t m_fusedFramesCount;
+
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
@@ -118,6 +120,16 @@ private:
 
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
+
+  /**
+   * A number of initial frames to fuse, regardless of their tracking quality.
+   * Tracking quality can be poor in the first few frames, when there is only
+   * a limited model against which to track. By forcibly fusing these frames,
+   * we prevent poor tracking quality from stopping the reconstruction. After
+   * these frames have been fused, only frames with a good tracking result will
+   * be fused.
+   */
+  size_t m_initialFramesToFuse;
 
   /** The image into which depth input is to be read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
@@ -167,20 +179,6 @@ private:
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
 
-  /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
-  bool m_reconstructionStarted;
-
-  /** The number of fused frames since the beginning. */
-  size_t m_fusedFramesCount;
-
-  /**
-   * The minimum number of frames that will be fused regardless of their tracking quality.
-   * After this number of frames only frames with a GOOD tracking result will be fused.
-   * This allows the integration of poorly tracked frames due to the low reconstruction quality
-   * at the beginning of the execution.
-   */
-  size_t m_fusedFramesMin;
-
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
@@ -198,9 +196,6 @@ private:
 
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
-
-  /** The tracker failure mode. */
-  FailureMode m_trackerFailureMode;
 
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;

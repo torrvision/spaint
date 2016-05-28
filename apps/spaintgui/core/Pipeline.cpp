@@ -132,45 +132,49 @@ void Pipeline::run_main_section()
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);
-  if(m_reconstructionStarted) m_trackingController->Track(trackingState.get(), view.get());
+  if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
-  ITMTrackingState::TrackingResult trackerResult = ITMTrackingState::TRACKING_GOOD;
-  switch (m_trackerFailureMode)
+  // Determine the tracking quality, taking into account the failure mode being used.
+  ITMTrackingState::TrackingResult trackerResult;
+  switch(m_model->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
-      // FIXME: relocalization is not implemented in spaint
-      trackerResult = trackingState->trackerResult;
-      break;
+    {
+      throw std::runtime_error("Relocalisation support has not yet been ported to SemanticPaint");
+    }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
-      if (trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
-        trackerResult = trackingState->trackerResult;
-      else trackerResult = ITMTrackingState::TRACKING_POOR;
+    {
+      trackerResult = trackingState->trackerResult;
+
+      // Since we're not using relocalisation, treat tracking failures like poor tracking,
+      // on the basis that it's better to try to keep going than to fail completely.
+      if(trackerResult == ITMTrackingState::TRACKING_FAILED) trackerResult = ITMTrackingState::TRACKING_POOR;
+
       break;
+    }
     case ITMLibSettings::FAILUREMODE_IGNORE:
     default:
-      // Always integrate (trackerResult forcefully set to GOOD)
+    {
+      // If we're completely ignoring poor or failed tracking, treat the tracking quality as good.
+      trackerResult = ITMTrackingState::TRACKING_GOOD;
       break;
+    }
   }
 
-  // Determine whether or not fusion should be run.
+  // Decide whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-
-  // Do not fuse if the tracking has FAILED or has given POOR results, but in this case only
-  // after a minimum number of frames have been fused. This allows the correct initialization of the reconstructed scene.
   if(trackerResult == ITMTrackingState::TRACKING_FAILED ||
-      (trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount > m_fusedFramesMin))
+     (trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount >= m_initialFramesToFuse) ||
+     (m_fallibleTracker && m_fallibleTracker->lost_tracking()))
   {
     runFusion = false;
   }
-
-  if(m_fallibleTracker && m_fallibleTracker->lost_tracking()) runFusion = false;
 
   if(runFusion)
   {
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
-    m_reconstructionStarted = true;
-    m_fusedFramesCount++;
+    ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
@@ -342,13 +346,12 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   reset_forest();
 
   m_featureInspectionWindowName = "Feature Inspection";
+  m_fusedFramesCount = 0;
   m_fusionEnabled = true;
   m_mode = MODE_NORMAL;
-  m_reconstructionStarted = false;
 
-  m_fusedFramesCount = 0;
-  //FIXME: These values shouldn't be hard-coded here ultimately.
-  m_fusedFramesMin = 50;
+  // FIXME: This value should be passed in rather than hard-coded.
+  m_initialFramesToFuse = 50;
 }
 
 ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,
@@ -491,7 +494,6 @@ void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
 void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
   m_fallibleTracker = NULL;
-  m_trackerFailureMode = settings->behaviourOnFailure;
 
   switch(m_trackerType)
   {
