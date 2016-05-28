@@ -136,7 +136,6 @@ void Pipeline::run_main_section()
 
   // Determine whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-  if(trackingState->trackerResult != ITMTrackingState::TRACKING_GOOD) runFusion = false;
   if(m_fallibleTracker && m_fallibleTracker->lost_tracking()) runFusion = false;
 
   if(runFusion)
