@@ -140,7 +140,9 @@ void Pipeline::run_main_section()
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
-      throw std::runtime_error("Relocalisation support has not yet been ported to SemanticPaint");
+      // TODO: Port relocalisation support across from InfiniTAM.
+      trackerResult = trackingState->trackerResult;
+      break;
     }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
     {
