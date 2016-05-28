@@ -136,7 +136,7 @@ try
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
     boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
-    bool useInternalCalibration = true;
+    bool useInternalCalibration = !uri; // if reading from a file, assume that the provided calibration is to be used
     pipeline.reset(new Pipeline(calibrationFilename, uri, settings, resourcesDir, trackerType, trackerParams, useInternalCalibration));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");

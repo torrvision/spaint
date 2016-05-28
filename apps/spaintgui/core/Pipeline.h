@@ -109,6 +109,9 @@ private:
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
+  /** The number of frames for which fusion has been run. */
+  size_t m_fusedFramesCount;
+
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
@@ -117,6 +120,16 @@ private:
 
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
+
+  /**
+   * A number of initial frames to fuse, regardless of their tracking quality.
+   * Tracking quality can be poor in the first few frames, when there is only
+   * a limited model against which to track. By forcibly fusing these frames,
+   * we prevent poor tracking quality from stopping the reconstruction. After
+   * these frames have been fused, only frames with a good tracking result will
+   * be fused.
+   */
+  size_t m_initialFramesToFuse;
 
   /** The image into which depth input is to be read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
@@ -165,9 +178,6 @@ private:
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
-
-  /** Whether or not reconstruction has started yet (the tracking can only be run once it has). */
-  bool m_reconstructionStarted;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
