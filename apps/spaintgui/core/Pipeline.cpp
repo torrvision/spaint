@@ -134,14 +134,43 @@ void Pipeline::run_main_section()
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
+  // For relocalisation
+  int relocAddKeyframeIdx = -1;
+
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult;
   switch(m_model->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
-      // TODO: Port relocalisation support across from InfiniTAM.
       trackerResult = trackingState->trackerResult;
+      if (trackerResult == ITMTrackingState::TRACKING_GOOD && m_relocalisationCount > 0) m_relocalisationCount--;
+
+      int NN; float distances;
+      view->depth->UpdateHostFromDevice();
+      relocAddKeyframeIdx = m_relocaliser->ProcessFrame(view->depth, 1, &NN, &distances,
+        trackerResult == ITMTrackingState::TRACKING_GOOD && m_relocalisationCount == 0);
+
+      // add keyframe, if necessary
+      if (relocAddKeyframeIdx >= 0)
+      {
+        m_poseDatabase->storePose(relocAddKeyframeIdx, *(trackingState->pose_d), 0);
+      }
+      else if (trackerResult == ITMTrackingState::TRACKING_FAILED)
+      {
+        m_relocalisationCount = 10;
+
+        const RelocLib::PoseDatabase::PoseInScene & keyframe = m_poseDatabase->retrievePose(NN);
+        trackingState->pose_d->SetFrom(&keyframe.pose);
+
+        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), true);
+        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(),
+          m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
+        m_trackingController->Track(trackingState.get(), view.get());
+
+        trackerResult = trackingState->trackerResult;
+      }
+
       break;
     }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
@@ -191,6 +220,19 @@ void Pipeline::run_main_section()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
+
+  // If we added the current frame as keyframe to the pose database,
+  // also store its rendering (for visualization)
+  if (relocAddKeyframeIdx >= 0)
+  {
+    ORUtils::MemoryBlock<Vector4u>::MemoryCopyDirection memoryCopyDirection =
+      m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU;
+
+    // This does not really work in spaint because the image rendering is not part of the main section,
+    // as a fallback we store the last rgb image.
+    // m_model->get_relocalization_keyframe()->SetFrom(liveRenderState->raycastImage, memoryCopyDirection);
+    m_model->get_relocalization_keyframe()->SetFrom(view->rgb, memoryCopyDirection);
+  }
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
@@ -257,6 +299,8 @@ void Pipeline::initialise(const Settings_Ptr& settings)
     settings->deviceType = ITMLibSettings::DEVICE_CPU;
   }
 #endif
+
+  settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
   // Determine the RGB and depth image sizes.
   Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
@@ -346,6 +390,11 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the random forest.
   reset_forest();
+
+  // Set up relocalisation
+  m_relocaliser.reset(new RelocLib::Relocaliser(
+    depthImageSize, Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max), 0.2f, 500, 4));
+  m_poseDatabase.reset(new RelocLib::PoseDatabase);
 
   m_featureInspectionWindowName = "Feature Inspection";
   m_fusedFramesCount = 0;

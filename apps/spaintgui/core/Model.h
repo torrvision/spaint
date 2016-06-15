@@ -35,6 +35,7 @@ public:
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -61,6 +62,9 @@ private:
 
   /** The current view of the scene. */
   View_Ptr m_view;
+
+  /** The raycast of the last keyframe added to the relocalization database. */
+  ITMUChar4Image_Ptr m_relocalisationKfRaycast;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -183,6 +187,11 @@ public:
    * \param view  The new current view of the scene.
    */
   void set_view(ITMLib::ITMView *view);
+
+  /**
+   * \brief Returns the last relocalization keyframe.
+   */
+  const ITMUChar4Image_Ptr& get_relocalization_keyframe() const;
 };
 
 //#################### TYPEDEFS ####################

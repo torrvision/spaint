@@ -15,6 +15,8 @@
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
+#include <RelocLib/Relocaliser.h>
+#include <RelocLib/PoseDatabase.h>
 
 #include <rafl/core/RandomForest.h>
 
@@ -51,6 +53,8 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
+  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -214,6 +218,16 @@ private:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
+
+  //#################### RELOCALIZATION ##################
+  /** The relocaliser. */
+  Relocaliser_Ptr m_relocaliser;
+
+  /** The database of previous poses. */
+  PoseDatabase_Ptr m_poseDatabase;
+
+  /** The number of relocalisation attempts. */
+  size_t m_relocalisationCount;
 
   //#################### CONSTRUCTORS ####################
 public:

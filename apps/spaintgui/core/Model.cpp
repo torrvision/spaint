@@ -18,7 +18,8 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),
   m_settings(settings),
-  m_trackingState(trackingState)
+  m_trackingState(trackingState),
+  m_relocalisationKfRaycast(new ITMUChar4Image(depthImageSize, true, true))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -96,4 +97,9 @@ Model::View_CPtr Model::get_view() const
 void Model::set_view(ITMView *view)
 {
   if(m_view.get() != view) m_view.reset(view);
+}
+
+const Model::ITMUChar4Image_Ptr& Model::get_relocalization_keyframe() const
+{
+  return m_relocalisationKfRaycast;
 }
