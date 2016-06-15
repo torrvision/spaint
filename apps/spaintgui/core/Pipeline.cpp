@@ -144,7 +144,18 @@ void Pipeline::run_main_section()
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
       trackerResult = trackingState->trackerResult;
-      if (trackerResult == ITMTrackingState::TRACKING_GOOD && m_relocalisationCount > 0) m_relocalisationCount--;
+
+      if(trackingState->trackerResult != ITMTrackingState::TRACKING_GOOD) std::cout << "Tracking result: ";
+//      if(trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD) std::cout << "GOOD";
+      if(trackingState->trackerResult == ITMTrackingState::TRACKING_POOR) std::cout << "POOR";
+      if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED) std::cout << "FAIL";
+      if(trackingState->trackerResult != ITMTrackingState::TRACKING_GOOD) std::cout << std::endl;
+
+      if (trackerResult == ITMTrackingState::TRACKING_GOOD && m_relocalisationCount > 0)
+      {
+        m_relocalisationCount--;
+        std::cout << "Decreased relocalization count: " << m_relocalisationCount << std::endl;
+      }
 
       int NN; float distances;
       view->depth->UpdateHostFromDevice();
@@ -155,6 +166,7 @@ void Pipeline::run_main_section()
       if (relocAddKeyframeIdx >= 0)
       {
         m_poseDatabase->storePose(relocAddKeyframeIdx, *(trackingState->pose_d), 0);
+        std::cout << "Adding keyframe: " << relocAddKeyframeIdx << std::endl;
       }
       else if (trackerResult == ITMTrackingState::TRACKING_FAILED)
       {
@@ -163,12 +175,20 @@ void Pipeline::run_main_section()
         const RelocLib::PoseDatabase::PoseInScene & keyframe = m_poseDatabase->retrievePose(NN);
         trackingState->pose_d->SetFrom(&keyframe.pose);
 
+        std::cout << "Reloc: setting pose to kf " << NN << std::endl;
+
         m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), true);
         m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(),
           m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
 
         trackerResult = trackingState->trackerResult;
+
+        std::cout << "After reloc: tracking result: ";
+        if(trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD) std::cout << "GOOD";
+        if(trackingState->trackerResult == ITMTrackingState::TRACKING_POOR) std::cout << "POOR";
+        if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED) std::cout << "FAIL";
+        std::cout << std::endl;
       }
 
       break;
@@ -299,8 +319,6 @@ void Pipeline::initialise(const Settings_Ptr& settings)
     settings->deviceType = ITMLibSettings::DEVICE_CPU;
   }
 #endif
-
-  settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
   // Determine the RGB and depth image sizes.
   Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
