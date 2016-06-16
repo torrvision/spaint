@@ -9,14 +9,13 @@
 #include <boost/optional.hpp>
 
 #include <InputSource/ImageSourceEngine.h>
-
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
-#include <RelocLib/Relocaliser.h>
 #include <RelocLib/PoseDatabase.h>
+#include <RelocLib/Relocaliser.h>
 
 #include <rafl/core/RandomForest.h>
 
@@ -44,7 +43,9 @@ private:
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
+  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMLibSettings> Settings_Ptr;
@@ -53,8 +54,6 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
-  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
-  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -144,6 +143,9 @@ private:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
 
+  /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
+  size_t m_keyframeDelay;
+
   /** The label propagator. */
   spaint::LabelPropagator_CPtr m_labelPropagator;
 
@@ -168,6 +170,9 @@ private:
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
 
+  /** The database of previous poses for relocalisation. */
+  PoseDatabase_Ptr m_poseDatabase;
+
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
@@ -182,6 +187,9 @@ private:
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
+
+  /** The relocaliser. */
+  Relocaliser_Ptr m_relocaliser;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
@@ -218,16 +226,6 @@ private:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
-
-  //#################### RELOCALIZATION ##################
-  /** The relocaliser. */
-  Relocaliser_Ptr m_relocaliser;
-
-  /** The database of previous poses. */
-  PoseDatabase_Ptr m_poseDatabase;
-
-  /** The number of relocalisation attempts. */
-  size_t m_relocalisationCount;
 
   //#################### CONSTRUCTORS ####################
 public:

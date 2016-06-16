@@ -19,6 +19,7 @@ using namespace spaint;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace RelocLib;
 
 #include <spaint/features/FeatureCalculatorFactory.h>
 #include <spaint/propagation/LabelPropagatorFactory.h>
@@ -134,49 +135,56 @@ void Pipeline::run_main_section()
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
-  // For relocalisation
-  int relocAddKeyframeIdx = -1;
-
   // Determine the tracking quality, taking into account the failure mode being used.
-  ITMTrackingState::TrackingResult trackerResult;
+  ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
   switch(m_model->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
-      trackerResult = trackingState->trackerResult;
-      if (trackerResult == ITMTrackingState::TRACKING_GOOD && m_relocalisationCount > 0) m_relocalisationCount--;
-
-      int NN; float distances;
+      // Copy the current depth input across to the CPU for use by the relocaliser.
       view->depth->UpdateHostFromDevice();
-      relocAddKeyframeIdx = m_relocaliser->ProcessFrame(view->depth, 1, &NN, &distances,
-        trackerResult == ITMTrackingState::TRACKING_GOOD && m_relocalisationCount == 0);
 
-      // add keyframe, if necessary
-      if (relocAddKeyframeIdx >= 0)
+      // Decide whether or not the relocaliser should consider using this frame as a keyframe.
+      bool considerKeyframe = false;
+      if(trackerResult == ITMTrackingState::TRACKING_GOOD)
       {
-        m_poseDatabase->storePose(relocAddKeyframeIdx, *(trackingState->pose_d), 0);
+        if(m_keyframeDelay == 0) considerKeyframe = true;
+        else --m_keyframeDelay;
       }
-      else if (trackerResult == ITMTrackingState::TRACKING_FAILED)
+
+      // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
+      // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
+      // good for some time and the current frame differs sufficiently from the existing keyframes.
+      int nearestNeighbour;
+      int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1, &nearestNeighbour, NULL, considerKeyframe);
+
+      if(keyframeID >= 0)
       {
-        m_relocalisationCount = 10;
+        // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
+        // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
+        m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
+      }
+      else if(trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
+      {
+        // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
+        // of the keyframe and rerun the tracker for this frame.
+        trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
-        const RelocLib::PoseDatabase::PoseInScene & keyframe = m_poseDatabase->retrievePose(NN);
-        trackingState->pose_d->SetFrom(&keyframe.pose);
-
-        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), true);
-        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(),
-          m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
+        const bool resetVisibleList = true;
+        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), resetVisibleList);
+        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
-
         trackerResult = trackingState->trackerResult;
+
+        // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
+        // adding a new keyframe.
+        m_keyframeDelay = 10;
       }
 
       break;
     }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
     {
-      trackerResult = trackingState->trackerResult;
-
       // Since we're not using relocalisation, treat tracking failures like poor tracking,
       // on the basis that it's better to try to keep going than to fail completely.
       if(trackerResult == ITMTrackingState::TRACKING_FAILED) trackerResult = ITMTrackingState::TRACKING_POOR;
@@ -376,14 +384,22 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   // Set up the random forest.
   reset_forest();
 
-  // Set up relocalisation
-  m_relocaliser.reset(new RelocLib::Relocaliser(
-    depthImageSize, Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max), 0.2f, 500, 4));
-  m_poseDatabase.reset(new RelocLib::PoseDatabase);
+  // Set up the pose database and the relocaliser.
+  m_poseDatabase.reset(new PoseDatabase);
+
+  const float harvestingThreshold = 0.2f;
+  const int numFerns = 500;
+  const int numDecisionsPerFern = 4;
+  m_relocaliser.reset(new Relocaliser(
+    depthImageSize,
+    Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max),
+    harvestingThreshold, numFerns, numDecisionsPerFern
+  ));
 
   m_featureInspectionWindowName = "Feature Inspection";
   m_fusedFramesCount = 0;
   m_fusionEnabled = true;
+  m_keyframeDelay = 0;
   m_mode = MODE_NORMAL;
 
   // FIXME: This value should be passed in rather than hard-coded.
