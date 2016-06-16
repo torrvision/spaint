@@ -128,9 +128,9 @@ void Raycaster::get_rgb_input(const UChar4Image_Ptr& output) const
 
 void Raycaster::get_last_raycasted_keyframe(const UChar4Image_Ptr& output) const
 {
-  prepare_to_copy_visualisation(m_model->get_relocalization_keyframe()->noDims, output);
-  if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_relocalization_keyframe()->UpdateHostFromDevice();
-  output->SetFrom(m_model->get_relocalization_keyframe().get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  prepare_to_copy_visualisation(m_model->get_last_keyframe_image()->noDims, output);
+  if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_last_keyframe_image()->UpdateHostFromDevice();
+  output->SetFrom(m_model->get_last_keyframe_image().get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
 const Raycaster::VisualisationEngine_Ptr& Raycaster::get_visualisation_engine()

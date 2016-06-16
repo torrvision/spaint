@@ -230,8 +230,8 @@ void Pipeline::run_main_section()
 
     // This does not really work in spaint because the image rendering is not part of the main section,
     // as a fallback we store the last rgb image.
-    // m_model->get_relocalization_keyframe()->SetFrom(liveRenderState->raycastImage, memoryCopyDirection);
-    m_model->get_relocalization_keyframe()->SetFrom(view->rgb, memoryCopyDirection);
+    // m_model->get_last_keyframe_image()->SetFrom(liveRenderState->raycastImage, memoryCopyDirection);
+    m_model->get_last_keyframe_image()->SetFrom(view->rgb, memoryCopyDirection);
   }
 }
 
