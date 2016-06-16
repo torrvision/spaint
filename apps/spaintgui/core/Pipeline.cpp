@@ -220,19 +220,6 @@ void Pipeline::run_main_section()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
-
-  // If we added the current frame as keyframe to the pose database,
-  // also store its rendering (for visualization)
-  if (relocAddKeyframeIdx >= 0)
-  {
-    ORUtils::MemoryBlock<Vector4u>::MemoryCopyDirection memoryCopyDirection =
-      m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU;
-
-    // This does not really work in spaint because the image rendering is not part of the main section,
-    // as a fallback we store the last rgb image.
-    // m_model->get_last_keyframe_image()->SetFrom(liveRenderState->raycastImage, memoryCopyDirection);
-    m_model->get_last_keyframe_image()->SetFrom(view->rgb, memoryCopyDirection);
-  }
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)

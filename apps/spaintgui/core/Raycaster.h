@@ -42,8 +42,7 @@ public:
     RT_SEMANTICCOLOUR,
     RT_SEMANTICFLAT,
     RT_SEMANTICLAMBERTIAN,
-    RT_SEMANTICPHONG,
-    RT_RELOCALISATION_KF,
+    RT_SEMANTICPHONG
   };
 
   //#################### PRIVATE VARIABLES ####################
@@ -99,13 +98,6 @@ public:
    * \param output  The location into which to put the output image.
    */
   void get_depth_input(const UChar4Image_Ptr& output) const;
-
-  /**
-   * \brief Gets the last raycasted keyframes from the model and copies it into output.
-   *
-   * \param output  The location into which to put the output image.
-   */
-  void get_last_raycasted_keyframe(const UChar4Image_Ptr& output) const;
 
   /**
    * \brief Gets the render state corresponding to the live camera pose.

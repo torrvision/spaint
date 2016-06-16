@@ -14,7 +14,6 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
              const Settings_CPtr& settings, const std::string& resourcesDir)
 : m_depthImageSize(depthImageSize),
   m_labelManager(new LabelManager(10)),
-  m_lastKeyframeImage(new ITMUChar4Image(depthImageSize, true, true)),
   m_resourcesDir(resourcesDir),
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),
@@ -42,11 +41,6 @@ const LabelManager_Ptr& Model::get_label_manager()
 LabelManager_CPtr Model::get_label_manager() const
 {
   return m_labelManager;
-}
-
-const Model::ITMUChar4Image_Ptr& Model::get_last_keyframe_image() const
-{
-  return m_lastKeyframeImage;
 }
 
 const SE3Pose& Model::get_pose() const

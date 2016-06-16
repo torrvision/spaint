@@ -26,8 +26,6 @@
 class Model
 {
   //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
 public:
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
@@ -45,9 +43,6 @@ private:
 
   /** The label manager. */
   spaint::LabelManager_Ptr m_labelManager;
-
-  /** The colour image corresponding to the last keyframe added to the relocalisation database. */
-  ITMUChar4Image_Ptr m_lastKeyframeImage;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
@@ -111,13 +106,6 @@ public:
    * \return  The label manager.
    */
   spaint::LabelManager_CPtr get_label_manager() const;
-
-  /**
-   * \brief Gets the colour image corresponding to the last keyframe added to the relocalisation database.
-   *
-   * \return  The colour image corresponding to the last keyframe added to the relocalisation database.
-   */
-  const ITMUChar4Image_Ptr& get_last_keyframe_image() const;
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.

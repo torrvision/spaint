@@ -502,7 +502,6 @@ void Application::process_renderer_input()
       m_inputState.key_down(KEYCODE_2) ? Raycaster::RT_SEMANTICPHONG :
       m_inputState.key_down(KEYCODE_3) ? Raycaster::RT_SEMANTICCOLOUR :
       m_inputState.key_down(KEYCODE_4) ? Raycaster::RT_SEMANTICFLAT :
-      m_inputState.key_down(KEYCODE_5) ? Raycaster::RT_RELOCALISATION_KF :
       subwindow.get_type()
     );
   }

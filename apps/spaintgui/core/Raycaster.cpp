@@ -46,12 +46,6 @@ Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& vis
 void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const SE3Pose& pose, RaycastType raycastType,
                                       const boost::optional<Postprocessor>& postprocessor) const
 {
-  if(raycastType == RT_RELOCALISATION_KF)
-  {
-    get_last_raycasted_keyframe(output);
-    return;
-  }
-
   Model::View_CPtr view = m_model->get_view();
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
   Model::Scene_CPtr scene = m_model->get_scene();
@@ -124,13 +118,6 @@ void Raycaster::get_rgb_input(const UChar4Image_Ptr& output) const
   prepare_to_copy_visualisation(m_model->get_view()->rgb->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->rgb->UpdateHostFromDevice();
   output->SetFrom(m_model->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
-}
-
-void Raycaster::get_last_raycasted_keyframe(const UChar4Image_Ptr& output) const
-{
-  prepare_to_copy_visualisation(m_model->get_last_keyframe_image()->noDims, output);
-  if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_last_keyframe_image()->UpdateHostFromDevice();
-  output->SetFrom(m_model->get_last_keyframe_image().get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
 const Raycaster::VisualisationEngine_Ptr& Raycaster::get_visualisation_engine()
