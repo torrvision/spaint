@@ -2,13 +2,28 @@
 # UseInfiniTAM.cmake #
 ######################
 
-SET(InfiniTAM_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM" CACHE FILEPATH "The InfiniTAM include directory")
-SET(InfiniTAM_InputSource_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/InputSource" CACHE FILEPATH "The directory containing the InputSource library")
-SET(InfiniTAM_ITMLib_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/ITMLib" CACHE FILEPATH "The directory containing the ITMLib library")
-SET(InfiniTAM_ORUtils_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/ORUtils" CACHE FILEPATH "The directory containing the ORUtils library")
-SET(InfiniTAM_RelocLib_LIBRARY_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build/RelocLib" CACHE FILEPATH "The directory containing the RelocLib library")
+SET(InfiniTAM_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM" CACHE PATH "The InfiniTAM include directory")
+SET(InfiniTAM_BUILD_DIR "${PROJECT_SOURCE_DIR}/../InfiniTAM/InfiniTAM/build" CACHE PATH "The InfiniTAM build directory")
+
+FIND_LIBRARY(InfiniTAM_InputSource_LIBRARY_DEBUG InputSource HINTS "${InfiniTAM_BUILD_DIR}/InputSource" "${InfiniTAM_BUILD_DIR}/InputSource/Debug")
+FIND_LIBRARY(InfiniTAM_ITMLib_LIBRARY_DEBUG ITMLib HINTS "${InfiniTAM_BUILD_DIR}/ITMLib" "${InfiniTAM_BUILD_DIR}/ITMLib/Debug")
+FIND_LIBRARY(InfiniTAM_ORUtils_LIBRARY_DEBUG ORUtils HINTS "${InfiniTAM_BUILD_DIR}/ORUtils" "${InfiniTAM_BUILD_DIR}/ORUtils/Debug")
+FIND_LIBRARY(InfiniTAM_RelocLib_LIBRARY_DEBUG RelocLib HINTS "${InfiniTAM_BUILD_DIR}/RelocLib" "${InfiniTAM_BUILD_DIR}/RelocLib/Debug")
+
+FIND_LIBRARY(InfiniTAM_InputSource_LIBRARY_RELEASE InputSource HINTS "${InfiniTAM_BUILD_DIR}/InputSource" "${InfiniTAM_BUILD_DIR}/InputSource/Release")
+FIND_LIBRARY(InfiniTAM_ITMLib_LIBRARY_RELEASE ITMLib HINTS "${InfiniTAM_BUILD_DIR}/ITMLib" "${InfiniTAM_BUILD_DIR}/ITMLib/Release")
+FIND_LIBRARY(InfiniTAM_ORUtils_LIBRARY_RELEASE ORUtils HINTS "${InfiniTAM_BUILD_DIR}/ORUtils" "${InfiniTAM_BUILD_DIR}/ORUtils/Release")
+FIND_LIBRARY(InfiniTAM_RelocLib_LIBRARY_RELEASE RelocLib HINTS "${InfiniTAM_BUILD_DIR}/RelocLib" "${InfiniTAM_BUILD_DIR}/RelocLib/Release")
+
+SET(InfiniTAM_InputSource_LIBRARY debug ${InfiniTAM_InputSource_LIBRARY_DEBUG} optimized ${InfiniTAM_InputSource_LIBRARY_RELEASE})
+SET(InfiniTAM_ITMLib_LIBRARY debug ${InfiniTAM_ITMLib_LIBRARY_DEBUG} optimized ${InfiniTAM_ITMLib_LIBRARY_RELEASE})
+SET(InfiniTAM_ORUtils_LIBRARY debug ${InfiniTAM_ORUtils_LIBRARY_DEBUG} optimized ${InfiniTAM_ORUtils_LIBRARY_RELEASE})
+SET(InfiniTAM_RelocLib_LIBRARY debug ${InfiniTAM_RelocLib_LIBRARY_DEBUG} optimized ${InfiniTAM_RelocLib_LIBRARY_RELEASE})
+
+SET(InfiniTAM_LIBRARIES ${InfiniTAM_InputSource_LIBRARY} ${InfiniTAM_ITMLib_LIBRARY} ${InfiniTAM_ORUtils_LIBRARY} ${InfiniTAM_RelocLib_LIBRARY})
+
 INCLUDE_DIRECTORIES(${InfiniTAM_INCLUDE_DIR})
-LINK_DIRECTORIES(${InfiniTAM_InputSource_LIBRARY_DIR} ${InfiniTAM_ITMLib_LIBRARY_DIR} ${InfiniTAM_ORUtils_LIBRARY_DIR} ${InfiniTAM_RelocLib_LIBRARY_DIR})
+
 ADD_DEFINITIONS(-DUSING_CMAKE)
 
 IF(NOT(WITH_CUDA))
