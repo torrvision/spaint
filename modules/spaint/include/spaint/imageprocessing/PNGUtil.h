@@ -14,7 +14,7 @@
 namespace spaint {
 
 /**
- * \brief This class contains utility functions for saving images to PNG files.
+ * \brief This class contains utility functions for loading and saving PNG images.
  */
 class PNGUtil
 {
