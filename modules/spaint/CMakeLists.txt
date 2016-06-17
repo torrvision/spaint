@@ -25,6 +25,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
@@ -81,16 +82,23 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 
 ##
 SET(imageprocessing_sources
-src/imageprocessing/ImageProcessorFactory.cpp
+src/imageprocessing/PNGUtil.cpp
 )
 
 SET(imageprocessing_headers
-include/spaint/imageprocessing/ImageProcessorFactory.h
+include/spaint/imageprocessing/PNGUtil.h
 )
 
 IF(WITH_ARRAYFIRE)
-  SET(imageprocessing_sources ${imageprocessing_sources} src/imageprocessing/MedianFilterer.cpp)
-  SET(imageprocessing_headers ${imageprocessing_headers} include/spaint/imageprocessing/MedianFilterer.h)
+  SET(imageprocessing_sources ${imageprocessing_sources}
+    src/imageprocessing/ImageProcessorFactory.cpp
+    src/imageprocessing/MedianFilterer.cpp
+  )
+
+  SET(imageprocessing_headers ${imageprocessing_headers}
+    include/spaint/imageprocessing/ImageProcessorFactory.h
+    include/spaint/imageprocessing/MedianFilterer.h
+  )
 ENDIF()
 
 ##
@@ -514,6 +522,7 @@ SET(sources
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
+${imageprocessing_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
@@ -542,6 +551,7 @@ ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${imageprocessing_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
@@ -576,13 +586,11 @@ ${visualisers_shared_headers}
 
 IF(WITH_ARRAYFIRE)
   SET(sources ${sources}
-    ${imageprocessing_sources}
     ${imageprocessing_cpu_sources}
     ${imageprocessing_interface_sources}
     ${touch_sources}
   )
   SET(headers ${headers}
-    ${imageprocessing_headers}
     ${imageprocessing_cpu_headers}
     ${imageprocessing_interface_headers}
     ${imageprocessing_shared_headers}
