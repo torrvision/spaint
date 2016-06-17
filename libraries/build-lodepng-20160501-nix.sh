@@ -31,16 +31,13 @@ else
   echo "[spaint] ...Configuring using CMake..."
   if [ $PLATFORM == "mac" ]
   then
-    cmake -Wno-dev -DCMAKE_INSTALL_PREFIX=.. -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libstdc++" .. > $LOG 2>&1
+    cmake -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libstdc++" .. > $LOG 2>&1
   else
-    cmake -Wno-dev -DCMAKE_INSTALL_PREFIX=.. .. > $LOG 2>&1
+    cmake -DCMAKE_INSTALL_PREFIX=../install .. > $LOG 2>&1
   fi
 
   echo "[spaint] ...Running build..."
   make -j2 >> $LOG 2>&1
-
-  echo "[spaint] ...Installing..."
-  make install
 
   echo "[spaint] ...Finished building LodePNG 20160501."
 fi

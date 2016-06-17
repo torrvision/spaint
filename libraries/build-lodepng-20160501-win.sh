@@ -39,26 +39,13 @@ else
   cd build
 
   echo "[spaint] ...Configuring using CMake..."
-  cmake -Wno-dev -DCMAKE_INSTALL_PREFIX=.. -G "$1" .. > $LOG 2>&1
+  cmake -DCMAKE_INSTALL_PREFIX=../install -G "$1" .. > $LOG 2>&1
 
   echo "[spaint] ...Running Debug build..."
   cmd //c "msbuild /p:Configuration=Debug lodepng.sln >> $LOG 2>&1"
 
   echo "[spaint] ...Running Release build..."
   cmd //c "msbuild /p:Configuration=Release lodepng.sln >> $LOG 2>&1"
-
-  cd ..
-fi
-
-if [ -d install ]
-then
-  echo "[spaint] ...Skipping install (already installed)"
-else
-  cd build
-
-  echo "[spaint] ...Installing..."
-  cmd //c "msbuild /p:Configuration=Debug INSTALL.vcxproj >> $LOG 2>&1"
-  cmd //c "msbuild /p:Configuration=Release INSTALL.vcxproj >> $LOG 2>&1"
 
   cd ..
 fi
