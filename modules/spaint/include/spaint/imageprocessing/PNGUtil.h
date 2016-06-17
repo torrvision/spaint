@@ -53,7 +53,7 @@ private:
   static ITMUChar4Image_Ptr decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path);
 
   /**
-   * \brief Encodes an image in PNG format and writes it into a buffer.
+   * \brief Encodes an RGBA image in PNG format and writes it into a buffer.
    *
    * \param image   The image to encode.
    * \param buffer  The buffer into which to write the encoded image.
