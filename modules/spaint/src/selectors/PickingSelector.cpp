@@ -79,8 +79,8 @@ void PickingSelector::update(const InputState& inputState, const RenderState_CPt
   m_pickPointValid = false;
 
   if(!inputState.mouse_position_known()) return;
-  int x = (int)ROUND(inputState.mouse_position_x() * renderState->raycastResult->noDims.x);
-  int y = (int)ROUND(inputState.mouse_position_y() * renderState->raycastResult->noDims.y);
+  int x = (int)ROUND(inputState.mouse_position_x() * (renderState->raycastResult->noDims.x - 1));
+  int y = (int)ROUND(inputState.mouse_position_y() * (renderState->raycastResult->noDims.y - 1));
 
   m_pickPointValid = m_picker->pick(x, y, renderState.get(), *m_pickPointFloatMB);
   if(m_pickPointValid) m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
