@@ -650,7 +650,7 @@ void Application::toggle_video_recording()
   }
 }
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
 boost::filesystem::path Application::app_dir(const std::string& name)
 {
