@@ -172,6 +172,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
+  // If / is pressed on its own, save a screenshot. If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
   {
     if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_video_recording();
