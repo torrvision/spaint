@@ -570,7 +570,9 @@ void Application::save_video_frame()
 {
   ++m_videoFrameNumber;
   boost::filesystem::path p = *m_videoPath / (boost::format("%06i.png") % m_videoFrameNumber).str();
-  PNGUtil::save_image(m_renderer->capture_screenshot(), p.string());
+  ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
+  boost::thread t(&PNGUtil::save_image, screenshotImage, p.string());
+  t.detach();
 }
 
 void Application::setup_labels()

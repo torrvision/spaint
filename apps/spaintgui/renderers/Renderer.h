@@ -68,9 +68,6 @@ private:
   /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
   Raycaster_CPtr m_raycaster;
 
-  /** The image into which to capture screenshots. */
-  mutable ITMUChar4Image_Ptr m_screenshotImage;
-
   /** The sub-window configuration to use for visualising the scene. */
   SubwindowConfiguration_Ptr m_subwindowConfiguration;
 

@@ -202,15 +202,10 @@ Renderer::~Renderer() {}
 
 Renderer::ITMUChar4Image_CPtr Renderer::capture_screenshot() const
 {
-  // Make sure that the screenshot image is initialised and has the correct size.
+  // Read the pixel data from video memory into an image.
   const int width = m_windowViewportSize.width, height = m_windowViewportSize.height;
-  if(!m_screenshotImage || m_screenshotImage->noDims.x != width || m_screenshotImage->noDims.y != height)
-  {
-    m_screenshotImage.reset(new ITMUChar4Image(Vector2i(width, height), true, false));
-  }
-
-  // Read the pixel data from video memory into the screenshot image.
-  Vector4u *pixelData = m_screenshotImage->GetData(MEMORYDEVICE_CPU);
+  ITMUChar4Image_Ptr screenshotImage(new ITMUChar4Image(Vector2i(width, height), true, false));
+  Vector4u *pixelData = screenshotImage->GetData(MEMORYDEVICE_CPU);
   glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
 
   // Since the image we read from OpenGL will be upside-down, flip it before returning.
@@ -223,7 +218,7 @@ Renderer::ITMUChar4Image_CPtr Renderer::capture_screenshot() const
     }
   }
 
-  return m_screenshotImage;
+  return screenshotImage;
 }
 
 Vector2f Renderer::compute_fractional_window_position(int x, int y) const

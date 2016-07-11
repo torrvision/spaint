@@ -42,6 +42,7 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
   typedef Renderer::RenderState_CPtr RenderState_CPtr;
 
