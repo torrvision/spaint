@@ -22,7 +22,7 @@ using namespace rigging;
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
-#include <tvgutil/ExecutableFinder.h>
+#include <tvgutil/PathFinder.h>
 #include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
@@ -80,7 +80,7 @@ void Application::run()
 
 boost::filesystem::path Application::resources_dir()
 {
-  return app_dir("resources");
+  return find_subdir_from_executable("resources");
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -564,7 +564,7 @@ void Application::save_screenshot() const
   ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
 
   // Determine the appropriate path to which to save the screenshot.
-  boost::filesystem::path p = app_dir("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
+  boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
   boost::filesystem::create_directories(p.parent_path());
   std::cout << "[spaint] Saving screenshot to " << p << "...\n";
 
@@ -657,19 +657,9 @@ void Application::toggle_video_recording()
   }
   else
   {
-    m_videoPath.reset(app_dir("videos") / (TimeUtil::get_iso_timestamp()));
+    m_videoPath.reset(find_subdir_from_executable("videos") / (TimeUtil::get_iso_timestamp()));
     m_videoFrameNumber = 0;
     boost::filesystem::create_directories(*m_videoPath);
     std::cout << "[spaint] Started saving video to " << *m_videoPath << "...\n";
   }
-}
-
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-
-boost::filesystem::path Application::app_dir(const std::string& name)
-{
-  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
-  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
-  p = p / name;                                  // spaint/build/bin/apps/spaintgui/<name>
-  return p;
 }

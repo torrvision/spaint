@@ -233,16 +233,6 @@ private:
    * \brief Toggles video recording on or off.
    */
   void toggle_video_recording();
-
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Gets the path to the application directory with the specified name.
-   *
-   * \param name  The name of the application directory whose path we want to get.
-   * \return      The path to the application directory with the specified name.
-   */
-  static boost::filesystem::path app_dir(const std::string& name);
 };
 
 #endif
