@@ -560,31 +560,27 @@ void Application::process_voice_input()
 
 void Application::save_screenshot() const
 {
-  // Capture a screenshot.
-  ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
-
-  // Determine the appropriate path to which to save the screenshot.
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
   boost::filesystem::create_directories(p.parent_path());
   std::cout << "[spaint] Saving screenshot to " << p << "...\n";
+  save_screenshot_to_path(p);
+}
+
+void Application::save_screenshot_to_path(const boost::filesystem::path& path) const
+{
+  // Capture the screenshot.
+  ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
 
   // Save it to disk on a separate thread to avoid slowing down the application.
-  boost::thread t(&PNGUtil::save_image, screenshotImage, p.string());
+  boost::thread t(&PNGUtil::save_image, screenshotImage, path.string());
   t.detach();
 }
 
 void Application::save_video_frame()
 {
-  // Capture a screenshot.
-  ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
-
-  // Determine the appropriate path to which to save the screenshot.
   ++m_videoFrameNumber;
   boost::filesystem::path p = *m_videoPath / (boost::format("%06i.png") % m_videoFrameNumber).str();
-
-  // Save it to disk on a separate thread to avoid slowing down the application.
-  boost::thread t(&PNGUtil::save_image, screenshotImage, p.string());
-  t.detach();
+  save_screenshot_to_path(p);
 }
 
 void Application::setup_labels()

@@ -204,6 +204,13 @@ private:
   void save_screenshot() const;
 
   /**
+   * \brief Saves a screenshot to the specified path on disk.
+   *
+   * \param path  The path to which to save the screenshot.
+   */
+  void save_screenshot_to_path(const boost::filesystem::path& path) const;
+
+  /**
    * \brief Saves the next frame of the video being recorded to disk.
    */
   void save_video_frame();
