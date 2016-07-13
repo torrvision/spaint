@@ -136,6 +136,13 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Captures a screenshot that can be saved to disk.
+   *
+   * \return  The screenshot.
+   */
+  ITMUChar4Image_CPtr capture_screenshot() const;
+
+  /**
    * \brief Computes the fractional position of point (x,y) in the window.
    *
    * \param x The x coordinate of the point whose fractional position is to be computed.

@@ -200,6 +200,27 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
+Renderer::ITMUChar4Image_CPtr Renderer::capture_screenshot() const
+{
+  // Read the pixel data from video memory into an image.
+  const int width = m_windowViewportSize.width, height = m_windowViewportSize.height;
+  ITMUChar4Image_Ptr screenshotImage(new ITMUChar4Image(Vector2i(width, height), true, false));
+  Vector4u *pixelData = screenshotImage->GetData(MEMORYDEVICE_CPU);
+  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+
+  // Since the image we read from OpenGL will be upside-down, flip it before returning.
+  for(int y = 0, halfHeight = height / 2; y < halfHeight; ++y)
+  {
+    int rowOffset1 = y * width, rowOffset2 = (height - 1 - y) * width;
+    for(int x = 0; x < width; ++x)
+    {
+      std::swap(pixelData[rowOffset1 + x], pixelData[rowOffset2 + x]);
+    }
+  }
+
+  return screenshotImage;
+}
+
 Vector2f Renderer::compute_fractional_window_position(int x, int y) const
 {
   const Vector2f windowViewportSize = get_window_viewport_size().toFloat();

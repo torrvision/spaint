@@ -9,6 +9,7 @@ using namespace tvginput;
 #include <fstream>
 #include <stdexcept>
 
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
@@ -17,11 +18,13 @@ using boost::assign::map_list_of;
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
+#include <spaint/imageprocessing/PNGUtil.h>
 #include <spaint/ogl/WrappedGL.h>
 using namespace spaint;
 
-#include <tvgutil/ExecutableFinder.h>
+#include <tvgutil/PathFinder.h>
 #include <tvgutil/commands/NoOpCommand.h>
+#include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
 #ifdef WITH_OVR
@@ -65,6 +68,9 @@ void Application::run()
     // If the application is unpaused, run the mode-specific section of the pipeline.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
 
+    // If we're currently recording a video, save the next frame of it to disk.
+    if(m_videoPath) save_video_frame();
+
     // If desired, pause at the end of each frame for debugging purposes.
     if(m_pauseBetweenFrames) m_paused = true;
   }
@@ -74,10 +80,7 @@ void Application::run()
 
 boost::filesystem::path Application::resources_dir()
 {
-  boost::filesystem::path p = find_executable(); // spaint/build/bin/apps/spaintgui/spaintgui(.exe)
-  p = p.parent_path();                           // spaint/build/bin/apps/spaintgui/
-  p = p / "resources/";                          // spaint/build/bin/apps/spaintgui/resources/
-  return p;
+  return find_subdir_from_executable("resources");
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -169,6 +172,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
+  // If / is pressed on its own, save a screenshot. If right shift + / is pressed, toggle video recording.
+  if(keysym.sym == SDLK_SLASH)
+  {
+    if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_video_recording();
+    else save_screenshot();
+  }
+
   // If the H key is pressed, print out a list of keyboard controls.
   if(keysym.sym == KEYCODE_h)
   {
@@ -214,7 +224,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RShift + Backspace = Clear All Label Propagations\n"
               << "RCtrl + Backspace = Clear Current Label\n"
               << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
-              << "; = Toggle Median Filtering\n";
+              << "; = Toggle Median Filtering\n"
+              << "/ = Save Screenshot\n"
+              << "RShift + / = Toggle Video Recording\n";
   }
 }
 
@@ -546,6 +558,31 @@ void Application::process_voice_input()
   }
 }
 
+void Application::save_screenshot() const
+{
+  boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
+  boost::filesystem::create_directories(p.parent_path());
+  std::cout << "[spaint] Saving screenshot to " << p << "...\n";
+  save_screenshot_to_path(p);
+}
+
+void Application::save_screenshot_to_path(const boost::filesystem::path& path) const
+{
+  // Capture the screenshot.
+  ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
+
+  // Save it to disk on a separate thread to avoid slowing down the application.
+  boost::thread t(&PNGUtil::save_image, screenshotImage, path.string());
+  t.detach();
+}
+
+void Application::save_video_frame()
+{
+  ++m_videoFrameNumber;
+  boost::filesystem::path p = *m_videoPath / (boost::format("%06i.png") % m_videoFrameNumber).str();
+  save_screenshot_to_path(p);
+}
+
 void Application::setup_labels()
 {
   const LabelManager_Ptr& labelManager = m_pipeline->get_model()->get_label_manager();
@@ -605,4 +642,20 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
+}
+
+void Application::toggle_video_recording()
+{
+  if(m_videoPath)
+  {
+    m_videoPath.reset();
+    std::cout << "[spaint] Stopped saving video.\n";
+  }
+  else
+  {
+    m_videoPath.reset(find_subdir_from_executable("videos") / (TimeUtil::get_iso_timestamp()));
+    m_videoFrameNumber = 0;
+    boost::filesystem::create_directories(*m_videoPath);
+    std::cout << "[spaint] Started saving video to " << *m_videoPath << "...\n";
+  }
 }

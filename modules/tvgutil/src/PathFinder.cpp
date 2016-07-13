@@ -1,9 +1,9 @@
 /**
- * tvgutil: ExecutableFinder.cpp
+ * tvgutil: PathFinder.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "ExecutableFinder.h"
+#include "PathFinder.h"
 
 #include <vector>
 
@@ -54,6 +54,14 @@ boost::filesystem::path find_executable()
 
   std::string s = &buffer[0];
   return s;
+}
+
+boost::filesystem::path find_subdir_from_executable(const std::string& name)
+{
+  boost::filesystem::path p = find_executable();
+  p = p.parent_path();
+  p = p / name;
+  return p;
 }
 
 }
