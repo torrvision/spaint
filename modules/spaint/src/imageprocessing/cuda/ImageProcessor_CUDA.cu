@@ -93,6 +93,9 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
+
+  // Note: This is a bit of a hack - passing inputImage->device<unsigned char>() to the CUDA kernel doesn't work for some reason.
+  af::array temp = (*inputImage)(af::span, af::span);
   
   Vector2i imgSize = outputImage->noDims;
   int pixelCount = imgSize.x * imgSize.y;
@@ -101,7 +104,7 @@ void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const I
   int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
   
   ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
-    inputImage->device<unsigned char>(),
+    temp.device<unsigned char>(),
     imgSize.x,
     imgSize.y,
     outputImage->GetData(MEMORYDEVICE_CUDA)
@@ -156,6 +159,8 @@ void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, 
     outputChannels[2].device<unsigned char>(),
     outputChannels[3].device<unsigned char>()
   );
+
+  for(int i = 0; i < 4; ++i) (*outputImage)(af::span, af::span, i) = outputChannels[i];
 }
 
 void ImageProcessor_CUDA::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
