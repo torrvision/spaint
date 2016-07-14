@@ -12,6 +12,10 @@
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
 
+#if WITH_ARRAYFIRE
+#include <spaint/touch/TouchDetector.h>
+#endif
+
 #include "Model.h"
 
 /**
@@ -44,6 +48,11 @@ private:
 
   /** The semantic label to use for manually labelling the scene. */
   spaint::SpaintVoxel::Label m_semanticLabel;
+
+#if WITH_ARRAYFIRE
+  /** The touch detector to use when performing touch selection. */
+  spaint::TouchDetector_Ptr m_touchDetector;
+#endif
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   VoxelMarker_CPtr m_voxelMarker;
@@ -93,6 +102,15 @@ public:
    * \return  The semantic label that is being used for manually labelling the scene.
    */
   spaint::SpaintVoxel::Label get_semantic_label() const;
+
+#if WITH_ARRAYFIRE
+  /**
+   * \brief Gets the touch detector to use when performing touch selection.
+   *
+   * \return  The touch detector to use when performing touch selection.
+   */
+  const spaint::TouchDetector_Ptr& get_touch_detector();
+#endif
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.

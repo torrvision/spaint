@@ -253,6 +253,9 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
     case MODE_FEATURE_INSPECTION:
       run_feature_inspection_section(renderState);
       break;
+    case MODE_HAND_LEARNING:
+      run_hand_learning_section();
+      break;
     case MODE_PREDICTION:
       run_prediction_section(renderState);
       break;
@@ -460,6 +463,13 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
   cv::imshow(m_featureInspectionWindowName, featureInspectionImage);
   const int delayMs = 1;
   cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
+#endif
+}
+
+void Pipeline::run_hand_learning_section()
+{
+#if WITH_ARRAYFIRE
+  // TODO
 #endif
 }
 

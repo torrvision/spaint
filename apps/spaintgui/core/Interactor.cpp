@@ -83,6 +83,18 @@ SpaintVoxel::Label Interactor::get_semantic_label() const
   return m_semanticLabel;
 }
 
+#if WITH_ARRAYFIRE
+const TouchDetector_Ptr& Interactor::get_touch_detector()
+{
+  if(!m_touchDetector)
+  {
+    const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
+    m_touchDetector.reset(new TouchDetector(m_model->get_depth_image_size(), m_model->get_settings(), touchSettings));
+  }
+  return m_touchDetector;
+}
+#endif
+
 void Interactor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels, MarkingMode mode)
 {
   m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get(), mode);
@@ -117,9 +129,8 @@ void Interactor::update_selector(const InputState& inputState, const RenderState
 #ifdef WITH_ARRAYFIRE
     else if(inputState.key_down(KEYCODE_4))
     {
-      const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      m_selector.reset(new TouchSelector(settings, touchSettings, m_model->get_tracking_state(), m_model->get_view(), maxKeptTouchPoints));
+      m_selector.reset(new TouchSelector(get_touch_detector(), settings, m_model->get_tracking_state(), m_model->get_view(), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_model->get_settings()->deviceType);

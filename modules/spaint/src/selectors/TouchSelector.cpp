@@ -28,14 +28,14 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchSelector::TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
+TouchSelector::TouchSelector(const TouchDetector_Ptr& touchDetector, const ITMSettings_CPtr& itmSettings, const TrackingState_Ptr& trackingState,
                              const View_Ptr& view, size_t maxKeptTouchPoints)
 : Selector(itmSettings),
   m_keptTouchPointCount(0),  
   m_keptTouchPointsFloatMB(new ORUtils::MemoryBlock<Vector3f>(maxKeptTouchPoints, true, true)),
   m_keptTouchPointsShortMB(new ORUtils::MemoryBlock<Vector3s>(maxKeptTouchPoints, true, true)),
   m_maxKeptTouchPoints(maxKeptTouchPoints),
-  m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
+  m_touchDetector(touchDetector),
   m_trackingState(trackingState),
   m_view(view)
 {

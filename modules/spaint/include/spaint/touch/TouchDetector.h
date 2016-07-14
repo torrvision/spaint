@@ -214,6 +214,10 @@ private:
   static Vector3f to_itm(const Eigen::Vector3f& v);
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
+
 }
 
 #endif

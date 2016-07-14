@@ -63,6 +63,9 @@ public:
     /** In feature inspection mode, the user can move the mouse around and visualise the features at particular points in the scene. */
     MODE_FEATURE_INSPECTION,
 
+    /** In hand learning mode, a pixel-wise appearance model is trained that can be used to separate a hand from an object. */
+    MODE_HAND_LEARNING,
+
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
 
@@ -387,6 +390,11 @@ private:
    * \param renderState The render state associated with the camera position from which the user is picking voxels.
    */
   void run_feature_inspection_section(const RenderState_CPtr& renderState);
+
+  /**
+   * \brief Runs the section of the pipeline associated with hand learning mode.
+   */
+  void run_hand_learning_section();
 
   /**
    * \brief Runs the section of the pipeline associated with prediction mode.

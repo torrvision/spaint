@@ -158,6 +158,15 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 )
 
 ##
+SET(objects_sources
+src/objects/ColourAppearanceModel.cpp
+)
+
+SET(objects_headers
+include/spaint/objects/ColourAppearanceModel.h
+)
+
+##
 SET(ocv_sources
 src/ocv/OpenCVUtil.cpp
 )
@@ -522,6 +531,7 @@ ${features_cpu_sources}
 ${features_interface_sources}
 ${imageprocessing_sources}
 ${markers_cpu_sources}
+${objects_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
 ${propagation_sources}
@@ -553,6 +563,7 @@ ${imageprocessing_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
+${objects_headers}
 ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
@@ -648,6 +659,7 @@ SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
+SOURCE_GROUP(objects FILES ${objects_sources} ${objects_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
