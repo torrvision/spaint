@@ -94,6 +94,7 @@ void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const I
 {
   check_image_size_equal(inputImage, outputImage);
 
+  // Note: This is a bit of a hack - passing inputImage->device<unsigned char>() to the CUDA kernel doesn't work for some reason.
   af::array temp = (*inputImage)(af::span, af::span);
   
   Vector2i imgSize = outputImage->noDims;

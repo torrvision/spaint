@@ -1,4 +1,4 @@
-#include "arrayfire.h"
+#include <arrayfire.h>
 
 int main(int argc, char** argv)
 {
