@@ -18,7 +18,7 @@ ColourAppearanceModel::ColourAppearanceModel(int binsCb, int binsCr)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-double ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbColour) const
+float ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbColour) const
 {
   // If we haven't yet seen enough training data to successfully build our appearance model, early out.
   if(!m_pmfColourGivenObject || !m_pmfColourGivenNotObject) return 0.5f;

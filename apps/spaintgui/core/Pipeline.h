@@ -406,6 +406,13 @@ private:
   void run_hand_learning_section(const RenderState_CPtr& renderState);
 
   /**
+   * \brief Runs the section of the pipeline associated with object segmentation mode.
+   *
+   * \param renderState The render state associated with the camera position from which to segment the object.
+   */
+  void run_object_segmentation_section(const RenderState_CPtr& renderState);
+
+  /**
    * \brief Runs the section of the pipeline associated with prediction mode.
    *
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.

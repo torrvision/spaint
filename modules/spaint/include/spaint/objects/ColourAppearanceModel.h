@@ -65,7 +65,7 @@ public:
    * \param rgbColour The RGB colour of the pixel.
    * \return          The posterior probability of the pixel being part of the object given its colour.
    */
-  double compute_posterior_probability(const Vector3u& rgbColour) const;
+  float compute_posterior_probability(const Vector3u& rgbColour) const;
 
   /**
    * \brief TODO

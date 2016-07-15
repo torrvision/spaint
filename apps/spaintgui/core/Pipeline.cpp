@@ -259,6 +259,9 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
     case MODE_HAND_LEARNING:
       run_hand_learning_section(renderState);
       break;
+    case MODE_OBJECT_SEGMENTATION:
+      run_object_segmentation_section(renderState);
+      break;
     case MODE_PREDICTION:
       run_prediction_section(renderState);
       break;
@@ -479,12 +482,40 @@ void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
   ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
   touchDetector->determine_touch_points(camera, depthInput, renderState);
-  ITMUCharImage_CPtr handMask = touchDetector->get_touch_mask();
+  ITMUCharImage_CPtr mask = touchDetector->get_touch_mask();
 
   if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(10, 10));
-  m_handAppearanceModel->train(rgbInput, handMask);
+  m_handAppearanceModel->train(rgbInput, mask);
 
   m_model->set_object_image(touchDetector->generate_touch_image(m_model->get_view()));
+#endif
+}
+
+void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderState)
+{
+#if WITH_ARRAYFIRE
+  if(!m_handAppearanceModel) return;
+
+  ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
+  rgbInput->UpdateHostFromDevice();
+
+  TouchDetector_Ptr touchDetector = m_interactor->get_touch_detector();
+  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
+  ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
+  touchDetector->determine_touch_points(camera, depthInput, renderState);
+  ITMUCharImage_CPtr mask = touchDetector->get_touch_mask();
+
+  static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
+  const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
+  Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
+  const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
+  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+  {
+    float prob = m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
+    objectPtr[i] = maskPtr[i] && prob < 0.5f ? rgbPtr[i] : Vector4u((uchar)0);
+  }
+
+  m_model->set_object_image(objectImage);
 #endif
 }
 
