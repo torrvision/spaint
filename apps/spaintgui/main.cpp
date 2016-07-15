@@ -28,7 +28,6 @@ using namespace ITMLib;
   #include <OVR_CAPI.h>
 #endif
 
-#include <spaint/util/ColourConversion_Shared.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
@@ -43,26 +42,9 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
   exit(code);
 }
 
-void output_colour(const Vector3u& c)
-{
-  Vector3i ci(c.r, c.g, c.b);
-  std::cout << ci << '\n';
-}
-
 int main(int argc, char *argv[])
 try
 {
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(0,0,0))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(127,0,0))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(255,0,0))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(0,255,0))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(0,0,255))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(255,255,0))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(255,0,255))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(0,255,255))));
-  output_colour(convert_ycbcr_to_rgb(convert_rgb_to_ycbcr(Vector3u(255,255,255))));
-  return 0;
-
   // Initialise SDL.
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
