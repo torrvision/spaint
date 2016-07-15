@@ -301,6 +301,15 @@ private:
   static void render_textured_quad(GLuint textureID);
 
   /**
+   * \brief Renders a colour image containing the current touch interaction.
+   *
+   * The rendering works by drawing a semi-transparent quad textured with the touch image over the existing scene.
+   *
+   * \param touchImage  A colour image containing the current touch interaction.
+   */
+  void render_touch_image(const ITMUChar4Image_CPtr& touchImage) const;
+
+  /**
    * \brief Sets the OpenGL projection matrix based on a set of intrinsic camera parameters.
    *
    * \param intrinsics  The intrinsic camera parameters.

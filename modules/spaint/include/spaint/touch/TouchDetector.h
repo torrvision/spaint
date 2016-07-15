@@ -222,6 +222,7 @@ private:
 //#################### TYPEDEFS ####################
 
 typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
+typedef boost::shared_ptr<const TouchDetector> TouchDetector_CPtr;
 
 }
 

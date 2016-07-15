@@ -51,7 +51,7 @@ private:
 
 #if WITH_ARRAYFIRE
   /** The touch detector to use when performing touch selection. */
-  spaint::TouchDetector_Ptr m_touchDetector;
+  mutable spaint::TouchDetector_Ptr m_touchDetector;
 #endif
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
@@ -110,6 +110,13 @@ public:
    * \return  The touch detector to use when performing touch selection.
    */
   const spaint::TouchDetector_Ptr& get_touch_detector();
+
+  /**
+   * \brief Gets the touch detector to use when performing touch selection.
+   *
+   * \return  The touch detector to use when performing touch selection.
+   */
+  spaint::TouchDetector_CPtr get_touch_detector() const;
 #endif
 
   /**

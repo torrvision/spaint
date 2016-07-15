@@ -86,6 +86,12 @@ SpaintVoxel::Label Interactor::get_semantic_label() const
 #if WITH_ARRAYFIRE
 const TouchDetector_Ptr& Interactor::get_touch_detector()
 {
+  const_cast<const Interactor*>(this)->get_touch_detector();
+  return m_touchDetector;
+}
+
+TouchDetector_CPtr Interactor::get_touch_detector() const
+{
   if(!m_touchDetector)
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
