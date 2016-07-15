@@ -10,6 +10,10 @@
 
 #include <ITMLib/Utils/ITMImageTypes.h>
 
+// FIXME: There's a reasonable argument that things like Histogram and ProbabilityMassFunction should be moved somewhere more central.
+#include <rafl/base/Histogram.h>
+#include <rafl/base/ProbabilityMassFunction.h>
+
 namespace spaint {
 
 /**
@@ -21,14 +25,37 @@ class ColourAppearanceModel
 private:
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
+  typedef boost::shared_ptr<rafl::ProbabilityMassFunction<int> > PMF_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  // TODO
+  /** TODO */
+  int m_binsCb;
+
+  /** TODO */
+  int m_binsCr;
+
+  // P(Colour | object)
+  rafl::Histogram<int> m_histColourGivenObject;
+
+  // P(Colour | ¬object)
+  rafl::Histogram<int> m_histColourGivenNotObject;
+
+  // P(Colour | object)
+  PMF_Ptr m_pmfColourGivenObject;
+
+  // P(Colour | ¬object)
+  PMF_Ptr m_pmfColourGivenNotObject;
 
   //#################### CONSTRUCTORS ####################
 public:
-  // TODO
+  /**
+   * \brief TODO
+   *
+   * \param binsCb  TODO
+   * \param binsCr  TODO
+   */
+  ColourAppearanceModel(int binsCb, int binsCr);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -44,6 +71,13 @@ public:
    * \brief TODO
    */
   void update(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  int compute_bin(const Vector3u& rgbColour) const;
 };
 
 }
