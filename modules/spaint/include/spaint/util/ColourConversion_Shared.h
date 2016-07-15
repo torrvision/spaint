@@ -68,6 +68,44 @@ inline Vector3f convert_rgb_to_lab(const Vector3f& rgb)
   return Vector3f(L, A, B);
 }
 
+/**
+ * \brief Converts an RGB colour to YCbCr.
+ *
+ * \param rgb The RGB colour.
+ * \return    The resulting of converting the colour to YCbCr.
+ */
+_CPU_AND_GPU_CODE_
+inline Vector3f convert_rgb_to_ycbcr(const Vector3u& rgb)
+{
+  // This is adapted from http://www.equasys.de/colorconversion.html.
+  return Vector3f(
+    CLAMP(0.299f * rgb.r + 0.587f * rgb.g + 0.114f * rgb.b, 0, 255),
+    CLAMP(127.5f - 0.169f * rgb.r - 0.331f * rgb.g + 0.5f * rgb.b, 0, 255),
+    CLAMP(127.5f + 0.5f * rgb.r - 0.419f * rgb.g - 0.081f * rgb.b, 0, 255)
+  );
+}
+
+/**
+ * \brief Converts a YCbCr colour to RGB.
+ *
+ * \param ycc The YCbCr colour.
+ * \return    The resulting of converting the colour to RGB.
+ */
+_CPU_AND_GPU_CODE_
+inline Vector3u convert_ycbcr_to_rgb(const Vector3f& ycc)
+{
+  // This is adapted from http://www.equasys.de/colorconversion.html.
+  // The RGB -> YCbCr matrix was manually inverted in Matlab.
+  float Y = ycc.x;
+  float Cbm = ycc.y - 127.5f;
+  float Crm = ycc.z - 127.5f;
+  return Vector3u(
+    (unsigned char)CLAMP(ROUND(Y - 0.0009f * Cbm + 1.4017f * Crm), 0, 255),
+    (unsigned char)CLAMP(ROUND(Y - 0.3437f * Cbm - 0.7142f * Crm), 0, 255),
+    (unsigned char)CLAMP(ROUND(Y + 1.7722f * Cbm + 0.001f * Crm), 0, 255)
+  );
+}
+
 }
 
 #endif

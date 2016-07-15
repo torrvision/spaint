@@ -43,49 +43,6 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
   exit(code);
 }
 
-/**
- * \brief Converts an RGB colour to YCrCb.
- *
- * \param rgb The RGB colour.
- * \return    The resulting of converting the colour to YCrCb.
- */
-inline Vector3u convert_rgb_to_ycbcr(const Vector3u& rgb)
-{
-  // See "A Survey on Pixel-Based Skin Color Detection Techniques" by Vezhnevets et al., equation (9).
-  float r = rgb.r / 255.0f;
-  float g = rgb.g / 255.0f;
-  float b = rgb.b / 255.0f;
-
-  float y = 0.299f * r + 0.587f * g + 0.114f * b;
-  //float cr = 0.5f * r - 0.419f * g - 0.081f * b;
-  //float cb = -0.169f * r - 0.331f * g + 0.5f * b;
-  float cr = r - y;
-  float cb = b - y;
-
-  /*return Vector3u(
-    static_cast<unsigned char>(y * 255.0f + 0.5f),
-    static_cast<unsigned char>(cr * 255.0f + 0.5f),
-    static_cast<unsigned char>(cb * 255.0f + 0.5f)
-  );*/
-  return Vector3u(
-    (unsigned char)CLAMP(ROUND(0.299f * rgb.r + 0.587f * rgb.g + 0.114f * rgb.b), 0, 255),
-    (unsigned char)CLAMP(ROUND(128 - 0.169f * rgb.r - 0.331f * rgb.g + 0.5f * rgb.b), 0, 255),
-    (unsigned char)CLAMP(ROUND(128 + 0.5f * rgb.r - 0.419f * rgb.g - 0.081f * rgb.b), 0, 255)
-  );
-}
-
-inline Vector3u convert_ycbcr_to_rgb(const Vector3u& ycrcb)
-{
-  int Y = ycrcb.x;
-  int Cbm = ycrcb.y - 128;
-  int Crm = ycrcb.z - 128;
-  return Vector3u(
-    (unsigned char)CLAMP(ROUND(Y + 1.4f * Crm), 0, 255),
-    (unsigned char)CLAMP(ROUND(Y - 0.343f * Cbm - 0.711f * Crm), 0, 255),
-    (unsigned char)CLAMP(ROUND(Y + 1.765f * Cbm), 0, 255)
-  );
-}
-
 void output_colour(const Vector3u& c)
 {
   Vector3i ci(c.r, c.g, c.b);
