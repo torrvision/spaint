@@ -484,7 +484,7 @@ void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
   touchDetector->determine_touch_points(camera, depthInput, renderState);
   ITMUCharImage_CPtr mask = touchDetector->get_touch_mask();
 
-  if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(10, 10));
+  if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
   m_handAppearanceModel->train(rgbInput, mask);
 
   m_model->set_object_image(touchDetector->generate_touch_image(m_model->get_view()));
