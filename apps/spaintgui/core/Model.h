@@ -27,6 +27,8 @@ class Model
 {
   //#################### TYPEDEFS ####################
 public:
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
@@ -43,6 +45,9 @@ private:
 
   /** The label manager. */
   spaint::LabelManager_Ptr m_labelManager;
+
+  /** TODO */
+  ITMUChar4Image_Ptr m_objectImage;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
@@ -106,6 +111,16 @@ public:
    * \return  The label manager.
    */
   spaint::LabelManager_CPtr get_label_manager() const;
+
+  /**
+   * \brief TODO
+   */
+  const ITMUChar4Image_Ptr& get_object_image();
+
+  /**
+   * \brief TODO
+   */
+  ITMUChar4Image_CPtr get_object_image() const;
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
@@ -176,6 +191,11 @@ public:
    * \return  The current view of the scene.
    */
   View_CPtr get_view() const;
+
+  /**
+   * \brief TODO
+   */
+  void set_object_image(const ITMUChar4Image_Ptr& objectImage);
 
   /**
    * \brief Sets the current view of the scene.

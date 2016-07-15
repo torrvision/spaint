@@ -483,6 +483,8 @@ void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 
   if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(10, 10));
   m_handAppearanceModel->train(rgbInput, handMask);
+
+  m_model->set_object_image(touchDetector->generate_touch_image(m_model->get_view()));
 #endif
 }
 

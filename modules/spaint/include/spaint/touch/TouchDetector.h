@@ -123,7 +123,7 @@ public:
    * \param view  The current view.
    * \return      A colour image containing the current touch interaction (if any).
    */
-  ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
+  ITMUChar4Image_Ptr generate_touch_image(const View_CPtr& view) const;
 
   /**
    * \brief TODO

@@ -425,10 +425,10 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       if(transformer) transformer->accept(selectorRenderer);
       interactor->get_selector()->accept(selectorRenderer);
 
-      // TEMPORARY
-      if(interactor->get_touch_detector())
+      // TODO
+      if(m_model->get_object_image())
       {
-        render_touch_image(interactor->get_touch_detector()->generate_touch_image(m_model->get_view()));
+        render_touch_image(m_model->get_object_image());
       }
     }
     glPopMatrix();

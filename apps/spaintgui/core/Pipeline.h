@@ -70,6 +70,9 @@ public:
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
 
+    /** In object segmentation mode, the hand appearance model is used to separate it from an object it is holding. */
+    MODE_OBJECT_SEGMENTATION,
+
     /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
     MODE_PREDICTION,
 

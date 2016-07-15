@@ -53,15 +53,8 @@ void ColourAppearanceModel::train(const ITMUChar4Image_CPtr& image, const ITMUCh
   }
 
   // Update the likelihood PMFs from the histograms.
-  if(m_histColourGivenObject.get_count() > 0)
-  {
-    m_pmfColourGivenObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenObject));
-  }
-
-  if(m_histColourGivenNotObject.get_count() > 0)
-  {
-    m_pmfColourGivenNotObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenNotObject));
-  }
+  if(m_histColourGivenObject.get_count() > 0) m_pmfColourGivenObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenObject));
+  if(m_histColourGivenNotObject.get_count() > 0) m_pmfColourGivenNotObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenNotObject));
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
