@@ -4,6 +4,8 @@
  */
 
 #include "objects/ColourAppearanceModel.h"
+
+#include "util/ColourConversion_Shared.h"
 using namespace rafl;
 
 namespace spaint {
@@ -25,14 +27,15 @@ double ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbC
 
   For simplicity, assume that P(object) = P(¬object) = 0.5. Then:
 
-  P(object | colour) =          2 * P(colour | object)
+  P(object | colour) =            P(colour | object)
                        ----------------------------------------
                        P(colour | object) + P(colour | ¬object)
   */
   int bin = compute_bin(rgbColour);
   float colourGivenObject = m_pmfColourGivenObject->get_mass(bin);
   float colourGivenNotObject = m_pmfColourGivenNotObject->get_mass(bin);
-  return 2.0f * colourGivenObject / (colourGivenObject + colourGivenNotObject);
+  float denom = colourGivenObject + colourGivenNotObject;
+  return denom > 0.0f ? colourGivenObject / denom : 0.5f;
 }
 
 void ColourAppearanceModel::update(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask)
@@ -43,9 +46,7 @@ void ColourAppearanceModel::update(const ITMUChar4Image_CPtr& image, const ITMUC
   for(int i = 0, size = static_cast<int>(image->dataSize); i < size; ++i)
   {
     int bin = compute_bin(imagePtr[i].toVector3());
-
-    if(objectMaskPtr[i]) m_histColourGivenObject.add(bin);
-    else m_histColourGivenNotObject.add(bin);
+    (objectMaskPtr[i] ? m_histColourGivenObject : m_histColourGivenNotObject).add(bin);
   }
 
   // Update the likelihood PMFs from the histograms.
@@ -57,8 +58,12 @@ void ColourAppearanceModel::update(const ITMUChar4Image_CPtr& image, const ITMUC
 
 int ColourAppearanceModel::compute_bin(const Vector3u& rgbColour) const
 {
-  // TODO
-  throw 23;
+  Vector3f yccColour = convert_rgb_to_ycbcr(rgbColour);
+  float cbFrac = yccColour.y / 255.0f;
+  float crFrac = yccColour.z / 255.0f;
+  int x = (int)CLAMP(ROUND(cbFrac * (m_binsCb - 1)), 0, m_binsCb - 1);
+  int y = (int)CLAMP(ROUND(crFrac * (m_binsCr - 1)), 0, m_binsCr - 1);
+  return y * m_binsCb + x;
 }
 
 }
