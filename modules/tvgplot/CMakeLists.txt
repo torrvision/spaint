@@ -1,12 +1,12 @@
-###################################
-# CMakeLists.txt for apps/raflvis #
-###################################
+#########################################
+# CMakeLists.txt for modules/tvgplot #
+#########################################
 
 ###########################
 # Specify the target name #
 ###########################
 
-SET(targetname raflvis)
+SET(targetname tvgplot)
 
 ################################
 # Specify the libraries to use #
@@ -15,7 +15,6 @@ SET(targetname raflvis)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
 # Specify the project files #
@@ -23,45 +22,36 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 ##
 SET(sources
-main.cpp
+src/PaletteGenerator.cpp
+src/PlotWindow.cpp
 )
 
 SET(headers
-TestDecisionFunctionGenerator.h
+include/tvgplot/PaletteGenerator.h
+include/tvgplot/PlotWindow.h
 )
 
 #############################
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(sources FILES ${sources})
-SOURCE_GROUP(headers FILES ${headers})
+SOURCE_GROUP(core FILES ${sources} ${headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/evaluation/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgplot/include)
+INCLUDE_DIRECTORIES(include/tvgplot)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #
 ##########################################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
-
-#################################
-# Specify the libraries to link #
-#################################
-
-TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgplot tvgutil)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetLibTarget.cmake)
 
 #############################
 # Specify things to install #
 #############################
 
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
+INSTALL(TARGETS ${targetname} DESTINATION lib)

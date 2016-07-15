@@ -12,6 +12,8 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 
+namespace tvgplot {
+
 //#################### CONSTRUCTORS ####################
 
 PlotWindow::PlotWindow(const std::string& windowName, int canvasWidth, int canvasHeight, float axesLength)
@@ -144,4 +146,6 @@ cv::Point PlotWindow::line_graph_value_position_in_image_calculator(int lineSepa
 cv::Scalar PlotWindow::rgb_to_bgr(const cv::Scalar& colour) const
 {
   return cv::Scalar(colour.val[2], colour.val[1], colour.val[0]);
+}
+
 }

@@ -21,10 +21,10 @@ using namespace evaluation;
 using namespace rafl;
 
 #include <tvgutil/persistence/SerializationUtil.h>
-using namespace tvgutil;
+#include <tvgplot/PaletteGenerator.h>
+#include <tvgplot/PlotWindow.h>
+using namespace tvgplot;
 
-#include "PaletteGenerator.h"
-#include "PlotWindow.h"
 #include "TestDecisionFunctionGenerator.h"
 
 //#################### TYPEDEFS ####################

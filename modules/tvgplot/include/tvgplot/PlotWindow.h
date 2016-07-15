@@ -13,6 +13,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+namespace tvgplot {
+
 /**
  * \brief An instance of this class represents a window into which we can plot shapes and/or a graph.
  */
@@ -180,5 +182,7 @@ private:
    */
   cv::Scalar rgb_to_bgr(const cv::Scalar& colour) const;
 };
+
+}
 
 #endif
