@@ -20,6 +20,9 @@ ColourAppearanceModel::ColourAppearanceModel(int binsCb, int binsCr)
 
 double ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbColour) const
 {
+  // If we haven't yet seen enough training data to successfully build our appearance model, early out.
+  if(!m_pmfColourGivenObject || !m_pmfColourGivenNotObject) return 0.5f;
+
   /*
   P(object | colour) =                   P(colour | object) * P(object)
                        -----------------------------------------------------------------
@@ -38,7 +41,7 @@ double ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbC
   return denom > 0.0f ? colourGivenObject / denom : 0.5f;
 }
 
-void ColourAppearanceModel::update(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask)
+void ColourAppearanceModel::train(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask)
 {
   // Update the likelihood histograms based on the colour image and object mask.
   const Vector4u *imagePtr = image->GetData(MEMORYDEVICE_CPU);
@@ -50,8 +53,15 @@ void ColourAppearanceModel::update(const ITMUChar4Image_CPtr& image, const ITMUC
   }
 
   // Update the likelihood PMFs from the histograms.
-  m_pmfColourGivenObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenObject));
-  m_pmfColourGivenNotObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenNotObject));
+  if(m_histColourGivenObject.get_count() > 0)
+  {
+    m_pmfColourGivenObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenObject));
+  }
+
+  if(m_histColourGivenNotObject.get_count() > 0)
+  {
+    m_pmfColourGivenNotObject.reset(new ProbabilityMassFunction<int>(m_histColourGivenNotObject));
+  }
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

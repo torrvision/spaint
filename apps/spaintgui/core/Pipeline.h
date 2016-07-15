@@ -20,6 +20,7 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
+#include <spaint/objects/ColourAppearanceModel.h>
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
@@ -118,6 +119,9 @@ private:
 
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
+
+  /** The colour appearance model to use to separate the user's hand from any object it's holding. */
+  spaint::ColourAppearanceModel_Ptr m_handAppearanceModel;
 
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
@@ -393,8 +397,10 @@ private:
 
   /**
    * \brief Runs the section of the pipeline associated with hand learning mode.
+   *
+   * \param renderState The render state associated with the camera position from which to learn the hand.
    */
-  void run_hand_learning_section();
+  void run_hand_learning_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with prediction mode.

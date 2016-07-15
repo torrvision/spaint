@@ -7,6 +7,8 @@
 using namespace rafl;
 using namespace spaint;
 
+#include <boost/serialization/shared_ptr.hpp>
+
 #ifdef WITH_OPENNI
 #include <InputSource/OpenNIEngine.h>
 #endif
@@ -27,6 +29,7 @@ using namespace RelocLib;
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
 #include <spaint/smoothing/LabelSmootherFactory.h>
+#include <spaint/util/CameraPoseConverter.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
@@ -254,7 +257,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       run_feature_inspection_section(renderState);
       break;
     case MODE_HAND_LEARNING:
-      run_hand_learning_section();
+      run_hand_learning_section(renderState);
       break;
     case MODE_PREDICTION:
       run_prediction_section(renderState);
@@ -466,10 +469,20 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 #endif
 }
 
-void Pipeline::run_hand_learning_section()
+void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 {
 #if WITH_ARRAYFIRE
-  // TODO
+  ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
+  rgbInput->UpdateHostFromDevice();
+
+  TouchDetector_Ptr touchDetector = m_interactor->get_touch_detector();
+  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
+  ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
+  touchDetector->determine_touch_points(camera, depthInput, renderState);
+  ITMUCharImage_CPtr handMask = touchDetector->get_touch_mask();
+
+  if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(10, 10));
+  m_handAppearanceModel->train(rgbInput, handMask);
 #endif
 }
 

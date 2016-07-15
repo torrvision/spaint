@@ -125,6 +125,11 @@ public:
    */
   ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
 
+  /**
+   * \brief TODO
+   */
+  ITMUCharImage_CPtr get_touch_mask() const;
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**

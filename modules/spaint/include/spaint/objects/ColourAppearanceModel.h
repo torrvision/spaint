@@ -70,7 +70,7 @@ public:
   /**
    * \brief TODO
    */
-  void update(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask);
+  void train(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -79,6 +79,10 @@ private:
    */
   int compute_bin(const Vector3u& rgbColour) const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<ColourAppearanceModel> ColourAppearanceModel_Ptr;
 
 }
 
