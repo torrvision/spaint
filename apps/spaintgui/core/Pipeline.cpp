@@ -444,6 +444,15 @@ ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Sett
   return compositeTracker;
 }
 
+Pipeline::ITMUCharImage_CPtr Pipeline::make_touch_mask(const RenderState_CPtr& renderState) const
+{
+  TouchDetector_Ptr touchDetector = m_interactor->get_touch_detector();
+  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
+  ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
+  touchDetector->determine_touch_points(camera, depthInput, renderState);
+  return touchDetector->get_touch_mask();
+}
+
 void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
@@ -475,47 +484,52 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 {
 #if WITH_ARRAYFIRE
+  // Copy the current colour input image across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
   rgbInput->UpdateHostFromDevice();
 
-  TouchDetector_Ptr touchDetector = m_interactor->get_touch_detector();
-  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
-  ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
-  touchDetector->determine_touch_points(camera, depthInput, renderState);
-  ITMUCharImage_CPtr mask = touchDetector->get_touch_mask();
-
+  // Train a colour appearance model to separate the user's hand from the scene background.
   if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
-  m_handAppearanceModel->train(rgbInput, mask);
+  m_handAppearanceModel->train(rgbInput, make_touch_mask(renderState));
 
-  m_model->set_object_image(touchDetector->generate_touch_image(m_model->get_view()));
+  // Generate a segmented image of the user's hand that can be shown to the user to provide them
+  // with interactive feedback about the data that is being used to train the appearance model.
+  m_model->set_object_image(m_interactor->get_touch_detector()->generate_touch_image(m_model->get_view()));
 #endif
 }
 
 void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderState)
 {
 #if WITH_ARRAYFIRE && WITH_OPENCV
+  // If the user has not yet trained a hand appearance model, early out.
   if(!m_handAppearanceModel) return;
 
+  // Copy the current colour input image across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
   rgbInput->UpdateHostFromDevice();
 
-  TouchDetector_Ptr touchDetector = m_interactor->get_touch_detector();
-  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
-  ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
-  touchDetector->determine_touch_points(camera, depthInput, renderState);
-  ITMUCharImage_CPtr diffMask = touchDetector->get_touch_mask();
-
+  // Make the touch mask image and some other images in which to store the segmented object and its mask.
+  ITMUCharImage_CPtr touchMask = make_touch_mask(renderState);
   static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
   static cv::Mat1b objectMask = cv::Mat1b::zeros(objectImage->noDims.y, objectImage->noDims.x);
-  const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
+
+  // For each pixel in the current colour input image:
   Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
-  const uchar *diffMaskPtr = diffMask->GetData(MEMORYDEVICE_CPU);
+  const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
+  const uchar *touchMaskPtr = touchMask->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
-    float prob = m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
-    if(diffMaskPtr[i] && prob < 0.5f)
+    // Decide whether the pixel is part of the object.
+    bool inObject = false;
+    if(touchMaskPtr[i])
     {
+      float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
+      if(objectProb >= 0.5f) inObject = true;
+    }
 
+    // Based on this decision, update the segmented object image and the corresponding mask.
+    if(inObject)
+    {
       objectPtr[i] = rgbPtr[i];
       objectMask.data[i] = 255;
     }
@@ -526,15 +540,18 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
     }
   }
 
+  // Perform a morphological opening operation on the object mask to reduce the noise.
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
   cv::Mat temp;
   cv::erode(objectMask, temp, kernel);  objectMask = temp;
   cv::dilate(objectMask, temp, kernel); objectMask = temp;
 
+  // Find the connected components of the object mask.
   cv::Mat1i ccsImage, stats;
-  cv::Mat centroids;
+  cv::Mat1d centroids;
   cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
 
+  // Determine the largest connected component in the object mask and its size.
   int largestComponentIndex = -1;
   int largestComponentSize = INT_MIN;
   for(int componentIndex = 1; componentIndex < stats.rows; ++componentIndex)
@@ -547,11 +564,11 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
     }
   }
 
-  std::cout << largestComponentIndex << ' ' << largestComponentSize << '\n';
-
+  // If the largest connected component is too small, ignore it.
   if(largestComponentSize < 1000) largestComponentIndex = -1;
 
-  const int *ccsData = (int*)ccsImage.data;
+  // Update the segmented object image and mask to only contain the largest connected component (if any).
+  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
     if(ccsData[i] != largestComponentIndex)
@@ -561,9 +578,7 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
     }
   }
 
-  // TEMPORARY
-  cv::imshow("Object Mask", objectMask);
-
+  // Store the segmented object image in the model so that it will be rendered.
   m_model->set_object_image(objectImage);
 #endif
 }

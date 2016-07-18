@@ -392,6 +392,11 @@ private:
                                           const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
 
   /**
+   * \brief TODO
+   */
+  ITMUCharImage_CPtr make_touch_mask(const RenderState_CPtr& renderState) const;
+
+  /**
    * \brief Runs the section of the pipeline associated with feature inspection mode.
    *
    * \param renderState The render state associated with the camera position from which the user is picking voxels.
