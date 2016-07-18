@@ -526,6 +526,11 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
     }
   }
 
+  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+  cv::Mat temp;
+  cv::erode(objectMask, temp, kernel);  objectMask = temp;
+  cv::dilate(objectMask, temp, kernel); objectMask = temp;
+
   cv::Mat1i ccsImage, stats;
   cv::Mat centroids;
   cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
@@ -543,6 +548,8 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   }
 
   std::cout << largestComponentIndex << ' ' << largestComponentSize << '\n';
+
+  if(largestComponentSize < 1000) largestComponentIndex = -1;
 
   const int *ccsData = (int*)ccsImage.data;
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
