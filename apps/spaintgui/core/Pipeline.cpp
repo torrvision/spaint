@@ -493,7 +493,7 @@ void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 
 void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderState)
 {
-#if WITH_ARRAYFIRE
+#if WITH_ARRAYFIRE && WITH_OPENCV
   if(!m_handAppearanceModel) return;
 
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
@@ -503,17 +503,59 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
   ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
   touchDetector->determine_touch_points(camera, depthInput, renderState);
-  ITMUCharImage_CPtr mask = touchDetector->get_touch_mask();
+  ITMUCharImage_CPtr diffMask = touchDetector->get_touch_mask();
 
   static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
+  static cv::Mat1b objectMask = cv::Mat1b::zeros(objectImage->noDims.y, objectImage->noDims.x);
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
   Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
-  const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
+  const uchar *diffMaskPtr = diffMask->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
     float prob = m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
-    objectPtr[i] = maskPtr[i] && prob < 0.5f ? rgbPtr[i] : Vector4u((uchar)0);
+    if(diffMaskPtr[i] && prob < 0.5f)
+    {
+
+      objectPtr[i] = rgbPtr[i];
+      objectMask.data[i] = 255;
+    }
+    else
+    {
+      objectPtr[i] = Vector4u((uchar)0);
+      objectMask.data[i] = 0;
+    }
   }
+
+  cv::Mat1i ccsImage, stats;
+  cv::Mat centroids;
+  cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
+
+  int largestComponentIndex = -1;
+  int largestComponentSize = INT_MIN;
+  for(int componentIndex = 1; componentIndex < stats.rows; ++componentIndex)
+  {
+    int componentSize = stats(componentIndex, cv::CC_STAT_AREA);
+    if(componentSize > largestComponentSize)
+    {
+      largestComponentIndex = componentIndex;
+      largestComponentSize = componentSize;
+    }
+  }
+
+  std::cout << largestComponentIndex << ' ' << largestComponentSize << '\n';
+
+  const int *ccsData = (int*)ccsImage.data;
+  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+  {
+    if(ccsData[i] != largestComponentIndex)
+    {
+      objectPtr[i] = Vector4u((uchar)0);
+      objectMask.data[i] = 0;
+    }
+  }
+
+  // TEMPORARY
+  cv::imshow("Object Mask", objectMask);
 
   m_model->set_object_image(objectImage);
 #endif
