@@ -304,6 +304,12 @@ void Pipeline::set_mode(Mode mode)
   }
 #endif
 
+  // If we are switching into hand learning mode, reset the hand appearance model.
+  if(mode == MODE_HAND_LEARNING && m_mode != MODE_HAND_LEARNING)
+  {
+    m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
+  }
+
   m_mode = mode;
 }
 
@@ -489,7 +495,6 @@ void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
   rgbInput->UpdateHostFromDevice();
 
   // Train a colour appearance model to separate the user's hand from the scene background.
-  if(!m_handAppearanceModel) m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
   m_handAppearanceModel->train(rgbInput, make_touch_mask(renderState));
 
   // Generate a segmented image of the user's hand that can be shown to the user to provide them
