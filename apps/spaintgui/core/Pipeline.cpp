@@ -617,10 +617,10 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   {
     // Save the colour input and segmented object images to disk so that they can be used later for training purposes.
     ++m_segmentationFrameNumber;
-    boost::filesystem::path rgbPath = *m_segmentationPath / (boost::format("%06i.png") % m_segmentationFrameNumber).str();
-    PNGUtil::save_image(rgbInput, rgbPath.string());
-    boost::filesystem::path segPath = *m_segmentationPath / (boost::format("%06i-segmented.png") % m_segmentationFrameNumber).str();
-    PNGUtil::save_image(objectImage, segPath.string());
+    boost::filesystem::path rgbPath = *m_segmentationPath / (boost::format("rgb%06i.png") % m_segmentationFrameNumber).str();
+    PNGUtil::save_image_on_thread(rgbInput, rgbPath.string());
+    boost::filesystem::path segPath = *m_segmentationPath / (boost::format("seg%06i.png") % m_segmentationFrameNumber).str();
+    PNGUtil::save_image_on_thread(objectImage, segPath.string());
   }
 
   // Store the segmented object image in the model so that it will be rendered.
