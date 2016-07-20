@@ -6,6 +6,7 @@
 #ifndef H_SPAINTGUI_PIPELINE
 #define H_SPAINTGUI_PIPELINE
 
+#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
 #include <InputSource/ImageSourceEngine.h>
@@ -201,6 +202,12 @@ private:
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
+
+  /** The frame number of the current object segmentation video (if any). */
+  int m_segmentationFrameNumber;
+
+  /** The path to which the current object segmentation video (if any) is being saved. */
+  boost::optional<boost::filesystem::path> m_segmentationPath;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;

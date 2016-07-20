@@ -6,7 +6,9 @@
 #include "Pipeline.h"
 using namespace rafl;
 using namespace spaint;
+using namespace tvgutil;
 
+#include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
 #ifdef WITH_OPENNI
@@ -24,6 +26,7 @@ using namespace ORUtils;
 using namespace RelocLib;
 
 #include <spaint/features/FeatureCalculatorFactory.h>
+#include <spaint/imageprocessing/PNGUtil.h>
 #include <spaint/propagation/LabelPropagatorFactory.h>
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
@@ -44,6 +47,9 @@ using namespace RelocLib;
 #include <spaint/trackers/RobustViconTracker.h>
 #include <spaint/trackers/ViconTracker.h>
 #endif
+
+#include <tvgutil/PathFinder.h>
+#include <tvgutil/timing/TimeUtil.h>
 
 #define DEBUGGING 1
 
@@ -308,6 +314,20 @@ void Pipeline::set_mode(Mode mode)
   if(mode == MODE_HAND_LEARNING && m_mode != MODE_HAND_LEARNING)
   {
     m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
+  }
+
+  // If we are switching into object segmentation mode, start a new object segmentation video.
+  if(mode == MODE_OBJECT_SEGMENTATION && m_mode != MODE_OBJECT_SEGMENTATION)
+  {
+    m_segmentationPath.reset(find_subdir_from_executable("segmentations") / (TimeUtil::get_iso_timestamp()));
+    m_segmentationFrameNumber = 0;
+    boost::filesystem::create_directories(*m_segmentationPath);
+  }
+
+  // If we are switching out of object segmentation mode, stop recording the object segmentation video.
+  if(m_mode == MODE_OBJECT_SEGMENTATION && mode != MODE_OBJECT_SEGMENTATION)
+  {
+    m_segmentationPath.reset();
   }
 
   m_mode = mode;
@@ -591,6 +611,16 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
     objectPtr[i] = objectMask.data[i] ? rgbPtr[i] : Vector4u((uchar)0);
+  }
+
+  if(largestComponentIndex != -1)
+  {
+    // Save the colour input and segmented object images to disk so that they can be used later for training purposes.
+    ++m_segmentationFrameNumber;
+    boost::filesystem::path rgbPath = *m_segmentationPath / (boost::format("%06i.png") % m_segmentationFrameNumber).str();
+    PNGUtil::save_image(rgbInput, rgbPath.string());
+    boost::filesystem::path segPath = *m_segmentationPath / (boost::format("%06i-segmented.png") % m_segmentationFrameNumber).str();
+    PNGUtil::save_image(objectImage, segPath.string());
   }
 
   // Store the segmented object image in the model so that it will be rendered.
