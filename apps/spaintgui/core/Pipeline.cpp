@@ -572,15 +572,25 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   // If the largest connected component is too small, ignore it.
   if(largestComponentSize < 1000) largestComponentIndex = -1;
 
-  // Update the segmented object image and mask to only contain the largest connected component (if any).
+  // Update the object mask to only contain the largest connected component (if any).
   const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
     if(ccsData[i] != largestComponentIndex)
     {
-      objectPtr[i] = Vector4u((uchar)0);
       objectMask.data[i] = 0;
     }
+  }
+
+  // Perform a morphological closing operation on the object mask to fill in holes.
+  kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(25, 25));
+  cv::dilate(objectMask, temp, kernel); objectMask = temp;
+  cv::erode(objectMask, temp, kernel);  objectMask = temp;
+
+  // Update the segmented object image to match the mask.
+  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+  {
+    objectPtr[i] = objectMask.data[i] ? rgbPtr[i] : Vector4u((uchar)0);
   }
 
   // Store the segmented object image in the model so that it will be rendered.
