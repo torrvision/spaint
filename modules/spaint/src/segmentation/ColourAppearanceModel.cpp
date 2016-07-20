@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "objects/ColourAppearanceModel.h"
+#include "segmentation/ColourAppearanceModel.h"
 
 #include "util/ColourConversion_Shared.h"
 using namespace rafl;

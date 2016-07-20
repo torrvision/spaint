@@ -158,15 +158,6 @@ include/spaint/markers/shared/VoxelMarker_Shared.h
 )
 
 ##
-SET(objects_sources
-src/objects/ColourAppearanceModel.cpp
-)
-
-SET(objects_headers
-include/spaint/objects/ColourAppearanceModel.h
-)
-
-##
 SET(ocv_sources
 src/ocv/OpenCVUtil.cpp
 )
@@ -313,6 +304,15 @@ include/spaint/sampling/interface/UniformVoxelSampler.h
 SET(sampling_shared_headers
 include/spaint/sampling/shared/PerLabelVoxelSampler_Shared.h
 include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
+)
+
+##
+SET(segmentation_sources
+src/segmentation/ColourAppearanceModel.cpp
+)
+
+SET(segmentation_headers
+include/spaint/segmentation/ColourAppearanceModel.h
 )
 
 ##
@@ -531,7 +531,6 @@ ${features_cpu_sources}
 ${features_interface_sources}
 ${imageprocessing_sources}
 ${markers_cpu_sources}
-${objects_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
 ${propagation_sources}
@@ -541,6 +540,7 @@ ${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
+${segmentation_sources}
 ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
@@ -563,7 +563,6 @@ ${imageprocessing_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
-${objects_headers}
 ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
@@ -577,6 +576,7 @@ ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
 ${sampling_shared_headers}
+${segmentation_headers}
 ${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
@@ -659,7 +659,6 @@ SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
-SOURCE_GROUP(objects FILES ${objects_sources} ${objects_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
@@ -677,6 +676,7 @@ SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers}
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
 SOURCE_GROUP(sampling\\interface FILES ${sampling_interface_sources} ${sampling_interface_headers})
 SOURCE_GROUP(sampling\\shared FILES ${sampling_shared_headers})
+SOURCE_GROUP(segmentation FILES ${segmentation_sources} ${segmentation_headers})
 SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
