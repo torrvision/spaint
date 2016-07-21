@@ -19,6 +19,7 @@ class ObjectSegmenter
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
@@ -34,9 +35,12 @@ private:
   /** The touch detector to use to get the initial difference mask. */
   mutable TouchDetector_Ptr m_touchDetector;
 
+  /** TODO */
+  View_CPtr m_view;
+
   //#################### CONSTRUCTORS ####################
 public:
-  ObjectSegmenter();
+  ObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -48,12 +52,11 @@ public:
   /**
    * \brief TODO
    *
-   * \param view        TODO
    * \param pose        TODO
    * \param renderState TODO
    * \return            TODO
    */
-  ITMUCharImage_Ptr segment_object(const View_CPtr& view, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  ITMUCharImage_Ptr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /**
    * \brief Trains the colour appearance model used to separate the user's hand from any object it's holding.
@@ -63,7 +66,7 @@ public:
    * \param renderState TODO
    * \return            TODO
    */
-  ITMUChar4Image_Ptr train_hand_model(const View_CPtr& view, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
+  ITMUChar4Image_Ptr train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

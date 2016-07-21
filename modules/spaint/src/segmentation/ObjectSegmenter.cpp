@@ -8,13 +8,19 @@
 #include <boost/serialization/shared_ptr.hpp>
 
 #include <opencv2/core/core.hpp>
-//#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "imageprocessing/PNGUtil.h"
 #include "util/CameraPoseConverter.h"
 
 namespace spaint {
+
+//#################### CONSTRUCTORS ####################
+
+ObjectSegmenter::ObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view)
+: m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
+  m_view(view)
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -23,19 +29,20 @@ void ObjectSegmenter::reset_hand_model()
   m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
 }
 
-ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const View_CPtr& view, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(view->rgb->noDims, true, false));
-  static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(view->rgb->noDims.y, view->rgb->noDims.x);
+  // Make the object mask images.
+  static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(m_view->rgb->noDims, true, false));
+  static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
 
   // If the user has not yet trained a hand appearance model, early out.
   if(!m_handAppearanceModel) return itmObjectMask;
 
   // Copy the current colour and depth input images across to the CPU.
-  ITMUChar4Image_CPtr rgbInput(view->rgb, boost::serialization::null_deleter());
+  ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
   rgbInput->UpdateHostFromDevice();
 
-  ITMFloatImage_CPtr depthInput(view->depth, boost::serialization::null_deleter());
+  ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
   // Make the touch mask image.
@@ -99,18 +106,18 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const View_CP
   cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
   cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
 
-  // Convert the object mask to InfiniTAM format and return it.
-  std::copy(cvObjectMask.data, cvObjectMask.data + view->rgb->dataSize, itmObjectMask->GetData(MEMORYDEVICE_CPU));
+  // Convert the OpenCV object mask to InfiniTAM format and return it.
+  std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, itmObjectMask->GetData(MEMORYDEVICE_CPU));
   return itmObjectMask;
 }
 
-ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const View_CPtr& view, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
+ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
 {
   // Copy the current colour and depth input images across to the CPU.
-  ITMUChar4Image_CPtr rgbInput(view->rgb, boost::serialization::null_deleter());
+  ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
   rgbInput->UpdateHostFromDevice();
 
-  ITMFloatImage_CPtr depthInput(view->depth, boost::serialization::null_deleter());
+  ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
   // Train a colour appearance model to separate the user's hand from the scene background.
@@ -118,7 +125,7 @@ ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const View
 
   // Generate a segmented image of the user's hand that can be shown to the user to provide them
   // with interactive feedback about the data that is being used to train the appearance model.
-  return m_touchDetector->generate_touch_image(view);
+  return m_touchDetector->generate_touch_image(m_view);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
