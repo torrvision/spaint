@@ -7,6 +7,8 @@
 
 #include <stdexcept>
 
+#include <boost/thread.hpp>
+
 #include <lodepng.h>
 
 namespace spaint {
@@ -26,6 +28,12 @@ void PNGUtil::save_image(const ITMUChar4Image_CPtr& image, const std::string& pa
   std::vector<unsigned char> buffer;
   encode_png(image, buffer);
   lodepng::save_file(buffer, path);
+}
+
+void PNGUtil::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path)
+{
+  boost::thread t(&save_image, image, path);
+  t.detach();
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################

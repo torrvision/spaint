@@ -42,6 +42,14 @@ public:
    */
   static void save_image(const ITMUChar4Image_CPtr& image, const std::string& path);
 
+  /**
+   * \brief Saves an RGBA image to a PNG file on a separate thread.
+   *
+   * \param image The image to save.
+   * \param path  The path to the file to which to save it.
+   */
+  static void save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path);
+
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**

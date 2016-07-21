@@ -572,8 +572,7 @@ void Application::save_screenshot_to_path(const boost::filesystem::path& path) c
   ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
 
   // Save it to disk on a separate thread to avoid slowing down the application.
-  boost::thread t(&PNGUtil::save_image, screenshotImage, path.string());
-  t.detach();
+  PNGUtil::save_image_on_thread(screenshotImage, path.string());
 }
 
 void Application::save_video_frame()
