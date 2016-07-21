@@ -14,10 +14,10 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
              const Settings_CPtr& settings, const std::string& resourcesDir)
 : m_depthImageSize(depthImageSize),
   m_labelManager(new LabelManager(10)),
-  m_objectImage(new ITMUChar4Image(rgbImageSize, true, false)),
   m_resourcesDir(resourcesDir),
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),
+  m_segmentationImage(new ITMUChar4Image(rgbImageSize, true, false)),
   m_settings(settings),
   m_trackingState(trackingState)
 {}
@@ -42,11 +42,6 @@ const LabelManager_Ptr& Model::get_label_manager()
 LabelManager_CPtr Model::get_label_manager() const
 {
   return m_labelManager;
-}
-
-const Model::ITMUChar4Image_CPtr& Model::get_object_image() const
-{
-  return m_objectImage;
 }
 
 const SE3Pose& Model::get_pose() const
@@ -74,6 +69,11 @@ Model::Scene_CPtr Model::get_scene() const
   return m_scene;
 }
 
+const Model::ITMUChar4Image_CPtr& Model::get_segmentation_image() const
+{
+  return m_segmentationImage;
+}
+
 const Model::Settings_CPtr& Model::get_settings() const
 {
   return m_settings;
@@ -99,9 +99,9 @@ Model::View_CPtr Model::get_view() const
   return m_view;
 }
 
-void Model::set_object_image(const ITMUChar4Image_CPtr& objectImage)
+void Model::set_segmentation_image(const ITMUChar4Image_CPtr& segmentationImage)
 {
-  m_objectImage = objectImage;
+  m_segmentationImage = segmentationImage;
 }
 
 void Model::set_view(ITMView *view)

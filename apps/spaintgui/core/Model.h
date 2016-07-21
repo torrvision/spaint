@@ -46,9 +46,6 @@ private:
   /** The label manager. */
   spaint::LabelManager_Ptr m_labelManager;
 
-  /** TODO */
-  ITMUChar4Image_CPtr m_objectImage;
-
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
@@ -57,6 +54,9 @@ private:
 
   /** The current reconstructed scene. */
   Scene_Ptr m_scene;
+
+  /** The overlay image (if any) to render whilst performing object segmentation. */
+  ITMUChar4Image_CPtr m_segmentationImage;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
@@ -113,11 +113,6 @@ public:
   spaint::LabelManager_CPtr get_label_manager() const;
 
   /**
-   * \brief TODO
-   */
-  const ITMUChar4Image_CPtr& get_object_image() const;
-
-  /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
    *
    * \return  The current camera pose.
@@ -151,6 +146,13 @@ public:
    * \return  The current reconstructed scene.
    */
   Scene_CPtr get_scene() const;
+
+  /**
+   * \brief Gets the overlay image (if any) to render whilst performing object segmentation.
+   *
+   * \return  The overlay image (if any) to render whilst performing object segmentation.
+   */
+  const ITMUChar4Image_CPtr& get_segmentation_image() const;
 
   /**
    * \brief Gets the settings to use for InfiniTAM.
@@ -188,9 +190,11 @@ public:
   View_CPtr get_view() const;
 
   /**
-   * \brief TODO
+   * \brief Sets the overlay image (if any) to render whilst performing object segmentation.
+   *
+   * \param segmentationImage The overlay image (if any) to render whilst performing object segmentation.
    */
-  void set_object_image(const ITMUChar4Image_CPtr& objectImage);
+  void set_segmentation_image(const ITMUChar4Image_CPtr& segmentationImage);
 
   /**
    * \brief Sets the current view of the scene.

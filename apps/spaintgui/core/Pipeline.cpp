@@ -512,7 +512,7 @@ void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 {
 #if WITH_ARRAYFIRE && WITH_OPENCV
   ITMUChar4Image_Ptr touchImage = get_object_segmenter()->train_hand_model(m_model->get_pose(), renderState);
-  m_model->set_object_image(touchImage);
+  m_model->set_segmentation_image(touchImage);
 #endif
 }
 
@@ -525,7 +525,7 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   // If the mask is empty, early out.
   if(!objectMask)
   {
-    m_model->set_object_image(ITMUChar4Image_Ptr());
+    m_model->set_segmentation_image(ITMUChar4Image_Ptr());
     return;
   }
 
@@ -548,7 +548,7 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   PNGUtil::save_image_on_thread(depthMasked, depthMaskedPath.string());
 
   // Store the masked colour image in the model so that it will be rendered.
-  m_model->set_object_image(rgbMasked);
+  m_model->set_segmentation_image(rgbMasked);
 #endif
 }
 

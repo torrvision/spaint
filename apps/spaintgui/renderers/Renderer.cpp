@@ -426,9 +426,9 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       interactor->get_selector()->accept(selectorRenderer);
 
       // TODO
-      if(m_model->get_object_image())
+      if(m_model->get_segmentation_image())
       {
-        render_touch_image(m_model->get_object_image());
+        render_touch_image(m_model->get_segmentation_image());
       }
     }
     glPopMatrix();
