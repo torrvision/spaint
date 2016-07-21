@@ -315,6 +315,11 @@ SET(segmentation_headers
 include/spaint/segmentation/ColourAppearanceModel.h
 )
 
+IF(WITH_ARRAYFIRE AND WITH_OPENCV)
+  SET(segmentation_sources ${segmentation_sources} src/segmentation/ObjectSegmenter.cpp)
+  SET(segmentation_headers ${segmentation_headers} include/spaint/segmentation/ObjectSegmenter.h)
+ENDIF()
+
 ##
 SET(selectiontransformers_sources
 src/selectiontransformers/SelectionTransformerFactory.cpp
