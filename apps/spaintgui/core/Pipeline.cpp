@@ -32,7 +32,6 @@ using namespace RelocLib;
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
 #include <spaint/smoothing/LabelSmootherFactory.h>
-#include <spaint/util/CameraPoseConverter.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV

@@ -94,8 +94,8 @@ public:
   /** Override */
   virtual void visit(const TouchSelector& selector) const
   {
-    // Render a colour image containing the current touch interaction.
-    m_base->render_touch_image(selector.generate_touch_image(m_base->m_model->get_view()));
+    // Render the current touch interaction as an overlay.
+    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view()));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -340,6 +340,27 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
+{
+  // Copy the overlay to a texture.
+  glBindTexture(GL_TEXTURE_2D, m_textureID);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, overlay->noDims.x, overlay->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, overlay->GetData(MEMORYDEVICE_CPU));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  // Enable blending.
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  // Render a semi-transparent quad textured with the overlay over the top of the existing scene.
+  begin_2d();
+    render_textured_quad(m_textureID);
+  end_2d();
+
+  // Disable blending again.
+  glDisable(GL_BLEND);
+}
+
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
 void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow& subwindow) const
 {
@@ -428,7 +449,7 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       // TODO
       if(m_model->get_segmentation_image())
       {
-        render_touch_image(m_model->get_segmentation_image());
+        render_overlay(m_model->get_segmentation_image());
       }
     }
     glPopMatrix();
@@ -467,27 +488,6 @@ void Renderer::render_textured_quad(GLuint textureID)
     glEnd();
   }
   glDisable(GL_TEXTURE_2D);
-}
-
-void Renderer::render_touch_image(const ITMUChar4Image_CPtr& touchImage) const
-{
-  // Copy the touch image to a texture.
-  glBindTexture(GL_TEXTURE_2D, m_textureID);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, touchImage->noDims.x, touchImage->noDims.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, touchImage->GetData(MEMORYDEVICE_CPU));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-  // Enable blending.
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // Render a semi-transparent quad textured with the touch image over the top of the existing scene.
-  begin_2d();
-    render_textured_quad(m_textureID);
-  end_2d();
-
-  // Disable blending again.
-  glDisable(GL_BLEND);
 }
 
 void Renderer::set_projection_matrix(const ITMIntrinsics& intrinsics, int width, int height)
