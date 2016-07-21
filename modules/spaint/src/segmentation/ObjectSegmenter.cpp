@@ -10,7 +10,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "imageprocessing/PNGUtil.h"
 #include "util/CameraPoseConverter.h"
 
 namespace spaint {
