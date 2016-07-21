@@ -535,34 +535,23 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
 
   // Make the touch mask image and some other images in which to store the segmented object and its mask.
   ITMUCharImage_CPtr touchMask = make_touch_mask(renderState);
-  static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
-  static cv::Mat1b objectMask = cv::Mat1b::zeros(objectImage->noDims.y, objectImage->noDims.x);
+  static cv::Mat1b objectMask = cv::Mat1b::zeros(rgbInput->noDims.y, rgbInput->noDims.x);
 
   // For each pixel in the current colour input image:
-  Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
   const uchar *touchMaskPtr = touchMask->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
-    // Decide whether the pixel is part of the object.
-    bool inObject = false;
+    // Update the object mask based on whether the pixel is part of the object.
+    unsigned char value = 0;
     if(touchMaskPtr[i])
     {
       float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
-      if(objectProb >= 0.5f) inObject = true;
+      if(objectProb >= 0.5f) value = 255;
     }
 
-    // Based on this decision, update the segmented object image and the corresponding mask.
-    if(inObject)
-    {
-      objectPtr[i] = rgbPtr[i];
-      objectMask.data[i] = 255;
-    }
-    else
-    {
-      objectPtr[i] = Vector4u((uchar)0);
-      objectMask.data[i] = 0;
-    }
+    // Based on this decision, update the object mask.
+    objectMask.data[i] = value;
   }
 
   // Perform a morphological opening operation on the object mask to reduce the noise.
@@ -608,6 +597,8 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   cv::erode(objectMask, temp, kernel);  objectMask = temp;
 
   // Update the segmented object image to match the mask.
+  static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
+  Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
     objectPtr[i] = objectMask.data[i] ? rgbPtr[i] : Vector4u((uchar)0);
