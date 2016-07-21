@@ -31,12 +31,8 @@ void ObjectSegmenter::reset_hand_model()
 
 ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  // Make the object mask images.
-  static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(m_view->rgb->noDims, true, false));
-  static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
-
   // If the user has not yet trained a hand appearance model, early out.
-  if(!m_handAppearanceModel) return itmObjectMask;
+  if(!m_handAppearanceModel) return ITMUCharImage_Ptr();
 
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
@@ -45,8 +41,9 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
-  // Make the touch mask image.
+  // Make the touch mask and object mask images.
   ITMUCharImage_CPtr touchMask = make_touch_mask(depthInput, pose, renderState);
+  static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
 
   // For each pixel in the current colour input image:
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
@@ -89,7 +86,7 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   }
 
   // If the largest connected component is too small, ignore it.
-  if(largestComponentSize < 1000) largestComponentIndex = -1;
+  if(largestComponentSize < 1000) return ITMUCharImage_Ptr();
 
   // Update the object mask to only contain the largest connected component (if any).
   const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
@@ -106,7 +103,8 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
   cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
 
-  // Convert the OpenCV object mask to InfiniTAM format and return it.
+  // Convert the object mask to InfiniTAM format and return it.
+  static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(m_view->rgb->noDims, true, false));
   std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, itmObjectMask->GetData(MEMORYDEVICE_CPU));
   return itmObjectMask;
 }
@@ -126,6 +124,29 @@ ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const ORUt
   // Generate a segmented image of the user's hand that can be shown to the user to provide them
   // with interactive feedback about the data that is being used to train the appearance model.
   return m_touchDetector->generate_touch_image(m_view);
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::apply_mask(const ITMUCharImage_CPtr& mask, const ITMUChar4Image_CPtr& image)
+{
+  ITMUChar4Image_Ptr maskedImage(new ITMUChar4Image(image->noDims, true, false));
+
+  const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
+  const Vector4u *imagePtr = image->GetData(MEMORYDEVICE_CPU);
+  Vector4u *maskedImagePtr = maskedImage->GetData(MEMORYDEVICE_CPU);
+
+  int pixelCount = static_cast<int>(image->dataSize);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    maskedImagePtr[i] = maskPtr[i] ? imagePtr[i] : Vector4u((uchar)0);
+  }
+
+  return maskedImage;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

@@ -47,7 +47,7 @@ private:
   spaint::LabelManager_Ptr m_labelManager;
 
   /** TODO */
-  ITMUChar4Image_Ptr m_objectImage;
+  ITMUChar4Image_CPtr m_objectImage;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
@@ -115,12 +115,7 @@ public:
   /**
    * \brief TODO
    */
-  const ITMUChar4Image_Ptr& get_object_image();
-
-  /**
-   * \brief TODO
-   */
-  ITMUChar4Image_CPtr get_object_image() const;
+  const ITMUChar4Image_CPtr& get_object_image() const;
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
@@ -195,7 +190,7 @@ public:
   /**
    * \brief TODO
    */
-  void set_object_image(const ITMUChar4Image_Ptr& objectImage);
+  void set_object_image(const ITMUChar4Image_CPtr& objectImage);
 
   /**
    * \brief Sets the current view of the scene.

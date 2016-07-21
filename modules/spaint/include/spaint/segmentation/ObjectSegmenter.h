@@ -68,6 +68,16 @@ public:
    */
   ITMUChar4Image_Ptr train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   *
+   * \param mask  TODO
+   * \param image TODO
+   */
+  static ITMUChar4Image_Ptr apply_mask(const ITMUCharImage_CPtr& mask, const ITMUChar4Image_CPtr& image);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
@@ -75,6 +85,10 @@ private:
    */
   ITMUCharImage_CPtr make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<ObjectSegmenter> ObjectSegmenter_Ptr;
 
 }
 

@@ -24,7 +24,7 @@
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
-#include <spaint/segmentation/ColourAppearanceModel.h>
+#include <spaint/segmentation/ObjectSegmenter.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
 
@@ -124,9 +124,6 @@ private:
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
-  /** The colour appearance model to use to separate the user's hand from any object it's holding. */
-  spaint::ColourAppearanceModel_Ptr m_handAppearanceModel;
-
   /** The engine used to provide input images to the fusion pipeline. */
   ImageSourceEngine_Ptr m_imageSourceEngine;
 
@@ -175,6 +172,9 @@ private:
 
   /** The spaint model. */
   Model_Ptr m_model;
+
+  /** The object segmenter. */
+  mutable spaint::ObjectSegmenter_Ptr m_objectSegmenter;
 
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
@@ -378,6 +378,13 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Gets the object segmenter.
+   *
+   * \return  The object segmenter.
+   */
+  const spaint::ObjectSegmenter_Ptr& get_object_segmenter() const;
+
   /**
    * \brief Initialises the pipeline.
    *

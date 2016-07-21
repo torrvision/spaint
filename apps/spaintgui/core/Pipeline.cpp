@@ -313,7 +313,7 @@ void Pipeline::set_mode(Mode mode)
   // If we are switching into hand learning mode, reset the hand appearance model.
   if(mode == MODE_HAND_LEARNING && m_mode != MODE_HAND_LEARNING)
   {
-    m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
+    get_object_segmenter()->reset_hand_model();
   }
 
   // If we are switching into object segmentation mode, start a new object segmentation video.
@@ -334,6 +334,16 @@ void Pipeline::set_mode(Mode mode)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+const ObjectSegmenter_Ptr& Pipeline::get_object_segmenter() const
+{
+  if(!m_objectSegmenter)
+  {
+    const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
+    m_objectSegmenter.reset(new ObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
+  }
+  return m_objectSegmenter;
+}
 
 void Pipeline::initialise(const Settings_Ptr& settings)
 {
@@ -509,97 +519,43 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 
 void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 {
-#if WITH_ARRAYFIRE
-  // Copy the current colour input image across to the CPU.
-  ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
-  rgbInput->UpdateHostFromDevice();
-
-  // Train a colour appearance model to separate the user's hand from the scene background.
-  m_handAppearanceModel->train(rgbInput, make_touch_mask(renderState));
-
-  // Generate a segmented image of the user's hand that can be shown to the user to provide them
-  // with interactive feedback about the data that is being used to train the appearance model.
-  m_model->set_object_image(m_interactor->get_touch_detector()->generate_touch_image(m_model->get_view()));
+#if WITH_ARRAYFIRE && WITH_OPENCV
+  ITMUChar4Image_Ptr touchImage = get_object_segmenter()->train_hand_model(m_model->get_pose(), renderState);
+  m_model->set_object_image(touchImage);
 #endif
 }
 
 void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderState)
 {
 #if WITH_ARRAYFIRE && WITH_OPENCV
-  // If the user has not yet trained a hand appearance model, early out.
-  if(!m_handAppearanceModel) return;
+  // Segment the current input images to obtain a mask for the object.
+  ITMUCharImage_Ptr objectMask = get_object_segmenter()->segment_object(m_model->get_pose(), renderState);
 
-  // Copy the current colour input image across to the CPU.
+  // If the mask is empty, early out.
+  if(!objectMask)
+  {
+    m_model->set_object_image(ITMUChar4Image_Ptr());
+    return;
+  }
+
+  // Make masked versions of the colour and depth inputs.
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
-  rgbInput->UpdateHostFromDevice();
+  ITMUChar4Image_Ptr depthInput(new ITMUChar4Image(m_model->get_view()->depth->dataSize, true, false));
+  m_raycaster->get_depth_input(depthInput);
+  ITMUChar4Image_CPtr rgbMasked = ObjectSegmenter::apply_mask(objectMask, rgbInput);
+  ITMUChar4Image_CPtr depthMasked = ObjectSegmenter::apply_mask(objectMask, depthInput);
 
-  // Make the touch mask image and some other images in which to store the segmented object and its mask.
-  ITMUCharImage_CPtr touchMask = make_touch_mask(renderState);
-  static cv::Mat1b objectMask = cv::Mat1b::zeros(rgbInput->noDims.y, rgbInput->noDims.x);
+  // Save the original and masked versions of the colour and depth inputs to disk so that they can be used later for training.
+  // TODO
 
-  // For each pixel in the current colour input image:
-  const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
-  const uchar *touchMaskPtr = touchMask->GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
-  {
-    // Update the object mask based on whether the pixel is part of the object.
-    unsigned char value = 0;
-    if(touchMaskPtr[i])
-    {
-      float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
-      if(objectProb >= 0.5f) value = 255;
-    }
+  // Store the masked colour image in the model so that it will be rendered.
+  m_model->set_object_image(rgbMasked);
 
-    // Based on this decision, update the object mask.
-    objectMask.data[i] = value;
-  }
-
-  // Perform a morphological opening operation on the object mask to reduce the noise.
-  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-  cv::Mat temp;
-  cv::erode(objectMask, temp, kernel);  objectMask = temp;
-  cv::dilate(objectMask, temp, kernel); objectMask = temp;
-
-  // Find the connected components of the object mask.
-  cv::Mat1i ccsImage, stats;
-  cv::Mat1d centroids;
-  cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
-
-  // Determine the largest connected component in the object mask and its size.
-  int largestComponentIndex = -1;
-  int largestComponentSize = INT_MIN;
-  for(int componentIndex = 1; componentIndex < stats.rows; ++componentIndex)
-  {
-    int componentSize = stats(componentIndex, cv::CC_STAT_AREA);
-    if(componentSize > largestComponentSize)
-    {
-      largestComponentIndex = componentIndex;
-      largestComponentSize = componentSize;
-    }
-  }
-
-  // If the largest connected component is too small, ignore it.
-  if(largestComponentSize < 1000) largestComponentIndex = -1;
-
-  // Update the object mask to only contain the largest connected component (if any).
-  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
-  {
-    if(ccsData[i] != largestComponentIndex)
-    {
-      objectMask.data[i] = 0;
-    }
-  }
-
-  // Perform a morphological closing operation on the object mask to fill in holes.
-  kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(25, 25));
-  cv::dilate(objectMask, temp, kernel); objectMask = temp;
-  cv::erode(objectMask, temp, kernel);  objectMask = temp;
-
-  // Update the segmented object image to match the mask.
+#if 0
+  // Make masked versions of the colour and depth input images.
   static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
   Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+  for(size_t i = 0, size = m_model->get_view()->rgb->dataSize; i < size; ++i)
   {
     objectPtr[i] = objectMask.data[i] ? rgbPtr[i] : Vector4u((uchar)0);
   }
@@ -616,6 +572,7 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
 
   // Store the segmented object image in the model so that it will be rendered.
   m_model->set_object_image(objectImage);
+#endif
 #endif
 }
 

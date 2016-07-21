@@ -44,12 +44,7 @@ LabelManager_CPtr Model::get_label_manager() const
   return m_labelManager;
 }
 
-const Model::ITMUChar4Image_Ptr& Model::get_object_image()
-{
-  return m_objectImage;
-}
-
-Model::ITMUChar4Image_CPtr Model::get_object_image() const
+const Model::ITMUChar4Image_CPtr& Model::get_object_image() const
 {
   return m_objectImage;
 }
@@ -104,7 +99,7 @@ Model::View_CPtr Model::get_view() const
   return m_view;
 }
 
-void Model::set_object_image(const ITMUChar4Image_Ptr& objectImage)
+void Model::set_object_image(const ITMUChar4Image_CPtr& objectImage)
 {
   m_objectImage = objectImage;
 }
