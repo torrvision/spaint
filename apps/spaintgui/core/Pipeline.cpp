@@ -480,15 +480,6 @@ ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Sett
   return compositeTracker;
 }
 
-Pipeline::ITMUCharImage_CPtr Pipeline::make_touch_mask(const RenderState_CPtr& renderState) const
-{
-  TouchDetector_Ptr touchDetector = m_interactor->get_touch_detector();
-  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(m_model->get_pose())));
-  ITMFloatImage_CPtr depthInput(m_model->get_view()->depth, boost::serialization::null_deleter());
-  touchDetector->determine_touch_points(camera, depthInput, renderState);
-  return touchDetector->get_touch_mask();
-}
-
 void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
