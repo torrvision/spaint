@@ -546,33 +546,18 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   ITMUChar4Image_CPtr depthMasked = ObjectSegmenter::apply_mask(objectMask, depthInput);
 
   // Save the original and masked versions of the colour and depth inputs to disk so that they can be used later for training.
-  // TODO
+  ++m_segmentationFrameNumber;
+  boost::filesystem::path rgbPath = *m_segmentationPath / (boost::format("rgb%06i.png") % m_segmentationFrameNumber).str();
+  PNGUtil::save_image_on_thread(rgbInput, rgbPath.string());
+  boost::filesystem::path depthPath = *m_segmentationPath / (boost::format("depth%06i.png") % m_segmentationFrameNumber).str();
+  PNGUtil::save_image_on_thread(depthInput, depthPath.string());
+  boost::filesystem::path rgbMaskedPath = *m_segmentationPath / (boost::format("rgbm%06i.png") % m_segmentationFrameNumber).str();
+  PNGUtil::save_image_on_thread(rgbMasked, rgbMaskedPath.string());
+  boost::filesystem::path depthMaskedPath = *m_segmentationPath / (boost::format("depthm%06i.png") % m_segmentationFrameNumber).str();
+  PNGUtil::save_image_on_thread(depthMasked, depthMaskedPath.string());
 
   // Store the masked colour image in the model so that it will be rendered.
   m_model->set_object_image(rgbMasked);
-
-#if 0
-  // Make masked versions of the colour and depth input images.
-  static ITMUChar4Image_Ptr objectImage(new ITMUChar4Image(m_model->get_rgb_image_size(), true, false));
-  Vector4u *objectPtr = objectImage->GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0, size = m_model->get_view()->rgb->dataSize; i < size; ++i)
-  {
-    objectPtr[i] = objectMask.data[i] ? rgbPtr[i] : Vector4u((uchar)0);
-  }
-
-  if(largestComponentIndex != -1)
-  {
-    // Save the colour input and segmented object images to disk so that they can be used later for training purposes.
-    ++m_segmentationFrameNumber;
-    boost::filesystem::path rgbPath = *m_segmentationPath / (boost::format("rgb%06i.png") % m_segmentationFrameNumber).str();
-    PNGUtil::save_image_on_thread(rgbInput, rgbPath.string());
-    boost::filesystem::path segPath = *m_segmentationPath / (boost::format("seg%06i.png") % m_segmentationFrameNumber).str();
-    PNGUtil::save_image_on_thread(objectImage, segPath.string());
-  }
-
-  // Store the segmented object image in the model so that it will be rendered.
-  m_model->set_object_image(objectImage);
-#endif
 #endif
 }
 
