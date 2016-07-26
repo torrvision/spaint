@@ -306,7 +306,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->useSwapping, memoryType));
+  Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
 
   // Set up the InfiniTAM engines and view builder.
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
