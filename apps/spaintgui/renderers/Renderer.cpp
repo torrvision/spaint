@@ -446,11 +446,9 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       if(transformer) transformer->accept(selectorRenderer);
       interactor->get_selector()->accept(selectorRenderer);
 
-      // TODO
-      if(m_model->get_segmentation_image())
-      {
-        render_overlay(m_model->get_segmentation_image());
-      }
+      // Render any overlay image generated during object segmentation.
+      const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image();
+      if(segmentationImage) render_overlay(segmentationImage);
     }
     glPopMatrix();
   }

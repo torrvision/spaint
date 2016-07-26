@@ -6,7 +6,6 @@
 #ifndef H_SPAINTGUI_PIPELINE
 #define H_SPAINTGUI_PIPELINE
 
-#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
 #include <InputSource/ImageSourceEngine.h>

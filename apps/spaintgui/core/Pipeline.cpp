@@ -549,7 +549,7 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   PNGUtil::save_image_on_thread(rgbMasked, m_segmentationPathGenerator->make_path("rgbm%06i.png"));
   PNGUtil::save_image_on_thread(depthMasked, m_segmentationPathGenerator->make_path("depthm%06i.png"));
 
-  // Store the masked colour image in the model so that it will be rendered.
+  // Set the masked colour image as the segmentation overlay image so that it will be rendered.
   m_model->set_segmentation_image(rgbMasked);
 #endif
 }
