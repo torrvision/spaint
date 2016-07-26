@@ -324,16 +324,15 @@ void Pipeline::set_mode(Mode mode)
   // If we are switching into object segmentation mode, start a new object segmentation video.
   if(mode == MODE_OBJECT_SEGMENTATION && m_mode != MODE_OBJECT_SEGMENTATION)
   {
-    m_segmentationPath.reset(find_subdir_from_executable("segmentations") / (TimeUtil::get_iso_timestamp()));
-    m_segmentationFrameNumber = 0;
-    boost::filesystem::create_directories(*m_segmentationPath);
+    m_segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / (TimeUtil::get_iso_timestamp())));
+    boost::filesystem::create_directories(m_segmentationPathGenerator->get_base_dir());
   }
 
   // If we are switching out of object segmentation mode, stop recording the object segmentation video
   // and clear the segmentation image.
   if(m_mode == MODE_OBJECT_SEGMENTATION && mode != MODE_OBJECT_SEGMENTATION)
   {
-    m_segmentationPath.reset();
+    m_segmentationPathGenerator.reset();
     m_model->set_segmentation_image(ITMUChar4Image_CPtr());
   }
 
@@ -544,15 +543,11 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   ITMUChar4Image_CPtr depthMasked = ObjectSegmenter::apply_mask(objectMask, depthInput);
 
   // Save the original and masked versions of the colour and depth inputs to disk so that they can be used later for training.
-  ++m_segmentationFrameNumber;
-  boost::filesystem::path rgbPath = *m_segmentationPath / (boost::format("rgb%06i.png") % m_segmentationFrameNumber).str();
-  PNGUtil::save_image_on_thread(rgbInput, rgbPath.string());
-  boost::filesystem::path depthPath = *m_segmentationPath / (boost::format("depth%06i.png") % m_segmentationFrameNumber).str();
-  PNGUtil::save_image_on_thread(depthInput, depthPath.string());
-  boost::filesystem::path rgbMaskedPath = *m_segmentationPath / (boost::format("rgbm%06i.png") % m_segmentationFrameNumber).str();
-  PNGUtil::save_image_on_thread(rgbMasked, rgbMaskedPath.string());
-  boost::filesystem::path depthMaskedPath = *m_segmentationPath / (boost::format("depthm%06i.png") % m_segmentationFrameNumber).str();
-  PNGUtil::save_image_on_thread(depthMasked, depthMaskedPath.string());
+  m_segmentationPathGenerator->increment_index();
+  PNGUtil::save_image_on_thread(rgbInput, m_segmentationPathGenerator->make_path("rgb%06i.png"));
+  PNGUtil::save_image_on_thread(depthInput, m_segmentationPathGenerator->make_path("depth%06i.png"));
+  PNGUtil::save_image_on_thread(rgbMasked, m_segmentationPathGenerator->make_path("rgbm%06i.png"));
+  PNGUtil::save_image_on_thread(depthMasked, m_segmentationPathGenerator->make_path("depthm%06i.png"));
 
   // Store the masked colour image in the model so that it will be rendered.
   m_model->set_segmentation_image(rgbMasked);

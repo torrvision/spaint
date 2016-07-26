@@ -28,6 +28,8 @@
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
 
+#include <tvgutil/SequentialPathGenerator.h>
+
 #include "Interactor.h"
 #include "Model.h"
 #include "Raycaster.h"
@@ -203,11 +205,8 @@ private:
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
-  /** The frame number of the current object segmentation video (if any). */
-  int m_segmentationFrameNumber;
-
-  /** The path to which the current object segmentation video (if any) is being saved. */
-  boost::optional<boost::filesystem::path> m_segmentationPath;
+  /** The path generator for the current object segmentation video (if any). */
+  boost::optional<tvgutil::SequentialPathGenerator> m_segmentationPathGenerator;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
