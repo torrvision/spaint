@@ -1,10 +1,10 @@
 /**
- * spaint: SequentialPathGenerator.h
+ * tvgutil: SequentialPathGenerator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_SEQUENTIALPATHGENERATOR
-#define H_SPAINT_SEQUENTIALPATHGENERATOR
+#ifndef H_TVGUTIL_SEQUENTIALPATHGENERATOR
+#define H_TVGUTIL_SEQUENTIALPATHGENERATOR
 
 #include <string>
 
