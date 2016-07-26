@@ -36,6 +36,11 @@ void PNGUtil::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::
   t.detach();
 }
 
+void PNGUtil::save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path)
+{
+  save_image_on_thread(image, path.string());
+}
+
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
 PNGUtil::ITMUChar4Image_Ptr PNGUtil::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
