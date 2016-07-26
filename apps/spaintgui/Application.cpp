@@ -69,7 +69,7 @@ void Application::run()
     if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
 
     // If we're currently recording a video, save the next frame of it to disk.
-    if(m_videoPath) save_video_frame();
+    if(m_videoPathGenerator) save_video_frame();
 
     // If desired, pause at the end of each frame for debugging purposes.
     if(m_pauseBetweenFrames) m_paused = true;
@@ -563,23 +563,13 @@ void Application::save_screenshot() const
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
   boost::filesystem::create_directories(p.parent_path());
   std::cout << "[spaint] Saving screenshot to " << p << "...\n";
-  save_screenshot_to_path(p);
-}
-
-void Application::save_screenshot_to_path(const boost::filesystem::path& path) const
-{
-  // Capture the screenshot.
-  ITMUChar4Image_CPtr screenshotImage = m_renderer->capture_screenshot();
-
-  // Save it to disk on a separate thread to avoid slowing down the application.
-  PNGUtil::save_image_on_thread(screenshotImage, path.string());
+  PNGUtil::save_image_on_thread(m_renderer->capture_screenshot(), p);
 }
 
 void Application::save_video_frame()
 {
-  ++m_videoFrameNumber;
-  boost::filesystem::path p = *m_videoPath / (boost::format("%06i.png") % m_videoFrameNumber).str();
-  save_screenshot_to_path(p);
+  m_videoPathGenerator->increment_index();
+  PNGUtil::save_image_on_thread(m_renderer->capture_screenshot(), m_videoPathGenerator->make_path("%06i.png"));
 }
 
 void Application::setup_labels()
@@ -645,16 +635,15 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
 
 void Application::toggle_video_recording()
 {
-  if(m_videoPath)
+  if(m_videoPathGenerator)
   {
-    m_videoPath.reset();
+    m_videoPathGenerator.reset();
     std::cout << "[spaint] Stopped saving video.\n";
   }
   else
   {
-    m_videoPath.reset(find_subdir_from_executable("videos") / (TimeUtil::get_iso_timestamp()));
-    m_videoFrameNumber = 0;
-    boost::filesystem::create_directories(*m_videoPath);
-    std::cout << "[spaint] Started saving video to " << *m_videoPath << "...\n";
+    m_videoPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("videos") / (TimeUtil::get_iso_timestamp())));
+    boost::filesystem::create_directories(m_videoPathGenerator->get_base_dir());
+    std::cout << "[spaint] Started saving video to " << m_videoPathGenerator->get_base_dir() << "...\n";
   }
 }

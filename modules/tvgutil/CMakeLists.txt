@@ -49,6 +49,7 @@ src/IOUtil.cpp
 src/PathFinder.cpp
 src/PropertyUtil.cpp
 src/RandomNumberGenerator.cpp
+src/SequentialPathGenerator.cpp
 )
 
 SET(toplevel_headers
@@ -64,6 +65,7 @@ include/tvgutil/PathFinder.h
 include/tvgutil/PriorityQueue.h
 include/tvgutil/PropertyUtil.h
 include/tvgutil/RandomNumberGenerator.h
+include/tvgutil/SequentialPathGenerator.h
 include/tvgutil/SerializationUtil.h
 )
 

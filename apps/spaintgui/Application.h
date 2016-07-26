@@ -12,7 +12,6 @@
 #endif
 
 #include <boost/asio.hpp>
-#include <boost/filesystem.hpp>
 
 #ifdef _MSC_VER
   // Re-enable the VC++ warnings for the rest of the code.
@@ -26,6 +25,7 @@
 
 #include <tvginput/InputState.h>
 
+#include <tvgutil/SequentialPathGenerator.h>
 #include <tvgutil/commands/CommandManager.h>
 
 #include "core/Pipeline.h"
@@ -75,11 +75,8 @@ private:
   /** A set of sub-window configurations that the user can switch between as desired. */
   mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
-  /** The frame number of the current video (if any). */
-  int m_videoFrameNumber;
-
-  /** The path to which the current video (if any) is being saved. */
-  boost::optional<boost::filesystem::path> m_videoPath;
+  /** The path generator for the current video (if any). */
+  boost::optional<tvgutil::SequentialPathGenerator> m_videoPathGenerator;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
@@ -202,13 +199,6 @@ private:
    * \brief Saves a screenshot to disk.
    */
   void save_screenshot() const;
-
-  /**
-   * \brief Saves a screenshot to the specified path on disk.
-   *
-   * \param path  The path to which to save the screenshot.
-   */
-  void save_screenshot_to_path(const boost::filesystem::path& path) const;
 
   /**
    * \brief Saves the next frame of the video being recorded to disk.
