@@ -315,6 +315,12 @@ void Pipeline::set_mode(Mode mode)
     get_object_segmenter()->reset_hand_model();
   }
 
+  // If we are switching out of hand learning mode, clear the segmentation image.
+  if(m_mode == MODE_HAND_LEARNING && mode != MODE_HAND_LEARNING)
+  {
+    m_model->set_segmentation_image(ITMUChar4Image_CPtr());
+  }
+
   // If we are switching into object segmentation mode, start a new object segmentation video.
   if(mode == MODE_OBJECT_SEGMENTATION && m_mode != MODE_OBJECT_SEGMENTATION)
   {
@@ -323,10 +329,12 @@ void Pipeline::set_mode(Mode mode)
     boost::filesystem::create_directories(*m_segmentationPath);
   }
 
-  // If we are switching out of object segmentation mode, stop recording the object segmentation video.
+  // If we are switching out of object segmentation mode, stop recording the object segmentation video
+  // and clear the segmentation image.
   if(m_mode == MODE_OBJECT_SEGMENTATION && mode != MODE_OBJECT_SEGMENTATION)
   {
     m_segmentationPath.reset();
+    m_model->set_segmentation_image(ITMUChar4Image_CPtr());
   }
 
   m_mode = mode;
