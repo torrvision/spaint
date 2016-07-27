@@ -38,13 +38,13 @@ private:
   // P(Colour | object)
   rafl::Histogram<int> m_histColourGivenObject;
 
-  // P(Colour | ¬object)
+  // P(Colour | !object)
   rafl::Histogram<int> m_histColourGivenNotObject;
 
   // P(Colour | object)
   PMF_Ptr m_pmfColourGivenObject;
 
-  // P(Colour | ¬object)
+  // P(Colour | !object)
   PMF_Ptr m_pmfColourGivenNotObject;
 
   //#################### CONSTRUCTORS ####################
@@ -68,14 +68,20 @@ public:
   float compute_posterior_probability(const Vector3u& rgbColour) const;
 
   /**
-   * \brief TODO
+   * \brief Trains the colour appearance model for the object.
+   *
+   * \param image       An image containing the object and its background.
+   * \param objectMask  A binary mask specifying which pixels in the image are object and which are background.
    */
   void train(const ITMUChar4Image_CPtr& image, const ITMUCharImage_CPtr& objectMask);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Computes the 2D histogram bin index for the specified RGB colour.
+   *
+   * \param rgbColour An RGB colour.
+   * \return          The 2D histogram bin index for the colour.
    */
   int compute_bin(const Vector3u& rgbColour) const;
 };

@@ -26,13 +26,13 @@ float ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbCo
   /*
   P(object | colour) =                   P(colour | object) * P(object)
                        -----------------------------------------------------------------
-                       P(colour | object) * P(object) + P(colour | ¬object) * P(¬object)
+                       P(colour | object) * P(object) + P(colour | !object) * P(!object)
 
-  For simplicity, assume that P(object) = P(¬object) = 0.5. Then:
+  For simplicity, assume that P(object) = P(!object) = 0.5. Then:
 
   P(object | colour) =            P(colour | object)
                        ----------------------------------------
-                       P(colour | object) + P(colour | ¬object)
+                       P(colour | object) + P(colour | !object)
   */
   int bin = compute_bin(rgbColour);
   float colourGivenObject = m_pmfColourGivenObject->get_mass(bin);
