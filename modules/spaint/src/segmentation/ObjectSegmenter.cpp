@@ -8,6 +8,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "util/CameraPoseConverter.h"
@@ -30,6 +31,25 @@ void ObjectSegmenter::reset_hand_model()
 
 ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
+  // TEMPORARY: Debugging controls.
+  static bool initialised = false;
+  static int closingSize = 25;
+  static int componentSizeThreshold = 1000;
+  static int objectProbThreshold = 80;
+  static int useClosing = 1;
+  static int useOpening = 0;
+  const std::string debugWindowName = "Debug";
+  if(!initialised)
+  {
+    cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("closingSize", debugWindowName, &closingSize, 50);
+    cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
+    cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
+    cv::createTrackbar("useClosing", debugWindowName, &useClosing, 1);
+    cv::createTrackbar("useOpening", debugWindowName, &useOpening, 1);
+    initialised = true;
+  }
+
   // If the user has not yet trained a hand appearance model, early out.
   if(!m_handAppearanceModel) return ITMUCharImage_Ptr();
 
@@ -54,24 +74,39 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
     if(changeMaskPtr[i])
     {
       float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
-      if(objectProb >= 0.5f) value = 255;
+      if(objectProb >= objectProbThreshold / 100.0f) value = 255;
     }
 
     cvObjectMask.data[i] = value;
   }
 
-  // Perform a morphological opening operation on the object mask to reduce the noise.
-  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-  cv::Mat temp;
-  cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
-  cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
+  cv::Mat kernel, temp;
 
-#if 0
+  if(useOpening)
+  {
+    // Perform a morphological opening operation on the object mask to reduce the noise.
+    kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+    cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
+    cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
+  }
+
   // Find the connected components of the object mask.
   cv::Mat1i ccsImage, stats;
   cv::Mat1d centroids;
   cv::connectedComponentsWithStats(cvObjectMask, ccsImage, stats, centroids);
 
+  // Update the object mask to only contain components over a certain size.
+  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+  {
+    int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
+    if(componentSize < componentSizeThreshold)
+    {
+      cvObjectMask.data[i] = 0;
+    }
+  }
+
+#if 0
   // Determine the largest connected component in the object mask and its size.
   int largestComponentIndex = -1;
   int largestComponentSize = INT_MIN;
@@ -97,12 +132,18 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
       cvObjectMask.data[i] = 0;
     }
   }
-
-  // Perform a morphological closing operation on the object mask to fill in holes.
-  kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(25, 25));
-  cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
-  cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
 #endif
+
+  if(useClosing)
+  {
+    // Perform a morphological closing operation on the object mask to fill in holes.
+    int k = std::max(closingSize, 3);
+    kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(k, k));
+    cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
+    cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
+  }
+
+  cv::imshow(debugWindowName, cvObjectMask);
 
   // Convert the object mask to InfiniTAM format and return it.
   static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(m_view->rgb->noDims, true, false));
