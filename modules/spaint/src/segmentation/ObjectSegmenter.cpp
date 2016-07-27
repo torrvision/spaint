@@ -40,18 +40,18 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
-  // Make the touch mask and object mask images.
-  ITMUCharImage_CPtr touchMask = make_touch_mask(depthInput, pose, renderState);
+  // Make the change mask and object mask images.
+  ITMUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
   static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
 
   // For each pixel in the current colour input image:
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
-  const uchar *touchMaskPtr = touchMask->GetData(MEMORYDEVICE_CPU);
+  const uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
   {
     // Update the object mask based on whether the pixel is part of the object.
     unsigned char value = 0;
-    if(touchMaskPtr[i])
+    if(changeMaskPtr[i])
     {
       float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
       if(objectProb >= 0.5f) value = 255;
@@ -66,6 +66,7 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
   cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
 
+#if 0
   // Find the connected components of the object mask.
   cv::Mat1i ccsImage, stats;
   cv::Mat1d centroids;
@@ -101,6 +102,7 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(25, 25));
   cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
   cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
+#endif
 
   // Convert the object mask to InfiniTAM format and return it.
   static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(m_view->rgb->noDims, true, false));
