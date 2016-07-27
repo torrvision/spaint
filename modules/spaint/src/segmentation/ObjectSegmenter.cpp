@@ -125,29 +125,6 @@ ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const ORUt
   return m_touchDetector->generate_touch_image(m_view);
 }
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::apply_mask(const ITMUCharImage_CPtr& mask, const ITMUChar4Image_CPtr& image)
-{
-  ITMUChar4Image_Ptr maskedImage(new ITMUChar4Image(image->noDims, true, false));
-
-  const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
-  const Vector4u *imagePtr = image->GetData(MEMORYDEVICE_CPU);
-  Vector4u *maskedImagePtr = maskedImage->GetData(MEMORYDEVICE_CPU);
-
-  int pixelCount = static_cast<int>(image->dataSize);
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int i = 0; i < pixelCount; ++i)
-  {
-    maskedImagePtr[i] = maskPtr[i] ? imagePtr[i] : Vector4u((uchar)0);
-  }
-
-  return maskedImage;
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const

@@ -31,6 +31,7 @@ using namespace RelocLib;
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
+#include <spaint/segmentation/SegmentationUtil.h>
 #include <spaint/smoothing/LabelSmootherFactory.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
@@ -539,8 +540,8 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
   ITMUChar4Image_Ptr depthInput(new ITMUChar4Image(m_model->get_view()->depth->dataSize, true, false));
   m_raycaster->get_depth_input(depthInput);
-  ITMUChar4Image_CPtr rgbMasked = ObjectSegmenter::apply_mask(objectMask, rgbInput);
-  ITMUChar4Image_CPtr depthMasked = ObjectSegmenter::apply_mask(objectMask, depthInput);
+  ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(objectMask, rgbInput);
+  ITMUChar4Image_CPtr depthMasked = SegmentationUtil::apply_mask(objectMask, depthInput);
 
   // Save the original and masked versions of the colour and depth inputs to disk so that they can be used later for training.
   m_segmentationPathGenerator->increment_index();
