@@ -73,6 +73,11 @@ private:
   /**
    * \brief TODO
    */
+  ITMUCharImage_CPtr make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+
+  /**
+   * \brief TODO
+   */
   ITMUCharImage_CPtr make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 };
 

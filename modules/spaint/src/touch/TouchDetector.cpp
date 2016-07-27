@@ -7,6 +7,7 @@
 using namespace ITMLib;
 
 #include <boost/format.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include <tvgutil/ArgUtil.h>
 using namespace tvgutil;
@@ -48,7 +49,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_touchDebuggingOutputWindowName("TouchDebuggingOutputWindow"),
 
   // Normal variables.
-  m_changeMask(imgSize.y, imgSize.x),
+  m_changeMask(new af::array(imgSize.y, imgSize.x)),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
@@ -106,7 +107,7 @@ try
   detect_changes();
 
   // Make a connected-component image from the change mask.
-  m_connectedComponentImage = af::regions(m_changeMask);
+  m_connectedComponentImage = af::regions(*m_changeMask);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_CONNECTED_COMPONENTS)
   // Display the connected components.
@@ -231,8 +232,19 @@ ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) c
   return touchImage;
 }
 
+TouchDetector::ITMUCharImage_CPtr TouchDetector::get_change_mask() const
+{
+  // FIXME: The implementation of this is the same as that of get_touch_mask - factor out the commonality.
+  static Vector2i imgSize = ImageProcessor::image_size(m_changeMask);
+  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(imgSize, true, true));
+  m_imageProcessor->copy_af_to_itm(m_changeMask, changeMask);
+  changeMask->UpdateHostFromDevice();
+  return changeMask;
+}
+
 TouchDetector::ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
 {
+  // FIXME: The implementation of this is the same as that of get_change_mask - factor out the commonality.
   static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
   static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
   m_imageProcessor->copy_af_to_itm(m_touchMask, touchMask);
@@ -263,7 +275,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
+  *m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
@@ -275,8 +287,8 @@ void TouchDetector::detect_changes()
   if(morphKernelSize < 3) morphKernelSize = 3;
   if(morphKernelSize % 2 == 0) ++morphKernelSize;
   af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
-  m_changeMask = af::erode(m_changeMask, morphKernel);
-  m_changeMask = af::dilate(m_changeMask, morphKernel);
+  *m_changeMask = af::erode(*m_changeMask, morphKernel);
+  *m_changeMask = af::dilate(*m_changeMask, morphKernel);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_DENOISED_CHANGE_MASK)
   // Display the change mask after applying morphological operations.
@@ -481,7 +493,7 @@ af::array TouchDetector::select_candidate_components()
   m_connectedComponentImage += 1;
 
   // Set all regions in the connected component image which are in the static scene to zero.
-  m_connectedComponentImage *= m_changeMask;
+  m_connectedComponentImage *= *m_changeMask;
 
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;

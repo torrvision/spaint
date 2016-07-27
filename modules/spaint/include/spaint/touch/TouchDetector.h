@@ -50,7 +50,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
-  af::array m_changeMask;
+  AFArray_Ptr m_changeMask;
 
   /** An image in which to store the connected components of the change mask. */
   af::array m_connectedComponentImage;
@@ -126,7 +126,16 @@ public:
   ITMUChar4Image_Ptr generate_touch_image(const View_CPtr& view) const;
 
   /**
-   * \brief TODO
+   * \brief Gets a mask of the changes that have been detected in the scene with respect to the reconstructed model.
+   *
+   * \return  A mask of the changes that have been detected in the scene with respect to the reconstructed model.
+   */
+  ITMUCharImage_CPtr get_change_mask() const;
+
+  /**
+   * \brief Gets a mask denoting the detected touch region.
+   *
+   * \return  A mask denoting the detected touch region.
    */
   ITMUCharImage_CPtr get_touch_mask() const;
 
