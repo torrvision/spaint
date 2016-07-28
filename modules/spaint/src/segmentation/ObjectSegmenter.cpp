@@ -43,6 +43,7 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
   static int componentSizeThreshold = 1000;
   static int objectProbThreshold = 80;
   static int useClosing = 1;
+  static int useOnlyLargest = 0;
   static int useOpening = 0;
   const std::string debugWindowName = "Debug";
   if(!initialised)
@@ -52,6 +53,7 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
     cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
     cv::createTrackbar("useClosing", debugWindowName, &useClosing, 1);
+    cv::createTrackbar("useOnlyLargest", debugWindowName, &useOnlyLargest, 1);
     cv::createTrackbar("useOpening", debugWindowName, &useOpening, 1);
     initialised = true;
   }
@@ -113,34 +115,6 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
     }
   }
 
-#if 0
-  // Determine the largest connected component in the object mask and its size.
-  int largestComponentIndex = -1;
-  int largestComponentSize = INT_MIN;
-  for(int componentIndex = 1; componentIndex < stats.rows; ++componentIndex)
-  {
-    int componentSize = stats(componentIndex, cv::CC_STAT_AREA);
-    if(componentSize > largestComponentSize)
-    {
-      largestComponentIndex = componentIndex;
-      largestComponentSize = componentSize;
-    }
-  }
-
-  // If the largest connected component is too small, ignore it.
-  if(largestComponentSize < 1000) return ITMUCharImage_Ptr();
-
-  // Update the object mask to only contain the largest connected component (if any).
-  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
-  {
-    if(ccsData[i] != largestComponentIndex)
-    {
-      cvObjectMask.data[i] = 0;
-    }
-  }
-#endif
-
   if(useClosing)
   {
     // Perform a morphological closing operation on the object mask to fill in holes.
@@ -148,6 +122,35 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
     kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(k, k));
     cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
     cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
+  }
+
+  if(useOnlyLargest)
+  {
+    // Find the connected components of the object mask again.
+    cv::connectedComponentsWithStats(cvObjectMask, ccsImage, stats, centroids);
+
+    // Determine the largest connected component in the object mask and its size.
+    int largestComponentIndex = -1;
+    int largestComponentSize = INT_MIN;
+    for(int componentIndex = 1; componentIndex < stats.rows; ++componentIndex)
+    {
+      int componentSize = stats(componentIndex, cv::CC_STAT_AREA);
+      if(componentSize > largestComponentSize)
+      {
+        largestComponentIndex = componentIndex;
+        largestComponentSize = componentSize;
+      }
+    }
+
+    // Update the object mask to only contain the largest connected component (if any).
+    const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+    for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+    {
+      if(ccsData[i] != largestComponentIndex)
+      {
+        cvObjectMask.data[i] = 0;
+      }
+    }
   }
 
   cv::imshow(debugWindowName, cvObjectMask);
