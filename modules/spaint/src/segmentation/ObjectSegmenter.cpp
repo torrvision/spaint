@@ -33,7 +33,7 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
-  static int closingSize = 25;
+  static int closingSize = 5;
   static int componentSizeThreshold = 1000;
   static int objectProbThreshold = 80;
   static int useClosing = 1;
@@ -75,6 +75,7 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
     {
       float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
       if(objectProb >= objectProbThreshold / 100.0f) value = 255;
+      //if(objectProb >= objectProbThreshold / 100.0f) value = (uchar)(objectProb * 255);
     }
 
     cvObjectMask.data[i] = value;
@@ -138,7 +139,7 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   {
     // Perform a morphological closing operation on the object mask to fill in holes.
     int k = std::max(closingSize, 3);
-    kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(k, k));
+    kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(k, k));
     cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
     cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
   }
