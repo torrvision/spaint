@@ -154,9 +154,28 @@ bool Pipeline::run_main_section()
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
   m_model->set_view(newView);
 
+  // If we're in object segmentation mode, mask out the object in the depth image so that it will be ignored for tracking purposes.
+  ITMFloatImage_Ptr maskedDepthImage;
+  if(m_mode == MODE_OBJECT_SEGMENTATION)
+  {
+    view->depth->UpdateHostFromDevice();
+    maskedDepthImage = SegmentationUtil::apply_mask(
+      SegmentationUtil::invert_mask(get_object_segmenter()->get_mask()),
+      ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter())
+    );
+    maskedDepthImage->UpdateDeviceFromHost();
+    view->depth->Swap(*maskedDepthImage);
+  }
+
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
+
+  // If we're in object segmentation mode, restore the original depth image after tracking so that it can be used for segmentation.
+  if(m_mode == MODE_OBJECT_SEGMENTATION)
+  {
+    view->depth->Swap(*maskedDepthImage);
+  }
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
@@ -527,7 +546,7 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
 {
 #if WITH_ARRAYFIRE && WITH_OPENCV
   // Segment the current input images to obtain a mask for the object.
-  ITMUCharImage_Ptr objectMask = get_object_segmenter()->segment_object(m_model->get_pose(), renderState);
+  ITMUCharImage_CPtr objectMask = get_object_segmenter()->segment_object(m_model->get_pose(), renderState);
 
   // If the mask is empty, early out.
   if(!objectMask)

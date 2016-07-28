@@ -32,6 +32,9 @@ private:
   /** The colour appearance model to use to separate the user's hand from any object it's holding. */
   ColourAppearanceModel_Ptr m_handAppearanceModel;
 
+  /** TODO */
+  ITMUCharImage_Ptr m_objectMask;
+
   /** The touch detector to use to get the initial difference mask. */
   mutable TouchDetector_Ptr m_touchDetector;
 
@@ -45,6 +48,11 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief TODO
+   */
+  ITMUCharImage_CPtr get_mask() const;
+
+  /**
    * \brief Resets the colour appearance model used to separate the user's hand from any object it's holding.
    */
   void reset_hand_model();
@@ -56,7 +64,7 @@ public:
    * \param renderState TODO
    * \return            TODO
    */
-  ITMUCharImage_Ptr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  ITMUCharImage_CPtr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /**
    * \brief Trains the colour appearance model used to separate the user's hand from any object it's holding.

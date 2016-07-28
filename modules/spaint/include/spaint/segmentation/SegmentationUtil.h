@@ -19,6 +19,7 @@ class SegmentationUtil
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
@@ -50,12 +51,11 @@ public:
   template <typename T>
   static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<const ORUtils::Image<T> >& image)
   {
-    boost::shared_ptr<ORUtils::Image<T> > maskedImage(new ORUtils::Image<T>(image->noDims, true, false));
+    boost::shared_ptr<ORUtils::Image<T> > maskedImage(new ORUtils::Image<T>(image->noDims, true, true));
 
     const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
     const T *imagePtr = image->GetData(MEMORYDEVICE_CPU);
     T *maskedImagePtr = maskedImage->GetData(MEMORYDEVICE_CPU);
-
     int pixelCount = static_cast<int>(image->dataSize);
 
   #ifdef WITH_OPENMP
@@ -67,6 +67,32 @@ public:
     }
 
     return maskedImage;
+  }
+
+  /**
+   * \brief Inverts a binary mask.
+   *
+   * \param mask  The mask to invert.
+   * \return      An inverted version of the mask.
+   */
+  static ITMUCharImage_Ptr invert_mask(const ITMUCharImage_CPtr& mask)
+  {
+    // TODO: Move this to a .cpp file.
+    ITMUCharImage_Ptr invertedMask(new ITMUCharImage(mask->noDims, true, false));
+
+    const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
+    uchar *invertedMaskPtr = invertedMask->GetData(MEMORYDEVICE_CPU);
+    int pixelCount = static_cast<int>(mask->dataSize);
+
+#ifdef WITH_OPENMP
+    #pragma omp parallel for
+#endif
+    for(int i = 0; i < pixelCount; ++i)
+    {
+      invertedMaskPtr[i] = maskPtr[i] ? 0 : 255;
+    }
+
+    return invertedMask;
   }
 };
 

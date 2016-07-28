@@ -18,18 +18,24 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 ObjectSegmenter::ObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view)
-: m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
+: m_objectMask(new ITMUCharImage(view->rgb->noDims, true, false)),
+  m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
   m_view(view)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::get_mask() const
+{
+  return m_objectMask;
+}
 
 void ObjectSegmenter::reset_hand_model()
 {
   m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
 }
 
-ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
@@ -147,9 +153,8 @@ ObjectSegmenter::ITMUCharImage_Ptr ObjectSegmenter::segment_object(const ORUtils
   cv::imshow(debugWindowName, cvObjectMask);
 
   // Convert the object mask to InfiniTAM format and return it.
-  static ITMUCharImage_Ptr itmObjectMask(new ITMUCharImage(m_view->rgb->noDims, true, false));
-  std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, itmObjectMask->GetData(MEMORYDEVICE_CPU));
-  return itmObjectMask;
+  std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, m_objectMask->GetData(MEMORYDEVICE_CPU));
+  return m_objectMask;
 }
 
 ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
