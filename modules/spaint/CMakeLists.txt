@@ -309,7 +309,6 @@ include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
 ##
 SET(segmentation_sources
 src/segmentation/ColourAppearanceModel.cpp
-src/segmentation/SegmentationUtil.cpp
 )
 
 SET(segmentation_headers
