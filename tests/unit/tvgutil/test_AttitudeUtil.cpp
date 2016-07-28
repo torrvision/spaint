@@ -77,13 +77,13 @@ BOOST_AUTO_TEST_CASE(test_conversions)
   const float TOL = 1e-4f;
 
   // Start from an axis-angle representation.
-  float angle = M_PI / 4.0f;
+  float angle = static_cast<float>(M_PI) / 4.0f;
   Vector3f axis(1.0f, 0.0f, 0.0f);
 
   // Start conversions.
   Vector3f rotationVector;
   AttitudeUtil::axis_angle_to_rotation_vector(axis.v, &angle, rotationVector.v);
-  check_close(rotationVector, Vector3f(M_PI/4.0f, 0.0f, 0.0f), TOL);
+  check_close(rotationVector, Vector3f(static_cast<float>(M_PI) / 4.0f, 0.0f, 0.0f), TOL);
 
   Vector4f quaternion;
   AttitudeUtil::rotation_vector_to_quaternion(rotationVector.v, quaternion.v);

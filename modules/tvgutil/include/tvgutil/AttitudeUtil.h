@@ -290,7 +290,7 @@ private:
     else if((matrix[4] >  matrix[8]) && (matrix[0] <  matrix[4]) && (matrix[0] < -matrix[8])) variant = 2;
     else if((matrix[4] <  matrix[8]) && (matrix[0] < -matrix[4]) && (matrix[0] <  matrix[8])) variant = 3;
 
-    double denominator;
+    T denominator;
 
     switch(variant)
     {
