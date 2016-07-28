@@ -159,7 +159,7 @@ private:
 Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
                    const Vector2i& windowViewportSize)
 : m_cameraMode(CM_FOLLOW),
-  m_medianFilteringEnabled(true),
+  m_medianFilteringEnabled(false),
   m_model(model),
   m_raycaster(raycaster),
   m_subwindowConfiguration(subwindowConfiguration),
