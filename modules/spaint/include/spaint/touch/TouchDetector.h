@@ -130,7 +130,14 @@ public:
    *
    * \return  A mask of the changes that have been detected in the scene with respect to the reconstructed model.
    */
-  ITMUCharImage_CPtr get_change_mask() const;
+  ITMUCharImage_Ptr get_change_mask() const;
+
+  /**
+   * \brief Gets the depth of the reconstructed model as viewed from the current camera pose.
+   *
+   * \return  The depth of the reconstructed model as viewed from the current camera pose.
+   */
+  ITMFloatImage_CPtr get_depth_raycast() const;
 
   /**
    * \brief Gets a mask denoting the detected touch region.
@@ -138,6 +145,13 @@ public:
    * \return  A mask denoting the detected touch region.
    */
   ITMUCharImage_CPtr get_touch_mask() const;
+
+  /**
+   * \brief Gets the depth value to use for pixels whose rays do not hit the scene when raycasting.
+   *
+   * \return  The depth value to use for pixels whose rays do not hit the scene when raycasting.
+   */
+  float invalid_depth_value() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

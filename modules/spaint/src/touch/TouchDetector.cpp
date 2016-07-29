@@ -232,7 +232,7 @@ ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) c
   return touchImage;
 }
 
-TouchDetector::ITMUCharImage_CPtr TouchDetector::get_change_mask() const
+TouchDetector::ITMUCharImage_Ptr TouchDetector::get_change_mask() const
 {
   // FIXME: The implementation of this is the same as that of get_touch_mask - factor out the commonality.
   static Vector2i imgSize = ImageProcessor::image_size(m_changeMask);
@@ -240,6 +240,11 @@ TouchDetector::ITMUCharImage_CPtr TouchDetector::get_change_mask() const
   m_imageProcessor->copy_af_to_itm(m_changeMask, changeMask);
   changeMask->UpdateHostFromDevice();
   return changeMask;
+}
+
+TouchDetector::ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
+{
+  return m_depthRaycast;
 }
 
 TouchDetector::ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
@@ -250,6 +255,11 @@ TouchDetector::ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
   m_imageProcessor->copy_af_to_itm(m_touchMask, touchMask);
   touchMask->UpdateHostFromDevice();
   return touchMask;
+}
+
+float TouchDetector::invalid_depth_value() const
+{
+  return 100.0f;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -430,14 +440,13 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   // As with the raw depth image, the pixel values of this raycast denote depth values in metres.
   // We assume that parts of the scene for which we have no information are far away (at an
   // arbitrarily large depth of 100m).
-  const float invalidDepthValue = 100.0f;
   m_depthVisualiser->render_depth(
     DepthVisualiser::DT_ORTHOGRAPHIC,
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
     m_itmSettings->sceneParams.voxelSize,
-    invalidDepthValue,
+    invalid_depth_value(),
     m_depthRaycast
   );
 }

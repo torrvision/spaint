@@ -5,6 +5,8 @@
 
 #include "segmentation/ObjectSegmenter.h"
 
+#include <cmath>
+
 #include <boost/serialization/shared_ptr.hpp>
 
 #include <opencv2/core/core.hpp>
@@ -181,15 +183,33 @@ ObjectSegmenter::ITMUChar4Image_Ptr ObjectSegmenter::train_hand_model(const ORUt
 
 ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  // FIXME: The implementation of this is the same as that of make_touch_mask - factor out the commonality.
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
-  return m_touchDetector->get_change_mask();
+  ITMUCharImage_Ptr changeMask = m_touchDetector->get_change_mask();
+
+  ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
+  depthRaycast->UpdateHostFromDevice();
+
+  uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
+  const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
+  int pixelCount = static_cast<int>(changeMask->dataSize);
+
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    if(fabs(depthRaycastPtr[i] - m_touchDetector->invalid_depth_value()) < 1e-3f)
+    {
+      changeMaskPtr[i] = 0;
+    }
+  }
+
+  return changeMask;
 }
 
 ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  // FIXME: The implementation of this is the same as that of make_change_mask - factor out the commonality.
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
   return m_touchDetector->get_touch_mask();
