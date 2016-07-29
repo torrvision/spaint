@@ -1,5 +1,5 @@
 /**
- * spaint: VOPFeatureCalculator_CUDA.cpp
+ * spaint: VOPFeatureCalculator_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
