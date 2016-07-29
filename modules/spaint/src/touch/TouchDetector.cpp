@@ -262,6 +262,11 @@ float TouchDetector::invalid_depth_value() const
   return 100.0f;
 }
 
+void TouchDetector::set_lower_depth_threshold_mm(int lowerDepthThresholdMm)
+{
+  m_touchSettings->lowerDepthThresholdMm = lowerDepthThresholdMm;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void TouchDetector::detect_changes()

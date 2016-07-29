@@ -153,6 +153,11 @@ public:
    */
   float invalid_depth_value() const;
 
+  /**
+   * \brief TODO
+   */
+  void set_lower_depth_threshold_mm(int lowerDepthThresholdMm);
+
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**

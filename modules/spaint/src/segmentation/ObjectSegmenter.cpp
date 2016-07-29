@@ -43,6 +43,7 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
   static bool initialised = false;
   static int closingSize = 5;
   static int componentSizeThreshold = 1000;
+  static int lowerDepthThresholdMm = 100;
   static int objectProbThreshold = 80;
   static int useClosing = 1;
   static int useOnlyLargest = 0;
@@ -53,6 +54,7 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("closingSize", debugWindowName, &closingSize, 50);
     cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
+    cv::createTrackbar("lowerDepthThresholdMm", debugWindowName, &lowerDepthThresholdMm, 100);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
     cv::createTrackbar("useClosing", debugWindowName, &useClosing, 1);
     cv::createTrackbar("useOnlyLargest", debugWindowName, &useOnlyLargest, 1);
@@ -69,6 +71,9 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
 
   ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
+
+  // Update the lower depth threshold for the touch detector.
+  m_touchDetector->set_lower_depth_threshold_mm(lowerDepthThresholdMm);
 
   // Make the change mask and object mask images.
   ITMUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
