@@ -18,6 +18,8 @@ namespace spaint {
 
 /**
  * \brief An instance of this class can be used to represent a pixel-wise colour appearance model for an object.
+ *
+ * We base our model on a chroma-based 2D histogram over colours in the YCbCr colour space.
  */
 class ColourAppearanceModel
 {
@@ -29,10 +31,10 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The number of Cb bins in the histogram. */
   int m_binsCb;
 
-  /** TODO */
+  /** The number of Cr bins in the histogram. */
   int m_binsCr;
 
   // P(Colour | object)
@@ -50,10 +52,10 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a histogram-based colour appearance model.
    *
-   * \param binsCb  TODO
-   * \param binsCr  TODO
+   * \param binsCb  The number of Cb bins in the histogram.
+   * \param binsCr  The number of Cr bins in the histogram.
    */
   ColourAppearanceModel(int binsCb, int binsCr);
 
