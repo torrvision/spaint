@@ -41,7 +41,7 @@ ObjectSegmenter::ITMUCharImage_CPtr ObjectSegmenter::segment_object(const ORUtil
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
-  static int closingSize = 5;
+  static int closingSize = 15;
   static int componentSizeThreshold = 1000;
   static int lowerDepthThresholdMm = 100;
   static int objectProbThreshold = 80;
