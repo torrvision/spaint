@@ -39,6 +39,10 @@ using namespace RelocLib;
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
 
+#if WITH_ARRAYFIRE && WITH_OPENCV
+#include <spaint/segmentation/MotionBasedObjectSegmenter.h>
+#endif
+
 #ifdef WITH_OVR
 #include <spaint/trackers/RiftTracker.h>
 #endif

@@ -23,12 +23,9 @@
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
+#include <spaint/segmentation/ObjectSegmenter.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
-
-#if WITH_ARRAYFIRE && WITH_OPENCV
-#include <spaint/segmentation/MotionBasedObjectSegmenter.h>
-#endif
 
 #include <tvgutil/SequentialPathGenerator.h>
 

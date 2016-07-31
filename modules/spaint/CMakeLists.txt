@@ -313,6 +313,7 @@ src/segmentation/ColourAppearanceModel.cpp
 
 SET(segmentation_headers
 include/spaint/segmentation/ColourAppearanceModel.h
+include/spaint/segmentation/ObjectSegmenter.h
 include/spaint/segmentation/SegmentationUtil.h
 )
 

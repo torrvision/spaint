@@ -7,24 +7,22 @@
 #define H_SPAINT_MOTIONBASEDOBJECTSEGMENTER
 
 #include "ColourAppearanceModel.h"
+#include "ObjectSegmenter.h"
 #include "../touch/TouchDetector.h"
 
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to segment moving objects based on their motion with respect to the scene.
+ * \brief An instance of this class can be used to segment a moving object based on its motion with respect to the scene.
  */
-class MotionBasedObjectSegmenter
+class MotionBasedObjectSegmenter : public ObjectSegmenter
 {
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
   typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
@@ -47,34 +45,17 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief TODO
-   */
-  ITMUCharImage_CPtr get_mask() const;
+  /** Override */
+  virtual ITMUCharImage_CPtr get_mask() const;
 
-  /**
-   * \brief Resets the colour appearance model used to separate the user's hand from any object it's holding.
-   */
-  void reset_hand_model();
+  /** Override */
+  virtual void reset_hand_model();
 
-  /**
-   * \brief TODO
-   *
-   * \param pose        TODO
-   * \param renderState TODO
-   * \return            TODO
-   */
-  ITMUCharImage_CPtr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  /** Override */
+  virtual ITMUCharImage_CPtr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
-  /**
-   * \brief Trains the colour appearance model used to separate the user's hand from any object it's holding.
-   *
-   * \param view        TODO
-   * \param pose        TODO
-   * \param renderState TODO
-   * \return            TODO
-   */
-  ITMUChar4Image_Ptr train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
+  /** Override */
+  virtual ITMUChar4Image_Ptr train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -88,10 +69,6 @@ private:
    */
   ITMUCharImage_CPtr make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 };
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<MotionBasedObjectSegmenter> ObjectSegmenter_Ptr;
 
 }
 

@@ -20,7 +20,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 MotionBasedObjectSegmenter::MotionBasedObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings,
-													   const View_CPtr& view)
+                                                       const View_CPtr& view)
 : m_objectMask(new ITMUCharImage(view->rgb->noDims, true, false)),
   m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
   m_view(view)
@@ -28,7 +28,7 @@ MotionBasedObjectSegmenter::MotionBasedObjectSegmenter(const ITMSettings_CPtr& i
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-MotionBasedObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::get_mask() const
+ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::get_mask() const
 {
   return m_objectMask;
 }
@@ -38,8 +38,7 @@ void MotionBasedObjectSegmenter::reset_hand_model()
   m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
 }
 
-MotionBasedObjectSegmenter::ITMUCharImage_CPtr
-MotionBasedObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
@@ -169,8 +168,7 @@ MotionBasedObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const R
   return m_objectMask;
 }
 
-MotionBasedObjectSegmenter::ITMUChar4Image_Ptr
-MotionBasedObjectSegmenter::train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
+ObjectSegmenter::ITMUChar4Image_Ptr MotionBasedObjectSegmenter::train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
 {
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
@@ -189,9 +187,8 @@ MotionBasedObjectSegmenter::train_hand_model(const ORUtils::SE3Pose& pose, const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-MotionBasedObjectSegmenter::ITMUCharImage_CPtr
-MotionBasedObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose,
-											 const RenderState_CPtr& renderState) const
+ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose,
+											                                                           const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
@@ -218,9 +215,8 @@ MotionBasedObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInpu
   return changeMask;
 }
 
-MotionBasedObjectSegmenter::ITMUCharImage_CPtr
-MotionBasedObjectSegmenter::make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose,
-										    const RenderState_CPtr& renderState) const
+ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose,
+										                                                            const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
