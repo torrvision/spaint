@@ -162,13 +162,17 @@ bool Pipeline::run_main_section()
   ITMFloatImage_Ptr maskedDepthImage;
   if(m_mode == MODE_OBJECT_SEGMENTATION)
   {
-    view->depth->UpdateHostFromDevice();
-    maskedDepthImage = SegmentationUtil::apply_mask(
-      SegmentationUtil::invert_mask(get_object_segmenter()->get_mask()),
-      ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter())
-    );
-    maskedDepthImage->UpdateDeviceFromHost();
-    view->depth->Swap(*maskedDepthImage);
+    const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+    if(segmenter)
+    {
+      view->depth->UpdateHostFromDevice();
+      maskedDepthImage = SegmentationUtil::apply_mask(
+        SegmentationUtil::invert_mask(segmenter->get_mask()),
+        ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter())
+      );
+      maskedDepthImage->UpdateDeviceFromHost();
+      view->depth->Swap(*maskedDepthImage);
+    }
   }
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
@@ -336,7 +340,8 @@ void Pipeline::set_mode(Mode mode)
   // If we are switching into hand learning mode, reset the hand appearance model.
   if(mode == MODE_HAND_LEARNING && m_mode != MODE_HAND_LEARNING)
   {
-    get_object_segmenter()->reset_hand_model();
+    const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+    if(segmenter) segmenter->reset_hand_model();
   }
 
   // If we are switching out of hand learning mode, clear the segmentation image.
@@ -367,11 +372,14 @@ void Pipeline::set_mode(Mode mode)
 
 const ObjectSegmenter_Ptr& Pipeline::get_object_segmenter() const
 {
+#if WITH_ARRAYFIRE && WITH_OPENCV
   if(!m_objectSegmenter)
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
     m_objectSegmenter.reset(new MotionBasedObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
   }
+#endif
+
   return m_objectSegmenter;
 }
 
@@ -540,15 +548,19 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 
 void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
 {
-#if WITH_ARRAYFIRE && WITH_OPENCV
-  ITMUChar4Image_Ptr touchImage = get_object_segmenter()->train_hand_model(m_model->get_pose(), renderState);
+  const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+  if(!segmenter) return;
+
+  ITMUChar4Image_Ptr touchImage = segmenter->train_hand_model(m_model->get_pose(), renderState);
   m_model->set_segmentation_image(touchImage);
-#endif
 }
 
 void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderState)
 {
-#if WITH_ARRAYFIRE && WITH_OPENCV
+  // Gets the current object segmenter. If there isn't one, early out.
+  const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+  if(!segmenter) return;
+
   // Segment the current input images to obtain a mask for the object.
   ITMUCharImage_CPtr objectMask = get_object_segmenter()->segment_object(m_model->get_pose(), renderState);
 
@@ -575,7 +587,6 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
 
   // Set the masked colour image as the segmentation overlay image so that it will be rendered.
   m_model->set_segmentation_image(rgbMasked);
-#endif
 }
 
 void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
