@@ -366,7 +366,7 @@ const ObjectSegmenter_Ptr& Pipeline::get_object_segmenter() const
   if(!m_objectSegmenter)
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
-    m_objectSegmenter.reset(new ObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
+    m_objectSegmenter.reset(new MotionBasedObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
   }
   return m_objectSegmenter;
 }

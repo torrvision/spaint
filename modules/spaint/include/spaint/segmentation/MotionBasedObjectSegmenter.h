@@ -1,10 +1,10 @@
 /**
- * spaint: ObjectSegmenter.h
+ * spaint: MotionBasedObjectSegmenter.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_OBJECTSEGMENTER
-#define H_SPAINT_OBJECTSEGMENTER
+#ifndef H_SPAINT_MOTIONBASEDOBJECTSEGMENTER
+#define H_SPAINT_MOTIONBASEDOBJECTSEGMENTER
 
 #include "ColourAppearanceModel.h"
 #include "../touch/TouchDetector.h"
@@ -12,9 +12,9 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this class can be used to segment moving objects based on their motion with respect to the scene.
  */
-class ObjectSegmenter
+class MotionBasedObjectSegmenter
 {
   //#################### TYPEDEFS ####################
 private:
@@ -43,7 +43,7 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  ObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view);
+  MotionBasedObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -91,7 +91,7 @@ private:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<ObjectSegmenter> ObjectSegmenter_Ptr;
+typedef boost::shared_ptr<MotionBasedObjectSegmenter> ObjectSegmenter_Ptr;
 
 }
 

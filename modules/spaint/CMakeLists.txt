@@ -317,8 +317,8 @@ include/spaint/segmentation/SegmentationUtil.h
 )
 
 IF(WITH_ARRAYFIRE AND WITH_OPENCV)
-  SET(segmentation_sources ${segmentation_sources} src/segmentation/ObjectSegmenter.cpp)
-  SET(segmentation_headers ${segmentation_headers} include/spaint/segmentation/ObjectSegmenter.h)
+  SET(segmentation_sources ${segmentation_sources} src/segmentation/MotionBasedObjectSegmenter.cpp)
+  SET(segmentation_headers ${segmentation_headers} include/spaint/segmentation/MotionBasedObjectSegmenter.h)
 ENDIF()
 
 ##
