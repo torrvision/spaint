@@ -25,39 +25,60 @@ private:
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration represent the supported image file types.
+   */
+  enum ImageFileType
+  {
+    IFT_PGM,
+    IFT_PNG,
+    IFT_PPM,
+    IFT_UNKNOWN
+  };
+
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Loads an RGBA image from a PNG file.
+   * \brief Attempts to load an RGBA image from a file.
    *
-   * \param path  The path to the file from which to load the image.
-   * \return      The loaded image.
+   * \param path                The path to the file from which to load the image.
+   * \param fileType            The image file type.
+   * \return                    The loaded image.
+   * \throws std::runtime_error If the image could not be loaded.
    */
-  static ITMUChar4Image_Ptr load_rgba_image(const std::string& path);
+  static ITMUChar4Image_Ptr load_rgba_image(const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
-   * \brief Saves an RGBA image to a PNG file.
+   * \brief Attempts to save an RGBA image to a file.
    *
-   * \param image The image to save.
-   * \param path  The path to the file to which to save it.
+   * \param image               The image to save.
+   * \param path                The path to the file to which to save it.
+   * \param fileType            The image file type.
+   * \throws std::runtime_error If the image could not be saved.
    */
-  static void save_image(const ITMUChar4Image_CPtr& image, const std::string& path);
+  static void save_image(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
-   * \brief Saves an RGBA image to a PNG file on a separate thread.
+   * \brief Attempts to save an RGBA image to a file on a separate thread.
    *
-   * \param image The image to save.
-   * \param path  The path to the file to which to save it.
+   * \param image               The image to save.
+   * \param path                The path to the file to which to save it.
+   * \param fileType            The image file type.
+   * \throws std::runtime_error If the image could not be saved.
    */
-  static void save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path);
+  static void save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
-   * \brief Saves an RGBA image to a PNG file on a separate thread.
+   * \brief Attempts to save an RGBA image to a file on a separate thread.
    *
-   * \param image The image to save.
-   * \param path  The path to the file to which to save it.
+   * \param image               The image to save.
+   * \param path                The path to the file to which to save it.
+   * \param fileType            The image file type.
+   * \throws std::runtime_error If the image could not be saved.
    */
-  static void save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path);
+  static void save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path, ImageFileType fileType = IFT_UNKNOWN);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
@@ -69,6 +90,14 @@ private:
    * \return        The decoded image.
    */
   static ITMUChar4Image_Ptr decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path);
+
+  /**
+   * \brief Attempts to deduce an image file's type based on its file extension.
+   *
+   * \param path                The path to the image file.
+   * \return                    The image file's type, if it can be deduced from the file extension, or IFT_UNKNOWN otherwise.
+   */
+  static ImageFileType deduce_image_file_type(const std::string& path);
 
   /**
    * \brief Encodes an RGBA image in PNG format and writes it into a buffer.

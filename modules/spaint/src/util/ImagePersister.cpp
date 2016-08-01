@@ -15,30 +15,59 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ImagePersister::ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path)
+ImagePersister::ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path, ImageFileType fileType)
 {
-  std::vector<unsigned char> buffer;
-  lodepng::load_file(buffer, path);
-  if(buffer.empty()) throw std::runtime_error("Could not load PNG image from '" + path + "'");
-  return decode_rgba_png(buffer, path);
+  // If the image file type wasn't specified, try to deduce it.
+  if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
+
+  // Load the image in an appropriate way based on its file type.
+  switch(fileType)
+  {
+    case IFT_PNG:
+    {
+      std::vector<unsigned char> buffer;
+      lodepng::load_file(buffer, path);
+      if(buffer.empty()) throw std::runtime_error("Could not load PNG image from '" + path + "'");
+      return decode_rgba_png(buffer, path);
+    }
+    default:
+    {
+      throw std::runtime_error("Could not load image from '" + path + "': unsupported file type");
+    }
+  }
 }
 
-void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::string& path)
+void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType)
 {
-  std::vector<unsigned char> buffer;
-  encode_png(image, buffer);
-  lodepng::save_file(buffer, path);
+  // If the image file type wasn't specified, try to deduce it.
+  if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
+
+  // Save the image in an appropriate way based on its file type.
+  switch(fileType)
+  {
+    case IFT_PNG:
+    {
+      std::vector<unsigned char> buffer;
+      encode_png(image, buffer);
+      lodepng::save_file(buffer, path);
+      break;
+    }
+    default:
+    {
+      throw std::runtime_error("Could not save image to '" + path + "': unsupported file type");
+    }
+  }
 }
 
-void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path)
+void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType)
 {
-  boost::thread t(&save_image, image, path);
+  boost::thread t(&save_image, image, path, fileType);
   t.detach();
 }
 
-void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path)
+void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path, ImageFileType fileType)
 {
-  save_image_on_thread(image, path.string());
+  save_image_on_thread(image, path.string(), fileType);
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
@@ -73,6 +102,11 @@ ImagePersister::ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::ve
   }
 
   return image;
+}
+
+ImagePersister::ImageFileType ImagePersister::deduce_image_file_type(const std::string& path)
+{
+  return IFT_UNKNOWN;
 }
 
 void ImagePersister::encode_png(const ITMUChar4Image_CPtr& image, std::vector<unsigned char>& buffer)
