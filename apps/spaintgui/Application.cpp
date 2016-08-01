@@ -20,8 +20,8 @@ using boost::assign::map_list_of;
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
-#include <spaint/imageprocessing/PNGUtil.h>
 #include <spaint/ogl/WrappedGL.h>
+#include <spaint/util/ImagePersister.h>
 using namespace spaint;
 
 #include <tvgutil/PathFinder.h>
@@ -571,7 +571,7 @@ void Application::save_screenshot() const
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
   boost::filesystem::create_directories(p.parent_path());
   std::cout << "[spaint] Saving screenshot to " << p << "...\n";
-  PNGUtil::save_image_on_thread(m_renderer->capture_screenshot(), p);
+  ImagePersister::save_image_on_thread(m_renderer->capture_screenshot(), p);
 }
 
 void Application::save_sequence_frame()
@@ -583,7 +583,7 @@ void Application::save_sequence_frame()
 void Application::save_video_frame()
 {
   m_videoPathGenerator->increment_index();
-  PNGUtil::save_image_on_thread(m_renderer->capture_screenshot(), m_videoPathGenerator->make_path("%06i.png"));
+  ImagePersister::save_image_on_thread(m_renderer->capture_screenshot(), m_videoPathGenerator->make_path("%06i.png"));
 }
 
 void Application::setup_labels()

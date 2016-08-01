@@ -81,13 +81,8 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
-SET(imageprocessing_sources
-src/imageprocessing/PNGUtil.cpp
-)
-
-SET(imageprocessing_headers
-include/spaint/imageprocessing/PNGUtil.h
-)
+SET(imageprocessing_sources)
+SET(imageprocessing_headers)
 
 IF(WITH_ARRAYFIRE)
   SET(imageprocessing_sources ${imageprocessing_sources}
@@ -461,6 +456,7 @@ ENDIF()
 ##
 SET(util_sources
 src/util/CameraPoseConverter.cpp
+src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
 src/util/RGBDUtil.cpp
@@ -469,6 +465,7 @@ src/util/RGBDUtil.cpp
 SET(util_headers
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
+include/spaint/util/ImagePersister.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h

@@ -1,10 +1,10 @@
 /**
- * spaint: PNGUtil.h
+ * spaint: ImagePersister.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_PNGUTIL
-#define H_SPAINT_PNGUTIL
+#ifndef H_SPAINT_IMAGEPERSISTER
+#define H_SPAINT_IMAGEPERSISTER
 
 #include <vector>
 
@@ -16,9 +16,9 @@
 namespace spaint {
 
 /**
- * \brief This class contains utility functions for loading and saving PNG images.
+ * \brief This class contains utility functions for loading and saving images.
  */
-class PNGUtil
+class ImagePersister
 {
   //#################### TYPEDEFS ####################
 private:

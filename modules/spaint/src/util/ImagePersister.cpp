@@ -1,9 +1,9 @@
 /**
- * spaint: PNGUtil.cpp
+ * spaint: ImagePersister.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "imageprocessing/PNGUtil.h"
+#include "util/ImagePersister.h"
 
 #include <stdexcept>
 
@@ -15,7 +15,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-PNGUtil::ITMUChar4Image_Ptr PNGUtil::load_rgba_image(const std::string& path)
+ImagePersister::ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path)
 {
   std::vector<unsigned char> buffer;
   lodepng::load_file(buffer, path);
@@ -23,27 +23,27 @@ PNGUtil::ITMUChar4Image_Ptr PNGUtil::load_rgba_image(const std::string& path)
   return decode_rgba_png(buffer, path);
 }
 
-void PNGUtil::save_image(const ITMUChar4Image_CPtr& image, const std::string& path)
+void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::string& path)
 {
   std::vector<unsigned char> buffer;
   encode_png(image, buffer);
   lodepng::save_file(buffer, path);
 }
 
-void PNGUtil::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path)
+void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path)
 {
   boost::thread t(&save_image, image, path);
   t.detach();
 }
 
-void PNGUtil::save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path)
+void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path)
 {
   save_image_on_thread(image, path.string());
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-PNGUtil::ITMUChar4Image_Ptr PNGUtil::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
+ImagePersister::ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
 {
   // Decode the PNG.
   std::vector<unsigned char> data;
@@ -75,7 +75,7 @@ PNGUtil::ITMUChar4Image_Ptr PNGUtil::decode_rgba_png(const std::vector<unsigned 
   return image;
 }
 
-void PNGUtil::encode_png(const ITMUChar4Image_CPtr& image, std::vector<unsigned char>& buffer)
+void ImagePersister::encode_png(const ITMUChar4Image_CPtr& image, std::vector<unsigned char>& buffer)
 {
   const int pixelCount = static_cast<int>(image->dataSize);
   std::vector<unsigned char> data(pixelCount * 4);
