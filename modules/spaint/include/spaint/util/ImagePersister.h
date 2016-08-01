@@ -6,18 +6,13 @@
 #ifndef H_SPAINT_IMAGEPERSISTER
 #define H_SPAINT_IMAGEPERSISTER
 
-#include <stdexcept>
 #include <vector>
 
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-#include <lodepng.h>
-
 #include <ITMLib/Utils/ITMImageTypes.h>
-
-#include <ORUtils/FileUtils.h>
 
 namespace spaint {
 
@@ -58,41 +53,24 @@ public:
   static ITMUChar4Image_Ptr load_rgba_image(const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
-   * \brief Attempts to save an image to a file.
+   * \brief Attempts to save a short image to a file.
    *
    * \param image               The image to save.
    * \param path                The path to the file to which to save it.
    * \param fileType            The image file type.
    * \throws std::runtime_error If the image could not be saved.
    */
-  template <typename T>
-  static void save_image(const boost::shared_ptr<const ORUtils::Image<T> >& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN)
-  {
-    // If the image file type wasn't specified, try to deduce it.
-    if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
+  static void save_image(const ITMShortImage_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
-    // Save the image in an appropriate way based on its file type.
-    switch(fileType)
-    {
-      case IFT_PGM:
-      case IFT_PPM:
-      {
-        SaveImageToFile(image.get(), path.c_str());
-        break;
-      }
-      case IFT_PNG:
-      {
-        std::vector<unsigned char> buffer;
-        encode_png(image, buffer);
-        lodepng::save_file(buffer, path);
-        break;
-      }
-      default:
-      {
-        throw std::runtime_error("Could not save image to '" + path + "': unsupported file type");
-      }
-    }
-  }
+  /**
+   * \brief Attempts to save an RGBA image to a file.
+   *
+   * \param image               The image to save.
+   * \param path                The path to the file to which to save it.
+   * \param fileType            The image file type.
+   * \throws std::runtime_error If the image could not be saved.
+   */
+  static void save_image(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN);
 
   /**
    * \brief Attempts to save an image to a file on a separate thread.
@@ -105,7 +83,8 @@ public:
   template <typename T>
   static void save_image_on_thread(const boost::shared_ptr<const ORUtils::Image<T> >& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN)
   {
-    boost::thread t(&save_image<Vector4u>, image, path, fileType);
+    void (*p)(const boost::shared_ptr<const ORUtils::Image<T> >&, const std::string&, ImageFileType) = &save_image;
+    boost::thread t(p, image, path, fileType);
     t.detach();
   }
 
