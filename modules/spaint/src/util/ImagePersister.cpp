@@ -5,14 +5,6 @@
 
 #include "util/ImagePersister.h"
 
-#include <stdexcept>
-
-#include <boost/thread.hpp>
-
-#include <lodepng.h>
-
-#include <ORUtils/FileUtils.h>
-
 namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -37,44 +29,6 @@ ImagePersister::ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::st
       throw std::runtime_error("Could not load image from '" + path + "': unsupported file type");
     }
   }
-}
-
-void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType)
-{
-  // If the image file type wasn't specified, try to deduce it.
-  if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
-
-  // Save the image in an appropriate way based on its file type.
-  switch(fileType)
-  {
-    case IFT_PPM:
-    {
-      SaveImageToFile(image.get(), path.c_str());
-      break;
-    }
-    case IFT_PNG:
-    {
-      std::vector<unsigned char> buffer;
-      encode_png(image, buffer);
-      lodepng::save_file(buffer, path);
-      break;
-    }
-    default:
-    {
-      throw std::runtime_error("Could not save image to '" + path + "': unsupported file type");
-    }
-  }
-}
-
-void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const std::string& path, ImageFileType fileType)
-{
-  boost::thread t(&save_image, image, path, fileType);
-  t.detach();
-}
-
-void ImagePersister::save_image_on_thread(const ITMUChar4Image_CPtr& image, const boost::filesystem::path& path, ImageFileType fileType)
-{
-  save_image_on_thread(image, path.string(), fileType);
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
