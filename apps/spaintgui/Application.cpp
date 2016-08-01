@@ -48,6 +48,7 @@ Application::Application(const Pipeline_Ptr& pipeline)
 {
   setup_labels();
   switch_to_windowed_renderer(1);
+  toggle_recording("sequence", m_sequencePathGenerator); // TEMPORARY
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -576,7 +577,8 @@ void Application::save_screenshot() const
 
 void Application::save_sequence_frame()
 {
-  // TODO
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image(), m_sequencePathGenerator->make_path("%06i.pgm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image(), m_sequencePathGenerator->make_path("%06i.ppm"));
   m_sequencePathGenerator->increment_index();
 }
 

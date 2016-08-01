@@ -78,6 +78,16 @@ bool Pipeline::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
+Pipeline::ITMShortImage_CPtr Pipeline::get_input_raw_depth_image() const
+{
+  return m_inputRawDepthImage;
+}
+
+Pipeline::ITMUChar4Image_CPtr Pipeline::get_input_rgb_image() const
+{
+  return m_inputRGBImage;
+}
+
 const Interactor_Ptr& Pipeline::get_interactor()
 {
   return m_interactor;

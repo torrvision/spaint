@@ -41,7 +41,9 @@ private:
   typedef boost::shared_ptr<InputSource::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
+  typedef boost::shared_ptr<const ITMShortImage> ITMShortImage_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
@@ -266,6 +268,16 @@ public:
    * \return  true, if the user wants fusion to be run as part of the pipeline, or false otherwise.
    */
   bool get_fusion_enabled() const;
+
+  /**
+   * \brief TODO
+   */
+  ITMShortImage_CPtr get_input_raw_depth_image() const;
+
+  /**
+   * \brief TODO
+   */
+  ITMUChar4Image_CPtr get_input_rgb_image() const;
 
   /**
    * \brief Gets the interactor that is used to interact with the InfiniTAM scene.

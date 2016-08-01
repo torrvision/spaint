@@ -7,6 +7,8 @@
 
 #include <stdexcept>
 
+#include <boost/algorithm/string.hpp>
+
 #include <lodepng.h>
 
 #include <ORUtils/FileUtils.h>
@@ -120,6 +122,15 @@ ImagePersister::ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::ve
 
 ImagePersister::ImageFileType ImagePersister::deduce_image_file_type(const std::string& path)
 {
+  size_t i = path.find('.');
+  if(i != std::string::npos && i + 1 != path.length())
+  {
+    std::string extension = path.substr(i + 1);
+    boost::to_lower(extension);
+    if(extension == "pgm") return IFT_PGM;
+    if(extension == "png") return IFT_PNG;
+    if(extension == "ppm") return IFT_PPM;
+  }
   return IFT_UNKNOWN;
 }
 
