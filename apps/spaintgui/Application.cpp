@@ -48,7 +48,6 @@ Application::Application(const Pipeline_Ptr& pipeline)
 {
   setup_labels();
   switch_to_windowed_renderer(1);
-  toggle_recording("sequence", m_sequencePathGenerator); // TEMPORARY
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -182,10 +181,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
-  // If / is pressed on its own, save a screenshot. If right shift + / is pressed, toggle video recording.
+  // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
+  // If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
   {
-    if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
+    if(m_inputState.key_down(KEYCODE_LSHIFT)) toggle_recording("sequence", m_sequencePathGenerator);
+    else if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
     else save_screenshot();
   }
 
@@ -236,6 +237,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
               << "/ = Save Screenshot\n"
+              << "LShift + / = Toggle Sequence Recording\n"
               << "RShift + / = Toggle Video Recording\n";
   }
 }
