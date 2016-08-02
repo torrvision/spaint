@@ -15,8 +15,6 @@ using namespace tvginput;
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
 
-#include <ORUtils/FileUtils.h>
-
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
@@ -68,7 +66,10 @@ void Application::run()
       bool frameWasProcessed = m_pipeline->run_main_section();
 
       // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
-      if(frameWasProcessed && m_sequencePathGenerator) save_sequence_frame();
+      if(frameWasProcessed && m_sequencePathGenerator)
+      {
+        save_sequence_frame();
+      }
     }
 
     // Render the scene.

@@ -67,16 +67,16 @@ void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::str
   // Save the image in an appropriate way based on its file type.
   switch(fileType)
   {
-    case IFT_PPM:
-    {
-      SaveImageToFile(image.get(), path.c_str());
-      break;
-    }
     case IFT_PNG:
     {
       std::vector<unsigned char> buffer;
       encode_png(image, buffer);
       lodepng::save_file(buffer, path);
+      break;
+    }
+    case IFT_PPM:
+    {
+      SaveImageToFile(image.get(), path.c_str());
       break;
     }
     default:

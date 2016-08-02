@@ -204,7 +204,7 @@ private:
   void save_screenshot() const;
 
   /**
-   * \brief Saves the next frame in the sequence being recorded to disk.
+   * \brief Saves the next frame of the sequence being recorded to disk.
    */
   void save_sequence_frame();
 
