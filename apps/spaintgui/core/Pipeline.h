@@ -136,10 +136,10 @@ private:
    */
   size_t m_initialFramesToFuse;
 
-  /** The image into which depth input is to be read each frame. */
+  /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 
-  /** The image into which RGB input is to be read each frame. */
+  /** The image into which RGB input is read each frame. */
   ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
@@ -270,12 +270,16 @@ public:
   bool get_fusion_enabled() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the image into which depth input is read each frame.
+   *
+   * \return  The image into which depth input is read each frame.
    */
   ITMShortImage_CPtr get_input_raw_depth_image() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the image into which RGB input is read each frame.
+   *
+   * \return  The image into which RGB input is read each frame.
    */
   ITMUChar4Image_CPtr get_input_rgb_image() const;
 
