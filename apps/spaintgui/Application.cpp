@@ -65,10 +65,11 @@ void Application::run()
     // If the application is unpaused, process a new frame.
     if(!m_paused)
     {
-      m_pipeline->run_main_section();
+      // Run the main section of the pipeline.
+      bool frameWasProcessed = m_pipeline->run_main_section();
 
-      // If we're currently recording the sequence, save the new frame to disk.
-      if(m_sequencePathGenerator) save_sequence_frame();
+      // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
+      if(frameWasProcessed && m_sequencePathGenerator) save_sequence_frame();
     }
 
     // Render the scene.

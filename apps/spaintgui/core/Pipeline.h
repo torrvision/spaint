@@ -329,9 +329,11 @@ public:
   /**
    * \brief Runs the main section of the pipeline.
    *
-   * This involves processing the next frame from the image source engine.
+   * This involves processing the next frame from the image source engine (if any).
+   *
+   * \return  true, if a frame was available from the image source engine, or false otherwise.
    */
-  void run_main_section();
+  bool run_main_section();
 
   /**
    * \brief Runs the mode-specific section of the pipeline.

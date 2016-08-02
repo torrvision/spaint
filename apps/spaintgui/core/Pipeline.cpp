@@ -125,9 +125,9 @@ void Pipeline::reset_forest()
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 }
 
-void Pipeline::run_main_section()
+bool Pipeline::run_main_section()
 {
-  if(!m_imageSourceEngine->hasMoreImages()) return;
+  if(!m_imageSourceEngine->hasMoreImages()) return false;
 
   const Raycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
   const Model::Scene_Ptr& scene = m_model->get_scene();
@@ -238,6 +238,8 @@ void Pipeline::run_main_section()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
+
+  return true;
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
