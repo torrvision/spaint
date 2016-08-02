@@ -8,7 +8,7 @@
 
 #include <boost/optional.hpp>
 
-#include <InputSource/ImageSourceEngine.h>
+#include <InputSource/CompositeImageSourceEngine.h>
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
@@ -37,8 +37,8 @@ class Pipeline
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
-  typedef boost::shared_ptr<InputSource::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
@@ -117,7 +117,7 @@ private:
   bool m_fusionEnabled;
 
   /** The engine used to provide input images to the fusion pipeline. */
-  ImageSourceEngine_Ptr m_imageSourceEngine;
+  CompositeImageSourceEngine_Ptr m_imageSourceEngine;
 
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
@@ -242,6 +242,13 @@ public:
   Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
            const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "",
            bool useInternalCalibration = false);
+
+  /**
+   * \brief TODO
+   */
+  Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+           const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& resourcesDir,
+           TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "", bool useInternalCalibration = false);
 #endif
 
   /**

@@ -51,7 +51,28 @@ Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional
                    const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
 : m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
-  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
+  m_imageSourceEngine.reset(new CompositeImageSourceEngine(calibrationFilename.c_str()));
+  m_imageSourceEngine->addSubengine(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
+#if USE_LOW_USB_BANDWIDTH_MODE
+    // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
+    , Vector2i(320, 240)
+#endif
+  ));
+
+  initialise(settings);
+}
+
+Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+                   const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& resourcesDir,
+                   TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
+: m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
+{
+  m_imageSourceEngine.reset(new CompositeImageSourceEngine(calibrationFilename.c_str()));
+
+  ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
+  m_imageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator));
+
+  m_imageSourceEngine->addSubengine(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
 #if USE_LOW_USB_BANDWIDTH_MODE
     // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
     , Vector2i(320, 240)
@@ -67,7 +88,8 @@ Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rg
 : m_resourcesDir(resourcesDir)
 {
   ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-  m_imageSourceEngine.reset(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, initialFrameNumber));
+  m_imageSourceEngine.reset(new CompositeImageSourceEngine(calibrationFilename.c_str()));
+  m_imageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, initialFrameNumber));
   initialise(settings);
 }
 
@@ -242,6 +264,9 @@ bool Pipeline::run_main_section()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
+
+  // If the current sub-engine has run out of images, disable fusion.
+  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   return true;
 }
