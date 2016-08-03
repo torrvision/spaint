@@ -122,14 +122,14 @@ ImagePersister::ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::ve
 
 ImagePersister::ImageFileType ImagePersister::deduce_image_file_type(const std::string& path)
 {
-  size_t i = path.find('.');
-  if(i != std::string::npos && i + 1 != path.length())
+  boost::filesystem::path bpath(path);
+  if(bpath.has_extension())
   {
-    std::string extension = path.substr(i + 1);
+    std::string extension = bpath.extension().string();
     boost::to_lower(extension);
-    if(extension == "pgm") return IFT_PGM;
-    if(extension == "png") return IFT_PNG;
-    if(extension == "ppm") return IFT_PPM;
+    if(extension == ".pgm") return IFT_PGM;
+    if(extension == ".png") return IFT_PNG;
+    if(extension == ".ppm") return IFT_PPM;
   }
   return IFT_UNKNOWN;
 }

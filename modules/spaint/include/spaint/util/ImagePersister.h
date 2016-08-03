@@ -116,8 +116,8 @@ private:
   /**
    * \brief Attempts to deduce an image file's type based on its file extension.
    *
-   * \param path                The path to the image file.
-   * \return                    The image file's type, if it can be deduced from the file extension, or IFT_UNKNOWN otherwise.
+   * \param path  The path to the image file.
+   * \return      The image file's type, if it can be deduced from the file extension, or IFT_UNKNOWN otherwise.
    */
   static ImageFileType deduce_image_file_type(const std::string& path);
 
