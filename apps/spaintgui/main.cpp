@@ -7,6 +7,9 @@
 #include <iostream>
 #include <string>
 
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
 
@@ -70,16 +73,39 @@ try
 #endif
 
   // Parse the command-line arguments.
-  if (argc > 4)
-  {
-    // Note: See the InfiniTAM code for argument details (we use the same arguments here for consistency).
-    quit("Usage: spaint [<Calibration Filename> [<OpenNI Device URI> | <RGB Image Mask> <Depth Image Mask>]]");
-  }
+  std::string calibrationFilename, depthImageMask, openNIDeviceURI, rgbImageMask;
 
-  std::string calibrationFilename = argc >= 2 ? argv[1] : "",
-              openNIDeviceURI = argc == 3 ? argv[2] : "Default",
-              rgbImageMask = argc == 4 ? argv[2] : "",
-              depthImageMask = argc == 4 ? argv[3] : "";
+  po::options_description genericOptions("Generic options");
+  genericOptions.add_options()
+    ("help", "produce help message")
+    ("calib", po::value<std::string>(&calibrationFilename)->default_value(""), "calibration filename")
+  ;
+
+  po::options_description cameraOptions("Camera options");
+  cameraOptions.add_options()
+    ("oniDevice", po::value<std::string>(&openNIDeviceURI)->default_value("Default"), "OpenNI device URI")
+  ;
+
+  po::options_description diskSequenceOptions("Disk sequence options");
+  diskSequenceOptions.add_options()
+    ("depthMask", po::value<std::string>(&depthImageMask)->default_value(""), "depth image mask")
+    ("rgbMask", po::value<std::string>(&rgbImageMask)->default_value(""), "RGB image mask")
+  ;
+
+  po::options_description allOptions;
+  allOptions.add(genericOptions);
+  allOptions.add(cameraOptions);
+  allOptions.add(diskSequenceOptions);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, allOptions), vm);
+  po::notify(vm);
+
+  if(vm.count("help"))
+  {
+    std::cout << allOptions << '\n';
+    return 0;
+  }
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
@@ -128,7 +154,7 @@ try
   // Construct the pipeline.
   Pipeline_Ptr pipeline;
   std::string resourcesDir = Application::resources_dir().string();
-  if(argc == 4)
+  if(depthImageMask != "")
   {
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
     pipeline.reset(new Pipeline(calibrationFilename, rgbImageMask, depthImageMask, settings, resourcesDir));
