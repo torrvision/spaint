@@ -37,7 +37,6 @@ class Pipeline
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
@@ -117,7 +116,7 @@ private:
   bool m_fusionEnabled;
 
   /** The engine used to provide input images to the fusion pipeline. */
-  CompositeImageSourceEngine_Ptr m_imageSourceEngine;
+  InputSource::CompositeImageSourceEngine m_imageSourceEngine;
 
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
