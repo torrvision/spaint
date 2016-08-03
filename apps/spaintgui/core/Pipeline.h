@@ -270,18 +270,18 @@ public:
   bool get_fusion_enabled() const;
 
   /**
-   * \brief Gets the image into which depth input is read each frame.
+   * \brief Gets a copy of the image into which depth input is read each frame.
    *
-   * \return  The image into which depth input is read each frame.
+   * \return  A copy of the image into which depth input is read each frame.
    */
-  ITMShortImage_CPtr get_input_raw_depth_image() const;
+  ITMShortImage_Ptr get_input_raw_depth_image_copy() const;
 
   /**
-   * \brief Gets the image into which RGB input is read each frame.
+   * \brief Gets a copy of the image into which RGB input is read each frame.
    *
-   * \return  The image into which RGB input is read each frame.
+   * \return  A copy of the image into which RGB input is read each frame.
    */
-  ITMUChar4Image_CPtr get_input_rgb_image() const;
+  ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
 
   /**
    * \brief Gets the interactor that is used to interact with the InfiniTAM scene.

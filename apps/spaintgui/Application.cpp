@@ -581,19 +581,8 @@ void Application::save_screenshot() const
 
 void Application::save_sequence_frame()
 {
-  // Get the current input images.
-  ITMShortImage_CPtr inputRawDepthImage = m_pipeline->get_input_raw_depth_image();
-  ITMUChar4Image_CPtr inputRGBImage = m_pipeline->get_input_rgb_image();
-
-  // Copy them so that they won't be overwritten during saving.
-  ITMShortImage_Ptr inputRawDepthImageCopy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
-  ITMUChar4Image_Ptr inputRGBImageCopy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
-  inputRawDepthImageCopy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
-  inputRGBImageCopy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
-
-  // Save the copies to disk and increment the sequence index.
-  ImagePersister::save_image_on_thread(inputRawDepthImageCopy, m_sequencePathGenerator->make_path("%06i.pgm"));
-  ImagePersister::save_image_on_thread(inputRGBImageCopy, m_sequencePathGenerator->make_path("%06i.ppm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("%06i.pgm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("%06i.ppm"));
   m_sequencePathGenerator->increment_index();
 }
 

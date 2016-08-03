@@ -78,14 +78,18 @@ bool Pipeline::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
-Pipeline::ITMShortImage_CPtr Pipeline::get_input_raw_depth_image() const
+Pipeline::ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 {
-  return m_inputRawDepthImage;
+  ITMShortImage_Ptr copy(new ITMShortImage(m_inputRawDepthImage->noDims, true, false));
+  copy->SetFrom(m_inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
+  return copy;
 }
 
-Pipeline::ITMUChar4Image_CPtr Pipeline::get_input_rgb_image() const
+Pipeline::ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
 {
-  return m_inputRGBImage;
+  ITMUChar4Image_Ptr copy(new ITMUChar4Image(m_inputRGBImage->noDims, true, false));
+  copy->SetFrom(m_inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  return copy;
 }
 
 const Interactor_Ptr& Pipeline::get_interactor()
