@@ -38,6 +38,48 @@ using namespace spaint;
 
 //#################### FUNCTIONS ####################
 
+bool parse_command_line(int argc, char *argv[],
+                        std::string& calibrationFilename, std::string& depthImageMask,
+                        std::string& openNIDeviceURI, std::string& rgbImageMask)
+{
+  // Specify the possible options.
+  po::options_description genericOptions("Generic options");
+  genericOptions.add_options()
+    ("help", "produce help message")
+    ("calib", po::value<std::string>(&calibrationFilename)->default_value(""), "calibration filename")
+  ;
+
+  po::options_description cameraOptions("Camera options");
+  cameraOptions.add_options()
+    ("oniDevice", po::value<std::string>(&openNIDeviceURI)->default_value("Default"), "OpenNI device URI")
+  ;
+
+  po::options_description diskSequenceOptions("Disk sequence options");
+  diskSequenceOptions.add_options()
+    ("depthMask", po::value<std::string>(&depthImageMask)->default_value(""), "depth image mask")
+    ("rgbMask", po::value<std::string>(&rgbImageMask)->default_value(""), "RGB image mask")
+  ;
+
+  po::options_description options;
+  options.add(genericOptions);
+  options.add(cameraOptions);
+  options.add(diskSequenceOptions);
+
+  // Actually parse the command line.
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, options), vm);
+  po::notify(vm);
+
+  // If the user specifies the --help flag, print a help message.
+  if(vm.count("help"))
+  {
+    std::cout << options << '\n';
+    return false;
+  }
+
+  return true;
+}
+
 void quit(const std::string& message, int code = EXIT_FAILURE)
 {
   std::cerr << message << '\n';
@@ -48,6 +90,13 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
+  // Parse the command-line arguments.
+  std::string calibrationFilename, depthImageMask, openNIDeviceURI, rgbImageMask;
+  if(!parse_command_line(argc, argv, calibrationFilename, depthImageMask, openNIDeviceURI, rgbImageMask))
+  {
+    return 0;
+  }
+
   // Initialise SDL.
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
@@ -71,41 +120,6 @@ try
   // If we built with Rift support, initialise the Rift SDK.
   ovr_Initialize();
 #endif
-
-  // Parse the command-line arguments.
-  std::string calibrationFilename, depthImageMask, openNIDeviceURI, rgbImageMask;
-
-  po::options_description genericOptions("Generic options");
-  genericOptions.add_options()
-    ("help", "produce help message")
-    ("calib", po::value<std::string>(&calibrationFilename)->default_value(""), "calibration filename")
-  ;
-
-  po::options_description cameraOptions("Camera options");
-  cameraOptions.add_options()
-    ("oniDevice", po::value<std::string>(&openNIDeviceURI)->default_value("Default"), "OpenNI device URI")
-  ;
-
-  po::options_description diskSequenceOptions("Disk sequence options");
-  diskSequenceOptions.add_options()
-    ("depthMask", po::value<std::string>(&depthImageMask)->default_value(""), "depth image mask")
-    ("rgbMask", po::value<std::string>(&rgbImageMask)->default_value(""), "RGB image mask")
-  ;
-
-  po::options_description allOptions;
-  allOptions.add(genericOptions);
-  allOptions.add(cameraOptions);
-  allOptions.add(diskSequenceOptions);
-
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, allOptions), vm);
-  po::notify(vm);
-
-  if(vm.count("help"))
-  {
-    std::cout << allOptions << '\n';
-    return 0;
-  }
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
