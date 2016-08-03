@@ -75,6 +75,22 @@ public:
   /**
    * \brief Attempts to save an image to a file on a separate thread.
    *
+   * This function template is needed to help the compiler with type deduction.
+   *
+   * \param image               The image to save.
+   * \param path                The path to the file to which to save it.
+   * \param fileType            The image file type.
+   * \throws std::runtime_error If the image could not be saved.
+   */
+  template <typename T>
+  static void save_image_on_thread(const boost::shared_ptr<ORUtils::Image<T> >& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN)
+  {
+    save_image_on_thread(boost::shared_ptr<const ORUtils::Image<T> >(image), path, fileType);
+  }
+
+  /**
+   * \brief Attempts to save an image to a file on a separate thread.
+   *
    * \param image               The image to save.
    * \param path                The path to the file to which to save it.
    * \param fileType            The image file type.
@@ -86,6 +102,22 @@ public:
     void (*p)(const boost::shared_ptr<const ORUtils::Image<T> >&, const std::string&, ImageFileType) = &save_image;
     boost::thread t(p, image, path, fileType);
     t.detach();
+  }
+
+  /**
+   * \brief Attempts to save an image to a file on a separate thread.
+   *
+   * This function template is needed to help the compiler with type deduction.
+   *
+   * \param image               The image to save.
+   * \param path                The path to the file to which to save it.
+   * \param fileType            The image file type.
+   * \throws std::runtime_error If the image could not be saved.
+   */
+  template <typename T>
+  static void save_image_on_thread(const boost::shared_ptr<ORUtils::Image<T> >& image, const boost::filesystem::path& path, ImageFileType fileType = IFT_UNKNOWN)
+  {
+    save_image_on_thread(image, path.string(), fileType);
   }
 
   /**
