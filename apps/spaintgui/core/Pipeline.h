@@ -250,11 +250,12 @@ public:
    * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
    * \param rgbImageMask        The mask for the RGB image filenames (e.g. "Teddy/Frames/%04i.ppm").
    * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
+   * \param initialFrameNumber  The frame number from which to start reading the sequence.
    * \param settings            The settings to use for InfiniTAM.
    * \param resourcesDir        The path to the resources directory.
    */
   Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-           const Settings_Ptr& settings, const std::string& resourcesDir);
+           int initialFrameNumber, const Settings_Ptr& settings, const std::string& resourcesDir);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
