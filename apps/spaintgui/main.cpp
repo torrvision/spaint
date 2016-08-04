@@ -95,7 +95,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   }
 
   // If the user specifies a sequence name, set the depth and RGB image masks appropriately.
-  if(vm.count("sequenceName"))
+  if(args.sequenceName != "")
   {
     boost::filesystem::path dir = find_subdir_from_executable(args.sequenceType + "s") / args.sequenceName;
     args.depthImageMask = (dir / "depthm%06i.pgm").string();
