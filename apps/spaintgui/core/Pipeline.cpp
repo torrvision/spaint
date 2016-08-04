@@ -7,9 +7,6 @@
 using namespace rafl;
 using namespace spaint;
 
-#ifdef WITH_OPENNI
-#include <InputSource/OpenNIEngine.h>
-#endif
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
 #include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
@@ -52,51 +49,6 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 {
   initialise(settings);
 }
-
-#if 0
-#ifdef WITH_OPENNI
-Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                   const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
-: m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
-{
-  m_imageSourceEngine.addSubengine(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
-#if USE_LOW_USB_BANDWIDTH_MODE
-    // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
-    , Vector2i(320, 240)
-#endif
-  ));
-
-  initialise(settings);
-}
-
-Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-                   const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& resourcesDir,
-                   TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
-: m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
-{
-  ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-  m_imageSourceEngine.addSubengine(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator));
-
-  m_imageSourceEngine.addSubengine(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
-#if USE_LOW_USB_BANDWIDTH_MODE
-    // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
-    , Vector2i(320, 240)
-#endif
-  ));
-
-  initialise(settings);
-}
-#endif
-
-Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, int initialFrameNumber,
-                   const Settings_Ptr& settings, const std::string& resourcesDir)
-: m_resourcesDir(resourcesDir)
-{
-  ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-  m_imageSourceEngine.addSubengine(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, initialFrameNumber));
-  initialise(settings);
-}
-#endif
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 

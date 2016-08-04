@@ -228,49 +228,16 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs an instance of the pipeline.
+   *
+   * \param imageSourceEngine The engine used to provide input images to the fusion pipeline.
+   * \param settings          The settings to use for InfiniTAM.
+   * \param resourcesDir      The path to the resouces directory.
+   * \param trackerType       The type of tracker to use.
+   * \param trackerParams     The parameters for the tracker (if any).
    */
   Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
            TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
-
-#if 0
-#ifdef WITH_OPENNI
-  /**
-   * \brief Constructs an instance of the pipeline that uses an OpenNI device as its image source.
-   *
-   * \param calibrationFilename     The name of a file containing InfiniTAM calibration settings.
-   * \param openNIDeviceURI         An optional OpenNI device URI (if boost::none is passed in, the default OpenNI device will be used).
-   * \param settings                The settings to use for InfiniTAM.
-   * \param resourcesDir            The path to the resources directory.
-   * \param trackerType             The type of tracker to use.
-   * \param trackerParams           The parameters for the tracker (if any).
-   * \param useInternalCalibration  A flag indicating whether or not to use internal calibration.
-   */
-  Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-           const std::string& resourcesDir, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "",
-           bool useInternalCalibration = false);
-
-  /**
-   * \brief TODO
-   */
-  Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-           const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings, const std::string& resourcesDir,
-           TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "", bool useInternalCalibration = false);
-#endif
-
-  /**
-   * \brief Constructs an instance of the pipeline that uses images on disk as its image source.
-   *
-   * \param calibrationFilename The name of a file containing InfiniTAM calibration settings.
-   * \param rgbImageMask        The mask for the RGB image filenames (e.g. "Teddy/Frames/%04i.ppm").
-   * \param depthImageMask      The mask for the depth image filenames (e.g. "Teddy/Frames/%04i.pgm").
-   * \param initialFrameNumber  The frame number from which to start reading the sequence.
-   * \param settings            The settings to use for InfiniTAM.
-   * \param resourcesDir        The path to the resources directory.
-   */
-  Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-           int initialFrameNumber, const Settings_Ptr& settings, const std::string& resourcesDir);
-#endif
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
