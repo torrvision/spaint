@@ -26,13 +26,13 @@ using namespace ORUtils;
 using namespace RelocLib;
 
 #include <spaint/features/FeatureCalculatorFactory.h>
-#include <spaint/imageprocessing/PNGUtil.h>
 #include <spaint/propagation/LabelPropagatorFactory.h>
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
 #include <spaint/segmentation/SegmentationUtil.h>
 #include <spaint/smoothing/LabelSmootherFactory.h>
+#include <spaint/util/ImagePersister.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
