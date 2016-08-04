@@ -44,6 +44,7 @@ using namespace tvgutil;
 struct CommandLineArguments
 {
   std::string calibrationFilename;
+  bool cameraAfterDisk;
   std::string depthImageMask;
   int initialFrameNumber;
   std::string openNIDeviceURI;
@@ -61,6 +62,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   genericOptions.add_options()
     ("help", "produce help message")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
+    ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -148,6 +150,7 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  if(args.cameraAfterDisk) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
   settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
   Pipeline::TrackerType trackerType = Pipeline::TRACKER_INFINITAM;
@@ -191,24 +194,34 @@ try
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
   // Construct the pipeline.
+  boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
   Pipeline_Ptr pipeline;
   std::string resourcesDir = Application::resources_dir().string();
   if(args.depthImageMask != "")
   {
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
-    pipeline.reset(new Pipeline(args.calibrationFilename, args.rgbImageMask, args.depthImageMask, args.initialFrameNumber, settings, resourcesDir));
+    ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
+    imageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator));
   }
-  else
+
+  if(args.depthImageMask == "" || args.cameraAfterDisk)
   {
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << args.openNIDeviceURI << '\n';
     boost::optional<std::string> uri = args.openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(args.openNIDeviceURI);
     bool useInternalCalibration = !uri; // if reading from a file, assume that the provided calibration is to be used
-    pipeline.reset(new Pipeline(args.calibrationFilename, uri, settings, resourcesDir, trackerType, trackerParams, useInternalCalibration));
+    imageSourceEngine->addSubengine(new OpenNIEngine(args.calibrationFilename.c_str(), uri ? uri->c_str() : NULL, useInternalCalibration
+#if USE_LOW_USB_BANDWIDTH_MODE
+      // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
+      , Vector2i(320, 240)
+#endif
+    ));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
   }
+
+  pipeline.reset(new Pipeline(imageSourceEngine, settings, resourcesDir, trackerType, trackerParams));
 
   // Run the application.
   Application app(pipeline);

@@ -37,6 +37,7 @@ class Pipeline
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
@@ -116,7 +117,7 @@ private:
   bool m_fusionEnabled;
 
   /** The engine used to provide input images to the fusion pipeline. */
-  InputSource::CompositeImageSourceEngine m_imageSourceEngine;
+  CompositeImageSourceEngine_Ptr m_imageSourceEngine;
 
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
@@ -226,6 +227,13 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
+  /**
+   * \brief TODO
+   */
+  Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
+           TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
+
+#if 0
 #ifdef WITH_OPENNI
   /**
    * \brief Constructs an instance of the pipeline that uses an OpenNI device as its image source.
@@ -262,6 +270,7 @@ public:
    */
   Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
            int initialFrameNumber, const Settings_Ptr& settings, const std::string& resourcesDir);
+#endif
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -46,6 +46,14 @@ using namespace RelocLib;
 
 //#################### CONSTRUCTORS ####################
 
+Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
+                   TrackerType trackerType, const std::string& trackerParams)
+: m_imageSourceEngine(imageSourceEngine), m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
+{
+  initialise(settings);
+}
+
+#if 0
 #ifdef WITH_OPENNI
 Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
                    const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
@@ -88,6 +96,7 @@ Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rg
   m_imageSourceEngine.addSubengine(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, initialFrameNumber));
   initialise(settings);
 }
+#endif
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -149,7 +158,7 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
-  if(!m_imageSourceEngine.hasMoreImages()) return false;
+  if(!m_imageSourceEngine->hasMoreImages()) return false;
 
   const Raycaster::RenderState_Ptr& liveRenderState = m_raycaster->get_live_render_state();
   const Model::Scene_Ptr& scene = m_model->get_scene();
@@ -158,7 +167,7 @@ bool Pipeline::run_main_section()
 
   // Get the next frame.
   ITMView *newView = view.get();
-  m_imageSourceEngine.getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
+  m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
   m_model->set_view(newView);
@@ -262,7 +271,7 @@ bool Pipeline::run_main_section()
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
-  if(!m_imageSourceEngine.getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   return true;
 }
@@ -333,8 +342,8 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 #endif
 
   // Determine the RGB and depth image sizes.
-  Vector2i rgbImageSize = m_imageSourceEngine.getRGBImageSize();
-  Vector2i depthImageSize = m_imageSourceEngine.getDepthImageSize();
+  Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
+  Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
@@ -347,7 +356,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the InfiniTAM engines and view builder.
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
-  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine.getCalib(), settings->deviceType));
+  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
   VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
 
   // Set up the dense mapper and tracking controller.
