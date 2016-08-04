@@ -41,7 +41,9 @@ private:
   typedef boost::shared_ptr<InputSource::ImageSourceEngine> ImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
+  typedef boost::shared_ptr<const ITMShortImage> ITMShortImage_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
+  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
@@ -134,10 +136,10 @@ private:
    */
   size_t m_initialFramesToFuse;
 
-  /** The image into which depth input is to be read each frame. */
+  /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 
-  /** The image into which RGB input is to be read each frame. */
+  /** The image into which RGB input is read each frame. */
   ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
@@ -268,6 +270,20 @@ public:
   bool get_fusion_enabled() const;
 
   /**
+   * \brief Gets a copy of the image into which depth input is read each frame.
+   *
+   * \return  A copy of the image into which depth input is read each frame.
+   */
+  ITMShortImage_Ptr get_input_raw_depth_image_copy() const;
+
+  /**
+   * \brief Gets a copy of the image into which RGB input is read each frame.
+   *
+   * \return  A copy of the image into which RGB input is read each frame.
+   */
+  ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
+
+  /**
    * \brief Gets the interactor that is used to interact with the InfiniTAM scene.
    *
    * \return  The interactor that is used to interact with the InfiniTAM scene.
@@ -317,9 +333,11 @@ public:
   /**
    * \brief Runs the main section of the pipeline.
    *
-   * This involves processing the next frame from the image source engine.
+   * This involves processing the next frame from the image source engine (if any).
+   *
+   * \return  true, if a frame was available from the image source engine, or false otherwise.
    */
-  void run_main_section();
+  bool run_main_section();
 
   /**
    * \brief Runs the mode-specific section of the pipeline.

@@ -18,8 +18,8 @@ using boost::assign::map_list_of;
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
-#include <spaint/imageprocessing/PNGUtil.h>
 #include <spaint/ogl/WrappedGL.h>
+#include <spaint/util/ImagePersister.h>
 using namespace spaint;
 
 #include <tvgutil/PathFinder.h>
@@ -60,7 +60,17 @@ void Application::run()
     process_input();
 
     // If the application is unpaused, process a new frame.
-    if(!m_paused) m_pipeline->run_main_section();
+    if(!m_paused)
+    {
+      // Run the main section of the pipeline.
+      bool frameWasProcessed = m_pipeline->run_main_section();
+
+      // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
+      if(frameWasProcessed && m_sequencePathGenerator)
+      {
+        save_sequence_frame();
+      }
+    }
 
     // Render the scene.
     m_renderer->render(m_pipeline->get_interactor(), m_fracWindowPos);
@@ -172,10 +182,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
-  // If / is pressed on its own, save a screenshot. If right shift + / is pressed, toggle video recording.
+  // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
+  // If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
   {
-    if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_video_recording();
+    if(m_inputState.key_down(KEYCODE_LSHIFT)) toggle_recording("sequence", m_sequencePathGenerator);
+    else if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
     else save_screenshot();
   }
 
@@ -226,6 +238,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
               << "/ = Save Screenshot\n"
+              << "LShift + / = Toggle Sequence Recording\n"
               << "RShift + / = Toggle Video Recording\n";
   }
 }
@@ -563,13 +576,20 @@ void Application::save_screenshot() const
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
   boost::filesystem::create_directories(p.parent_path());
   std::cout << "[spaint] Saving screenshot to " << p << "...\n";
-  PNGUtil::save_image_on_thread(m_renderer->capture_screenshot(), p);
+  ImagePersister::save_image_on_thread(m_renderer->capture_screenshot(), p);
+}
+
+void Application::save_sequence_frame()
+{
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("%06i.pgm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("%06i.ppm"));
+  m_sequencePathGenerator->increment_index();
 }
 
 void Application::save_video_frame()
 {
   m_videoPathGenerator->increment_index();
-  PNGUtil::save_image_on_thread(m_renderer->capture_screenshot(), m_videoPathGenerator->make_path("%06i.png"));
+  ImagePersister::save_image_on_thread(m_renderer->capture_screenshot(), m_videoPathGenerator->make_path("%06i.png"));
 }
 
 void Application::setup_labels()
@@ -633,17 +653,17 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
 }
 
-void Application::toggle_video_recording()
+void Application::toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator)
 {
-  if(m_videoPathGenerator)
+  if(pathGenerator)
   {
-    m_videoPathGenerator.reset();
-    std::cout << "[spaint] Stopped saving video.\n";
+    pathGenerator.reset();
+    std::cout << "[spaint] Stopped saving " << type << ".\n";
   }
   else
   {
-    m_videoPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("videos") / (TimeUtil::get_iso_timestamp())));
-    boost::filesystem::create_directories(m_videoPathGenerator->get_base_dir());
-    std::cout << "[spaint] Started saving video to " << m_videoPathGenerator->get_base_dir() << "...\n";
+    pathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable(type + "s") / TimeUtil::get_iso_timestamp()));
+    boost::filesystem::create_directories(pathGenerator->get_base_dir());
+    std::cout << "[spaint] Started saving " << type << " to " << pathGenerator->get_base_dir() << "...\n";
   }
 }

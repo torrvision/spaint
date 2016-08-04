@@ -42,6 +42,9 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMShortImage> ITMShortImage_Ptr;
+  typedef boost::shared_ptr<const ITMShortImage> ITMShortImage_CPtr;
+  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
   typedef Renderer::RenderState_CPtr RenderState_CPtr;
@@ -72,10 +75,13 @@ private:
   /** The current renderer. */
   Renderer_Ptr m_renderer;
 
+  /** The path generator for the current sequence recording (if any). */
+  boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
+
   /** A set of sub-window configurations that the user can switch between as desired. */
   mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
-  /** The path generator for the current video (if any). */
+  /** The path generator for the current video recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_videoPathGenerator;
 
   /** The stream of commands being sent from the voice command server. */
@@ -201,6 +207,11 @@ private:
   void save_screenshot() const;
 
   /**
+   * \brief Saves the next frame of the sequence being recorded to disk.
+   */
+  void save_sequence_frame();
+
+  /**
    * \brief Saves the next frame of the video being recorded to disk.
    */
   void save_video_frame();
@@ -227,9 +238,12 @@ private:
   void switch_to_windowed_renderer(size_t subwindowConfigurationIndex);
 
   /**
-   * \brief Toggles video recording on or off.
+   * \brief Toggles sequence or video recording on or off.
+   *
+   * \param type          The type or recording (sequence or video).
+   * \param pathGenerator The path generator associated with that type of recording.
    */
-  void toggle_video_recording();
+  void toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator);
 };
 
 #endif
