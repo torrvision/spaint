@@ -32,7 +32,7 @@ void BackgroundSubtractingObjectSegmenter::reset()
   m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
 }
 
-Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
@@ -162,7 +162,7 @@ Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(cons
   return m_targetMask;
 }
 
-Segmenter::ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
+ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
 {
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
@@ -181,7 +181,7 @@ Segmenter::ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const 
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput,
+ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput,
                                                                                      const ORUtils::SE3Pose& pose,
                                                                                      const RenderState_CPtr& renderState) const
 {
@@ -210,7 +210,7 @@ Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_
   return changeMask;
 }
 
-Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
+ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
                                                                                    const ORUtils::SE3Pose& pose,
                                                                                    const RenderState_CPtr& renderState) const
 {

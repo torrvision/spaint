@@ -6,13 +6,12 @@
 #ifndef H_SPAINT_SEGMENTER
 #define H_SPAINT_SEGMENTER
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Objects/Views/ITMView.h>
-#include <ITMLib/Utils/ITMImageTypes.h>
 
 #include <ORUtils/SE3Pose.h>
+
+#include "../util/ITMImagePtrTypes.h"
 
 namespace spaint {
 
@@ -23,9 +22,6 @@ class Segmenter
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 

@@ -9,7 +9,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-SegmentationUtil::ITMUCharImage_Ptr SegmentationUtil::invert_mask(const ITMUCharImage_CPtr& mask)
+ITMUCharImage_Ptr SegmentationUtil::invert_mask(const ITMUCharImage_CPtr& mask)
 {
   ITMUCharImage_Ptr invertedMask(new ITMUCharImage(mask->noDims, true, false));
 

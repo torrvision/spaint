@@ -6,9 +6,7 @@
 #ifndef H_SPAINT_SEGMENTATIONUTIL
 #define H_SPAINT_SEGMENTATIONUTIL
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Utils/ITMImageTypes.h>
+#include "../util/ITMImagePtrTypes.h"
 
 namespace spaint {
 
@@ -17,13 +15,6 @@ namespace spaint {
  */
 class SegmentationUtil
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
