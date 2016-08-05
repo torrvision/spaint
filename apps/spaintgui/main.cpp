@@ -70,9 +70,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   po::options_description diskSequenceOptions("Disk sequence options");
   diskSequenceOptions.add_options()
-    ("depth,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
+    ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
-    ("rgb,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
+    ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
     ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
