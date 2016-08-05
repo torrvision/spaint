@@ -600,21 +600,21 @@ void Pipeline::run_segmentation_section(const RenderState_CPtr& renderState)
   }
 
   // Make masked versions of the depth and colour inputs.
-  ITMUChar4Image_Ptr depthInput(new ITMUChar4Image(m_model->get_view()->depth->dataSize, true, false));
-  m_raycaster->get_depth_input(depthInput);
-  ITMShortImage_Ptr rawDepthInput = get_input_raw_depth_image_copy();
+  ITMUChar4Image_Ptr colouredDepthInput(new ITMUChar4Image(m_model->get_view()->depth->dataSize, true, false));
+  m_raycaster->get_depth_input(colouredDepthInput);
+  ITMShortImage_Ptr depthInput = get_input_raw_depth_image_copy();
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
 
-  ITMUChar4Image_CPtr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
-  ITMShortImage_Ptr rawDepthMasked = SegmentationUtil::apply_mask(targetMask, rawDepthInput);
+  ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput);
+  ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
   ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput);
 
   // Save the original and masked versions of the depth and colour inputs to disk so that they can be used later for training.
   m_segmentationPathGenerator->increment_index();
-  ImagePersister::save_image_on_thread(depthInput, m_segmentationPathGenerator->make_path("depth%06i.png"));
-  ImagePersister::save_image_on_thread(depthMasked, m_segmentationPathGenerator->make_path("depthm%06i.png"));
-  ImagePersister::save_image_on_thread(rawDepthInput, m_segmentationPathGenerator->make_path("rawdepth%06i.pgm"));
-  ImagePersister::save_image_on_thread(rawDepthMasked, m_segmentationPathGenerator->make_path("rawdepthm%06i.pgm"));
+  ImagePersister::save_image_on_thread(colouredDepthInput, m_segmentationPathGenerator->make_path("cdepth%06i.png"));
+  ImagePersister::save_image_on_thread(colouredDepthMasked, m_segmentationPathGenerator->make_path("cdepthm%06i.png"));
+  ImagePersister::save_image_on_thread(depthInput, m_segmentationPathGenerator->make_path("depth%06i.pgm"));
+  ImagePersister::save_image_on_thread(depthMasked, m_segmentationPathGenerator->make_path("depthm%06i.pgm"));
   ImagePersister::save_image_on_thread(rgbInput, m_segmentationPathGenerator->make_path("rgb%06i.ppm"));
   ImagePersister::save_image_on_thread(rgbMasked, m_segmentationPathGenerator->make_path("rgbm%06i.ppm"));
 
