@@ -167,7 +167,7 @@ bool Pipeline::run_main_section()
     {
       view->depth->UpdateHostFromDevice();
       maskedDepthImage = SegmentationUtil::apply_mask(
-        SegmentationUtil::invert_mask(segmenter->get_mask()),
+        SegmentationUtil::invert_mask(segmenter->get_target_mask()),
         ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter())
       );
       maskedDepthImage->UpdateDeviceFromHost();

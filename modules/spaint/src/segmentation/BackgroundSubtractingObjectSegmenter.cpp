@@ -22,17 +22,10 @@ namespace spaint {
 BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const ITMSettings_CPtr& itmSettings,
                                                                            const TouchSettings_Ptr& touchSettings,
                                                                            const View_CPtr& view)
-: m_objectMask(new ITMUCharImage(view->rgb->noDims, true, false)),
-  m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
-  m_view(view)
+: Segmenter(view), m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-
-Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::get_mask() const
-{
-  return m_objectMask;
-}
 
 void BackgroundSubtractingObjectSegmenter::reset()
 {
@@ -165,8 +158,8 @@ Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(cons
   cv::imshow(debugWindowName, cvObjectMask);
 
   // Convert the object mask to InfiniTAM format and return it.
-  std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, m_objectMask->GetData(MEMORYDEVICE_CPU));
-  return m_objectMask;
+  std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, m_targetMask->GetData(MEMORYDEVICE_CPU));
+  return m_targetMask;
 }
 
 Segmenter::ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)

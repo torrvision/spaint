@@ -22,23 +22,15 @@ class BackgroundSubtractingObjectSegmenter : public Segmenter
 private:
   typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
-  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
   typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The colour appearance model to use to separate the user's hand from any object it's holding. */
   ColourAppearanceModel_Ptr m_handAppearanceModel;
 
-  /** TODO */
-  ITMUCharImage_Ptr m_objectMask;
-
   /** The touch detector to use to get the initial difference mask. */
   mutable TouchDetector_Ptr m_touchDetector;
-
-  /** TODO */
-  View_CPtr m_view;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -46,9 +38,6 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual ITMUCharImage_CPtr get_mask() const;
-
   /** Override */
   virtual void reset();
 

@@ -9,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Objects/Views/ITMView.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
 
 #include <ORUtils/SE3Pose.h>
@@ -16,53 +17,77 @@
 namespace spaint {
 
 /**
- * \brief An instance of a class deriving from this one can be used to segment a target from the live camera input.
+ * \brief An instance of a class deriving from this one can be used to segment a target from the current view of the scene.
  */
 class Segmenter
 {
   //#################### TYPEDEFS ####################
 protected:
+  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
   typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
   typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
+
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** The most recent target mask produced by the segmentation process. */
+  ITMUCharImage_Ptr m_targetMask;
+
+  /** The current view of the scene. */
+  View_CPtr m_view;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a segmenter.
+   *
+   * \param view  The current view of the scene.
+   */
+  explicit Segmenter(const View_CPtr& view);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief Destroys the segmenter.
    */
-  virtual ~Segmenter() {}
+  virtual ~Segmenter();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
-   */
-  virtual ITMUCharImage_CPtr get_mask() const = 0;
-
-  /**
-   * \brief Resets the colour appearance model used to separate the user's hand from any object it's holding.
+   * \brief Resets the segmenter.
+   *
+   * In practice, this resets any internal model that the segmenter has learnt during segmentation training mode.
    */
   virtual void reset() = 0;
 
   /**
-   * \brief TODO
+   * \brief Segments the target from the current view of the scene.
    *
-   * \param pose        TODO
-   * \param renderState TODO
-   * \return            TODO
+   * \param pose        The camera pose from which the scene is being viewed.
+   * \param renderState The render state corresponding to the camera.
+   * \return            The target mask produced by the segmentation process.
    */
   virtual ITMUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const = 0;
 
   /**
-   * \brief Trains the colour appearance model used to separate the user's hand from any object it's holding.
+   * \brief Trains the segmenter.
    *
-   * \param view        TODO
-   * \param pose        TODO
-   * \param renderState TODO
-   * \return            TODO
+   * \param pose        The camera pose from which the scene is being viewed.
+   * \param renderState The render state corresponding to the camera.
+   * \return            A visualisation of the training process to enable the user to see what's going on.
    */
   virtual ITMUChar4Image_Ptr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the most recent target mask produced by the segmentation process.
+   *
+   * \return  The most recent target mask produced by the segmentation process.
+   */
+  ITMUCharImage_CPtr get_target_mask() const;
 };
 
 //#################### TYPEDEFS ####################
