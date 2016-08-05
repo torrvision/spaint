@@ -104,10 +104,14 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     args.depthImageMask = (dir / "depthm%06i.pgm").string();
     args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
 
-    boost::filesystem::path defaultCalibrationFilename = dir / "calib.txt";
-    if(boost::filesystem::exists(defaultCalibrationFilename))
+    // If the user hasn't explicitly specified a calibration file, try to find one in the sequence directory.
+    if(args.calibrationFilename == "")
     {
-      args.calibrationFilename = defaultCalibrationFilename.string();
+      boost::filesystem::path defaultCalibrationFilename = dir / "calib.txt";
+      if(boost::filesystem::exists(defaultCalibrationFilename))
+      {
+        args.calibrationFilename = defaultCalibrationFilename.string();
+      }
     }
   }
 
