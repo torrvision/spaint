@@ -1,21 +1,22 @@
 /**
- * spaint: MotionBasedObjectSegmenter.h
+ * spaint: BackgroundSubtractingObjectSegmenter.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_MOTIONBASEDOBJECTSEGMENTER
-#define H_SPAINT_MOTIONBASEDOBJECTSEGMENTER
+#ifndef H_SPAINT_BACKGROUNDSUBTRACTINGOBJECTSEGMENTER
+#define H_SPAINT_BACKGROUNDSUBTRACTINGOBJECTSEGMENTER
 
 #include "ColourAppearanceModel.h"
-#include "ObjectSegmenter.h"
+#include "Segmenter.h"
 #include "../touch/TouchDetector.h"
 
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to segment a moving object based on its motion with respect to the scene.
+ * \brief An instance of this class can be used to segment an object that is placed in front of a static scene
+ *        using background subtraction.
  */
-class MotionBasedObjectSegmenter : public ObjectSegmenter
+class BackgroundSubtractingObjectSegmenter : public Segmenter
 {
   //#################### TYPEDEFS ####################
 private:
@@ -41,7 +42,7 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  MotionBasedObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view);
+  BackgroundSubtractingObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -1,10 +1,10 @@
 /**
- * spaint: ObjectSegmenter.h
+ * spaint: Segmenter.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_OBJECTSEGMENTER
-#define H_SPAINT_OBJECTSEGMENTER
+#ifndef H_SPAINT_SEGMENTER
+#define H_SPAINT_SEGMENTER
 
 #include <boost/shared_ptr.hpp>
 
@@ -16,9 +16,9 @@
 namespace spaint {
 
 /**
- * \brief An instance of a class deriving from this one can be used to segment an object from the live camera input.
+ * \brief An instance of a class deriving from this one can be used to segment a target from the live camera input.
  */
-class ObjectSegmenter
+class Segmenter
 {
   //#################### TYPEDEFS ####################
 protected:
@@ -29,9 +29,9 @@ protected:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys the object segmenter.
+   * \brief Destroys the segmenter.
    */
-  virtual ~ObjectSegmenter() {}
+  virtual ~Segmenter() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -67,7 +67,7 @@ public:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<ObjectSegmenter> ObjectSegmenter_Ptr;
+typedef boost::shared_ptr<Segmenter> Segmenter_Ptr;
 
 }
 

@@ -23,7 +23,7 @@
 #include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
-#include <spaint/segmentation/ObjectSegmenter.h>
+#include <spaint/segmentation/Segmenter.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
 
@@ -174,9 +174,6 @@ private:
   /** The spaint model. */
   Model_Ptr m_model;
 
-  /** The object segmenter. */
-  mutable spaint::ObjectSegmenter_Ptr m_objectSegmenter;
-
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
 
@@ -204,8 +201,11 @@ private:
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
-  /** The path generator for the current object segmentation video (if any). */
+  /** The path generator for the current segmentation video (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_segmentationPathGenerator;
+
+  /** The segmenter. */
+  mutable spaint::Segmenter_Ptr m_segmenter;
 
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
@@ -377,11 +377,11 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Gets the object segmenter.
+   * \brief Gets the segmenter.
    *
-   * \return  The object segmenter.
+   * \return  The segmenter.
    */
-  const spaint::ObjectSegmenter_Ptr& get_object_segmenter() const;
+  const spaint::Segmenter_Ptr& get_segmenter() const;
 
   /**
    * \brief Initialises the pipeline.

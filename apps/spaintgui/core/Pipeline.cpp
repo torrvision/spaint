@@ -40,7 +40,7 @@ using namespace RelocLib;
 #endif
 
 #if WITH_ARRAYFIRE && WITH_OPENCV
-#include <spaint/segmentation/MotionBasedObjectSegmenter.h>
+#include <spaint/segmentation/BackgroundSubtractingObjectSegmenter.h>
 #endif
 
 #ifdef WITH_OVR
@@ -162,7 +162,7 @@ bool Pipeline::run_main_section()
   ITMFloatImage_Ptr maskedDepthImage;
   if(m_mode == MODE_SEGMENTATION)
   {
-    const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+    const Segmenter_Ptr& segmenter = get_segmenter();
     if(segmenter)
     {
       view->depth->UpdateHostFromDevice();
@@ -340,7 +340,7 @@ void Pipeline::set_mode(Mode mode)
   // If we are switching into segmentation training mode, reset the segmenter.
   if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
   {
-    const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+    const Segmenter_Ptr& segmenter = get_segmenter();
     if(segmenter) segmenter->reset();
   }
 
@@ -370,17 +370,17 @@ void Pipeline::set_mode(Mode mode)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-const ObjectSegmenter_Ptr& Pipeline::get_object_segmenter() const
+const Segmenter_Ptr& Pipeline::get_segmenter() const
 {
 #if WITH_ARRAYFIRE && WITH_OPENCV
-  if(!m_objectSegmenter)
+  if(!m_segmenter)
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
-    m_objectSegmenter.reset(new MotionBasedObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
+    m_segmenter.reset(new BackgroundSubtractingObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
   }
 #endif
 
-  return m_objectSegmenter;
+  return m_segmenter;
 }
 
 void Pipeline::initialise(const Settings_Ptr& settings)
@@ -586,11 +586,11 @@ void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 void Pipeline::run_segmentation_section(const RenderState_CPtr& renderState)
 {
   // Gets the current segmenter. If there isn't one, early out.
-  const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+  const Segmenter_Ptr& segmenter = get_segmenter();
   if(!segmenter) return;
 
   // Segment the current input images to obtain a mask for the target.
-  ITMUCharImage_CPtr targetMask = get_object_segmenter()->segment(m_model->get_pose(), renderState);
+  ITMUCharImage_CPtr targetMask = segmenter->segment(m_model->get_pose(), renderState);
 
   // If the mask is empty, early out.
   if(!targetMask)
@@ -624,7 +624,7 @@ void Pipeline::run_segmentation_section(const RenderState_CPtr& renderState)
 
 void Pipeline::run_segmentation_training_section(const RenderState_CPtr& renderState)
 {
-  const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+  const Segmenter_Ptr& segmenter = get_segmenter();
   if(!segmenter) return;
 
   ITMUChar4Image_Ptr touchImage = segmenter->train(m_model->get_pose(), renderState);
