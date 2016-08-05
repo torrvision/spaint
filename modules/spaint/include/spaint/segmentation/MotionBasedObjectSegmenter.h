@@ -49,13 +49,13 @@ public:
   virtual ITMUCharImage_CPtr get_mask() const;
 
   /** Override */
-  virtual void reset_hand_model();
+  virtual void reset();
 
   /** Override */
-  virtual ITMUCharImage_CPtr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  virtual ITMUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /** Override */
-  virtual ITMUChar4Image_Ptr train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
+  virtual ITMUChar4Image_Ptr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

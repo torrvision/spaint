@@ -43,7 +43,7 @@ public:
   /**
    * \brief Resets the colour appearance model used to separate the user's hand from any object it's holding.
    */
-  virtual void reset_hand_model() = 0;
+  virtual void reset() = 0;
 
   /**
    * \brief TODO
@@ -52,7 +52,7 @@ public:
    * \param renderState TODO
    * \return            TODO
    */
-  virtual ITMUCharImage_CPtr segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const = 0;
+  virtual ITMUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const = 0;
 
   /**
    * \brief Trains the colour appearance model used to separate the user's hand from any object it's holding.
@@ -62,7 +62,7 @@ public:
    * \param renderState TODO
    * \return            TODO
    */
-  virtual ITMUChar4Image_Ptr train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
+  virtual ITMUChar4Image_Ptr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
 };
 
 //#################### TYPEDEFS ####################

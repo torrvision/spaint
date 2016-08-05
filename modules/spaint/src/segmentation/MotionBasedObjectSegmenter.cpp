@@ -33,12 +33,12 @@ ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::get_mask() const
   return m_objectMask;
 }
 
-void MotionBasedObjectSegmenter::reset_hand_model()
+void MotionBasedObjectSegmenter::reset()
 {
   m_handAppearanceModel.reset(new ColourAppearanceModel(30, 30));
 }
 
-ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::segment_object(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
+ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
@@ -168,7 +168,7 @@ ObjectSegmenter::ITMUCharImage_CPtr MotionBasedObjectSegmenter::segment_object(c
   return m_objectMask;
 }
 
-ObjectSegmenter::ITMUChar4Image_Ptr MotionBasedObjectSegmenter::train_hand_model(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
+ObjectSegmenter::ITMUChar4Image_Ptr MotionBasedObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
 {
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());

@@ -337,11 +337,11 @@ void Pipeline::set_mode(Mode mode)
   }
 #endif
 
-  // If we are switching into segmentation training mode, reset the hand appearance model.
+  // If we are switching into segmentation training mode, reset the segmenter.
   if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
   {
     const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
-    if(segmenter) segmenter->reset_hand_model();
+    if(segmenter) segmenter->reset();
   }
 
   // If we are switching out of segmentation training mode, clear the segmentation image.
@@ -585,15 +585,15 @@ void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 
 void Pipeline::run_segmentation_section(const RenderState_CPtr& renderState)
 {
-  // Gets the current object segmenter. If there isn't one, early out.
+  // Gets the current segmenter. If there isn't one, early out.
   const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
   if(!segmenter) return;
 
-  // Segment the current input images to obtain a mask for the object.
-  ITMUCharImage_CPtr objectMask = get_object_segmenter()->segment_object(m_model->get_pose(), renderState);
+  // Segment the current input images to obtain a mask for the target.
+  ITMUCharImage_CPtr targetMask = get_object_segmenter()->segment(m_model->get_pose(), renderState);
 
   // If the mask is empty, early out.
-  if(!objectMask)
+  if(!targetMask)
   {
     m_model->set_segmentation_image(ITMUChar4Image_Ptr());
     return;
@@ -605,9 +605,9 @@ void Pipeline::run_segmentation_section(const RenderState_CPtr& renderState)
   ITMShortImage_Ptr rawDepthInput = get_input_raw_depth_image_copy();
   ITMUChar4Image_CPtr rgbInput(m_model->get_view()->rgb, boost::serialization::null_deleter());
 
-  ITMUChar4Image_CPtr depthMasked = SegmentationUtil::apply_mask(objectMask, depthInput);
-  ITMShortImage_Ptr rawDepthMasked = SegmentationUtil::apply_mask(objectMask, rawDepthInput);
-  ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(objectMask, rgbInput);
+  ITMUChar4Image_CPtr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
+  ITMShortImage_Ptr rawDepthMasked = SegmentationUtil::apply_mask(targetMask, rawDepthInput);
+  ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput);
 
   // Save the original and masked versions of the depth and colour inputs to disk so that they can be used later for training.
   m_segmentationPathGenerator->increment_index();
@@ -627,7 +627,7 @@ void Pipeline::run_segmentation_training_section(const RenderState_CPtr& renderS
   const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
   if(!segmenter) return;
 
-  ITMUChar4Image_Ptr touchImage = segmenter->train_hand_model(m_model->get_pose(), renderState);
+  ITMUChar4Image_Ptr touchImage = segmenter->train(m_model->get_pose(), renderState);
   m_model->set_segmentation_image(touchImage);
 }
 
