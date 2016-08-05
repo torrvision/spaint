@@ -7,6 +7,9 @@
 #include <iostream>
 #include <string>
 
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
 
@@ -31,9 +34,76 @@ using namespace ITMLib;
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
+#include <tvgutil/PathFinder.h>
+using namespace tvgutil;
+
 #include "core/Pipeline.h"
 
+//#################### TYPES ####################
+
+struct CommandLineArguments
+{
+  std::string calibrationFilename;
+  std::string depthImageMask;
+  int initialFrameNumber;
+  std::string openNIDeviceURI;
+  std::string rgbImageMask;
+  std::string sequenceName;
+  std::string sequenceType;
+};
+
 //#################### FUNCTIONS ####################
+
+bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
+{
+  // Specify the possible options.
+  po::options_description genericOptions("Generic options");
+  genericOptions.add_options()
+    ("help", "produce help message")
+    ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
+  ;
+
+  po::options_description cameraOptions("Camera options");
+  cameraOptions.add_options()
+    ("uri,u", po::value<std::string>(&args.openNIDeviceURI)->default_value("Default"), "OpenNI device URI")
+  ;
+
+  po::options_description diskSequenceOptions("Disk sequence options");
+  diskSequenceOptions.add_options()
+    ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
+    ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
+    ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
+    ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
+  ;
+
+  po::options_description options;
+  options.add(genericOptions);
+  options.add(cameraOptions);
+  options.add(diskSequenceOptions);
+
+  // Actually parse the command line.
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, options), vm);
+  po::notify(vm);
+
+  // If the user specifies the --help flag, print a help message.
+  if(vm.count("help"))
+  {
+    std::cout << options << '\n';
+    return false;
+  }
+
+  // If the user specifies a sequence name, set the depth and RGB image masks appropriately.
+  if(args.sequenceName != "")
+  {
+    boost::filesystem::path dir = find_subdir_from_executable(args.sequenceType + "s") / args.sequenceName;
+    args.depthImageMask = (dir / "depthm%06i.pgm").string();
+    args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
+  }
+
+  return true;
+}
 
 void quit(const std::string& message, int code = EXIT_FAILURE)
 {
@@ -45,6 +115,13 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
+  // Parse the command-line arguments.
+  CommandLineArguments args;
+  if(!parse_command_line(argc, argv, args))
+  {
+    return 0;
+  }
+
   // Initialise SDL.
   if(SDL_Init(SDL_INIT_VIDEO) < 0)
   {
@@ -68,18 +145,6 @@ try
   // If we built with Rift support, initialise the Rift SDK.
   ovr_Initialize();
 #endif
-
-  // Parse the command-line arguments.
-  if (argc > 4)
-  {
-    // Note: See the InfiniTAM code for argument details (we use the same arguments here for consistency).
-    quit("Usage: spaint [<Calibration Filename> [<OpenNI Device URI> | <RGB Image Mask> <Depth Image Mask>]]");
-  }
-
-  std::string calibrationFilename = argc >= 2 ? argv[1] : "",
-              openNIDeviceURI = argc == 3 ? argv[2] : "Default",
-              rgbImageMask = argc == 4 ? argv[2] : "",
-              depthImageMask = argc == 4 ? argv[3] : "";
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
@@ -128,18 +193,18 @@ try
   // Construct the pipeline.
   Pipeline_Ptr pipeline;
   std::string resourcesDir = Application::resources_dir().string();
-  if(argc == 4)
+  if(args.depthImageMask != "")
   {
-    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
-    pipeline.reset(new Pipeline(calibrationFilename, rgbImageMask, depthImageMask, settings, resourcesDir));
+    std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
+    pipeline.reset(new Pipeline(args.calibrationFilename, args.rgbImageMask, args.depthImageMask, args.initialFrameNumber, settings, resourcesDir));
   }
   else
   {
 #ifdef WITH_OPENNI
-    std::cout << "[spaint] Reading images from OpenNI device: " << openNIDeviceURI << '\n';
-    boost::optional<std::string> uri = openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(openNIDeviceURI);
+    std::cout << "[spaint] Reading images from OpenNI device: " << args.openNIDeviceURI << '\n';
+    boost::optional<std::string> uri = args.openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(args.openNIDeviceURI);
     bool useInternalCalibration = !uri; // if reading from a file, assume that the provided calibration is to be used
-    pipeline.reset(new Pipeline(calibrationFilename, uri, settings, resourcesDir, trackerType, trackerParams, useInternalCalibration));
+    pipeline.reset(new Pipeline(args.calibrationFilename, uri, settings, resourcesDir, trackerType, trackerParams, useInternalCalibration));
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif

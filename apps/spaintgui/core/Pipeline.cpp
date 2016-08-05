@@ -62,12 +62,12 @@ Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional
 }
 #endif
 
-Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
+Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask, int initialFrameNumber,
                    const Settings_Ptr& settings, const std::string& resourcesDir)
 : m_resourcesDir(resourcesDir)
 {
   ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-  m_imageSourceEngine.reset(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator));
+  m_imageSourceEngine.reset(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator, initialFrameNumber));
   initialise(settings);
 }
 
