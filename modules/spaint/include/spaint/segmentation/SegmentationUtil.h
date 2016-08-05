@@ -75,25 +75,7 @@ public:
    * \param mask  The mask to invert.
    * \return      An inverted version of the mask.
    */
-  static ITMUCharImage_Ptr invert_mask(const ITMUCharImage_CPtr& mask)
-  {
-    // TODO: Move this to a .cpp file.
-    ITMUCharImage_Ptr invertedMask(new ITMUCharImage(mask->noDims, true, false));
-
-    const uchar *maskPtr = mask->GetData(MEMORYDEVICE_CPU);
-    uchar *invertedMaskPtr = invertedMask->GetData(MEMORYDEVICE_CPU);
-    int pixelCount = static_cast<int>(mask->dataSize);
-
-#ifdef WITH_OPENMP
-    #pragma omp parallel for
-#endif
-    for(int i = 0; i < pixelCount; ++i)
-    {
-      invertedMaskPtr[i] = maskPtr[i] ? 0 : 255;
-    }
-
-    return invertedMask;
-  }
+  static ITMUCharImage_Ptr invert_mask(const ITMUCharImage_CPtr& mask);
 };
 
 }
