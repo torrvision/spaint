@@ -14,11 +14,6 @@
   */
 class Subwindow
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]). */

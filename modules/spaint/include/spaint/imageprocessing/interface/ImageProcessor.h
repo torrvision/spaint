@@ -8,10 +8,9 @@
 
 #include <arrayfire.h>
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/ITMLibDefines.h>
-#include <ITMLib/Utils/ITMImageTypes.h>
+
+#include "../../util/ITMImagePtrTypes.h"
 
 namespace spaint {
 
@@ -24,11 +23,6 @@ class ImageProcessor
 protected:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
   typedef boost::shared_ptr<const af::array> AFArray_CPtr;
-  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
-  typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
-  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
   //#################### ENUMERATIONS ####################
 public: 

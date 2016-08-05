@@ -165,7 +165,7 @@ catch(af::exception&)
   return std::vector<Eigen::Vector2i>();
 }
 
-TouchDetector::ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
+ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
 {
   static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
   static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));

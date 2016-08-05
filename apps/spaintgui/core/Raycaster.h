@@ -11,6 +11,7 @@
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
+#include <spaint/util/ITMImagePtrTypes.h>
 #include <spaint/visualisers/interface/SemanticVisualiser.h>
 
 #include "Model.h"
@@ -21,11 +22,8 @@
 class Raycaster
 {
   //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMUChar4Image> UChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> UChar4Image_CPtr;
 public:
-  typedef boost::function<void(const UChar4Image_CPtr&,const UChar4Image_Ptr&)> Postprocessor;
+  typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
@@ -81,7 +79,7 @@ public:
    * \param raycastType   The type of raycast to generate.
    * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const ORUtils::SE3Pose& pose, RaycastType = RT_LAMBERTIAN,
+  void generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderState_Ptr& renderState, const ORUtils::SE3Pose& pose, RaycastType = RT_LAMBERTIAN,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
@@ -90,14 +88,14 @@ public:
    * \param output        The location into which to put the output image.
    * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+  void get_default_raycast(const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets the depth image from the most recently processed frame.
    *
    * \param output  The location into which to put the output image.
    */
-  void get_depth_input(const UChar4Image_Ptr& output) const;
+  void get_depth_input(const ITMUChar4Image_Ptr& output) const;
 
   /**
    * \brief Gets the render state corresponding to the live camera pose.
@@ -111,7 +109,7 @@ public:
    *
    * \param output  The location into which to put the output image.
    */
-  void get_rgb_input(const UChar4Image_Ptr& output) const;
+  void get_rgb_input(const ITMUChar4Image_Ptr& output) const;
 
   /**
    * \brief Gets the InfiniTAM engine used for raycasting the scene.
@@ -129,7 +127,7 @@ private:
    * \param postprocessor An optional function with which to postprocess the output raycast.
    * \param outputRaycast The output raycast (guaranteed to be accessible on the CPU).
    */
-  void make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const;
+  void make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const ITMUChar4Image_Ptr& outputRaycast) const;
 
   /**
    * \brief Prepares to copy a visualisation image into the specified output image.
@@ -137,7 +135,7 @@ private:
    * \param input   The size of the visualisation image to be copied.
    * \param output  The output image to which the visualisation image will be copied.
    */
-  void prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const;
+  void prepare_to_copy_visualisation(const Vector2i& inputSize, const ITMUChar4Image_Ptr& output) const;
 };
 
 //#################### TYPEDEFS ####################

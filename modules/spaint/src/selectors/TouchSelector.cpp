@@ -64,7 +64,7 @@ void TouchSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
-TouchSelector::ITMUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
+ITMUChar4Image_CPtr TouchSelector::generate_touch_image(const View_CPtr& view) const
 {
   return m_touchDetector->generate_touch_image(view);
 }

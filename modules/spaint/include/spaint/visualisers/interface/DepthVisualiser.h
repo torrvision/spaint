@@ -6,14 +6,13 @@
 #ifndef H_SPAINT_DEPTHVISUALISER
 #define H_SPAINT_DEPTHVISUALISER
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
-#include <ITMLib/Utils/ITMImageTypes.h>
 
 #include <ORUtils/SE3Pose.h>
+
+#include "../../util/ITMImagePtrTypes.h"
 
 namespace spaint {
 
@@ -22,10 +21,6 @@ namespace spaint {
  */
 class DepthVisualiser
 {
-  //#################### TYPEDEFS ####################
-protected:
-  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
-
   //#################### ENUMERATIONS ####################
 public:
   /**

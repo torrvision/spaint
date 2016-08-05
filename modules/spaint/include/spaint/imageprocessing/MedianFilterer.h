@@ -17,11 +17,6 @@ namespace spaint {
  */
 class MedianFilterer
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The image processor. */

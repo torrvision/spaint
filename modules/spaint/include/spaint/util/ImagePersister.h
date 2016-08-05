@@ -9,10 +9,9 @@
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-#include <ITMLib/Utils/ITMImageTypes.h>
+#include "ITMImagePtrTypes.h"
 
 namespace spaint {
 
@@ -21,12 +20,6 @@ namespace spaint {
  */
 class ImagePersister
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMShortImage> ITMShortImage_CPtr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
-
   //#################### ENUMERATIONS ####################
 public:
   /**

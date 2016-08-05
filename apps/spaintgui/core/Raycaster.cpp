@@ -43,7 +43,7 @@ Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& vis
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState_Ptr& renderState, const SE3Pose& pose, RaycastType raycastType,
+void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderState_Ptr& renderState, const SE3Pose& pose, RaycastType raycastType,
                                       const boost::optional<Postprocessor>& postprocessor) const
 {
   Model::View_CPtr view = m_model->get_view();
@@ -96,12 +96,12 @@ void Raycaster::generate_free_raycast(const UChar4Image_Ptr& output, RenderState
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_default_raycast(const UChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
+void Raycaster::get_default_raycast(const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
 {
   make_postprocessed_cpu_copy(m_liveRenderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_depth_input(const UChar4Image_Ptr& output) const
+void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_model->get_view()->depth->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->depth->UpdateHostFromDevice();
@@ -113,7 +113,7 @@ const Raycaster::RenderState_Ptr& Raycaster::get_live_render_state()
   return m_liveRenderState;
 }
 
-void Raycaster::get_rgb_input(const UChar4Image_Ptr& output) const
+void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_model->get_view()->rgb->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->rgb->UpdateHostFromDevice();
@@ -127,7 +127,8 @@ const Raycaster::VisualisationEngine_Ptr& Raycaster::get_visualisation_engine()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor, const UChar4Image_Ptr& outputRaycast) const
+void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
+                                            const ITMUChar4Image_Ptr& outputRaycast) const
 {
   // Make sure that the output raycast is of the right size.
   prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
@@ -157,7 +158,7 @@ void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, 
   }
 }
 
-void Raycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const UChar4Image_Ptr& output) const
+void Raycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const ITMUChar4Image_Ptr& output) const
 {
   output->Clear();
   output->ChangeDims(inputSize);

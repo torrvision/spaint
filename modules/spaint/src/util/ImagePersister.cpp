@@ -17,7 +17,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ImagePersister::ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path, ImageFileType fileType)
+ITMUChar4Image_Ptr ImagePersister::load_rgba_image(const std::string& path, ImageFileType fileType)
 {
   // If the image file type wasn't specified, try to deduce it.
   if(fileType == IFT_UNKNOWN) fileType = deduce_image_file_type(path);
@@ -88,7 +88,7 @@ void ImagePersister::save_image(const ITMUChar4Image_CPtr& image, const std::str
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-ImagePersister::ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
+ITMUChar4Image_Ptr ImagePersister::decode_rgba_png(const std::vector<unsigned char>& buffer, const std::string& path)
 {
   // Decode the PNG.
   std::vector<unsigned char> data;

@@ -21,12 +21,12 @@ const Vector2f& Subwindow::bottom_right() const
   return m_bottomRight;
 }
 
-const Subwindow::ITMUChar4Image_Ptr& Subwindow::get_image()
+const ITMUChar4Image_Ptr& Subwindow::get_image()
 {
   return m_image;
 }
 
-Subwindow::ITMUChar4Image_CPtr Subwindow::get_image() const
+ITMUChar4Image_CPtr Subwindow::get_image() const
 {
   return m_image;
 }

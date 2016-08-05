@@ -200,7 +200,7 @@ Renderer::~Renderer() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-Renderer::ITMUChar4Image_CPtr Renderer::capture_screenshot() const
+ITMUChar4Image_CPtr Renderer::capture_screenshot() const
 {
   // Read the pixel data from video memory into an image.
   const int width = m_windowViewportSize.width, height = m_windowViewportSize.height;

@@ -32,11 +32,6 @@ class TouchDetector
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
-  typedef boost::shared_ptr<ITMFloatImage> ITMFloatImage_Ptr;
-  typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
-  typedef boost::shared_ptr<ITMUCharImage> ITMUCharImage_Ptr;
-  typedef boost::shared_ptr<ITMUChar4Image> ITMUChar4Image_Ptr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
   typedef int Label;
