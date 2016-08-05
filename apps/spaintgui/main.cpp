@@ -193,10 +193,9 @@ try
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
 
-  // Construct the pipeline.
+  // Construct the image source engine.
   boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
-  Pipeline_Ptr pipeline;
-  std::string resourcesDir = Application::resources_dir().string();
+
   if(args.depthImageMask != "")
   {
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
@@ -221,10 +220,8 @@ try
 #endif
   }
 
-  pipeline.reset(new Pipeline(imageSourceEngine, settings, resourcesDir, trackerType, trackerParams));
-
   // Run the application.
-  Application app(pipeline);
+  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), trackerType, trackerParams)));
   app.run();
 
 #ifdef WITH_OVR
