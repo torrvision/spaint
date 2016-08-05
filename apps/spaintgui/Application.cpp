@@ -16,6 +16,7 @@ using namespace tvginput;
 using boost::assign::map_list_of;
 
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
+using namespace ITMLib;
 
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
@@ -584,11 +585,10 @@ void Application::save_screenshot() const
 void Application::save_sequence_frame()
 {
   // If the RGBD calibration hasn't already been saved, save it now.
-  boost::filesystem::path calibrationFile = (m_sequencePathGenerator->get_base_dir() / "calib.txt");
+  boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";
   if(!boost::filesystem::exists(calibrationFile))
   {
-    const ITMLib::ITMRGBDCalib& calib = *m_pipeline->get_model()->get_view()->calib;
-    ITMLib::writeRGBDCalib(calibrationFile.string().c_str(), calib);
+    writeRGBDCalib(calibrationFile.string().c_str(), *m_pipeline->get_model()->get_view()->calib);
   }
 
   // Save the current input images.
