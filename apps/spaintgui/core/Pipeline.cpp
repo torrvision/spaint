@@ -376,7 +376,7 @@ const Segmenter_Ptr& Pipeline::get_segmenter() const
   if(!m_segmenter)
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_model->get_resources_dir() + "/TouchSettings.xml"));
-    m_segmenter.reset(new BackgroundSubtractingObjectSegmenter(m_model->get_settings(), touchSettings, m_model->get_view()));
+    m_segmenter.reset(new BackgroundSubtractingObjectSegmenter(m_model->get_view(), m_model->get_settings(), touchSettings));
   }
 #endif
 

@@ -19,9 +19,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const ITMSettings_CPtr& itmSettings,
-                                                                           const TouchSettings_Ptr& touchSettings,
-                                                                           const View_CPtr& view)
+BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const View_CPtr& view,
+                                                                           const ITMSettings_CPtr& itmSettings,
+                                                                           const TouchSettings_Ptr& touchSettings)
 : Segmenter(view), m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings))
 {}
 
@@ -172,7 +172,7 @@ Segmenter::ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const 
   depthInput->UpdateHostFromDevice();
 
   // Train a colour appearance model to separate the user's hand from the scene background.
-  m_handAppearanceModel->train(rgbInput, make_touch_mask(depthInput, pose, renderState));
+  m_handAppearanceModel->train(rgbInput, make_hand_mask(depthInput, pose, renderState));
 
   // Generate a segmented image of the user's hand that can be shown to the user to provide them
   // with interactive feedback about the data that is being used to train the appearance model.
@@ -210,9 +210,9 @@ Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_
   return changeMask;
 }
 
-Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_touch_mask(const ITMFloatImage_CPtr& depthInput,
-                                                                                    const ORUtils::SE3Pose& pose,
-                                                                                    const RenderState_CPtr& renderState) const
+Segmenter::ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
+                                                                                   const ORUtils::SE3Pose& pose,
+                                                                                   const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);

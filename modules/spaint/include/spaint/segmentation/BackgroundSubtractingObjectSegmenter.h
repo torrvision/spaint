@@ -29,12 +29,19 @@ private:
   /** The colour appearance model to use to separate the user's hand from any object it's holding. */
   ColourAppearanceModel_Ptr m_handAppearanceModel;
 
-  /** The touch detector to use to get the initial difference mask. */
+  /** The touch detector to use to make the change and hand masks. */
   mutable TouchDetector_Ptr m_touchDetector;
 
   //#################### CONSTRUCTORS ####################
 public:
-  BackgroundSubtractingObjectSegmenter(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const View_CPtr& view);
+  /**
+   * \brief Constructs a background-subtracting object segmenter.
+   *
+   * \param view          The current view of the scene.
+   * \param itmSettings   The settings to use for InfiniTAM.
+   * \param touchSettings The settings to use for the touch detector.
+   */
+  BackgroundSubtractingObjectSegmenter(const View_CPtr& view, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -50,14 +57,22 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Makes a mask of any changes in the scene with respect to the reconstructed model.
+   *
+   * \param depthInput  The live depth input from the camera.
+   * \param pose        The camera pose from which the scene is being viewed.
+   * \param renderState The render state corresponding to the camera.
    */
   ITMUCharImage_CPtr make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /**
-   * \brief TODO
+   * \brief Makes a mask denoting the location of the user's hand as seen from the camera.
+   *
+   * \param depthInput  The live depth input from the camera.
+   * \param pose        The camera pose from which the scene is being viewed.
+   * \param renderState The render state corresponding to the camera.
    */
-  ITMUCharImage_CPtr make_touch_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+  ITMUCharImage_CPtr make_hand_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 };
 
 }
