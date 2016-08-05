@@ -472,8 +472,8 @@ void Application::process_mode_input()
     else if(m_inputState.key_down(KEYCODE_5)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
     else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_SMOOTHING;
     else if(m_inputState.key_down(KEYCODE_7)) mode = Pipeline::MODE_FEATURE_INSPECTION;
-    else if(m_inputState.key_down(KEYCODE_8)) mode = Pipeline::MODE_HAND_LEARNING;
-    else if(m_inputState.key_down(KEYCODE_9)) mode = Pipeline::MODE_OBJECT_SEGMENTATION;
+    else if(m_inputState.key_down(KEYCODE_8)) mode = Pipeline::MODE_SEGMENTATION_TRAINING;
+    else if(m_inputState.key_down(KEYCODE_9)) mode = Pipeline::MODE_SEGMENTATION;
   }
   m_pipeline->set_mode(mode);
 }

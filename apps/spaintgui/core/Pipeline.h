@@ -66,20 +66,20 @@ public:
     /** In feature inspection mode, the user can move the mouse around and visualise the features at particular points in the scene. */
     MODE_FEATURE_INSPECTION,
 
-    /** In hand learning mode, a pixel-wise appearance model is trained that can be used to separate a hand from an object. */
-    MODE_HAND_LEARNING,
-
     /** In normal mode, the user can reconstruct and manually label the scene. */
     MODE_NORMAL,
-
-    /** In object segmentation mode, the hand appearance model is used to separate it from an object it is holding. */
-    MODE_OBJECT_SEGMENTATION,
 
     /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
     MODE_PREDICTION,
 
     /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
     MODE_PROPAGATION,
+
+    /** In segmentation mode, the segmenter is used to separate its target from the rest of the scene. */
+    MODE_SEGMENTATION,
+
+    /** In segmentation training mode, the segmenter is trained to separate its target from the rest of the scene. */
+    MODE_SEGMENTATION_TRAINING,
 
     /** In smoothing mode, voxel labels are filled in based on the labels of neighbouring voxels. */
     MODE_SMOOTHING,
@@ -411,20 +411,6 @@ private:
   void run_feature_inspection_section(const RenderState_CPtr& renderState);
 
   /**
-   * \brief Runs the section of the pipeline associated with hand learning mode.
-   *
-   * \param renderState The render state associated with the camera position from which to learn the hand.
-   */
-  void run_hand_learning_section(const RenderState_CPtr& renderState);
-
-  /**
-   * \brief Runs the section of the pipeline associated with object segmentation mode.
-   *
-   * \param renderState The render state associated with the camera position from which to segment the object.
-   */
-  void run_object_segmentation_section(const RenderState_CPtr& renderState);
-
-  /**
    * \brief Runs the section of the pipeline associated with prediction mode.
    *
    * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
@@ -437,6 +423,20 @@ private:
    * \param renderState The render state associated with the camera position from which to propagate.
    */
   void run_propagation_section(const RenderState_CPtr& renderState);
+
+  /**
+   * \brief Runs the section of the pipeline associated with segmentation mode.
+   *
+   * \param renderState The render state associated with the camera position from which to segment the target.
+   */
+  void run_segmentation_section(const RenderState_CPtr& renderState);
+
+  /**
+   * \brief Runs the section of the pipeline associated with segmentation training mode.
+   *
+   * \param renderState The render state associated with the camera position from which to train the segmenter.
+   */
+  void run_segmentation_training_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Runs the section of the pipeline associated with smoothing mode.

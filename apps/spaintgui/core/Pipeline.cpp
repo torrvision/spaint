@@ -158,9 +158,9 @@ bool Pipeline::run_main_section()
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
   m_model->set_view(newView);
 
-  // If we're in object segmentation mode, mask out the object in the depth image so that it will be ignored for tracking purposes.
+  // If we're in segmentation mode, mask out the segmentation target in the depth image so that it will be ignored for tracking purposes.
   ITMFloatImage_Ptr maskedDepthImage;
-  if(m_mode == MODE_OBJECT_SEGMENTATION)
+  if(m_mode == MODE_SEGMENTATION)
   {
     const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
     if(segmenter)
@@ -179,8 +179,8 @@ bool Pipeline::run_main_section()
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
-  // If we're in object segmentation mode, restore the original depth image after tracking so that it can be used for segmentation.
-  if(m_mode == MODE_OBJECT_SEGMENTATION)
+  // If we're in segmentation mode, restore the original depth image after tracking so that it can be used for segmentation.
+  if(m_mode == MODE_SEGMENTATION)
   {
     view->depth->Swap(*maskedDepthImage);
   }
@@ -289,17 +289,17 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
     case MODE_FEATURE_INSPECTION:
       run_feature_inspection_section(renderState);
       break;
-    case MODE_HAND_LEARNING:
-      run_hand_learning_section(renderState);
-      break;
-    case MODE_OBJECT_SEGMENTATION:
-      run_object_segmentation_section(renderState);
-      break;
     case MODE_PREDICTION:
       run_prediction_section(renderState);
       break;
     case MODE_PROPAGATION:
       run_propagation_section(renderState);
+      break;
+    case MODE_SEGMENTATION:
+      run_segmentation_section(renderState);
+      break;
+    case MODE_SEGMENTATION_TRAINING:
+      run_segmentation_training_section(renderState);
       break;
     case MODE_SMOOTHING:
       run_smoothing_section(renderState);
@@ -337,29 +337,29 @@ void Pipeline::set_mode(Mode mode)
   }
 #endif
 
-  // If we are switching into hand learning mode, reset the hand appearance model.
-  if(mode == MODE_HAND_LEARNING && m_mode != MODE_HAND_LEARNING)
+  // If we are switching into segmentation training mode, reset the hand appearance model.
+  if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
   {
     const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
     if(segmenter) segmenter->reset_hand_model();
   }
 
-  // If we are switching out of hand learning mode, clear the segmentation image.
-  if(m_mode == MODE_HAND_LEARNING && mode != MODE_HAND_LEARNING)
+  // If we are switching out of segmentation training mode, clear the segmentation image.
+  if(m_mode == MODE_SEGMENTATION_TRAINING && mode != MODE_SEGMENTATION_TRAINING)
   {
     m_model->set_segmentation_image(ITMUChar4Image_CPtr());
   }
 
-  // If we are switching into object segmentation mode, start a new object segmentation video.
-  if(mode == MODE_OBJECT_SEGMENTATION && m_mode != MODE_OBJECT_SEGMENTATION)
+  // If we are switching into segmentation mode, start a new segmentation video.
+  if(mode == MODE_SEGMENTATION && m_mode != MODE_SEGMENTATION)
   {
     m_segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / (TimeUtil::get_iso_timestamp())));
     boost::filesystem::create_directories(m_segmentationPathGenerator->get_base_dir());
   }
 
-  // If we are switching out of object segmentation mode, stop recording the object segmentation video
+  // If we are switching out of segmentation mode, stop recording the segmentation video
   // and clear the segmentation image.
-  if(m_mode == MODE_OBJECT_SEGMENTATION && mode != MODE_OBJECT_SEGMENTATION)
+  if(m_mode == MODE_SEGMENTATION && mode != MODE_SEGMENTATION)
   {
     m_segmentationPathGenerator.reset();
     m_model->set_segmentation_image(ITMUChar4Image_CPtr());
@@ -546,16 +546,44 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 #endif
 }
 
-void Pipeline::run_hand_learning_section(const RenderState_CPtr& renderState)
+void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
 {
-  const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
-  if(!segmenter) return;
+  // If we haven't been provided with a camera position from which to sample, early out.
+  if(!samplingRenderState) return;
 
-  ITMUChar4Image_Ptr touchImage = segmenter->train_hand_model(m_model->get_pose(), renderState);
-  m_model->set_segmentation_image(touchImage);
+  // If the random forest is not yet valid, early out.
+  if(!m_forest->is_valid()) return;
+
+  // Sample some voxels for which to predict labels.
+  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
+
+  // Calculate feature descriptors for the sampled voxels.
+  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_model->get_scene().get(), *m_predictionFeaturesMB);
+  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
+
+  // Predict labels for the voxels based on the feature descriptors.
+  SpaintVoxel::PackedLabel *labels = m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < static_cast<int>(m_maxPredictionVoxelCount); ++i)
+  {
+    labels[i] = SpaintVoxel::PackedLabel(m_forest->predict(descriptors[i]), SpaintVoxel::LG_FOREST);
+  }
+
+  m_predictionLabelsMB->UpdateDeviceFromHost();
+
+  // Mark the voxels with their predicted labels.
+  m_interactor->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
 }
 
-void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderState)
+void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
+{
+  m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+}
+
+void Pipeline::run_segmentation_section(const RenderState_CPtr& renderState)
 {
   // Gets the current object segmenter. If there isn't one, early out.
   const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
@@ -594,41 +622,13 @@ void Pipeline::run_object_segmentation_section(const RenderState_CPtr& renderSta
   m_model->set_segmentation_image(rgbMasked);
 }
 
-void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
+void Pipeline::run_segmentation_training_section(const RenderState_CPtr& renderState)
 {
-  // If we haven't been provided with a camera position from which to sample, early out.
-  if(!samplingRenderState) return;
+  const ObjectSegmenter_Ptr& segmenter = get_object_segmenter();
+  if(!segmenter) return;
 
-  // If the random forest is not yet valid, early out.
-  if(!m_forest->is_valid()) return;
-
-  // Sample some voxels for which to predict labels.
-  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
-
-  // Calculate feature descriptors for the sampled voxels.
-  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_model->get_scene().get(), *m_predictionFeaturesMB);
-  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
-
-  // Predict labels for the voxels based on the feature descriptors.
-  SpaintVoxel::PackedLabel *labels = m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int i = 0; i < static_cast<int>(m_maxPredictionVoxelCount); ++i)
-  {
-    labels[i] = SpaintVoxel::PackedLabel(m_forest->predict(descriptors[i]), SpaintVoxel::LG_FOREST);
-  }
-
-  m_predictionLabelsMB->UpdateDeviceFromHost();
-
-  // Mark the voxels with their predicted labels.
-  m_interactor->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
-}
-
-void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
-{
-  m_labelPropagator->propagate_label(m_interactor->get_semantic_label(), renderState->raycastResult, m_model->get_scene().get());
+  ITMUChar4Image_Ptr touchImage = segmenter->train_hand_model(m_model->get_pose(), renderState);
+  m_model->set_segmentation_image(touchImage);
 }
 
 void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
