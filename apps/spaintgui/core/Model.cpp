@@ -69,7 +69,7 @@ Model::Scene_CPtr Model::get_scene() const
   return m_scene;
 }
 
-const Model::ITMUChar4Image_CPtr& Model::get_segmentation_image() const
+const ITMUChar4Image_CPtr& Model::get_segmentation_image() const
 {
   return m_segmentationImage;
 }

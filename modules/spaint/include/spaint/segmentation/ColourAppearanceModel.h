@@ -6,13 +6,11 @@
 #ifndef H_SPAINT_COLOURAPPEARANCEMODEL
 #define H_SPAINT_COLOURAPPEARANCEMODEL
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Utils/ITMImageTypes.h>
-
 // FIXME: There's a reasonable argument that things like Histogram and ProbabilityMassFunction should be moved somewhere more central.
 #include <rafl/base/Histogram.h>
 #include <rafl/base/ProbabilityMassFunction.h>
+
+#include "../util/ITMImagePtrTypes.h"
 
 namespace spaint {
 
@@ -25,8 +23,6 @@ class ColourAppearanceModel
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<const ITMUCharImage> ITMUCharImage_CPtr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef boost::shared_ptr<rafl::ProbabilityMassFunction<int> > PMF_Ptr;
 
   //#################### PRIVATE VARIABLES ####################

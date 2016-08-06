@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_MODEL
 #define H_SPAINTGUI_MODEL
 
-#include <boost/shared_ptr.hpp>
-
 #include <InputSource/ImageSourceEngine.h>
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
@@ -15,6 +13,7 @@
 #include <ITMLib/Objects/Views/ITMView.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <spaint/util/ITMImagePtrTypes.h>
 #include <spaint/util/LabelManager.h>
 
 /**
@@ -27,7 +26,6 @@ class Model
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
@@ -54,7 +52,7 @@ private:
   /** The current reconstructed scene. */
   Scene_Ptr m_scene;
 
-  /** The overlay image (if any) to render whilst performing object segmentation. */
+  /** The overlay image (if any) to render whilst performing segmentation. */
   ITMUChar4Image_CPtr m_segmentationImage;
 
   /** The settings to use for InfiniTAM. */
@@ -147,9 +145,9 @@ public:
   Scene_CPtr get_scene() const;
 
   /**
-   * \brief Gets the overlay image (if any) to render whilst performing object segmentation.
+   * \brief Gets the overlay image (if any) to render whilst performing segmentation.
    *
-   * \return  The overlay image (if any) to render whilst performing object segmentation.
+   * \return  The overlay image (if any) to render whilst performing segmentation.
    */
   const ITMUChar4Image_CPtr& get_segmentation_image() const;
 
@@ -189,9 +187,9 @@ public:
   View_CPtr get_view() const;
 
   /**
-   * \brief Sets the overlay image (if any) to render whilst performing object segmentation.
+   * \brief Sets the overlay image (if any) to render whilst performing segmentation.
    *
-   * \param segmentationImage The overlay image (if any) to render whilst performing object segmentation.
+   * \param segmentationImage The overlay image (if any) to render whilst performing segmentation.
    */
   void set_segmentation_image(const ITMUChar4Image_CPtr& segmentationImage);
 

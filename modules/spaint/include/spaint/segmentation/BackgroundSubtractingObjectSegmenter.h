@@ -20,9 +20,7 @@ class BackgroundSubtractingObjectSegmenter : public Segmenter
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<const ITMFloatImage> ITMFloatImage_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
-  typedef boost::shared_ptr<const ITMUChar4Image> ITMUChar4Image_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
