@@ -11,9 +11,6 @@ using namespace tvgutil;
 #include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-#ifdef WITH_OPENNI
-#include <InputSource/OpenNIEngine.h>
-#endif
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
 #include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
@@ -59,28 +56,10 @@ using namespace RelocLib;
 
 //#################### CONSTRUCTORS ####################
 
-#ifdef WITH_OPENNI
-Pipeline::Pipeline(const std::string& calibrationFilename, const boost::optional<std::string>& openNIDeviceURI, const Settings_Ptr& settings,
-                   const std::string& resourcesDir, TrackerType trackerType, const std::string& trackerParams, bool useInternalCalibration)
-: m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
+Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
+                   TrackerType trackerType, const std::string& trackerParams)
+: m_imageSourceEngine(imageSourceEngine), m_resourcesDir(resourcesDir), m_trackerParams(trackerParams), m_trackerType(trackerType)
 {
-  m_imageSourceEngine.reset(new OpenNIEngine(calibrationFilename.c_str(), openNIDeviceURI ? openNIDeviceURI->c_str() : NULL, useInternalCalibration
-#if USE_LOW_USB_BANDWIDTH_MODE
-    // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
-    , Vector2i(320, 240)
-#endif
-  ));
-
-  initialise(settings);
-}
-#endif
-
-Pipeline::Pipeline(const std::string& calibrationFilename, const std::string& rgbImageMask, const std::string& depthImageMask,
-                   const Settings_Ptr& settings, const std::string& resourcesDir)
-: m_resourcesDir(resourcesDir)
-{
-  ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
-  m_imageSourceEngine.reset(new ImageFileReader<ImageMaskPathGenerator>(calibrationFilename.c_str(), pathGenerator));
   initialise(settings);
 }
 
@@ -279,6 +258,9 @@ bool Pipeline::run_main_section()
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
 
+  // If the current sub-engine has run out of images, disable fusion.
+  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+
   return true;
 }
 
@@ -409,7 +391,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the InfiniTAM engines and view builder.
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
-  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->calib, settings->deviceType));
+  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
   VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
 
   // Set up the dense mapper and tracking controller.
