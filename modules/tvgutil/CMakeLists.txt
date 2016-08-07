@@ -77,12 +77,12 @@ include/tvgutil/numbers/RandomNumberGenerator.h
 
 ##
 SET(persistence_sources
-src/persistence/IOUtil.cpp
+src/persistence/LineUtil.cpp
 src/persistence/PropertyUtil.cpp
 )
 
 SET(persistence_headers
-include/tvgutil/persistence/IOUtil.h
+include/tvgutil/persistence/LineUtil.h
 include/tvgutil/persistence/PropertyUtil.h
 include/tvgutil/persistence/SerializationUtil.h
 )

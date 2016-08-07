@@ -8,7 +8,7 @@
 
 #include <fstream>
 
-#include <tvgutil/persistence/IOUtil.h>
+#include <tvgutil/persistence/LineUtil.h>
 #include <tvgutil/statistics/ProbabilityMassFunction.h>
 
 #include "Example.h"
@@ -68,7 +68,7 @@ public:
     if(!fs) throw std::runtime_error("Error: '" + filename + "' could not be opened");
 
     const std::string delimiters(", ");
-    std::vector<std::vector<std::string> > wordLines = tvgutil::IOUtil::extract_word_lines(fs, delimiters);
+    std::vector<std::vector<std::string> > wordLines = tvgutil::LineUtil::extract_word_lines(fs, delimiters);
 
     for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {

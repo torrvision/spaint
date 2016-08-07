@@ -1,10 +1,10 @@
 /**
- * tvgutil: IOUtil.h
+ * tvgutil: LineUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_IOUTIL
-#define H_TVGUTIL_IOUTIL
+#ifndef H_TVGUTIL_LINEUTIL
+#define H_TVGUTIL_LINEUTIL
 
 #include <iosfwd>
 #include <string>
@@ -13,9 +13,9 @@
 namespace tvgutil {
 
 /**
- * \brief This struct contains I/O utility functions.
+ * \brief This struct provides utility functions for writing/reading lines to/from streams.
  */
-struct IOUtil
+struct LineUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
@@ -37,7 +37,7 @@ struct IOUtil
   static std::vector<std::vector<std::string> > extract_word_lines(std::istream& is, const std::string& delimiters);
 
   /**
-   * \brief Output lines to a stream.
+   * \brief Outputs lines to a stream.
    *
    * \param os     The stream.
    * \param lines  The lines.
