@@ -267,7 +267,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The histogram holding the class frequencies observed in the training data. */
-  Histogram<Label> m_classFrequencies;
+  tvgutil::Histogram<Label> m_classFrequencies;
 
   /** The indices of nodes to which examples have been added during the current call to add_examples() and whose splittability may need recalculating. */
   std::set<int> m_dirtyNodes;
@@ -385,7 +385,7 @@ public:
    *
    * \return  A histogram holding the class frequencies observed in the training data.
    */
-  const Histogram<Label>& get_class_frequencies() const
+  const tvgutil::Histogram<Label>& get_class_frequencies() const
   {
     return m_classFrequencies;
   }
@@ -428,7 +428,7 @@ public:
    * \param descriptor  The descriptor.
    * \return            The probability mass function for the leaf to which an example with that descriptor would be added.
    */
-  ProbabilityMassFunction<Label> lookup_pmf(const Descriptor_CPtr& descriptor) const
+  tvgutil::ProbabilityMassFunction<Label> lookup_pmf(const Descriptor_CPtr& descriptor) const
   {
     int leafIndex = find_leaf(*descriptor);
     return make_pmf(leafIndex);
@@ -608,9 +608,9 @@ private:
    * \param leafIndex The leaf for which to make the probability mass function.
    * \return          The probability mass function.
    */
-  ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
+  tvgutil::ProbabilityMassFunction<Label> make_pmf(int leafIndex) const
   {
-    return ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), m_inverseClassWeights);
+    return tvgutil::ProbabilityMassFunction<Label>(*m_nodes[leafIndex]->m_reservoir.get_histogram(), m_inverseClassWeights);
   }
 
   /**

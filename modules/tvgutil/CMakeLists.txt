@@ -35,6 +35,12 @@ include/tvgutil/commands/SeqCommand.h
 )
 
 ##
+SET(statistics_headers
+include/tvgutil/statistics/Histogram.h
+include/tvgutil/statistics/ProbabilityMassFunction.h
+)
+
+##
 SET(timing_headers
 include/tvgutil/timing/AverageTimer.h
 include/tvgutil/timing/Timer.h
@@ -80,6 +86,7 @@ ${toplevel_sources}
 
 SET(headers
 ${commands_headers}
+${statistics_headers}
 ${timing_headers}
 ${toplevel_headers}
 )
@@ -90,6 +97,7 @@ ${toplevel_headers}
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
+SOURCE_GROUP(statistics FILES ${statistics_headers})
 SOURCE_GROUP(timing FILES ${timing_headers})
 
 ##########################################

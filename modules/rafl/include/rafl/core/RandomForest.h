@@ -96,13 +96,13 @@ public:
    * \param descriptor  The descriptor.
    * \return            The PMF.
    */
-  ProbabilityMassFunction<Label> calculate_pmf(const Descriptor_CPtr& descriptor) const
+  tvgutil::ProbabilityMassFunction<Label> calculate_pmf(const Descriptor_CPtr& descriptor) const
   {
     // Sum the masses from the individual tree PMFs for the descriptor.
     std::map<Label,float> masses;
     for(typename std::vector<DT_Ptr>::const_iterator it = m_trees.begin(), iend = m_trees.end(); it != iend; ++it)
     {
-      ProbabilityMassFunction<Label> individualPMF = (*it)->lookup_pmf(descriptor);
+      tvgutil::ProbabilityMassFunction<Label> individualPMF = (*it)->lookup_pmf(descriptor);
       const std::map<Label,float>& individualMasses = individualPMF.get_masses();
       for(typename std::map<Label,float>::const_iterator jt = individualMasses.begin(), jend = individualMasses.end(); jt != jend; ++jt)
       {
@@ -111,7 +111,7 @@ public:
     }
 
     // Create a normalised probability mass function from the summed masses.
-    return ProbabilityMassFunction<Label>(masses);
+    return tvgutil::ProbabilityMassFunction<Label>(masses);
   }
 
   /**

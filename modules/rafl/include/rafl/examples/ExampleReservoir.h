@@ -14,8 +14,8 @@
 #include <vector>
 
 #include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/statistics/Histogram.h>
 
-#include "../base/Histogram.h"
 #include "Example.h"
 
 namespace rafl {
@@ -29,8 +29,8 @@ class ExampleReservoir
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
-  typedef boost::shared_ptr<Histogram<Label> > Histogram_Ptr;
-  typedef boost::shared_ptr<const Histogram<Label> > Histogram_CPtr;
+  typedef boost::shared_ptr<tvgutil::Histogram<Label> > Histogram_Ptr;
+  typedef boost::shared_ptr<const tvgutil::Histogram<Label> > Histogram_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -64,7 +64,7 @@ public:
    * \param randomNumberGenerator A random number generator.
    */
   ExampleReservoir(size_t maxClassSize, const tvgutil::RandomNumberGenerator_Ptr& randomNumberGenerator)
-  : m_curSize(0), m_histogram(new Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
+  : m_curSize(0), m_histogram(new tvgutil::Histogram<Label>), m_maxClassSize(maxClassSize), m_randomNumberGenerator(randomNumberGenerator), m_seenExamples(0)
   {}
 
   /**
