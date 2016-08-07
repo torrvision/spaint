@@ -3,7 +3,7 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include <tvgutil/AttitudeUtil.h>
+#include <tvgutil/misc/AttitudeUtil.h>
 using namespace tvgutil;
 
 //#################### HELPER FUNCTIONS ####################

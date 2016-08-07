@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "PathFinder.h"
+#include "filesystem/PathFinder.h"
 
 #include <vector>
 

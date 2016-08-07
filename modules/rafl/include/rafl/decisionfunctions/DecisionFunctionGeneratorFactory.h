@@ -6,7 +6,7 @@
 #ifndef H_RAFL_DECISIONFUNCTIONGENERATORFACTORY
 #define H_RAFL_DECISIONFUNCTIONGENERATORFACTORY
 
-#include <tvgutil/MapUtil.h>
+#include <tvgutil/containers/MapUtil.h>
 
 #include "FeatureThresholdingDecisionFunctionGenerator.h"
 #include "PairwiseOpAndThresholdDecisionFunctionGenerator.h"

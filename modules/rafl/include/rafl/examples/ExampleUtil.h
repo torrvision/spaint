@@ -8,7 +8,7 @@
 
 #include <fstream>
 
-#include <tvgutil/IOUtil.h>
+#include <tvgutil/persistence/IOUtil.h>
 #include <tvgutil/statistics/ProbabilityMassFunction.h>
 
 #include "Example.h"

@@ -8,7 +8,7 @@
 #include <set>
 #include <stdexcept>
 
-#include <tvgutil/LimitedContainer.h>
+#include <tvgutil/containers/LimitedContainer.h>
 
 #include "splitgenerators/RNGFunctor.h"
 

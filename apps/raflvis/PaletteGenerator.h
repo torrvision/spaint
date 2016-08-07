@@ -13,7 +13,7 @@
 
 #include <opencv2/core/core.hpp>
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 /**
  * \brief This class provides functions that can be used to generate palettes (maps from labels to colours).

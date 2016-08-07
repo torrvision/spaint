@@ -13,7 +13,7 @@
 #include <boost/optional.hpp>
 
 #include "Histogram.h"
-#include "../ArgUtil.h"
+#include "../misc/ArgUtil.h"
 
 namespace tvgutil {
 

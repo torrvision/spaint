@@ -13,7 +13,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include <tvgutil/IOUtil.h>
+#include <tvgutil/persistence/IOUtil.h>
 
 #include "LabelledPath.h"
 

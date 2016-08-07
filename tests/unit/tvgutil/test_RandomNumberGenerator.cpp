@@ -1,7 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 using namespace tvgutil;
 
 BOOST_AUTO_TEST_SUITE(test_RandomNumberGenerator)

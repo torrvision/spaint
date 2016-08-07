@@ -25,8 +25,8 @@ using namespace rigging;
 #include <spaint/util/ImagePersister.h>
 using namespace spaint;
 
-#include <tvgutil/PathFinder.h>
 #include <tvgutil/commands/NoOpCommand.h>
+#include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 

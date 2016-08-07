@@ -10,7 +10,7 @@
 #include <set>
 #include <stdexcept>
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "Example.h"
 

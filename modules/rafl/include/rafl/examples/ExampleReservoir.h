@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 #include <tvgutil/statistics/Histogram.h>
 
 #include "Example.h"

@@ -9,8 +9,8 @@
 #include <set>
 #include <stdexcept>
 
-#include <tvgutil/PriorityQueue.h>
-#include <tvgutil/PropertyUtil.h>
+#include <tvgutil/containers/PriorityQueue.h>
+#include <tvgutil/persistence/PropertyUtil.h>
 
 #include "../decisionfunctions/DecisionFunctionGeneratorFactory.h"
 

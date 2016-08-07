@@ -25,8 +25,8 @@
 
 #include <tvginput/InputState.h>
 
-#include <tvgutil/SequentialPathGenerator.h>
 #include <tvgutil/commands/CommandManager.h>
+#include <tvgutil/filesystem/SequentialPathGenerator.h>
 
 #include "core/Pipeline.h"
 #include "renderers/Renderer.h"
