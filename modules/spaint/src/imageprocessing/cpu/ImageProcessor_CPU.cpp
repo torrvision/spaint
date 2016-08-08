@@ -20,16 +20,15 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
   const float *secondInputData = secondInputImage->GetData(MEMORYDEVICE_CPU);
   float *outputData = outputImage->device<float>(); // note that using host<float>() doesn't work!
 
-  const int height = outputImage->dims(0);
-  const int width = outputImage->dims(1);
-  const int pixelCount = height * width;
+  const Vector2i imgSize = image_size(outputImage);
+  const int pixelCount = imgSize.x * imgSize.y;
 
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
   {
-    calculate_pixel_depth_difference(rowMajorIndex, firstInputData, secondInputData, width, height, outputData);
+    calculate_pixel_depth_difference(rowMajorIndex, firstInputData, secondInputData, imgSize.x, imgSize.y, outputData);
   }
 }
 
@@ -40,8 +39,8 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
   const unsigned char *inputData = inputImage->device<unsigned char>();
   unsigned char *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
 
-  const int height = inputImage->dims(0);
-  const int width = inputImage->dims(1);
+  const int height = outputImage->noDims.y;
+  const int width = outputImage->noDims.x;
   const int pixelCount = height * width;
 
 #ifdef WITH_OPENMP
