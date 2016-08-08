@@ -335,7 +335,7 @@ void Pipeline::set_mode(Mode mode)
   // If we are switching into segmentation mode, start a new segmentation video.
   if(mode == MODE_SEGMENTATION && m_mode != MODE_SEGMENTATION)
   {
-    m_segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / (TimeUtil::get_iso_timestamp())));
+    m_segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / TimeUtil::get_iso_timestamp()));
     boost::filesystem::create_directories(m_segmentationPathGenerator->get_base_dir());
   }
 
