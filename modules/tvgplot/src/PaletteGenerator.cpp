@@ -1,9 +1,11 @@
 /**
- * raflvis: PaletteGenerator.cpp
+ * tvgplot: PaletteGenerator.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
 #include "PaletteGenerator.h"
+
+namespace tvgplot {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
@@ -30,4 +32,6 @@ std::map<std::string,cv::Scalar> PaletteGenerator::generate_basic_rgba_palette()
     ("Navy",cv::Scalar(0,0,128,alpha));
 
   return result;
+}
+
 }

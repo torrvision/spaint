@@ -3,6 +3,11 @@
 #####################################
 
 ADD_SUBDIRECTORY(tvginput)
+
+IF(WITH_OPENCV)
+  ADD_SUBDIRECTORY(tvgplot)
+ENDIF()
+
 ADD_SUBDIRECTORY(tvgutil)
 
 IF(BUILD_EVALUATION_MODULES)

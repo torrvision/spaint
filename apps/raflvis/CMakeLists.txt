@@ -24,13 +24,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 ##
 SET(sources
 main.cpp
-PaletteGenerator.cpp
-PlotWindow.cpp
 )
 
 SET(headers
-PaletteGenerator.h
-PlotWindow.h
 TestDecisionFunctionGenerator.h
 )
 
@@ -47,6 +43,7 @@ SOURCE_GROUP(headers FILES ${headers})
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/evaluation/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgplot/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
@@ -59,7 +56,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} evaluation rafl tvgplot tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 

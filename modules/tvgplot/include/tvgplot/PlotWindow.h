@@ -1,10 +1,10 @@
 /**
- * raflvis: PlotWindow.h
+ * tvgplot: PlotWindow.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_RAFLVIS_PLOTWINDOW
-#define H_RAFLVIS_PLOTWINDOW
+#ifndef H_TVGPLOT_PLOTWINDOW
+#define H_TVGPLOT_PLOTWINDOW
 
 #include <string>
 
@@ -12,6 +12,8 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
+namespace tvgplot {
 
 /**
  * \brief An instance of this class represents a window into which we can plot shapes and/or a graph.
@@ -180,5 +182,7 @@ private:
    */
   cv::Scalar rgb_to_bgr(const cv::Scalar& colour) const;
 };
+
+}
 
 #endif

@@ -20,11 +20,13 @@ using namespace evaluation;
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
 
+#include <tvgplot/PaletteGenerator.h>
+#include <tvgplot/PlotWindow.h>
+using namespace tvgplot;
+
 #include <tvgutil/persistence/SerializationUtil.h>
 using namespace tvgutil;
 
-#include "PaletteGenerator.h"
-#include "PlotWindow.h"
 #include "TestDecisionFunctionGenerator.h"
 
 //#################### TYPEDEFS ####################
