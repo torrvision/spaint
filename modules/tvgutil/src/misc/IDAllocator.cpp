@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "IDAllocator.h"
+#include "misc/IDAllocator.h"
 
 #include <sstream>
 #include <stdexcept>

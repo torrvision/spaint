@@ -1,19 +1,19 @@
 /**
- * rafl: Histogram.h
+ * tvgutil: Histogram.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_RAFL_HISTOGRAM
-#define H_RAFL_HISTOGRAM
+#ifndef H_TVGUTIL_HISTOGRAM
+#define H_TVGUTIL_HISTOGRAM
 
 #include <map>
 #include <stdexcept>
 
 #include <boost/serialization/serialization.hpp>
 
-#include <tvgutil/LimitedContainer.h>
+#include "../containers/LimitedContainer.h"
 
-namespace rafl {
+namespace tvgutil {
 
 /**
  * \brief An instance of an instantiation of this class template represents a histogram over the specified label type.
@@ -112,7 +112,7 @@ template <typename Label>
 std::ostream& operator<<(std::ostream& os, const Histogram<Label>& rhs)
 {
   const size_t ELEMENT_DISPLAY_LIMIT = 10;
-  os << tvgutil::make_limited_container(rhs.get_bins(), ELEMENT_DISPLAY_LIMIT);
+  os << make_limited_container(rhs.get_bins(), ELEMENT_DISPLAY_LIMIT);
   return os;
 }
 

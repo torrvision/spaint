@@ -8,12 +8,9 @@
 
 #include <fstream>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
+#include <tvgutil/persistence/LineUtil.h>
+#include <tvgutil/statistics/ProbabilityMassFunction.h>
 
-#include <tvgutil/IOUtil.h>
-
-#include "../base/ProbabilityMassFunction.h"
 #include "Example.h"
 
 namespace rafl {
@@ -47,10 +44,10 @@ public:
    * \return            The entropy of the label distribution represented by the histogram.
    */
   template <typename Label>
-  static float calculate_entropy(const Histogram<Label>& histogram,
+  static float calculate_entropy(const tvgutil::Histogram<Label>& histogram,
                                  const typename boost::mpl::identity<boost::optional<std::map<Label,float> > >::type& multipliers = boost::none)
   {
-    return histogram.empty() ? 0.0f : ProbabilityMassFunction<Label>(histogram, multipliers).calculate_entropy();
+    return histogram.empty() ? 0.0f : tvgutil::ProbabilityMassFunction<Label>(histogram, multipliers).calculate_entropy();
   }
 
   /**
@@ -71,7 +68,7 @@ public:
     if(!fs) throw std::runtime_error("Error: '" + filename + "' could not be opened");
 
     const std::string delimiters(", ");
-    std::vector<std::vector<std::string> > wordLines = tvgutil::IOUtil::extract_word_lines(fs, delimiters);
+    std::vector<std::vector<std::string> > wordLines = tvgutil::LineUtil::extract_word_lines(fs, delimiters);
 
     for(size_t i = 0, lineCount = wordLines.size(); i < lineCount; ++i)
     {
@@ -97,11 +94,11 @@ public:
    * \return          The histogram.
    */
   template <typename Label>
-  static Histogram<Label> make_histogram(const std::vector<boost::shared_ptr<const Example<Label> > >& examples)
+  static tvgutil::Histogram<Label> make_histogram(const std::vector<boost::shared_ptr<const Example<Label> > >& examples)
   {
     typedef boost::shared_ptr<const Example<Label> > Example_CPtr;
 
-    Histogram<Label> histogram;
+    tvgutil::Histogram<Label> histogram;
     for(typename std::vector<Example_CPtr>::const_iterator it = examples.begin(), iend = examples.end(); it != iend; ++it)
     {
       histogram.add((*it)->get_label());
@@ -118,9 +115,10 @@ public:
    * \return            The PMF.
    */
   template <typename Label>
-  static ProbabilityMassFunction<Label> make_pmf(const std::vector<boost::shared_ptr<const Example<Label> > >& examples, const boost::optional<std::map<Label,float> >& multipliers = boost::none)
+  static tvgutil::ProbabilityMassFunction<Label> make_pmf(const std::vector<boost::shared_ptr<const Example<Label> > >& examples,
+                                                          const boost::optional<std::map<Label,float> >& multipliers = boost::none)
   {
-    return ProbabilityMassFunction<Label>(make_histogram(examples), multipliers);
+    return tvgutil::ProbabilityMassFunction<Label>(make_histogram(examples), multipliers);
   }
 };
 

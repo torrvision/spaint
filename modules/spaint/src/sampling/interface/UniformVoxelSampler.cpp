@@ -5,7 +5,7 @@
 
 #include "sampling/interface/UniformVoxelSampler.h"
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "util/MemoryBlockFactory.h"
 

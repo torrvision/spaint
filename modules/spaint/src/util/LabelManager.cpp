@@ -10,7 +10,7 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
-#include <tvgutil/MapUtil.h>
+#include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
 
 namespace {

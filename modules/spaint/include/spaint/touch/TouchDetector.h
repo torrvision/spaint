@@ -16,7 +16,7 @@
 
 #include <rigging/SimpleCamera.h>
 
-#include <tvgutil/PropertyUtil.h>
+#include <tvgutil/persistence/PropertyUtil.h>
 
 #include "TouchSettings.h"
 #include "../imageprocessing/interface/ImageProcessor.h"

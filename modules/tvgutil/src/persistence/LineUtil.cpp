@@ -1,9 +1,9 @@
 /**
- * tvgutil: IOUtil.cpp
+ * tvgutil: LineUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "IOUtil.h"
+#include "persistence/LineUtil.h"
 
 #include <stdexcept>
 
@@ -14,7 +14,7 @@ namespace tvgutil {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-std::vector<std::string> IOUtil::extract_lines(std::istream& is)
+std::vector<std::string> LineUtil::extract_lines(std::istream& is)
 {
   std::vector<std::string> lines;
 
@@ -28,7 +28,7 @@ std::vector<std::string> IOUtil::extract_lines(std::istream& is)
   return lines;
 }
 
-std::vector<std::vector<std::string> > IOUtil::extract_word_lines(std::istream& is, const std::string& delimiters)
+std::vector<std::vector<std::string> > LineUtil::extract_word_lines(std::istream& is, const std::string& delimiters)
 {
   std::vector<std::vector<std::string> > wordLines;
 
@@ -48,7 +48,7 @@ std::vector<std::vector<std::string> > IOUtil::extract_word_lines(std::istream& 
   return wordLines;
 }
 
-void IOUtil::output_lines(std::ostream& os, const std::vector<std::string>& lines)
+void LineUtil::output_lines(std::ostream& os, const std::vector<std::string>& lines)
 {
   if(!os) throw std::runtime_error("Unable to write to the output stream");
 

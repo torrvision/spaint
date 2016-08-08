@@ -6,7 +6,7 @@
 #ifndef H_EVALUATION_RNGFUNCTOR
 #define H_EVALUATION_RNGFUNCTOR
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 namespace evaluation {
 

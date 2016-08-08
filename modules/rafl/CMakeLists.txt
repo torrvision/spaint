@@ -23,8 +23,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 ##
 SET(base_headers
 include/rafl/base/Descriptor.h
-include/rafl/base/Histogram.h
-include/rafl/base/ProbabilityMassFunction.h
 )
 
 ##

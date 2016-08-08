@@ -8,7 +8,7 @@ using namespace ITMLib;
 
 #include <boost/format.hpp>
 
-#include <tvgutil/ArgUtil.h>
+#include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"

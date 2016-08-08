@@ -1,23 +1,21 @@
 /**
- * rafl: ProbabilityMassFunction.h
+ * tvgutil: ProbabilityMassFunction.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_RAFL_PROBABILITYMASSFUNCTION
-#define H_RAFL_PROBABILITYMASSFUNCTION
+#ifndef H_TVGUTIL_PROBABILITYMASSFUNCTION
+#define H_TVGUTIL_PROBABILITYMASSFUNCTION
 
 #include <cassert>
 #include <cmath>
-#include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 
-#include <tvgutil/ArgUtil.h>
-
 #include "Histogram.h"
+#include "../misc/ArgUtil.h"
 
-namespace rafl {
+namespace tvgutil {
 
 //#################### GLOBAL CONSTANTS ####################
 
@@ -103,7 +101,7 @@ public:
    */
   Label calculate_best_label() const
   {
-    return tvgutil::ArgUtil::argmax(m_masses);
+    return ArgUtil::argmax(m_masses);
   }
 
   /**
@@ -197,7 +195,7 @@ template <typename Label>
 std::ostream& operator<<(std::ostream& os, const ProbabilityMassFunction<Label>& rhs)
 {
   const size_t ELEMENT_DISPLAY_LIMIT = 3;
-  os << tvgutil::make_limited_container(rhs.get_masses(), ELEMENT_DISPLAY_LIMIT);
+  os << make_limited_container(rhs.get_masses(), ELEMENT_DISPLAY_LIMIT);
   return os;
 }
 

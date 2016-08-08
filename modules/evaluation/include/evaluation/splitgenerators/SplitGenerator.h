@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include <tvgutil/RandomNumberGenerator.h>
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 namespace evaluation {
 
