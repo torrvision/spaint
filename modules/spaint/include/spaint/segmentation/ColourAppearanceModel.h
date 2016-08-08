@@ -31,16 +31,16 @@ private:
   /** The number of Cr bins in the histogram. */
   int m_binsCr;
 
-  // P(Colour | object)
+  // A (linearised) 2D histogram representing P(Colour | object).
   tvgutil::Histogram<int> m_histColourGivenObject;
 
-  // P(Colour | !object)
+  // A (linearised) 2D histogram representing P(Colour | !object).
   tvgutil::Histogram<int> m_histColourGivenNotObject;
 
-  // P(Colour | object)
+  // A (linearised) 2D probability mass function representing P(Colour | object).
   PMF_Ptr m_pmfColourGivenObject;
 
-  // P(Colour | !object)
+  // A (linearised) 2D probability mass function representing P(Colour | !object).
   PMF_Ptr m_pmfColourGivenNotObject;
 
   //#################### CONSTRUCTORS ####################
