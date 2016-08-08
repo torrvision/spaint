@@ -4,6 +4,8 @@
  */
 
 #include "segmentation/ColourAppearanceModel.h"
+
+#include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
 
 #include "util/ColourConversion_Shared.h"
@@ -35,8 +37,8 @@ float ColourAppearanceModel::compute_posterior_probability(const Vector3u& rgbCo
                        P(colour | object) + P(colour | !object)
   */
   int bin = compute_bin(rgbColour);
-  float colourGivenObject = m_pmfColourGivenObject->get_mass(bin);
-  float colourGivenNotObject = m_pmfColourGivenNotObject->get_mass(bin);
+  float colourGivenObject = MapUtil::lookup(m_pmfColourGivenObject->get_masses(), bin, 0.0f);
+  float colourGivenNotObject = MapUtil::lookup(m_pmfColourGivenNotObject->get_masses(), bin, 0.0f);
   float denom = colourGivenObject + colourGivenNotObject;
   return denom > 0.0f ? colourGivenObject / denom : 0.5f;
 }

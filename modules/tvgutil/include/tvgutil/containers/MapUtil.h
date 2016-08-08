@@ -39,6 +39,21 @@ public:
   }
 
   /**
+   * \brief Gets the value associated with a particular key in the map, if any, or a default value otherwise.
+   *
+   * \param map                 The map.
+   * \param key                 The key.
+   * \param defaultValue        A default value to return if the key is not present in the map.
+   * \return                    The value associated with the key in the map, if any, or the default value otherwise.
+   */
+  template <typename K, typename V>
+  static const V& lookup(const std::map<K,V>& map, typename boost::mpl::identity<const K>::type& key, typename boost::mpl::identity<const V>::type& defaultValue)
+  {
+    typename std::map<K,V>::const_iterator it = map.find(key);
+    return it != map.end() ? it->second : defaultValue;
+  }
+
+  /**
    * \brief Writes the value associated with a particular key in a map into a typed variable.
    *
    * This succeeds precisely when the key exists in the map and its corresponding value is of a type that can

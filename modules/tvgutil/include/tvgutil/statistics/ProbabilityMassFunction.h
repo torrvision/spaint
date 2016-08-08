@@ -125,18 +125,6 @@ public:
   }
 
   /**
-   * \brief Gets the mass for the specified label.
-   *
-   * \param label The label for which to get the mass.
-   * \return      The mass for the specified label.
-   */
-  float get_mass(Label label) const
-  {
-    typename std::map<Label,float>::const_iterator it = m_masses.find(label);
-    return it != m_masses.end() ? it->second : 0.0f;
-  }
-
-  /**
    * \brief Gets the masses for the various labels.
    *
    * \return The masses for the various labels.
