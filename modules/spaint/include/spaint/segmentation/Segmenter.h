@@ -53,8 +53,6 @@ public:
 public:
   /**
    * \brief Resets the segmenter.
-   *
-   * In practice, this resets any internal model that the segmenter has learnt during segmentation training mode.
    */
   virtual void reset() = 0;
 

@@ -20,7 +20,7 @@ public:
   /**
    * \brief Applies a binary mask to an image.
    *
-   * This version of the function is needed to assist the compiler with type inference.
+   * This version of the function is needed to assist the compiler with type deduction.
    *
    * \param mask  The binary mask.
    * \param image The image to which to apply it.

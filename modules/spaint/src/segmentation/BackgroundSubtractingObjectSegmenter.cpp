@@ -182,8 +182,8 @@ ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput,
-                                                                                     const ORUtils::SE3Pose& pose,
-                                                                                     const RenderState_CPtr& renderState) const
+                                                                          const ORUtils::SE3Pose& pose,
+                                                                          const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
@@ -211,8 +211,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
 }
 
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
-                                                                                   const ORUtils::SE3Pose& pose,
-                                                                                   const RenderState_CPtr& renderState) const
+                                                                        const ORUtils::SE3Pose& pose,
+                                                                        const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
