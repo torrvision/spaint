@@ -1,6 +1,6 @@
-#########################################
+######################################
 # CMakeLists.txt for modules/tvgplot #
-#########################################
+######################################
 
 ###########################
 # Specify the target name #
@@ -13,7 +13,6 @@ SET(targetname tvgplot)
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 
 #############################
