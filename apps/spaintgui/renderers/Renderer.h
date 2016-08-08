@@ -254,6 +254,13 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Renders a semi-transparent colour overlay over the existing scene.
+   *
+   * \param overlay The colour overlay.
+   */
+  void render_overlay(const ITMUChar4Image_CPtr& overlay) const;
+
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
   /**
    * \brief Renders the value of a pixel in the specified sub-window.
