@@ -7,9 +7,6 @@
 #include <boost/format.hpp>
 using boost::assign::list_of;
 
-#include <tvgutil/SerializationUtil.h>
-using namespace tvgutil;
-
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
 #include <evaluation/core/ParamSetUtil.h>
@@ -22,6 +19,9 @@ using namespace evaluation;
 #include <rafl/examples/ExampleUtil.h>
 #include <rafl/examples/UnitCircleExampleGenerator.h>
 using namespace rafl;
+
+#include <tvgutil/persistence/SerializationUtil.h>
+using namespace tvgutil;
 
 #include "PaletteGenerator.h"
 #include "PlotWindow.h"

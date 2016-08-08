@@ -4,9 +4,9 @@
  */
 
 #include "segmentation/ColourAppearanceModel.h"
+using namespace tvgutil;
 
 #include "util/ColourConversion_Shared.h"
-using namespace rafl;
 
 namespace spaint {
 

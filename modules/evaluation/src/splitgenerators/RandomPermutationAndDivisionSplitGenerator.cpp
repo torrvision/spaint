@@ -9,7 +9,7 @@
 #include <cassert>
 #include <stdexcept>
 
-#include <tvgutil/LimitedContainer.h>
+#include <tvgutil/containers/LimitedContainer.h>
 
 namespace evaluation {
 

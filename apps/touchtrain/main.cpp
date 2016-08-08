@@ -21,7 +21,7 @@ using namespace raflevaluation;
 #include <spaint/touch/TouchDescriptorCalculator.h>
 using namespace spaint;
 
-#include <tvgutil/SerializationUtil.h>
+#include <tvgutil/persistence/SerializationUtil.h>
 #include <tvgutil/timing/Timer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;

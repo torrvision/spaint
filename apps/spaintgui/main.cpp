@@ -34,7 +34,7 @@ using namespace ITMLib;
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
-#include <tvgutil/PathFinder.h>
+#include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
 #include "core/Pipeline.h"

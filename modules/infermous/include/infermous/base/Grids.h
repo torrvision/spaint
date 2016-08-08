@@ -12,7 +12,7 @@
 
 #include <Eigen/Dense>
 
-#include <tvgutil/LimitedContainer.h>
+#include <tvgutil/containers/LimitedContainer.h>
 
 namespace infermous {
 

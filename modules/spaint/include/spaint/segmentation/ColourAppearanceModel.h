@@ -6,9 +6,7 @@
 #ifndef H_SPAINT_COLOURAPPEARANCEMODEL
 #define H_SPAINT_COLOURAPPEARANCEMODEL
 
-// FIXME: There's a reasonable argument that things like Histogram and ProbabilityMassFunction should be moved somewhere more central.
-#include <rafl/base/Histogram.h>
-#include <rafl/base/ProbabilityMassFunction.h>
+#include <tvgutil/statistics/ProbabilityMassFunction.h>
 
 #include "../util/ITMImagePtrTypes.h"
 
@@ -23,7 +21,7 @@ class ColourAppearanceModel
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<rafl::ProbabilityMassFunction<int> > PMF_Ptr;
+  typedef boost::shared_ptr<tvgutil::ProbabilityMassFunction<int> > PMF_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -34,10 +32,10 @@ private:
   int m_binsCr;
 
   // P(Colour | object)
-  rafl::Histogram<int> m_histColourGivenObject;
+  tvgutil::Histogram<int> m_histColourGivenObject;
 
   // P(Colour | !object)
-  rafl::Histogram<int> m_histColourGivenNotObject;
+  tvgutil::Histogram<int> m_histColourGivenNotObject;
 
   // P(Colour | object)
   PMF_Ptr m_pmfColourGivenObject;

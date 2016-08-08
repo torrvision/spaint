@@ -1,7 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
-#include <tvgutil/ArgUtil.h>
+#include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
 
 //#################### HELPER FUNCTIONS ####################

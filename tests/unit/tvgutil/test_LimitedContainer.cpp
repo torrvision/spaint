@@ -6,7 +6,7 @@
 #include <sstream>
 #include <vector>
 
-#include <tvgutil/LimitedContainer.h>
+#include <tvgutil/containers/LimitedContainer.h>
 using namespace tvgutil;
 
 BOOST_AUTO_TEST_SUITE(test_LimitedContainer)

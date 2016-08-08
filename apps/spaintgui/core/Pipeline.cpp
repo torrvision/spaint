@@ -49,7 +49,7 @@ using namespace RelocLib;
 #include <spaint/trackers/ViconTracker.h>
 #endif
 
-#include <tvgutil/PathFinder.h>
+#include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
 
 #define DEBUGGING 1

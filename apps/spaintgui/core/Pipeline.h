@@ -27,7 +27,7 @@
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/trackers/FallibleTracker.h>
 
-#include <tvgutil/SequentialPathGenerator.h>
+#include <tvgutil/filesystem/SequentialPathGenerator.h>
 
 #include "Interactor.h"
 #include "Model.h"

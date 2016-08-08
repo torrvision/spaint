@@ -9,7 +9,7 @@ using namespace ITMLib;
 #include <boost/format.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-#include <tvgutil/ArgUtil.h>
+#include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
 
 #include "imageprocessing/ImageProcessorFactory.h"

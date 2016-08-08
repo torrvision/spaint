@@ -4,10 +4,10 @@
 
 #include "touch/TouchSettings.h"
 
-#include <tvgutil/FilesystemUtil.h>
-#include <tvgutil/MapUtil.h>
-#include <tvgutil/PropertyUtil.h>
-#include <tvgutil/SerializationUtil.h>
+#include <tvgutil/containers/MapUtil.h>
+#include <tvgutil/filesystem/FilesystemUtil.h>
+#include <tvgutil/persistence/PropertyUtil.h>
+#include <tvgutil/persistence/SerializationUtil.h>
 using namespace tvgutil;
 
 namespace spaint {
