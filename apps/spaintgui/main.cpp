@@ -47,6 +47,7 @@ struct CommandLineArguments
   bool cameraAfterDisk;
   std::string depthImageMask;
   int initialFrameNumber;
+  bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string rgbImageMask;
   std::string sequenceName;
@@ -63,6 +64,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("help", "produce help message")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -161,7 +163,7 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  /*if(args.cameraAfterDisk)*/ settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
+  if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
   settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
   Pipeline::TrackerType trackerType = Pipeline::TRACKER_INFINITAM;
