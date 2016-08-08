@@ -72,7 +72,7 @@ inline Vector3f convert_rgb_to_lab(const Vector3f& rgb)
  * \brief Converts an RGB colour to YCbCr.
  *
  * \param rgb The RGB colour.
- * \return    The resulting of converting the colour to YCbCr.
+ * \return    The result of converting the colour to YCbCr.
  */
 _CPU_AND_GPU_CODE_
 inline Vector3f convert_rgb_to_ycbcr(const Vector3u& rgb)
@@ -89,7 +89,7 @@ inline Vector3f convert_rgb_to_ycbcr(const Vector3u& rgb)
  * \brief Converts a YCbCr colour to RGB.
  *
  * \param ycc The YCbCr colour.
- * \return    The resulting of converting the colour to RGB.
+ * \return    The result of converting the colour to RGB.
  */
 _CPU_AND_GPU_CODE_
 inline Vector3u convert_ycbcr_to_rgb(const Vector3f& ycc)
