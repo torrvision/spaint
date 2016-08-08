@@ -313,7 +313,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
   const int resizedDiffHeight = static_cast<int>(m_imageHeight * scaleFactor);
   const int *touchIndices = touchIndicesImage.as(s32).host<int>();
   std::vector<Eigen::Vector2i> touchPoints;
-  for(int i = 0, touchPointCount = touchIndicesImage.elements(); i < touchPointCount; ++i)
+  for(int i = 0, touchPointCount = static_cast<int>(touchIndicesImage.elements()); i < touchPointCount; ++i)
   {
     Eigen::Vector2f point(touchIndices[i] / resizedDiffHeight, touchIndices[i] % resizedDiffHeight);
     touchPoints.push_back((point / scaleFactor).cast<int>());
@@ -325,7 +325,7 @@ std::vector<Eigen::Vector2i> TouchDetector::extract_touch_points(int component, 
 int TouchDetector::pick_best_candidate_component_based_on_distance(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
+  const int candidateCount = static_cast<int>(candidateComponents.dims(0));
 
   int bestCandidateID = -1;
   af::array mask;
@@ -361,7 +361,7 @@ int TouchDetector::pick_best_candidate_component_based_on_distance(const af::arr
 int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array& candidateComponents, const af::array& diffRawRaycastInMm) const
 {
   const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
+  const int candidateCount = static_cast<int>(candidateComponents.dims(0));
   const Label isTouchLabel = 1;
 
   std::vector<float> touchProb(candidateCount);
@@ -449,7 +449,7 @@ void TouchDetector::save_candidate_components(const af::array& candidateComponen
   static size_t imageCounter = 0;
 
   const int *candidateIDs = candidateComponents.host<int>();
-  const int candidateCount = candidateComponents.dims(0);
+  const int candidateCount = static_cast<int>(candidateComponents.dims(0));
   af::array candidateDiffAF(m_imageHeight, m_imageWidth, u8);
 
   for(int i = 0; i < candidateCount; ++i)
