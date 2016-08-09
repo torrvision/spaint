@@ -62,7 +62,10 @@ SET(core_headers
 core/Interactor.h
 core/Model.h
 core/Pipeline.h
+core/PipelineMode.h
+core/PipelineState.h
 core/Raycaster.h
+core/TrackerType.h
 )
 
 ##

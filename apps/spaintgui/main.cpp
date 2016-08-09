@@ -166,15 +166,15 @@ try
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
   settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
-  Pipeline::TrackerType trackerType = Pipeline::TRACKER_INFINITAM;
+  TrackerType trackerType = TRACKER_INFINITAM;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
-  if(trackerType == Pipeline::TRACKER_RIFT)
+  if(trackerType == TRACKER_RIFT)
   {
 #ifdef WITH_OVR
     // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0) trackerType = Pipeline::TRACKER_INFINITAM;
+    if(ovrHmd_Detect() == 0) trackerType = TRACKER_INFINITAM;
 #else
     // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
     trackerType = Pipeline::TRACKER_INFINITAM;
@@ -182,7 +182,7 @@ try
   }
 
   // If we're trying to use the Vicon tracker:
-  if(trackerType == Pipeline::TRACKER_VICON || trackerType == Pipeline::TRACKER_ROBUSTVICON)
+  if(trackerType == TRACKER_VICON || trackerType == TRACKER_ROBUSTVICON)
   {
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
@@ -199,7 +199,7 @@ try
 #endif
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = Pipeline::TRACKER_INFINITAM;
+    trackerType = TRACKER_INFINITAM;
 #endif
   }
 
