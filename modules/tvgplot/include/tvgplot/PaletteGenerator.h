@@ -1,10 +1,10 @@
 /**
- * raflvis: PaletteGenerator.h
+ * tvgplot: PaletteGenerator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_RAFLVIS_PALETTEGENERATOR
-#define H_RAFLVIS_PALETTEGENERATOR
+#ifndef H_TVGPLOT_PALETTEGENERATOR
+#define H_TVGPLOT_PALETTEGENERATOR
 
 #include <map>
 #include <set>
@@ -14,6 +14,8 @@
 #include <opencv2/core/core.hpp>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
+
+namespace tvgplot {
 
 /**
  * \brief This class provides functions that can be used to generate palettes (maps from labels to colours).
@@ -53,5 +55,7 @@ public:
     return result;
   }
 };
+
+}
 
 #endif
