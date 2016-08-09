@@ -31,7 +31,7 @@ fi
 cd ..
 
 # Set build and source folders
-source_dir="$(pwd)"
+source_dir=`pwd`
 build_dir="$source_dir/build"
 
 if [ "$1" == "Eclipse CDT4 - Unix Makefiles" ]
