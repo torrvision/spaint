@@ -40,7 +40,7 @@ then
 
   # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
-  cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 ..
+  cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 -DCMAKE_INCLUDE_DIRECTORIES_BEFORE=ON ..
   cmake ..
 
   cd ..
