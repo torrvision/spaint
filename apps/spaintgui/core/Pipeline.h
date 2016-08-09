@@ -104,7 +104,7 @@ private:
   /** The feature calculator. */
   spaint::FeatureCalculator_CPtr m_featureCalculator;
 
-  /** The name to give the featuere inspection window. */
+  /** The name to give the feature inspection window. */
   std::string m_featureInspectionWindowName;
 
   /** The random forest. */
