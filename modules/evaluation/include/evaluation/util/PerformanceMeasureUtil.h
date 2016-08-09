@@ -17,7 +17,7 @@ namespace evaluation {
  */
 struct PerformanceMeasureUtil
 {
-  //#################### PUBLIC STATIC MEMBER FNCTIONS #################### 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS #################### 
 
   /**
    * \brief Averages a set of performance results.
