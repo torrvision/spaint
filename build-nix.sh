@@ -30,16 +30,18 @@ fi
 
 cd ..
 
-# Build spaint itself.
+# Set build and source folders
 source_dir="$(pwd)"
-build_dir=./build
+build_dir="$source_dir/build"
+
 if [ "$1" == "Eclipse CDT4 - Unix Makefiles" ]
 then
   # Eclipse does not like having the build folder inside the project
-  # Use a sibling folder instead
-  build_dir=../spaint-build
+  # Use a sibling instead
+  build_dir="$source_dir/../spaint-build"
 fi
 
+# Build spaint itself.
 echo "[spaint] Building spaint in $build_dir"
 
 if [ ! -d $build_dir ]
