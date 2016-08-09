@@ -56,6 +56,7 @@ core/Interactor.cpp
 core/Model.cpp
 core/Pipeline.cpp
 core/Raycaster.cpp
+core/SmoothingSection.cpp
 )
 
 SET(core_headers
@@ -65,6 +66,8 @@ core/Pipeline.h
 core/PipelineMode.h
 core/PipelineState.h
 core/Raycaster.h
+core/SmoothingSection.h
+core/SmoothingState.h
 core/TrackerType.h
 )
 

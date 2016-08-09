@@ -487,7 +487,7 @@ void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 
 void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
 {
-  m_state.m_labelSmoother->smooth_labels(renderState->raycastResult, m_state.m_model->get_scene().get());
+  m_smoothingSection.run(m_state, renderState);
 }
 
 void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)

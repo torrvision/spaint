@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_PIPELINE
 
 #include "PipelineState.h"
+#include "SmoothingSection.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -24,6 +25,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  SmoothingSection m_smoothingSection;
+
   /** The state shared between the different sections of the pipeline. */
   PipelineState m_state;
 

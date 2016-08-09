@@ -28,12 +28,13 @@
 #include "Interactor.h"
 #include "PipelineMode.h"
 #include "Raycaster.h"
+#include "SmoothingState.h"
 #include "TrackerType.h"
 
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
  */
-class PipelineState
+class PipelineState : public SmoothingState
 {
   //#################### TYPEDEFS ####################
 private:
@@ -179,6 +180,20 @@ public:
 
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual const spaint::LabelSmoother_CPtr& get_label_smoother() const
+  {
+    return m_labelSmoother;
+  }
+
+  /** Override */
+  virtual const Model_Ptr& get_model() const
+  {
+    return m_model;
+  }
 };
 
 #endif
