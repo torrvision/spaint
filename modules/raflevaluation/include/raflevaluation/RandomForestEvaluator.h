@@ -11,6 +11,7 @@
 #include <evaluation/core/LearnerEvaluator.h>
 #include <evaluation/core/PerformanceMeasure.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
+#include <evaluation/util/PerformanceMeasureUtil.h>
 
 #include <rafl/core/RandomForest.h>
 
@@ -22,11 +23,11 @@ namespace raflevaluation {
  * \brief An instance of this class can be used to evaluate a random forest using approaches based on example set splitting.
  */
 template <typename Label>
-class RandomForestEvaluator : public evaluation::LearnerEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> >
+class RandomForestEvaluator : public evaluation::LearnerEvaluator<rafl::Example<Label>,PerformanceResult>
 {
   //#################### TYPEDEFS AND USINGS ####################
 private:
-  typedef evaluation::LearnerEvaluator<rafl::Example<Label>,std::map<std::string,PerformanceMeasure> > Base;
+  typedef evaluation::LearnerEvaluator<rafl::Example<Label>,PerformanceResult> Base;
   using typename Base::Example_CPtr;
   using typename Base::ResultType;
   typedef rafl::DecisionTree<Label> DecisionTree;
@@ -64,28 +65,9 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /** Override */
-  virtual std::map<std::string,PerformanceMeasure> average_results(const std::vector<std::map<std::string,PerformanceMeasure> >& results) const
+  virtual PerformanceResult average_results(const std::vector<PerformanceResult>& results) const
   {
-    std::map<std::string,std::vector<PerformanceMeasure> > groupedResults;
-
-    // Group the results by measure.
-    for(typename std::vector<std::map<std::string,PerformanceMeasure> >::const_iterator it = results.begin(), iend = results.end(); it != iend; ++it)
-    {
-      const std::map<std::string,PerformanceMeasure>& result = *it;
-      for(typename std::map<std::string,PerformanceMeasure>::const_iterator jt = result.begin(), jend = result.end(); jt != jend; ++jt)
-      {
-        groupedResults[jt->first].push_back(jt->second);
-      }
-    }
-
-    // Average the results for each measure.
-    std::map<std::string,PerformanceMeasure> averagedResults;
-    for(std::map<std::string,std::vector<PerformanceMeasure> >::const_iterator it = groupedResults.begin(), iend = groupedResults.end(); it != iend; ++it)
-    {
-      averagedResults.insert(std::make_pair(it->first, PerformanceMeasure::average(it->second)));
-    }
-
-    return averagedResults;
+    return PerformanceMeasureUtil::average_results(results);
   }
 
   /** Override */

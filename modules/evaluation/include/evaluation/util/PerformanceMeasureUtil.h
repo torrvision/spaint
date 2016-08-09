@@ -8,24 +8,24 @@
 
 #include <map>
 
-#include "../core/PerformanceMeasure.h"
+#include "../core/PerformanceResult.h"
 
 namespace evaluation {
 
 /**
- * \brief This struct contains utility functions to make it easier to manipulate performance measures.
+ * \brief This struct contains utility functions to make it easier to manipulate performance results.
  */
 struct PerformanceMeasureUtil
 {
   //#################### PUBLIC STATIC MEMBER FNCTIONS #################### 
 
   /**
-   * \brief Averages a set of performance measures.
+   * \brief Averages a set of performance results.
    *
-   * \param measures  The list of performance measures.
-   * \return          The average of the performance measures.
+   * \param results   The list of performance results.
+   * \return          The average of the performance results.
    */
-  static std::map<std::string,PerformanceMeasure> average_results(const std::vector<std::map<std::string,PerformanceMeasure> >& measures);
+  static PerformanceResult average_results(const std::vector<PerformanceResult>& results);
 };
 
 }

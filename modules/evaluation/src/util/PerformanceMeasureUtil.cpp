@@ -9,22 +9,22 @@ namespace evaluation {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-std::map<std::string,PerformanceMeasure> PerformanceMeasureUtil::average_results(const std::vector<std::map<std::string,PerformanceMeasure> >& results)
+PerformanceResult PerformanceMeasureUtil::average_results(const std::vector<PerformanceResult>& results)
 {
   std::map<std::string,std::vector<PerformanceMeasure> > groupedResults;
 
   // Group the results by measure.
-  for(std::vector<std::map<std::string,PerformanceMeasure> >::const_iterator it = results.begin(), iend = results.end(); it != iend; ++it)
+  for(std::vector<PerformanceResult>::const_iterator it = results.begin(), iend = results.end(); it != iend; ++it)
   {
-    const std::map<std::string,PerformanceMeasure>& result = *it;
-    for(std::map<std::string,PerformanceMeasure>::const_iterator jt = result.begin(), jend = result.end(); jt != jend; ++jt)
+    const PerformanceResult& result = *it;
+    for(PerformanceResult::const_iterator jt = result.begin(), jend = result.end(); jt != jend; ++jt)
     {
       groupedResults[jt->first].push_back(jt->second);
     }
   }
 
   // Average the results for each measure.
-  std::map<std::string,PerformanceMeasure> averagedResults;
+  PerformanceResult averagedResults;
   for(std::map<std::string,std::vector<PerformanceMeasure> >::const_iterator it = groupedResults.begin(), iend = groupedResults.end(); it != iend; ++it)
   {
     averagedResults.insert(std::make_pair(it->first, PerformanceMeasure::average(it->second)));

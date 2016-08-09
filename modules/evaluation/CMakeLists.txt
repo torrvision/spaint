@@ -30,6 +30,7 @@ SET(core_headers
 include/evaluation/core/LearnerEvaluator.h
 include/evaluation/core/ParamSetUtil.h
 include/evaluation/core/PerformanceMeasure.h
+include/evaluation/core/PerformanceResult.h
 include/evaluation/core/PerformanceTable.h
 )
 
