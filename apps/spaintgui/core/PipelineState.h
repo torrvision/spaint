@@ -27,6 +27,7 @@
 
 #include "Interactor.h"
 #include "PipelineMode.h"
+#include "PredictionState.h"
 #include "Raycaster.h"
 #include "SmoothingState.h"
 #include "TrackerType.h"
@@ -34,7 +35,7 @@
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
  */
-class PipelineState : public SmoothingState
+class PipelineState : public PredictionState, public SmoothingState
 {
   //#################### TYPEDEFS ####################
 private:
@@ -45,6 +46,7 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
+  typedef boost::shared_ptr<const rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_CPtr;
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
@@ -184,15 +186,63 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  virtual const spaint::FeatureCalculator_CPtr& get_feature_calculator() const
+  {
+    return m_featureCalculator;
+  }
+
+  /** Override */
+  virtual RandomForest_CPtr get_forest() const
+  {
+    return m_forest;
+  }
+
+  /** Override */
+  virtual const Interactor_Ptr& get_interactor() const
+  {
+    return m_interactor;
+  }
+
+  /** Override */
   virtual const spaint::LabelSmoother_CPtr& get_label_smoother() const
   {
     return m_labelSmoother;
   }
 
   /** Override */
+  virtual size_t get_max_prediction_voxel_count() const
+  {
+    return m_maxPredictionVoxelCount;
+  }
+
+  /** Override */
   virtual const Model_Ptr& get_model() const
   {
     return m_model;
+  }
+
+  /** Override */
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_prediction_features()
+  {
+    return m_predictionFeaturesMB;
+  }
+
+  /** Override */
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> >& get_prediction_labels()
+  {
+    return m_predictionLabelsMB;
+  }
+
+  /** Override */
+  virtual const spaint::UniformVoxelSampler_CPtr& get_prediction_sampler() const
+  {
+    return m_predictionSampler;
+  }
+
+  /** Override */
+  virtual const spaint::Selector::Selection_Ptr& get_prediction_voxel_locations()
+  {
+    return m_predictionVoxelLocationsMB;
   }
 };
 

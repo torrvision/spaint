@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_PIPELINE
 
 #include "PipelineState.h"
+#include "PredictionSection.h"
 #include "SmoothingSection.h"
 
 /**
@@ -25,6 +26,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  PredictionSection m_predictionSection;
+
   /** TODO */
   SmoothingSection m_smoothingSection;
 

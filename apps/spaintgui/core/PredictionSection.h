@@ -1,21 +1,21 @@
 /**
- * spaintgui: SmoothingSection.h
+ * spaintgui: PredictionSection.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_SMOOTHINGSECTION
-#define H_SPAINTGUI_SMOOTHINGSECTION
+#ifndef H_SPAINTGUI_PREDICTIONSECTION
+#define H_SPAINTGUI_PREDICTIONSECTION
 
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-#include "SmoothingState.h"
+#include "PredictionState.h"
 
 /**
  * \brief TODO
  */
-class SmoothingSection
+class PredictionSection
 {
   //#################### TYPEDEFS ####################
 private:
@@ -24,7 +24,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** TODO */
-  virtual void run(SmoothingState& state, const RenderState_CPtr& renderState);
+  virtual void run(PredictionState& state, const RenderState_CPtr& samplingRenderState);
 };
 
 #endif

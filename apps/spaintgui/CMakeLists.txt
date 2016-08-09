@@ -55,6 +55,7 @@ SET(core_sources
 core/Interactor.cpp
 core/Model.cpp
 core/Pipeline.cpp
+core/PredictionSection.cpp
 core/Raycaster.cpp
 core/SmoothingSection.cpp
 )
@@ -65,6 +66,8 @@ core/Model.h
 core/Pipeline.h
 core/PipelineMode.h
 core/PipelineState.h
+core/PredictionSection.h
+core/PredictionState.h
 core/Raycaster.h
 core/SmoothingSection.h
 core/SmoothingState.h

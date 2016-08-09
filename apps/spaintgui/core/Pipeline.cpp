@@ -450,34 +450,7 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 
 void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
 {
-  // If we haven't been provided with a camera position from which to sample, early out.
-  if(!samplingRenderState) return;
-
-  // If the random forest is not yet valid, early out.
-  if(!m_state.m_forest->is_valid()) return;
-
-  // Sample some voxels for which to predict labels.
-  m_state.m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_state.m_maxPredictionVoxelCount, *m_state.m_predictionVoxelLocationsMB);
-
-  // Calculate feature descriptors for the sampled voxels.
-  m_state.m_featureCalculator->calculate_features(*m_state.m_predictionVoxelLocationsMB, m_state.m_model->get_scene().get(), *m_state.m_predictionFeaturesMB);
-  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_state.m_predictionFeaturesMB, m_state.m_maxPredictionVoxelCount, m_state.m_featureCalculator->get_feature_count());
-
-  // Predict labels for the voxels based on the feature descriptors.
-  SpaintVoxel::PackedLabel *labels = m_state.m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int i = 0; i < static_cast<int>(m_state.m_maxPredictionVoxelCount); ++i)
-  {
-    labels[i] = SpaintVoxel::PackedLabel(m_state.m_forest->predict(descriptors[i]), SpaintVoxel::LG_FOREST);
-  }
-
-  m_state.m_predictionLabelsMB->UpdateDeviceFromHost();
-
-  // Mark the voxels with their predicted labels.
-  m_state.m_interactor->mark_voxels(m_state.m_predictionVoxelLocationsMB, m_state.m_predictionLabelsMB);
+  m_predictionSection.run(m_state, samplingRenderState);
 }
 
 void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
