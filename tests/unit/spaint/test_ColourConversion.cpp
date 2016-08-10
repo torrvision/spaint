@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_SUITE(test_ColourConversion)
 
 BOOST_AUTO_TEST_CASE(convert_rgb_to_ycbcr_test)
 {
+  // To manually verify that these values make sense, see the CbCr plane image at https://en.wikipedia.org/wiki/YCbCr.
   BOOST_CHECK_EQUAL(convert_rgb_to_ycbcr(Vector3u(0,0,0)), Vector3f(0.0f,127.5f,127.5f));
   BOOST_CHECK_EQUAL(convert_rgb_to_ycbcr(Vector3u(255,0,0)), Vector3f(76.2449951f,84.4049988f,255.0f));
   BOOST_CHECK_EQUAL(convert_rgb_to_ycbcr(Vector3u(0,255,0)), Vector3f(149.684998f,43.0950012f,20.6549988f));
