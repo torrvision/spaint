@@ -38,6 +38,13 @@ protected:
    */
   LabelSmoother(size_t maxLabelCount, float maxSquaredDistanceBetweenVoxels);
 
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys the label smoother.
+   */
+  virtual ~LabelSmoother();
+
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**

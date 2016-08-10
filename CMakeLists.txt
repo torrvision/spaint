@@ -24,8 +24,14 @@ ENDIF()
 #########################################
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  SET(CMAKE_INSTALL_PREFIX ../install CACHE PATH "" FORCE)
+  SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install CACHE PATH "" FORCE)
 ENDIF()
+
+#####################################################################
+# Ensure that include directories are prepended to the include path #
+#####################################################################
+
+SET(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON CACHE BOOL "" FORCE)
 
 ##########################
 # Specify subdirectories #
