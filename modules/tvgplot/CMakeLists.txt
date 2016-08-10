@@ -34,7 +34,7 @@ include/tvgplot/PlotWindow.h
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP(core FILES ${sources} ${headers})
+SOURCE_GROUP("" FILES ${sources} ${headers})
 
 ##########################################
 # Specify additional include directories #

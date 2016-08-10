@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
   for(size_t n = 0, size = params.size(); n < size; ++n)
   {
     evaluator.reset(new RandomForestEvaluator<Label>(splitGenerator, params[n]));
-    std::map<std::string,PerformanceMeasure> result = evaluator->evaluate(examples);
+    PerformanceResult result = evaluator->evaluate(examples);
     results.record_performance(params[n], result);
   }
 

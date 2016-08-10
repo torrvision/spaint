@@ -75,16 +75,6 @@ public:
    * \return  The variance of the measure.
    */
   float get_variance() const;
-
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-public:
-  /** 
-   * \brief Calculates the average of a set of measures.
-   *
-   * \param measures  A set of measures (must be non-empty).
-   * \return          The average of the measures.
-   */
-  static PerformanceMeasure average(const std::vector<PerformanceMeasure>& measures);
 };
 
 //#################### STREAM OPERATORS ####################

@@ -18,12 +18,12 @@ void check_close(const float *v1, const float *v2, size_t size, float TOL)
   for(size_t i = 0; i < size; ++i) check_close(v1[i], v2[i], TOL);
 }
 
-void check_close(Vector3f v1, Vector3f v2, float TOL)
+void check_close(const Vector3f& v1, const Vector3f& v2, float TOL)
 {
   check_close(v1.v, v2.v, v1.size(), TOL);
 }
 
-void check_close(Vector4f v1, Vector4f v2, float TOL)
+void check_close(const Vector4f& v1, const Vector4f& v2, float TOL)
 {
   check_close(v1.v, v2.v, v1.size(), TOL);
 }

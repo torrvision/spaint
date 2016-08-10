@@ -1,23 +1,19 @@
-######################################
-# CMakeLists.txt for unit/evaluation #
-######################################
+###################################
+# CMakeLists.txt for unit/spaint #
+###################################
 
 ###############################
 # Specify the test suite name #
 ###############################
 
-SET(suitename evaluation)
+SET(suitename spaint)
 
 ##########################
 # Specify the test names #
 ##########################
 
 SET(testnames
-CartesianProductParameterSetGenerator
-ConfusionMatrixUtil
-CrossValidationSplitGenerator
-PerformanceMeasureUtil
-RandomPermutationAndDivisionSplitGenerator
+ColourConversion
 )
 
 FOREACH(testname ${testnames})
@@ -29,7 +25,7 @@ SET(targetname "unittest_${suitename}_${testname}")
 ################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -49,8 +45,7 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/evaluation/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 
 ##########################################
 # Specify the target and where to put it #
@@ -62,7 +57,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetUnitTestTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-TARGET_LINK_LIBRARIES(${targetname} evaluation tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
 ENDFOREACH()
