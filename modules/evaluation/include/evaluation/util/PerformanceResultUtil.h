@@ -1,6 +1,6 @@
 /**
  * evaluation: PerformanceResultUtil.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
 #ifndef H_EVALUATION_PERFORMANCERESULTUTIL
@@ -22,14 +22,12 @@ struct PerformanceResultUtil
   /**
    * \brief Averages a list of performance results.
    * 
-   * Note: If the performance results are non-homogeneous,
-   *       it will return the union of the performance measures:
+   * If the performance results contain different performance measures, the average result
+   * will contain the averages of all measures present in any input result. For example:
    *
-   * Example: Input: { [A->1, B->2]; [A->2, B->1]; [C->3] }
-   *
-   *         Groups: { [A->1, A->2]; [B->2, B->1]; [C->3] }
-   *
-   *         Output: [A->1.5, B->1.5, C->3].
+   * Input: [[A->1, B->2]; [A->2, B->1]; [C->3]]
+   * Groups: [[A->1, A->2]; [B->2, B->1]; [C->3]]
+   * Output: [A->1.5, B->1.5, C->3]
    *
    * \param results   The list of performance results.
    * \return          The average of the performance results.
