@@ -45,9 +45,14 @@ PerformanceMeasure PerformanceMeasureUtil::average_measures(const std::vector<Pe
 
 PerformanceResult PerformanceMeasureUtil::average_results(const std::vector<PerformanceResult>& results)
 {
-  std::map<std::string,std::vector<PerformanceMeasure> > groupedMeasures;
+  // Check that there are results to average.
+  if(results.empty())
+  {
+    throw std::runtime_error("Cannot average an empty set of results");
+  }
 
   // Group the measures.
+  std::map<std::string,std::vector<PerformanceMeasure> > groupedMeasures;
   for(std::vector<PerformanceResult>::const_iterator it = results.begin(), iend = results.end(); it != iend; ++it)
   {
     const PerformanceResult& result = *it;

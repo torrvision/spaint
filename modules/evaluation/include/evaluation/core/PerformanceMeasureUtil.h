@@ -37,8 +37,8 @@ struct PerformanceMeasureUtil
    * Groups: [[A->1, A->2]; [B->2, B->1]; [C->3]]
    * Output: [A->1.5, B->1.5, C->3]
    *
-   * \param results   The vector of performance results.
-   * \return          The average of the performance results.
+   * \param results   The vector of performance results to average (must be non-empty).
+   * \return          The average of the results.
    */
   static PerformanceResult average_results(const std::vector<PerformanceResult>& results);
 };
