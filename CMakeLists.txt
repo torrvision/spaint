@@ -24,7 +24,7 @@ ENDIF()
 #########################################
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  SET(CMAKE_INSTALL_PREFIX ../install CACHE PATH "" FORCE)
+  SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install CACHE PATH "" FORCE)
 ENDIF()
 
 #####################################################################
