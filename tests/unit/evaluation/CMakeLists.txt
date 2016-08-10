@@ -17,6 +17,7 @@ CartesianProductParameterSetGenerator
 ConfusionMatrixUtil
 CrossValidationSplitGenerator
 PerformanceMeasure
+PerformanceResultUtil
 RandomPermutationAndDivisionSplitGenerator
 )
 
