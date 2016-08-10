@@ -6,15 +6,15 @@
 #ifndef H_EVALUATION_PERFORMANCETABLE
 #define H_EVALUATION_PERFORMANCETABLE
 
-#include "ParamSetUtil.h"
-#include "PerformanceResult.h"
-
 #include <ostream>
 #include <utility>
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/assign/list_of.hpp>
+
+#include "ParamSetUtil.h"
+#include "PerformanceResult.h"
 
 namespace evaluation {
 

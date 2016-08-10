@@ -21,15 +21,15 @@ PerformanceTable::PerformanceTable(const std::vector<std::string>& measureNames)
 const ParamSet& PerformanceTable::find_best_param_set(const std::string& measureName) const
 {
   size_t bestRow = 0;
-  float bestResult = static_cast<float>(INT_MIN);
+  float bestMean = static_cast<float>(INT_MIN);
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
     const PerformanceMeasure& measure = MapUtil::lookup(m_results[i].second, measureName);
 
     float mean = measure.get_mean();
-    if(mean > bestResult)
+    if(mean > bestMean)
     {
-      bestResult = mean;
+      bestMean = mean;
       bestRow = i;
     }
   }

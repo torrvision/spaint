@@ -6,9 +6,9 @@
 #ifndef H_EVALUATION_PERFORMANCERESULT
 #define H_EVALUATION_PERFORMANCERESULT
 
-#include "PerformanceMeasure.h"
-
 #include <map>
+
+#include "PerformanceMeasure.h"
 
 namespace evaluation {
 

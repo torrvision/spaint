@@ -2,7 +2,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/lexical_cast.hpp>
 using boost::assign::list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
