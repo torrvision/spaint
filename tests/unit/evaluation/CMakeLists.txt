@@ -16,7 +16,6 @@ SET(testnames
 CartesianProductParameterSetGenerator
 ConfusionMatrixUtil
 CrossValidationSplitGenerator
-PerformanceMeasure
 PerformanceMeasureUtil
 RandomPermutationAndDivisionSplitGenerator
 )
