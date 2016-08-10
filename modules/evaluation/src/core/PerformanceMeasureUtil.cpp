@@ -1,15 +1,15 @@
 /**
- * evaluation: PerformanceResultUtil.cpp
+ * evaluation: PerformanceMeasureUtil.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "util/PerformanceResultUtil.h"
+#include "core/PerformanceMeasureUtil.h"
 
 namespace evaluation {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-PerformanceResult PerformanceResultUtil::average_results(const std::vector<PerformanceResult>& results)
+PerformanceResult PerformanceMeasureUtil::average_results(const std::vector<PerformanceResult>& results)
 {
   std::map<std::string,std::vector<PerformanceMeasure> > groupedMeasures;
 

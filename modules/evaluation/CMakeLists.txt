@@ -23,6 +23,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 SET(core_sources
 src/core/ParamSetUtil.cpp
 src/core/PerformanceMeasure.cpp
+src/core/PerformanceMeasureUtil.cpp
 src/core/PerformanceTable.cpp
 )
 
@@ -30,6 +31,7 @@ SET(core_headers
 include/evaluation/core/LearnerEvaluator.h
 include/evaluation/core/ParamSetUtil.h
 include/evaluation/core/PerformanceMeasure.h
+include/evaluation/core/PerformanceMeasureUtil.h
 include/evaluation/core/PerformanceResult.h
 include/evaluation/core/PerformanceTable.h
 )
@@ -52,13 +54,11 @@ include/evaluation/splitgenerators/SplitGenerator.h
 SET(util_sources
 src/util/CartesianProductParameterSetGenerator.cpp
 src/util/ConfusionMatrixUtil.cpp
-src/util/PerformanceResultUtil.cpp
 )
 
 SET(util_headers
 include/evaluation/util/CartesianProductParameterSetGenerator.h
 include/evaluation/util/ConfusionMatrixUtil.h
-include/evaluation/util/PerformanceResultUtil.h
 )
 
 #################################################################
