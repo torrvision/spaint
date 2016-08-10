@@ -30,34 +30,33 @@ fi
 
 cd ..
 
-# Set build and source folders
-source_dir=`pwd`
-build_dir="$source_dir/build"
+# Set the source and build directories for spaint itself.
+SOURCE_DIR=`pwd`
+BUILD_DIR="$SOURCE_DIR/build"
 
 if [ "$1" == "Eclipse CDT4 - Unix Makefiles" ]
 then
-  # Eclipse does not like having the build folder inside the project
-  # Use a sibling instead
-  build_dir="$source_dir/../spaint-build"
+  # Eclipse doesn't like having the build directory inside the project: use a sibling directory instead.
+  BUILD_DIR="$SOURCE_DIR/../spaint-build"
 fi
 
-# Build spaint itself.
-echo "[spaint] Building spaint in $build_dir"
+# Build spaint.
+echo "[spaint] Building spaint in $BUILD_DIR"
 
-if [ ! -d $build_dir ]
+if [ ! -d $BUILD_DIR ]
 then
-  mkdir $build_dir
-  cd $build_dir
+  mkdir $BUILD_DIR
+  cd $BUILD_DIR
 
   # Note: We need to configure twice to handle conditional building.
   echo "[spaint] ...Configuring using CMake..."
-  cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 $source_dir
-  cmake $source_dir
+  cmake -G"$1" -DCMAKE_BUILD_TYPE=$2 $SOURCE_DIR
+  cmake $SOURCE_DIR
 
-  cd $source_dir
+  cd $SOURCE_DIR
 fi
 
-cd $build_dir
+cd $BUILD_DIR
 
 echo "[spaint] ...Running build..."
 make -j2
