@@ -14,4 +14,8 @@ LabelSmoother::LabelSmoother(size_t maxLabelCount, float maxSquaredDistanceBetwe
   m_maxSquaredDistanceBetweenVoxels(maxSquaredDistanceBetweenVoxels)
 {}
 
+//#################### DESTRUCTOR ####################
+
+LabelSmoother::~LabelSmoother() {}
+
 }
