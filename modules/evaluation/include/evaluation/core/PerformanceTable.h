@@ -6,7 +6,6 @@
 #ifndef H_EVALUATION_PERFORMANCETABLE
 #define H_EVALUATION_PERFORMANCETABLE
 
-#include <map>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -15,7 +14,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include "ParamSetUtil.h"
-#include "PerformanceMeasure.h"
+#include "PerformanceResult.h"
 
 namespace evaluation {
 
@@ -30,7 +29,7 @@ private:
   std::vector<std::string> m_measureNames;
 
   /** The results of running the algorithm with various sets of parameters. */
-  std::vector<std::pair<ParamSet,std::map<std::string,PerformanceMeasure> > > m_results;
+  std::vector<std::pair<ParamSet,PerformanceResult> > m_results;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -77,9 +76,9 @@ public:
    * \brief Records the performance of the algorithm when run with the specified set of parameters.
    *
    * \param params    The parameters that were used when running the algorithm.
-   * \param measures  The performance measures for the algorithm when run with that set of parameters.
+   * \param result    The performance result for the algorithm when run with that set of parameters.
    */
-  void record_performance(const ParamSet& params, const std::map<std::string,PerformanceMeasure>& measures);
+  void record_performance(const ParamSet& params, const PerformanceResult& result);
 };
 
 }
