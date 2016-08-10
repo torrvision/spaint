@@ -1,10 +1,10 @@
 /**
- * evaluation: PerformanceMeasureUtil.h
+ * evaluation: PerformanceResultUtil.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_EVALUATION_PERFORMANCEMEASUREUTIL
-#define H_EVALUATION_PERFORMANCEMEASUREUTIL
+#ifndef H_EVALUATION_PERFORMANCERESULTUTIL
+#define H_EVALUATION_PERFORMANCERESULTUTIL
 
 #include <map>
 
@@ -15,12 +15,12 @@ namespace evaluation {
 /**
  * \brief This struct contains utility functions to make it easier to manipulate performance results.
  */
-struct PerformanceMeasureUtil
+struct PerformanceResultUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS #################### 
 
   /**
-   * \brief Averages a set of performance results.
+   * \brief Averages a list of performance results.
    *
    * \param results   The list of performance results.
    * \return          The average of the performance results.

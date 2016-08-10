@@ -24,8 +24,7 @@ const ParamSet& PerformanceTable::find_best_param_set(const std::string& measure
   float bestResult = static_cast<float>(INT_MIN);
   for(size_t i = 0, size = m_results.size(); i < size; ++i)
   {
-    const PerformanceResult& result = m_results[i].second;
-    const PerformanceMeasure& measure = MapUtil::lookup(result, measureName);
+    const PerformanceMeasure& measure = MapUtil::lookup(m_results[i].second, measureName);
 
     float mean = measure.get_mean();
     if(mean > bestResult)

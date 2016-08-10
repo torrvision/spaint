@@ -11,7 +11,7 @@
 #include <evaluation/core/LearnerEvaluator.h>
 #include <evaluation/core/PerformanceMeasure.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
-#include <evaluation/util/PerformanceMeasureUtil.h>
+#include <evaluation/util/PerformanceResultUtil.h>
 
 #include <rafl/core/RandomForest.h>
 
@@ -67,7 +67,7 @@ protected:
   /** Override */
   virtual PerformanceResult average_results(const std::vector<PerformanceResult>& results) const
   {
-    return PerformanceMeasureUtil::average_results(results);
+    return PerformanceResultUtil::average_results(results);
   }
 
   /** Override */
