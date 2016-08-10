@@ -6,8 +6,6 @@
 #ifndef H_EVALUATION_PERFORMANCEMEASUREUTIL
 #define H_EVALUATION_PERFORMANCEMEASUREUTIL
 
-#include <map>
-
 #include "../core/PerformanceResult.h"
 
 namespace evaluation {
