@@ -29,11 +29,6 @@ public:
   /**
    * \brief TODO
    */
-  virtual const std::string& get_feature_inspection_window_name() const = 0;
-
-  /**
-   * \brief TODO
-   */
   virtual const Interactor_Ptr& get_interactor() const = 0;
 
   /**

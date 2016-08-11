@@ -70,9 +70,6 @@ public:
   /** The feature calculator. */
   spaint::FeatureCalculator_CPtr m_featureCalculator;
 
-  /** The name to give the feature inspection window. */
-  std::string m_featureInspectionWindowName;
-
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
@@ -197,12 +194,6 @@ public:
   virtual const spaint::FeatureCalculator_CPtr& get_feature_calculator() const
   {
     return m_featureCalculator;
-  }
-
-  /** Override */
-  virtual const std::string& get_feature_inspection_window_name() const
-  {
-    return m_featureInspectionWindowName;
   }
 
   /** Override */

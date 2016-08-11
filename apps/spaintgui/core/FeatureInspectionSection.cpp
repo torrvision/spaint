@@ -36,7 +36,7 @@ void FeatureInspectionSection::run(FeatureInspectionState& state, const RenderSt
   const float scaleFactor = 10.0f;
   cv::resize(featureInspectionImage, featureInspectionImage, cv::Size(), scaleFactor, scaleFactor, CV_INTER_NN);
 
-  cv::imshow(state.get_feature_inspection_window_name(), featureInspectionImage);
+  cv::imshow("Feature Inspection", featureInspectionImage);
   const int delayMs = 1;
   cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
 #endif

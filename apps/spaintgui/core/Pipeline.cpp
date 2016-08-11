@@ -397,7 +397,6 @@ void Pipeline::initialise(const Settings_Ptr& settings)
     harvestingThreshold, numFerns, numDecisionsPerFern
   ));
 
-  m_state.m_featureInspectionWindowName = "Feature Inspection";
   m_state.m_fusedFramesCount = 0;
   m_state.m_fusionEnabled = true;
   m_state.m_keyframeDelay = 0;
