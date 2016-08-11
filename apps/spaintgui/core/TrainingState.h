@@ -1,23 +1,24 @@
 /**
- * spaintgui: PredictionState.h
+ * spaintgui: TrainingState.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_PREDICTIONSTATE
-#define H_SPAINTGUI_PREDICTIONSTATE
+#ifndef H_SPAINTGUI_TRAININGSTATE
+#define H_SPAINTGUI_TRAININGSTATE
 
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/sampling/interface/UniformVoxelSampler.h>
+#include <spaint/sampling/interface/PerLabelVoxelSampler.h>
+#include <spaint/selectors/Selector.h>
 #include <spaint/util/SpaintVoxel.h>
 
-#include "Interactor.h"
+#include "Model.h"
 
 /**
  * \brief TODO
  */
-class PredictionState
+class TrainingState
 {
   //#################### TYPEDEFS ####################
 private:
@@ -25,7 +26,7 @@ private:
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~PredictionState() {}
+  virtual ~TrainingState() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -42,12 +43,7 @@ public:
   /**
    * \brief TODO
    */
-  virtual const Interactor_Ptr& get_interactor() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual size_t get_max_prediction_voxel_count() const = 0;
+  virtual size_t get_max_training_voxels_per_label() const = 0;
 
   /**
    * \brief TODO
@@ -57,22 +53,27 @@ public:
   /**
    * \brief TODO
    */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_prediction_features() = 0;
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const = 0;
 
   /**
    * \brief TODO
    */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> >& get_prediction_labels() = 0;
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<bool> >& get_training_label_mask() const = 0;
 
   /**
    * \brief TODO
    */
-  virtual const spaint::UniformVoxelSampler_CPtr& get_prediction_sampler() const = 0;
+  virtual const spaint::PerLabelVoxelSampler_CPtr& get_training_sampler() const = 0;
 
   /**
    * \brief TODO
    */
-  virtual const spaint::Selector::Selection_Ptr& get_prediction_voxel_locations() = 0;
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> >& get_training_voxel_counts() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations() = 0;
 };
 
 #endif

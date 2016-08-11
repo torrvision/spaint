@@ -9,6 +9,7 @@
 #include "PipelineState.h"
 #include "PredictionSection.h"
 #include "SmoothingSection.h"
+#include "TrainingSection.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -34,6 +35,9 @@ private:
 
   /** The state shared between the different sections of the pipeline. */
   PipelineState m_state;
+
+  /** TODO */
+  TrainingSection m_trainingSection;
 
   //#################### CONSTRUCTORS ####################
 public:

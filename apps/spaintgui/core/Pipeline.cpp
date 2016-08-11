@@ -465,56 +465,7 @@ void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
 
 void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
 {
-  // If we haven't been provided with a camera position from which to sample, early out.
-  if(!samplingRenderState) return;
-
-  // Calculate a mask indicating the labels that are currently in use and from which we want to train.
-  // Note that we deliberately avoid training from the background label (0), since the entire scene is
-  // initially labelled as background and so training from the background would cause us to learn
-  // incorrect labels for non-background things.
-  LabelManager_CPtr labelManager = m_state.m_model->get_label_manager();
-  const size_t maxLabelCount = labelManager->get_max_label_count();
-  bool *labelMask = m_state.m_trainingLabelMaskMB->GetData(MEMORYDEVICE_CPU);
-  labelMask[0] = false;
-  for(size_t i = 1; i < maxLabelCount; ++i)
-  {
-    labelMask[i] = labelManager->has_label(static_cast<SpaintVoxel::Label>(i));
-  }
-  m_state.m_trainingLabelMaskMB->UpdateDeviceFromHost();
-
-  // Sample voxels from the scene to use for training the random forest.
-  const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_state.m_trainingSampler->sample_voxels(raycastResult, m_state.m_model->get_scene().get(), *m_state.m_trainingLabelMaskMB, *m_state.m_trainingVoxelLocationsMB, *m_state.m_trainingVoxelCountsMB);
-
-#if DEBUGGING
-  // Output the numbers of voxels sampled for each label (for debugging purposes).
-  for(size_t i = 0; i < m_state.m_trainingVoxelCountsMB->dataSize; ++i)
-  {
-    std::cout << m_state.m_trainingVoxelCountsMB->GetData(MEMORYDEVICE_CPU)[i] << ' ';
-  }
-  std::cout << '\n';
-
-  // Make sure that the sampled voxels are available on the CPU so that they can be checked.
-  m_state.m_trainingVoxelLocationsMB->UpdateHostFromDevice();
-#endif
-
-  // Compute feature vectors for the sampled voxels.
-  m_state.m_featureCalculator->calculate_features(*m_state.m_trainingVoxelLocationsMB, m_state.m_model->get_scene().get(), *m_state.m_trainingFeaturesMB);
-
-  // Make the training examples.
-  typedef boost::shared_ptr<const Example<SpaintVoxel::Label> > Example_CPtr;
-  std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::Label>(
-    *m_state.m_trainingFeaturesMB,
-    *m_state.m_trainingVoxelCountsMB,
-    m_state.m_featureCalculator->get_feature_count(),
-    m_state.m_maxTrainingVoxelsPerLabel,
-    maxLabelCount
-  );
-
-  // Train the forest.
-  const size_t splitBudget = 20;
-  m_state.m_forest->add_examples(examples);
-  m_state.m_forest->train(splitBudget);
+  m_trainingSection.run(m_state, samplingRenderState);
 }
 
 void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)

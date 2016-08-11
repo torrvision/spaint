@@ -31,11 +31,12 @@
 #include "Raycaster.h"
 #include "SmoothingState.h"
 #include "TrackerType.h"
+#include "TrainingState.h"
 
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
  */
-class PipelineState : public PredictionState, public SmoothingState
+class PipelineState : public PredictionState, public SmoothingState, public TrainingState
 {
   //#################### TYPEDEFS ####################
 private:
@@ -192,7 +193,7 @@ public:
   }
 
   /** Override */
-  virtual RandomForest_CPtr get_forest() const
+  virtual const RandomForest_Ptr& get_forest()
   {
     return m_forest;
   }
@@ -213,6 +214,12 @@ public:
   virtual size_t get_max_prediction_voxel_count() const
   {
     return m_maxPredictionVoxelCount;
+  }
+
+  /** Override */
+  virtual size_t get_max_training_voxels_per_label() const
+  {
+    return m_maxTrainingVoxelsPerLabel;
   }
 
   /** Override */
@@ -243,6 +250,36 @@ public:
   virtual const spaint::Selector::Selection_Ptr& get_prediction_voxel_locations()
   {
     return m_predictionVoxelLocationsMB;
+  }
+
+  /** Override */
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const
+  {
+    return m_trainingFeaturesMB;
+  }
+
+  /** Override */
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<bool> >& get_training_label_mask() const
+  {
+    return m_trainingLabelMaskMB;
+  }
+
+  /** Override */
+  virtual const spaint::PerLabelVoxelSampler_CPtr& get_training_sampler() const
+  {
+    return m_trainingSampler;
+  }
+
+  /** Override */
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> >& get_training_voxel_counts() const
+  {
+    return m_trainingVoxelCountsMB;
+  }
+
+  /** Override */
+  virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations()
+  {
+    return m_trainingVoxelLocationsMB;
   }
 };
 

@@ -58,6 +58,7 @@ core/Pipeline.cpp
 core/PredictionSection.cpp
 core/Raycaster.cpp
 core/SmoothingSection.cpp
+core/TrainingSection.cpp
 )
 
 SET(core_headers
@@ -72,6 +73,8 @@ core/Raycaster.h
 core/SmoothingSection.h
 core/SmoothingState.h
 core/TrackerType.h
+core/TrainingSection.h
+core/TrainingState.h
 )
 
 ##
