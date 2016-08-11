@@ -6,6 +6,7 @@
 #ifndef H_SPAINTGUI_PIPELINE
 #define H_SPAINTGUI_PIPELINE
 
+#include "FeatureInspectionSection.h"
 #include "PipelineState.h"
 #include "PredictionSection.h"
 #include "PropagationSection.h"
@@ -28,6 +29,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  FeatureInspectionSection m_featureInspectionSection;
+
   /** TODO */
   PredictionSection m_predictionSection;
 
@@ -181,13 +185,6 @@ private:
    */
   ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,
                                           const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
-
-  /**
-   * \brief Runs the section of the pipeline associated with feature inspection mode.
-   *
-   * \param renderState The render state associated with the camera position from which the user is picking voxels.
-   */
-  void run_feature_inspection_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Sets up the tracker.

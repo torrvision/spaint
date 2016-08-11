@@ -25,6 +25,7 @@
 #include <spaint/trackers/FallibleTracker.h>
 #include <spaint/util/SpaintVoxel.h>
 
+#include "FeatureInspectionState.h"
 #include "Interactor.h"
 #include "PipelineMode.h"
 #include "PredictionState.h"
@@ -38,7 +39,8 @@
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
  */
 class PipelineState
-: public PredictionState,
+: public FeatureInspectionState,
+  public PredictionState,
   public PropagationState,
   public SmoothingState,
   public TrainingState
@@ -198,6 +200,12 @@ public:
   }
 
   /** Override */
+  virtual const std::string& get_feature_inspection_window_name() const
+  {
+    return m_featureInspectionWindowName;
+  }
+
+  /** Override */
   virtual const RandomForest_Ptr& get_forest()
   {
     return m_forest;
@@ -237,6 +245,12 @@ public:
   virtual const Model_Ptr& get_model() const
   {
     return m_model;
+  }
+
+  /** Override */
+  virtual size_t get_patch_size() const
+  {
+    return m_patchSize;
   }
 
   /** Override */

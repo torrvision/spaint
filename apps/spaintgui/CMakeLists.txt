@@ -52,6 +52,7 @@ commands/MarkVoxelsCommand.h
 
 ##
 SET(core_sources
+core/FeatureInspectionSection.cpp
 core/Interactor.cpp
 core/Model.cpp
 core/Pipeline.cpp
@@ -63,6 +64,8 @@ core/TrainingSection.cpp
 )
 
 SET(core_headers
+core/FeatureInspectionSection.h
+core/FeatureInspectionState.h
 core/Interactor.h
 core/Model.h
 core/Pipeline.h
