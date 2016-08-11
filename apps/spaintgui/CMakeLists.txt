@@ -56,6 +56,7 @@ core/Interactor.cpp
 core/Model.cpp
 core/Pipeline.cpp
 core/PredictionSection.cpp
+core/PropagationSection.cpp
 core/Raycaster.cpp
 core/SmoothingSection.cpp
 core/TrainingSection.cpp
@@ -69,6 +70,8 @@ core/PipelineMode.h
 core/PipelineState.h
 core/PredictionSection.h
 core/PredictionState.h
+core/PropagationSection.h
+core/PropagationState.h
 core/Raycaster.h
 core/SmoothingSection.h
 core/SmoothingState.h

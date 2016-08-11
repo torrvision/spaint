@@ -28,6 +28,7 @@
 #include "Interactor.h"
 #include "PipelineMode.h"
 #include "PredictionState.h"
+#include "PropagationState.h"
 #include "Raycaster.h"
 #include "SmoothingState.h"
 #include "TrackerType.h"
@@ -36,7 +37,11 @@
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
  */
-class PipelineState : public PredictionState, public SmoothingState, public TrainingState
+class PipelineState
+: public PredictionState,
+  public PropagationState,
+  public SmoothingState,
+  public TrainingState
 {
   //#################### TYPEDEFS ####################
 private:
@@ -202,6 +207,12 @@ public:
   virtual const Interactor_Ptr& get_interactor() const
   {
     return m_interactor;
+  }
+
+  /** Override */
+  virtual const spaint::LabelPropagator_CPtr& get_label_propagator() const
+  {
+    return m_labelPropagator;
   }
 
   /** Override */

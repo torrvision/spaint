@@ -242,7 +242,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       m_predictionSection.run(m_state, renderState);
       break;
     case PIPELINEMODE_PROPAGATION:
-      run_propagation_section(renderState);
+      m_propagationSection.run(m_state, renderState);
       break;
     case PIPELINEMODE_SMOOTHING:
       m_smoothingSection.run(m_state, renderState);
@@ -446,11 +446,6 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
   const int delayMs = 1;
   cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
 #endif
-}
-
-void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
-{
-  m_state.m_labelPropagator->propagate_label(m_state.m_interactor->get_semantic_label(), renderState->raycastResult, m_state.m_model->get_scene().get());
 }
 
 void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)

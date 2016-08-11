@@ -8,6 +8,7 @@
 
 #include "PipelineState.h"
 #include "PredictionSection.h"
+#include "PropagationSection.h"
 #include "SmoothingSection.h"
 #include "TrainingSection.h"
 
@@ -29,6 +30,9 @@ private:
 private:
   /** TODO */
   PredictionSection m_predictionSection;
+
+  /** TODO */
+  PropagationSection m_propagationSection;
 
   /** TODO */
   SmoothingSection m_smoothingSection;
@@ -184,13 +188,6 @@ private:
    * \param renderState The render state associated with the camera position from which the user is picking voxels.
    */
   void run_feature_inspection_section(const RenderState_CPtr& renderState);
-
-  /**
-   * \brief Runs the section of the pipeline associated with propagation mode.
-   *
-   * \param renderState The render state associated with the camera position from which to propagate.
-   */
-  void run_propagation_section(const RenderState_CPtr& renderState);
 
   /**
    * \brief Sets up the tracker.
