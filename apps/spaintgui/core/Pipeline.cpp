@@ -239,26 +239,26 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       run_feature_inspection_section(renderState);
       break;
     case PIPELINEMODE_PREDICTION:
-      run_prediction_section(renderState);
+      m_predictionSection.run(m_state, renderState);
       break;
     case PIPELINEMODE_PROPAGATION:
       run_propagation_section(renderState);
       break;
     case PIPELINEMODE_SMOOTHING:
-      run_smoothing_section(renderState);
+      m_smoothingSection.run(m_state, renderState);
       break;
     case PIPELINEMODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) run_training_section(renderState);
-      else run_prediction_section(renderState);
+      if(trainThisFrame) m_trainingSection.run(m_state, renderState);
+      else m_predictionSection.run(m_state, renderState);;
 
       break;
     }
     case PIPELINEMODE_TRAINING:
-      run_training_section(renderState);
+      m_trainingSection.run(m_state, renderState);
       break;
     default:
       break;
@@ -448,24 +448,9 @@ void Pipeline::run_feature_inspection_section(const RenderState_CPtr& renderStat
 #endif
 }
 
-void Pipeline::run_prediction_section(const RenderState_CPtr& samplingRenderState)
-{
-  m_predictionSection.run(m_state, samplingRenderState);
-}
-
 void Pipeline::run_propagation_section(const RenderState_CPtr& renderState)
 {
   m_state.m_labelPropagator->propagate_label(m_state.m_interactor->get_semantic_label(), renderState->raycastResult, m_state.m_model->get_scene().get());
-}
-
-void Pipeline::run_smoothing_section(const RenderState_CPtr& renderState)
-{
-  m_smoothingSection.run(m_state, renderState);
-}
-
-void Pipeline::run_training_section(const RenderState_CPtr& samplingRenderState)
-{
-  m_trainingSection.run(m_state, samplingRenderState);
 }
 
 void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)

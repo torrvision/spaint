@@ -186,32 +186,11 @@ private:
   void run_feature_inspection_section(const RenderState_CPtr& renderState);
 
   /**
-   * \brief Runs the section of the pipeline associated with prediction mode.
-   *
-   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
-   */
-  void run_prediction_section(const RenderState_CPtr& samplingRenderState);
-
-  /**
    * \brief Runs the section of the pipeline associated with propagation mode.
    *
    * \param renderState The render state associated with the camera position from which to propagate.
    */
   void run_propagation_section(const RenderState_CPtr& renderState);
-
-  /**
-   * \brief Runs the section of the pipeline associated with smoothing mode.
-   *
-   * \param renderState The render state associated with the camera position from which to smoothe.
-   */
-  void run_smoothing_section(const RenderState_CPtr& renderState);
-
-  /**
-   * \brief Runs the section of the pipeline associated with training mode.
-   *
-   * \param samplingRenderState The render state associated with the camera position from which to sample voxels.
-   */
-  void run_training_section(const RenderState_CPtr& samplingRenderState);
 
   /**
    * \brief Sets up the tracker.
