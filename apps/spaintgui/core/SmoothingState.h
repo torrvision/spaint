@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_SMOOTHINGSTATE
 #define H_SPAINTGUI_SMOOTHINGSTATE
 
-#include <spaint/smoothing/interface/LabelSmoother.h>
-
 #include "Model.h"
 
 /**
@@ -21,11 +19,6 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::LabelSmoother_CPtr& get_label_smoother() const = 0;
-
   /**
    * \brief TODO
    */

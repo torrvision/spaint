@@ -20,7 +20,6 @@ using namespace RelocLib;
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
-#include <spaint/smoothing/LabelSmootherFactory.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
@@ -43,7 +42,8 @@ using namespace RelocLib;
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    const LabelManager_Ptr& labelManager, TrackerType trackerType, const std::string& trackerParams)
 : m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
-  m_slamSection(imageSourceEngine, settings, trackerType, trackerParams)
+  m_slamSection(imageSourceEngine, settings, trackerType, trackerParams),
+  m_smoothingSection(labelManager->get_max_label_count(), settings)
 {
   m_state.m_resourcesDir = resourcesDir;
 
@@ -76,10 +76,6 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
-  // Set up the label smoother.
-  const size_t maxLabelCount = labelManager->get_max_label_count();
-  m_state.m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
-
   // Set the maximum numbers of voxels to use for prediction and training.
   // FIXME: These values shouldn't be hard-coded here ultimately.
 #ifndef USE_LOW_POWER_MODE
@@ -88,6 +84,7 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_state.m_maxPredictionVoxelCount = 512;
 #endif
   m_state.m_maxTrainingVoxelsPerLabel = 128;
+  const size_t maxLabelCount = labelManager->get_max_label_count();
   const size_t maxTrainingVoxelCount = maxLabelCount * m_state.m_maxTrainingVoxelsPerLabel;
 
   // Set up the voxel samplers.

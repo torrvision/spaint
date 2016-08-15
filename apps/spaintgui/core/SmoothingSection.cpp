@@ -5,9 +5,19 @@
 
 #include "SmoothingSection.h"
 
+#include <spaint/smoothing/LabelSmootherFactory.h>
+using namespace spaint;
+
+//#################### CONSTRUCTORS ####################
+
+SmoothingSection::SmoothingSection(size_t maxLabelCount, const Settings_CPtr& settings)
+{
+  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
+}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SmoothingSection::run(SmoothingState& state, const RenderState_CPtr& renderState)
 {
-  state.get_label_smoother()->smooth_labels(renderState->raycastResult, state.get_model()->get_scene().get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, state.get_model()->get_scene().get());
 }

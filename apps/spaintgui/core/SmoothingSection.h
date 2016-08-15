@@ -6,9 +6,9 @@
 #ifndef H_SPAINTGUI_SMOOTHINGSECTION
 #define H_SPAINTGUI_SMOOTHINGSECTION
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+
+#include <spaint/smoothing/interface/LabelSmoother.h>
 
 #include "SmoothingState.h"
 
@@ -20,6 +20,19 @@ class SmoothingSection
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The label smoother. */
+  spaint::LabelSmoother_CPtr m_labelSmoother;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  SmoothingSection(size_t maxLabelCount, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

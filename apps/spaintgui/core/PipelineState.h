@@ -49,9 +49,6 @@ public:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
 
-  /** The label smoother. */
-  spaint::LabelSmoother_CPtr m_labelSmoother;
-
   /** The maximum number of voxels for which to predict labels each frame. */
   size_t m_maxPredictionVoxelCount;
 
@@ -118,12 +115,6 @@ public:
   virtual const Interactor_Ptr& get_interactor() const
   {
     return m_interactor;
-  }
-
-  /** Override */
-  virtual const spaint::LabelSmoother_CPtr& get_label_smoother() const
-  {
-    return m_labelSmoother;
   }
 
   /** Override */
