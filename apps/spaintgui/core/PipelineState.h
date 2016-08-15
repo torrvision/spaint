@@ -71,9 +71,6 @@ public:
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
 
-  /** The path to the resources directory. */
-  std::string m_resourcesDir;
-
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 

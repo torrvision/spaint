@@ -41,6 +41,9 @@ private:
   /** TODO */
   PropagationSection m_propagationSection;
 
+  /** The path to the resources directory. */
+  std::string m_resourcesDir;
+
   /** TODO */
   SLAMSection m_slamSection;
 

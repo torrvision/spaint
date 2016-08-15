@@ -42,13 +42,12 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
 : m_predictionSection(imageSourceEngine->getDepthImageSize(), seed, settings),
   m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
+  m_resourcesDir(resourcesDir),
   m_slamSection(imageSourceEngine, settings, trackerType, trackerParams),
   m_smoothingSection(labelManager->get_max_label_count(), settings),
   m_trainingSection(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count())
 {
-  m_state.m_resourcesDir = resourcesDir;
-
-    // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
+  // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
   if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
@@ -73,7 +72,7 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
   // Set up the spaint model, raycaster and interactor.
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, m_state.m_resourcesDir, labelManager));
+  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, resourcesDir, labelManager));
   m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
@@ -177,7 +176,7 @@ Raycaster_CPtr Pipeline::get_raycaster() const
 void Pipeline::reset_forest()
 {
   const size_t treeCount = 5;
-  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_state.m_resourcesDir + "/RaflSettings.xml");
+  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
   m_state.m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 }
 
