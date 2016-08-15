@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_PROPAGATIONSTATE
 #define H_SPAINTGUI_PROPAGATIONSTATE
 
-#include <spaint/propagation/interface/LabelPropagator.h>
-
 #include "Interactor.h"
 
 /**
@@ -25,11 +23,6 @@ public:
    * \brief TODO
    */
   virtual const Interactor_Ptr& get_interactor() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::LabelPropagator_CPtr& get_label_propagator() const = 0;
 
   /**
    * \brief TODO

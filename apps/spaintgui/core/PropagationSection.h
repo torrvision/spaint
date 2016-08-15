@@ -10,6 +10,8 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
+#include <spaint/propagation/interface/LabelPropagator.h>
+
 #include "PropagationState.h"
 
 /**
@@ -20,6 +22,19 @@ class PropagationSection
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+
+  //#################### PRIVATE VARIABLES ####################
+private:
+  /** The label propagator. */
+  spaint::LabelPropagator_CPtr m_labelPropagator;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  PropagationSection(const Vector2i& depthImageSize, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

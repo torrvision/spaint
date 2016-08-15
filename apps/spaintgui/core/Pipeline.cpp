@@ -17,7 +17,6 @@ using namespace ORUtils;
 using namespace RelocLib;
 
 #include <spaint/features/FeatureCalculatorFactory.h>
-#include <spaint/propagation/LabelPropagatorFactory.h>
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
 #include <spaint/sampling/VoxelSamplerFactory.h>
@@ -43,7 +42,8 @@ using namespace RelocLib;
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    TrackerType trackerType, const std::string& trackerParams)
-: m_slamSection(imageSourceEngine, settings, trackerType, trackerParams)
+: m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
+  m_slamSection(imageSourceEngine, settings, trackerType, trackerParams)
 {
   m_state.m_resourcesDir = resourcesDir;
   initialise(settings);
@@ -199,10 +199,6 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
-  // Set up the label propagator.
-  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_state.m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
-
   // Set up the label smoother.
   const size_t maxLabelCount = m_state.m_model->get_label_manager()->get_max_label_count();
   m_state.m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
@@ -219,6 +215,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the voxel samplers.
   const unsigned int seed = 12345;
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
   m_state.m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_state.m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_state.m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
 

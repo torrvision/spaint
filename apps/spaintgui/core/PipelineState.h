@@ -9,7 +9,6 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/propagation/interface/LabelPropagator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
@@ -49,9 +48,6 @@ public:
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
-
-  /** The label propagator. */
-  spaint::LabelPropagator_CPtr m_labelPropagator;
 
   /** The label smoother. */
   spaint::LabelSmoother_CPtr m_labelSmoother;
@@ -122,12 +118,6 @@ public:
   virtual const Interactor_Ptr& get_interactor() const
   {
     return m_interactor;
-  }
-
-  /** Override */
-  virtual const spaint::LabelPropagator_CPtr& get_label_propagator() const
-  {
-    return m_labelPropagator;
   }
 
   /** Override */
