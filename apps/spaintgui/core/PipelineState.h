@@ -65,17 +65,8 @@ public:
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
-  /** The engine used to provide input images to the fusion pipeline. */
-  CompositeImageSourceEngine_Ptr m_imageSourceEngine;
-
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
-
-  /** The image into which depth input is read each frame. */
-  ITMShortImage_Ptr m_inputRawDepthImage;
-
-  /** The image into which RGB input is read each frame. */
-  ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
@@ -158,9 +149,6 @@ public:
   /** A memory block in which to store the locations of the voxels sampled for training purposes. */
   spaint::Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
-  /** The view builder. */
-  ViewBuilder_Ptr m_viewBuilder;
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
@@ -191,24 +179,6 @@ public:
   virtual bool get_fusion_enabled() const
   {
     return m_fusionEnabled;
-  }
-
-  /** Override */
-  virtual const CompositeImageSourceEngine_Ptr& get_image_source_engine() const
-  {
-    return m_imageSourceEngine;
-  }
-
-  /** Override */
-  virtual const ITMShortImage_Ptr& get_input_raw_depth_image() const
-  {
-    return m_inputRawDepthImage;
-  }
-
-  /** Override */
-  virtual const ITMUChar4Image_Ptr& get_input_rgb_image() const
-  {
-    return m_inputRGBImage;
   }
 
   /** Override */
@@ -329,12 +299,6 @@ public:
   virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations()
   {
     return m_trainingVoxelLocationsMB;
-  }
-
-  /** Override */
-  virtual const ViewBuilder_Ptr& get_view_builder() const
-  {
-    return m_viewBuilder;
   }
 
   /** Override */

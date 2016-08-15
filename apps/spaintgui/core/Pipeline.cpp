@@ -10,7 +10,6 @@ using namespace spaint;
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
 #include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
-#include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace InputSource;
@@ -45,8 +44,8 @@ using namespace RelocLib;
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    TrackerType trackerType, const std::string& trackerParams)
+: m_slamSection(imageSourceEngine, settings)
 {
-  m_state.m_imageSourceEngine = imageSourceEngine;
   m_state.m_resourcesDir = resourcesDir;
   m_state.m_trackerParams = trackerParams;
   m_state.m_trackerType = trackerType;
@@ -62,15 +61,17 @@ bool Pipeline::get_fusion_enabled() const
 
 ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 {
-  ITMShortImage_Ptr copy(new ITMShortImage(m_state.m_inputRawDepthImage->noDims, true, false));
-  copy->SetFrom(m_state.m_inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
+  ITMShortImage_CPtr inputRawDepthImage = m_slamSection.get_input_raw_depth_image();
+  ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
+  copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
 }
 
 ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
 {
-  ITMUChar4Image_Ptr copy(new ITMUChar4Image(m_state.m_inputRGBImage->noDims, true, false));
-  copy->SetFrom(m_state.m_inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  ITMUChar4Image_CPtr inputRGBImage = m_slamSection.get_input_rgb_image();
+  ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
+  copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
 }
 
@@ -113,9 +114,7 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
-  if(!m_state.m_imageSourceEngine->hasMoreImages()) return false;
-  m_slamSection.run(m_state);
-  return true;
+  return m_slamSection.run(m_state);
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
@@ -183,23 +182,17 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   }
 #endif
 
-  // Determine the RGB and depth image sizes.
-  Vector2i rgbImageSize = m_state.m_imageSourceEngine->getRGBImageSize();
-  Vector2i depthImageSize = m_state.m_imageSourceEngine->getDepthImageSize();
-  if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
-
-  // Set up the RGB and raw depth images into which input is to be read each frame.
-  m_state.m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, true));
-  m_state.m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, true));
-
   // Set up the scene.
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
 
-  // Set up the InfiniTAM engines and view builder.
+  // Set up the InfiniTAM engines.
   m_state.m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
-  m_state.m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_state.m_imageSourceEngine->getCalib(), settings->deviceType));
   VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
+
+  // Get the RGB and depth image sizes.
+  Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
+  Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
 
   // Set up the dense mapper and tracking controller.
   m_state.m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));

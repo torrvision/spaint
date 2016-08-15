@@ -6,10 +6,8 @@
 #ifndef H_SPAINTGUI_SLAMSTATE
 #define H_SPAINTGUI_SLAMSTATE
 
-#include <InputSource/CompositeImageSourceEngine.h>
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMTrackingController.h>
-#include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
@@ -24,12 +22,10 @@ class SLAMState
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -58,21 +54,6 @@ public:
   /**
    * \brief TODO
    */
-  virtual const CompositeImageSourceEngine_Ptr& get_image_source_engine() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const ITMShortImage_Ptr& get_input_raw_depth_image() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const ITMUChar4Image_Ptr& get_input_rgb_image() const = 0;
-
-  /**
-   * \brief TODO
-   */
   virtual const Model_Ptr& get_model() const = 0;
 
   /**
@@ -94,11 +75,6 @@ public:
    * \brief TODO
    */
   virtual const TrackingController_Ptr& get_tracking_controller() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const ViewBuilder_Ptr& get_view_builder() const = 0;
 
   /**
    * \brief TODO

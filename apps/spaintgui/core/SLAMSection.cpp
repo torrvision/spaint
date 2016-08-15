@@ -4,21 +4,48 @@
  */
 
 #include "SLAMSection.h"
+
+#include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 using namespace ITMLib;
 using namespace ORUtils;
 
 //#################### CONSTRUCTORS ####################
 
-SLAMSection::SLAMSection()
+SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings)
 : m_fusedFramesCount(0),
-  m_initialFramesToFuse(50),  // FIXME: This value should be passed in rather than hard-coded.
+  m_imageSourceEngine(imageSourceEngine),
+  m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_keyframeDelay(0)
-{}
+{
+  // Determine the RGB and depth image sizes.
+  Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
+  Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
+  if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
+
+  // Set up the RGB and raw depth images into which input is to be read each frame.
+  m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, true));
+  m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, true));
+
+  // Set up the view builder.
+  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SLAMSection::run(SLAMState& state)
+ITMShortImage_CPtr SLAMSection::get_input_raw_depth_image() const
 {
+  return m_inputRawDepthImage;
+}
+
+ITMUChar4Image_CPtr SLAMSection::get_input_rgb_image() const
+{
+  return m_inputRGBImage;
+}
+
+bool SLAMSection::run(SLAMState& state)
+{
+  if(!m_imageSourceEngine->hasMoreImages()) return false;
+
   const Raycaster::RenderState_Ptr& liveRenderState = state.get_raycaster()->get_live_render_state();
   const Model::Scene_Ptr& scene = state.get_model()->get_scene();
   const Model::TrackingState_Ptr& trackingState = state.get_model()->get_tracking_state();
@@ -26,9 +53,9 @@ void SLAMSection::run(SLAMState& state)
 
   // Get the next frame.
   ITMView *newView = view.get();
-  state.get_image_source_engine()->getImages(state.get_input_rgb_image().get(), state.get_input_raw_depth_image().get());
+  m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
   const bool useBilateralFilter = false;
-  state.get_view_builder()->UpdateView(&newView, state.get_input_rgb_image().get(), state.get_input_raw_depth_image().get(), useBilateralFilter);
+  m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
   state.get_model()->set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
@@ -130,5 +157,7 @@ void SLAMSection::run(SLAMState& state)
   state.get_tracking_controller()->Prepare(trackingState.get(), scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
-  if(!state.get_image_source_engine()->getCurrentSubengine()->hasMoreImages()) state.set_fusion_enabled(false);
+  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) state.set_fusion_enabled(false);
+
+  return true;
 }
