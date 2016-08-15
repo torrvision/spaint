@@ -9,7 +9,6 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/SpaintVoxel.h>
 
@@ -43,11 +42,6 @@ public:
   /**
    * \brief TODO
    */
-  virtual size_t get_max_training_voxels_per_label() const = 0;
-
-  /**
-   * \brief TODO
-   */
   virtual const Model_Ptr& get_model() const = 0;
 
   /**
@@ -59,11 +53,6 @@ public:
    * \brief TODO
    */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<bool> >& get_training_label_mask() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::PerLabelVoxelSampler_CPtr& get_training_sampler() const = 0;
 
   /**
    * \brief TODO

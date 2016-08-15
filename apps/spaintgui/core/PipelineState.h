@@ -9,7 +9,6 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/util/SpaintVoxel.h>
 
@@ -51,9 +50,6 @@ public:
   /** The maximum number of voxels for which to predict labels each frame. */
   size_t m_maxPredictionVoxelCount;
 
-  /** The maximum number of voxels per label from which to train each frame. */
-  size_t m_maxTrainingVoxelsPerLabel;
-
   /** The mode in which the pipeline is currently running. */
   PipelineMode m_mode;
 
@@ -83,9 +79,6 @@ public:
 
   /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to train. */
   boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
-
-  /** The voxel sampler used in training mode. */
-  spaint::PerLabelVoxelSampler_CPtr m_trainingSampler;
 
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
@@ -117,12 +110,6 @@ public:
   virtual size_t get_max_prediction_voxel_count() const
   {
     return m_maxPredictionVoxelCount;
-  }
-
-  /** Override */
-  virtual size_t get_max_training_voxels_per_label() const
-  {
-    return m_maxTrainingVoxelsPerLabel;
   }
 
   /** Override */
@@ -171,12 +158,6 @@ public:
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<bool> >& get_training_label_mask() const
   {
     return m_trainingLabelMaskMB;
-  }
-
-  /** Override */
-  virtual const spaint::PerLabelVoxelSampler_CPtr& get_training_sampler() const
-  {
-    return m_trainingSampler;
   }
 
   /** Override */

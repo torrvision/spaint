@@ -19,7 +19,6 @@ using namespace RelocLib;
 #include <spaint/features/FeatureCalculatorFactory.h>
 #include <spaint/randomforest/ForestUtil.h>
 #include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
-#include <spaint/sampling/VoxelSamplerFactory.h>
 #include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
@@ -44,7 +43,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 : m_predictionSection(imageSourceEngine->getDepthImageSize(), seed, settings),
   m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
   m_slamSection(imageSourceEngine, settings, trackerType, trackerParams),
-  m_smoothingSection(labelManager->get_max_label_count(), settings)
+  m_smoothingSection(labelManager->get_max_label_count(), settings),
+  m_trainingSection(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count())
 {
   m_state.m_resourcesDir = resourcesDir;
 
@@ -84,13 +84,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 #else
   m_state.m_maxPredictionVoxelCount = 512;
 #endif
-  m_state.m_maxTrainingVoxelsPerLabel = 128;
   const size_t maxLabelCount = labelManager->get_max_label_count();
-  const size_t maxTrainingVoxelCount = maxLabelCount * m_state.m_maxTrainingVoxelsPerLabel;
-
-  // Set up the training voxel sampler.
-  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_state.m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_state.m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+  const size_t maxTrainingVoxelCount = m_trainingSection.get_max_training_voxel_count();
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.

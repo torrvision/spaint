@@ -9,12 +9,28 @@
 using namespace rafl;
 
 #include <spaint/randomforest/ForestUtil.h>
+#include <spaint/sampling/VoxelSamplerFactory.h>
 #include <spaint/util/LabelManager.h>
 using namespace spaint;
 
 #define DEBUGGING 1
 
+//#################### CONSTRUCTORS ####################
+
+TrainingSection::TrainingSection(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings, size_t maxLabelCount)
+: m_maxLabelCount(maxLabelCount),
+  m_maxTrainingVoxelsPerLabel(128) // FIXME: This value shouldn't be hard-coded here ultimately.
+{
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+size_t TrainingSection::get_max_training_voxel_count() const
+{
+  return m_maxLabelCount * m_maxTrainingVoxelsPerLabel;
+}
 
 void TrainingSection::run(TrainingState& state, const RenderState_CPtr& samplingRenderState)
 {
@@ -37,7 +53,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  state.get_training_sampler()->sample_voxels(raycastResult, state.get_model()->get_scene().get(), *state.get_training_label_mask(), *state.get_training_voxel_locations(), *state.get_training_voxel_counts());
+  m_trainingSampler->sample_voxels(raycastResult, state.get_model()->get_scene().get(), *state.get_training_label_mask(), *state.get_training_voxel_locations(), *state.get_training_voxel_counts());
 
 #if DEBUGGING
   // Output the numbers of voxels sampled for each label (for debugging purposes).
@@ -60,7 +76,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
     *state.get_training_features(),
     *state.get_training_voxel_counts(),
     state.get_feature_calculator()->get_feature_count(),
-    state.get_max_training_voxels_per_label(),
+    m_maxTrainingVoxelsPerLabel,
     maxLabelCount
   );
 
