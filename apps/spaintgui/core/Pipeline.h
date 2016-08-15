@@ -6,6 +6,8 @@
 #ifndef H_SPAINTGUI_PIPELINE
 #define H_SPAINTGUI_PIPELINE
 
+#include <spaint/util/LabelManager.h>
+
 #include "FeatureInspectionSection.h"
 #include "PipelineState.h"
 #include "PredictionSection.h"
@@ -59,11 +61,12 @@ public:
    * \param imageSourceEngine The engine used to provide input images to the fusion pipeline.
    * \param settings          The settings to use for InfiniTAM.
    * \param resourcesDir      The path to the resouces directory.
+   * \param labelManager      The label manager.
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
    */
   Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
-           TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
+           const spaint::LabelManager_Ptr& labelManager, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -167,15 +170,6 @@ public:
    * \param mode  The mode in which the pipeline should now run.
    */
   void set_mode(PipelineMode mode);
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
-   * \brief Initialises the pipeline.
-   *
-   * \param settings  The settings to use for InfiniTAM.
-   */
-  void initialise(const Settings_Ptr& settings);
 };
 
 //#################### TYPEDEFS ####################

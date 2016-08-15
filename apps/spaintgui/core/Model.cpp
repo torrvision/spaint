@@ -11,9 +11,9 @@ using namespace spaint;
 //#################### CONSTRUCTORS ####################
 
 Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-             const Settings_CPtr& settings, const std::string& resourcesDir)
+             const Settings_CPtr& settings, const std::string& resourcesDir, const LabelManager_Ptr& labelManager)
 : m_depthImageSize(depthImageSize),
-  m_labelManager(new LabelManager(10)),
+  m_labelManager(labelManager),
   m_resourcesDir(resourcesDir),
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),

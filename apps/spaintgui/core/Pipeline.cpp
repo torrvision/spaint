@@ -41,12 +41,93 @@ using namespace RelocLib;
 //#################### CONSTRUCTORS ####################
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
-                   TrackerType trackerType, const std::string& trackerParams)
+                   const LabelManager_Ptr& labelManager, TrackerType trackerType, const std::string& trackerParams)
 : m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
   m_slamSection(imageSourceEngine, settings, trackerType, trackerParams)
 {
   m_state.m_resourcesDir = resourcesDir;
-  initialise(settings);
+
+    // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
+#ifndef WITH_CUDA
+  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+    std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
+    settings->deviceType = ITMLibSettings::DEVICE_CPU;
+  }
+#endif
+
+  // Set up the visualisation engine.
+  VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
+
+  // Get the RGB and depth image sizes.
+  Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
+  Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
+
+  // Get the scene.
+  const Model::Scene_Ptr& scene = m_slamSection.get_scene();
+
+  // Set up the live render state.
+  Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
+  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
+
+  // Set up the spaint model, raycaster and interactor.
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, m_state.m_resourcesDir, labelManager));
+  m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
+  m_state.m_interactor.reset(new Interactor(m_state.m_model));
+
+  // Set up the label smoother.
+  const size_t maxLabelCount = labelManager->get_max_label_count();
+  m_state.m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
+
+  // Set the maximum numbers of voxels to use for prediction and training.
+  // FIXME: These values shouldn't be hard-coded here ultimately.
+#ifndef USE_LOW_POWER_MODE
+  m_state.m_maxPredictionVoxelCount = 8192;
+#else
+  m_state.m_maxPredictionVoxelCount = 512;
+#endif
+  m_state.m_maxTrainingVoxelsPerLabel = 128;
+  const size_t maxTrainingVoxelCount = maxLabelCount * m_state.m_maxTrainingVoxelsPerLabel;
+
+  // Set up the voxel samplers.
+  const unsigned int seed = 12345;
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  m_state.m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
+  m_state.m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_state.m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
+
+  // Set up the feature calculator.
+  // FIXME: These values shouldn't be hard-coded here ultimately.
+  m_state.m_patchSize = 13;
+  const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
+  const size_t binCount = 36;                                         // 10 degrees per bin
+
+  m_state.m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
+    std::max(m_state.m_maxPredictionVoxelCount, maxTrainingVoxelCount),
+    m_state.m_patchSize, patchSpacing, binCount, settings->deviceType
+  );
+
+  // Set up the memory blocks needed for prediction and training.
+  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
+  const size_t featureCount = m_state.m_featureCalculator->get_feature_count();
+  m_state.m_predictionFeaturesMB = mbf.make_block<float>(m_state.m_maxPredictionVoxelCount * featureCount);
+  m_state.m_predictionLabelsMB = mbf.make_block<SpaintVoxel::PackedLabel>(m_state.m_maxPredictionVoxelCount);
+  m_state.m_predictionVoxelLocationsMB = mbf.make_block<Vector3s>(m_state.m_maxPredictionVoxelCount);
+  m_state.m_trainingFeaturesMB = mbf.make_block<float>(maxTrainingVoxelCount * featureCount);
+  m_state.m_trainingLabelMaskMB = mbf.make_block<bool>(maxLabelCount);
+  m_state.m_trainingVoxelCountsMB = mbf.make_block<unsigned int>(maxLabelCount);
+  m_state.m_trainingVoxelLocationsMB = mbf.make_block<Vector3s>(maxTrainingVoxelCount);
+
+  // Register the relevant decision function generators with the factory.
+  DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(
+    SpaintDecisionFunctionGenerator::get_static_type(),
+    &SpaintDecisionFunctionGenerator::maker
+  );
+
+  // Set up the random forest.
+  reset_forest();
+
+  m_state.m_mode = PIPELINEMODE_NORMAL;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -164,91 +245,4 @@ void Pipeline::set_mode(PipelineMode mode)
 #endif
 
   m_state.m_mode = mode;
-}
-
-//#################### PRIVATE MEMBER FUNCTIONS ####################
-
-void Pipeline::initialise(const Settings_Ptr& settings)
-{
-  // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
-#ifndef WITH_CUDA
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-    std::cerr << "[spaint] CUDA support unavailable, reverting to the CPU implementation of InfiniTAM\n";
-    settings->deviceType = ITMLibSettings::DEVICE_CPU;
-  }
-#endif
-
-  // Set up the visualisation engine.
-  VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
-
-  // Get the RGB and depth image sizes.
-  Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
-  Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
-
-  // Get the scene.
-  const Model::Scene_Ptr& scene = m_slamSection.get_scene();
-
-  // Set up the live render state.
-  Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
-  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
-
-  // Set up the spaint model, raycaster and interactor.
-  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, m_state.m_resourcesDir));
-  m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
-  m_state.m_interactor.reset(new Interactor(m_state.m_model));
-
-  // Set up the label smoother.
-  const size_t maxLabelCount = m_state.m_model->get_label_manager()->get_max_label_count();
-  m_state.m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
-
-  // Set the maximum numbers of voxels to use for prediction and training.
-  // FIXME: These values shouldn't be hard-coded here ultimately.
-#ifndef USE_LOW_POWER_MODE
-  m_state.m_maxPredictionVoxelCount = 8192;
-#else
-  m_state.m_maxPredictionVoxelCount = 512;
-#endif
-  m_state.m_maxTrainingVoxelsPerLabel = 128;
-  const size_t maxTrainingVoxelCount = maxLabelCount * m_state.m_maxTrainingVoxelsPerLabel;
-
-  // Set up the voxel samplers.
-  const unsigned int seed = 12345;
-  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_state.m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
-  m_state.m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_state.m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
-
-  // Set up the feature calculator.
-  // FIXME: These values shouldn't be hard-coded here ultimately.
-  m_state.m_patchSize = 13;
-  const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
-  const size_t binCount = 36;                                         // 10 degrees per bin
-
-  m_state.m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
-    std::max(m_state.m_maxPredictionVoxelCount, maxTrainingVoxelCount),
-    m_state.m_patchSize, patchSpacing, binCount, settings->deviceType
-  );
-
-  // Set up the memory blocks needed for prediction and training.
-  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-  const size_t featureCount = m_state.m_featureCalculator->get_feature_count();
-  m_state.m_predictionFeaturesMB = mbf.make_block<float>(m_state.m_maxPredictionVoxelCount * featureCount);
-  m_state.m_predictionLabelsMB = mbf.make_block<SpaintVoxel::PackedLabel>(m_state.m_maxPredictionVoxelCount);
-  m_state.m_predictionVoxelLocationsMB = mbf.make_block<Vector3s>(m_state.m_maxPredictionVoxelCount);
-  m_state.m_trainingFeaturesMB = mbf.make_block<float>(maxTrainingVoxelCount * featureCount);
-  m_state.m_trainingLabelMaskMB = mbf.make_block<bool>(maxLabelCount);
-  m_state.m_trainingVoxelCountsMB = mbf.make_block<unsigned int>(maxLabelCount);
-  m_state.m_trainingVoxelLocationsMB = mbf.make_block<Vector3s>(maxTrainingVoxelCount);
-
-  // Register the relevant decision function generators with the factory.
-  DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(
-    SpaintDecisionFunctionGenerator::get_static_type(),
-    &SpaintDecisionFunctionGenerator::maker
-  );
-
-  // Set up the random forest.
-  reset_forest();
-
-  m_state.m_mode = PIPELINEMODE_NORMAL;
 }

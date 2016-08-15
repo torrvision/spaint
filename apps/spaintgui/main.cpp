@@ -233,8 +233,12 @@ try
 #endif
   }
 
+  // Construct the label manager.
+  const size_t maxLabelCount = 10;
+  LabelManager_Ptr labelManager(new LabelManager(maxLabelCount));
+
   // Run the application.
-  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), trackerType, trackerParams)));
+  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), labelManager, trackerType, trackerParams)));
   app.run();
 
 #ifdef WITH_OVR

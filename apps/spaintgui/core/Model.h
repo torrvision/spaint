@@ -73,9 +73,10 @@ public:
    * \param trackingState   The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM).
    * \param settings        The settings to use for InfiniTAM.
    * \param resourcesDir    The path to the resources directory.
+   * \param labelManager    The label manager.
    */
   Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-        const Settings_CPtr& settings, const std::string& resourcesDir);
+        const Settings_CPtr& settings, const std::string& resourcesDir, const spaint::LabelManager_Ptr& labelManager);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
