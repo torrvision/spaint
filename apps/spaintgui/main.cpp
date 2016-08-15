@@ -177,7 +177,7 @@ try
     if(ovrHmd_Detect() == 0) trackerType = TRACKER_INFINITAM;
 #else
     // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
-    trackerType = Pipeline::TRACKER_INFINITAM;
+    trackerType = TRACKER_INFINITAM;
 #endif
   }
 
