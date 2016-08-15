@@ -15,6 +15,10 @@
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <RelocLib/PoseDatabase.h>
+#include <RelocLib/Relocaliser.h>
+
+#include <spaint/trackers/FallibleTracker.h>
 
 #include "SLAMState.h"
 #include "TrackerType.h"
@@ -31,6 +35,8 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
+  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
+  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
@@ -81,6 +87,12 @@ private:
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
+
+  /** The database of previous poses for relocalisation. */
+  PoseDatabase_Ptr m_poseDatabase;
+
+  /** The relocaliser. */
+  Relocaliser_Ptr m_relocaliser;
 
   /** The reconstructed scene. */
   Scene_Ptr m_scene;

@@ -253,17 +253,5 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   // Set up the random forest.
   reset_forest();
 
-  // Set up the pose database and the relocaliser.
-  m_state.m_poseDatabase.reset(new PoseDatabase);
-
-  const float harvestingThreshold = 0.2f;
-  const int numFerns = 500;
-  const int numDecisionsPerFern = 4;
-  m_state.m_relocaliser.reset(new Relocaliser(
-    depthImageSize,
-    Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max),
-    harvestingThreshold, numFerns, numDecisionsPerFern
-  ));
-
   m_state.m_mode = PIPELINEMODE_NORMAL;
 }

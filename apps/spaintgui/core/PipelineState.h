@@ -6,9 +6,6 @@
 #ifndef H_SPAINTGUI_PIPELINESTATE
 #define H_SPAINTGUI_PIPELINESTATE
 
-#include <RelocLib/PoseDatabase.h>
-#include <RelocLib/Relocaliser.h>
-
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
@@ -74,9 +71,6 @@ public:
   /** The side length of a VOP patch (must be odd). */
   size_t m_patchSize;
 
-  /** The database of previous poses for relocalisation. */
-  PoseDatabase_Ptr m_poseDatabase;
-
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
@@ -91,9 +85,6 @@ public:
 
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
-
-  /** The relocaliser. */
-  Relocaliser_Ptr m_relocaliser;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
@@ -170,12 +161,6 @@ public:
   }
 
   /** Override */
-  virtual const PoseDatabase_Ptr& get_pose_database() const
-  {
-    return m_poseDatabase;
-  }
-
-  /** Override */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_prediction_features()
   {
     return m_predictionFeaturesMB;
@@ -203,12 +188,6 @@ public:
   virtual const Raycaster_Ptr& get_raycaster() const
   {
     return m_raycaster;
-  }
-
-  /** Override */
-  virtual const Relocaliser_Ptr& get_relocaliser() const
-  {
-    return m_relocaliser;
   }
 
   /** Override */
