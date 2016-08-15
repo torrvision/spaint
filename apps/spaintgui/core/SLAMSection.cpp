@@ -16,6 +16,7 @@ using namespace ORUtils;
 
 SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams)
 : m_fusedFramesCount(0),
+  m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_keyframeDelay(0),
@@ -54,6 +55,11 @@ SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
+bool SLAMSection::get_fusion_enabled() const
+{
+  return m_fusionEnabled;
+}
 
 ITMShortImage_CPtr SLAMSection::get_input_raw_depth_image() const
 {
@@ -164,7 +170,7 @@ bool SLAMSection::run(SLAMState& state)
   }
 
   // Decide whether or not fusion should be run.
-  bool runFusion = state.get_fusion_enabled();
+  bool runFusion = m_fusionEnabled;
   if(trackerResult == ITMTrackingState::TRACKING_FAILED ||
      (trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount >= m_initialFramesToFuse) ||
      (m_fallibleTracker && m_fallibleTracker->lost_tracking()))
@@ -193,9 +199,14 @@ bool SLAMSection::run(SLAMState& state)
   m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
-  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) state.set_fusion_enabled(false);
+  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   return true;
+}
+
+void SLAMSection::set_fusion_enabled(bool fusionEnabled)
+{
+  m_fusionEnabled = fusionEnabled;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

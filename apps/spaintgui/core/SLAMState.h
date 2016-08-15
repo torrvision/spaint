@@ -35,11 +35,6 @@ public:
   /**
    * \brief TODO
    */
-  virtual bool get_fusion_enabled() const = 0;
-
-  /**
-   * \brief TODO
-   */
   virtual const Model_Ptr& get_model() const = 0;
 
   /**
@@ -56,11 +51,6 @@ public:
    * \brief TODO
    */
   virtual const Relocaliser_Ptr& get_relocaliser() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual void set_fusion_enabled(bool fusionEnabled) = 0;
 };
 
 #endif

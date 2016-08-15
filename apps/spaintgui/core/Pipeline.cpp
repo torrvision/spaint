@@ -53,7 +53,7 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
 bool Pipeline::get_fusion_enabled() const
 {
-  return m_state.m_fusionEnabled;
+  return m_slamSection.get_fusion_enabled();
 }
 
 ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
@@ -150,7 +150,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 
 void Pipeline::set_fusion_enabled(bool fusionEnabled)
 {
-  m_state.m_fusionEnabled = fusionEnabled;
+  m_slamSection.set_fusion_enabled(fusionEnabled);
 }
 
 void Pipeline::set_mode(PipelineMode mode)
@@ -265,6 +265,5 @@ void Pipeline::initialise(const Settings_Ptr& settings)
     harvestingThreshold, numFerns, numDecisionsPerFern
   ));
 
-  m_state.m_fusionEnabled = true;
   m_state.m_mode = PIPELINEMODE_NORMAL;
 }

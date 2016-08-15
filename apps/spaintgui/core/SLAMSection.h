@@ -51,6 +51,9 @@ private:
   /** The number of frames for which fusion has been run. */
   size_t m_fusedFramesCount;
 
+  /** Whether or not the user wants fusion to be run. */
+  bool m_fusionEnabled;
+
   /** The engine used to provide input images to the fusion process. */
   CompositeImageSourceEngine_Ptr m_imageSourceEngine;
 
@@ -123,6 +126,11 @@ public:
   /**
    * \brief TODO
    */
+  bool get_fusion_enabled() const;
+
+  /**
+   * \brief TODO
+   */
   ITMShortImage_CPtr get_input_raw_depth_image() const;
 
   /**
@@ -147,6 +155,11 @@ public:
 
   /** TODO */
   virtual bool run(SLAMState& state);
+
+  /**
+   * \brief TODO
+   */
+  void set_fusion_enabled(bool fusionEnabled);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

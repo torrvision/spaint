@@ -50,9 +50,6 @@ public:
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
-  /** Whether or not the user wants fusion to be run as part of the pipeline. */
-  bool m_fusionEnabled;
-
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
 
@@ -128,12 +125,6 @@ public:
   virtual const RandomForest_Ptr& get_forest()
   {
     return m_forest;
-  }
-
-  /** Override */
-  virtual bool get_fusion_enabled() const
-  {
-    return m_fusionEnabled;
   }
 
   /** Override */
@@ -248,12 +239,6 @@ public:
   virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations()
   {
     return m_trainingVoxelLocationsMB;
-  }
-
-  /** Override */
-  virtual void set_fusion_enabled(bool fusionEnabled)
-  {
-    m_fusionEnabled = fusionEnabled;
   }
 };
 
