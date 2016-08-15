@@ -34,7 +34,7 @@ private:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMLibSettings> Settings_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
@@ -82,6 +82,9 @@ private:
   /** The reconstructed scene. */
   Scene_Ptr m_scene;
 
+  /** The settings to use for InfiniTAM. */
+  Settings_CPtr m_settings;
+
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
@@ -113,7 +116,7 @@ public:
    * \param trackerType       TODO
    * \param trackerParams     TODO
    */
-  SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, TrackerType trackerType, const std::string& trackerParams);
+  SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -150,25 +153,20 @@ private:
   /**
    * \brief Makes a hybrid tracker that refines the results of a primary tracker using ICP.
    *
-   * \param primaryTracker    The primary tracker (e.g. a Rift or Vicon tracker).
-   * \param settings          The settings to use for InfiniTAM.
-   * \param scene             The scene.
-   * \param rgbImageSize      The RGB image size.
-   * \param depthImageSize    The depth image size.
-   * \return                  The hybrid tracker.
+   * \param primaryTracker  The primary tracker (e.g. a Rift or Vicon tracker).
+   * \param rgbImageSize    The RGB image size.
+   * \param depthImageSize  The depth image size.
+   * \return                The hybrid tracker.
    */
-  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker, const Settings_Ptr& settings, const Scene_Ptr& scene,
-                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
+  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker, const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
 
   /**
    * \brief Sets up the tracker.
    *
-   * \param settings          The settings to use for InfiniTAM.
-   * \param scene             The scene.
-   * \param rgbImageSize      The RGB image size.
-   * \param depthImageSize    The depth image size.
+   * \param rgbImageSize    The RGB image size.
+   * \param depthImageSize  The depth image size.
    */
-  void setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
+  void setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
 };
 
 #endif
