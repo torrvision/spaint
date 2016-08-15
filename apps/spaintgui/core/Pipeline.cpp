@@ -11,7 +11,6 @@ using namespace spaint;
 #include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
 #include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
-#include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
@@ -44,11 +43,9 @@ using namespace RelocLib;
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    TrackerType trackerType, const std::string& trackerParams)
-: m_slamSection(imageSourceEngine, settings)
+: m_slamSection(imageSourceEngine, settings, trackerType, trackerParams)
 {
   m_state.m_resourcesDir = resourcesDir;
-  m_state.m_trackerParams = trackerParams;
-  m_state.m_trackerType = trackerType;
   initialise(settings);
 }
 
@@ -182,8 +179,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   }
 #endif
 
-  // Set up the InfiniTAM engines.
-  m_state.m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
+  // Set up the visualisation engine.
   VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
 
   // Get the RGB and depth image sizes.
@@ -193,19 +189,13 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   // Get the scene.
   const Model::Scene_Ptr& scene = m_slamSection.get_scene();
 
-  // Set up the tracking controller.
-  setup_tracker(settings, scene, rgbImageSize, depthImageSize);
-  m_state.m_trackingController.reset(new ITMTrackingController(m_state.m_tracker.get(), settings.get()));
-
   // Set up the live render state.
-  Vector2i trackedImageSize = m_state.m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
+  Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
   RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
 
   // Set up the spaint model, raycaster and interactor.
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  TrackingState_Ptr trackingState(new ITMTrackingState(trackedImageSize, memoryType));
-  m_state.m_tracker->UpdateInitialPose(trackingState.get());
-  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, trackingState, settings, m_state.m_resourcesDir));
+  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, m_state.m_resourcesDir));
   m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
@@ -277,65 +267,4 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   m_state.m_fusionEnabled = true;
   m_state.m_mode = PIPELINEMODE_NORMAL;
-}
-
-ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,
-                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
-{
-  ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
-  compositeTracker->SetTracker(primaryTracker, 0);
-  compositeTracker->SetTracker(
-    ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
-      rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig), m_state.m_lowLevelEngine.get(), m_state.m_imuCalibrator.get(), scene.get()
-    ), 1
-  );
-  return compositeTracker;
-}
-
-void Pipeline::setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
-{
-  m_state.m_fallibleTracker = NULL;
-
-  switch(m_state.m_trackerType)
-  {
-    case TRACKER_RIFT:
-    {
-#ifdef WITH_OVR
-      m_state.m_tracker.reset(make_hybrid_tracker(new RiftTracker, settings, scene, rgbImageSize, depthImageSize));
-      break;
-#else
-      // This should never happen as things stand - we never try to use the Rift tracker if Rift support isn't available.
-      throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
-#endif
-    }
-    case TRACKER_ROBUSTVICON:
-    {
-#ifdef WITH_VICON
-      m_fallibleTracker = new RobustViconTracker(m_trackerParams, "kinect", rgbImageSize, depthImageSize, settings, m_lowLevelEngine, scene);
-      m_tracker.reset(m_fallibleTracker);
-      break;
-#else
-      // This should never happen as things stand - we never try to use the robust Vicon tracker if Vicon support isn't available.
-      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
-#endif
-    }
-    case TRACKER_VICON:
-    {
-#ifdef WITH_VICON
-      m_fallibleTracker = new ViconTracker(m_trackerParams, "kinect");
-      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker, settings, scene, rgbImageSize, depthImageSize));
-      break;
-#else
-      // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.
-      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
-#endif
-    }
-    default: // TRACKER_INFINITAM
-    {
-      m_state.m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-      m_state.m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, settings.get(), m_state.m_lowLevelEngine.get(), m_state.m_imuCalibrator.get(), scene.get()
-      ));
-    }
-  }
 }

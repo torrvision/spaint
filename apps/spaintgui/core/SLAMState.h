@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_SLAMSTATE
 #define H_SPAINTGUI_SLAMSTATE
 
-#include <ITMLib/Core/ITMDenseMapper.h>
-#include <ITMLib/Core/ITMTrackingController.h>
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
@@ -24,7 +22,6 @@ class SLAMState
 protected:
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -35,11 +32,6 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::FallibleTracker *get_fallible_tracker() const = 0;
-
   /**
    * \brief TODO
    */
@@ -64,11 +56,6 @@ public:
    * \brief TODO
    */
   virtual const Relocaliser_Ptr& get_relocaliser() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const TrackingController_Ptr& get_tracking_controller() const = 0;
 
   /**
    * \brief TODO

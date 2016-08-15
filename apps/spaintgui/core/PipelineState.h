@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_PIPELINESTATE
 #define H_SPAINTGUI_PIPELINESTATE
 
-#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
-#include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
@@ -26,7 +24,6 @@
 #include "PropagationState.h"
 #include "SLAMState.h"
 #include "SmoothingState.h"
-#include "TrackerType.h"
 #include "TrainingState.h"
 
 /**
@@ -42,17 +39,11 @@ class PipelineState
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
   typedef boost::shared_ptr<const rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_CPtr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
-  /** A pointer to a tracker that can detect tracking failures (if available). */
-  spaint::FallibleTracker *m_fallibleTracker;
-
   /** The feature calculator. */
   spaint::FeatureCalculator_CPtr m_featureCalculator;
 
@@ -62,9 +53,6 @@ public:
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
-  /** The IMU calibrator. */
-  IMUCalibrator_Ptr m_imuCalibrator;
-
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
 
@@ -73,9 +61,6 @@ public:
 
   /** The label smoother. */
   spaint::LabelSmoother_CPtr m_labelSmoother;
-
-  /** The engine used to perform low-level image processing operations. */
-  LowLevelEngine_Ptr m_lowLevelEngine;
 
   /** The maximum number of voxels for which to predict labels each frame. */
   size_t m_maxPredictionVoxelCount;
@@ -116,21 +101,6 @@ public:
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
-  /** The tracker. */
-  ITMTracker_Ptr m_tracker;
-
-  /**
-   * The parameters for the tracker (if any). For example, this would be the host on which the
-   * Vicon software is running (e.g. "<IP address>:<port>") if we're using the Vicon tracker.
-   */
-  std::string m_trackerParams;
-
-  /** The type of tracker to use. */
-  TrackerType m_trackerType;
-
-  /** The tracking controller. */
-  TrackingController_Ptr m_trackingController;
-
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
@@ -148,12 +118,6 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual const spaint::FallibleTracker *get_fallible_tracker() const
-  {
-    return m_fallibleTracker;
-  }
-
   /** Override */
   virtual const spaint::FeatureCalculator_CPtr& get_feature_calculator() const
   {
@@ -254,12 +218,6 @@ public:
   virtual const Relocaliser_Ptr& get_relocaliser() const
   {
     return m_relocaliser;
-  }
-
-  /** Override */
-  virtual const TrackingController_Ptr& get_tracking_controller() const
-  {
-    return m_trackingController;
   }
 
   /** Override */

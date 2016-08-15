@@ -176,29 +176,6 @@ private:
    * \param settings  The settings to use for InfiniTAM.
    */
   void initialise(const Settings_Ptr& settings);
-
-  /**
-   * \brief Makes a hybrid tracker that refines the results of a primary tracker using ICP.
-   *
-   * \param primaryTracker    The primary tracker (e.g. a Rift or Vicon tracker).
-   * \param settings          The settings to use for InfiniTAM.
-   * \param scene             The scene.
-   * \param rgbImageSize      The RGB image size.
-   * \param depthImageSize    The depth image size.
-   * \return                  The hybrid tracker.
-   */
-  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,
-                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
-
-  /**
-   * \brief Sets up the tracker.
-   *
-   * \param settings          The settings to use for InfiniTAM.
-   * \param scene             The scene.
-   * \param rgbImageSize      The RGB image size.
-   * \param depthImageSize    The depth image size.
-   */
-  void setup_tracker(const Settings_Ptr& settings, const Model::Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
 };
 
 //#################### TYPEDEFS ####################
