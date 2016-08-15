@@ -10,6 +10,7 @@
 #include "PipelineState.h"
 #include "PredictionSection.h"
 #include "PropagationSection.h"
+#include "SLAMSection.h"
 #include "SmoothingSection.h"
 #include "TrainingSection.h"
 
@@ -37,6 +38,9 @@ private:
 
   /** TODO */
   PropagationSection m_propagationSection;
+
+  /** TODO */
+  SLAMSection m_slamSection;
 
   /** TODO */
   SmoothingSection m_smoothingSection;

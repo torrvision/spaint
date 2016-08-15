@@ -114,120 +114,7 @@ void Pipeline::reset_forest()
 bool Pipeline::run_main_section()
 {
   if(!m_state.m_imageSourceEngine->hasMoreImages()) return false;
-
-  const Raycaster::RenderState_Ptr& liveRenderState = m_state.m_raycaster->get_live_render_state();
-  const Model::Scene_Ptr& scene = m_state.m_model->get_scene();
-  const Model::TrackingState_Ptr& trackingState = m_state.m_model->get_tracking_state();
-  const Model::View_Ptr& view = m_state.m_model->get_view();
-
-  // Get the next frame.
-  ITMView *newView = view.get();
-  m_state.m_imageSourceEngine->getImages(m_state.m_inputRGBImage.get(), m_state.m_inputRawDepthImage.get());
-  const bool useBilateralFilter = false;
-  m_state.m_viewBuilder->UpdateView(&newView, m_state.m_inputRGBImage.get(), m_state.m_inputRawDepthImage.get(), useBilateralFilter);
-  m_state.m_model->set_view(newView);
-
-  // Track the camera (we can only do this once we've started reconstructing the model because we need something to track against).
-  SE3Pose oldPose(*trackingState->pose_d);
-  if(m_state.m_fusedFramesCount > 0) m_state.m_trackingController->Track(trackingState.get(), view.get());
-
-  // Determine the tracking quality, taking into account the failure mode being used.
-  ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
-  switch(m_state.m_model->get_settings()->behaviourOnFailure)
-  {
-    case ITMLibSettings::FAILUREMODE_RELOCALISE:
-    {
-      // Copy the current depth input across to the CPU for use by the relocaliser.
-      view->depth->UpdateHostFromDevice();
-
-      // Decide whether or not the relocaliser should consider using this frame as a keyframe.
-      bool considerKeyframe = false;
-      if(trackerResult == ITMTrackingState::TRACKING_GOOD)
-      {
-        if(m_state.m_keyframeDelay == 0) considerKeyframe = true;
-        else --m_state.m_keyframeDelay;
-      }
-
-      // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-      // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
-      // good for some time and the current frame differs sufficiently from the existing keyframes.
-      int nearestNeighbour;
-      int keyframeID = m_state.m_relocaliser->ProcessFrame(view->depth, 1, &nearestNeighbour, NULL, considerKeyframe);
-
-      if(keyframeID >= 0)
-      {
-        // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
-        // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
-        m_state.m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
-      }
-      else if(trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
-      {
-        // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
-        // of the keyframe and rerun the tracker for this frame.
-        trackingState->pose_d->SetFrom(&m_state.m_poseDatabase->retrievePose(nearestNeighbour).pose);
-
-        const bool resetVisibleList = true;
-        m_state.m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), resetVisibleList);
-        m_state.m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_state.m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
-        m_state.m_trackingController->Track(trackingState.get(), view.get());
-        trackerResult = trackingState->trackerResult;
-
-        // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
-        // adding a new keyframe.
-        m_state.m_keyframeDelay = 10;
-      }
-
-      break;
-    }
-    case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
-    {
-      // Since we're not using relocalisation, treat tracking failures like poor tracking,
-      // on the basis that it's better to try to keep going than to fail completely.
-      if(trackerResult == ITMTrackingState::TRACKING_FAILED) trackerResult = ITMTrackingState::TRACKING_POOR;
-
-      break;
-    }
-    case ITMLibSettings::FAILUREMODE_IGNORE:
-    default:
-    {
-      // If we're completely ignoring poor or failed tracking, treat the tracking quality as good.
-      trackerResult = ITMTrackingState::TRACKING_GOOD;
-      break;
-    }
-  }
-
-  // Decide whether or not fusion should be run.
-  bool runFusion = m_state.m_fusionEnabled;
-  if(trackerResult == ITMTrackingState::TRACKING_FAILED ||
-     (trackerResult == ITMTrackingState::TRACKING_POOR && m_state.m_fusedFramesCount >= m_state.m_initialFramesToFuse) ||
-     (m_state.m_fallibleTracker && m_state.m_fallibleTracker->lost_tracking()))
-  {
-    runFusion = false;
-  }
-
-  if(runFusion)
-  {
-    // Run the fusion process.
-    m_state.m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
-    ++m_state.m_fusedFramesCount;
-  }
-  else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
-  {
-    // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_state.m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
-  }
-  else
-  {
-    // If the tracking has completely failed, restore the pose from the previous frame.
-    *trackingState->pose_d = oldPose;
-  }
-
-  // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_state.m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_state.m_raycaster->get_visualisation_engine().get(), liveRenderState.get());
-
-  // If the current sub-engine has run out of images, disable fusion.
-  if(!m_state.m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_state.m_fusionEnabled = false;
-
+  m_slamSection.run(m_state);
   return true;
 }
 
@@ -397,13 +284,8 @@ void Pipeline::initialise(const Settings_Ptr& settings)
     harvestingThreshold, numFerns, numDecisionsPerFern
   ));
 
-  m_state.m_fusedFramesCount = 0;
   m_state.m_fusionEnabled = true;
-  m_state.m_keyframeDelay = 0;
   m_state.m_mode = PIPELINEMODE_NORMAL;
-
-  // FIXME: This value should be passed in rather than hard-coded.
-  m_state.m_initialFramesToFuse = 50;
 }
 
 ITMTracker *Pipeline::make_hybrid_tracker(ITMTracker *primaryTracker, const Settings_Ptr& settings, const Model::Scene_Ptr& scene,

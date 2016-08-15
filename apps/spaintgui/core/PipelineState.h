@@ -6,11 +6,7 @@
 #ifndef H_SPAINTGUI_PIPELINESTATE
 #define H_SPAINTGUI_PIPELINESTATE
 
-#include <InputSource/CompositeImageSourceEngine.h>
-#include <ITMLib/Core/ITMDenseMapper.h>
-#include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
-#include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
@@ -22,15 +18,13 @@
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
-#include <spaint/trackers/FallibleTracker.h>
 #include <spaint/util/SpaintVoxel.h>
 
 #include "FeatureInspectionState.h"
-#include "Interactor.h"
 #include "PipelineMode.h"
 #include "PredictionState.h"
 #include "PropagationState.h"
-#include "Raycaster.h"
+#include "SLAMState.h"
 #include "SmoothingState.h"
 #include "TrackerType.h"
 #include "TrainingState.h"
@@ -42,22 +36,17 @@ class PipelineState
 : public FeatureInspectionState,
   public PredictionState,
   public PropagationState,
+  public SLAMState,
   public SmoothingState,
   public TrainingState
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
   typedef boost::shared_ptr<const rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_CPtr;
-  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -73,9 +62,6 @@ public:
   /** The random forest. */
   RandomForest_Ptr m_forest;
 
-  /** The number of frames for which fusion has been run. */
-  size_t m_fusedFramesCount;
-
   /** Whether or not the user wants fusion to be run as part of the pipeline. */
   bool m_fusionEnabled;
 
@@ -85,16 +71,6 @@ public:
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
 
-  /**
-   * A number of initial frames to fuse, regardless of their tracking quality.
-   * Tracking quality can be poor in the first few frames, when there is only
-   * a limited model against which to track. By forcibly fusing these frames,
-   * we prevent poor tracking quality from stopping the reconstruction. After
-   * these frames have been fused, only frames with a good tracking result will
-   * be fused.
-   */
-  size_t m_initialFramesToFuse;
-
   /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 
@@ -103,9 +79,6 @@ public:
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
-
-  /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
-  size_t m_keyframeDelay;
 
   /** The label propagator. */
   spaint::LabelPropagator_CPtr m_labelPropagator;
@@ -191,6 +164,18 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
+  virtual const DenseMapper_Ptr& get_dense_mapper() const
+  {
+    return m_denseMapper;
+  }
+
+  /** Override */
+  virtual const spaint::FallibleTracker *get_fallible_tracker() const
+  {
+    return m_fallibleTracker;
+  }
+
+  /** Override */
   virtual const spaint::FeatureCalculator_CPtr& get_feature_calculator() const
   {
     return m_featureCalculator;
@@ -200,6 +185,30 @@ public:
   virtual const RandomForest_Ptr& get_forest()
   {
     return m_forest;
+  }
+
+  /** Override */
+  virtual bool get_fusion_enabled() const
+  {
+    return m_fusionEnabled;
+  }
+
+  /** Override */
+  virtual const CompositeImageSourceEngine_Ptr& get_image_source_engine() const
+  {
+    return m_imageSourceEngine;
+  }
+
+  /** Override */
+  virtual const ITMShortImage_Ptr& get_input_raw_depth_image() const
+  {
+    return m_inputRawDepthImage;
+  }
+
+  /** Override */
+  virtual const ITMUChar4Image_Ptr& get_input_rgb_image() const
+  {
+    return m_inputRGBImage;
   }
 
   /** Override */
@@ -245,6 +254,12 @@ public:
   }
 
   /** Override */
+  virtual const PoseDatabase_Ptr& get_pose_database() const
+  {
+    return m_poseDatabase;
+  }
+
+  /** Override */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_prediction_features()
   {
     return m_predictionFeaturesMB;
@@ -266,6 +281,24 @@ public:
   virtual const spaint::Selector::Selection_Ptr& get_prediction_voxel_locations()
   {
     return m_predictionVoxelLocationsMB;
+  }
+
+  /** Override */
+  virtual const Raycaster_Ptr& get_raycaster() const
+  {
+    return m_raycaster;
+  }
+
+  /** Override */
+  virtual const Relocaliser_Ptr& get_relocaliser() const
+  {
+    return m_relocaliser;
+  }
+
+  /** Override */
+  virtual const TrackingController_Ptr& get_tracking_controller() const
+  {
+    return m_trackingController;
   }
 
   /** Override */
@@ -296,6 +329,18 @@ public:
   virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations()
   {
     return m_trainingVoxelLocationsMB;
+  }
+
+  /** Override */
+  virtual const ViewBuilder_Ptr& get_view_builder() const
+  {
+    return m_viewBuilder;
+  }
+
+  /** Override */
+  virtual void set_fusion_enabled(bool fusionEnabled)
+  {
+    m_fusionEnabled = fusionEnabled;
   }
 };
 

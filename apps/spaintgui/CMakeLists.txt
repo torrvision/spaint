@@ -59,6 +59,7 @@ core/Pipeline.cpp
 core/PredictionSection.cpp
 core/PropagationSection.cpp
 core/Raycaster.cpp
+core/SLAMSection.cpp
 core/SmoothingSection.cpp
 core/TrainingSection.cpp
 )
@@ -76,6 +77,8 @@ core/PredictionState.h
 core/PropagationSection.h
 core/PropagationState.h
 core/Raycaster.h
+core/SLAMSection.h
+core/SLAMState.h
 core/SmoothingSection.h
 core/SmoothingState.h
 core/TrackerType.h
