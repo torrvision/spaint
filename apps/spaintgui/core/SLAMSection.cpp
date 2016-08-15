@@ -4,6 +4,7 @@
  */
 
 #include "SLAMSection.h"
+using namespace spaint;
 
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 using namespace ITMLib;
@@ -28,6 +29,14 @@ SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine
 
   // Set up the view builder.
   m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
+
+  // Set up the scene.
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  m_scene.reset(new Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+
+  // Set up the dense mapper.
+  m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
+  m_denseMapper->ResetScene(m_scene.get());
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -42,12 +51,16 @@ ITMUChar4Image_CPtr SLAMSection::get_input_rgb_image() const
   return m_inputRGBImage;
 }
 
+const SLAMSection::Scene_Ptr& SLAMSection::get_scene()
+{
+  return m_scene;
+}
+
 bool SLAMSection::run(SLAMState& state)
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
   const Raycaster::RenderState_Ptr& liveRenderState = state.get_raycaster()->get_live_render_state();
-  const Model::Scene_Ptr& scene = state.get_model()->get_scene();
   const Model::TrackingState_Ptr& trackingState = state.get_model()->get_tracking_state();
   const Model::View_Ptr& view = state.get_model()->get_view();
 
@@ -98,8 +111,8 @@ bool SLAMSection::run(SLAMState& state)
         trackingState->pose_d->SetFrom(&state.get_pose_database()->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        state.get_dense_mapper()->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), resetVisibleList);
-        state.get_tracking_controller()->Prepare(trackingState.get(), scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
+        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), m_scene.get(), liveRenderState.get(), resetVisibleList);
+        state.get_tracking_controller()->Prepare(trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
         state.get_tracking_controller()->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
 
@@ -139,13 +152,13 @@ bool SLAMSection::run(SLAMState& state)
   if(runFusion)
   {
     // Run the fusion process.
-    state.get_dense_mapper()->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), m_scene.get(), liveRenderState.get());
     ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    state.get_dense_mapper()->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), m_scene.get(), liveRenderState.get());
   }
   else
   {
@@ -154,7 +167,7 @@ bool SLAMSection::run(SLAMState& state)
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  state.get_tracking_controller()->Prepare(trackingState.get(), scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
+  state.get_tracking_controller()->Prepare(trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) state.set_fusion_enabled(false);

@@ -50,9 +50,6 @@ private:
 
   //#################### PUBLIC VARIABLES ####################
 public:
-  /** The dense mapper. */
-  DenseMapper_Ptr m_denseMapper;
-
   /** A pointer to a tracker that can detect tracking failures (if available). */
   spaint::FallibleTracker *m_fallibleTracker;
 
@@ -151,12 +148,6 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual const DenseMapper_Ptr& get_dense_mapper() const
-  {
-    return m_denseMapper;
-  }
-
   /** Override */
   virtual const spaint::FallibleTracker *get_fallible_tracker() const
   {

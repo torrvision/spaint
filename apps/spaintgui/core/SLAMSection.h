@@ -22,12 +22,18 @@ class SLAMSection
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLibSettings> Settings_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The dense mapper. */
+  DenseMapper_Ptr m_denseMapper;
+
   /** The number of frames for which fusion has been run. */
   size_t m_fusedFramesCount;
 
@@ -53,6 +59,9 @@ private:
   /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
   size_t m_keyframeDelay;
 
+  /** The reconstructed scene. */
+  Scene_Ptr m_scene;
+
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
 
@@ -77,6 +86,11 @@ public:
    * \brief TODO
    */
   ITMUChar4Image_CPtr get_input_rgb_image() const;
+
+  /**
+   * \brief TODO
+   */
+  const Scene_Ptr& get_scene();
 
   /** TODO */
   virtual bool run(SLAMState& state);

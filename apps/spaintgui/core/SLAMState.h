@@ -22,7 +22,6 @@ class SLAMState
 {
   //#################### TYPEDEFS ####################
 protected:
-  typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
@@ -36,11 +35,6 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief TODO
-   */
-  virtual const DenseMapper_Ptr& get_dense_mapper() const = 0;
-
   /**
    * \brief TODO
    */

@@ -182,10 +182,6 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   }
 #endif
 
-  // Set up the scene.
-  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  Model::Scene_Ptr scene(new Model::Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
-
   // Set up the InfiniTAM engines.
   m_state.m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
   VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
@@ -194,9 +190,10 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
   Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
 
-  // Set up the dense mapper and tracking controller.
-  m_state.m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
-  m_state.m_denseMapper->ResetScene(scene.get());
+  // Get the scene.
+  const Model::Scene_Ptr& scene = m_slamSection.get_scene();
+
+  // Set up the tracking controller.
   setup_tracker(settings, scene, rgbImageSize, depthImageSize);
   m_state.m_trackingController.reset(new ITMTrackingController(m_state.m_tracker.get(), settings.get()));
 
@@ -205,6 +202,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
   RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
 
   // Set up the spaint model, raycaster and interactor.
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   TrackingState_Ptr trackingState(new ITMTrackingState(trackedImageSize, memoryType));
   m_state.m_tracker->UpdateInitialPose(trackingState.get());
   m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, trackingState, settings, m_state.m_resourcesDir));
