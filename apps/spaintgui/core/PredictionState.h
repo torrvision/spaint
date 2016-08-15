@@ -9,7 +9,6 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/sampling/interface/UniformVoxelSampler.h>
 #include <spaint/util/SpaintVoxel.h>
 
 #include "Interactor.h"
@@ -63,11 +62,6 @@ public:
    * \brief TODO
    */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> >& get_prediction_labels() = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::UniformVoxelSampler_CPtr& get_prediction_sampler() const = 0;
 
   /**
    * \brief TODO

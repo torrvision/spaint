@@ -8,7 +8,16 @@
 using namespace rafl;
 
 #include <spaint/randomforest/ForestUtil.h>
+#include <spaint/sampling/VoxelSamplerFactory.h>
 using namespace spaint;
+
+//#################### CONSTRUCTORS ####################
+
+PredictionSection::PredictionSection(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings)
+{
+  const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -22,7 +31,7 @@ void PredictionSection::run(PredictionState& state, const RenderState_CPtr& samp
 
   // Sample some voxels for which to predict labels.
   const size_t maxPredictionVoxelCount = state.get_max_prediction_voxel_count();
-  state.get_prediction_sampler()->sample_voxels(samplingRenderState->raycastResult, maxPredictionVoxelCount, *state.get_prediction_voxel_locations());
+  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, maxPredictionVoxelCount, *state.get_prediction_voxel_locations());
 
   // Calculate feature descriptors for the sampled voxels.
   state.get_feature_calculator()->calculate_features(*state.get_prediction_voxel_locations(), state.get_model()->get_scene().get(), *state.get_prediction_features());

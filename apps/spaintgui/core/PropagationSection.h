@@ -6,8 +6,6 @@
 #ifndef H_SPAINTGUI_PROPAGATIONSECTION
 #define H_SPAINTGUI_PROPAGATIONSECTION
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
 #include <spaint/propagation/interface/LabelPropagator.h>

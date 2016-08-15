@@ -40,8 +40,9 @@ using namespace RelocLib;
 //#################### CONSTRUCTORS ####################
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
-                   const LabelManager_Ptr& labelManager, TrackerType trackerType, const std::string& trackerParams)
-: m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
+                   const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
+: m_predictionSection(imageSourceEngine->getDepthImageSize(), seed, settings),
+  m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
   m_slamSection(imageSourceEngine, settings, trackerType, trackerParams),
   m_smoothingSection(labelManager->get_max_label_count(), settings)
 {
@@ -87,10 +88,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   const size_t maxLabelCount = labelManager->get_max_label_count();
   const size_t maxTrainingVoxelCount = maxLabelCount * m_state.m_maxTrainingVoxelsPerLabel;
 
-  // Set up the voxel samplers.
-  const unsigned int seed = 12345;
+  // Set up the training voxel sampler.
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_state.m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_state.m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_state.m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
 
   // Set up the feature calculator.

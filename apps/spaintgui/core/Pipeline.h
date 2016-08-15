@@ -62,11 +62,12 @@ public:
    * \param settings          The settings to use for InfiniTAM.
    * \param resourcesDir      The path to the resouces directory.
    * \param labelManager      The label manager.
+   * \param seed              The seed to use for the random number generators used by the voxel samplers.
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
    */
   Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
-           const spaint::LabelManager_Ptr& labelManager, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
+           const spaint::LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

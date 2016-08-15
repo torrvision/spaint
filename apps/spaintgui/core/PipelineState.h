@@ -10,7 +10,6 @@
 
 #include <spaint/features/interface/FeatureCalculator.h>
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
-#include <spaint/sampling/interface/UniformVoxelSampler.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/util/SpaintVoxel.h>
 
@@ -69,9 +68,6 @@ public:
 
   /** A memory block in which to store the labels predicted for the various voxels. */
   boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
-
-  /** The voxel sampler used in prediction mode. */
-  spaint::UniformVoxelSampler_CPtr m_predictionSampler;
 
   /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
   spaint::Selector::Selection_Ptr m_predictionVoxelLocationsMB;
@@ -151,12 +147,6 @@ public:
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> >& get_prediction_labels()
   {
     return m_predictionLabelsMB;
-  }
-
-  /** Override */
-  virtual const spaint::UniformVoxelSampler_CPtr& get_prediction_sampler() const
-  {
-    return m_predictionSampler;
   }
 
   /** Override */

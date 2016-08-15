@@ -238,7 +238,8 @@ try
   LabelManager_Ptr labelManager(new LabelManager(maxLabelCount));
 
   // Run the application.
-  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), labelManager, trackerType, trackerParams)));
+  const unsigned int seed = 12345;
+  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), labelManager, seed, trackerType, trackerParams)));
   app.run();
 
 #ifdef WITH_OVR
