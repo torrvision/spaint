@@ -1,5 +1,6 @@
 /**
  * evaluation: CoordinateDescentParameterSetGenerator.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
 #include <iostream>
@@ -52,9 +53,9 @@ size_t CoordinateDescentParameterSetGenerator::get_iteration_count() const
   }
   else
   {
-  // If parameters only have a single value, then do not count the parameter in the interation count.
-  size_t epochIterationCount = m_globalParamCount - m_singlePointParamCount;
-  return m_epochCount * epochIterationCount;
+    // If parameters only have a single value, then do not count the parameter in the iteration count.
+    size_t epochIterationCount = m_globalParamCount - m_singlePointParamCount;
+    return m_epochCount * epochIterationCount;
   }
 }
 
@@ -82,7 +83,7 @@ void CoordinateDescentParameterSetGenerator::initialise()
     if(size == 1) ++m_singlePointParamCount;
 
     // Randomly initialise the best parameter indices.
-    m_currentParamIndices.push_back(m_rng.generate_int_from_uniform(0, size -1));
+    m_currentParamIndices.push_back(m_rng.generate_int_from_uniform(0, size - 1));
 
     // Initialise the score associated with each parameter to a very large value.
     m_paramScores.push_back(std::vector<float>(size, largeScore));
@@ -101,7 +102,7 @@ void CoordinateDescentParameterSetGenerator::initialise()
     }
   }
 
-  // Initialise the index of parameters along the first coordinate to seach to the first element;
+  // Initialise the index of parameters along the first coordinate to seach to the first element.
   m_currentParamIndices[m_currentDimIndex] = 0;
 
   // The current and initial parameter indices are assumend to be the best.
@@ -113,8 +114,6 @@ void CoordinateDescentParameterSetGenerator::initialise()
   std::cout << "Best parameter indices: " << make_limited_container(m_bestParamIndices, 50) << std::endl;
   std::cout << "Best parameter indices all time: " << make_limited_container(m_bestParamIndicesAllTime, 50) << std::endl;
 #endif
-
-
 }
 
 void CoordinateDescentParameterSetGenerator::score_param_set_and_update_state(const ParamSet& paramSet, float score) const
@@ -149,7 +148,7 @@ void CoordinateDescentParameterSetGenerator::output_param_values(std::ostream& o
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ParamSet CoordinateDescentParameterSetGenerator::param_indices_to_set(std::vector<size_t> paramIndices) const
+ParamSet CoordinateDescentParameterSetGenerator::param_indices_to_set(const std::vector<size_t>& paramIndices) const
 {
   ParamSet paramSet;
   for(size_t i = 0; i < m_dimCount; ++i)
@@ -166,7 +165,7 @@ void CoordinateDescentParameterSetGenerator::random_restart() const
   for(size_t i = 0; i < m_dimCount; ++i)
   {
     size_t size = m_paramValues[i].second.size();
-    m_currentParamIndices[i] = (m_rng.generate_int_from_uniform(0, size -1));
+    m_currentParamIndices[i] = m_rng.generate_int_from_uniform(0, size - 1);
   }
 }
 
@@ -178,7 +177,7 @@ void CoordinateDescentParameterSetGenerator::update_state() const
   }
   else
   {
-    size_t bestIndex = tvgutil::ArgUtil::argmin(m_paramScores[m_currentDimIndex]);
+    size_t bestIndex = ArgUtil::argmin(m_paramScores[m_currentDimIndex]);
     m_bestScore = m_paramScores[m_currentDimIndex][bestIndex];
 
 #ifdef DEBUG_COORDINATE_DESCENT

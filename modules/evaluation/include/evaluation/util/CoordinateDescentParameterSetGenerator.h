@@ -6,8 +6,8 @@
 #ifndef H_EVALUATION_COORDINATEDESCENTPARAMETERSETGENERATOR
 #define H_EVALUATION_COORDINATEDESCENTPARAMETERSETGENERATOR
 
-#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/spirit/home/support/detail/hold_any.hpp>
@@ -19,13 +19,13 @@
 namespace evaluation {
 
 /**
- * \brief An instance of this class will try to find the parameters which minimise a function with coordinate descent.
+ * \brief An instance of this class will try to find the parameters that minimise a function using coordinate descent.
  */
 class CoordinateDescentParameterSetGenerator
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** A record of the best parameter indices along each parameter dimension. */
+  /** The best parameter indices along each parameter dimension. */
   mutable std::vector<size_t> m_bestParamIndices;
 
   /** The best parameter indices over all epochs. */
@@ -49,7 +49,7 @@ private:
   /** The total number of parameter dimensions. */
   size_t m_dimCount;
 
-  /** The number of passes through the parameter set. */
+  /** The number of passes that should be made through the parameter set. */
   size_t m_epochCount;
 
   /** The first dimension along which to search. */
@@ -78,7 +78,7 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
-  explicit CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount);
+  CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -147,7 +147,7 @@ private:
    * \param paramIndices  The index set.
    * \return              The parameter set corresponding to the index set.
    */
-  ParamSet param_indices_to_set(std::vector<size_t> paramIndices) const;
+  ParamSet param_indices_to_set(const std::vector<size_t>& paramIndices) const;
 
   /**
    * \brief Randomly restart the parameter search when learning has converged.
