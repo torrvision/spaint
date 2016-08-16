@@ -48,25 +48,15 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   }
 #endif
 
-  // Set up the visualisation engine.
-  VisualisationEngine_Ptr visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
-
-  // Get the RGB and depth image sizes.
-  Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
-  Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
-
-  // Get the scene.
-  const Model::Scene_Ptr& scene = m_slamSection.get_scene();
-
-  // Set up the live render state.
-  Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
-  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
-
   // Set up the spaint model, raycaster and interactor.
+  Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
   MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  m_state.m_model.reset(new Model(scene, rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, resourcesDir, labelManager));
-  m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
-  m_state.m_interactor.reset(new Interactor(m_state.m_model));
+  Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
+  Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
+
+  m_state.m_model.reset(new Model(m_slamSection.get_scene(), rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, resourcesDir, labelManager));
+  m_state.m_raycaster.reset(new Raycaster(m_state.get_model(), trackedImageSize, settings));
+  m_state.m_interactor.reset(new Interactor(m_state.get_model()));
 
   // Get the maximum numbers of voxels to use for prediction and training.
   const size_t maxPredictionVoxelCount = m_predictionSection.get_max_prediction_voxel_count();

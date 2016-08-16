@@ -26,6 +26,7 @@ public:
   typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### ENUMERATIONS ####################
@@ -62,11 +63,11 @@ public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model               The spaint model.
-   * \param visualisationEngine The InfiniTAM engine used for raycasting the scene.
-   * \param liveRenderState     The render state corresponding to the live camera pose.
+   * \param model             The spaint model.
+   * \param trackedImageSize  The size of the images used by the tracker.
+   * \param settings          The settings to use for InfiniTAM.
    */
-  Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState);
+  Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

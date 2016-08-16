@@ -7,6 +7,7 @@
 
 #include <stdexcept>
 
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 using namespace ORUtils;
@@ -19,9 +20,15 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Raycaster::Raycaster(const Model_CPtr& model, const VisualisationEngine_Ptr& visualisationEngine, const RenderState_Ptr& liveRenderState)
-: m_liveRenderState(liveRenderState), m_model(model), m_visualisationEngine(visualisationEngine)
+Raycaster::Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, const Settings_CPtr& settings)
+: m_model(model)
 {
+  // Set up the visualisation engine.
+  m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
+
+  // Set up the live render state.
+  m_liveRenderState.reset(m_visualisationEngine->CreateRenderState(model->get_scene().get(), trackedImageSize));
+
   // Set up the visualisers.
   size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
