@@ -8,7 +8,6 @@
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
 
-#include <spaint/selectors/Selector.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
@@ -17,14 +16,14 @@ using namespace spaint;
 void FeatureInspectionSection::run(FeatureInspectionState& state, const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
-  Selector::Selection_CPtr selection = state.get_interactor()->get_selector()->get_selection();
+  Selector::Selection_CPtr selection = state.get_selector()->get_selection();
 
   // If the user hasn't selected a single voxel, early out.
   if(!selection || selection->dataSize != 1) return;
 
   // Calculate the feature descriptor for the selected voxel.
   boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(state.get_feature_calculator()->get_feature_count());
-  state.get_feature_calculator()->calculate_features(*selection, state.get_model()->get_scene().get(), *featuresMB);
+  state.get_feature_calculator()->calculate_features(*selection, state.get_scene().get(), *featuresMB);
 
 #ifdef WITH_OPENCV
   // Convert the feature descriptor into an OpenCV image and show it in a window.

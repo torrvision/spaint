@@ -34,7 +34,8 @@ class PipelineState
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
-  typedef boost::shared_ptr<const rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_CPtr;
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -119,6 +120,12 @@ public:
   virtual const Scene_Ptr& get_scene() const
   {
     return m_model->get_scene();
+  }
+
+  /** Override */
+  virtual spaint::Selector_CPtr get_selector() const
+  {
+    return m_interactor->get_selector();
   }
 
   /** Override */

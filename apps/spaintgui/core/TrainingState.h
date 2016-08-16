@@ -18,7 +18,7 @@
 class TrainingState
 {
   //#################### TYPEDEFS ####################
-protected:
+private:
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;

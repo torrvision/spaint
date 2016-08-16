@@ -7,14 +7,18 @@
 #define H_SPAINTGUI_FEATUREINSPECTIONSTATE
 
 #include <spaint/features/interface/FeatureCalculator.h>
-
-#include "Interactor.h"
+#include <spaint/selectors/Selector.h>
 
 /**
  * \brief TODO
  */
 class FeatureInspectionState
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
+
   //#################### DESTRUCTOR ####################
 public:
   virtual ~FeatureInspectionState() {}
@@ -29,17 +33,17 @@ public:
   /**
    * \brief TODO
    */
-  virtual const Interactor_Ptr& get_interactor() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const Model_Ptr& get_model() const = 0;
-
-  /**
-   * \brief TODO
-   */
   virtual size_t get_patch_size() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual const Scene_Ptr& get_scene() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual spaint::Selector_CPtr get_selector() const = 0;
 };
 
 #endif
