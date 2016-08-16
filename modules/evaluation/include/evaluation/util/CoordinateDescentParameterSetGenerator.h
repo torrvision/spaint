@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include <boost/function.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
@@ -36,6 +37,9 @@ private:
 
   /** The best score over all epochs. */
   mutable float m_bestScoreAllTime;
+
+  /** The cost function. */
+  boost::function<float(const ParamSet&)> m_costFunction;
 
   /** The dimension index along which to search. */
   mutable size_t m_currentDimIndex;
@@ -92,6 +96,36 @@ public:
   CoordinateDescentParameterSetGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
 
   /**
+   * \brief Calculates the best parameters.
+   *
+   * \return The best parameters.
+   */
+  ParamSet calculate_best_parameters();
+
+  /**
+   * \brief Calculate the best parameters.
+   *
+   * \param bestScore  Sets the best score associated with the best parameter set.
+   *
+   * \return The best parameters.
+   */
+  ParamSet calculate_best_parameters(float& bestScore);
+
+  /**
+   * \brief Initialise the coordinate descent parameter generator.
+   */
+  void initialise(const boost::function<float(const ParamSet&)>& costFunction);
+
+  /**
+   * \brief Output the parameters and the associated values they may assume.
+   *
+   * \param os  The stream.
+   */
+  void output_param_values(std::ostream& os) const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
    * \brief Gets the best parameter set over all epochs.
    *
    * \return  The best parameters set.
@@ -120,28 +154,6 @@ public:
   ParamSet get_next_param_set() const;
 
   /**
-   * \brief Initialise the coordinate descent parameter generator.
-   */
-  void initialise();
-
-  /**
-   * \brief Adds a score corresponding to a set of parameters.
-   *
-   * \param paramSet  The parameter set.
-   * \param score     The score.
-   */
-  void score_param_set_and_update_state(const ParamSet& paramSet, float score) const;
-
-  /**
-   * \brief Output the parameters and the associated values they may assume.
-   *
-   * \param os  The stream.
-   */
-  void output_param_values(std::ostream& os) const;
-
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  /**
    * \brief Converts a set of parameter indices to a parameter set.
    *
    * \param paramIndices  The index set.
@@ -153,6 +165,14 @@ private:
    * \brief Randomly restart the parameter search when learning has converged.
    */
   void random_restart() const;
+
+  /**
+   * \brief Adds a score corresponding to a set of parameters.
+   *
+   * \param paramSet  The parameter set.
+   * \param score     The score.
+   */
+  void score_param_set_and_update_state(const ParamSet& paramSet, float score) const;
 
   /**
    * \brief Update the current state of the parameter generator.

@@ -34,39 +34,30 @@ CoordinateDescentParameterSetGenerator& CoordinateDescentParameterSetGenerator::
   return *this;
 }
 
-ParamSet CoordinateDescentParameterSetGenerator::get_best_param_set() const
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters()
 {
-  return param_indices_to_set(m_bestParamIndicesAllTime);
+  float dummy(0.0f);
+  return calculate_best_parameters(dummy);
 }
 
-
-float CoordinateDescentParameterSetGenerator::get_best_score() const
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float& bestScore)
 {
-  return m_bestScoreAllTime;
-}
-
-size_t CoordinateDescentParameterSetGenerator::get_iteration_count() const
-{
-  if(m_globalParamCount == m_singlePointParamCount)
+  const size_t maxIterationCount = get_iteration_count();
+  for(size_t i = 0; i < maxIterationCount; ++i)
   {
-    return 1;
+    ParamSet params = get_next_param_set();
+    score_param_set_and_update_state(params, m_costFunction(params));
   }
-  else
-  {
-    // If parameters only have a single value, then do not count the parameter in the iteration count.
-    size_t epochIterationCount = m_globalParamCount - m_singlePointParamCount;
-    return m_epochCount * epochIterationCount;
-  }
+
+  bestScore = get_best_score();
+
+  return get_best_param_set();
 }
 
-ParamSet CoordinateDescentParameterSetGenerator::get_next_param_set() const
+void CoordinateDescentParameterSetGenerator::initialise(const boost::function<float(const ParamSet&)>& costFunction)
 {
-  m_currentParamSet = param_indices_to_set(m_currentParamIndices);
-  return m_currentParamSet;
-}
+  m_costFunction = costFunction;
 
-void CoordinateDescentParameterSetGenerator::initialise()
-{
   m_firstIteration = true;
 
   // Initialise the number of dimensions.
@@ -116,19 +107,6 @@ void CoordinateDescentParameterSetGenerator::initialise()
 #endif
 }
 
-void CoordinateDescentParameterSetGenerator::score_param_set_and_update_state(const ParamSet& paramSet, float score) const
-{
-  if(paramSet == m_currentParamSet)
-  {
-    m_paramScores[m_currentDimIndex][m_currentParamIndices[m_currentDimIndex]] = score;
-    update_state();
-  }
-  else
-  {
-    std::cout << "Warning: the parameter set for which you are entering a score does not match the current parameter set.\n";
-  }
-}
-
 void CoordinateDescentParameterSetGenerator::output_param_values(std::ostream& os) const
 {
   for(size_t i = 0, size = m_paramValues.size(); i < size; ++i)
@@ -148,6 +126,37 @@ void CoordinateDescentParameterSetGenerator::output_param_values(std::ostream& o
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+ParamSet CoordinateDescentParameterSetGenerator::get_best_param_set() const
+{
+  return param_indices_to_set(m_bestParamIndicesAllTime);
+}
+
+
+float CoordinateDescentParameterSetGenerator::get_best_score() const
+{
+  return m_bestScoreAllTime;
+}
+
+size_t CoordinateDescentParameterSetGenerator::get_iteration_count() const
+{
+  if(m_globalParamCount == m_singlePointParamCount)
+  {
+    return 1;
+  }
+  else
+  {
+    // If parameters only have a single value, then do not count the parameter in the iteration count.
+    size_t epochIterationCount = m_globalParamCount - m_singlePointParamCount;
+    return m_epochCount * epochIterationCount;
+  }
+}
+
+ParamSet CoordinateDescentParameterSetGenerator::get_next_param_set() const
+{
+  m_currentParamSet = param_indices_to_set(m_currentParamIndices);
+  return m_currentParamSet;
+}
+
 ParamSet CoordinateDescentParameterSetGenerator::param_indices_to_set(const std::vector<size_t>& paramIndices) const
 {
   ParamSet paramSet;
@@ -166,6 +175,19 @@ void CoordinateDescentParameterSetGenerator::random_restart() const
   {
     size_t size = m_paramValues[i].second.size();
     m_currentParamIndices[i] = m_rng.generate_int_from_uniform(0, size - 1);
+  }
+}
+
+void CoordinateDescentParameterSetGenerator::score_param_set_and_update_state(const ParamSet& paramSet, float score) const
+{
+  if(paramSet == m_currentParamSet)
+  {
+    m_paramScores[m_currentDimIndex][m_currentParamIndices[m_currentDimIndex]] = score;
+    update_state();
+  }
+  else
+  {
+    std::cout << "Warning: the parameter set for which you are entering a score does not match the current parameter set.\n";
   }
 }
 
