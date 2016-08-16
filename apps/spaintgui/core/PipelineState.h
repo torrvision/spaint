@@ -125,6 +125,12 @@ public:
   }
 
   /** Override */
+  virtual spaint::SpaintVoxel::Label get_semantic_label() const
+  {
+    return m_interactor->get_semantic_label();
+  }
+
+  /** Override */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const
   {
     return m_trainingFeaturesMB;

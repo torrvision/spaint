@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_PROPAGATIONSECTION
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <spaint/propagation/interface/LabelPropagator.h>
 

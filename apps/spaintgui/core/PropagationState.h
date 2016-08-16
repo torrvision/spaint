@@ -6,13 +6,22 @@
 #ifndef H_SPAINTGUI_PROPAGATIONSTATE
 #define H_SPAINTGUI_PROPAGATIONSTATE
 
-#include "Interactor.h"
+#include <boost/shared_ptr.hpp>
+
+#include <ITMLib/Objects/Scene/ITMScene.h>
+
+#include <spaint/util/SpaintVoxel.h>
 
 /**
  * \brief TODO
  */
 class PropagationState
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
+
   //#################### DESTRUCTOR ####################
 public:
   virtual ~PropagationState() {}
@@ -22,12 +31,12 @@ public:
   /**
    * \brief TODO
    */
-  virtual const Interactor_Ptr& get_interactor() const = 0;
+  virtual const Scene_Ptr& get_scene() const = 0;
 
   /**
    * \brief TODO
    */
-  virtual const Model_Ptr& get_model() const = 0;
+  virtual spaint::SpaintVoxel::Label get_semantic_label() const = 0;
 };
 
 #endif

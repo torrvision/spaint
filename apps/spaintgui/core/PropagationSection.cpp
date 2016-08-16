@@ -20,5 +20,5 @@ PropagationSection::PropagationSection(const Vector2i& depthImageSize, const Set
 
 void PropagationSection::run(PropagationState& state, const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->propagate_label(state.get_interactor()->get_semantic_label(), renderState->raycastResult, state.get_model()->get_scene().get());
+  m_labelPropagator->propagate_label(state.get_semantic_label(), renderState->raycastResult, state.get_scene().get());
 }
