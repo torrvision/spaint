@@ -13,6 +13,7 @@
 #include <spaint/util/SpaintVoxel.h>
 
 #include "FeatureInspectionState.h"
+#include "Interactor.h"
 #include "PredictionState.h"
 #include "PropagationState.h"
 #include "SLAMState.h"
@@ -134,6 +135,12 @@ public:
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const
   {
     return m_trainingFeaturesMB;
+  }
+
+  /** Override */
+  virtual const spaint::VoxelMarker_CPtr& get_voxel_marker() const
+  {
+    return m_interactor->get_voxel_marker();
   }
 };
 

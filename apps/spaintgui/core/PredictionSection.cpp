@@ -54,7 +54,7 @@ void PredictionSection::run(PredictionState& state, const RenderState_CPtr& samp
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
   // Calculate feature descriptors for the sampled voxels.
-  state.get_feature_calculator()->calculate_features(*m_predictionVoxelLocationsMB, state.get_model()->get_scene().get(), *state.get_prediction_features());
+  state.get_feature_calculator()->calculate_features(*m_predictionVoxelLocationsMB, state.get_scene().get(), *state.get_prediction_features());
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*state.get_prediction_features(), m_maxPredictionVoxelCount, state.get_feature_calculator()->get_feature_count());
 
   // Predict labels for the voxels based on the feature descriptors.
@@ -71,5 +71,5 @@ void PredictionSection::run(PredictionState& state, const RenderState_CPtr& samp
   m_predictionLabelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  state.get_interactor()->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB);
+  state.get_voxel_marker()->mark_voxels(*m_predictionVoxelLocationsMB, *m_predictionLabelsMB, state.get_scene().get());
 }

@@ -7,8 +7,10 @@
 #define H_SPAINTGUI_PREDICTIONSECTION
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <spaint/sampling/interface/UniformVoxelSampler.h>
+#include <spaint/selectors/Selector.h>
 
 #include "PredictionState.h"
 

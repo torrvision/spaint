@@ -27,7 +27,6 @@ private:
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<spaint::SelectionTransformer> SelectionTransformer_Ptr;
-  typedef boost::shared_ptr<const spaint::VoxelMarker> VoxelMarker_CPtr;
 public:
   typedef boost::shared_ptr<const spaint::SelectionTransformer> SelectionTransformer_CPtr;
 
@@ -46,7 +45,7 @@ private:
   spaint::SpaintVoxel::Label m_semanticLabel;
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
-  VoxelMarker_CPtr m_voxelMarker;
+  spaint::VoxelMarker_CPtr m_voxelMarker;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -93,6 +92,13 @@ public:
    * \return  The semantic label that is being used for manually labelling the scene.
    */
   spaint::SpaintVoxel::Label get_semantic_label() const;
+
+  /**
+   * \brief Gets the voxel marker that is being used to apply semantic labels to voxels in the scene.
+   *
+   * \return  The voxel marker that is being used to apply semantic labels to voxels in the scene.
+   */
+  const spaint::VoxelMarker_CPtr& get_voxel_marker() const;
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.

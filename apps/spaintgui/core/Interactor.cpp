@@ -83,6 +83,11 @@ SpaintVoxel::Label Interactor::get_semantic_label() const
   return m_semanticLabel;
 }
 
+const spaint::VoxelMarker_CPtr& Interactor::get_voxel_marker() const
+{
+  return m_voxelMarker;
+}
+
 void Interactor::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels, MarkingMode mode)
 {
   m_voxelMarker->mark_voxels(*selection, label, m_model->get_scene().get(), oldLabels.get(), mode);
