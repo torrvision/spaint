@@ -19,5 +19,5 @@ SmoothingSection::SmoothingSection(size_t maxLabelCount, const Settings_CPtr& se
 
 void SmoothingSection::run(SmoothingState& state, const RenderState_CPtr& renderState)
 {
-  m_labelSmoother->smooth_labels(renderState->raycastResult, state.get_model()->get_scene().get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, state.get_scene().get());
 }

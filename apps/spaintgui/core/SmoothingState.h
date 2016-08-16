@@ -6,13 +6,22 @@
 #ifndef H_SPAINTGUI_SMOOTHINGSTATE
 #define H_SPAINTGUI_SMOOTHINGSTATE
 
-#include "Model.h"
+#include <boost/shared_ptr.hpp>
+
+#include <ITMLib/Objects/Scene/ITMScene.h>
+
+#include <spaint/util/SpaintVoxel.h>
 
 /**
  * \brief TODO
  */
 class SmoothingState
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
+
   //#################### DESTRUCTOR ####################
 public:
   virtual ~SmoothingState() {}
@@ -22,7 +31,7 @@ public:
   /**
    * \brief TODO
    */
-  virtual const Model_Ptr& get_model() const = 0;
+  virtual const Scene_Ptr& get_scene() const = 0;
 };
 
 #endif

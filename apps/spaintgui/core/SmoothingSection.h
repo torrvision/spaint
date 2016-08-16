@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_SMOOTHINGSECTION
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <spaint/smoothing/interface/LabelSmoother.h>
 
