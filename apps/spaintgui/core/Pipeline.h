@@ -9,6 +9,7 @@
 #include <spaint/util/LabelManager.h>
 
 #include "FeatureInspectionSection.h"
+#include "PipelineMode.h"
 #include "PipelineState.h"
 #include "PredictionSection.h"
 #include "PropagationSection.h"
@@ -34,6 +35,9 @@ private:
 private:
   /** TODO */
   FeatureInspectionSection m_featureInspectionSection;
+
+  /** The mode in which the pipeline is currently running. */
+  PipelineMode m_mode;
 
   /** TODO */
   PredictionSection m_predictionSection;

@@ -31,7 +31,8 @@ using namespace RelocLib;
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
-: m_predictionSection(imageSourceEngine->getDepthImageSize(), seed, settings),
+: m_mode(PIPELINEMODE_NORMAL),
+  m_predictionSection(imageSourceEngine->getDepthImageSize(), seed, settings),
   m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
   m_resourcesDir(resourcesDir),
   m_slamSection(imageSourceEngine, settings, trackerType, trackerParams),
@@ -96,8 +97,6 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
   // Set up the random forest.
   reset_forest();
-
-  m_state.m_mode = PIPELINEMODE_NORMAL;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -130,7 +129,7 @@ const Interactor_Ptr& Pipeline::get_interactor()
 
 PipelineMode Pipeline::get_mode() const
 {
-  return m_state.m_mode;
+  return m_mode;
 }
 
 const Model_Ptr& Pipeline::get_model()
@@ -167,7 +166,7 @@ bool Pipeline::run_main_section()
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 {
-  switch(m_state.m_mode)
+  switch(m_mode)
   {
     case PIPELINEMODE_FEATURE_INSPECTION:
       m_featureInspectionSection.run(m_state, renderState);
@@ -208,11 +207,11 @@ void Pipeline::set_mode(PipelineMode mode)
 {
 #ifdef WITH_OPENCV
   // If we are switching out of feature inspection mode, destroy the feature inspection window.
-  if(m_state.m_mode == PIPELINEMODE_FEATURE_INSPECTION && mode != PIPELINEMODE_FEATURE_INSPECTION)
+  if(m_mode == PIPELINEMODE_FEATURE_INSPECTION && mode != PIPELINEMODE_FEATURE_INSPECTION)
   {
     cv::destroyAllWindows();
   }
 #endif
 
-  m_state.m_mode = mode;
+  m_mode = mode;
 }

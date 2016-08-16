@@ -13,7 +13,6 @@
 #include <spaint/util/SpaintVoxel.h>
 
 #include "FeatureInspectionState.h"
-#include "PipelineMode.h"
 #include "PredictionState.h"
 #include "PropagationState.h"
 #include "SLAMState.h"
@@ -47,9 +46,6 @@ public:
 
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
-
-  /** The mode in which the pipeline is currently running. */
-  PipelineMode m_mode;
 
   /** The spaint model. */
   Model_Ptr m_model;
