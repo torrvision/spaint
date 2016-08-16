@@ -12,6 +12,7 @@ using namespace spaint;
 #include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace InputSource;
 using namespace ITMLib;
@@ -319,7 +320,7 @@ void Pipeline::initialise(const Settings_Ptr& settings)
 
   // Set up the live render state.
   Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
-  RenderState_Ptr liveRenderState(visualisationEngine->CreateRenderState(scene.get(), trackedImageSize));
+  RenderState_Ptr liveRenderState(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
 
   // Set up the spaint model, raycaster and interactor.
   TrackingState_Ptr trackingState(new ITMTrackingState(trackedImageSize, memoryType));
