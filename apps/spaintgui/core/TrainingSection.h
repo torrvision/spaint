@@ -9,6 +9,7 @@
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
 #include <spaint/sampling/interface/PerLabelVoxelSampler.h>
+#include <spaint/selectors/Selector.h>
 
 #include "TrainingState.h"
 

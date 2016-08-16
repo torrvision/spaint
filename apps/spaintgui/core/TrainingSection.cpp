@@ -49,7 +49,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
   // Note that we deliberately avoid training from the background label (0), since the entire scene is
   // initially labelled as background and so training from the background would cause us to learn
   // incorrect labels for non-background things.
-  LabelManager_CPtr labelManager = state.get_model()->get_label_manager();
+  LabelManager_CPtr labelManager = state.get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
   bool *labelMask = m_trainingLabelMaskMB->GetData(MEMORYDEVICE_CPU);
   labelMask[0] = false;
@@ -61,7 +61,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_trainingSampler->sample_voxels(raycastResult, state.get_model()->get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, state.get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
 #if DEBUGGING
   // Output the numbers of voxels sampled for each label (for debugging purposes).
@@ -76,7 +76,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
 #endif
 
   // Compute feature vectors for the sampled voxels.
-  state.get_feature_calculator()->calculate_features(*m_trainingVoxelLocationsMB, state.get_model()->get_scene().get(), *state.get_training_features());
+  state.get_feature_calculator()->calculate_features(*m_trainingVoxelLocationsMB, state.get_scene().get(), *state.get_training_features());
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::Label> > Example_CPtr;

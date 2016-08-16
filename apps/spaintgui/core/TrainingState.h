@@ -9,10 +9,8 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/selectors/Selector.h>
+#include <spaint/util/LabelManager.h>
 #include <spaint/util/SpaintVoxel.h>
-
-#include "Model.h"
 
 /**
  * \brief TODO
@@ -20,8 +18,10 @@
 class TrainingState
 {
   //#################### TYPEDEFS ####################
-private:
+protected:
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -42,7 +42,12 @@ public:
   /**
    * \brief TODO
    */
-  virtual const Model_Ptr& get_model() const = 0;
+  virtual const spaint::LabelManager_Ptr& get_label_manager() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual const Scene_Ptr& get_scene() const = 0;
 
   /**
    * \brief TODO

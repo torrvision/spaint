@@ -86,6 +86,12 @@ public:
   }
 
   /** Override */
+  virtual const spaint::LabelManager_Ptr& get_label_manager() const
+  {
+    return m_model->get_label_manager();
+  }
+
+  /** Override */
   virtual const Model_Ptr& get_model() const
   {
     return m_model;
@@ -107,6 +113,12 @@ public:
   virtual const Raycaster_Ptr& get_raycaster() const
   {
     return m_raycaster;
+  }
+
+  /** Override */
+  virtual const Scene_Ptr& get_scene() const
+  {
+    return m_model->get_scene();
   }
 
   /** Override */
