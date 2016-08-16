@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 using namespace ORUtils;
@@ -27,7 +28,8 @@ Raycaster::Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, 
   m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
 
   // Set up the live render state.
-  m_liveRenderState.reset(m_visualisationEngine->CreateRenderState(model->get_scene().get(), trackedImageSize));
+  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  m_liveRenderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, model->get_scene()->sceneParams, memoryType));
 
   // Set up the visualisers.
   size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
@@ -57,7 +59,11 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
   Model::Scene_CPtr scene = m_model->get_scene();
 
-  if(!renderState) renderState.reset(m_visualisationEngine->CreateRenderState(scene.get(), m_model->get_depth_image_size()));
+  if(!renderState)
+  {
+    MemoryDeviceType memoryType = m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(m_model->get_depth_image_size(), scene->sceneParams, memoryType));
+  }
 
   m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
   m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
