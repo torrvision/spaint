@@ -67,14 +67,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_state.m_raycaster.reset(new Raycaster(m_state.m_model, visualisationEngine, liveRenderState));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
-  // Set the maximum numbers of voxels to use for prediction and training.
-  // FIXME: These values shouldn't be hard-coded here ultimately.
-#ifndef USE_LOW_POWER_MODE
-  m_state.m_maxPredictionVoxelCount = 8192;
-#else
-  m_state.m_maxPredictionVoxelCount = 512;
-#endif
-  const size_t maxLabelCount = labelManager->get_max_label_count();
+  // Get the maximum numbers of voxels to use for prediction and training.
+  const size_t maxPredictionVoxelCount = m_predictionSection.get_max_prediction_voxel_count();
   const size_t maxTrainingVoxelCount = m_trainingSection.get_max_training_voxel_count();
 
   // Set up the feature calculator.
@@ -84,20 +78,15 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   const size_t binCount = 36;                                         // 10 degrees per bin
 
   m_state.m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
-    std::max(m_state.m_maxPredictionVoxelCount, maxTrainingVoxelCount),
+    std::max(maxPredictionVoxelCount, maxTrainingVoxelCount),
     m_state.m_patchSize, patchSpacing, binCount, settings->deviceType
   );
 
-  // Set up the memory blocks needed for prediction and training.
+  // Set up the memory blocks needed to store the features computed during prediction and training.
   MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   const size_t featureCount = m_state.m_featureCalculator->get_feature_count();
-  m_state.m_predictionFeaturesMB = mbf.make_block<float>(m_state.m_maxPredictionVoxelCount * featureCount);
-  m_state.m_predictionLabelsMB = mbf.make_block<SpaintVoxel::PackedLabel>(m_state.m_maxPredictionVoxelCount);
-  m_state.m_predictionVoxelLocationsMB = mbf.make_block<Vector3s>(m_state.m_maxPredictionVoxelCount);
+  m_state.m_predictionFeaturesMB = mbf.make_block<float>(maxPredictionVoxelCount * featureCount);
   m_state.m_trainingFeaturesMB = mbf.make_block<float>(maxTrainingVoxelCount * featureCount);
-  m_state.m_trainingLabelMaskMB = mbf.make_block<bool>(maxLabelCount);
-  m_state.m_trainingVoxelCountsMB = mbf.make_block<unsigned int>(maxLabelCount);
-  m_state.m_trainingVoxelLocationsMB = mbf.make_block<Vector3s>(maxTrainingVoxelCount);
 
   // Register the relevant decision function generators with the factory.
   DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(

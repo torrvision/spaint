@@ -47,9 +47,6 @@ public:
   /** The interactor that is used to interact with the InfiniTAM scene. */
   Interactor_Ptr m_interactor;
 
-  /** The maximum number of voxels for which to predict labels each frame. */
-  size_t m_maxPredictionVoxelCount;
-
   /** The mode in which the pipeline is currently running. */
   PipelineMode m_mode;
 
@@ -62,26 +59,11 @@ public:
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
 
-  /** A memory block in which to store the labels predicted for the various voxels. */
-  boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
-
-  /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
-  spaint::Selector::Selection_Ptr m_predictionVoxelLocationsMB;
-
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
 
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
-
-  /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to train. */
-  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
-
-  /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
-  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
-
-  /** A memory block in which to store the locations of the voxels sampled for training purposes. */
-  spaint::Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -104,12 +86,6 @@ public:
   }
 
   /** Override */
-  virtual size_t get_max_prediction_voxel_count() const
-  {
-    return m_maxPredictionVoxelCount;
-  }
-
-  /** Override */
   virtual const Model_Ptr& get_model() const
   {
     return m_model;
@@ -128,18 +104,6 @@ public:
   }
 
   /** Override */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> >& get_prediction_labels()
-  {
-    return m_predictionLabelsMB;
-  }
-
-  /** Override */
-  virtual const spaint::Selector::Selection_Ptr& get_prediction_voxel_locations()
-  {
-    return m_predictionVoxelLocationsMB;
-  }
-
-  /** Override */
   virtual const Raycaster_Ptr& get_raycaster() const
   {
     return m_raycaster;
@@ -149,24 +113,6 @@ public:
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const
   {
     return m_trainingFeaturesMB;
-  }
-
-  /** Override */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<bool> >& get_training_label_mask() const
-  {
-    return m_trainingLabelMaskMB;
-  }
-
-  /** Override */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> >& get_training_voxel_counts() const
-  {
-    return m_trainingVoxelCountsMB;
-  }
-
-  /** Override */
-  virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations()
-  {
-    return m_trainingVoxelLocationsMB;
   }
 };
 

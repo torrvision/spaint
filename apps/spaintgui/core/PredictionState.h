@@ -46,27 +46,12 @@ public:
   /**
    * \brief TODO
    */
-  virtual size_t get_max_prediction_voxel_count() const = 0;
-
-  /**
-   * \brief TODO
-   */
   virtual const Model_Ptr& get_model() const = 0;
 
   /**
    * \brief TODO
    */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_prediction_features() = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> >& get_prediction_labels() = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::Selector::Selection_Ptr& get_prediction_voxel_locations() = 0;
 };
 
 #endif

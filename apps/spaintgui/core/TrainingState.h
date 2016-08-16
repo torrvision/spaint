@@ -48,21 +48,6 @@ public:
    * \brief TODO
    */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<bool> >& get_training_label_mask() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> >& get_training_voxel_counts() const = 0;
-
-  /**
-   * \brief TODO
-   */
-  virtual const spaint::Selector::Selection_Ptr& get_training_voxel_locations() = 0;
 };
 
 #endif

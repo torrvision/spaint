@@ -30,8 +30,17 @@ private:
   /** The maximum number of voxels per label from which to train each frame. */
   size_t m_maxTrainingVoxelsPerLabel;
 
+  /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to train. */
+  boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
+
   /** The voxel sampler used in training mode. */
   spaint::PerLabelVoxelSampler_CPtr m_trainingSampler;
+
+  /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
+  boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
+
+  /** A memory block in which to store the locations of the voxels sampled for training purposes. */
+  spaint::Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
   //#################### CONSTRUCTORS ####################
 public:
