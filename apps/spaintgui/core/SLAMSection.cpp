@@ -13,6 +13,15 @@ using namespace ITMLib;
 using namespace ORUtils;
 using namespace RelocLib;
 
+#ifdef WITH_OVR
+#include <spaint/trackers/RiftTracker.h>
+#endif
+
+#ifdef WITH_VICON
+#include <spaint/trackers/RobustViconTracker.h>
+#include <spaint/trackers/ViconTracker.h>
+#endif
+
 //#################### CONSTRUCTORS ####################
 
 SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams)
@@ -245,7 +254,7 @@ void SLAMSection::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& de
     case TRACKER_RIFT:
     {
 #ifdef WITH_OVR
-      m_state.m_tracker.reset(make_hybrid_tracker(new RiftTracker, settings, scene, rgbImageSize, depthImageSize));
+      m_tracker.reset(make_hybrid_tracker(new RiftTracker, rgbImageSize, depthImageSize));
       break;
 #else
       // This should never happen as things stand - we never try to use the Rift tracker if Rift support isn't available.
@@ -267,7 +276,7 @@ void SLAMSection::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& de
     {
 #ifdef WITH_VICON
       m_fallibleTracker = new ViconTracker(m_trackerParams, "kinect");
-      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker, settings, scene, rgbImageSize, depthImageSize));
+      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker, rgbImageSize, depthImageSize));
       break;
 #else
       // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.

@@ -25,15 +25,6 @@ using namespace RelocLib;
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
 
-#ifdef WITH_OVR
-#include <spaint/trackers/RiftTracker.h>
-#endif
-
-#ifdef WITH_VICON
-#include <spaint/trackers/RobustViconTracker.h>
-#include <spaint/trackers/ViconTracker.h>
-#endif
-
 #define DEBUGGING 1
 
 //#################### CONSTRUCTORS ####################
