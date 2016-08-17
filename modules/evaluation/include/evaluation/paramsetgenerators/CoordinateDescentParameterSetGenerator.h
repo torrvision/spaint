@@ -15,14 +15,14 @@
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
-#include "../core/ParamSetUtil.h"
+#include "ParameterSetGenerator.h"
 
 namespace evaluation {
 
 /**
  * \brief An instance of this class will try to find the parameters that minimise a function using coordinate descent.
  */
-class CoordinateDescentParameterSetGenerator
+class CoordinateDescentParameterSetGenerator : public ParameterSetGenerator
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -68,9 +68,6 @@ private:
   /** A list of the scores associated with each parameter. */
   mutable std::vector<std::vector<float> > m_paramScores;
 
-  /** A list of the possible values for each parameter (e.g. [("A", [1,2]), ("B", [3,4])]). */
-  std::vector<std::pair<std::string,std::vector<boost::spirit::hold_any> > > m_paramValues;
-
   /** A record of the best parameter indices obtained in the last epoch. */
   mutable std::vector<size_t> m_previousBestParamIndices;
 
@@ -82,15 +79,18 @@ private:
 
   //#################### CONSTRUCTORS ####################
 public:
+  /**
+   * \brief TODO
+   */
   CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Adds a parameter, together with a list of the values it may assume.
+   * \brief Adds a parameter, together with a list of the values it may take.
    *
    * \param param   The parameter name.
-   * \param values  The values the parameter may assume.
+   * \param values  The values the parameter may take.
    * \return        The generator itself (so that calls to add_param may be chained).
    */
   CoordinateDescentParameterSetGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
@@ -100,7 +100,7 @@ public:
    *
    * \return The best parameters.
    */
-  ParamSet calculate_best_parameters();
+  ParamSet calculate_best_parameters() const;
 
   /**
    * \brief Calculate the best parameters.
@@ -109,7 +109,10 @@ public:
    *
    * \return The best parameters.
    */
-  ParamSet calculate_best_parameters(float& bestScore);
+  ParamSet calculate_best_parameters(float& bestScore) const;
+
+  /** Override */
+  virtual std::vector<ParamSet> generate_param_sets() const;
 
   /**
    * \brief Initialise the coordinate descent parameter generator.

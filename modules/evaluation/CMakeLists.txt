@@ -37,6 +37,19 @@ include/evaluation/core/PerformanceTable.h
 )
 
 ##
+SET(paramsetgenerators_sources
+src/paramsetgenerators/CartesianProductParameterSetGenerator.cpp
+src/paramsetgenerators/CoordinateDescentParameterSetGenerator.cpp
+src/paramsetgenerators/ParameterSetGenerator.cpp
+)
+
+SET(paramsetgenerators_headers
+include/evaluation/paramsetgenerators/CartesianProductParameterSetGenerator.h
+include/evaluation/paramsetgenerators/CoordinateDescentParameterSetGenerator.h
+include/evaluation/paramsetgenerators/ParameterSetGenerator.h
+)
+
+##
 SET(splitgenerators_sources
 src/splitgenerators/CrossValidationSplitGenerator.cpp
 src/splitgenerators/RandomPermutationAndDivisionSplitGenerator.cpp
@@ -52,15 +65,11 @@ include/evaluation/splitgenerators/SplitGenerator.h
 
 ##
 SET(util_sources
-src/util/CartesianProductParameterSetGenerator.cpp
 src/util/ConfusionMatrixUtil.cpp
-src/util/CoordinateDescentParameterSetGenerator.cpp
 )
 
 SET(util_headers
-include/evaluation/util/CartesianProductParameterSetGenerator.h
 include/evaluation/util/ConfusionMatrixUtil.h
-include/evaluation/util/CoordinateDescentParameterSetGenerator.h
 )
 
 #################################################################
@@ -69,12 +78,14 @@ include/evaluation/util/CoordinateDescentParameterSetGenerator.h
 
 SET(sources
 ${core_sources}
+${paramsetgenerators_sources}
 ${splitgenerators_sources}
 ${util_sources}
 )
 
 SET(headers
 ${core_headers}
+${paramsetgenerators_headers}
 ${splitgenerators_headers}
 ${util_headers}
 )
@@ -84,6 +95,7 @@ ${util_headers}
 #############################
 
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(paramsetgenerators FILES ${paramsetgenerators_sources} ${paramsetgenerators_headers})
 SOURCE_GROUP(splitgenerators FILES ${splitgenerators_sources} ${splitgenerators_headers})
 SOURCE_GROUP(util FILES ${util_sources} ${util_headers})
 

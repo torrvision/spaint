@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "util/CoordinateDescentParameterSetGenerator.h"
+#include "paramsetgenerators/CoordinateDescentParameterSetGenerator.h"
 
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
@@ -28,19 +28,19 @@ CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(u
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-CoordinateDescentParameterSetGenerator& CoordinateDescentParameterSetGenerator::add_param(const std::string& param, const std::vector<hold_any>& values)
+CoordinateDescentParameterSetGenerator& CoordinateDescentParameterSetGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values)
 {
-  m_paramValues.push_back(std::make_pair(param, values));
+  ParameterSetGenerator::add_param(param, values);
   return *this;
 }
 
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters()
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters() const
 {
   float dummy(0.0f);
   return calculate_best_parameters(dummy);
 }
 
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float& bestScore)
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float& bestScore) const
 {
   const size_t maxIterationCount = get_iteration_count();
   for(size_t i = 0; i < maxIterationCount; ++i)
@@ -52,6 +52,13 @@ ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float
   bestScore = get_best_score();
 
   return get_best_param_set();
+}
+
+std::vector<ParamSet> CoordinateDescentParameterSetGenerator::generate_param_sets() const
+{
+  std::vector<ParamSet> result;
+  result.push_back(calculate_best_parameters());
+  return result;
 }
 
 void CoordinateDescentParameterSetGenerator::initialise(const boost::function<float(const ParamSet&)>& costFunction)

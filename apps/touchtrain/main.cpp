@@ -8,8 +8,8 @@ using boost::assign::list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceTable.h>
+#include <evaluation/paramsetgenerators/CartesianProductParameterSetGenerator.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
-#include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
 #include <rafl/decisionfunctions/DecisionFunctionGeneratorFactory.h>

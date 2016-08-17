@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "util/CartesianProductParameterSetGenerator.h"
+#include "paramsetgenerators/CartesianProductParameterSetGenerator.h"
 
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
@@ -15,29 +15,9 @@ namespace evaluation {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-CartesianProductParameterSetGenerator& CartesianProductParameterSetGenerator::add_param(const std::string& param, const std::vector<hold_any>& values)
-{
-  m_paramValues.push_back(std::make_pair(param, values));
-  return *this;
-}
-
 std::vector<ParamSet> CartesianProductParameterSetGenerator::generate_param_sets() const
 {
   return generate_partial_param_sets_for_params(0);
-}
-
-std::string CartesianProductParameterSetGenerator::param_set_to_string(const ParamSet& params)
-{
-  std::string paramString;
-  size_t mapSize = params.size();
-  size_t sizeCount = 0;
-  for(std::map<std::string,std::string>::const_iterator it = params.begin(), iend = params.end(); it != iend; ++it)
-  {
-    paramString += it->first + "-" + it->second;
-    if(++sizeCount != mapSize) paramString += "_";
-  }
-
-  return paramString;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

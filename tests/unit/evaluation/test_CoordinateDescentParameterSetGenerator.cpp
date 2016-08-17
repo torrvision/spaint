@@ -10,8 +10,8 @@ using boost::assign::map_list_of;
 
 #include <boost/lexical_cast.hpp>
 
-#include <evaluation/util/CoordinateDescentParameterSetGenerator.h>
 #include <evaluation/core/ParamSetUtil.h>
+#include <evaluation/paramsetgenerators/CoordinateDescentParameterSetGenerator.h>
 using namespace evaluation;
 
 #include <tvgutil/numbers/NumberSequenceGenerator.h>
