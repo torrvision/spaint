@@ -47,9 +47,6 @@ private:
   /** The current parameter indices for which a score is needed. */
   mutable std::vector<size_t> m_currentParamIndices;
 
-  /** The set of parameters for which a score is needed. */
-  mutable ParamSet m_currentParamSet;
-
   /** The total number of parameter dimensions. */
   size_t m_dimCount;
 
@@ -104,32 +101,11 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Gets the best parameter set over all epochs.
-   *
-   * \return  The best parameters set.
-   */
-  ParamSet get_best_param_set() const;
-
-  /**
-   * \brief Gets the best score over all epochs.
-   *
-   * \return  The best score.
-   */
-  float get_best_score() const;
-
-  /**
    * \brief Gets the total number of iterations.
    *
    * \return The total number of iterations.
    */
   size_t get_iteration_count() const;
-
-  /**
-   * \brief Gets the next parameter set to evaluate.
-   *
-   * \return  The next parameter set.
-   */
-  ParamSet get_next_param_set() const;
 
   /**
    * \brief Converts a set of parameter indices to a parameter set.
@@ -143,14 +119,6 @@ private:
    * \brief Randomly restart the parameter search when learning has converged.
    */
   void random_restart() const;
-
-  /**
-   * \brief Adds a score corresponding to a set of parameters.
-   *
-   * \param paramSet  The parameter set.
-   * \param score     The score.
-   */
-  void score_param_set_and_update_state(const ParamSet& paramSet, float score) const;
 
   /**
    * \brief Update the current state of the parameter generator.

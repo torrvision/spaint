@@ -9,6 +9,7 @@
 
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
+using boost::assign::list_of;
 using boost::spirit::hold_any;
 
 #include <tvgutil/misc/ArgUtil.h>
@@ -34,20 +35,19 @@ ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float
   const size_t maxIterationCount = get_iteration_count();
   for(size_t i = 0; i < maxIterationCount; ++i)
   {
-    ParamSet params = get_next_param_set();
-    score_param_set_and_update_state(params, m_costFunction(params));
+    const ParamSet paramSet = param_indices_to_set(m_currentParamIndices);
+    m_paramScores[m_currentDimIndex][m_currentParamIndices[m_currentDimIndex]] = m_costFunction(paramSet);
+    update_state();
   }
 
-  if(bestScore) *bestScore = get_best_score();
+  if(bestScore) *bestScore = m_bestScoreAllTime;
 
-  return get_best_param_set();
+  return param_indices_to_set(m_bestParamIndicesAllTime);
 }
 
 std::vector<ParamSet> CoordinateDescentParameterSetGenerator::generate_param_sets() const
 {
-  std::vector<ParamSet> result;
-  result.push_back(calculate_best_parameters());
-  return result;
+  return list_of(calculate_best_parameters());
 }
 
 void CoordinateDescentParameterSetGenerator::initialise()
@@ -103,17 +103,6 @@ void CoordinateDescentParameterSetGenerator::initialise()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ParamSet CoordinateDescentParameterSetGenerator::get_best_param_set() const
-{
-  return param_indices_to_set(m_bestParamIndicesAllTime);
-}
-
-
-float CoordinateDescentParameterSetGenerator::get_best_score() const
-{
-  return m_bestScoreAllTime;
-}
-
 size_t CoordinateDescentParameterSetGenerator::get_iteration_count() const
 {
   if(m_globalParamCount == m_singlePointParamCount)
@@ -126,12 +115,6 @@ size_t CoordinateDescentParameterSetGenerator::get_iteration_count() const
     size_t epochIterationCount = m_globalParamCount - m_singlePointParamCount;
     return m_epochCount * epochIterationCount;
   }
-}
-
-ParamSet CoordinateDescentParameterSetGenerator::get_next_param_set() const
-{
-  m_currentParamSet = param_indices_to_set(m_currentParamIndices);
-  return m_currentParamSet;
 }
 
 ParamSet CoordinateDescentParameterSetGenerator::param_indices_to_set(const std::vector<size_t>& paramIndices) const
@@ -152,19 +135,6 @@ void CoordinateDescentParameterSetGenerator::random_restart() const
   {
     size_t size = m_paramValues[i].second.size();
     m_currentParamIndices[i] = m_rng.generate_int_from_uniform(0, size - 1);
-  }
-}
-
-void CoordinateDescentParameterSetGenerator::score_param_set_and_update_state(const ParamSet& paramSet, float score) const
-{
-  if(paramSet == m_currentParamSet)
-  {
-    m_paramScores[m_currentDimIndex][m_currentParamIndices[m_currentDimIndex]] = score;
-    update_state();
-  }
-  else
-  {
-    std::cout << "Warning: the parameter set for which you are entering a score does not match the current parameter set.\n";
   }
 }
 
@@ -226,7 +196,6 @@ void CoordinateDescentParameterSetGenerator::update_state() const
 
     m_currentParamIndices[m_currentDimIndex] = 0;
   }
-
 
 #ifdef DEBUG_COORDINATE_DESCENT
   std::cout << "After update state: \n";
