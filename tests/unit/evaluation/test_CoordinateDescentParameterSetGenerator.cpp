@@ -54,11 +54,10 @@ BOOST_AUTO_TEST_CASE(find_best_params)
   const size_t epochCount = 10;
   CoordinateDescentParameterSetGenerator paramGenerator(seed, epochCount, sum_squares_cost_fn);
 
-  paramGenerator.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5, 1.5f, 5.0f)))
+  paramGenerator.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5f, 1.5f, 5.0f)))
                 .add_param("Bar", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-1000.0f, 1.0f, 5.0f)))
                 .add_param("Boo", list_of<float>(-10.0f)(-5.0f)(-2.0f)(0.0f)(5.0f)(15.0f))
-                .add_param("Dum", list_of<float>(0.0f))
-                .initialise();
+                .add_param("Dum", list_of<float>(0.0f));
 
   float bestScore;
   ParamSet bestParams = paramGenerator.calculate_best_parameters(&bestScore);

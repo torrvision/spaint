@@ -24,8 +24,8 @@ namespace evaluation {
 //#################### CONSTRUCTORS ####################
 
 CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount, const boost::function<float(const ParamSet&)>& costFunction)
-: m_bestScore(std::numeric_limits<float>::max()),
-  m_bestScoreAllTime(std::numeric_limits<float>::max()),
+: /*m_bestScore(std::numeric_limits<float>::max()),
+  m_bestScoreAllTime(std::numeric_limits<float>::max()),*/
   m_costFunction(costFunction),
   m_epochCount(epochCount),
   m_rng(seed)
@@ -33,7 +33,8 @@ CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(u
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float *bestScore) const
+#if 0
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters2(float *bestScore) const
 {
   const size_t maxIterationCount = get_iteration_count();
   for(size_t i = 0; i < maxIterationCount; ++i)
@@ -47,8 +48,9 @@ ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float
 
   return param_indices_to_set(m_bestParamIndicesAllTime);
 }
+#endif
 
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters2(float *bestScore) const
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float *bestScore) const
 {
   std::vector<size_t> bestParamIndicesAllTime;
   float bestScoreAllTime = static_cast<float>(INT_MAX);
@@ -79,21 +81,25 @@ std::pair<std::vector<size_t>,float> CoordinateDescentParameterSetGenerator::run
   std::vector<size_t> bestParamIndicesInEpoch = currentParamIndices;
   float bestScoreInEpoch = currentScore;
 
-  int paramCount = static_cast<int>(m_paramValues.size());
-  int startingOffset = m_rng.generate_int_from_uniform(0, paramCount - 1);
-  for(size_t k = 0, paramCount = m_paramValues.size(); k < paramCount; ++k)
+  size_t paramCount = m_paramValues.size();
+  int startingOffset = m_rng.generate_int_from_uniform(0, static_cast<int>(paramCount) - 1);
+  for(size_t k = 0; k < paramCount; ++k)
   {
     size_t paramIndex = (k + startingOffset) % paramCount;
 
     int valueCount = static_cast<int>(m_paramValues[paramIndex].second.size());
     if(valueCount == 1) continue;
 
-    int originalValueIndex = currentParamIndices[paramIndex];
+    size_t originalValueIndex = currentParamIndices[paramIndex];
+    std::vector<size_t> valueIndices = currentParamIndices;
+
     for(size_t valueIndex = 0; valueIndex < valueCount; ++valueIndex)
     {
       if(valueIndex == originalValueIndex) continue;
 
-      float score = m_costFunction(param_indices_to_set(currentParamIndices));
+      valueIndices[paramIndex] = valueIndex;
+      float score = m_costFunction(param_indices_to_set(valueIndices));
+
       if(score < currentScore)
       {
         currentParamIndices[paramIndex] = valueIndex;
@@ -116,7 +122,7 @@ std::vector<size_t> CoordinateDescentParameterSetGenerator::generate_random_para
   std::vector<size_t> result;
   for(size_t i = 0, paramCount = m_paramValues.size(); i < paramCount; ++i)
   {
-    result[i] = m_rng.generate_int_from_uniform(0, static_cast<int>(m_paramValues[i].second.size()) - 1);
+    result.push_back(m_rng.generate_int_from_uniform(0, static_cast<int>(m_paramValues[i].second.size()) - 1));
   }
   return result;
 }
@@ -126,6 +132,7 @@ std::vector<ParamSet> CoordinateDescentParameterSetGenerator::generate_param_set
   return list_of(calculate_best_parameters());
 }
 
+#if 0
 void CoordinateDescentParameterSetGenerator::initialise()
 {
   m_globalParamCount = 0;
@@ -185,6 +192,7 @@ size_t CoordinateDescentParameterSetGenerator::get_iteration_count() const
     return m_epochCount * epochIterationCount;
   }
 }
+#endif
 
 ParamSet CoordinateDescentParameterSetGenerator::param_indices_to_set(const std::vector<size_t>& paramIndices) const
 {
@@ -197,6 +205,7 @@ ParamSet CoordinateDescentParameterSetGenerator::param_indices_to_set(const std:
   return paramSet;
 }
 
+#if 0
 void CoordinateDescentParameterSetGenerator::random_restart() const
 {
   m_currentDimIndex = m_firstDimIndex = m_rng.generate_int_from_uniform(0, m_paramValues.size() - 1);
@@ -272,7 +281,7 @@ void CoordinateDescentParameterSetGenerator::update_state() const
   std::cout << "Best parameter indices: " << make_limited_container(m_bestParamIndices, 50) << std::endl;
   std::cout << "Best parameter indices all time: " << make_limited_container(m_bestParamIndicesAllTime, 50) << std::endl;
 #endif
-
 }
+#endif
 
 }
