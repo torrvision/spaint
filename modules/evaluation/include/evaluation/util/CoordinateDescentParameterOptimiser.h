@@ -61,6 +61,20 @@ public:
   CoordinateDescentParameterOptimiser& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
 
   /**
+   * \brief Adds a parameter, together with a list of the values it may take.
+   *
+   * \param param   The parameter name.
+   * \param values  The values the parameter may take.
+   * \return        The generator itself (so that calls to add_param may be chained).
+   */
+  template <typename T>
+  CoordinateDescentParameterOptimiser& add_param(const std::string& param, const std::vector<T>& values)
+  {
+    std::vector<boost::spirit::hold_any> anyValues(values.begin(), values.end());
+    return add_param(param, anyValues);
+  }
+
+  /**
    * \brief Performs coordinate descent optimisation with random restarts to try to find a parameter set with as low a cost as possible.
    *
    * \param bestCost    A place in which to return the cost associated with the best parameter set found (may be NULL).
