@@ -47,17 +47,11 @@ private:
   /** The current parameter indices for which a score is needed. */
   mutable std::vector<size_t> m_currentParamIndices;
 
-  /** The total number of parameter dimensions. */
-  size_t m_dimCount;
-
   /** The number of passes that should be made through the parameter set. */
   size_t m_epochCount;
 
   /** The first dimension along which to search. */
   mutable size_t m_firstDimIndex;
-
-  /** A flag indicating whether the parameter generator has passed the first iteration. */
-  mutable bool m_firstIteration;
 
   /** The total number of parameters that need to be searched in one epoch. */
   size_t m_globalParamCount;
@@ -91,6 +85,8 @@ public:
    * \return The best parameters.
    */
   ParamSet calculate_best_parameters(float *bestScore = NULL) const;
+
+  ParamSet calculate_best_parameters2(float *bestScore = NULL) const;
 
   /** Override */
   virtual std::vector<ParamSet> generate_param_sets() const;
