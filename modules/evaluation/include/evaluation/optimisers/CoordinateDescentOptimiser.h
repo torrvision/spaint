@@ -1,31 +1,39 @@
 /**
- * evaluation: CoordinateDescentParameterSetGenerator.h
+ * evaluation: CoordinateDescentOptimiser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_EVALUATION_COORDINATEDESCENTPARAMETERSETGENERATOR
-#define H_EVALUATION_COORDINATEDESCENTPARAMETERSETGENERATOR
+#ifndef H_EVALUATION_COORDINATEDESCENTOPTIMISER
+#define H_EVALUATION_COORDINATEDESCENTOPTIMISER
 
 #include <boost/function.hpp>
+#include <boost/spirit/home/support/detail/hold_any.hpp>
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
-#include "ParameterSetGenerator.h"
+#include "../core/ParamSetUtil.h"
 
 namespace evaluation {
 
 /**
  * \brief An instance of this class uses coordinate descent with random restarts to find a parameter set with as low a cost as possible.
  */
-class CoordinateDescentParameterSetGenerator : public ParameterSetGenerator
+class CoordinateDescentOptimiser
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::function<float(const ParamSet&)> CostFunction;
+
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The cost function to use to evaluate different parameter sets. */
-  boost::function<float(const ParamSet&)> m_costFunction;
+  /** The cost function to use to evaluate the different parameter sets. */
+  CostFunction m_costFunction;
 
   /** The number of epochs for which coordinate descent should be run. */
   size_t m_epochCount;
+
+  /** A list of the possible values for each parameter (e.g. [("A", [1,2]), ("B", [3,4])]). */
+  std::vector<std::pair<std::string,std::vector<boost::spirit::hold_any> > > m_paramValues;
 
   /** A random number generator. */
   mutable tvgutil::RandomNumberGenerator m_rng;
@@ -33,26 +41,32 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a coordinate descent parameter set generator.
+   * \brief Constructs a coordinate descent optimiser.
    *
-   * \param costFunction  The cost function to use to evaluate different parameter sets.
+   * \param costFunction  The cost function to use to evaluate the different parameter sets.
    * \param epochCount    The number of epochs for which coordinate descent should be run.
    * \param seed          The seed for the random number generator.
    */
-  CoordinateDescentParameterSetGenerator(const boost::function<float(const ParamSet&)>& costFunction, size_t epochCount, unsigned int seed);
+  CoordinateDescentOptimiser(const CostFunction& costFunction, size_t epochCount, unsigned int seed);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Adds a parameter, together with a list of the values it may take.
+   *
+   * \param param   The parameter name.
+   * \param values  The values the parameter may take.
+   * \return        The generator itself (so that calls to add_param may be chained).
+   */
+  CoordinateDescentOptimiser& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
+
+  /**
    * \brief Performs coordinate descent optimisation with random restarts to try to find a parameter set with as low a cost as possible.
    *
-   * \param bestCost  A place in which to return the cost associated with the best parameter set found (may be NULL).
-   * \return          The best parameter set found during coordinate descent.
+   * \param bestCost    A place in which to return the cost associated with the best parameter set found (may be NULL).
+   * \return            The best parameter set found during coordinate descent.
    */
   ParamSet choose_parameters(float *bestCost = NULL) const;
-
-  /** Override */
-  virtual std::vector<ParamSet> generate_param_sets() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

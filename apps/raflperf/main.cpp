@@ -10,9 +10,9 @@ using boost::assign::map_list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceTable.h>
-#include <evaluation/paramsetgenerators/CartesianProductParameterSetGenerator.h>
 #include <evaluation/splitgenerators/CrossValidationSplitGenerator.h>
 #include <evaluation/splitgenerators/RandomPermutationAndDivisionSplitGenerator.h>
+#include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 
 #include <rafl/examples/ExampleUtil.h>

@@ -7,7 +7,7 @@ using boost::assign::list_of;
 using boost::assign::map_list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
-#include <evaluation/paramsetgenerators/CoordinateDescentParameterSetGenerator.h>
+#include <evaluation/optimisers/CoordinateDescentOptimiser.h>
 using namespace evaluation;
 
 #include <tvgutil/numbers/NumberSequenceGenerator.h>
@@ -52,15 +52,15 @@ BOOST_AUTO_TEST_CASE(find_best_params)
 {
   const unsigned int seed = 12345;
   const size_t epochCount = 10;
-  CoordinateDescentParameterSetGenerator paramGenerator(sum_squares_cost_fn, epochCount, seed);
+  CoordinateDescentOptimiser optimiser(sum_squares_cost_fn, epochCount, seed);
 
-  paramGenerator.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5f, 1.5f, 5.0f)))
-                .add_param("Bar", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-1000.0f, 1.0f, 5.0f)))
-                .add_param("Boo", list_of<float>(-10.0f)(-5.0f)(-2.0f)(0.0f)(5.0f)(15.0f))
-                .add_param("Dum", list_of<float>(0.0f));
+  optimiser.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5f, 1.5f, 5.0f)))
+           .add_param("Bar", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-1000.0f, 1.0f, 5.0f)))
+           .add_param("Boo", list_of<float>(-10.0f)(-5.0f)(-2.0f)(0.0f)(5.0f)(15.0f))
+           .add_param("Dum", list_of<float>(0.0f));
 
   float bestScore;
-  ParamSet bestParams = paramGenerator.choose_parameters(&bestScore);
+  ParamSet bestParams = optimiser.choose_parameters(&bestScore);
 
   ParamSet answerParams = map_list_of("Foo",boost::lexical_cast<std::string>(0.5f))
                                      ("Bar",boost::lexical_cast<std::string>(0.0f))

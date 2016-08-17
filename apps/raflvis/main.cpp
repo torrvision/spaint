@@ -9,7 +9,7 @@ using boost::assign::list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceMeasure.h>
-#include <evaluation/paramsetgenerators/CartesianProductParameterSetGenerator.h>
+#include <evaluation/util/CartesianProductParameterSetGenerator.h>
 #include <evaluation/util/ConfusionMatrixUtil.h>
 using namespace evaluation;
 
