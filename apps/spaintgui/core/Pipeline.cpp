@@ -117,6 +117,11 @@ const Interactor_Ptr& Pipeline::get_interactor()
   return m_state.m_interactor;
 }
 
+Pipeline::RenderState_CPtr Pipeline::get_live_render_state() const
+{
+  return m_slamSection.get_live_render_state();
+}
+
 PipelineMode Pipeline::get_mode() const
 {
   return m_mode;

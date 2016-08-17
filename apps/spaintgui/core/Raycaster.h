@@ -46,9 +46,6 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The render state corresponding to the live camera pose. */
-  RenderState_Ptr m_liveRenderState;
-
   /** The spaint model. */
   Model_CPtr m_model;
 
@@ -86,10 +83,11 @@ public:
   /**
    * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).
    *
-   * \param output        The location into which to put the output image.
-   * \param postprocessor An optional function with which to postprocess the raycast before returning it.
+   * \param liveRenderState The render state corresponding to the current camera pose.
+   * \param output          The location into which to put the output image.
+   * \param postprocessor   An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+  void get_default_raycast(const RenderState_CPtr& liveRenderState, const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets the depth image from the most recently processed frame.
@@ -97,13 +95,6 @@ public:
    * \param output  The location into which to put the output image.
    */
   void get_depth_input(const ITMUChar4Image_Ptr& output) const;
-
-  /**
-   * \brief Gets the render state corresponding to the live camera pose.
-   *
-   * \return  The render state corresponding to the live camera pose.
-   */
-  const RenderState_Ptr& get_live_render_state();
 
   /**
    * \brief Gets the RGB image from the most recently processed frame.

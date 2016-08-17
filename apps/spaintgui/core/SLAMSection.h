@@ -37,6 +37,7 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
@@ -84,6 +85,9 @@ private:
 
   /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
   size_t m_keyframeDelay;
+
+  /** The render state corresponding to the live camera pose. */
+  RenderState_Ptr m_liveRenderState;
 
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
@@ -149,6 +153,13 @@ public:
    * \brief TODO
    */
   ITMUChar4Image_CPtr get_input_rgb_image() const;
+
+  /**
+   * \brief Gets the render state corresponding to the live camera pose.
+   *
+   * \return  The render state corresponding to the live camera pose.
+   */
+  RenderState_CPtr get_live_render_state() const;
 
   /**
    * \brief TODO

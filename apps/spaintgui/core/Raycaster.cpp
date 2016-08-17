@@ -27,10 +27,6 @@ Raycaster::Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, 
   // Set up the visualisation engine.
   m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
 
-  // Set up the live render state.
-  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
-  m_liveRenderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, model->get_scene()->sceneParams, memoryType));
-
   // Set up the visualisers.
   size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -109,9 +105,9 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_default_raycast(const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
+void Raycaster::get_default_raycast(const RenderState_CPtr& liveRenderState, const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
 {
-  make_postprocessed_cpu_copy(m_liveRenderState->raycastImage, postprocessor, output);
+  make_postprocessed_cpu_copy(liveRenderState->raycastImage, postprocessor, output);
 }
 
 void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output) const
@@ -119,11 +115,6 @@ void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output) const
   prepare_to_copy_visualisation(m_model->get_view()->depth->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->depth->UpdateHostFromDevice();
   m_visualisationEngine->DepthToUchar4(output.get(), m_model->get_view()->depth);
-}
-
-const Raycaster::RenderState_Ptr& Raycaster::get_live_render_state()
-{
-  return m_liveRenderState;
 }
 
 void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output) const

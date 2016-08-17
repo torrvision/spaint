@@ -8,6 +8,7 @@ using namespace spaint;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace ITMLib;
 using namespace ORUtils;
@@ -60,8 +61,12 @@ SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine
   // Set up the tracker and the tracking controller.
   setup_tracker(rgbImageSize, depthImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
-  m_trackingState.reset(new ITMTrackingState(get_tracked_image_size(rgbImageSize, depthImageSize), memoryType));
+  const Vector2i trackedImageSize = get_tracked_image_size(rgbImageSize, depthImageSize);
+  m_trackingState.reset(new ITMTrackingState(trackedImageSize, memoryType));
   m_tracker->UpdateInitialPose(m_trackingState.get());
+
+  // Set up the live render state.
+  m_liveRenderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, m_scene->sceneParams, memoryType));
 
   // Set up the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
@@ -93,6 +98,11 @@ ITMUChar4Image_CPtr SLAMSection::get_input_rgb_image() const
   return m_inputRGBImage;
 }
 
+SLAMSection::RenderState_CPtr SLAMSection::get_live_render_state() const
+{
+  return m_liveRenderState;
+}
+
 const SLAMSection::Scene_Ptr& SLAMSection::get_scene()
 {
   return m_scene;
@@ -112,7 +122,6 @@ bool SLAMSection::run(SLAMState& state)
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const Raycaster::RenderState_Ptr& liveRenderState = state.get_raycaster()->get_live_render_state();
   const Model::View_Ptr& view = state.get_model()->get_view();
 
   // Get the next frame.
@@ -162,8 +171,8 @@ bool SLAMSection::run(SLAMState& state)
         m_trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
+        m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get(), resetVisibleList);
+        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), m_liveRenderState.get());
         m_trackingController->Track(m_trackingState.get(), view.get());
         trackerResult = m_trackingState->trackerResult;
 
@@ -203,13 +212,13 @@ bool SLAMSection::run(SLAMState& state)
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseMapper->ProcessFrame(view.get(), m_trackingState.get(), m_scene.get(), liveRenderState.get());
+    m_denseMapper->ProcessFrame(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get());
     ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), liveRenderState.get());
+    m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get());
   }
   else
   {
@@ -218,7 +227,7 @@ bool SLAMSection::run(SLAMState& state)
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), liveRenderState.get());
+  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), m_liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
