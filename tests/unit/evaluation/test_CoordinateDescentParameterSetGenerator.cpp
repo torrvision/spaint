@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(find_best_params)
 {
   const unsigned int seed = 12345;
   const size_t epochCount = 10;
-  CoordinateDescentParameterSetGenerator paramGenerator(seed, epochCount, sum_squares_cost_fn);
+  CoordinateDescentParameterSetGenerator paramGenerator(sum_squares_cost_fn, epochCount, seed);
 
   paramGenerator.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5f, 1.5f, 5.0f)))
                 .add_param("Bar", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-1000.0f, 1.0f, 5.0f)))
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(find_best_params)
                 .add_param("Dum", list_of<float>(0.0f));
 
   float bestScore;
-  ParamSet bestParams = paramGenerator.calculate_best_parameters(&bestScore);
+  ParamSet bestParams = paramGenerator.choose_parameters(&bestScore);
 
   ParamSet answerParams = map_list_of("Foo",boost::lexical_cast<std::string>(0.5f))
                                      ("Bar",boost::lexical_cast<std::string>(0.0f))

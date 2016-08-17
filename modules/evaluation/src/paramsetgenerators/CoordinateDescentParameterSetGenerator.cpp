@@ -16,13 +16,13 @@ namespace evaluation {
 
 //#################### CONSTRUCTORS ####################
 
-CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount, const boost::function<float(const ParamSet&)>& costFunction)
+CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(const boost::function<float(const ParamSet&)>& costFunction, size_t epochCount, unsigned int seed)
 : m_costFunction(costFunction), m_epochCount(epochCount), m_rng(seed)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float *bestCost) const
+ParamSet CoordinateDescentParameterSetGenerator::choose_parameters(float *bestCost) const
 {
   std::vector<size_t> bestValueIndicesAllTime;
   float bestCostAllTime = std::numeric_limits<float>::max();
@@ -53,7 +53,7 @@ ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float
 
 std::vector<ParamSet> CoordinateDescentParameterSetGenerator::generate_param_sets() const
 {
-  return list_of(calculate_best_parameters());
+  return list_of(choose_parameters());
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
