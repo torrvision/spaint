@@ -21,26 +21,15 @@ namespace evaluation {
 
 //#################### CONSTRUCTORS ####################
 
-CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount)
-: m_epochCount(epochCount),
+CoordinateDescentParameterSetGenerator::CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount, const boost::function<float(const ParamSet&)>& costFunction)
+: m_costFunction(costFunction),
+  m_epochCount(epochCount),
   m_rng(seed)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-CoordinateDescentParameterSetGenerator& CoordinateDescentParameterSetGenerator::add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values)
-{
-  ParameterSetGenerator::add_param(param, values);
-  return *this;
-}
-
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters() const
-{
-  float dummy(0.0f);
-  return calculate_best_parameters(dummy);
-}
-
-ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float& bestScore) const
+ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float *bestScore) const
 {
   const size_t maxIterationCount = get_iteration_count();
   for(size_t i = 0; i < maxIterationCount; ++i)
@@ -49,7 +38,7 @@ ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float
     score_param_set_and_update_state(params, m_costFunction(params));
   }
 
-  bestScore = get_best_score();
+  if(bestScore) *bestScore = get_best_score();
 
   return get_best_param_set();
 }
@@ -61,10 +50,8 @@ std::vector<ParamSet> CoordinateDescentParameterSetGenerator::generate_param_set
   return result;
 }
 
-void CoordinateDescentParameterSetGenerator::initialise(const boost::function<float(const ParamSet&)>& costFunction)
+void CoordinateDescentParameterSetGenerator::initialise()
 {
-  m_costFunction = costFunction;
-
   m_firstIteration = true;
 
   // Initialise the number of dimensions.
@@ -112,23 +99,6 @@ void CoordinateDescentParameterSetGenerator::initialise(const boost::function<fl
   std::cout << "Best parameter indices: " << make_limited_container(m_bestParamIndices, 50) << std::endl;
   std::cout << "Best parameter indices all time: " << make_limited_container(m_bestParamIndicesAllTime, 50) << std::endl;
 #endif
-}
-
-void CoordinateDescentParameterSetGenerator::output_param_values(std::ostream& os) const
-{
-  for(size_t i = 0, size = m_paramValues.size(); i < size; ++i)
-  {
-    std::string paramName = m_paramValues[i].first;
-    std::vector<boost::spirit::hold_any> paramValues = m_paramValues[i].second;
-    std::string paramString = paramName + ": ";
-    for(size_t j = 0, size = paramValues.size(); j < size; ++j)
-    {
-      paramString += boost::lexical_cast<std::string>(paramValues[j]);
-      if(j < size - 1) paramString += ", ";
-    }
-
-    os << paramString << '\n';
-  }
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

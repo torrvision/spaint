@@ -52,6 +52,20 @@ public:
    */
   ParameterSetGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
 
+  /**
+   * \brief Initialises the parameter set generator once all of the parameters have been added.
+   *
+   * The expected usage is gen.add_param(...).add_param(...).initialise().
+   */
+  virtual void initialise();
+
+  /**
+   * \brief Makes a string representation of the possible values for each parameter.
+   *
+   * \return  A string representation of the possible values for each parameter.
+   */
+  std::string param_values_to_string() const;
+
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**

@@ -82,26 +82,10 @@ public:
   /**
    * \brief TODO
    */
-  CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount);
+  CoordinateDescentParameterSetGenerator(unsigned int seed, size_t epochCount, const boost::function<float(const ParamSet&)>& costFunction);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Adds a parameter, together with a list of the values it may take.
-   *
-   * \param param   The parameter name.
-   * \param values  The values the parameter may take.
-   * \return        The generator itself (so that calls to add_param may be chained).
-   */
-  CoordinateDescentParameterSetGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
-
-  /**
-   * \brief Calculates the best parameters.
-   *
-   * \return The best parameters.
-   */
-  ParamSet calculate_best_parameters() const;
-
   /**
    * \brief Calculate the best parameters.
    *
@@ -109,22 +93,13 @@ public:
    *
    * \return The best parameters.
    */
-  ParamSet calculate_best_parameters(float& bestScore) const;
+  ParamSet calculate_best_parameters(float *bestScore = NULL) const;
 
   /** Override */
   virtual std::vector<ParamSet> generate_param_sets() const;
 
-  /**
-   * \brief Initialise the coordinate descent parameter generator.
-   */
-  void initialise(const boost::function<float(const ParamSet&)>& costFunction);
-
-  /**
-   * \brief Output the parameters and the associated values they may assume.
-   *
-   * \param os  The stream.
-   */
-  void output_param_values(std::ostream& os) const;
+  /** Override */
+  virtual void initialise();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

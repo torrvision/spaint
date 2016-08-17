@@ -2,13 +2,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/lexical_cast.hpp>
 using boost::assign::list_of;
 using boost::assign::map_list_of;
-
-// TODO: Is this needed?
-#include <boost/bind.hpp>
-
-#include <boost/lexical_cast.hpp>
 
 #include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/paramsetgenerators/CoordinateDescentParameterSetGenerator.h>
@@ -54,21 +50,18 @@ BOOST_AUTO_TEST_SUITE(test_CoordinateDescentParameterSetGenerator)
 
 BOOST_AUTO_TEST_CASE(find_best_params)
 {
-  // TODO: Is this needed?
-  boost::function<float(const ParamSet&)> costFunction = boost::bind(sum_squares_cost_fn, _1);
-
   const unsigned int seed = 12345;
   const size_t epochCount = 10;
-  CoordinateDescentParameterSetGenerator paramGenerator(seed, epochCount);
+  CoordinateDescentParameterSetGenerator paramGenerator(seed, epochCount, sum_squares_cost_fn);
 
   paramGenerator.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5, 1.5f, 5.0f)))
                 .add_param("Bar", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-1000.0f, 1.0f, 5.0f)))
                 .add_param("Boo", list_of<float>(-10.0f)(-5.0f)(-2.0f)(0.0f)(5.0f)(15.0f))
                 .add_param("Dum", list_of<float>(0.0f))
-                .initialise(sum_squares_cost_fn);
+                .initialise();
 
   float bestScore;
-  ParamSet bestParams = paramGenerator.calculate_best_parameters(bestScore);
+  ParamSet bestParams = paramGenerator.calculate_best_parameters(&bestScore);
 
   ParamSet answerParams = map_list_of("Foo",boost::lexical_cast<std::string>(0.5f))
                                      ("Bar",boost::lexical_cast<std::string>(0.0f))
