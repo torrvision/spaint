@@ -7,6 +7,7 @@
 #define H_EVALUATION_PARAMETERSETGENERATOR
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/spirit/home/support/detail/hold_any.hpp>
@@ -51,13 +52,6 @@ public:
    * \return        The generator itself (so that calls to add_param may be chained).
    */
   ParameterSetGenerator& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
-
-  /**
-   * \brief Initialises the parameter set generator once all of the parameters have been added.
-   *
-   * The expected usage is gen.add_param(...).add_param(...).initialise().
-   */
-  virtual void initialise();
 
   /**
    * \brief Makes a string representation of the possible values for each parameter.

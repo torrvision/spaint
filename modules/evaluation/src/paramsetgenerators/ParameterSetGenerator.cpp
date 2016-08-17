@@ -22,11 +22,6 @@ ParameterSetGenerator& ParameterSetGenerator::add_param(const std::string& param
   return *this;
 }
 
-void ParameterSetGenerator::initialise()
-{
-  // No-op by default
-}
-
 std::string ParameterSetGenerator::param_values_to_string() const
 {
   std::string result;
