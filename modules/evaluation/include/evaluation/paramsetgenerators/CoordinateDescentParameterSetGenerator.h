@@ -88,6 +88,10 @@ public:
 
   ParamSet calculate_best_parameters2(float *bestScore = NULL) const;
 
+  std::pair<std::vector<size_t>,float> run_epoch() const;
+
+  std::vector<size_t> generate_random_param_indices() const;
+
   /** Override */
   virtual std::vector<ParamSet> generate_param_sets() const;
 

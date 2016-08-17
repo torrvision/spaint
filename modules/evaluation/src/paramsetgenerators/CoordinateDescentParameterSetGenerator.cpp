@@ -50,43 +50,75 @@ ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters(float
 
 ParamSet CoordinateDescentParameterSetGenerator::calculate_best_parameters2(float *bestScore) const
 {
+  std::vector<size_t> bestParamIndicesAllTime;
+  float bestScoreAllTime = static_cast<float>(INT_MAX);
+
   for(size_t epochIndex = 0; epochIndex < m_epochCount; ++epochIndex)
   {
-    m_bestScore = static_cast<float>(INT_MAX);
-    // TODO: Pick random initial values for the parameters.
+    std::vector<size_t> bestParamIndicesInEpoch;
+    float bestScoreInEpoch;
+    boost::tie(bestParamIndicesInEpoch, bestScoreInEpoch) = run_epoch();
 
-    for(size_t paramIndex = 0, paramCount = m_paramValues.size(); paramIndex < paramCount; ++paramIndex)
+    if(bestScoreInEpoch < bestScoreAllTime)
     {
-      float bestScoreForParam = static_cast<float>(INT_MAX);
-      size_t bestValueIndex = 0;
-      for(size_t valueIndex = 0, valueCount = m_paramValues[paramIndex].second.size(); valueIndex < valueCount; ++valueIndex)
-      {
-        ParamSet paramSet = param_indices_to_set(m_currentParamIndices);
-        float score = m_costFunction(paramSet);
-        if(score < bestScoreForParam)
-        {
-          bestScoreForParam = score;
-          bestValueIndex = valueIndex;
-        }
-      }
-
-      m_currentParamIndices[paramIndex] = bestValueIndex;
-
-      if(bestScoreForParam < m_bestScore)
-      {
-        m_bestScore = bestScoreForParam;
-        m_bestParamIndices = m_currentParamIndices;
-      }
-    }
-
-    if(m_bestScore < m_bestScoreAllTime)
-    {
-      m_bestScoreAllTime = m_bestScore;
-      m_bestParamIndicesAllTime = m_bestParamIndices;
+      bestScoreAllTime = bestScoreInEpoch;
+      bestParamIndicesAllTime = bestParamIndicesInEpoch;
     }
   }
 
-  return param_indices_to_set(m_bestParamIndicesAllTime);
+  if(bestScore) *bestScore = bestScoreAllTime;
+
+  return param_indices_to_set(bestParamIndicesAllTime);
+}
+
+std::pair<std::vector<size_t>,float> CoordinateDescentParameterSetGenerator::run_epoch() const
+{
+  std::vector<size_t> currentParamIndices = generate_random_param_indices();
+  float currentScore = m_costFunction(param_indices_to_set(currentParamIndices));
+
+  std::vector<size_t> bestParamIndicesInEpoch = currentParamIndices;
+  float bestScoreInEpoch = currentScore;
+
+  int paramCount = static_cast<int>(m_paramValues.size());
+  int startingOffset = m_rng.generate_int_from_uniform(0, paramCount - 1);
+  for(size_t k = 0, paramCount = m_paramValues.size(); k < paramCount; ++k)
+  {
+    size_t paramIndex = (k + startingOffset) % paramCount;
+
+    int valueCount = static_cast<int>(m_paramValues[paramIndex].second.size());
+    if(valueCount == 1) continue;
+
+    int originalValueIndex = currentParamIndices[paramIndex];
+    for(size_t valueIndex = 0; valueIndex < valueCount; ++valueIndex)
+    {
+      if(valueIndex == originalValueIndex) continue;
+
+      float score = m_costFunction(param_indices_to_set(currentParamIndices));
+      if(score < currentScore)
+      {
+        currentParamIndices[paramIndex] = valueIndex;
+        currentScore = score;
+      }
+    }
+
+    if(currentScore < bestScoreInEpoch)
+    {
+      bestParamIndicesInEpoch = currentParamIndices;
+      bestScoreInEpoch = currentScore;
+    }
+  }
+
+  return std::make_pair(bestParamIndicesInEpoch, bestScoreInEpoch);
+}
+
+std::vector<size_t> CoordinateDescentParameterSetGenerator::generate_random_param_indices() const
+{
+  std::vector<size_t> result;
+  for(size_t i = 0, paramCount = m_paramValues.size(); i < paramCount; ++i)
+  {
+    result[i] = m_rng.generate_int_from_uniform(0, static_cast<int>(m_paramValues[i].second.size()) - 1);
+  }
+  return result;
 }
 
 std::vector<ParamSet> CoordinateDescentParameterSetGenerator::generate_param_sets() const
