@@ -1,10 +1,10 @@
 /**
- * evaluation: CoordinateDescentOptimiser.h
+ * evaluation: CoordinateDescentParameterOptimiser.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_EVALUATION_COORDINATEDESCENTOPTIMISER
-#define H_EVALUATION_COORDINATEDESCENTOPTIMISER
+#ifndef H_EVALUATION_COORDINATEDESCENTPARAMETEROPTIMISER
+#define H_EVALUATION_COORDINATEDESCENTPARAMETEROPTIMISER
 
 #include <boost/function.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
@@ -18,7 +18,7 @@ namespace evaluation {
 /**
  * \brief An instance of this class uses coordinate descent with random restarts to find a parameter set with as low a cost as possible.
  */
-class CoordinateDescentOptimiser
+class CoordinateDescentParameterOptimiser
 {
   //#################### TYPEDEFS ####################
 private:
@@ -47,7 +47,7 @@ public:
    * \param epochCount    The number of epochs for which coordinate descent should be run.
    * \param seed          The seed for the random number generator.
    */
-  CoordinateDescentOptimiser(const CostFunction& costFunction, size_t epochCount, unsigned int seed);
+  CoordinateDescentParameterOptimiser(const CostFunction& costFunction, size_t epochCount, unsigned int seed);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -58,7 +58,7 @@ public:
    * \param values  The values the parameter may take.
    * \return        The generator itself (so that calls to add_param may be chained).
    */
-  CoordinateDescentOptimiser& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
+  CoordinateDescentParameterOptimiser& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
 
   /**
    * \brief Performs coordinate descent optimisation with random restarts to try to find a parameter set with as low a cost as possible.

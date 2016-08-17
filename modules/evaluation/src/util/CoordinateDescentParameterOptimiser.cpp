@@ -1,9 +1,9 @@
 /**
- * evaluation: CoordinateDescentOptimiser.cpp
+ * evaluation: CoordinateDescentParameterOptimiser.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "optimisers/CoordinateDescentOptimiser.h"
+#include "util/CoordinateDescentParameterOptimiser.h"
 
 #include <limits>
 
@@ -16,19 +16,19 @@ namespace evaluation {
 
 //#################### CONSTRUCTORS ####################
 
-CoordinateDescentOptimiser::CoordinateDescentOptimiser(const CostFunction& costFunction, size_t epochCount, unsigned int seed)
+CoordinateDescentParameterOptimiser::CoordinateDescentParameterOptimiser(const CostFunction& costFunction, size_t epochCount, unsigned int seed)
 : m_costFunction(costFunction), m_epochCount(epochCount), m_rng(seed)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-CoordinateDescentOptimiser& CoordinateDescentOptimiser::add_param(const std::string& param, const std::vector<hold_any>& values)
+CoordinateDescentParameterOptimiser& CoordinateDescentParameterOptimiser::add_param(const std::string& param, const std::vector<hold_any>& values)
 {
   m_paramValues.push_back(std::make_pair(param, values));
   return *this;
 }
 
-ParamSet CoordinateDescentOptimiser::choose_parameters(float *bestCost) const
+ParamSet CoordinateDescentParameterOptimiser::choose_parameters(float *bestCost) const
 {
   std::vector<size_t> bestValueIndicesAllTime;
   float bestCostAllTime = std::numeric_limits<float>::max();
@@ -59,12 +59,12 @@ ParamSet CoordinateDescentOptimiser::choose_parameters(float *bestCost) const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-float CoordinateDescentOptimiser::compute_cost(const std::vector<size_t>& valueIndices) const
+float CoordinateDescentParameterOptimiser::compute_cost(const std::vector<size_t>& valueIndices) const
 {
   return m_costFunction(make_param_set(valueIndices));
 }
 
-std::vector<size_t> CoordinateDescentOptimiser::generate_random_value_indices() const
+std::vector<size_t> CoordinateDescentParameterOptimiser::generate_random_value_indices() const
 {
   std::vector<size_t> valueIndices;
   for(size_t i = 0, paramCount = m_paramValues.size(); i < paramCount; ++i)
@@ -74,7 +74,7 @@ std::vector<size_t> CoordinateDescentOptimiser::generate_random_value_indices() 
   return valueIndices;
 }
 
-ParamSet CoordinateDescentOptimiser::make_param_set(const std::vector<size_t>& valueIndices) const
+ParamSet CoordinateDescentParameterOptimiser::make_param_set(const std::vector<size_t>& valueIndices) const
 {
   ParamSet paramSet;
   for(size_t i = 0; i < m_paramValues.size(); ++i)
@@ -86,7 +86,7 @@ ParamSet CoordinateDescentOptimiser::make_param_set(const std::vector<size_t>& v
   return paramSet;
 }
 
-std::pair<std::vector<size_t>,float> CoordinateDescentOptimiser::optimise(const std::vector<size_t>& initialValueIndices) const
+std::pair<std::vector<size_t>,float> CoordinateDescentParameterOptimiser::optimise(const std::vector<size_t>& initialValueIndices) const
 {
   // Invariant: currentCost = compute_cost(currentValueIndices)
 

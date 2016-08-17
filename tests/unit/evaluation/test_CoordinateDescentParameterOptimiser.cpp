@@ -7,7 +7,7 @@ using boost::assign::list_of;
 using boost::assign::map_list_of;
 
 #include <evaluation/core/ParamSetUtil.h>
-#include <evaluation/optimisers/CoordinateDescentOptimiser.h>
+#include <evaluation/util/CoordinateDescentParameterOptimiser.h>
 using namespace evaluation;
 
 #include <tvgutil/numbers/NumberSequenceGenerator.h>
@@ -46,13 +46,13 @@ float sum_squares_cost_fn(const ParamSet& params)
 
 //#################### TESTS ####################
 
-BOOST_AUTO_TEST_SUITE(test_CoordinateDescentParameterSetGenerator)
+BOOST_AUTO_TEST_SUITE(test_CoordinateDescentParameterOptimiser)
 
 BOOST_AUTO_TEST_CASE(find_best_params)
 {
   const unsigned int seed = 12345;
   const size_t epochCount = 10;
-  CoordinateDescentOptimiser optimiser(sum_squares_cost_fn, epochCount, seed);
+  CoordinateDescentParameterOptimiser optimiser(sum_squares_cost_fn, epochCount, seed);
 
   optimiser.add_param("Foo", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-5.5f, 1.5f, 5.0f)))
            .add_param("Bar", convert_to_hold_any(NumberSequenceGenerator::generate_stepped<float>(-1000.0f, 1.0f, 5.0f)))
