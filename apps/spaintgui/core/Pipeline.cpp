@@ -51,8 +51,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
   Vector2i trackedImageSize = m_slamComponent.get_tracked_image_size(rgbImageSize, depthImageSize);
 
-  m_state.m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
-  m_raycaster.reset(new Raycaster(m_state.m_model, trackedImageSize, settings));
+  m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
+  m_raycaster.reset(new Raycaster(m_model, trackedImageSize, settings));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -90,12 +90,12 @@ PipelineMode Pipeline::get_mode() const
 
 const Model_Ptr& Pipeline::get_model()
 {
-  return m_state.m_model;
+  return m_model;
 }
 
 Model_CPtr Pipeline::get_model() const
 {
-  return m_state.m_model;
+  return m_model;
 }
 
 const Raycaster_Ptr& Pipeline::get_raycaster()
@@ -115,7 +115,7 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
-  return m_slamComponent.run(m_state);
+  return m_slamComponent.run(*m_model);
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
@@ -123,29 +123,29 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
   switch(m_mode)
   {
     case PIPELINEMODE_FEATURE_INSPECTION:
-      m_semanticSegmentationComponent.run_feature_inspection(m_state, renderState);
+      m_semanticSegmentationComponent.run_feature_inspection(*m_model, renderState);
       break;
     case PIPELINEMODE_PREDICTION:
-      m_semanticSegmentationComponent.run_prediction(m_state, renderState);
+      m_semanticSegmentationComponent.run_prediction(*m_model, renderState);
       break;
     case PIPELINEMODE_PROPAGATION:
-      m_propagationComponent.run(m_state, renderState);
+      m_propagationComponent.run(*m_model, renderState);
       break;
     case PIPELINEMODE_SMOOTHING:
-      m_smoothingComponent.run(m_state, renderState);
+      m_smoothingComponent.run(*m_model, renderState);
       break;
     case PIPELINEMODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) m_semanticSegmentationComponent.run_training(m_state, renderState);
-      else m_semanticSegmentationComponent.run_prediction(m_state, renderState);;
+      if(trainThisFrame) m_semanticSegmentationComponent.run_training(*m_model, renderState);
+      else m_semanticSegmentationComponent.run_prediction(*m_model, renderState);;
 
       break;
     }
     case PIPELINEMODE_TRAINING:
-      m_semanticSegmentationComponent.run_training(m_state, renderState);
+      m_semanticSegmentationComponent.run_training(*m_model, renderState);
       break;
     default:
       break;

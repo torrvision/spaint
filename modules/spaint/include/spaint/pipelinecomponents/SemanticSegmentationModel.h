@@ -32,7 +32,7 @@ public:
   /**
    * \brief TODO
    */
-  virtual const LabelManager_Ptr& get_label_manager() const = 0;
+  virtual const LabelManager_Ptr& get_label_manager() = 0;
 
   /**
    * \brief Gets the current reconstructed scene.

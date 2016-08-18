@@ -61,7 +61,6 @@ SET(core_headers
 core/Model.h
 core/Pipeline.h
 core/PipelineMode.h
-core/PipelineState.h
 core/Raycaster.h
 )
 

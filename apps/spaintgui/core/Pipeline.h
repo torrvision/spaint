@@ -13,7 +13,6 @@
 #include <spaint/util/LabelManager.h>
 
 #include "PipelineMode.h"
-#include "PipelineState.h"
 #include "Raycaster.h"
 
 /**
@@ -35,6 +34,9 @@ private:
   /** The mode in which the pipeline is currently running. */
   PipelineMode m_mode;
 
+  /** The spaint model. */
+  Model_Ptr m_model;
+
   /** TODO */
   spaint::PropagationComponent m_propagationComponent;
 
@@ -49,9 +51,6 @@ private:
 
   /** TODO */
   spaint::SmoothingComponent m_smoothingComponent;
-
-  /** The state shared between the different sections of the pipeline. */
-  PipelineState m_state;
 
   //#################### CONSTRUCTORS ####################
 public:

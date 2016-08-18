@@ -17,6 +17,7 @@
 
 #include <spaint/markers/interface/VoxelMarker.h>
 #include <spaint/pipelinecomponents/PropagationModel.h>
+#include <spaint/pipelinecomponents/SemanticSegmentationModel.h>
 #include <spaint/pipelinecomponents/SLAMModel.h>
 #include <spaint/pipelinecomponents/SmoothingModel.h>
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
@@ -31,6 +32,7 @@
  */
 class Model
 : public spaint::PropagationModel,
+  public spaint::SemanticSegmentationModel,
   public spaint::SLAMModel,
   public spaint::SmoothingModel
 {
