@@ -33,8 +33,7 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
 : m_mode(PIPELINEMODE_NORMAL),
   m_propagationComponent(imageSourceEngine->getDepthImageSize(), settings),
-  m_resourcesDir(resourcesDir),
-  m_semanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count()),
+  m_semanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()),
   m_slamComponent(imageSourceEngine, settings, trackerType, trackerParams),
   m_smoothingComponent(labelManager->get_max_label_count(), settings)
 {
@@ -55,36 +54,6 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_state.m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
   m_raycaster.reset(new Raycaster(m_state.m_model, trackedImageSize, settings));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
-
-  // Get the maximum numbers of voxels to use for prediction and training.
-  const size_t maxPredictionVoxelCount = m_semanticSegmentationComponent.get_max_prediction_voxel_count();
-  const size_t maxTrainingVoxelCount = m_semanticSegmentationComponent.get_max_training_voxel_count();
-
-  // Set up the feature calculator.
-  // FIXME: These values shouldn't be hard-coded here ultimately.
-  m_state.m_patchSize = 13;
-  const float patchSpacing = 0.01f / settings->sceneParams.voxelSize; // 10mm = 0.01m (dividing by the voxel size, which is in m, expresses the spacing in voxels)
-  const size_t binCount = 36;                                         // 10 degrees per bin
-
-  m_state.m_featureCalculator = FeatureCalculatorFactory::make_vop_feature_calculator(
-    std::max(maxPredictionVoxelCount, maxTrainingVoxelCount),
-    m_state.m_patchSize, patchSpacing, binCount, settings->deviceType
-  );
-
-  // Set up the memory blocks needed to store the features computed during prediction and training.
-  MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
-  const size_t featureCount = m_state.m_featureCalculator->get_feature_count();
-  m_state.m_predictionFeaturesMB = mbf.make_block<float>(maxPredictionVoxelCount * featureCount);
-  m_state.m_trainingFeaturesMB = mbf.make_block<float>(maxTrainingVoxelCount * featureCount);
-
-  // Register the relevant decision function generators with the factory.
-  DecisionFunctionGeneratorFactory<SpaintVoxel::Label>::instance().register_maker(
-    SpaintDecisionFunctionGenerator::get_static_type(),
-    &SpaintDecisionFunctionGenerator::maker
-  );
-
-  // Set up the random forest.
-  reset_forest();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -147,9 +116,7 @@ Raycaster_CPtr Pipeline::get_raycaster() const
 
 void Pipeline::reset_forest()
 {
-  const size_t treeCount = 5;
-  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
-  m_state.m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
+  m_semanticSegmentationComponent.reset_forest();
 }
 
 bool Pipeline::run_main_section()

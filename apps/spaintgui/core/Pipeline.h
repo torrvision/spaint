@@ -41,9 +41,6 @@ private:
   /** The raycaster that is used to cast rays into the InfiniTAM scene. */
   Raycaster_Ptr m_raycaster;
 
-  /** The path to the resources directory. */
-  std::string m_resourcesDir;
-
   /** TODO */
   spaint::SemanticSegmentationComponent m_semanticSegmentationComponent;
 

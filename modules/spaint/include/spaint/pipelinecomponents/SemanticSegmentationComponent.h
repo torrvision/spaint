@@ -8,7 +8,10 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
+#include <rafl/core/RandomForest.h>
+
 #include "SemanticSegmentationModel.h"
+#include "../features/interface/FeatureCalculator.h"
 #include "../sampling/interface/PerLabelVoxelSampler.h"
 #include "../sampling/interface/UniformVoxelSampler.h"
 #include "../selectors/Selector.h"
@@ -22,11 +25,18 @@ class SemanticSegmentationComponent
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::Label> > RandomForest_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The feature calculator. */
+  FeatureCalculator_CPtr m_featureCalculator;
+
+  /** The random forest. */
+  RandomForest_Ptr m_forest;
+
   /** The maximum number of labels that can be in use. */
   size_t m_maxLabelCount;
 
@@ -36,6 +46,12 @@ private:
   /** The maximum number of voxels per label from which to train each frame. */
   size_t m_maxTrainingVoxelsPerLabel;
 
+  /** The side length of a VOP patch (must be odd). */
+  size_t m_patchSize;
+
+  /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
+
   /** A memory block in which to store the labels predicted for the various voxels. */
   boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
 
@@ -44,6 +60,12 @@ private:
 
   /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
   Selector::Selection_Ptr m_predictionVoxelLocationsMB;
+
+  /** The path to the resources directory. */
+  std::string m_resourcesDir;
+
+  /** A memory block in which to store the feature vectors computed for the various voxels during training. */
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
   /** A memory block in which to store a mask indicating which labels are currently in use and from which we want to train. */
   boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
@@ -62,19 +84,15 @@ public:
   /**
    * \brief TODO
    */
-  SemanticSegmentationComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings, size_t maxLabelCount);
+  SemanticSegmentationComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings,
+                                const std::string& resourcesDir, size_t maxLabelCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Resets the random forest.
    */
-  size_t get_max_prediction_voxel_count() const;
-
-  /**
-   * \brief TODO
-   */
-  size_t get_max_training_voxel_count() const;
+  void reset_forest();
 
   /** TODO */
   void run_feature_inspection(SemanticSegmentationModel& model, const RenderState_CPtr& renderState);
