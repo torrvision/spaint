@@ -19,6 +19,7 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
   m_resourcesDir(resourcesDir),
   m_rgbImageSize(rgbImageSize),
   m_scene(scene),
+  m_semanticLabel(0),
   m_settings(settings),
   m_trackingState(trackingState)
 {
@@ -73,6 +74,11 @@ Model::Scene_CPtr Model::get_scene() const
   return m_scene;
 }
 
+SpaintVoxel::Label Model::get_semantic_label() const
+{
+  return m_semanticLabel;
+}
+
 const Model::Settings_CPtr& Model::get_settings() const
 {
   return m_settings;
@@ -101,6 +107,11 @@ Model::View_CPtr Model::get_view() const
 Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
 {
   return m_visualisationEngine;
+}
+
+void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
+{
+  m_semanticLabel = semanticLabel;
 }
 
 void Model::set_view(ITMView *view)

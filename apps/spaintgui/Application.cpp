@@ -154,6 +154,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Interactor_Ptr& interactor = m_pipeline->get_interactor();
+    Model_CPtr model = m_pipeline->get_model();
+
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
@@ -164,7 +166,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     else if(m_inputState.key_down(KEYCODE_RCTRL))
     {
       // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
-      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, interactor->get_semantic_label()));
+      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, model->get_semantic_label()));
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RSHIFT))
@@ -175,7 +177,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     else
     {
       // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
-      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, interactor->get_semantic_label()));
+      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
     }
   }
 
@@ -405,8 +407,9 @@ void Application::process_labelling_input()
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
   const Interactor_Ptr& interactor = m_pipeline->get_interactor();
-  LabelManager_CPtr labelManager = m_pipeline->get_model()->get_label_manager();
-  SpaintVoxel::Label semanticLabel = interactor->get_semantic_label();
+  const Model_Ptr& model = m_pipeline->get_model();
+  LabelManager_CPtr labelManager = model->get_label_manager();
+  SpaintVoxel::Label semanticLabel = model->get_semantic_label();
 
   if(m_inputState.key_down(KEYCODE_RSHIFT) && m_inputState.key_down(KEYCODE_RIGHTBRACKET))
   {
@@ -420,7 +423,7 @@ void Application::process_labelling_input()
   }
   else canChangeLabel = true;
 
-  interactor->set_semantic_label(semanticLabel);
+  model->set_semantic_label(semanticLabel);
 
   // Update the current selector.
   interactor->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
@@ -557,7 +560,7 @@ void Application::process_voice_input()
     {
       SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(i);
       std::string changeLabelCommand = "label " + labelManager->get_label_name(label);
-      if(command == changeLabelCommand) m_pipeline->get_interactor()->set_semantic_label(label);
+      if(command == changeLabelCommand) m_pipeline->get_model()->set_semantic_label(label);
     }
 
     // Process any requests to disable/enable fusion.
@@ -638,7 +641,7 @@ void Application::setup_labels()
   }
 
   // Set the initial semantic label to use for painting.
-  m_pipeline->get_interactor()->set_semantic_label(1);
+  m_pipeline->get_model()->set_semantic_label(1);
 }
 
 #ifdef WITH_OVR

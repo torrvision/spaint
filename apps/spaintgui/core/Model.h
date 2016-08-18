@@ -15,6 +15,7 @@
 #include <ITMLib/Objects/Views/ITMView.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <spaint/pipelinecomponents/PropagationModel.h>
 #include <spaint/pipelinecomponents/SLAMModel.h>
 #include <spaint/pipelinecomponents/SmoothingModel.h>
 #include <spaint/util/LabelManager.h>
@@ -26,7 +27,8 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
-: public spaint::SLAMModel,
+: public spaint::PropagationModel,
+  public spaint::SLAMModel,
   public spaint::SmoothingModel
 {
   //#################### TYPEDEFS ####################
@@ -59,6 +61,9 @@ private:
 
   /** The current reconstructed scene. */
   Scene_Ptr m_scene;
+
+  /** The semantic label to use for manually labelling the scene. */
+  spaint::SpaintVoxel::Label m_semanticLabel;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
@@ -149,6 +154,9 @@ public:
    */
   Scene_CPtr get_scene() const;
 
+  /** Override */
+  virtual spaint::SpaintVoxel::Label get_semantic_label() const;
+
   /**
    * \brief Gets the settings to use for InfiniTAM.
    *
@@ -182,6 +190,13 @@ public:
 
   /** Override */
   virtual VisualisationEngine_CPtr get_visualisation_engine() const;
+
+  /**
+   * \brief Sets the semantic label to use for manually labelling the scene.
+   *
+   * \param semanticLabel The semantic label to use for manually labelling the scene.
+   */
+  void set_semantic_label(spaint::SpaintVoxel::Label semanticLabel);
 
   /** Override */
   virtual void set_view(ITMLib::ITMView *view);

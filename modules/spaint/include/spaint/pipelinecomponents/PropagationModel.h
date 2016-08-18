@@ -38,7 +38,9 @@ public:
   virtual const Scene_Ptr& get_scene() = 0;
 
   /**
-   * \brief TODO
+   * \brief Gets the semantic label that is being used for manually labelling the scene.
+   *
+   * \return  The semantic label that is being used for manually labelling the scene.
    */
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
 };

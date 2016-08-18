@@ -113,7 +113,7 @@ public:
   /** Override */
   virtual spaint::SpaintVoxel::Label get_semantic_label() const
   {
-    return m_interactor->get_semantic_label();
+    return m_model->get_semantic_label();
   }
 
   /** Override */

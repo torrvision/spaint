@@ -41,9 +41,6 @@ private:
   /** The selector to use for selecting voxels in the scene. */
   spaint::Selector_Ptr m_selector;
 
-  /** The semantic label to use for manually labelling the scene. */
-  spaint::SpaintVoxel::Label m_semanticLabel;
-
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   spaint::VoxelMarker_CPtr m_voxelMarker;
 
@@ -87,13 +84,6 @@ public:
   spaint::Selector_CPtr get_selector() const;
 
   /**
-   * \brief Gets the semantic label that is being used for manually labelling the scene.
-   *
-   * \return  The semantic label that is being used for manually labelling the scene.
-   */
-  spaint::SpaintVoxel::Label get_semantic_label() const;
-
-  /**
    * \brief Gets the voxel marker that is being used to apply semantic labels to voxels in the scene.
    *
    * \return  The voxel marker that is being used to apply semantic labels to voxels in the scene.
@@ -126,13 +116,6 @@ public:
    * \return  true, if the current selector is active, or false otherwise.
    */
   bool selector_is_active() const;
-
-  /**
-   * \brief Sets the semantic label to use for manually labelling the scene.
-   *
-   * \param semanticLabel The semantic label to use for manually labelling the scene.
-   */
-  void set_semantic_label(spaint::SpaintVoxel::Label semanticLabel);
 
   /**
    * \brief Allows the user to change selector or update the current selector.

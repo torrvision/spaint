@@ -439,7 +439,7 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       glEnd();
 
       // Render the current selector to show how we're interacting with the scene.
-      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(interactor->get_semantic_label());
+      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
       Interactor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();

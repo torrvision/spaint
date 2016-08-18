@@ -29,8 +29,7 @@ using namespace spaint;
 
 Interactor::Interactor(const Model_Ptr& model)
 : m_model(model),
-  m_selector(new NullSelector(model->get_settings())),
-  m_semanticLabel(0)
+  m_selector(new NullSelector(model->get_settings()))
 {
   // Set up the selection transformer.
   const int initialSelectionRadius = 2;
@@ -78,11 +77,6 @@ Selector_CPtr Interactor::get_selector() const
   return m_selector;
 }
 
-SpaintVoxel::Label Interactor::get_semantic_label() const
-{
-  return m_semanticLabel;
-}
-
 const spaint::VoxelMarker_CPtr& Interactor::get_voxel_marker() const
 {
   return m_voxelMarker;
@@ -101,11 +95,6 @@ void Interactor::mark_voxels(const Selection_CPtr& selection, const PackedLabels
 bool Interactor::selector_is_active() const
 {
   return m_selector->is_active();
-}
-
-void Interactor::set_semantic_label(SpaintVoxel::Label semanticLabel)
-{
-  m_semanticLabel = semanticLabel;
 }
 
 void Interactor::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
