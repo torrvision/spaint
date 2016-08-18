@@ -13,6 +13,10 @@
 */
 class SLAMState
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
+
   //#################### DESTRUCTOR ####################
 public:
   /**
@@ -25,12 +29,17 @@ public:
   /**
    * \brief TODO
    */
-  virtual const Model_Ptr& get_model() const = 0;
+  virtual const Raycaster_Ptr& get_raycaster() const = 0;
 
   /**
    * \brief TODO
    */
-  virtual const Raycaster_Ptr& get_raycaster() const = 0;
+  virtual const View_Ptr& get_view() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual void set_view(ITMLib::ITMView *view) = 0;
 };
 
 #endif

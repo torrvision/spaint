@@ -122,14 +122,14 @@ bool SLAMSection::run(SLAMState& state)
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const Model::View_Ptr& view = state.get_model()->get_view();
+  const Model::View_Ptr& view = state.get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
-  state.get_model()->set_view(newView);
+  state.set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the scene because we need something to track against).
   SE3Pose oldPose(*m_trackingState->pose_d);

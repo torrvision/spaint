@@ -54,8 +54,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
 
   m_state.m_model.reset(new Model(m_slamSection.get_scene(), rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, resourcesDir, labelManager));
-  m_state.m_raycaster.reset(new Raycaster(m_state.get_model(), trackedImageSize, settings));
-  m_state.m_interactor.reset(new Interactor(m_state.get_model()));
+  m_state.m_raycaster.reset(new Raycaster(m_state.m_model, trackedImageSize, settings));
+  m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
   // Get the maximum numbers of voxels to use for prediction and training.
   const size_t maxPredictionVoxelCount = m_predictionSection.get_max_prediction_voxel_count();

@@ -36,6 +36,7 @@ private:
   typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -90,12 +91,6 @@ public:
   }
 
   /** Override */
-  virtual const Model_Ptr& get_model() const
-  {
-    return m_model;
-  }
-
-  /** Override */
   virtual size_t get_patch_size() const
   {
     return m_patchSize;
@@ -138,9 +133,21 @@ public:
   }
 
   /** Override */
+  virtual const View_Ptr& get_view() const
+  {
+    return m_model->get_view();
+  }
+
+  /** Override */
   virtual const spaint::VoxelMarker_CPtr& get_voxel_marker() const
   {
     return m_interactor->get_voxel_marker();
+  }
+
+  /** Override */
+  virtual void set_view(ITMLib::ITMView *view)
+  {
+    m_model->set_view(view);
   }
 };
 
