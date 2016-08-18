@@ -22,7 +22,7 @@ class SLAMModel
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -34,17 +34,23 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the current view of the scene.
+   *
+   * \return  The current view of the scene.
    */
-  virtual const View_Ptr& get_view() const = 0;
+  virtual const View_Ptr& get_view() = 0;
 
   /**
-   * \brief TODO
+   * \brief Gets the InfiniTAM engine used for raycasting the scene.
+   *
+   * \return  The InfiniTAM engine used for raycasting the scene.
    */
-  virtual const VisualisationEngine_Ptr& get_visualisation_engine() const = 0;
+  virtual VisualisationEngine_CPtr get_visualisation_engine() const = 0;
 
   /**
-   * \brief TODO
+   * \brief Sets the current view of the scene.
+   *
+   * \param view  The new current view of the scene.
    */
   virtual void set_view(ITMLib::ITMView *view) = 0;
 };

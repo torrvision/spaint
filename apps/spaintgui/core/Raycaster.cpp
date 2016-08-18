@@ -7,7 +7,6 @@
 
 #include <stdexcept>
 
-#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
@@ -24,9 +23,6 @@ using namespace spaint;
 Raycaster::Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, const Settings_CPtr& settings)
 : m_model(model)
 {
-  // Set up the visualisation engine.
-  m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
-
   // Set up the visualisers.
   size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
   if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
@@ -54,6 +50,7 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
   Model::View_CPtr view = m_model->get_view();
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
   Model::Scene_CPtr scene = m_model->get_scene();
+  Model::VisualisationEngine_CPtr visualisationEngine = m_model->get_visualisation_engine();
 
   if(!renderState)
   {
@@ -61,20 +58,20 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
     renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(m_model->get_depth_image_size(), scene->sceneParams, memoryType));
   }
 
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 
   switch(raycastType)
   {
     case RT_COLOUR:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case RT_LAMBERTIAN:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
@@ -91,7 +88,7 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
       else if(raycastType == RT_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+      visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
@@ -114,7 +111,7 @@ void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output) const
 {
   prepare_to_copy_visualisation(m_model->get_view()->depth->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->depth->UpdateHostFromDevice();
-  m_visualisationEngine->DepthToUchar4(output.get(), m_model->get_view()->depth);
+  m_model->get_visualisation_engine()->DepthToUchar4(output.get(), m_model->get_view()->depth);
 }
 
 void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output) const
@@ -122,11 +119,6 @@ void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output) const
   prepare_to_copy_visualisation(m_model->get_view()->rgb->noDims, output);
   if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->rgb->UpdateHostFromDevice();
   output->SetFrom(m_model->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
-}
-
-const Raycaster::VisualisationEngine_Ptr& Raycaster::get_visualisation_engine()
-{
-  return m_visualisationEngine;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

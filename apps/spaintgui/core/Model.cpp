@@ -4,9 +4,11 @@
  */
 
 #include "Model.h"
+using namespace spaint;
+
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace ITMLib;
 using namespace ORUtils;
-using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
@@ -19,7 +21,10 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
   m_scene(scene),
   m_settings(settings),
   m_trackingState(trackingState)
-{}
+{
+  // Set up the visualisation engine.
+  m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -91,6 +96,11 @@ const Model::View_Ptr& Model::get_view()
 Model::View_CPtr Model::get_view() const
 {
   return m_view;
+}
+
+Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
+{
+  return m_visualisationEngine;
 }
 
 void Model::set_view(ITMView *view)

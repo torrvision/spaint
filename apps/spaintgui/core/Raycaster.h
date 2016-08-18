@@ -52,9 +52,6 @@ private:
   /** The platform-specific semantic visualiser. */
   boost::shared_ptr<const spaint::SemanticVisualiser> m_semanticVisualiser;
 
-  /** The InfiniTAM engine used for raycasting the scene. */
-  VisualisationEngine_Ptr m_visualisationEngine;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -102,13 +99,6 @@ public:
    * \param output  The location into which to put the output image.
    */
   void get_rgb_input(const ITMUChar4Image_Ptr& output) const;
-
-  /**
-   * \brief Gets the InfiniTAM engine used for raycasting the scene.
-   *
-   * \return  The InfiniTAM engine used for raycasting the scene.
-   */
-  const VisualisationEngine_Ptr& get_visualisation_engine();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

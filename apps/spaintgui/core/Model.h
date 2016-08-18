@@ -15,6 +15,7 @@
 #include <ITMLib/Objects/Views/ITMView.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <spaint/pipelinecomponents/SLAMModel.h>
 #include <spaint/util/LabelManager.h>
 
 /**
@@ -24,6 +25,7 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
+: public spaint::SLAMModel
 {
   //#################### TYPEDEFS ####################
 public:
@@ -35,6 +37,9 @@ public:
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
+  typedef ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> VisualisationEngine;
+  typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const VisualisationEngine> VisualisationEngine_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -61,6 +66,9 @@ private:
 
   /** The current view of the scene. */
   View_Ptr m_view;
+
+  /** The InfiniTAM engine used for raycasting the scene. */
+  VisualisationEngine_Ptr m_visualisationEngine;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -164,12 +172,8 @@ public:
    */
   TrackingState_CPtr get_tracking_state() const;
 
-  /**
-   * \brief Gets the current view of the scene.
-   *
-   * \return  The current view of the scene.
-   */
-  const View_Ptr& get_view();
+  /** Override */
+  virtual const View_Ptr& get_view();
 
   /**
    * \brief Gets the current view of the scene.
@@ -178,12 +182,11 @@ public:
    */
   View_CPtr get_view() const;
 
-  /**
-   * \brief Sets the current view of the scene.
-   *
-   * \param view  The new current view of the scene.
-   */
-  void set_view(ITMLib::ITMView *view);
+  /** Override */
+  virtual VisualisationEngine_CPtr get_visualisation_engine() const;
+
+  /** Override */
+  virtual void set_view(ITMLib::ITMView *view);
 };
 
 //#################### TYPEDEFS ####################

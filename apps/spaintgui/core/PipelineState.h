@@ -38,7 +38,7 @@ private:
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -123,15 +123,15 @@ public:
   }
 
   /** Override */
-  virtual const View_Ptr& get_view() const
+  virtual const View_Ptr& get_view()
   {
     return m_model->get_view();
   }
 
   /** Override */
-  virtual const VisualisationEngine_Ptr& get_visualisation_engine() const
+  virtual VisualisationEngine_CPtr get_visualisation_engine() const
   {
-    return m_raycaster->get_visualisation_engine();
+    return m_model->get_visualisation_engine();
   }
 
   /** Override */
