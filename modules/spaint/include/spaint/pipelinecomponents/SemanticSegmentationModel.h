@@ -1,14 +1,16 @@
 /**
- * spaint: TrainingModel.h
+ * spaint: SemanticSegmentationModel.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_TRAININGMODEL
-#define H_SPAINT_TRAININGMODEL
+#ifndef H_SPAINT_SEMANTICSEGMENTATIONMODEL
+#define H_SPAINT_SEMANTICSEGMENTATIONMODEL
 
 #include <rafl/core/RandomForest.h>
 
 #include "../features/interface/FeatureCalculator.h"
+#include "../markers/interface/VoxelMarker.h"
+#include "../selectors/Selector.h"
 #include "../util/LabelManager.h"
 #include "../util/SpaintVoxel.h"
 
@@ -17,7 +19,7 @@ namespace spaint {
 /**
  * \brief TODO
  */
-class TrainingModel
+class SemanticSegmentationModel
 {
   //#################### TYPEDEFS ####################
 private:
@@ -27,7 +29,7 @@ private:
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~TrainingModel() {}
+  virtual ~SemanticSegmentationModel() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -47,6 +49,16 @@ public:
   virtual const LabelManager_Ptr& get_label_manager() const = 0;
 
   /**
+   * \brief TODO
+   */
+  virtual size_t get_patch_size() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_prediction_features() = 0;
+
+  /**
    * \brief Gets the current reconstructed scene.
    *
    * \return  The current reconstructed scene.
@@ -56,7 +68,17 @@ public:
   /**
    * \brief TODO
    */
+  virtual Selector_CPtr get_selector() const = 0;
+
+  /**
+   * \brief TODO
+   */
   virtual const boost::shared_ptr<ORUtils::MemoryBlock<float> >& get_training_features() const = 0;
+
+  /**
+   * \brief TODO
+   */
+  virtual const VoxelMarker_CPtr& get_voxel_marker() const = 0;
 };
 
 }

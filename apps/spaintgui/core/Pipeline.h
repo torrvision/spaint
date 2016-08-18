@@ -6,12 +6,10 @@
 #ifndef H_SPAINTGUI_PIPELINE
 #define H_SPAINTGUI_PIPELINE
 
-#include <spaint/pipelinecomponents/FeatureInspectionComponent.h>
-#include <spaint/pipelinecomponents/PredictionComponent.h>
 #include <spaint/pipelinecomponents/PropagationComponent.h>
+#include <spaint/pipelinecomponents/SemanticSegmentationComponent.h>
 #include <spaint/pipelinecomponents/SLAMComponent.h>
 #include <spaint/pipelinecomponents/SmoothingComponent.h>
-#include <spaint/pipelinecomponents/TrainingComponent.h>
 #include <spaint/util/LabelManager.h>
 
 #include "PipelineMode.h"
@@ -34,14 +32,8 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
-  spaint::FeatureInspectionComponent m_featureInspectionComponent;
-
   /** The mode in which the pipeline is currently running. */
   PipelineMode m_mode;
-
-  /** TODO */
-  spaint::PredictionComponent m_predictionComponent;
 
   /** TODO */
   spaint::PropagationComponent m_propagationComponent;
@@ -53,6 +45,9 @@ private:
   std::string m_resourcesDir;
 
   /** TODO */
+  spaint::SemanticSegmentationComponent m_semanticSegmentationComponent;
+
+  /** TODO */
   spaint::SLAMComponent m_slamComponent;
 
   /** TODO */
@@ -60,9 +55,6 @@ private:
 
   /** The state shared between the different sections of the pipeline. */
   PipelineState m_state;
-
-  /** TODO */
-  spaint::TrainingComponent m_trainingComponent;
 
   //#################### CONSTRUCTORS ####################
 public:

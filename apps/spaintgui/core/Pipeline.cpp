@@ -32,12 +32,11 @@ using namespace RelocLib;
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
 : m_mode(PIPELINEMODE_NORMAL),
-  m_predictionComponent(imageSourceEngine->getDepthImageSize(), seed, settings),
   m_propagationComponent(imageSourceEngine->getDepthImageSize(), settings),
   m_resourcesDir(resourcesDir),
+  m_semanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count()),
   m_slamComponent(imageSourceEngine, settings, trackerType, trackerParams),
-  m_smoothingComponent(labelManager->get_max_label_count(), settings),
-  m_trainingComponent(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count())
+  m_smoothingComponent(labelManager->get_max_label_count(), settings)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -58,8 +57,8 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
   // Get the maximum numbers of voxels to use for prediction and training.
-  const size_t maxPredictionVoxelCount = m_predictionComponent.get_max_prediction_voxel_count();
-  const size_t maxTrainingVoxelCount = m_trainingComponent.get_max_training_voxel_count();
+  const size_t maxPredictionVoxelCount = m_semanticSegmentationComponent.get_max_prediction_voxel_count();
+  const size_t maxTrainingVoxelCount = m_semanticSegmentationComponent.get_max_training_voxel_count();
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
@@ -163,10 +162,10 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
   switch(m_mode)
   {
     case PIPELINEMODE_FEATURE_INSPECTION:
-      m_featureInspectionComponent.run(m_state, renderState);
+      m_semanticSegmentationComponent.run_feature_inspection(m_state, renderState);
       break;
     case PIPELINEMODE_PREDICTION:
-      m_predictionComponent.run(m_state, renderState);
+      m_semanticSegmentationComponent.run_prediction(m_state, renderState);
       break;
     case PIPELINEMODE_PROPAGATION:
       m_propagationComponent.run(m_state, renderState);
@@ -179,13 +178,13 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) m_trainingComponent.run(m_state, renderState);
-      else m_predictionComponent.run(m_state, renderState);;
+      if(trainThisFrame) m_semanticSegmentationComponent.run_training(m_state, renderState);
+      else m_semanticSegmentationComponent.run_prediction(m_state, renderState);;
 
       break;
     }
     case PIPELINEMODE_TRAINING:
-      m_trainingComponent.run(m_state, renderState);
+      m_semanticSegmentationComponent.run_training(m_state, renderState);
       break;
     default:
       break;

@@ -208,28 +208,22 @@ include/spaint/picking/shared/Picker_Shared.h
 
 ##
 SET(pipelinecomponents_sources
-src/pipelinecomponents/FeatureInspectionComponent.cpp
-src/pipelinecomponents/PredictionComponent.cpp
 src/pipelinecomponents/PropagationComponent.cpp
+src/pipelinecomponents/SemanticSegmentationComponent.cpp
 src/pipelinecomponents/SLAMComponent.cpp
 src/pipelinecomponents/SmoothingComponent.cpp
-src/pipelinecomponents/TrainingComponent.cpp
 )
 
 SET(pipelinecomponents_headers
-include/spaint/pipelinecomponents/FeatureInspectionComponent.h
-include/spaint/pipelinecomponents/FeatureInspectionModel.h
-include/spaint/pipelinecomponents/PredictionComponent.h
-include/spaint/pipelinecomponents/PredictionModel.h
 include/spaint/pipelinecomponents/PropagationComponent.h
 include/spaint/pipelinecomponents/PropagationModel.h
+include/spaint/pipelinecomponents/SemanticSegmentationComponent.h
+include/spaint/pipelinecomponents/SemanticSegmentationModel.h
 include/spaint/pipelinecomponents/SLAMComponent.h
 include/spaint/pipelinecomponents/SLAMModel.h
 include/spaint/pipelinecomponents/SmoothingComponent.h
 include/spaint/pipelinecomponents/SmoothingModel.h
 include/spaint/pipelinecomponents/TrackerType.h
-include/spaint/pipelinecomponents/TrainingComponent.h
-include/spaint/pipelinecomponents/TrainingModel.h
 )
 
 ##
