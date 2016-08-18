@@ -41,7 +41,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a coordinate descent optimiser.
+   * \brief Constructs a coordinate descent parameter optimiser.
    *
    * \param costFunction  The cost function to use to evaluate the different parameter sets.
    * \param epochCount    The number of epochs for which coordinate descent should be run.
@@ -56,7 +56,7 @@ public:
    *
    * \param param   The parameter name.
    * \param values  The values the parameter may take.
-   * \return        The generator itself (so that calls to add_param may be chained).
+   * \return        The optimiser itself (so that calls to add_param may be chained).
    */
   CoordinateDescentParameterOptimiser& add_param(const std::string& param, const std::vector<boost::spirit::hold_any>& values);
 
@@ -65,7 +65,7 @@ public:
    *
    * \param param   The parameter name.
    * \param values  The values the parameter may take.
-   * \return        The generator itself (so that calls to add_param may be chained).
+   * \return        The optimiser itself (so that calls to add_param may be chained).
    */
   template <typename T>
   CoordinateDescentParameterOptimiser& add_param(const std::string& param, const std::vector<T>& values)

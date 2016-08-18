@@ -7,7 +7,7 @@
 
 #include <limits>
 
-#include <boost/assign.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
 using boost::assign::list_of;
 using boost::spirit::hold_any;
@@ -90,12 +90,11 @@ std::pair<std::vector<size_t>,float> CoordinateDescentParameterOptimiser::optimi
 {
   // Invariant: currentCost = compute_cost(currentValueIndices)
 
-  // Calculate the cost of the initial parameter values and set them to be the best we've seen so far.
-  std::vector<size_t> currentValueIndices = initialValueIndices;
-  float currentCost = compute_cost(currentValueIndices);
-
-  std::vector<size_t> bestValueIndices = currentValueIndices;
-  float bestCost = currentCost;
+  // Initialise the current and best parameter value indices and their associated costs.
+  std::vector<size_t> bestValueIndices, currentValueIndices;
+  float bestCost, currentCost;
+  bestValueIndices = currentValueIndices = initialValueIndices;
+  bestCost = currentCost = compute_cost(currentValueIndices);
 
   // Pick the first parameter to optimise. The parameters will be optimised one-by-one, starting from this parameter.
   size_t paramCount = m_paramValues.size();
@@ -130,7 +129,7 @@ std::pair<std::vector<size_t>,float> CoordinateDescentParameterOptimiser::optimi
       }
     }
 
-    // If the current cost is now the best, update the best cost and best parameter value indices.
+    // If the current cost is now the best, update the best parameter value indices and the associated cost.
     if(currentCost < bestCost)
     {
       bestValueIndices = currentValueIndices;
