@@ -1,21 +1,21 @@
 /**
- * spaintgui: FeatureInspectionSection.h
+ * spaint: FeatureInspectionComponent.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_FEATUREINSPECTIONSECTION
-#define H_SPAINTGUI_FEATUREINSPECTIONSECTION
-
-#include <boost/shared_ptr.hpp>
+#ifndef H_SPAINT_FEATUREINSPECTIONCOMPONENT
+#define H_SPAINT_FEATUREINSPECTIONCOMPONENT
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-#include "FeatureInspectionState.h"
+#include "FeatureInspectionModel.h"
+
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class FeatureInspectionSection
+class FeatureInspectionComponent
 {
   //#################### TYPEDEFS ####################
 private:
@@ -24,7 +24,9 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** TODO */
-  virtual void run(FeatureInspectionState& state, const RenderState_CPtr& renderState);
+  virtual void run(FeatureInspectionModel& model, const RenderState_CPtr& renderState);
 };
+
+}
 
 #endif

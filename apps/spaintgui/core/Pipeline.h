@@ -6,16 +6,16 @@
 #ifndef H_SPAINTGUI_PIPELINE
 #define H_SPAINTGUI_PIPELINE
 
+#include <spaint/pipelinecomponents/FeatureInspectionComponent.h>
+#include <spaint/pipelinecomponents/PredictionComponent.h>
+#include <spaint/pipelinecomponents/PropagationComponent.h>
+#include <spaint/pipelinecomponents/SLAMComponent.h>
+#include <spaint/pipelinecomponents/SmoothingComponent.h>
+#include <spaint/pipelinecomponents/TrainingComponent.h>
 #include <spaint/util/LabelManager.h>
 
-#include "FeatureInspectionSection.h"
 #include "PipelineMode.h"
 #include "PipelineState.h"
-#include "PredictionSection.h"
-#include "PropagationSection.h"
-#include "SLAMSection.h"
-#include "SmoothingSection.h"
-#include "TrainingSection.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -34,31 +34,31 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
-  FeatureInspectionSection m_featureInspectionSection;
+  spaint::FeatureInspectionComponent m_featureInspectionComponent;
 
   /** The mode in which the pipeline is currently running. */
   PipelineMode m_mode;
 
   /** TODO */
-  PredictionSection m_predictionSection;
+  spaint::PredictionComponent m_predictionComponent;
 
   /** TODO */
-  PropagationSection m_propagationSection;
+  spaint::PropagationComponent m_propagationComponent;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
   /** TODO */
-  SLAMSection m_slamSection;
+  spaint::SLAMComponent m_slamComponent;
 
   /** TODO */
-  SmoothingSection m_smoothingSection;
+  spaint::SmoothingComponent m_smoothingComponent;
 
   /** The state shared between the different sections of the pipeline. */
   PipelineState m_state;
 
   /** TODO */
-  TrainingSection m_trainingSection;
+  spaint::TrainingComponent m_trainingComponent;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -74,7 +74,8 @@ public:
    * \param trackerParams     The parameters for the tracker (if any).
    */
   Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
-           const spaint::LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType = TRACKER_INFINITAM, const std::string& trackerParams = "");
+           const spaint::LabelManager_Ptr& labelManager, unsigned int seed, spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM,
+           const std::string& trackerParams = "");
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

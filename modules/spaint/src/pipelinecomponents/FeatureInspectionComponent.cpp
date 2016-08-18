@@ -1,35 +1,36 @@
 /**
- * spaintgui: FeatureInspectionSection.cpp
+ * spaint: FeatureInspectionComponent.cpp
  */
 
-#include "FeatureInspectionSection.h"
+#include "pipelinecomponents/FeatureInspectionComponent.h"
 
 #ifdef WITH_OPENCV
-#include <spaint/ocv/OpenCVUtil.h>
+#include "ocv/OpenCVUtil.h"
 #endif
 
-#include <spaint/util/MemoryBlockFactory.h>
-using namespace spaint;
+#include "util/MemoryBlockFactory.h"
+
+namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void FeatureInspectionSection::run(FeatureInspectionState& state, const RenderState_CPtr& renderState)
+void FeatureInspectionComponent::run(FeatureInspectionModel& model, const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
-  Selector::Selection_CPtr selection = state.get_selector()->get_selection();
+  Selector::Selection_CPtr selection = model.get_selector()->get_selection();
 
   // If the user hasn't selected a single voxel, early out.
   if(!selection || selection->dataSize != 1) return;
 
   // Calculate the feature descriptor for the selected voxel.
-  boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(state.get_feature_calculator()->get_feature_count());
-  state.get_feature_calculator()->calculate_features(*selection, state.get_scene().get(), *featuresMB);
+  boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(model.get_feature_calculator()->get_feature_count());
+  model.get_feature_calculator()->calculate_features(*selection, model.get_scene().get(), *featuresMB);
 
 #ifdef WITH_OPENCV
   // Convert the feature descriptor into an OpenCV image and show it in a window.
   featuresMB->UpdateHostFromDevice();
   const float *features = featuresMB->GetData(MEMORYDEVICE_CPU);
-  const int patchSize = static_cast<int>(state.get_patch_size());
+  const int patchSize = static_cast<int>(model.get_patch_size());
   cv::Mat3b featureInspectionImage = OpenCVUtil::make_rgb_image(features, patchSize, patchSize);
 
   const float scaleFactor = 10.0f;
@@ -39,4 +40,6 @@ void FeatureInspectionSection::run(FeatureInspectionState& state, const RenderSt
   const int delayMs = 1;
   cv::waitKey(delayMs);  // this is required in order to make OpenCV actually show the window
 #endif
+}
+
 }

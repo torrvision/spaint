@@ -1,24 +1,25 @@
 /**
- * spaintgui: TrainingSection.cpp
+ * spaint: TrainingComponent.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "TrainingSection.h"
+#include "pipelinecomponents/TrainingComponent.h"
 
 #include <rafl/examples/Example.h>
 using namespace rafl;
 
-#include <spaint/randomforest/ForestUtil.h>
-#include <spaint/sampling/VoxelSamplerFactory.h>
-#include <spaint/util/LabelManager.h>
-#include <spaint/util/MemoryBlockFactory.h>
-using namespace spaint;
+#include "randomforest/ForestUtil.h"
+#include "sampling/VoxelSamplerFactory.h"
+#include "util/LabelManager.h"
+#include "util/MemoryBlockFactory.h"
 
 #define DEBUGGING 1
 
+namespace spaint {
+
 //#################### CONSTRUCTORS ####################
 
-TrainingSection::TrainingSection(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings, size_t maxLabelCount)
+TrainingComponent::TrainingComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings, size_t maxLabelCount)
 : m_maxLabelCount(maxLabelCount),
   m_maxTrainingVoxelsPerLabel(128) // FIXME: This value shouldn't be hard-coded here ultimately.
 {
@@ -35,12 +36,12 @@ TrainingSection::TrainingSection(const Vector2i& depthImageSize, unsigned int se
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-size_t TrainingSection::get_max_training_voxel_count() const
+size_t TrainingComponent::get_max_training_voxel_count() const
 {
   return m_maxLabelCount * m_maxTrainingVoxelsPerLabel;
 }
 
-void TrainingSection::run(TrainingState& state, const RenderState_CPtr& samplingRenderState)
+void TrainingComponent::run(TrainingModel& model, const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
@@ -49,7 +50,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
   // Note that we deliberately avoid training from the background label (0), since the entire scene is
   // initially labelled as background and so training from the background would cause us to learn
   // incorrect labels for non-background things.
-  LabelManager_CPtr labelManager = state.get_label_manager();
+  LabelManager_CPtr labelManager = model.get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
   bool *labelMask = m_trainingLabelMaskMB->GetData(MEMORYDEVICE_CPU);
   labelMask[0] = false;
@@ -61,7 +62,7 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_trainingSampler->sample_voxels(raycastResult, state.get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, model.get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
 #if DEBUGGING
   // Output the numbers of voxels sampled for each label (for debugging purposes).
@@ -76,20 +77,22 @@ void TrainingSection::run(TrainingState& state, const RenderState_CPtr& sampling
 #endif
 
   // Compute feature vectors for the sampled voxels.
-  state.get_feature_calculator()->calculate_features(*m_trainingVoxelLocationsMB, state.get_scene().get(), *state.get_training_features());
+  model.get_feature_calculator()->calculate_features(*m_trainingVoxelLocationsMB, model.get_scene().get(), *model.get_training_features());
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::Label> > Example_CPtr;
   std::vector<Example_CPtr> examples = ForestUtil::make_examples<SpaintVoxel::Label>(
-    *state.get_training_features(),
+    *model.get_training_features(),
     *m_trainingVoxelCountsMB,
-    state.get_feature_calculator()->get_feature_count(),
+    model.get_feature_calculator()->get_feature_count(),
     m_maxTrainingVoxelsPerLabel,
     maxLabelCount
   );
 
   // Train the forest.
   const size_t splitBudget = 20;
-  state.get_forest()->add_examples(examples);
-  state.get_forest()->train(splitBudget);
+  model.get_forest()->add_examples(examples);
+  model.get_forest()->train(splitBudget);
+}
+
 }

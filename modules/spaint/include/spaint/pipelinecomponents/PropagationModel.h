@@ -1,30 +1,32 @@
 /**
- * spaintgui: PropagationState.h
+ * spaint: PropagationModel.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_PROPAGATIONSTATE
-#define H_SPAINTGUI_PROPAGATIONSTATE
+#ifndef H_SPAINT_PROPAGATIONMODEL
+#define H_SPAINT_PROPAGATIONMODEL
 
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
-#include <spaint/util/SpaintVoxel.h>
+#include "../util/SpaintVoxel.h"
+
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class PropagationState
+class PropagationModel
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~PropagationState() {}
+  virtual ~PropagationModel() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -36,7 +38,9 @@ public:
   /**
    * \brief TODO
    */
-  virtual spaint::SpaintVoxel::Label get_semantic_label() const = 0;
+  virtual SpaintVoxel::Label get_semantic_label() const = 0;
 };
+
+}
 
 #endif

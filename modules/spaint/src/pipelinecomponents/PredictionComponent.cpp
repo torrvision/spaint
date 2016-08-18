@@ -1,21 +1,22 @@
 /**
- * spaintgui: PredictionSection.cpp
+ * spaint: PredictionComponent.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "PredictionSection.h"
+#include "pipelinecomponents/PredictionComponent.h"
 
 #include <rafl/base/Descriptor.h>
 using namespace rafl;
 
-#include <spaint/randomforest/ForestUtil.h>
-#include <spaint/sampling/VoxelSamplerFactory.h>
-#include <spaint/util/MemoryBlockFactory.h>
-using namespace spaint;
+#include "randomforest/ForestUtil.h"
+#include "sampling/VoxelSamplerFactory.h"
+#include "util/MemoryBlockFactory.h"
+
+namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-PredictionSection::PredictionSection(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings)
+PredictionComponent::PredictionComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings)
 {
   // Set up the voxel sampler.
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
@@ -37,25 +38,25 @@ PredictionSection::PredictionSection(const Vector2i& depthImageSize, unsigned in
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-size_t PredictionSection::get_max_prediction_voxel_count() const
+size_t PredictionComponent::get_max_prediction_voxel_count() const
 {
   return m_maxPredictionVoxelCount;
 }
 
-void PredictionSection::run(PredictionState& state, const RenderState_CPtr& samplingRenderState)
+void PredictionComponent::run(PredictionModel& model, const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
 
   // If the random forest is not yet valid, early out.
-  if(!state.get_forest()->is_valid()) return;
+  if(!model.get_forest()->is_valid()) return;
 
   // Sample some voxels for which to predict labels.
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
   // Calculate feature descriptors for the sampled voxels.
-  state.get_feature_calculator()->calculate_features(*m_predictionVoxelLocationsMB, state.get_scene().get(), *state.get_prediction_features());
-  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*state.get_prediction_features(), m_maxPredictionVoxelCount, state.get_feature_calculator()->get_feature_count());
+  model.get_feature_calculator()->calculate_features(*m_predictionVoxelLocationsMB, model.get_scene().get(), *model.get_prediction_features());
+  std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*model.get_prediction_features(), m_maxPredictionVoxelCount, model.get_feature_calculator()->get_feature_count());
 
   // Predict labels for the voxels based on the feature descriptors.
   SpaintVoxel::PackedLabel *labels = m_predictionLabelsMB->GetData(MEMORYDEVICE_CPU);
@@ -65,11 +66,13 @@ void PredictionSection::run(PredictionState& state, const RenderState_CPtr& samp
 #endif
   for(int i = 0; i < static_cast<int>(m_maxPredictionVoxelCount); ++i)
   {
-    labels[i] = SpaintVoxel::PackedLabel(state.get_forest()->predict(descriptors[i]), SpaintVoxel::LG_FOREST);
+    labels[i] = SpaintVoxel::PackedLabel(model.get_forest()->predict(descriptors[i]), SpaintVoxel::LG_FOREST);
   }
 
   m_predictionLabelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  state.get_voxel_marker()->mark_voxels(*m_predictionVoxelLocationsMB, *m_predictionLabelsMB, state.get_scene().get());
+  model.get_voxel_marker()->mark_voxels(*m_predictionVoxelLocationsMB, *m_predictionLabelsMB, model.get_scene().get());
+}
+
 }

@@ -52,38 +52,19 @@ commands/MarkVoxelsCommand.h
 
 ##
 SET(core_sources
-core/FeatureInspectionSection.cpp
 core/Interactor.cpp
 core/Model.cpp
 core/Pipeline.cpp
-core/PredictionSection.cpp
-core/PropagationSection.cpp
 core/Raycaster.cpp
-core/SLAMSection.cpp
-core/SmoothingSection.cpp
-core/TrainingSection.cpp
 )
 
 SET(core_headers
-core/FeatureInspectionSection.h
-core/FeatureInspectionState.h
 core/Interactor.h
 core/Model.h
 core/Pipeline.h
 core/PipelineMode.h
 core/PipelineState.h
-core/PredictionSection.h
-core/PredictionState.h
-core/PropagationSection.h
-core/PropagationState.h
 core/Raycaster.h
-core/SLAMSection.h
-core/SLAMState.h
-core/SmoothingSection.h
-core/SmoothingState.h
-core/TrackerType.h
-core/TrainingSection.h
-core/TrainingState.h
 )
 
 ##

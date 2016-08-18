@@ -1,22 +1,23 @@
 /**
- * spaintgui: SmoothingSection.h
+ * spaint: PropagationComponent.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_SMOOTHINGSECTION
-#define H_SPAINTGUI_SMOOTHINGSECTION
+#ifndef H_SPAINT_PROPAGATIONCOMPONENT
+#define H_SPAINT_PROPAGATIONCOMPONENT
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include <spaint/smoothing/interface/LabelSmoother.h>
+#include "PropagationModel.h"
+#include "../propagation/interface/LabelPropagator.h"
 
-#include "SmoothingState.h"
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class SmoothingSection
+class PropagationComponent
 {
   //#################### TYPEDEFS ####################
 private:
@@ -25,20 +26,22 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The label smoother. */
-  spaint::LabelSmoother_CPtr m_labelSmoother;
+  /** The label propagator. */
+  LabelPropagator_CPtr m_labelPropagator;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief TODO
    */
-  SmoothingSection(size_t maxLabelCount, const Settings_CPtr& settings);
+  PropagationComponent(const Vector2i& depthImageSize, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** TODO */
-  virtual void run(SmoothingState& state, const RenderState_CPtr& renderState);
+  virtual void run(PropagationModel& model, const RenderState_CPtr& renderState);
 };
+
+}
 
 #endif

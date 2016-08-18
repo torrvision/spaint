@@ -1,38 +1,40 @@
 /**
- * spaintgui: PredictionState.h
+ * spaint: PredictionModel.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_PREDICTIONSTATE
-#define H_SPAINTGUI_PREDICTIONSTATE
+#ifndef H_SPAINT_PREDICTIONMODEL
+#define H_SPAINT_PREDICTIONMODEL
 
 #include <rafl/core/RandomForest.h>
 
-#include <spaint/features/interface/FeatureCalculator.h>
-#include <spaint/markers/interface/VoxelMarker.h>
-#include <spaint/util/SpaintVoxel.h>
+#include "../features/interface/FeatureCalculator.h"
+#include "../markers/interface/VoxelMarker.h"
+#include "../util/SpaintVoxel.h"
+
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class PredictionState
+class PredictionModel
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<rafl::RandomForest<spaint::SpaintVoxel::Label> > RandomForest_Ptr;
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::Label> > RandomForest_Ptr;
+  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~PredictionState() {}
+  virtual ~PredictionModel() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief TODO
    */
-  virtual const spaint::FeatureCalculator_CPtr& get_feature_calculator() const = 0;
+  virtual const FeatureCalculator_CPtr& get_feature_calculator() const = 0;
 
   /**
    * \brief TODO
@@ -52,7 +54,9 @@ public:
   /**
    * \brief TODO
    */
-  virtual const spaint::VoxelMarker_CPtr& get_voxel_marker() const = 0;
+  virtual const VoxelMarker_CPtr& get_voxel_marker() const = 0;
 };
+
+}
 
 #endif

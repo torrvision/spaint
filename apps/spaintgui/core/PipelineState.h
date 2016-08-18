@@ -9,28 +9,28 @@
 #include <rafl/core/RandomForest.h>
 
 #include <spaint/features/interface/FeatureCalculator.h>
+#include <spaint/pipelinecomponents/FeatureInspectionModel.h>
+#include <spaint/pipelinecomponents/PredictionModel.h>
+#include <spaint/pipelinecomponents/PropagationModel.h>
+#include <spaint/pipelinecomponents/SLAMModel.h>
+#include <spaint/pipelinecomponents/SmoothingModel.h>
+#include <spaint/pipelinecomponents/TrainingModel.h>
 #include <spaint/smoothing/interface/LabelSmoother.h>
 #include <spaint/util/SpaintVoxel.h>
 
-#include "FeatureInspectionState.h"
 #include "Interactor.h"
-#include "PredictionState.h"
-#include "PropagationState.h"
 #include "Raycaster.h"
-#include "SLAMState.h"
-#include "SmoothingState.h"
-#include "TrainingState.h"
 
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
  */
 class PipelineState
-: public FeatureInspectionState,
-  public PredictionState,
-  public PropagationState,
-  public SLAMState,
-  public SmoothingState,
-  public TrainingState
+: public spaint::FeatureInspectionModel,
+  public spaint::PredictionModel,
+  public spaint::PropagationModel,
+  public spaint::SLAMModel,
+  public spaint::SmoothingModel,
+  public spaint::TrainingModel
 {
   //#################### TYPEDEFS ####################
 private:

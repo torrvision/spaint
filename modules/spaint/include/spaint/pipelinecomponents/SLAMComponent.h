@@ -1,12 +1,10 @@
 /**
- * spaintgui: SLAMSection.h
+ * spaint: SLAMComponent.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_SLAMSECTION
-#define H_SPAINTGUI_SLAMSECTION
-
-#include <boost/shared_ptr.hpp>
+#ifndef H_SPAINT_SLAMCOMPONENT
+#define H_SPAINT_SLAMCOMPONENT
 
 #include <InputSource/CompositeImageSourceEngine.h>
 #include <ITMLib/Core/ITMDenseMapper.h>
@@ -18,21 +16,22 @@
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
-#include <spaint/trackers/FallibleTracker.h>
-#include <spaint/util/ITMImagePtrTypes.h>
-
-#include "SLAMState.h"
+#include "SLAMModel.h"
 #include "TrackerType.h"
+#include "../trackers/FallibleTracker.h"
+#include "../util/ITMImagePtrTypes.h"
+
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class SLAMSection
+class SLAMComponent
 {
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMDenseMapper<spaint::SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
@@ -40,7 +39,7 @@ private:
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
@@ -55,7 +54,7 @@ private:
   DenseMapper_Ptr m_denseMapper;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
-  spaint::FallibleTracker *m_fallibleTracker;
+  FallibleTracker *m_fallibleTracker;
 
   /** The number of frames for which fusion has been run. */
   size_t m_fusedFramesCount;
@@ -137,7 +136,7 @@ public:
    * \param trackerType       TODO
    * \param trackerParams     TODO
    */
-  SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams);
+  SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -179,7 +178,7 @@ public:
   const TrackingState_Ptr& get_tracking_state();
 
   /** TODO */
-  virtual bool run(SLAMState& state);
+  virtual bool run(SLAMModel& model);
 
   /**
    * \brief TODO
@@ -206,5 +205,7 @@ private:
    */
   void setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
 };
+
+}
 
 #endif

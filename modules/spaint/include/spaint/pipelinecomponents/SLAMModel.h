@@ -1,31 +1,35 @@
 /**
- * spaintgui: SLAMState.h
+ * spaint: SLAMModel.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_SLAMSTATE
-#define H_SPAINTGUI_SLAMSTATE
+#ifndef H_SPAINT_SLAMMODEL
+#define H_SPAINT_SLAMMODEL
+
+#include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
-#include <spaint/util/SpaintVoxel.h>
+#include "../util/SpaintVoxel.h"
+
+namespace spaint {
 
 /**
 * \brief TODO
 */
-class SLAMState
+class SLAMModel
 {
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
   /**
    * \brief TODO
    */
-  virtual ~SLAMState() {}
+  virtual ~SLAMModel() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -44,5 +48,7 @@ public:
    */
   virtual void set_view(ITMLib::ITMView *view) = 0;
 };
+
+}
 
 #endif

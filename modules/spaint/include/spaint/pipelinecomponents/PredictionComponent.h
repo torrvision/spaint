@@ -1,23 +1,24 @@
 /**
- * spaintgui: PredictionSection.h
+ * spaint: PredictionComponent.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_PREDICTIONSECTION
-#define H_SPAINTGUI_PREDICTIONSECTION
+#ifndef H_SPAINT_PREDICTIONCOMPONENT
+#define H_SPAINT_PREDICTIONCOMPONENT
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include <spaint/sampling/interface/UniformVoxelSampler.h>
-#include <spaint/selectors/Selector.h>
+#include "PredictionModel.h"
+#include "../sampling/interface/UniformVoxelSampler.h"
+#include "../selectors/Selector.h"
 
-#include "PredictionState.h"
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class PredictionSection
+class PredictionComponent
 {
   //#################### TYPEDEFS ####################
 private:
@@ -30,20 +31,20 @@ private:
   size_t m_maxPredictionVoxelCount;
 
   /** A memory block in which to store the labels predicted for the various voxels. */
-  boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
+  boost::shared_ptr<ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > m_predictionLabelsMB;
 
   /** The voxel sampler used in prediction mode. */
-  spaint::UniformVoxelSampler_CPtr m_predictionSampler;
+  UniformVoxelSampler_CPtr m_predictionSampler;
 
   /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
-  spaint::Selector::Selection_Ptr m_predictionVoxelLocationsMB;
+  Selector::Selection_Ptr m_predictionVoxelLocationsMB;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief TODO
    */
-  PredictionSection(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings);
+  PredictionComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -53,7 +54,9 @@ public:
   size_t get_max_prediction_voxel_count() const;
 
   /** TODO */
-  virtual void run(PredictionState& state, const RenderState_CPtr& samplingRenderState);
+  virtual void run(PredictionModel& model, const RenderState_CPtr& samplingRenderState);
 };
+
+}
 
 #endif

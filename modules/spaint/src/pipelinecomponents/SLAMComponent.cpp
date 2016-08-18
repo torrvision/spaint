@@ -1,10 +1,9 @@
 /**
- * spaintgui: SLAMSection.cpp
+ * spaint: SLAMComponent.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "SLAMSection.h"
-using namespace spaint;
+#include "pipelinecomponents/SLAMComponent.h"
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
@@ -15,17 +14,19 @@ using namespace ORUtils;
 using namespace RelocLib;
 
 #ifdef WITH_OVR
-#include <spaint/trackers/RiftTracker.h>
+#include "trackers/RiftTracker.h"
 #endif
 
 #ifdef WITH_VICON
-#include <spaint/trackers/RobustViconTracker.h>
-#include <spaint/trackers/ViconTracker.h>
+#include "trackers/RobustViconTracker.h"
+#include "trackers/ViconTracker.h"
 #endif
+
+namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams)
+SLAMComponent::SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams)
 : m_fusedFramesCount(0),
   m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
@@ -83,53 +84,53 @@ SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-bool SLAMSection::get_fusion_enabled() const
+bool SLAMComponent::get_fusion_enabled() const
 {
   return m_fusionEnabled;
 }
 
-ITMShortImage_CPtr SLAMSection::get_input_raw_depth_image() const
+ITMShortImage_CPtr SLAMComponent::get_input_raw_depth_image() const
 {
   return m_inputRawDepthImage;
 }
 
-ITMUChar4Image_CPtr SLAMSection::get_input_rgb_image() const
+ITMUChar4Image_CPtr SLAMComponent::get_input_rgb_image() const
 {
   return m_inputRGBImage;
 }
 
-SLAMSection::RenderState_CPtr SLAMSection::get_live_render_state() const
+SLAMComponent::RenderState_CPtr SLAMComponent::get_live_render_state() const
 {
   return m_liveRenderState;
 }
 
-const SLAMSection::Scene_Ptr& SLAMSection::get_scene()
+const SLAMComponent::Scene_Ptr& SLAMComponent::get_scene()
 {
   return m_scene;
 }
 
-Vector2i SLAMSection::get_tracked_image_size(const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
+Vector2i SLAMComponent::get_tracked_image_size(const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
 {
   return m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
 }
 
-const SLAMSection::TrackingState_Ptr& SLAMSection::get_tracking_state()
+const SLAMComponent::TrackingState_Ptr& SLAMComponent::get_tracking_state()
 {
   return m_trackingState;
 }
 
-bool SLAMSection::run(SLAMState& state)
+bool SLAMComponent::run(SLAMModel& model)
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const View_Ptr& view = state.get_view();
+  const View_Ptr& view = model.get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
-  state.set_view(newView);
+  model.set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the scene because we need something to track against).
   SE3Pose oldPose(*m_trackingState->pose_d);
@@ -172,7 +173,7 @@ bool SLAMSection::run(SLAMState& state)
 
         const bool resetVisibleList = true;
         m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_visualisation_engine().get(), m_liveRenderState.get());
+        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), model.get_visualisation_engine().get(), m_liveRenderState.get());
         m_trackingController->Track(m_trackingState.get(), view.get());
         trackerResult = m_trackingState->trackerResult;
 
@@ -227,7 +228,7 @@ bool SLAMSection::run(SLAMState& state)
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_visualisation_engine().get(), m_liveRenderState.get());
+  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), model.get_visualisation_engine().get(), m_liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
@@ -235,14 +236,14 @@ bool SLAMSection::run(SLAMState& state)
   return true;
 }
 
-void SLAMSection::set_fusion_enabled(bool fusionEnabled)
+void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 {
   m_fusionEnabled = fusionEnabled;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ITMTracker *SLAMSection::make_hybrid_tracker(ITMTracker *primaryTracker, const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
+ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
 {
   ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
   compositeTracker->SetTracker(primaryTracker, 0);
@@ -254,7 +255,7 @@ ITMTracker *SLAMSection::make_hybrid_tracker(ITMTracker *primaryTracker, const V
   return compositeTracker;
 }
 
-void SLAMSection::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
+void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
   m_fallibleTracker = NULL;
 
@@ -300,4 +301,6 @@ void SLAMSection::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& de
       ));
     }
   }
+}
+
 }

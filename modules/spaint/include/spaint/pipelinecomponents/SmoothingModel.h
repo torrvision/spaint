@@ -1,30 +1,35 @@
 /**
- * spaintgui: SmoothingState.h
+ * spaint: SmoothingModel.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_SMOOTHINGSTATE
-#define H_SPAINTGUI_SMOOTHINGSTATE
+#ifndef H_SPAINT_SMOOTHINGMODEL
+#define H_SPAINT_SMOOTHINGMODEL
 
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
-#include <spaint/util/SpaintVoxel.h>
+#include "../util/SpaintVoxel.h"
+
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class SmoothingState
+class SmoothingModel
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~SmoothingState() {}
+  /**
+   * \brief TODO
+   */
+  virtual ~SmoothingModel() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -33,5 +38,7 @@ public:
    */
   virtual const Scene_Ptr& get_scene() const = 0;
 };
+
+}
 
 #endif

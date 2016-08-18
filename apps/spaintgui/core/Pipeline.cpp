@@ -32,12 +32,12 @@ using namespace RelocLib;
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
 : m_mode(PIPELINEMODE_NORMAL),
-  m_predictionSection(imageSourceEngine->getDepthImageSize(), seed, settings),
-  m_propagationSection(imageSourceEngine->getDepthImageSize(), settings),
+  m_predictionComponent(imageSourceEngine->getDepthImageSize(), seed, settings),
+  m_propagationComponent(imageSourceEngine->getDepthImageSize(), settings),
   m_resourcesDir(resourcesDir),
-  m_slamSection(imageSourceEngine, settings, trackerType, trackerParams),
-  m_smoothingSection(labelManager->get_max_label_count(), settings),
-  m_trainingSection(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count())
+  m_slamComponent(imageSourceEngine, settings, trackerType, trackerParams),
+  m_smoothingComponent(labelManager->get_max_label_count(), settings),
+  m_trainingComponent(imageSourceEngine->getDepthImageSize(), seed, settings, labelManager->get_max_label_count())
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -49,17 +49,17 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 #endif
 
   // Set up the spaint model, raycaster and interactor.
-  Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
-  Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
-  Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
+  Vector2i depthImageSize = m_slamComponent.get_input_raw_depth_image()->noDims;
+  Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
+  Vector2i trackedImageSize = m_slamComponent.get_tracked_image_size(rgbImageSize, depthImageSize);
 
-  m_state.m_model.reset(new Model(m_slamSection.get_scene(), rgbImageSize, depthImageSize, m_slamSection.get_tracking_state(), settings, resourcesDir, labelManager));
+  m_state.m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
   m_state.m_raycaster.reset(new Raycaster(m_state.m_model, trackedImageSize, settings));
   m_state.m_interactor.reset(new Interactor(m_state.m_model));
 
   // Get the maximum numbers of voxels to use for prediction and training.
-  const size_t maxPredictionVoxelCount = m_predictionSection.get_max_prediction_voxel_count();
-  const size_t maxTrainingVoxelCount = m_trainingSection.get_max_training_voxel_count();
+  const size_t maxPredictionVoxelCount = m_predictionComponent.get_max_prediction_voxel_count();
+  const size_t maxTrainingVoxelCount = m_trainingComponent.get_max_training_voxel_count();
 
   // Set up the feature calculator.
   // FIXME: These values shouldn't be hard-coded here ultimately.
@@ -92,12 +92,12 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
 bool Pipeline::get_fusion_enabled() const
 {
-  return m_slamSection.get_fusion_enabled();
+  return m_slamComponent.get_fusion_enabled();
 }
 
 ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 {
-  ITMShortImage_CPtr inputRawDepthImage = m_slamSection.get_input_raw_depth_image();
+  ITMShortImage_CPtr inputRawDepthImage = m_slamComponent.get_input_raw_depth_image();
   ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
   copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
@@ -105,7 +105,7 @@ ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 
 ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
 {
-  ITMUChar4Image_CPtr inputRGBImage = m_slamSection.get_input_rgb_image();
+  ITMUChar4Image_CPtr inputRGBImage = m_slamComponent.get_input_rgb_image();
   ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
   copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
@@ -118,7 +118,7 @@ const Interactor_Ptr& Pipeline::get_interactor()
 
 Pipeline::RenderState_CPtr Pipeline::get_live_render_state() const
 {
-  return m_slamSection.get_live_render_state();
+  return m_slamComponent.get_live_render_state();
 }
 
 PipelineMode Pipeline::get_mode() const
@@ -155,7 +155,7 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
-  return m_slamSection.run(m_state);
+  return m_slamComponent.run(m_state);
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
@@ -163,29 +163,29 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
   switch(m_mode)
   {
     case PIPELINEMODE_FEATURE_INSPECTION:
-      m_featureInspectionSection.run(m_state, renderState);
+      m_featureInspectionComponent.run(m_state, renderState);
       break;
     case PIPELINEMODE_PREDICTION:
-      m_predictionSection.run(m_state, renderState);
+      m_predictionComponent.run(m_state, renderState);
       break;
     case PIPELINEMODE_PROPAGATION:
-      m_propagationSection.run(m_state, renderState);
+      m_propagationComponent.run(m_state, renderState);
       break;
     case PIPELINEMODE_SMOOTHING:
-      m_smoothingSection.run(m_state, renderState);
+      m_smoothingComponent.run(m_state, renderState);
       break;
     case PIPELINEMODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) m_trainingSection.run(m_state, renderState);
-      else m_predictionSection.run(m_state, renderState);;
+      if(trainThisFrame) m_trainingComponent.run(m_state, renderState);
+      else m_predictionComponent.run(m_state, renderState);;
 
       break;
     }
     case PIPELINEMODE_TRAINING:
-      m_trainingSection.run(m_state, renderState);
+      m_trainingComponent.run(m_state, renderState);
       break;
     default:
       break;
@@ -194,7 +194,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 
 void Pipeline::set_fusion_enabled(bool fusionEnabled)
 {
-  m_slamSection.set_fusion_enabled(fusionEnabled);
+  m_slamComponent.set_fusion_enabled(fusionEnabled);
 }
 
 void Pipeline::set_mode(PipelineMode mode)

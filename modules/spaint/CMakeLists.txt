@@ -207,6 +207,32 @@ include/spaint/picking/shared/Picker_Shared.h
 )
 
 ##
+SET(pipelinecomponents_sources
+src/pipelinecomponents/FeatureInspectionComponent.cpp
+src/pipelinecomponents/PredictionComponent.cpp
+src/pipelinecomponents/PropagationComponent.cpp
+src/pipelinecomponents/SLAMComponent.cpp
+src/pipelinecomponents/SmoothingComponent.cpp
+src/pipelinecomponents/TrainingComponent.cpp
+)
+
+SET(pipelinecomponents_headers
+include/spaint/pipelinecomponents/FeatureInspectionComponent.h
+include/spaint/pipelinecomponents/FeatureInspectionModel.h
+include/spaint/pipelinecomponents/PredictionComponent.h
+include/spaint/pipelinecomponents/PredictionModel.h
+include/spaint/pipelinecomponents/PropagationComponent.h
+include/spaint/pipelinecomponents/PropagationModel.h
+include/spaint/pipelinecomponents/SLAMComponent.h
+include/spaint/pipelinecomponents/SLAMModel.h
+include/spaint/pipelinecomponents/SmoothingComponent.h
+include/spaint/pipelinecomponents/SmoothingModel.h
+include/spaint/pipelinecomponents/TrackerType.h
+include/spaint/pipelinecomponents/TrainingComponent.h
+include/spaint/pipelinecomponents/TrainingModel.h
+)
+
+##
 SET(propagation_sources
 src/propagation/LabelPropagatorFactory.cpp
 )
@@ -524,6 +550,7 @@ ${imageprocessing_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
+${pipelinecomponents_sources}
 ${propagation_sources}
 ${propagation_cpu_sources}
 ${propagation_interface_sources}
@@ -557,6 +584,7 @@ ${ogl_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
+${pipelinecomponents_headers}
 ${propagation_headers}
 ${propagation_cpu_headers}
 ${propagation_interface_headers}
@@ -654,6 +682,7 @@ SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})
 SOURCE_GROUP(picking\\shared FILES ${picking_shared_headers})
+SOURCE_GROUP(pipelinecomponents FILES ${pipelinecomponents_sources} ${pipelinecomponents_headers})
 SOURCE_GROUP(propagation FILES ${propagation_sources} ${propagation_headers})
 SOURCE_GROUP(propagation\\cpu FILES ${propagation_cpu_sources} ${propagation_cpu_headers})
 SOURCE_GROUP(propagation\\cuda FILES ${propagation_cuda_sources} ${propagation_cuda_headers})

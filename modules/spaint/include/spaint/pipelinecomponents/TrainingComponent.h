@@ -1,22 +1,23 @@
 /**
- * spaintgui: TrainingSection.h
+ * spaint: TrainingComponent.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_TRAININGSECTION
-#define H_SPAINTGUI_TRAININGSECTION
+#ifndef H_SPAINT_TRAININGCOMPONENT
+#define H_SPAINT_TRAININGCOMPONENT
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-#include <spaint/sampling/interface/PerLabelVoxelSampler.h>
-#include <spaint/selectors/Selector.h>
+#include "TrainingModel.h"
+#include "../sampling/interface/PerLabelVoxelSampler.h"
+#include "../selectors/Selector.h"
 
-#include "TrainingState.h"
+namespace spaint {
 
 /**
  * \brief TODO
  */
-class TrainingSection
+class TrainingComponent
 {
   //#################### TYPEDEFS ####################
 private:
@@ -35,20 +36,20 @@ private:
   boost::shared_ptr<ORUtils::MemoryBlock<bool> > m_trainingLabelMaskMB;
 
   /** The voxel sampler used in training mode. */
-  spaint::PerLabelVoxelSampler_CPtr m_trainingSampler;
+  PerLabelVoxelSampler_CPtr m_trainingSampler;
 
   /** A memory block in which to store the number of voxels sampled for each label for training purposes. */
   boost::shared_ptr<ORUtils::MemoryBlock<unsigned int> > m_trainingVoxelCountsMB;
 
   /** A memory block in which to store the locations of the voxels sampled for training purposes. */
-  spaint::Selector::Selection_Ptr m_trainingVoxelLocationsMB;
+  Selector::Selection_Ptr m_trainingVoxelLocationsMB;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief TODO
    */
-  TrainingSection(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings, size_t maxLabelCount);
+  TrainingComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings, size_t maxLabelCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -58,7 +59,9 @@ public:
   size_t get_max_training_voxel_count() const;
 
   /** TODO */
-  virtual void run(TrainingState& state, const RenderState_CPtr& samplingRenderState);
+  virtual void run(TrainingModel& model, const RenderState_CPtr& samplingRenderState);
 };
+
+}
 
 #endif
