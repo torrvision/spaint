@@ -19,7 +19,6 @@
 #include <spaint/util/SpaintVoxel.h>
 
 #include "Interactor.h"
-#include "Raycaster.h"
 
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
@@ -59,9 +58,6 @@ public:
 
   /** A memory block in which to store the feature vectors computed for the various voxels during prediction. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_predictionFeaturesMB;
-
-  /** The raycaster that is used to cast rays into the InfiniTAM scene. */
-  Raycaster_Ptr m_raycaster;
 
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;

@@ -16,6 +16,7 @@
 
 #include "PipelineMode.h"
 #include "PipelineState.h"
+#include "Raycaster.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -44,6 +45,9 @@ private:
 
   /** TODO */
   spaint::PropagationComponent m_propagationComponent;
+
+  /** The raycaster that is used to cast rays into the InfiniTAM scene. */
+  Raycaster_Ptr m_raycaster;
 
   /** The path to the resources directory. */
   std::string m_resourcesDir;
