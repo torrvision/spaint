@@ -79,12 +79,6 @@ public:
   }
 
   /** Override */
-  virtual const Interactor_Ptr& get_interactor() const
-  {
-    return m_interactor;
-  }
-
-  /** Override */
   virtual const spaint::LabelManager_Ptr& get_label_manager() const
   {
     return m_model->get_label_manager();
