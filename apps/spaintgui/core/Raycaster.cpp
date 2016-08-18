@@ -20,7 +20,7 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Raycaster::Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, const Settings_CPtr& settings)
+Raycaster::Raycaster(const Model_CPtr& model)
 : m_model(model)
 {
   // Set up the visualisers.

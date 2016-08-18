@@ -57,11 +57,9 @@ public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model             The spaint model.
-   * \param trackedImageSize  The size of the images used by the tracker.
-   * \param settings          The settings to use for InfiniTAM.
+   * \param model The spaint model.
    */
-  Raycaster(const Model_CPtr& model, const Vector2i& trackedImageSize, const Settings_CPtr& settings);
+  explicit Raycaster(const Model_CPtr& model);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

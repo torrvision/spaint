@@ -170,11 +170,6 @@ public:
   /**
    * \brief TODO
    */
-  Vector2i get_tracked_image_size(const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
-
-  /**
-   * \brief TODO
-   */
   const TrackingState_Ptr& get_tracking_state();
 
   /** TODO */

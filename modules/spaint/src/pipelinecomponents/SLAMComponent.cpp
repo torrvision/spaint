@@ -62,7 +62,7 @@ SLAMComponent::SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEn
   // Set up the tracker and the tracking controller.
   setup_tracker(rgbImageSize, depthImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
-  const Vector2i trackedImageSize = get_tracked_image_size(rgbImageSize, depthImageSize);
+  const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   m_trackingState.reset(new ITMTrackingState(trackedImageSize, memoryType));
   m_tracker->UpdateInitialPose(m_trackingState.get());
 
@@ -107,11 +107,6 @@ SLAMComponent::RenderState_CPtr SLAMComponent::get_live_render_state() const
 const SLAMComponent::Scene_Ptr& SLAMComponent::get_scene()
 {
   return m_scene;
-}
-
-Vector2i SLAMComponent::get_tracked_image_size(const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
-{
-  return m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
 }
 
 const SLAMComponent::TrackingState_Ptr& SLAMComponent::get_tracking_state()

@@ -49,10 +49,9 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   // Set up the spaint model and raycaster.
   Vector2i depthImageSize = m_slamComponent.get_input_raw_depth_image()->noDims;
   Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
-  Vector2i trackedImageSize = m_slamComponent.get_tracked_image_size(rgbImageSize, depthImageSize);
 
   m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
-  m_raycaster.reset(new Raycaster(m_model, trackedImageSize, settings));
+  m_raycaster.reset(new Raycaster(m_model));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
