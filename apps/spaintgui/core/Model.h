@@ -16,6 +16,7 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <spaint/pipelinecomponents/SLAMModel.h>
+#include <spaint/pipelinecomponents/SmoothingModel.h>
 #include <spaint/util/LabelManager.h>
 
 /**
@@ -25,7 +26,8 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
-: public spaint::SLAMModel
+: public spaint::SLAMModel,
+  public spaint::SmoothingModel
 {
   //#################### TYPEDEFS ####################
 public:
@@ -137,12 +139,8 @@ public:
    */
   const Vector2i& get_rgb_image_size() const;
 
-  /**
-   * \brief Gets the current reconstructed scene.
-   *
-   * \return  The current reconstructed scene.
-   */
-  const Scene_Ptr& get_scene();
+  /** Override */
+  virtual const Scene_Ptr& get_scene();
 
   /**
    * \brief Gets the current reconstructed scene.

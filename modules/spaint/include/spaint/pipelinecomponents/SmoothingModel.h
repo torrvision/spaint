@@ -34,9 +34,11 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the current reconstructed scene.
+   *
+   * \return  The current reconstructed scene.
    */
-  virtual const Scene_Ptr& get_scene() const = 0;
+  virtual const Scene_Ptr& get_scene() = 0;
 };
 
 }

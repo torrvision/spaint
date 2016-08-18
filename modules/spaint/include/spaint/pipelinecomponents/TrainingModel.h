@@ -47,9 +47,11 @@ public:
   virtual const LabelManager_Ptr& get_label_manager() const = 0;
 
   /**
-   * \brief TODO
+   * \brief Gets the current reconstructed scene.
+   *
+   * \return  The current reconstructed scene.
    */
-  virtual const Scene_Ptr& get_scene() const = 0;
+  virtual const Scene_Ptr& get_scene() = 0;
 
   /**
    * \brief TODO

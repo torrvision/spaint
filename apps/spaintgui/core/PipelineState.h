@@ -99,7 +99,7 @@ public:
   }
 
   /** Override */
-  virtual const Scene_Ptr& get_scene() const
+  virtual const Scene_Ptr& get_scene()
   {
     return m_model->get_scene();
   }
