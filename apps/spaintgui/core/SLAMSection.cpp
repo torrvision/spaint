@@ -122,7 +122,7 @@ bool SLAMSection::run(SLAMState& state)
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const Model::View_Ptr& view = state.get_view();
+  const View_Ptr& view = state.get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
@@ -172,7 +172,7 @@ bool SLAMSection::run(SLAMState& state)
 
         const bool resetVisibleList = true;
         m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), m_liveRenderState.get());
+        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_visualisation_engine().get(), m_liveRenderState.get());
         m_trackingController->Track(m_trackingState.get(), view.get());
         trackerResult = m_trackingState->trackerResult;
 
@@ -227,7 +227,7 @@ bool SLAMSection::run(SLAMState& state)
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_raycaster()->get_visualisation_engine().get(), m_liveRenderState.get());
+  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), state.get_visualisation_engine().get(), m_liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;

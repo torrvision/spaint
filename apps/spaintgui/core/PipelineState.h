@@ -16,6 +16,7 @@
 #include "Interactor.h"
 #include "PredictionState.h"
 #include "PropagationState.h"
+#include "Raycaster.h"
 #include "SLAMState.h"
 #include "SmoothingState.h"
 #include "TrainingState.h"
@@ -37,6 +38,7 @@ private:
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### PUBLIC VARIABLES ####################
 public:
@@ -97,12 +99,6 @@ public:
   }
 
   /** Override */
-  virtual const Raycaster_Ptr& get_raycaster() const
-  {
-    return m_raycaster;
-  }
-
-  /** Override */
   virtual const Scene_Ptr& get_scene() const
   {
     return m_model->get_scene();
@@ -130,6 +126,12 @@ public:
   virtual const View_Ptr& get_view() const
   {
     return m_model->get_view();
+  }
+
+  /** Override */
+  virtual const VisualisationEngine_Ptr& get_visualisation_engine() const
+  {
+    return m_raycaster->get_visualisation_engine();
   }
 
   /** Override */

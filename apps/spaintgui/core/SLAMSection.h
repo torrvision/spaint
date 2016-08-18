@@ -19,6 +19,7 @@
 #include <RelocLib/Relocaliser.h>
 
 #include <spaint/trackers/FallibleTracker.h>
+#include <spaint/util/ITMImagePtrTypes.h>
 
 #include "SLAMState.h"
 #include "TrackerType.h"
@@ -45,6 +46,7 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
