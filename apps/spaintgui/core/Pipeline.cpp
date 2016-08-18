@@ -50,7 +50,6 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
   // Set up the spaint model, raycaster and interactor.
   Vector2i depthImageSize = m_slamSection.get_input_raw_depth_image()->noDims;
-  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
   Vector2i rgbImageSize = m_slamSection.get_input_rgb_image()->noDims;
   Vector2i trackedImageSize = m_slamSection.get_tracked_image_size(rgbImageSize, depthImageSize);
 

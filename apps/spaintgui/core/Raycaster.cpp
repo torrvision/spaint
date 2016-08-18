@@ -57,7 +57,7 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
 
   if(!renderState)
   {
-    MemoryDeviceType memoryType = m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+    MemoryDeviceType memoryType = m_model->get_settings()->GetMemoryType();
     renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(m_model->get_depth_image_size(), scene->sceneParams, memoryType));
   }
 

@@ -51,7 +51,7 @@ SLAMSection::SLAMSection(const CompositeImageSourceEngine_Ptr& imageSourceEngine
   m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
 
   // Set up the scene.
-  MemoryDeviceType memoryType = settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU;
+  MemoryDeviceType memoryType = settings->GetMemoryType();
   m_scene.reset(new Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
 
   // Set up the dense mapper.
