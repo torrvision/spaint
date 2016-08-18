@@ -20,7 +20,7 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include "../core/Interactor.h"
+#include "../core/Raycaster.h"
 #include "../subwindows/SubwindowConfiguration.h"
 
 /**
@@ -126,10 +126,9 @@ public:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
-   * \param interactor    The interactor that is being used to interact with the scene.
    * \param fracWindowPos The fractional position of the mouse within the window's viewport.
    */
-  virtual void render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const = 0;
+  virtual void render(const Vector2f& fracWindowPos) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -238,12 +237,10 @@ protected:
    * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
    *
    * \param pose          The camera pose.
-   * \param interactor    The interactor that is being used to interact with the scene.
    * \param renderState   The render state corresponding to the camera pose.
    * \param fracWindowPos The fractional position of the mouse within the window's viewport.
    */
-  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
-                    const Vector2f& fracWindowPos) const;
+  void render_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -283,10 +280,9 @@ private:
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param pose        The camera pose.
-   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param pose  The camera pose.
    */
-  void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor) const;
+  void render_synthetic_scene(const ORUtils::SE3Pose& pose) const;
 
 #ifdef WITH_GLUT
   /**

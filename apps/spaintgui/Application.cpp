@@ -76,7 +76,7 @@ void Application::run()
     }
 
     // Render the scene.
-    m_renderer->render(m_pipeline->get_interactor(), m_fracWindowPos);
+    m_renderer->render(m_fracWindowPos);
 
     // If the application is unpaused, run the mode-specific section of the pipeline.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
@@ -153,31 +153,29 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
-    const Interactor_Ptr& interactor = m_pipeline->get_interactor();
-    Model_CPtr model = m_pipeline->get_model();
-
+    const Model_Ptr& model = m_pipeline->get_model();
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
-      interactor->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
+      model->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
       m_pipeline->reset_forest();
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RCTRL))
     {
       // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
-      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, model->get_semantic_label()));
+      model->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, model->get_semantic_label()));
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene that were not labelled by the user.
-      interactor->clear_labels(ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
+      model->clear_labels(ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
     }
     else
     {
       // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
-      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
+      model->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
     }
   }
 
@@ -406,7 +404,6 @@ void Application::process_labelling_input()
 {
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
-  const Interactor_Ptr& interactor = m_pipeline->get_interactor();
   const Model_Ptr& model = m_pipeline->get_model();
   LabelManager_CPtr labelManager = model->get_label_manager();
   SpaintVoxel::Label semanticLabel = model->get_semantic_label();
@@ -426,7 +423,7 @@ void Application::process_labelling_input()
   model->set_semantic_label(semanticLabel);
 
   // Update the current selector.
-  interactor->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
+  model->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
 
   // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
   static bool currentlyMarking = false;
@@ -437,10 +434,10 @@ void Application::process_labelling_input()
   static std::map<std::string,std::string> precursors = map_list_of(beginMarkVoxelsDesc,markVoxelsDesc)(markVoxelsDesc,markVoxelsDesc);
 
   // If the current selector is active:
-  if(interactor->selector_is_active())
+  if(model->selector_is_active())
   {
     // Get the voxels selected by the user (if any).
-    Selector::Selection_CPtr selection = interactor->get_selection();
+    Selector::Selection_CPtr selection = model->get_selection();
 
     // If there are selected voxels, mark the voxels with the current semantic label.
     if(selection)
@@ -454,9 +451,9 @@ void Application::process_labelling_input()
           m_commandManager.execute_command(Command_CPtr(new NoOpCommand(beginMarkVoxelsDesc)));
           currentlyMarking = true;
         }
-        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, interactor)), precursors);
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, model)), precursors);
       }
-      else interactor->mark_voxels(selection, packedLabel);
+      else model->mark_voxels(selection, packedLabel);
     }
   }
   else if(currentlyMarking)

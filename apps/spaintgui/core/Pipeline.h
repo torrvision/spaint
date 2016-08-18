@@ -94,13 +94,6 @@ public:
   ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
 
   /**
-   * \brief Gets the interactor that is used to interact with the InfiniTAM scene.
-   *
-   * \return  The interactor that is used to interact with the InfiniTAM scene.
-   */
-  const Interactor_Ptr& get_interactor();
-
-  /**
    * \brief Gets the render state corresponding to the live camera pose.
    *
    * \return  The render state corresponding to the live camera pose.

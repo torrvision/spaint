@@ -11,7 +11,7 @@
 #include <spaint/pipelinecomponents/SLAMModel.h>
 #include <spaint/pipelinecomponents/SmoothingModel.h>
 
-#include "Interactor.h"
+#include "Model.h"
 
 /**
  * \brief An instance of this class represents the state shared between the different sections of the spaintgui processing pipeline.
@@ -31,9 +31,6 @@ private:
 
   //#################### PUBLIC VARIABLES ####################
 public:
-  /** The interactor that is used to interact with the InfiniTAM scene. */
-  Interactor_Ptr m_interactor;
-
   /** The spaint model. */
   Model_Ptr m_model;
 
@@ -54,7 +51,7 @@ public:
   /** Override */
   virtual spaint::Selector_CPtr get_selector() const
   {
-    return m_interactor->get_selector();
+    return m_model->get_selector();
   }
 
   /** Override */
@@ -78,7 +75,7 @@ public:
   /** Override */
   virtual const spaint::VoxelMarker_CPtr& get_voxel_marker() const
   {
-    return m_interactor->get_voxel_marker();
+    return m_model->get_voxel_marker();
   }
 
   /** Override */

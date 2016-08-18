@@ -284,8 +284,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
-                            const Vector2f& fracWindowPos) const
+void Renderer::render_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -311,7 +310,7 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
 
       // Render the reconstructed scene, then render a synthetic scene over the top of it.
       render_reconstructed_scene(pose, renderState, subwindow);
-      render_synthetic_scene(pose, interactor);
+      render_synthetic_scene(pose);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
       // Render the value of the pixel to which the user is pointing (for debugging purposes).
@@ -414,7 +413,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const SE3Pose& pose) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -442,9 +441,9 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
-      Interactor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      SelectionTransformer_CPtr transformer = m_model->get_selection_transformer();
       if(transformer) transformer->accept(selectorRenderer);
-      interactor->get_selector()->accept(selectorRenderer);
+      m_model->get_selector()->accept(selectorRenderer);
     }
     glPopMatrix();
   }

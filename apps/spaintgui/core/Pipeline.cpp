@@ -46,14 +46,13 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   }
 #endif
 
-  // Set up the spaint model, raycaster and interactor.
+  // Set up the spaint model and raycaster.
   Vector2i depthImageSize = m_slamComponent.get_input_raw_depth_image()->noDims;
   Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
   Vector2i trackedImageSize = m_slamComponent.get_tracked_image_size(rgbImageSize, depthImageSize);
 
   m_state.m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
   m_raycaster.reset(new Raycaster(m_state.m_model, trackedImageSize, settings));
-  m_state.m_interactor.reset(new Interactor(m_state.m_model));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -77,11 +76,6 @@ ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
   ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
   copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
-}
-
-const Interactor_Ptr& Pipeline::get_interactor()
-{
-  return m_state.m_interactor;
 }
 
 Pipeline::RenderState_CPtr Pipeline::get_live_render_state() const
