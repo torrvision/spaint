@@ -60,7 +60,6 @@ core/Raycaster.cpp
 SET(core_headers
 core/Model.h
 core/Pipeline.h
-core/PipelineMode.h
 core/Raycaster.h
 )
 

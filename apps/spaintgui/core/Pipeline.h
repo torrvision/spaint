@@ -12,7 +12,6 @@
 #include <spaint/pipelinecomponents/SmoothingComponent.h>
 #include <spaint/util/LabelManager.h>
 
-#include "PipelineMode.h"
 #include "Raycaster.h"
 
 /**
@@ -29,10 +28,39 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The different modes in which the pipeline can be running.
+   */
+  enum Mode
+  {
+    /** In feature inspection mode, the user can move the mouse around and visualise the features at particular points in the scene. */
+    MODE_FEATURE_INSPECTION,
+
+    /** In normal mode, the user can reconstruct and manually label the scene. */
+    MODE_NORMAL,
+
+    /** In prediction mode, the random forest is used to predict labels for previously-unseen voxels. */
+    MODE_PREDICTION,
+
+    /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
+    MODE_PROPAGATION,
+
+    /** In smoothing mode, voxel labels are filled in based on the labels of neighbouring voxels. */
+    MODE_SMOOTHING,
+
+    /** In train-and-predict mode, we alternate training and prediction to achieve a pleasing interactive effect. */
+    MODE_TRAIN_AND_PREDICT,
+
+    /** In training mode, a random forest is trained using voxels sampled from the current raycast. */
+    MODE_TRAINING
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The mode in which the pipeline is currently running. */
-  PipelineMode m_mode;
+  Mode m_mode;
 
   /** The spaint model. */
   Model_Ptr m_model;
@@ -104,7 +132,7 @@ public:
    *
    * \return  The mode in which the pipeline is currently running.
    */
-  PipelineMode get_mode() const;
+  Mode get_mode() const;
 
   /**
    * \brief Gets the spaint model.
@@ -170,7 +198,7 @@ public:
    *
    * \param mode  The mode in which the pipeline should now run.
    */
-  void set_mode(PipelineMode mode);
+  void set_mode(Mode mode);
 };
 
 //#################### TYPEDEFS ####################

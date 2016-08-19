@@ -4,34 +4,17 @@
  */
 
 #include "Pipeline.h"
-using namespace rafl;
 using namespace spaint;
-
-#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-#include <ITMLib/Engines/Reconstruction/ITMSceneReconstructionEngineFactory.h>
-#include <ITMLib/Engines/Swapping/ITMSwappingEngineFactory.h>
-#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
-using namespace InputSource;
-using namespace ITMLib;
-using namespace ORUtils;
-using namespace RelocLib;
-
-#include <spaint/features/FeatureCalculatorFactory.h>
-#include <spaint/randomforest/ForestUtil.h>
-#include <spaint/randomforest/SpaintDecisionFunctionGenerator.h>
-#include <spaint/util/MemoryBlockFactory.h>
 
 #ifdef WITH_OPENCV
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
 
-#define DEBUGGING 1
-
 //#################### CONSTRUCTORS ####################
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
-: m_mode(PIPELINEMODE_NORMAL),
+: m_mode(MODE_NORMAL),
   m_propagationComponent(imageSourceEngine->getDepthImageSize(), settings),
   m_semanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()),
   m_slamComponent(imageSourceEngine, settings, trackerType, trackerParams),
@@ -82,7 +65,7 @@ Pipeline::RenderState_CPtr Pipeline::get_live_render_state() const
   return m_slamComponent.get_live_render_state();
 }
 
-PipelineMode Pipeline::get_mode() const
+Pipeline::Mode Pipeline::get_mode() const
 {
   return m_mode;
 }
@@ -121,19 +104,19 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 {
   switch(m_mode)
   {
-    case PIPELINEMODE_FEATURE_INSPECTION:
+    case MODE_FEATURE_INSPECTION:
       m_semanticSegmentationComponent.run_feature_inspection(*m_model, renderState);
       break;
-    case PIPELINEMODE_PREDICTION:
+    case MODE_PREDICTION:
       m_semanticSegmentationComponent.run_prediction(*m_model, renderState);
       break;
-    case PIPELINEMODE_PROPAGATION:
+    case MODE_PROPAGATION:
       m_propagationComponent.run(*m_model, renderState);
       break;
-    case PIPELINEMODE_SMOOTHING:
+    case MODE_SMOOTHING:
       m_smoothingComponent.run(*m_model, renderState);
       break;
-    case PIPELINEMODE_TRAIN_AND_PREDICT:
+    case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
@@ -143,7 +126,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 
       break;
     }
-    case PIPELINEMODE_TRAINING:
+    case MODE_TRAINING:
       m_semanticSegmentationComponent.run_training(*m_model, renderState);
       break;
     default:
@@ -156,11 +139,11 @@ void Pipeline::set_fusion_enabled(bool fusionEnabled)
   m_slamComponent.set_fusion_enabled(fusionEnabled);
 }
 
-void Pipeline::set_mode(PipelineMode mode)
+void Pipeline::set_mode(Mode mode)
 {
 #ifdef WITH_OPENCV
   // If we are switching out of feature inspection mode, destroy the feature inspection window.
-  if(m_mode == PIPELINEMODE_FEATURE_INSPECTION && mode != PIPELINEMODE_FEATURE_INSPECTION)
+  if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
   {
     cv::destroyAllWindows();
   }
