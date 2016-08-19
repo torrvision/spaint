@@ -29,7 +29,7 @@ VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& v
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                   const View_CPtr& view, RenderState_Ptr& renderState, RaycastType raycastType,
+                                                   const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
                                                    const boost::optional<Postprocessor>& postprocessor) const
 {
   if(!renderState)
@@ -42,32 +42,32 @@ void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& out
   m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
   m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 
-  switch(raycastType)
+  switch(visualisationType)
   {
-    case RT_COLOUR:
+    case VT_COLOUR:
     {
       m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
-    case RT_LAMBERTIAN:
+    case VT_LAMBERTIAN:
     {
       m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
-    case RT_SEMANTICCOLOUR:
-    case RT_SEMANTICFLAT:
-    case RT_SEMANTICLAMBERTIAN:
-    case RT_SEMANTICPHONG:
+    case VT_SEMANTICCOLOUR:
+    case VT_SEMANTICFLAT:
+    case VT_SEMANTICLAMBERTIAN:
+    case VT_SEMANTICPHONG:
     {
       const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
       LightingType lightingType = LT_LAMBERTIAN;
-      if(raycastType == RT_SEMANTICFLAT) lightingType = LT_FLAT;
-      else if(raycastType == RT_SEMANTICPHONG) lightingType = LT_PHONG;
+      if(visualisationType == VT_SEMANTICFLAT) lightingType = LT_FLAT;
+      else if(visualisationType == VT_SEMANTICPHONG) lightingType = LT_PHONG;
 
-      float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
+      float labelAlpha = visualisationType == VT_SEMANTICCOLOUR ? 0.4f : 1.0f;
       m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;

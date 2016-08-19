@@ -37,16 +37,16 @@ public:
   //#################### ENUMERATIONS ####################
 public:
   /**
-   * \brief An enumeration specifying the different types of free-view raycasting that are supported.
+   * \brief An enumeration specifying the different types of visualisation that are supported.
    */
-  enum RaycastType
+  enum VisualisationType
   {
-    RT_COLOUR,
-    RT_LAMBERTIAN,
-    RT_SEMANTICCOLOUR,
-    RT_SEMANTICFLAT,
-    RT_SEMANTICLAMBERTIAN,
-    RT_SEMANTICPHONG
+    VT_COLOUR,
+    VT_LAMBERTIAN,
+    VT_SEMANTICCOLOUR,
+    VT_SEMANTICFLAT,
+    VT_SEMANTICLAMBERTIAN,
+    VT_SEMANTICPHONG
   };
 
   //#################### PRIVATE VARIABLES ####################
@@ -77,18 +77,18 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Generates a raycast of the scene from the specified pose.
+   * \brief Generates a visualisation of the scene from the specified pose.
    *
-   * \param output        The location into which to put the output image.
-   * \param scene         The scene to raycast.
-   * \param pose          The pose from which to raycast the scene.
-   * \param view          The current view of the scene.
-   * \param renderState   The render state to use for intermediate storage.
-   * \param raycastType   The type of raycast to generate.
-   * \param postprocessor An optional function with which to postprocess the raycast before returning it.
+   * \param output            The location into which to put the output image.
+   * \param scene             The scene to visualise.
+   * \param pose              The pose from which to visualise the scene.
+   * \param view              The current view of the scene.
+   * \param renderState       The render state to use for intermediate storage.
+   * \param visualisationType The type of visualisation to generate.
+   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                             const View_CPtr& view, RenderState_Ptr& renderState, RaycastType raycastType = RT_LAMBERTIAN,
+                             const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType = VT_LAMBERTIAN,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**

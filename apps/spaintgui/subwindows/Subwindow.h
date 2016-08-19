@@ -26,7 +26,7 @@ private:
   Vector2f m_topLeft;
 
   /** The type of scene visualisation to render in the sub-window. */
-  spaint::VisualisationGenerator::RaycastType m_type;
+  spaint::VisualisationGenerator::VisualisationType m_type;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -38,7 +38,7 @@ public:
    * \param type        The type of scene visualisation to render in the sub-window.
    * \param imgSize     The size of image needed to store the scene visualisation for the sub-window.
    */
-  Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, spaint::VisualisationGenerator::RaycastType type, const Vector2i& imgSize);
+  Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, spaint::VisualisationGenerator::VisualisationType type, const Vector2i& imgSize);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -68,7 +68,7 @@ public:
    *
    * \return  The type of scene visualisation to render in the sub-window.
    */
-  spaint::VisualisationGenerator::RaycastType get_type() const;
+  spaint::VisualisationGenerator::VisualisationType get_type() const;
 
   /**
    * \brief Gets the height of the sub-window (as a fraction of the window viewport height, in the range [0,1]).
@@ -82,7 +82,7 @@ public:
    *
    * \param type  The type of scene visualisation to render in the sub-window.
    */
-  void set_type(spaint::VisualisationGenerator::RaycastType type);
+  void set_type(spaint::VisualisationGenerator::VisualisationType type);
 
   /**
    * \brief Gets the location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]).
