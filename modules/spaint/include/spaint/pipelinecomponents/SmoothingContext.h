@@ -33,11 +33,6 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets the reconstructed scene.
-   *
-   * \return  The reconstructed scene.
-   */
   virtual const Scene_Ptr& get_scene() = 0;
 };
 

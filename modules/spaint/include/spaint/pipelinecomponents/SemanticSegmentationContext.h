@@ -35,35 +35,9 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets the label manager.
-   *
-   * \return  The label manger.
-   */
   virtual const LabelManager_Ptr& get_label_manager() = 0;
-
-  /**
-   * \brief Gets the reconstructed scene.
-   *
-   * \return  The reconstructed scene.
-   */
   virtual const Scene_Ptr& get_scene() = 0;
-
-  /**
-   * \brief Gets the selector that is currently being used to select voxels in the scene.
-   *
-   * \return  The selector that is currently being used to select voxels in the scene.
-   */
   virtual Selector_CPtr get_selector() const = 0;
-
-  /**
-   * \brief Marks a selection of voxels in the scene with the specified semantic labels.
-   *
-   * \param selection The selection of voxels.
-   * \param labels    The semantic labels with which to mark the voxels (one per voxel).
-   * \param scene     The scene.
-   * \param mode      The marking mode.
-   */
   virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode) = 0;
 };
 

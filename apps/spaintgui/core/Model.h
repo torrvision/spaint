@@ -109,58 +109,62 @@ public:
    *
    * \param settings  The settings to use for the label-clearing operation.
    */
-  void clear_labels(spaint::ClearingSettings settings);
+  virtual void clear_labels(spaint::ClearingSettings settings);
 
   /**
    * \brief Gets the dimensions of the depth images from which the scene is being reconstructed.
    *
    * \return  The dimensions of the depth images from which the scene is being reconstructed.
    */
-  const Vector2i& get_depth_image_size() const;
+  virtual const Vector2i& get_depth_image_size() const;
 
   /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the scene.
    *
    * \return  The intrinsic parameters for the camera.
    */
-  const ITMLib::ITMIntrinsics& get_intrinsics() const;
+  virtual const ITMLib::ITMIntrinsics& get_intrinsics() const;
 
   /**
    * \brief Gets the label manager.
    *
    * \return  The label manager.
    */
-  const spaint::LabelManager_Ptr& get_label_manager();
+  virtual const spaint::LabelManager_Ptr& get_label_manager();
 
   /**
    * \brief Gets the label manager.
    *
    * \return  The label manager.
    */
-  spaint::LabelManager_CPtr get_label_manager() const;
+  virtual spaint::LabelManager_CPtr get_label_manager() const;
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
    *
    * \return  The current camera pose.
    */
-  const ORUtils::SE3Pose& get_pose() const;
+  virtual const ORUtils::SE3Pose& get_pose() const;
 
   /**
    * \brief Gets the path to the resources directory.
    *
    * \return The path to the resources directory.
    */
-  const std::string& get_resources_dir() const;
+  virtual const std::string& get_resources_dir() const;
 
   /**
    * \brief Gets the dimensions of the RGB images from which the scene is being reconstructed.
    *
    * \return  The dimensions of the RGB images from which the scene is being reconstructed.
    */
-  const Vector2i& get_rgb_image_size() const;
+  virtual const Vector2i& get_rgb_image_size() const;
 
-  /** Override */
+  /**
+   * \brief Gets the reconstructed scene.
+   *
+   * \return  The reconstructed scene.
+   */
   virtual const Scene_Ptr& get_scene();
 
   /**
@@ -168,26 +172,34 @@ public:
    *
    * \return  The current reconstructed scene.
    */
-  Scene_CPtr get_scene() const;
+  virtual Scene_CPtr get_scene() const;
 
   /**
    * \brief Gets the voxels in the scene (if any) that were selected the last time the current selector was updated.
    *
    * \return  The voxels in the scene (if any) that were selected the last time the current selector was updated.
    */
-  Selection_CPtr get_selection() const;
+  virtual Selection_CPtr get_selection() const;
 
   /**
    * \brief Gets the selection transformer that is currently being used.
    *
    * \return  The selection transformer that is currently being used.
    */
-  spaint::SelectionTransformer_CPtr get_selection_transformer() const;
+  virtual spaint::SelectionTransformer_CPtr get_selection_transformer() const;
 
-  /** Override */
+  /**
+   * \brief Gets the selector that is currently being used to select voxels in the scene.
+   *
+   * \return  The selector that is currently being used to select voxels in the scene.
+   */
   virtual spaint::Selector_CPtr get_selector() const;
 
-  /** Override */
+  /**
+   * \brief Gets the semantic label to use for manually labelling the scene.
+   *
+   * \return  The semantic label to use for manually labelling the scene.
+   */
   virtual spaint::SpaintVoxel::Label get_semantic_label() const;
 
   /**
@@ -195,23 +207,27 @@ public:
    *
    * \return  The settings to use for InfiniTAM.
    */
-  const Settings_CPtr& get_settings() const;
+  virtual const Settings_CPtr& get_settings() const;
 
   /**
    * \brief Gets the current tracking state.
    *
    * \return  The current tracking state.
    */
-  const TrackingState_Ptr& get_tracking_state();
+  virtual const TrackingState_Ptr& get_tracking_state();
 
   /**
    * \brief Gets the current tracking state.
    *
    * \return  The current tracking state.
    */
-  TrackingState_CPtr get_tracking_state() const;
+  virtual TrackingState_CPtr get_tracking_state() const;
 
-  /** Override */
+  /**
+   * \brief Gets the current view of the scene.
+   *
+   * \return  The current view of the scene.
+   */
   virtual const View_Ptr& get_view();
 
   /**
@@ -219,9 +235,13 @@ public:
    *
    * \return  The current view of the scene.
    */
-  View_CPtr get_view() const;
+  virtual View_CPtr get_view() const;
 
-  /** Override */
+  /**
+   * \brief Gets the InfiniTAM engine used for raycasting the scene.
+   *
+   * \return  The InfiniTAM engine used for raycasting the scene.
+   */
   virtual VisualisationEngine_CPtr get_visualisation_engine() const;
 
   /**
@@ -233,10 +253,17 @@ public:
    * \param mode      The marking mode.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const Scene_Ptr& scene,
-                   spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
+  virtual void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const Scene_Ptr& scene,
+                           spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
-  /** Override */
+  /**
+   * \brief Marks a selection of voxels in the scene with the specified semantic labels.
+   *
+   * \param selection The selection of voxels.
+   * \param labels    The semantic labels with which to mark the voxels (one per voxel).
+   * \param scene     The scene.
+   * \param mode      The marking mode.
+   */
   virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode);
 
   /**
@@ -244,9 +271,13 @@ public:
    *
    * \param semanticLabel The semantic label to use for manually labelling the scene.
    */
-  void set_semantic_label(spaint::SpaintVoxel::Label semanticLabel);
+  virtual void set_semantic_label(spaint::SpaintVoxel::Label semanticLabel);
 
-  /** Override */
+  /**
+   * \brief Sets the current view of the scene.
+   *
+   * \param view  The new current view of the scene.
+   */
   virtual void set_view(ITMLib::ITMView *view);
 
   /**
@@ -256,7 +287,7 @@ public:
    * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  void update_selector(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update_selector(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
 };
 
 //#################### TYPEDEFS ####################

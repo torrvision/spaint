@@ -33,25 +33,8 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets the current view of the scene.
-   *
-   * \return  The current view of the scene.
-   */
   virtual const View_Ptr& get_view() = 0;
-
-  /**
-   * \brief Gets the InfiniTAM engine used for raycasting the scene.
-   *
-   * \return  The InfiniTAM engine used for raycasting the scene.
-   */
   virtual VisualisationEngine_CPtr get_visualisation_engine() const = 0;
-
-  /**
-   * \brief Sets the current view of the scene.
-   *
-   * \param view  The new current view of the scene.
-   */
   virtual void set_view(ITMLib::ITMView *view) = 0;
 };
 

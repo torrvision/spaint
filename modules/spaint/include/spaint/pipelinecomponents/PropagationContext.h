@@ -33,18 +33,7 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets the reconstructed scene.
-   *
-   * \return  The reconstructed scene.
-   */
   virtual const Scene_Ptr& get_scene() = 0;
-
-  /**
-   * \brief Gets the semantic label that should be propagated over the scene surfaces.
-   *
-   * \return  The semantic label that should be propagated over the scene surfaces.
-   */
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
 };
 
