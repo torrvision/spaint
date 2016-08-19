@@ -160,11 +160,6 @@ void Model::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr
   m_voxelMarker->mark_voxels(*selection, *labels, scene.get(), mode);
 }
 
-bool Model::selector_is_active() const
-{
-  return m_selector->is_active();
-}
-
 void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
 {
   m_semanticLabel = semanticLabel;

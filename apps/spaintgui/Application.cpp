@@ -434,7 +434,7 @@ void Application::process_labelling_input()
   static std::map<std::string,std::string> precursors = map_list_of(beginMarkVoxelsDesc,markVoxelsDesc)(markVoxelsDesc,markVoxelsDesc);
 
   // If the current selector is active:
-  if(model->selector_is_active())
+  if(model->get_selector()->is_active())
   {
     // Get the voxels selected by the user (if any).
     Selector::Selection_CPtr selection = model->get_selection();

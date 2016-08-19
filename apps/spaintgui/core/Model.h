@@ -240,13 +240,6 @@ public:
   virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode);
 
   /**
-   * \brief Gets whether or not the current selector is active.
-   *
-   * \return  true, if the current selector is active, or false otherwise.
-   */
-  bool selector_is_active() const;
-
-  /**
    * \brief Sets the semantic label to use for manually labelling the scene.
    *
    * \param semanticLabel The semantic label to use for manually labelling the scene.
