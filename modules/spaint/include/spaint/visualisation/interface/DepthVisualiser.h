@@ -59,6 +59,10 @@ public:
                             float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const = 0;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const DepthVisualiser> DepthVisualiser_CPtr;
+
 }
 
 #endif

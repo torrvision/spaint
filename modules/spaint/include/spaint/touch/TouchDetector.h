@@ -59,7 +59,7 @@ private:
   ITMFloatImage_Ptr m_depthRaycast;
 
   /** The depth visualiser. */
-  boost::shared_ptr<const DepthVisualiser> m_depthVisualiser;
+  DepthVisualiser_CPtr m_depthVisualiser;
 
   /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;

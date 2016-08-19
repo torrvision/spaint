@@ -55,7 +55,7 @@ private:
   spaint::LabelManager_CPtr m_labelManager;
 
   /** The platform-specific semantic visualiser. */
-  boost::shared_ptr<const spaint::SemanticVisualiser> m_semanticVisualiser;
+  SemanticVisualiser_CPtr m_semanticVisualiser;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;

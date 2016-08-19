@@ -83,6 +83,10 @@ public:
               ITMUChar4Image *outputImage) const;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const SemanticVisualiser> SemanticVisualiser_CPtr;
+
 }
 
 #endif

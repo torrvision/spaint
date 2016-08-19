@@ -505,10 +505,12 @@ include/spaint/util/SpaintVoxel.h
 ##
 SET(visualisation_sources
 src/visualisation/VisualisationGenerator.cpp
+src/visualisation/VisualiserFactory.cpp
 )
 
 SET(visualisation_headers
 include/spaint/visualisation/VisualisationGenerator.h
+include/spaint/visualisation/VisualiserFactory.h
 )
 
 ##

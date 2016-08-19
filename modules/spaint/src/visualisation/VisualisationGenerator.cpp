@@ -12,10 +12,7 @@
 using namespace ITMLib;
 using namespace ORUtils;
 
-#include "visualisation/cpu/SemanticVisualiser_CPU.h"
-#ifdef WITH_CUDA
-#include "visualisation/cuda/SemanticVisualiser_CUDA.h"
-#endif
+#include "visualisation/VisualiserFactory.h"
 
 namespace spaint {
 
@@ -23,26 +20,11 @@ namespace spaint {
 
 VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const LabelManager_CPtr& labelManager,
                                                const Settings_CPtr& settings)
-: m_labelManager(labelManager), m_settings(settings), m_visualisationEngine(visualisationEngine)
-{
-  // Set up the visualisers.
-  size_t maxLabelCount = labelManager->get_max_label_count();
-  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    // Use the CUDA implementations.
-    m_semanticVisualiser.reset(new SemanticVisualiser_CUDA(maxLabelCount));
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    // Use the CPU implementations.
-    m_semanticVisualiser.reset(new SemanticVisualiser_CPU(maxLabelCount));
-  }
-}
+: m_labelManager(labelManager),
+  m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
+  m_settings(settings),
+  m_visualisationEngine(visualisationEngine)
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
