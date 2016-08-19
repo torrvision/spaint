@@ -12,9 +12,9 @@
 using namespace ITMLib;
 using namespace ORUtils;
 
-#include <spaint/visualisers/cpu/SemanticVisualiser_CPU.h>
+#include <spaint/visualisation/cpu/SemanticVisualiser_CPU.h>
 #ifdef WITH_CUDA
-#include <spaint/visualisers/cuda/SemanticVisualiser_CUDA.h>
+#include <spaint/visualisation/cuda/SemanticVisualiser_CUDA.h>
 #endif
 using namespace spaint;
 

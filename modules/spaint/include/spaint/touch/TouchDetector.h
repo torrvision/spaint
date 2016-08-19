@@ -20,7 +20,7 @@
 
 #include "TouchSettings.h"
 #include "../imageprocessing/interface/ImageProcessor.h"
-#include "../visualisers/interface/DepthVisualiser.h"
+#include "../visualisation/interface/DepthVisualiser.h"
 
 namespace spaint {
 

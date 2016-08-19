@@ -14,11 +14,11 @@ using namespace tvgutil;
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "touch/TouchDescriptorCalculator.h"
 #include "util/RGBDUtil.h"
-#include "visualisers/cpu/DepthVisualiser_CPU.h"
+#include "visualisation/cpu/DepthVisualiser_CPU.h"
 using namespace rafl;
 
 #ifdef WITH_CUDA
-#include "visualisers/cuda/DepthVisualiser_CUDA.h"
+#include "visualisation/cuda/DepthVisualiser_CUDA.h"
 #endif
 
 #ifdef WITH_OPENCV

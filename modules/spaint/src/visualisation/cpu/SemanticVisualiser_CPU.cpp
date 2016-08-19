@@ -3,9 +3,9 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "visualisers/cpu/SemanticVisualiser_CPU.h"
+#include "visualisation/cpu/SemanticVisualiser_CPU.h"
 
-#include "visualisers/shared/SemanticVisualiser_Shared.h"
+#include "visualisation/shared/SemanticVisualiser_Shared.h"
 
 namespace spaint {
 

@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "visualisers/interface/SemanticVisualiser.h"
+#include "visualisation/interface/SemanticVisualiser.h"
 
 #include "util/MemoryBlockFactory.h"
 

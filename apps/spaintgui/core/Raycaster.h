@@ -13,7 +13,7 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <spaint/util/ITMImagePtrTypes.h>
-#include <spaint/visualisers/interface/SemanticVisualiser.h>
+#include <spaint/visualisation/interface/SemanticVisualiser.h>
 
 /**
  * \brief An instance of this class can be used to raycast the InfiniTAM scene in an spaint model.
