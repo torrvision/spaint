@@ -129,6 +129,15 @@ include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
 )
 
 ##
+SET(markers_sources
+src/markers/VoxelMarkerFactory.cpp
+)
+
+SET(markers_headers
+include/spaint/markers/VoxelMarkerFactory.h
+)
+
+##
 SET(markers_cpu_sources
 src/markers/cpu/VoxelMarker_CPU.cpp
 )
@@ -539,6 +548,7 @@ ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
 ${imageprocessing_sources}
+${markers_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
 ${picking_cpu_sources}
@@ -569,6 +579,7 @@ ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
 ${imageprocessing_headers}
+${markers_headers}
 ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
@@ -664,6 +675,7 @@ SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imagepr
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
 SOURCE_GROUP(imageprocessing\\interface FILES ${imageprocessing_interface_sources} ${imageprocessing_interface_headers})
 SOURCE_GROUP(imageprocessing\\shared FILES ${imageprocessing_shared_headers})
+SOURCE_GROUP(markers FILES ${markers_sources} ${markers_headers})
 SOURCE_GROUP(markers\\cpu FILES ${markers_cpu_sources} ${markers_cpu_headers})
 SOURCE_GROUP(markers\\cuda FILES ${markers_cuda_sources} ${markers_cuda_headers})
 SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})

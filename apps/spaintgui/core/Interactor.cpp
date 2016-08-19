@@ -7,15 +7,11 @@
 using namespace ITMLib;
 using namespace tvginput;
 
-#include <spaint/markers/cpu/VoxelMarker_CPU.h>
+#include <spaint/markers/VoxelMarkerFactory.h>
 #include <spaint/selectiontransformers/SelectionTransformerFactory.h>
 #include <spaint/selectors/NullSelector.h>
 #include <spaint/selectors/PickingSelector.h>
 using namespace spaint;
-
-#ifdef WITH_CUDA
-#include <spaint/markers/cuda/VoxelMarker_CUDA.h>
-#endif
 
 #ifdef WITH_LEAP
 #include <spaint/selectors/LeapSelector.h>
@@ -37,21 +33,7 @@ Interactor::Interactor(const Model_Ptr& model)
   m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, model->get_settings()->deviceType);
 
   // Set up the voxel marker.
-  if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    // Use the CUDA implementation.
-    m_voxelMarker.reset(new VoxelMarker_CUDA);
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    // Use the CPU implementation.
-    m_voxelMarker.reset(new VoxelMarker_CPU);
-  }
+  m_voxelMarker = VoxelMarkerFactory::make_voxel_marker(model->get_settings()->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
