@@ -15,7 +15,7 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of a class deriving from this one provides the shared context needed by a propagation component.
  */
 class PropagationModel
 {
@@ -26,21 +26,24 @@ private:
 
   //#################### DESTRUCTOR ####################
 public:
+  /**
+   * \brief Destroys the propagation model.
+   */
   virtual ~PropagationModel() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the current reconstructed scene.
+   * \brief Gets the scene over whose surfaces to propagate a semantic label.
    *
-   * \return  The current reconstructed scene.
+   * \return  The scene over whose surfaces to propagate a semantic label.
    */
   virtual const Scene_Ptr& get_scene() = 0;
 
   /**
-   * \brief Gets the semantic label that is being used for manually labelling the scene.
+   * \brief Gets the semantic label that should be propagated over the scene surfaces.
    *
-   * \return  The semantic label that is being used for manually labelling the scene.
+   * \return  The semantic label that should be propagated over the scene surfaces.
    */
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
 };
