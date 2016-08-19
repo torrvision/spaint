@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_VOXELMARKER
 #define H_SPAINT_VOXELMARKER
 
+#include <boost/shared_ptr.hpp>
+
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
 #include "../shared/VoxelMarker_Settings.h"
@@ -65,6 +67,10 @@ public:
                            ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
                            MarkingMode mode = NORMAL_MARKING) const = 0;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const VoxelMarker> VoxelMarker_CPtr;
 
 }
 

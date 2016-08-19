@@ -27,6 +27,7 @@ LabelPropagator_CPtr LabelPropagatorFactory::make_label_propagator(size_t raycas
 #ifdef WITH_CUDA
     propagator.reset(new LabelPropagator_CUDA(raycastResultSize, maxAngleBetweenNormals, maxSquaredDistanceBetweenColours, maxSquaredDistanceBetweenVoxels));
 #else
+    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
