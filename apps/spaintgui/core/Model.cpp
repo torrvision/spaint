@@ -4,11 +4,11 @@
  */
 
 #include "Model.h"
+using namespace ORUtils;
 using namespace tvginput;
 
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace ITMLib;
-using namespace ORUtils;
 
 #include <spaint/markers/VoxelMarkerFactory.h>
 #include <spaint/selectiontransformers/SelectionTransformerFactory.h>
@@ -36,17 +36,13 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
   m_settings(settings),
-  m_trackingState(trackingState)
+  m_trackingState(trackingState),
+  m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType)),
+  m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType))
 {
-  // Set up the visualisation engine.
-  m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType));
-
   // Set up the selection transformer.
   const int initialSelectionRadius = 2;
   m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, settings->deviceType);
-
-  // Set up the voxel marker.
-  m_voxelMarker = VoxelMarkerFactory::make_voxel_marker(settings->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
