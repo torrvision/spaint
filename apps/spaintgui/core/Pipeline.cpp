@@ -34,7 +34,7 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
 
   m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
-  m_raycaster.reset(new Raycaster(m_model));
+  m_raycaster.reset(new Raycaster(m_model->get_visualisation_engine(), labelManager, m_model->get_settings()));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

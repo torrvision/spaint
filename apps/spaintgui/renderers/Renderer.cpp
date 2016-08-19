@@ -399,7 +399,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  m_raycaster->generate_free_raycast(image, renderState, pose, subwindow.get_type(), postprocessor);
+  m_raycaster->generate_free_raycast(image, m_model->get_scene(), pose, m_model->get_view(), renderState, subwindow.get_type(), postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);

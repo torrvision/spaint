@@ -12,6 +12,7 @@
 #include <spaint/pipelinecomponents/SmoothingComponent.h>
 #include <spaint/util/LabelManager.h>
 
+#include "Model.h"
 #include "Raycaster.h"
 
 /**

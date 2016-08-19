@@ -10,11 +10,10 @@
 #include <boost/optional.hpp>
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <spaint/util/ITMImagePtrTypes.h>
 #include <spaint/visualisers/interface/SemanticVisualiser.h>
-
-#include "Model.h"
 
 /**
  * \brief An instance of this class can be used to raycast the InfiniTAM scene in an spaint model.
@@ -26,8 +25,12 @@ public:
   typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -46,20 +49,28 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The spaint model. */
-  Model_CPtr m_model;
+  /** The label manager. */
+  spaint::LabelManager_CPtr m_labelManager;
 
   /** The platform-specific semantic visualiser. */
   boost::shared_ptr<const spaint::SemanticVisualiser> m_semanticVisualiser;
+
+  /** The settings to use for InfiniTAM. */
+  Settings_CPtr m_settings;
+
+  /** The InfiniTAM engine used for raycasting the scene. */
+  VisualisationEngine_CPtr m_visualisationEngine;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a raycaster.
    *
-   * \param model The spaint model.
+   * \param visualisationEngine The InfiniTAM engine used for raycasting the scene.
+   * \param labelManager        The label manager.
+   * \param settings            The settings to use for InfiniTAM.
    */
-  explicit Raycaster(const Model_CPtr& model);
+  Raycaster(const VisualisationEngine_CPtr& visualisationEngine, const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -67,36 +78,41 @@ public:
    * \brief Generates a raycast of the scene from the specified pose.
    *
    * \param output        The location into which to put the output image.
-   * \param renderState   The render state to use for intermediate storage.
+   * \param scene         The scene to raycast.
    * \param pose          The pose from which to raycast the scene.
+   * \param view          The current view of the scene.
+   * \param renderState   The render state to use for intermediate storage.
    * \param raycastType   The type of raycast to generate.
    * \param postprocessor An optional function with which to postprocess the raycast before returning it.
    */
-  void generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderState_Ptr& renderState, const ORUtils::SE3Pose& pose, RaycastType = RT_LAMBERTIAN,
+  void generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                             const View_CPtr& view, RenderState_Ptr& renderState, RaycastType raycastType = RT_LAMBERTIAN,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).
    *
-   * \param liveRenderState The render state corresponding to the current camera pose.
    * \param output          The location into which to put the output image.
+   * \param liveRenderState The render state corresponding to the current camera pose.
    * \param postprocessor   An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const RenderState_CPtr& liveRenderState, const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+  void get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets the depth image from the most recently processed frame.
    *
    * \param output  The location into which to put the output image.
+   * \param view    The current view of the scene.
    */
-  void get_depth_input(const ITMUChar4Image_Ptr& output) const;
+  void get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
 
   /**
    * \brief Gets the RGB image from the most recently processed frame.
    *
    * \param output  The location into which to put the output image.
+   * \param view    The current view of the scene.
    */
-  void get_rgb_input(const ITMUChar4Image_Ptr& output) const;
+  void get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

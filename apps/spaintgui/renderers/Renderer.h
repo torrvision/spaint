@@ -20,6 +20,7 @@
 
 #include <rigging/MoveableCamera.h>
 
+#include "../core/Model.h"
 #include "../core/Raycaster.h"
 #include "../subwindows/SubwindowConfiguration.h"
 

@@ -20,12 +20,12 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Raycaster::Raycaster(const Model_CPtr& model)
-: m_model(model)
+Raycaster::Raycaster(const VisualisationEngine_CPtr& visualisationEngine, const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
+: m_labelManager(labelManager), m_settings(settings), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
-  size_t maxLabelCount = m_model->get_label_manager()->get_max_label_count();
-  if(model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
+  size_t maxLabelCount = labelManager->get_max_label_count();
+  if(settings->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
     // Use the CUDA implementations.
@@ -44,34 +44,31 @@ Raycaster::Raycaster(const Model_CPtr& model)
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderState_Ptr& renderState, const SE3Pose& pose, RaycastType raycastType,
+void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                      const View_CPtr& view, RenderState_Ptr& renderState, RaycastType raycastType,
                                       const boost::optional<Postprocessor>& postprocessor) const
 {
-  Model::View_CPtr view = m_model->get_view();
-  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
-  Model::Scene_CPtr scene = m_model->get_scene();
-  Model::VisualisationEngine_CPtr visualisationEngine = m_model->get_visualisation_engine();
-
   if(!renderState)
   {
-    MemoryDeviceType memoryType = m_model->get_settings()->GetMemoryType();
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(m_model->get_depth_image_size(), scene->sceneParams, memoryType));
+    MemoryDeviceType memoryType = m_settings->GetMemoryType();
+    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, memoryType));
   }
 
-  visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
+  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 
   switch(raycastType)
   {
     case RT_COLOUR:
     {
-      visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case RT_LAMBERTIAN:
     {
-      visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
@@ -80,15 +77,14 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
     case RT_SEMANTICLAMBERTIAN:
     case RT_SEMANTICPHONG:
     {
-      LabelManager_CPtr labelManager = m_model->get_label_manager();
-      const std::vector<Vector3u>& labelColours = labelManager->get_label_colours();
+      const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
       LightingType lightingType = LT_LAMBERTIAN;
       if(raycastType == RT_SEMANTICFLAT) lightingType = LT_FLAT;
       else if(raycastType == RT_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = raycastType == RT_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
@@ -102,23 +98,23 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, RenderSt
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_default_raycast(const RenderState_CPtr& liveRenderState, const ITMUChar4Image_Ptr& output, const boost::optional<Postprocessor>& postprocessor) const
+void Raycaster::get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
 {
   make_postprocessed_cpu_copy(liveRenderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output) const
+void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
 {
-  prepare_to_copy_visualisation(m_model->get_view()->depth->noDims, output);
-  if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->depth->UpdateHostFromDevice();
-  m_model->get_visualisation_engine()->DepthToUchar4(output.get(), m_model->get_view()->depth);
+  prepare_to_copy_visualisation(view->depth->noDims, output);
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->depth->UpdateHostFromDevice();
+  m_visualisationEngine->DepthToUchar4(output.get(), view->depth);
 }
 
-void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output) const
+void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
 {
-  prepare_to_copy_visualisation(m_model->get_view()->rgb->noDims, output);
-  if(m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA) m_model->get_view()->rgb->UpdateHostFromDevice();
-  output->SetFrom(m_model->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  prepare_to_copy_visualisation(view->rgb->noDims, output);
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
+  output->SetFrom(view->rgb, ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
@@ -129,13 +125,12 @@ void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, 
   // Make sure that the output raycast is of the right size.
   prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
 
-  const Model::Settings_CPtr& settings = m_model->get_settings();
   if(postprocessor)
   {
     // Copy the input raycast to the output raycast on the relevant device (e.g. on the GPU, if that's where the input currently resides).
     outputRaycast->SetFrom(
       inputRaycast,
-      settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+      m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
     );
 
     // Post-process the output raycast.
@@ -149,7 +144,7 @@ void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, 
     // If there is no post-processing to be done, copy the input raycast directly into the CPU memory of the output raycast.
     outputRaycast->SetFrom(
       inputRaycast,
-      settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
+      m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CPU : ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU
     );
   }
 }
