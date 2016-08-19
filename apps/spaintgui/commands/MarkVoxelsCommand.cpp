@@ -23,12 +23,12 @@ MarkVoxelsCommand::MarkVoxelsCommand(const boost::shared_ptr<const ORUtils::Memo
 
 void MarkVoxelsCommand::execute() const
 {
-  m_model->mark_voxels(m_voxelLocationsMB, m_label, m_oldVoxelLabelsMB);
+  m_model->mark_voxels(m_voxelLocationsMB, m_label, m_model->get_scene(), NORMAL_MARKING, m_oldVoxelLabelsMB);
 }
 
 void MarkVoxelsCommand::undo() const
 {
-  m_model->mark_voxels(m_voxelLocationsMB, m_oldVoxelLabelsMB, FORCED_MARKING);
+  m_model->mark_voxels(m_voxelLocationsMB, m_oldVoxelLabelsMB, m_model->get_scene(), FORCED_MARKING);
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

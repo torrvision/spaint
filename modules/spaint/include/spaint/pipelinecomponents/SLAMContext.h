@@ -15,7 +15,7 @@
 namespace spaint {
 
 /**
-* \brief TODO
+* \brief An instance of a class deriving from this one provides the shared context needed by a SLAM component.
 */
 class SLAMContext
 {

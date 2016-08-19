@@ -20,8 +20,11 @@ class SemanticSegmentationContext
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<const ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
   typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef spaint::Selector::Selection Selection;
+  typedef boost::shared_ptr<const Selection> Selection_CPtr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -47,14 +50,21 @@ public:
   virtual const Scene_Ptr& get_scene() = 0;
 
   /**
-   * \brief TODO
+   * \brief Gets the selector that is currently being used to select voxels in the scene.
+   *
+   * \return  The selector that is currently being used to select voxels in the scene.
    */
   virtual Selector_CPtr get_selector() const = 0;
 
   /**
-   * \brief TODO
+   * \brief Marks a selection of voxels in the scene with the specified semantic labels.
+   *
+   * \param selection The selection of voxels.
+   * \param labels    The semantic labels with which to mark the voxels (one per voxel).
+   * \param scene     The scene.
+   * \param mode      The marking mode.
    */
-  virtual const VoxelMarker_CPtr& get_voxel_marker() const = 0;
+  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode) = 0;
 };
 
 }

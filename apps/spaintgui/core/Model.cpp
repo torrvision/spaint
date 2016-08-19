@@ -149,19 +149,15 @@ Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
   return m_visualisationEngine;
 }
 
-const VoxelMarker_CPtr& Model::get_voxel_marker() const
+void Model::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const Scene_Ptr& scene,
+                        MarkingMode mode, const PackedLabels_Ptr& oldLabels)
 {
-  return m_voxelMarker;
+  m_voxelMarker->mark_voxels(*selection, label, scene.get(), mode, oldLabels.get());
 }
 
-void Model::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels, MarkingMode mode)
+void Model::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, MarkingMode mode)
 {
-  m_voxelMarker->mark_voxels(*selection, label, m_scene.get(), oldLabels.get(), mode);
-}
-
-void Model::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
-{
-  m_voxelMarker->mark_voxels(*selection, *labels, m_scene.get(), NULL, mode);
+  m_voxelMarker->mark_voxels(*selection, *labels, scene.get(), mode);
 }
 
 bool Model::selector_is_active() const

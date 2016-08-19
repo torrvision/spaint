@@ -184,12 +184,8 @@ public:
    */
   spaint::SelectionTransformer_CPtr get_selection_transformer() const;
 
-  /**
-   * \brief Gets the selector that is currently being used to select voxels in the scene.
-   *
-   * \return  The selector that is currently being used to select voxels in the scene.
-   */
-  spaint::Selector_CPtr get_selector() const;
+  /** Override */
+  virtual spaint::Selector_CPtr get_selector() const;
 
   /** Override */
   virtual spaint::SpaintVoxel::Label get_semantic_label() const;
@@ -229,31 +225,19 @@ public:
   virtual VisualisationEngine_CPtr get_visualisation_engine() const;
 
   /**
-   * \brief Gets the voxel marker that is being used to apply semantic labels to voxels in the scene.
-   *
-   * \return  The voxel marker that is being used to apply semantic labels to voxels in the scene.
-   */
-  const spaint::VoxelMarker_CPtr& get_voxel_marker() const;
-
-  /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.
    *
    * \param selection The selection of voxels.
    * \param label     The semantic label with which to mark the voxels.
+   * \param scene     The scene.
+   * \param mode      The marking mode.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
-   * \param mode      The marking mode.
    */
-  void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr(),
-                   spaint::MarkingMode mode = spaint::NORMAL_MARKING);
+  void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const Scene_Ptr& scene,
+                   spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
-  /**
-   * \brief Marks a selection of voxels in the scene with the specified semantic labels.
-   *
-   * \param selection The selection of voxels.
-   * \param labels    The semantic labels with which to mark the voxels (one per voxel).
-   * \param mode      The marking mode.
-   */
-  void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, spaint::MarkingMode mode = spaint::NORMAL_MARKING);
+  /** Override */
+  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode);
 
   /**
    * \brief Gets whether or not the current selector is active.

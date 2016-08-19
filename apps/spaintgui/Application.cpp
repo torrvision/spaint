@@ -453,7 +453,7 @@ void Application::process_labelling_input()
         }
         m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, model)), precursors);
       }
-      else model->mark_voxels(selection, packedLabel);
+      else model->mark_voxels(selection, packedLabel, model->get_scene(), NORMAL_MARKING);
     }
   }
   else if(currentlyMarking)

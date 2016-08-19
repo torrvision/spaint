@@ -142,7 +142,7 @@ void SemanticSegmentationComponent::run_prediction(SemanticSegmentationContext& 
   m_predictionLabelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  context.get_voxel_marker()->mark_voxels(*m_predictionVoxelLocationsMB, *m_predictionLabelsMB, context.get_scene().get());
+  context.mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB, context.get_scene(), NORMAL_MARKING);
 }
 
 void SemanticSegmentationComponent::run_training(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState)
