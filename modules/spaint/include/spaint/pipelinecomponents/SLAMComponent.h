@@ -17,8 +17,8 @@
 #include <RelocLib/Relocaliser.h>
 
 #include "SLAMModel.h"
-#include "TrackerType.h"
 #include "../trackers/FallibleTracker.h"
+#include "../trackers/TrackerType.h"
 #include "../util/ITMImagePtrTypes.h"
 
 namespace spaint {

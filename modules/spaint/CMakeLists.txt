@@ -232,7 +232,6 @@ include/spaint/pipelinecomponents/SLAMComponent.h
 include/spaint/pipelinecomponents/SLAMModel.h
 include/spaint/pipelinecomponents/SmoothingComponent.h
 include/spaint/pipelinecomponents/SmoothingModel.h
-include/spaint/pipelinecomponents/TrackerType.h
 )
 
 ##
@@ -463,6 +462,7 @@ SET(trackers_sources)
 
 SET(trackers_headers
 include/spaint/trackers/FallibleTracker.h
+include/spaint/trackers/TrackerType.h
 )
 
 IF(WITH_OVR)
