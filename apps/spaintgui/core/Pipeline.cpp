@@ -80,11 +80,6 @@ Model_CPtr Pipeline::get_model() const
   return m_model;
 }
 
-const VisualisationGenerator_Ptr& Pipeline::get_visualisation_generator()
-{
-  return m_visualisationGenerator;
-}
-
 VisualisationGenerator_CPtr Pipeline::get_visualisation_generator() const
 {
   return m_visualisationGenerator;

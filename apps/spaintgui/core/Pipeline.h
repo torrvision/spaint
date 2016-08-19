@@ -154,13 +154,6 @@ public:
    *
    * \return  The visualisation generator that is used to render the InfiniTAM scene.
    */
-  const spaint::VisualisationGenerator_Ptr& get_visualisation_generator();
-
-  /**
-   * \brief Gets the visualisation generator that is used to render the InfiniTAM scene.
-   *
-   * \return  The visualisation generator that is used to render the InfiniTAM scene.
-   */
   spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
 
   /**
