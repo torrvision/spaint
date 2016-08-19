@@ -6,14 +6,14 @@
 #ifndef H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 #define H_EVALUATION_CARTESIANPRODUCTPARAMETERSETGENERATOR
 
-#include "../core/ParamSetUtil.h"
-
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <boost/spirit/home/support/detail/hold_any.hpp>
+
+#include "../core/ParamSetUtil.h"
 
 namespace evaluation {
 
