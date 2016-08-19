@@ -526,10 +526,10 @@ void Application::process_renderer_input()
   {
     Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
     subwindow.set_type(
-      m_inputState.key_down(KEYCODE_1) ? Raycaster::RT_SEMANTICLAMBERTIAN :
-      m_inputState.key_down(KEYCODE_2) ? Raycaster::RT_SEMANTICPHONG :
-      m_inputState.key_down(KEYCODE_3) ? Raycaster::RT_SEMANTICCOLOUR :
-      m_inputState.key_down(KEYCODE_4) ? Raycaster::RT_SEMANTICFLAT :
+      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::RT_SEMANTICLAMBERTIAN :
+      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::RT_SEMANTICPHONG :
+      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::RT_SEMANTICCOLOUR :
+      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::RT_SEMANTICFLAT :
       subwindow.get_type()
     );
   }
@@ -648,7 +648,7 @@ void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
   SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(riftSubwindowConfigurationIndex);
   if(!subwindowConfiguration) return;
 
-  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, mode));
+  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_visualisation_generator(), subwindowConfiguration, mode));
 }
 #endif
 
@@ -661,7 +661,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size();
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_visualisation_generator(), subwindowConfiguration, windowViewportSize));
 }
 
 void Application::toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator)

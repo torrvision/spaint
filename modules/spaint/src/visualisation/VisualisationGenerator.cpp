@@ -1,9 +1,9 @@
 /**
- * spaintgui: Raycaster.cpp
+ * spaint: VisualisationGenerator.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "Raycaster.h"
+#include "visualisation/VisualisationGenerator.h"
 
 #include <stdexcept>
 
@@ -12,15 +12,17 @@
 using namespace ITMLib;
 using namespace ORUtils;
 
-#include <spaint/visualisation/cpu/SemanticVisualiser_CPU.h>
+#include "visualisation/cpu/SemanticVisualiser_CPU.h"
 #ifdef WITH_CUDA
-#include <spaint/visualisation/cuda/SemanticVisualiser_CUDA.h>
+#include "visualisation/cuda/SemanticVisualiser_CUDA.h"
 #endif
-using namespace spaint;
+
+namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-Raycaster::Raycaster(const VisualisationEngine_CPtr& visualisationEngine, const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
+VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const LabelManager_CPtr& labelManager,
+                                               const Settings_CPtr& settings)
 : m_labelManager(labelManager), m_settings(settings), m_visualisationEngine(visualisationEngine)
 {
   // Set up the visualisers.
@@ -44,9 +46,9 @@ Raycaster::Raycaster(const VisualisationEngine_CPtr& visualisationEngine, const 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                      const View_CPtr& view, RenderState_Ptr& renderState, RaycastType raycastType,
-                                      const boost::optional<Postprocessor>& postprocessor) const
+void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                                   const View_CPtr& view, RenderState_Ptr& renderState, RaycastType raycastType,
+                                                   const boost::optional<Postprocessor>& postprocessor) const
 {
   if(!renderState)
   {
@@ -98,19 +100,19 @@ void Raycaster::generate_free_raycast(const ITMUChar4Image_Ptr& output, const Sc
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
+void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
 {
   make_postprocessed_cpu_copy(liveRenderState->raycastImage, postprocessor, output);
 }
 
-void Raycaster::get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
+void VisualisationGenerator::get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
 {
   prepare_to_copy_visualisation(view->depth->noDims, output);
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->depth->UpdateHostFromDevice();
   m_visualisationEngine->DepthToUchar4(output.get(), view->depth);
 }
 
-void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
+void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
 {
   prepare_to_copy_visualisation(view->rgb->noDims, output);
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->rgb->UpdateHostFromDevice();
@@ -119,8 +121,8 @@ void Raycaster::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr&
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
-                                            const ITMUChar4Image_Ptr& outputRaycast) const
+void VisualisationGenerator::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, const boost::optional<Postprocessor>& postprocessor,
+                                                         const ITMUChar4Image_Ptr& outputRaycast) const
 {
   // Make sure that the output raycast is of the right size.
   prepare_to_copy_visualisation(inputRaycast->noDims, outputRaycast);
@@ -149,8 +151,10 @@ void Raycaster::make_postprocessed_cpu_copy(const ITMUChar4Image *inputRaycast, 
   }
 }
 
-void Raycaster::prepare_to_copy_visualisation(const Vector2i& inputSize, const ITMUChar4Image_Ptr& output) const
+void VisualisationGenerator::prepare_to_copy_visualisation(const Vector2i& inputSize, const ITMUChar4Image_Ptr& output) const
 {
   output->Clear();
   output->ChangeDims(inputSize);
+}
+
 }

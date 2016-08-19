@@ -10,10 +10,10 @@
 #include <spaint/pipelinecomponents/SemanticSegmentationComponent.h>
 #include <spaint/pipelinecomponents/SLAMComponent.h>
 #include <spaint/pipelinecomponents/SmoothingComponent.h>
+#include <spaint/visualisation/VisualisationGenerator.h>
 #include <spaint/util/LabelManager.h>
 
 #include "Model.h"
-#include "Raycaster.h"
 
 /**
  * \brief An instance of this class is used to represent the spaintgui processing pipeline.
@@ -69,9 +69,6 @@ private:
   /** TODO */
   spaint::PropagationComponent m_propagationComponent;
 
-  /** The raycaster that is used to cast rays into the InfiniTAM scene. */
-  Raycaster_Ptr m_raycaster;
-
   /** TODO */
   spaint::SemanticSegmentationComponent m_semanticSegmentationComponent;
 
@@ -80,6 +77,9 @@ private:
 
   /** TODO */
   spaint::SmoothingComponent m_smoothingComponent;
+
+  /** The visualiation generator that is used to render the InfiniTAM scene. */
+  spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -150,18 +150,18 @@ public:
   Model_CPtr get_model() const;
 
   /**
-   * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
+   * \brief Gets the visualisation generator that is used to render the InfiniTAM scene.
    *
-   * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
+   * \return  The visualisation generator that is used to render the InfiniTAM scene.
    */
-  const Raycaster_Ptr& get_raycaster();
+  const spaint::VisualisationGenerator_Ptr& get_visualisation_generator();
 
   /**
-   * \brief Gets the raycaster that is used to cast rays into the InfiniTAM scene.
+   * \brief Gets the visualisation generator that is used to render the InfiniTAM scene.
    *
-   * \return  The raycaster that is used to cast rays into the InfiniTAM scene.
+   * \return  The visualisation generator that is used to render the InfiniTAM scene.
    */
-  Raycaster_CPtr get_raycaster() const;
+  spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
 
   /**
    * \brief Resets the random forest.

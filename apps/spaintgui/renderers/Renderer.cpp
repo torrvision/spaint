@@ -11,6 +11,7 @@ using namespace ORUtils;
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
+using namespace spaint;
 
 #ifdef WITH_ARRAYFIRE
 #include <spaint/imageprocessing/MedianFilterer.h>
@@ -20,8 +21,6 @@ using namespace ORUtils;
 #ifdef WITH_LEAP
 #include <spaint/selectors/LeapSelector.h>
 #endif
-
-using namespace spaint;
 
 //#################### LOCAL TYPES ####################
 
@@ -156,13 +155,13 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-                   const Vector2i& windowViewportSize)
+Renderer::Renderer(const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
+                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
 : m_cameraMode(CM_FOLLOW),
   m_medianFilteringEnabled(true),
   m_model(model),
-  m_raycaster(raycaster),
   m_subwindowConfiguration(subwindowConfiguration),
+  m_visualisationGenerator(visualisationGenerator),
   m_windowViewportSize(windowViewportSize)
 {}
 
@@ -284,7 +283,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const
+void Renderer::render_scene(const SE3Pose& pose, VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -380,11 +379,11 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const SE3Pose& pose, VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const
 {
-  // Set up any post-processing that needs to be applied to the raycast result.
+  // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<Raycaster::Postprocessor> postprocessor = boost::none;
+  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
   if(!m_medianFilteringEnabled && postprocessor)
   {
     postprocessor.reset();
@@ -399,7 +398,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  m_raycaster->generate_free_raycast(image, m_model->get_scene(), pose, m_model->get_view(), renderState, subwindow.get_type(), postprocessor);
+  m_visualisationGenerator->generate_free_raycast(image, m_model->get_scene(), pose, m_model->get_view(), renderState, subwindow.get_type(), postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);

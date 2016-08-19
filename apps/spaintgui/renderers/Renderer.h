@@ -20,8 +20,9 @@
 
 #include <rigging/MoveableCamera.h>
 
+#include <spaint/visualisation/VisualisationGenerator.h>
+
 #include "../core/Model.h"
-#include "../core/Raycaster.h"
 #include "../subwindows/SubwindowConfiguration.h"
 
 /**
@@ -64,14 +65,14 @@ private:
   /** The spaint model. */
   Model_CPtr m_model;
 
-  /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
-  Raycaster_CPtr m_raycaster;
-
   /** The sub-window configuration to use for visualising the scene. */
   SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
+
+  /** The visualisation generator to use in order to render the InfiniTAM scene. */
+  spaint::VisualisationGenerator_CPtr m_visualisationGenerator;
 
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
@@ -85,12 +86,12 @@ protected:
    * \brief Constructs a renderer.
    *
    * \param model                   The spaint model.
-   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param visualisationGenerator  The visualisation generator to use in order to render the InfiniTAM scene.
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    * \param windowViewportSize      The size of the window's viewport.
    */
-  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-           const Vector2i& windowViewportSize);
+  Renderer(const Model_CPtr& model, const spaint::VisualisationGenerator_CPtr& visualisationGenerator,
+           const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -241,7 +242,7 @@ protected:
    * \param renderState   The render state corresponding to the camera pose.
    * \param fracWindowPos The fractional position of the mouse within the window's viewport.
    */
-  void render_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const;
+  void render_scene(const ORUtils::SE3Pose& pose, spaint::VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const;
 
   /**
    * \brief Sets the window into which to render.
@@ -276,7 +277,7 @@ private:
    * \param renderState The render state corresponding to the camera pose.
    * \param subwindow   The sub-window into which to render.
    */
-  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const;
+  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, spaint::VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.

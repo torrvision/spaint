@@ -44,7 +44,7 @@ private:
   ovrHmd m_hmd;
 
   /** The render states for the two eye views. */
-  mutable Raycaster::RenderState_Ptr m_renderStates[ovrEye_Count];
+  mutable spaint::VisualisationGenerator::RenderState_Ptr m_renderStates[ovrEye_Count];
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -53,11 +53,11 @@ public:
    *
    * \param title                   The title of the window.
    * \param model                   The spaint model.
-   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param visualisationGenerator  The visualisation generator to use in order to render the InfiniTAM scene.
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    * \param renderingMode           The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster,
+  RiftRenderer(const std::string& title, const Model_CPtr& model, const spaint::VisualisationGenerator_CPtr& visualisationGenerator,
                const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
@@ -85,7 +85,7 @@ public:
   virtual bool is_mono() const;
 
   /** Override */
-  virtual void render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const;
+  virtual void render(const Vector2f& fracWindowPos) const;
 };
 
 #endif

@@ -54,13 +54,11 @@ commands/MarkVoxelsCommand.h
 SET(core_sources
 core/Model.cpp
 core/Pipeline.cpp
-core/Raycaster.cpp
 )
 
 SET(core_headers
 core/Model.h
 core/Pipeline.h
-core/Raycaster.h
 )
 
 ##

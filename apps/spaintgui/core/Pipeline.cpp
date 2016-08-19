@@ -29,12 +29,12 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   }
 #endif
 
-  // Set up the spaint model and raycaster.
+  // Set up the spaint model and visualisation generator.
   Vector2i depthImageSize = m_slamComponent.get_input_raw_depth_image()->noDims;
   Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
 
   m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
-  m_raycaster.reset(new Raycaster(m_model->get_visualisation_engine(), labelManager, m_model->get_settings()));
+  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, m_model->get_settings()));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -80,14 +80,14 @@ Model_CPtr Pipeline::get_model() const
   return m_model;
 }
 
-const Raycaster_Ptr& Pipeline::get_raycaster()
+const VisualisationGenerator_Ptr& Pipeline::get_visualisation_generator()
 {
-  return m_raycaster;
+  return m_visualisationGenerator;
 }
 
-Raycaster_CPtr Pipeline::get_raycaster() const
+VisualisationGenerator_CPtr Pipeline::get_visualisation_generator() const
 {
-  return m_raycaster;
+  return m_visualisationGenerator;
 }
 
 void Pipeline::reset_forest()

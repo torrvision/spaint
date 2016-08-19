@@ -1,10 +1,10 @@
 /**
- * spaintgui: Raycaster.h
+ * spaint: VisualisationGenerator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_RAYCASTER
-#define H_SPAINTGUI_RAYCASTER
+#ifndef H_SPAINT_VISUALISATIONGENERATOR
+#define H_SPAINT_VISUALISATIONGENERATOR
 
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
@@ -12,13 +12,15 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include <spaint/util/ITMImagePtrTypes.h>
-#include <spaint/visualisation/interface/SemanticVisualiser.h>
+#include "interface/SemanticVisualiser.h"
+#include "../util/ITMImagePtrTypes.h"
+
+namespace spaint {
 
 /**
- * \brief An instance of this class can be used to raycast the InfiniTAM scene in an spaint model.
+ * \brief An instance of this class can be used to generate visualisations of an InfiniTAM scene.
  */
-class Raycaster
+class VisualisationGenerator
 {
   //#################### TYPEDEFS ####################
 public:
@@ -64,13 +66,13 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a raycaster.
+   * \brief Constructs a visualisation generator.
    *
    * \param visualisationEngine The InfiniTAM engine used for raycasting the scene.
    * \param labelManager        The label manager.
    * \param settings            The settings to use for InfiniTAM.
    */
-  Raycaster(const VisualisationEngine_CPtr& visualisationEngine, const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
+  VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -136,7 +138,9 @@ private:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<Raycaster> Raycaster_Ptr;
-typedef boost::shared_ptr<const Raycaster> Raycaster_CPtr;
+typedef boost::shared_ptr<VisualisationGenerator> VisualisationGenerator_Ptr;
+typedef boost::shared_ptr<const VisualisationGenerator> VisualisationGenerator_CPtr;
+
+}
 
 #endif

@@ -4,10 +4,11 @@
  */
 
 #include "Subwindow.h"
+using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, Raycaster::RaycastType type, const Vector2i& imgSize)
+Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, VisualisationGenerator::RaycastType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
   m_image(new ITMUChar4Image(imgSize, true, true)),
   m_topLeft(topLeft),
@@ -31,7 +32,7 @@ ITMUChar4Image_CPtr Subwindow::get_image() const
   return m_image;
 }
 
-Raycaster::RaycastType Subwindow::get_type() const
+VisualisationGenerator::RaycastType Subwindow::get_type() const
 {
   return m_type;
 }
@@ -41,7 +42,7 @@ float Subwindow::height() const
   return m_bottomRight.y - m_topLeft.y;
 }
 
-void Subwindow::set_type(Raycaster::RaycastType type)
+void Subwindow::set_type(VisualisationGenerator::RaycastType type)
 {
   m_type = type;
 }

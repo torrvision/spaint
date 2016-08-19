@@ -42,9 +42,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster,
+RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
                            const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode)
-: Renderer(model, raycaster, subwindowConfiguration, model->get_depth_image_size())
+: Renderer(model, visualisationGenerator, subwindowConfiguration, model->get_depth_image_size())
 {
   // Get a handle to the Rift.
   m_hmd = ovrHmd_Create(0);
@@ -146,7 +146,7 @@ bool RiftRenderer::is_mono() const
   return false;
 }
 
-void RiftRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const
+void RiftRenderer::render(const Vector2f& fracWindowPos) const
 {
   // Keep trying to get rid of the annoying health and safety warning until it goes away.
   ovrHmd_DismissHSWDisplay(m_hmd);
@@ -173,7 +173,7 @@ void RiftRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fra
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
     glUseProgram(0);
 
-    render_scene(poses[i], interactor, m_renderStates[i], fracWindowPos);
+    render_scene(poses[i], m_renderStates[i], fracWindowPos);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
