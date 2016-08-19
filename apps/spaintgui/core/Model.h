@@ -6,16 +6,6 @@
 #ifndef H_SPAINTGUI_MODEL
 #define H_SPAINTGUI_MODEL
 
-#include <boost/shared_ptr.hpp>
-
-#include <InputSource/ImageSourceEngine.h>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
-#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
-#include <ITMLib/Objects/Views/ITMView.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
-
-#include <spaint/markers/interface/VoxelMarker.h>
 #include <spaint/pipelinecomponents/PropagationModel.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationModel.h>
 #include <spaint/pipelinecomponents/SLAMModel.h>
