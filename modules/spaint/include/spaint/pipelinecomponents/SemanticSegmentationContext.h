@@ -1,10 +1,10 @@
 /**
- * spaint: SemanticSegmentationModel.h
+ * spaint: SemanticSegmentationContext.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_SEMANTICSEGMENTATIONMODEL
-#define H_SPAINT_SEMANTICSEGMENTATIONMODEL
+#ifndef H_SPAINT_SEMANTICSEGMENTATIONCONTEXT
+#define H_SPAINT_SEMANTICSEGMENTATIONCONTEXT
 
 #include "../markers/interface/VoxelMarker.h"
 #include "../selectors/Selector.h"
@@ -14,9 +14,9 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of a class deriving from this one provides the shared context needed by a semantic segmentation component.
  */
-class SemanticSegmentationModel
+class SemanticSegmentationContext
 {
   //#################### TYPEDEFS ####################
 private:
@@ -25,19 +25,24 @@ private:
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~SemanticSegmentationModel() {}
+  /**
+   * \brief Destroys the semantic segmentation context.
+   */
+  virtual ~SemanticSegmentationContext() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the label manager.
+   *
+   * \return  The label manger.
    */
   virtual const LabelManager_Ptr& get_label_manager() = 0;
 
   /**
-   * \brief Gets the current reconstructed scene.
+   * \brief Gets the reconstructed scene.
    *
-   * \return  The current reconstructed scene.
+   * \return  The reconstructed scene.
    */
   virtual const Scene_Ptr& get_scene() = 0;
 

@@ -1,10 +1,10 @@
 /**
- * spaint: PropagationModel.h
+ * spaint: PropagationContext.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_PROPAGATIONMODEL
-#define H_SPAINT_PROPAGATIONMODEL
+#ifndef H_SPAINT_PROPAGATIONCONTEXT
+#define H_SPAINT_PROPAGATIONCONTEXT
 
 #include <boost/shared_ptr.hpp>
 
@@ -17,7 +17,7 @@ namespace spaint {
 /**
  * \brief An instance of a class deriving from this one provides the shared context needed by a propagation component.
  */
-class PropagationModel
+class PropagationContext
 {
   //#################### TYPEDEFS ####################
 private:
@@ -27,16 +27,16 @@ private:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys the propagation model.
+   * \brief Destroys the propagation context.
    */
-  virtual ~PropagationModel() {}
+  virtual ~PropagationContext() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the scene over whose surfaces to propagate a semantic label.
+   * \brief Gets the reconstructed scene.
    *
-   * \return  The scene over whose surfaces to propagate a semantic label.
+   * \return  The reconstructed scene.
    */
   virtual const Scene_Ptr& get_scene() = 0;
 

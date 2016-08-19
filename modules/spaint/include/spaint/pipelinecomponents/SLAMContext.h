@@ -1,10 +1,10 @@
 /**
- * spaint: SLAMModel.h
+ * spaint: SLAMContext.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_SLAMMODEL
-#define H_SPAINT_SLAMMODEL
+#ifndef H_SPAINT_SLAMCONTEXT
+#define H_SPAINT_SLAMCONTEXT
 
 #include <boost/shared_ptr.hpp>
 
@@ -17,7 +17,7 @@ namespace spaint {
 /**
 * \brief TODO
 */
-class SLAMModel
+class SLAMContext
 {
   //#################### TYPEDEFS ####################
 private:
@@ -27,9 +27,9 @@ private:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief TODO
+   * \brief Destroys the SLAM context.
    */
-  virtual ~SLAMModel() {}
+  virtual ~SLAMContext() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

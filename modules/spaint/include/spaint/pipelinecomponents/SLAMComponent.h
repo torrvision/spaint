@@ -16,7 +16,7 @@
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
-#include "SLAMModel.h"
+#include "SLAMContext.h"
 #include "../trackers/FallibleTracker.h"
 #include "../trackers/TrackerType.h"
 #include "../util/ITMImagePtrTypes.h"
@@ -173,7 +173,7 @@ public:
   const TrackingState_Ptr& get_tracking_state();
 
   /** TODO */
-  virtual bool run(SLAMModel& model);
+  virtual bool run(SLAMContext& context);
 
   /**
    * \brief TODO

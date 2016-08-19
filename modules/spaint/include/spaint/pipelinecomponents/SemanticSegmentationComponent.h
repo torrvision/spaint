@@ -10,7 +10,7 @@
 
 #include <rafl/core/RandomForest.h>
 
-#include "SemanticSegmentationModel.h"
+#include "SemanticSegmentationContext.h"
 #include "../features/interface/FeatureCalculator.h"
 #include "../sampling/interface/PerLabelVoxelSampler.h"
 #include "../sampling/interface/UniformVoxelSampler.h"
@@ -95,13 +95,13 @@ public:
   void reset_forest();
 
   /** TODO */
-  void run_feature_inspection(SemanticSegmentationModel& model, const RenderState_CPtr& renderState);
+  void run_feature_inspection(SemanticSegmentationContext& context, const RenderState_CPtr& renderState);
 
   /** TODO */
-  void run_prediction(SemanticSegmentationModel& model, const RenderState_CPtr& samplingRenderState);
+  void run_prediction(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState);
 
   /** TODO */
-  void run_training(SemanticSegmentationModel& model, const RenderState_CPtr& samplingRenderState);
+  void run_training(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState);
 };
 
 }

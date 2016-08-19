@@ -6,10 +6,10 @@
 #ifndef H_SPAINTGUI_MODEL
 #define H_SPAINTGUI_MODEL
 
-#include <spaint/pipelinecomponents/PropagationModel.h>
-#include <spaint/pipelinecomponents/SemanticSegmentationModel.h>
-#include <spaint/pipelinecomponents/SLAMModel.h>
-#include <spaint/pipelinecomponents/SmoothingModel.h>
+#include <spaint/pipelinecomponents/PropagationContext.h>
+#include <spaint/pipelinecomponents/SemanticSegmentationContext.h>
+#include <spaint/pipelinecomponents/SLAMContext.h>
+#include <spaint/pipelinecomponents/SmoothingContext.h>
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
@@ -21,10 +21,10 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
-: public spaint::PropagationModel,
-  public spaint::SemanticSegmentationModel,
-  public spaint::SLAMModel,
-  public spaint::SmoothingModel
+: public spaint::PropagationContext,
+  public spaint::SemanticSegmentationContext,
+  public spaint::SLAMContext,
+  public spaint::SmoothingContext
 {
   //#################### TYPEDEFS ####################
 public:

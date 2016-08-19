@@ -18,9 +18,9 @@ SmoothingComponent::SmoothingComponent(size_t maxLabelCount, const Settings_CPtr
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SmoothingComponent::run(SmoothingModel& model, const RenderState_CPtr& renderState)
+void SmoothingComponent::run(SmoothingContext& context, const RenderState_CPtr& renderState)
 {
-  m_labelSmoother->smooth_labels(renderState->raycastResult, model.get_scene().get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, context.get_scene().get());
 }
 
 }

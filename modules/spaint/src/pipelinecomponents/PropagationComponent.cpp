@@ -19,9 +19,9 @@ PropagationComponent::PropagationComponent(const Vector2i& depthImageSize, const
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void PropagationComponent::run(PropagationModel& model, const RenderState_CPtr& renderState)
+void PropagationComponent::run(PropagationContext& context, const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->propagate_label(model.get_semantic_label(), renderState->raycastResult, model.get_scene().get());
+  m_labelPropagator->propagate_label(context.get_semantic_label(), renderState->raycastResult, context.get_scene().get());
 }
 
 }

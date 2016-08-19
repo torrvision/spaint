@@ -1,10 +1,10 @@
 /**
- * spaint: SmoothingModel.h
+ * spaint: SmoothingContext.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_SMOOTHINGMODEL
-#define H_SPAINT_SMOOTHINGMODEL
+#ifndef H_SPAINT_SMOOTHINGCONTEXT
+#define H_SPAINT_SMOOTHINGCONTEXT
 
 #include <boost/shared_ptr.hpp>
 
@@ -17,7 +17,7 @@ namespace spaint {
 /**
  * \brief An instance of a class deriving from this one provides the shared context needed by a smoothing component.
  */
-class SmoothingModel
+class SmoothingContext
 {
   //#################### TYPEDEFS ####################
 private:
@@ -27,16 +27,16 @@ private:
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief TODO
+   * \brief Destroys the smoothing context.
    */
-  virtual ~SmoothingModel() {}
+  virtual ~SmoothingContext() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the current reconstructed scene.
+   * \brief Gets the reconstructed scene.
    *
-   * \return  The current reconstructed scene.
+   * \return  The reconstructed scene.
    */
   virtual const Scene_Ptr& get_scene() = 0;
 };

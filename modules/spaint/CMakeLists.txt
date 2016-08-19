@@ -225,13 +225,13 @@ src/pipelinecomponents/SmoothingComponent.cpp
 
 SET(pipelinecomponents_headers
 include/spaint/pipelinecomponents/PropagationComponent.h
-include/spaint/pipelinecomponents/PropagationModel.h
+include/spaint/pipelinecomponents/PropagationContext.h
 include/spaint/pipelinecomponents/SemanticSegmentationComponent.h
-include/spaint/pipelinecomponents/SemanticSegmentationModel.h
+include/spaint/pipelinecomponents/SemanticSegmentationContext.h
 include/spaint/pipelinecomponents/SLAMComponent.h
-include/spaint/pipelinecomponents/SLAMModel.h
+include/spaint/pipelinecomponents/SLAMContext.h
 include/spaint/pipelinecomponents/SmoothingComponent.h
-include/spaint/pipelinecomponents/SmoothingModel.h
+include/spaint/pipelinecomponents/SmoothingContext.h
 )
 
 ##

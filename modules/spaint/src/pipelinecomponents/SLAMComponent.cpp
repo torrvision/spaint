@@ -114,18 +114,18 @@ const SLAMComponent::TrackingState_Ptr& SLAMComponent::get_tracking_state()
   return m_trackingState;
 }
 
-bool SLAMComponent::run(SLAMModel& model)
+bool SLAMComponent::run(SLAMContext& context)
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const View_Ptr& view = model.get_view();
+  const View_Ptr& view = context.get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
-  model.set_view(newView);
+  context.set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the scene because we need something to track against).
   SE3Pose oldPose(*m_trackingState->pose_d);
@@ -168,7 +168,7 @@ bool SLAMComponent::run(SLAMModel& model)
 
         const bool resetVisibleList = true;
         m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), model.get_visualisation_engine().get(), m_liveRenderState.get());
+        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), context.get_visualisation_engine().get(), m_liveRenderState.get());
         m_trackingController->Track(m_trackingState.get(), view.get());
         trackerResult = m_trackingState->trackerResult;
 
@@ -223,7 +223,7 @@ bool SLAMComponent::run(SLAMModel& model)
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), model.get_visualisation_engine().get(), m_liveRenderState.get());
+  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), context.get_visualisation_engine().get(), m_liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;

@@ -9,7 +9,7 @@
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "SmoothingModel.h"
+#include "SmoothingContext.h"
 #include "../smoothing/interface/LabelSmoother.h"
 
 namespace spaint {
@@ -39,7 +39,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** TODO */
-  virtual void run(SmoothingModel& model, const RenderState_CPtr& renderState);
+  virtual void run(SmoothingContext& context, const RenderState_CPtr& renderState);
 };
 
 }

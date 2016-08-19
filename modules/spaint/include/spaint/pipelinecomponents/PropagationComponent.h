@@ -9,7 +9,7 @@
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "PropagationModel.h"
+#include "PropagationContext.h"
 #include "../propagation/interface/LabelPropagator.h"
 
 namespace spaint {
@@ -44,10 +44,10 @@ public:
   /**
    * \brief Runs the propagation component, propagating a semantic label over the surfaces of the target scene.
    *
-   * \param model       The shared context needed for propagation.
+   * \param context     The shared context needed for propagation.
    * \param renderState The render state associated with the camera position from which to propagate.
    */
-  virtual void run(PropagationModel& model, const RenderState_CPtr& renderState);
+  virtual void run(PropagationContext& context, const RenderState_CPtr& renderState);
 };
 
 }
