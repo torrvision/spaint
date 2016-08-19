@@ -28,7 +28,7 @@ CoordinateDescentParameterOptimiser& CoordinateDescentParameterOptimiser::add_pa
   return *this;
 }
 
-ParamSet CoordinateDescentParameterOptimiser::choose_parameters(float *bestCost) const
+ParamSet CoordinateDescentParameterOptimiser::optimise_for_parameters(float *bestCost) const
 {
   std::vector<size_t> bestValueIndicesAllTime;
   float bestCostAllTime = std::numeric_limits<float>::max();
@@ -42,7 +42,7 @@ ParamSet CoordinateDescentParameterOptimiser::choose_parameters(float *bestCost)
     // Optimise the initial set of parameter value indices using coordinate descent.
     std::vector<size_t> optimisedValueIndices;
     float optimisedCost;
-    boost::tie(optimisedValueIndices, optimisedCost) = optimise(initialValueIndices);
+    boost::tie(optimisedValueIndices, optimisedCost) = perform_coordinate_descent(initialValueIndices);
 
     // If the optimised cost is the best we've seen so far, update the best cost and best parameter value indices.
     if(optimisedCost < bestCostAllTime)
@@ -86,7 +86,7 @@ ParamSet CoordinateDescentParameterOptimiser::make_param_set(const std::vector<s
   return paramSet;
 }
 
-std::pair<std::vector<size_t>,float> CoordinateDescentParameterOptimiser::optimise(const std::vector<size_t>& initialValueIndices) const
+std::pair<std::vector<size_t>,float> CoordinateDescentParameterOptimiser::perform_coordinate_descent(const std::vector<size_t>& initialValueIndices) const
 {
   // Invariant: currentCost = compute_cost(currentValueIndices)
 

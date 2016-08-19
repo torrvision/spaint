@@ -29,7 +29,7 @@ float sum_squares_cost_fn(const ParamSet& params)
 
 BOOST_AUTO_TEST_SUITE(test_CoordinateDescentParameterOptimiser)
 
-BOOST_AUTO_TEST_CASE(choose_parameters_test)
+BOOST_AUTO_TEST_CASE(optimise_for_parameters_test)
 {
   // Set up the optimiser.
   const unsigned int seed = 12345;
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(choose_parameters_test)
 
   // Use the optimiser to choose a set of parameters.
   float cost;
-  ParamSet params = optimiser.choose_parameters(&cost);
+  ParamSet params = optimiser.optimise_for_parameters(&cost);
 
   // Check that the chosen parameters are as expected.
   ParamSet expectedParams = map_list_of("Foo",boost::lexical_cast<std::string>(0.5f))

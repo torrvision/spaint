@@ -80,7 +80,7 @@ public:
    * \param bestCost    A place in which to return the cost associated with the best parameter set found (may be NULL).
    * \return            The best parameter set found during coordinate descent.
    */
-  ParamSet choose_parameters(float *bestCost = NULL) const;
+  ParamSet optimise_for_parameters(float *bestCost = NULL) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -115,7 +115,7 @@ private:
    * \param initialValueIndices The initial set of parameter value indices.
    * \return                    An optimised set of parameter value indices and the associated cost.
    */
-  std::pair<std::vector<size_t>,float> optimise(const std::vector<size_t>& initialValueIndices) const;
+  std::pair<std::vector<size_t>,float> perform_coordinate_descent(const std::vector<size_t>& initialValueIndices) const;
 };
 
 }
