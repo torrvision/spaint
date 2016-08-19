@@ -338,6 +338,25 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Model::Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                      const Model::View_CPtr& view, RenderState_Ptr& renderState,
+                                      VisualisationGenerator::VisualisationType visualisationType,
+                                      const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+{
+  switch(visualisationType)
+  {
+    case VisualisationGenerator::VT_INPUT_COLOUR:
+      m_visualisationGenerator->get_rgb_input(output, view);
+      break;
+    case VisualisationGenerator::VT_INPUT_DEPTH:
+      m_visualisationGenerator->get_depth_input(output, view);
+      break;
+    default:
+      m_visualisationGenerator->generate_free_raycast(output, scene, pose, view, renderState, visualisationType, postprocessor);
+      break;
+  }
+}
+
 void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
 {
   // Copy the overlay to a texture.
@@ -398,7 +417,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, VisualisationGene
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  m_visualisationGenerator->generate_free_raycast(image, m_model->get_scene(), pose, m_model->get_view(), renderState, subwindow.get_type(), postprocessor);
+  generate_visualisation(image, m_model->get_scene(), pose, m_model->get_view(), renderState, subwindow.get_type(), postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);

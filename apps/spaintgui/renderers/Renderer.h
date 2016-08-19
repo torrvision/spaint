@@ -45,6 +45,8 @@ public:
   };
 
   //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
 protected:
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
@@ -253,6 +255,22 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Generates a visualisation of the scene.
+   *
+   * \param output            The location into which to put the output image.
+   * \param scene             The scene to visualise.
+   * \param pose              The pose from which to visualise the scene (if relevant).
+   * \param view              The current view of the scene.
+   * \param renderState       The render state to use for intermediate storage (if relevant).
+   * \param visualisationType The type of visualisation to generate.
+   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
+   */
+  void generate_visualisation(const ITMUChar4Image_Ptr& output, const Model::Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                              const Model::View_CPtr& view, RenderState_Ptr& renderState,
+                              spaint::VisualisationGenerator::VisualisationType visualisationType,
+                              const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
+
   /**
    * \brief Renders a semi-transparent colour overlay over the existing scene.
    *

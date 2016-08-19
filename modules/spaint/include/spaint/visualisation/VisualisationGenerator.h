@@ -41,12 +41,14 @@ public:
    */
   enum VisualisationType
   {
-    VT_COLOUR,
-    VT_LAMBERTIAN,
-    VT_SEMANTICCOLOUR,
-    VT_SEMANTICFLAT,
-    VT_SEMANTICLAMBERTIAN,
-    VT_SEMANTICPHONG
+    VT_INPUT_COLOUR,
+    VT_INPUT_DEPTH,
+    VT_VOXEL_COLOUR,
+    VT_VOXEL_LAMBERTIAN,
+    VT_VOXEL_SEMANTICCOLOUR,
+    VT_VOXEL_SEMANTICFLAT,
+    VT_VOXEL_SEMANTICLAMBERTIAN,
+    VT_VOXEL_SEMANTICPHONG
   };
 
   //#################### PRIVATE VARIABLES ####################
@@ -77,7 +79,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Generates a visualisation of the scene from the specified pose.
+   * \brief Generates a raycast of the scene from the specified pose.
    *
    * \param output            The location into which to put the output image.
    * \param scene             The scene to visualise.
@@ -88,7 +90,7 @@ public:
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                             const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType = VT_LAMBERTIAN,
+                             const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**

@@ -526,10 +526,10 @@ void Application::process_renderer_input()
   {
     Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
     subwindow.set_type(
-      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_SEMANTICLAMBERTIAN :
-      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_SEMANTICPHONG :
-      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_SEMANTICCOLOUR :
-      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SEMANTICFLAT :
+      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_VOXEL_SEMANTICLAMBERTIAN :
+      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_VOXEL_SEMANTICPHONG :
+      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_VOXEL_SEMANTICCOLOUR :
+      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_VOXEL_SEMANTICFLAT :
       subwindow.get_type()
     );
   }

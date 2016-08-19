@@ -44,30 +44,30 @@ void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& out
 
   switch(visualisationType)
   {
-    case VT_COLOUR:
+    case VT_VOXEL_COLOUR:
     {
       m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
-    case VT_LAMBERTIAN:
+    case VT_VOXEL_LAMBERTIAN:
     {
       m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
                                          ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
-    case VT_SEMANTICCOLOUR:
-    case VT_SEMANTICFLAT:
-    case VT_SEMANTICLAMBERTIAN:
-    case VT_SEMANTICPHONG:
+    case VT_VOXEL_SEMANTICCOLOUR:
+    case VT_VOXEL_SEMANTICFLAT:
+    case VT_VOXEL_SEMANTICLAMBERTIAN:
+    case VT_VOXEL_SEMANTICPHONG:
     {
       const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
 
       LightingType lightingType = LT_LAMBERTIAN;
-      if(visualisationType == VT_SEMANTICFLAT) lightingType = LT_FLAT;
-      else if(visualisationType == VT_SEMANTICPHONG) lightingType = LT_PHONG;
+      if(visualisationType == VT_VOXEL_SEMANTICFLAT) lightingType = LT_FLAT;
+      else if(visualisationType == VT_VOXEL_SEMANTICPHONG) lightingType = LT_PHONG;
 
-      float labelAlpha = visualisationType == VT_SEMANTICCOLOUR ? 0.4f : 1.0f;
+      float labelAlpha = visualisationType == VT_VOXEL_SEMANTICCOLOUR ? 0.4f : 1.0f;
       m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
