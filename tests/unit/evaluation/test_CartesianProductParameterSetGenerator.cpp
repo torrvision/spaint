@@ -4,7 +4,6 @@
 #include <boost/assign/list_of.hpp>
 using boost::assign::list_of;
 
-#include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/util/CartesianProductParameterSetGenerator.h>
 using namespace evaluation;
 

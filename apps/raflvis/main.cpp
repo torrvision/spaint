@@ -7,10 +7,10 @@
 #include <boost/format.hpp>
 using boost::assign::list_of;
 
-#include <evaluation/util/CartesianProductParameterSetGenerator.h>
-#include <evaluation/util/ConfusionMatrixUtil.h>
 #include <evaluation/core/ParamSetUtil.h>
 #include <evaluation/core/PerformanceMeasure.h>
+#include <evaluation/util/CartesianProductParameterSetGenerator.h>
+#include <evaluation/util/ConfusionMatrixUtil.h>
 using namespace evaluation;
 
 #include <rafl/choppers/HeightLimitingTreeChopper.h>
