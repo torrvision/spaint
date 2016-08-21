@@ -97,7 +97,7 @@ struct Callback : ceres::IterationCallback
     int count = sizeof(as) / sizeof(Vector2d);
     for(int i = 0; i < count; ++i)
     {
-      m_plot.draw_cartesian_circle(cv::Point2f(bs[i].x, bs[i].y), palette["Blue"], 10);
+      m_plot.draw_cartesian_square(cv::Point2f(bs[i].x, bs[i].y), palette["Blue"], 10);
 
       double cosTheta = cos(m_theta);
       double sinTheta = sin(m_theta);
@@ -105,6 +105,7 @@ struct Callback : ceres::IterationCallback
         as[i].x * cosTheta - as[i].y * sinTheta + m_trans.x,
         as[i].x * sinTheta + as[i].y * cosTheta + m_trans.y
       );
+
       m_plot.draw_cartesian_circle(cv::Point2f(a.x, a.y), palette["Red"], 10);
     }
     m_plot.refresh();

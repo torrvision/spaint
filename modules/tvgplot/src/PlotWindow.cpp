@@ -58,6 +58,12 @@ void PlotWindow::draw_canvas_line(const cv::Point2f& p1, const cv::Point2f& p2, 
   cv::line(m_canvas, p1, p2, rgb_to_bgr(colour), thickness);
 }
 
+void PlotWindow::draw_canvas_square(const cv::Point2f& centre, const cv::Scalar& colour, int radius, int thickness) const
+{
+  cv::Rect rect(centre.x - radius, centre.y - radius, 2 * radius, 2 * radius);
+  cv::rectangle(m_canvas, rect, rgb_to_bgr(colour), thickness);
+}
+
 void PlotWindow::draw_canvas_text(const std::string& text, const cv::Point& position, const cv::Scalar& colour, double scale, int thickness) const
 {
     putText(m_canvas, text, position, cv::FONT_HERSHEY_SIMPLEX, scale, colour, thickness);
@@ -80,6 +86,11 @@ void PlotWindow::draw_cartesian_circle(const cv::Point2f& centre, const cv::Scal
 void PlotWindow::draw_cartesian_line(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Scalar& colour, int thickness) const
 {
   draw_canvas_line(cartesian_to_canvas(p1), cartesian_to_canvas(p2), colour, thickness);
+}
+
+void PlotWindow::draw_cartesian_square(const cv::Point2f& centre, const cv::Scalar& colour, int radius, int thickness) const
+{
+  draw_canvas_square(cartesian_to_canvas(centre), colour, radius, thickness);
 }
 
 void PlotWindow::draw_line_graph(const std::vector<float>& values, const cv::Scalar& colour) const
