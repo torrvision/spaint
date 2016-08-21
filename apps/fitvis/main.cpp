@@ -4,6 +4,7 @@
  */
 
 #include <cmath>
+#include <set>
 
 #include <ceres/ceres.h>
 
@@ -159,6 +160,7 @@ struct Callback : ceres::IterationCallback
     }
     std::cout << "-> ";
 
+    std::set<int> used;
 
     for(int i = 0; i < count; ++i)
     {
@@ -167,6 +169,8 @@ struct Callback : ceres::IterationCallback
 
       for(int j = 0; j < count; ++j)
       {
+        if(used.find(j) != used.end()) continue;
+
         double dx = as[i].pos.x - bs[j].pos.x;
         double dy = as[i].pos.y - bs[j].pos.y;
         double dr = as[i].colour[0] - bs[j].colour[0];
@@ -183,6 +187,7 @@ struct Callback : ceres::IterationCallback
       }
 
       correspondences[i] = bestIndex;
+      used.insert(bestIndex);
       std::cout << correspondences[i] << ' ';
     }
 
