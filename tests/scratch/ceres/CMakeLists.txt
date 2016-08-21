@@ -14,6 +14,7 @@ SET(targetname scratchtest_ceres)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCeres.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -44,3 +45,4 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetScratchTestTarget.cmake)
 #################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkCeres.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)

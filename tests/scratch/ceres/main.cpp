@@ -1,74 +1,56 @@
-// Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
-// http://ceres-solver.org/
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// * Redistributions of source code must retain the above copyright notice,
-//   this list of conditions and the following disclaimer.
-// * Redistributions in binary form must reproduce the above copyright notice,
-//   this list of conditions and the following disclaimer in the documentation
-//   and/or other materials provided with the distribution.
-// * Neither the name of Google Inc. nor the names of its contributors may be
-//   used to endorse or promote products derived from this software without
-//   specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//
-// Author: keir@google.com (Keir Mierle)
-//
-// A simple example of using the Ceres minimizer.
-//
-// Minimize 0.5 (10 - x)^2 using jacobian matrix computed using
-// automatic differentiation.
-#include "ceres/ceres.h"
-#include "glog/logging.h"
-using ceres::AutoDiffCostFunction;
-using ceres::CostFunction;
-using ceres::Problem;
-using ceres::Solver;
-using ceres::Solve;
-// A templated cost functor that implements the residual r = 10 -
-// x. The method operator() is templated so that we can then use an
-// automatic differentiation wrapper around it to generate its
-// derivatives.
-struct CostFunctor {
-  template <typename T> bool operator()(const T* const x, T* residual) const {
-    residual[0] = T(10.0) - x[0];
+#include <ceres/ceres.h>
+
+#include <ITMLib/Utils/ITMMath.h>
+using namespace ORUtils;
+
+struct CostFunctor
+{
+  Vector2d m_a, m_b;
+
+  CostFunctor(const Vector2d& a, const Vector2d& b)
+  : m_a(a), m_b(b)
+  {}
+
+  template <typename T>
+  bool operator()(const T *const trans, T *residual) const
+  {
+    T dx = m_b[0] - (m_a[0] + trans[0]);
+    T dy = m_b[1] - (m_a[1] + trans[1]);
+    residual[0] = sqrt(dx * dx + dy * dy);
     return true;
   }
 };
-int main(int argc, char** argv) {
+
+int main(int argc, char *argv[])
+{
+  // Initialise glog.
   google::InitGoogleLogging(argv[0]);
-  // The variable to solve for with its initial value. It will be
-  // mutated in place by the solver.
-  double x = 0.5;
-  const double initial_x = x;
+
+  // The variable to solve for with its initial value. It will be mutated in place by the solver.
+  Vector2d trans(0.0, 0.0);
+
   // Build the problem.
-  Problem problem;
-  // Set up the only cost function (also known as residual). This uses
-  // auto-differentiation to obtain the derivative (jacobian).
-  CostFunction* cost_function =
-      new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
-  problem.AddResidualBlock(cost_function, NULL, &x);
-  // Run the solver!
-  Solver::Options options;
+  ceres::Problem problem;
+  Vector2d as[] = { Vector2d(1,1), Vector2d(2,2) };
+  Vector2d bs[] = { Vector2d(2,3), Vector2d(3.5,4.5) };
+  int count = sizeof(as) / sizeof(Vector2d);
+  for(int i = 0; i < count; ++i)
+  {
+    ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<CostFunctor, 1, 2>(new CostFunctor(as[i], bs[i]));
+    problem.AddResidualBlock(costFunction, NULL, trans.v);
+  }
+
+  // Set up the solver.
+  ceres::Solver::Options options;
   options.minimizer_progress_to_stdout = true;
-  Solver::Summary summary;
+
+  // Run the solver.
+  ceres::Solver::Summary summary;
   Solve(options, &problem, &summary);
+
+  // Output a report.
   std::cout << summary.BriefReport() << "\n";
-  std::cout << "x : " << initial_x
-            << " -> " << x << "\n";
+  std::cout << "Trans: " << trans << '\n';
+
   return 0;
 }
