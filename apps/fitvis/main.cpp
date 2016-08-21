@@ -16,18 +16,39 @@ using namespace tvgplot;
 
 //#################### GLOBAL VARIABLES ####################
 
-Vector2d as[] = { Vector2d(1,1), Vector2d(1,2), Vector2d(2,1), Vector2d(2,0) };
-Vector2d bs[] = { Vector2d(4,3), Vector2d(5,3), Vector2d(4,2), Vector2d(3,2) };
+struct Element
+{
+  Vector2d pos;
+  cv::Scalar colour;
+
+  Element(const Vector2d& pos_, const cv::Scalar& colour_)
+  : pos(pos_), colour(colour_)
+  {}
+};
 
 std::map<std::string,cv::Scalar> palette = PaletteGenerator::generate_basic_rgba_palette();
 
+Element as[] = {
+  Element(Vector2d(1,1), palette["Red"]),
+  Element(Vector2d(1,2), palette["Blue"]),
+  Element(Vector2d(2,1), palette["Green"]),
+  Element(Vector2d(2,0), palette["Yellow"])
+};
+
+Element bs[] = {
+  Element(Vector2d(4,3), palette["Red"]),
+  Element(Vector2d(5,3), palette["Blue"]),
+  Element(Vector2d(4,2), palette["Green"]),
+  Element(Vector2d(3,2), palette["Yellow"])
+};
+
 //#################### TYPES ####################
 
-struct CostFunctor
+struct PositionCostFunctor
 {
   Vector2d m_a, m_b;
 
-  CostFunctor(const Vector2d& a, const Vector2d& b)
+  PositionCostFunctor(const Vector2d& a, const Vector2d& b)
   : m_a(a), m_b(b)
   {}
 
@@ -45,15 +66,15 @@ struct CostFunctor
   }
 };
 
-struct ManualCostFunction : ceres::SizedCostFunction<1, 1, 2>
+struct ManualPositionCostFunction : ceres::SizedCostFunction<1, 1, 2>
 {
   Vector2d m_a, m_b;
 
-  ManualCostFunction(const Vector2d& a, const Vector2d& b)
+  ManualPositionCostFunction(const Vector2d& a, const Vector2d& b)
   : m_a(a), m_b(b)
   {}
 
-  virtual ~ManualCostFunction() {}
+  virtual ~ManualPositionCostFunction() {}
 
   virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
   {
@@ -94,19 +115,19 @@ struct Callback : ceres::IterationCallback
 
     m_plot.clear_figure();
     m_plot.draw_cartesian_axes(palette["White"]);
-    int count = sizeof(as) / sizeof(Vector2d);
+    int count = sizeof(as) / sizeof(*as);
     for(int i = 0; i < count; ++i)
     {
-      m_plot.draw_cartesian_square(cv::Point2f(bs[i].x, bs[i].y), palette["Blue"], 10);
+      m_plot.draw_cartesian_square(cv::Point2f(bs[i].pos.x, bs[i].pos.y), bs[i].colour, 10, 1);
 
       double cosTheta = cos(m_theta);
       double sinTheta = sin(m_theta);
       Vector2d a(
-        as[i].x * cosTheta - as[i].y * sinTheta + m_trans.x,
-        as[i].x * sinTheta + as[i].y * cosTheta + m_trans.y
+        as[i].pos.x * cosTheta - as[i].pos.y * sinTheta + m_trans.x,
+        as[i].pos.x * sinTheta + as[i].pos.y * cosTheta + m_trans.y
       );
 
-      m_plot.draw_cartesian_circle(cv::Point2f(a.x, a.y), palette["Red"], 10);
+      m_plot.draw_cartesian_circle(cv::Point2f(a.x, a.y), as[i].colour, 10);
     }
     m_plot.refresh();
 
@@ -132,11 +153,11 @@ int main(int argc, char *argv[])
 
   // Build the problem.
   ceres::Problem problem;
-  int count = sizeof(as) / sizeof(Vector2d);
+  int count = sizeof(as) / sizeof(*as);
   for(int i = 0; i < count; ++i)
   {
-    //ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<CostFunctor, 1, 1, 2>(new CostFunctor(as[i], bs[i]));
-    ceres::CostFunction *costFunction = new ManualCostFunction(as[i], bs[i]);
+    //ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<PositionCostFunctor, 1, 1, 2>(new PositionCostFunctor(as[i].pos, bs[i].pos));
+    ceres::CostFunction *costFunction = new ManualPositionCostFunction(as[i].pos, bs[i].pos);
     problem.AddResidualBlock(costFunction, NULL, &theta, trans.v);
   }
 
