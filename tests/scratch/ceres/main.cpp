@@ -23,22 +23,15 @@ struct CostFunctor
 
 struct Callback : ceres::IterationCallback
 {
-  const ceres::Problem& m_problem;
   const Vector2d& m_trans;
 
-  explicit Callback(const ceres::Problem& problem, const Vector2d& trans)
-  : m_problem(problem), m_trans(trans)
+  explicit Callback(const Vector2d& trans)
+  : m_trans(trans)
   {}
 
   ceres::CallbackReturnType operator()(const ceres::IterationSummary& summary)
   {
-    if(summary.step_is_successful)
-    {
-      std::vector<double*> parameterBlocks;
-      m_problem.GetParameterBlocks(&parameterBlocks);
-      Vector2d trans(parameterBlocks[0][0], parameterBlocks[0][1]);
-      std::cout << "Current Trans: " << m_trans << '\n';
-    }
+    std::cout << "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" << m_trans << '\n';
     return ceres::SOLVER_CONTINUE;
   }
 };
@@ -67,8 +60,8 @@ int main(int argc, char *argv[])
   options.minimizer_progress_to_stdout = true;
   options.update_state_every_iteration = true;
 
-  // Add the iteration callback.
-  Callback callback(problem, trans);
+  // Add an iteration callback to monitor how the parameters change.
+  Callback callback(trans);
   options.callbacks.push_back(&callback);
 
   // Run the solver.
