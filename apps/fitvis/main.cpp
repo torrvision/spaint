@@ -15,6 +15,9 @@ using namespace ORUtils;
 #include <tvgplot/PlotWindow.h>
 using namespace tvgplot;
 
+#include <tvgutil/numbers/RandomNumberGenerator.h>
+using namespace tvgutil;
+
 //#################### GLOBAL VARIABLES ####################
 
 struct Element
@@ -29,6 +32,7 @@ struct Element
 
 std::map<std::string,cv::Scalar> palette = PaletteGenerator::generate_basic_rgba_palette();
 
+#if 0
 Element as[] = {
   Element(Vector2d(2,0), palette["Yellow"]),
   Element(Vector2d(2,1), palette["Green"]),
@@ -44,6 +48,23 @@ Element bs[] = {
 };
 
 int correspondences[] = { 0, 1, 2, 3 };
+#else
+Element as[] = {
+  Element(Vector2d(1,1), palette["Red"]),
+  Element(Vector2d(2,1), palette["Red"]),
+  Element(Vector2d(2,2), palette["Red"]),
+  Element(Vector2d(1,2), palette["Green"])
+};
+
+Element bs[] = {
+  Element(Vector2d(1,2), palette["Red"]),
+  Element(Vector2d(2,2), palette["Green"]),
+  Element(Vector2d(2,3), palette["Red"]),
+  Element(Vector2d(1,3), palette["Red"])
+};
+
+int correspondences[] = { 0, 1, 2, 3 };
+#endif
 
 //#################### TYPES ####################
 
@@ -97,9 +118,10 @@ struct ManualPositionCostFunction : ceres::SizedCostFunction<1, 1, 2>
 
     if(jacobians != NULL && jacobians[0] != NULL)
     {
-      jacobians[0][0] = (dx * (aPos().x * sinTheta + aPos().y * cosTheta) + dy * (aPos().y * sinTheta - aPos().x * cosTheta)) / residuals[0];
-      jacobians[1][0] = -dx / residuals[0];
-      jacobians[1][1] = -dy / residuals[0];
+      double temp = residuals[0] > 0.0 ? 1 / residuals[0] : 1.0;
+      jacobians[0][0] = (dx * (aPos().x * sinTheta + aPos().y * cosTheta) + dy * (aPos().y * sinTheta - aPos().x * cosTheta)) * temp;
+      jacobians[1][0] = -dx * temp;
+      jacobians[1][1] = -dy * temp;
     }
     return true;
   }
@@ -144,7 +166,7 @@ struct Callback : ceres::IterationCallback
 
     if(summary.iteration == 0 || summary.step_is_successful)
     {
-      if(cv::waitKey() == 'q') return ceres::SOLVER_ABORT;
+      if(cv::waitKey(10) == 'q') return ceres::SOLVER_ABORT;
     }
 
     return ceres::SOLVER_CONTINUE;
@@ -171,13 +193,20 @@ struct Callback : ceres::IterationCallback
       {
         if(used.find(j) != used.end()) continue;
 
-        double dx = as[i].pos.x - bs[j].pos.x;
-        double dy = as[i].pos.y - bs[j].pos.y;
+        double cosTheta = cos(m_theta);
+        double sinTheta = sin(m_theta);
+        Vector2d a(
+          as[i].pos.x * cosTheta - as[i].pos.y * sinTheta + m_trans.x,
+          as[i].pos.x * sinTheta + as[i].pos.y * cosTheta + m_trans.y
+        );
+
+        double dx = a.x - bs[j].pos.x;
+        double dy = a.y - bs[j].pos.y;
         double dr = as[i].colour[0] - bs[j].colour[0];
         double dg = as[i].colour[1] - bs[j].colour[1];
         double db = as[i].colour[2] - bs[j].colour[2];
-        double posWeight = 1.0;
-        double colourWeight = 0.0;
+        double posWeight = 100.0;
+        double colourWeight = 1.0;
         double cost = posWeight * (dx * dx + dy * dy) + colourWeight * (dr * dr + dg * dg + db * db);
         if(cost < bestCost)
         {
@@ -202,9 +231,9 @@ int main(int argc, char *argv[])
   // Initialise glog.
   google::InitGoogleLogging(argv[0]);
 
-  // The variables to solve for with their initial values. They will be mutated in place by the solver.
-  double theta = 0.0;
-  Vector2d trans(0.0, 0.0);
+  // The parameters for which to solve. They will be mutated in place by the solver.
+  double theta;
+  Vector2d trans;
 
   // Build the problem.
   ceres::Problem problem;
@@ -228,18 +257,37 @@ int main(int argc, char *argv[])
   Callback callback(plot, theta, trans);
   options.callbacks.push_back(&callback);
 
-  // Run the solver.
-  ceres::Solver::Summary summary;
-  Solve(options, &problem, &summary);
+  // Set the initial parameter values.
+  theta = 0.0;
+  trans = Vector2d(0.0, 0.0);
 
-  // Output a report.
-  std::cout << summary.FullReport() << "\n";
-  std::cout << "Theta: " << theta << '\n';
-  std::cout << "Trans: " << trans << '\n';
-
-  if(summary.termination_type != ceres::USER_FAILURE)
+  for(;;)
   {
-    cv::waitKey();
+    // Run the solver.
+    ceres::Solver::Summary summary;
+    Solve(options, &problem, &summary);
+
+    // Output a report.
+    std::cout << summary.FullReport() << "\n";
+    std::cout << "Theta: " << theta << '\n';
+    std::cout << "Trans: " << trans << "\n\n";
+
+    if(summary.IsSolutionUsable() && summary.final_cost < 1e-5)
+    {
+      cv::waitKey();
+      break;
+    }
+    else if(summary.termination_type == ceres::USER_FAILURE)
+    {
+      break;
+    }
+    else
+    {
+      // Randomly restart somewhere else in the search space.
+      static RandomNumberGenerator rng(12345);
+      theta = rng.generate_real_from_uniform(0.0, M_PI);
+      trans = Vector2d(0.0, 0.0);
+    }
   }
 
   return 0;
