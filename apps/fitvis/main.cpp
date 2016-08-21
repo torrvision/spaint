@@ -37,13 +37,13 @@ Element as[] = {
 };
 
 Element bs[] = {
-  Element(Vector2d(3,2), palette["Yellow"]),
-  Element(Vector2d(4,2), palette["Green"]),
-  Element(Vector2d(4,3), palette["Red"]),
-  Element(Vector2d(5,3), palette["Blue"])
+  Element(Vector2d(3,2), palette["Blue"]),
+  Element(Vector2d(4,2), palette["Red"]),
+  Element(Vector2d(4,3), palette["Green"]),
+  Element(Vector2d(5,3), palette["Yellow"])
 };
 
-int correspondences[] = { 3, 2, 1, 0 };
+int correspondences[] = { 0, 1, 2, 3 };
 
 //#################### TYPES ####################
 
@@ -177,7 +177,7 @@ struct Callback : ceres::IterationCallback
         double dg = as[i].colour[1] - bs[j].colour[1];
         double db = as[i].colour[2] - bs[j].colour[2];
         double posWeight = 1.0;
-        double colourWeight = 5.0;
+        double colourWeight = 0.0;
         double cost = posWeight * (dx * dx + dy * dy) + colourWeight * (dr * dr + dg * dg + db * db);
         if(cost < bestCost)
         {
