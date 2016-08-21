@@ -29,27 +29,29 @@ struct Element
 std::map<std::string,cv::Scalar> palette = PaletteGenerator::generate_basic_rgba_palette();
 
 Element as[] = {
-  Element(Vector2d(1,1), palette["Red"]),
-  Element(Vector2d(1,2), palette["Blue"]),
+  Element(Vector2d(2,0), palette["Yellow"]),
   Element(Vector2d(2,1), palette["Green"]),
-  Element(Vector2d(2,0), palette["Yellow"])
+  Element(Vector2d(1,1), palette["Red"]),
+  Element(Vector2d(1,2), palette["Blue"])
 };
 
 Element bs[] = {
-  Element(Vector2d(4,3), palette["Red"]),
-  Element(Vector2d(5,3), palette["Blue"]),
+  Element(Vector2d(3,2), palette["Yellow"]),
   Element(Vector2d(4,2), palette["Green"]),
-  Element(Vector2d(3,2), palette["Yellow"])
+  Element(Vector2d(4,3), palette["Red"]),
+  Element(Vector2d(5,3), palette["Blue"])
 };
+
+int correspondences[] = { 0, 1, 2, 3 };
 
 //#################### TYPES ####################
 
 struct PositionCostFunctor
 {
-  Vector2d m_a, m_b;
+  int m_i;
 
-  PositionCostFunctor(const Vector2d& a, const Vector2d& b)
-  : m_a(a), m_b(b)
+  PositionCostFunctor(int i)
+  : m_i(i)
   {}
 
   template <typename T>
@@ -57,21 +59,24 @@ struct PositionCostFunctor
   {
     T cosTheta = cos(*theta);
     T sinTheta = sin(*theta);
-    T transformedAx = m_a[0] * cosTheta - m_a[1] * sinTheta + trans[0];
-    T transformedAy = m_a[0] * sinTheta + m_a[1] * cosTheta + trans[1];
-    T dx = m_b[0] - transformedAx;
-    T dy = m_b[1] - transformedAy;
+    T transformedAx = aPos().x * cosTheta - aPos().y * sinTheta + trans[0];
+    T transformedAy = aPos().x * sinTheta + aPos().y * cosTheta + trans[1];
+    T dx = bPos()[0] - transformedAx;
+    T dy = bPos()[1] - transformedAy;
     residuals[0] = sqrt(dx * dx + dy * dy);
     return true;
   }
+
+  const Vector2d& aPos() const { return as[m_i].pos; }
+  const Vector2d& bPos() const { return bs[correspondences[m_i]].pos; }
 };
 
 struct ManualPositionCostFunction : ceres::SizedCostFunction<1, 1, 2>
 {
-  Vector2d m_a, m_b;
+  int m_i;
 
-  ManualPositionCostFunction(const Vector2d& a, const Vector2d& b)
-  : m_a(a), m_b(b)
+  ManualPositionCostFunction(int i)
+  : m_i(i)
   {}
 
   virtual ~ManualPositionCostFunction() {}
@@ -83,20 +88,23 @@ struct ManualPositionCostFunction : ceres::SizedCostFunction<1, 1, 2>
 
     double cosTheta = cos(*theta);
     double sinTheta = sin(*theta);
-    double transformedAx = m_a[0] * cosTheta - m_a[1] * sinTheta + trans[0];
-    double transformedAy = m_a[0] * sinTheta + m_a[1] * cosTheta + trans[1];
-    double dx = m_b[0] - transformedAx;
-    double dy = m_b[1] - transformedAy;
+    double transformedAx = aPos().x * cosTheta - aPos().y * sinTheta + trans[0];
+    double transformedAy = aPos().x * sinTheta + aPos().y * cosTheta + trans[1];
+    double dx = bPos()[0] - transformedAx;
+    double dy = bPos()[1] - transformedAy;
     residuals[0] = sqrt(dx * dx + dy * dy);
 
     if(jacobians != NULL && jacobians[0] != NULL)
     {
-      jacobians[0][0] = (dx * (m_a[0] * sinTheta + m_a[1] * cosTheta) + dy * (m_a[1] * sinTheta - m_a[0] * cosTheta)) / residuals[0];
+      jacobians[0][0] = (dx * (aPos().x * sinTheta + aPos().y * cosTheta) + dy * (aPos().y * sinTheta - aPos().x * cosTheta)) / residuals[0];
       jacobians[1][0] = -dx / residuals[0];
       jacobians[1][1] = -dy / residuals[0];
     }
     return true;
   }
+
+  const Vector2d& aPos() const { return as[m_i].pos; }
+  const Vector2d& bPos() const { return bs[correspondences[m_i]].pos; }
 };
 
 struct Callback : ceres::IterationCallback
@@ -156,8 +164,8 @@ int main(int argc, char *argv[])
   int count = sizeof(as) / sizeof(*as);
   for(int i = 0; i < count; ++i)
   {
-    //ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<PositionCostFunctor, 1, 1, 2>(new PositionCostFunctor(as[i].pos, bs[i].pos));
-    ceres::CostFunction *costFunction = new ManualPositionCostFunction(as[i].pos, bs[i].pos);
+    //ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<PositionCostFunctor, 1, 1, 2>(new PositionCostFunctor(i));
+    ceres::CostFunction *costFunction = new ManualPositionCostFunction(i);
     problem.AddResidualBlock(costFunction, NULL, &theta, trans.v);
   }
 
