@@ -16,8 +16,8 @@ using namespace tvgplot;
 
 //#################### GLOBAL VARIABLES ####################
 
-Vector2d as[] = { Vector2d(1,1), Vector2d(1,2), Vector2d(2,1) };
-Vector2d bs[] = { Vector2d(2,3), Vector2d(3,3), Vector2d(2,2) };
+Vector2d as[] = { Vector2d(1,1), Vector2d(1,2), Vector2d(2,1), Vector2d(2,0) };
+Vector2d bs[] = { Vector2d(4,3), Vector2d(5,3), Vector2d(4,2), Vector2d(3,2) };
 
 std::map<std::string,cv::Scalar> palette = PaletteGenerator::generate_basic_rgba_palette();
 
