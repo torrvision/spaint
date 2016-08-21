@@ -32,7 +32,7 @@ struct CostFunctor
   {}
 
   template <typename T>
-  bool operator()(const T *const theta, const T *const trans, T *residual) const
+  bool operator()(const T *const theta, const T *const trans, T *residuals) const
   {
     T cosTheta = cos(*theta);
     T sinTheta = sin(*theta);
@@ -40,7 +40,40 @@ struct CostFunctor
     T transformedAy = m_a[0] * sinTheta + m_a[1] * cosTheta + trans[1];
     T dx = m_b[0] - transformedAx;
     T dy = m_b[1] - transformedAy;
-    residual[0] = sqrt(dx * dx + dy * dy);
+    residuals[0] = sqrt(dx * dx + dy * dy);
+    return true;
+  }
+};
+
+struct ManualCostFunction : ceres::SizedCostFunction<1, 1, 2>
+{
+  Vector2d m_a, m_b;
+
+  ManualCostFunction(const Vector2d& a, const Vector2d& b)
+  : m_a(a), m_b(b)
+  {}
+
+  virtual ~ManualCostFunction() {}
+
+  virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+  {
+    const double *theta = parameters[0];
+    const double *trans = parameters[1];
+
+    double cosTheta = cos(*theta);
+    double sinTheta = sin(*theta);
+    double transformedAx = m_a[0] * cosTheta - m_a[1] * sinTheta + trans[0];
+    double transformedAy = m_a[0] * sinTheta + m_a[1] * cosTheta + trans[1];
+    double dx = m_b[0] - transformedAx;
+    double dy = m_b[1] - transformedAy;
+    residuals[0] = sqrt(dx * dx + dy * dy);
+
+    if(jacobians != NULL && jacobians[0] != NULL)
+    {
+      jacobians[0][0] = (dx * (m_a[0] * sinTheta + m_a[1] * cosTheta) + dy * (m_a[1] * sinTheta - m_a[0] * cosTheta)) / residuals[0];
+      jacobians[1][0] = -dx / residuals[0];
+      jacobians[1][1] = -dy / residuals[0];
+    }
     return true;
   }
 };
@@ -101,7 +134,8 @@ int main(int argc, char *argv[])
   int count = sizeof(as) / sizeof(Vector2d);
   for(int i = 0; i < count; ++i)
   {
-    ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<CostFunctor, 1, 1, 2>(new CostFunctor(as[i], bs[i]));
+    //ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<CostFunctor, 1, 1, 2>(new CostFunctor(as[i], bs[i]));
+    ceres::CostFunction *costFunction = new ManualCostFunction(as[i], bs[i]);
     problem.AddResidualBlock(costFunction, NULL, &theta, trans.v);
   }
 
