@@ -122,7 +122,8 @@ int main(int argc, char *argv[])
   Solve(options, &problem, &summary);
 
   // Output a report.
-  std::cout << summary.BriefReport() << "\n";
+  std::cout << summary.FullReport() << "\n";
+  std::cout << "Theta: " << theta << '\n';
   std::cout << "Trans: " << trans << '\n';
 
   if(summary.termination_type != ceres::USER_FAILURE)
