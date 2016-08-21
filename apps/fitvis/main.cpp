@@ -42,7 +42,7 @@ Element bs[] = {
   Element(Vector2d(5,3), palette["Blue"])
 };
 
-int correspondences[] = { 0, 1, 2, 3 };
+int correspondences[] = { 3, 2, 1, 0 };
 
 //#################### TYPES ####################
 
@@ -139,12 +139,54 @@ struct Callback : ceres::IterationCallback
     }
     m_plot.refresh();
 
+    update_correspondences();
+
     if(summary.iteration == 0 || summary.step_is_successful)
     {
       if(cv::waitKey() == 'q') return ceres::SOLVER_ABORT;
     }
 
     return ceres::SOLVER_CONTINUE;
+  }
+
+  void update_correspondences()
+  {
+    int count = sizeof(as) / sizeof(*as);
+    std::cout << "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tCorrespondences: ";
+    for(int i = 0; i < count; ++i)
+    {
+      std::cout << correspondences[i] << ' ';
+    }
+    std::cout << "-> ";
+
+
+    for(int i = 0; i < count; ++i)
+    {
+      double bestCost = INT_MAX;
+      int bestIndex = -1;
+
+      for(int j = 0; j < count; ++j)
+      {
+        double dx = as[i].pos.x - bs[j].pos.x;
+        double dy = as[i].pos.y - bs[j].pos.y;
+        double dr = as[i].colour[0] - bs[j].colour[0];
+        double dg = as[i].colour[1] - bs[j].colour[1];
+        double db = as[i].colour[2] - bs[j].colour[2];
+        double posWeight = 1.0;
+        double colourWeight = 5.0;
+        double cost = posWeight * (dx * dx + dy * dy) + colourWeight * (dr * dr + dg * dg + db * db);
+        if(cost < bestCost)
+        {
+          bestCost = cost;
+          bestIndex = j;
+        }
+      }
+
+      correspondences[i] = bestIndex;
+      std::cout << correspondences[i] << ' ';
+    }
+
+    std::cout << '\n';
   }
 };
 
