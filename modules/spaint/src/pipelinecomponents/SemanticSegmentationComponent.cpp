@@ -25,9 +25,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SemanticSegmentationComponent::SemanticSegmentationComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings,
-                                                             const std::string& resourcesDir, size_t maxLabelCount)
-: m_maxLabelCount(maxLabelCount), m_resourcesDir(resourcesDir)
+SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const Vector2i& depthImageSize, unsigned int seed,
+                                                             const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+: m_context(context), m_maxLabelCount(maxLabelCount), m_resourcesDir(resourcesDir)
 {
   // Set the maximum numbers of voxels to use for training and prediction.
   // FIXME: These values shouldn't be hard-coded here ultimately.
@@ -85,17 +85,17 @@ void SemanticSegmentationComponent::reset_forest()
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 }
 
-void SemanticSegmentationComponent::run_feature_inspection(SemanticSegmentationContext& context, const RenderState_CPtr& renderState)
+void SemanticSegmentationComponent::run_feature_inspection(const RenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
-  Selector::Selection_CPtr selection = context.get_selector()->get_selection();
+  Selector::Selection_CPtr selection = m_context->get_selector()->get_selection();
 
   // If the user hasn't selected a single voxel, early out.
   if(!selection || selection->dataSize != 1) return;
 
   // Calculate the feature descriptor for the selected voxel.
   boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(m_featureCalculator->get_feature_count());
-  m_featureCalculator->calculate_features(*selection, context.get_scene().get(), *featuresMB);
+  m_featureCalculator->calculate_features(*selection, m_context->get_scene().get(), *featuresMB);
 
 #ifdef WITH_OPENCV
   // Convert the feature descriptor into an OpenCV image and show it in a window.
@@ -113,7 +113,7 @@ void SemanticSegmentationComponent::run_feature_inspection(SemanticSegmentationC
 #endif
 }
 
-void SemanticSegmentationComponent::run_prediction(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState)
+void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
@@ -125,7 +125,7 @@ void SemanticSegmentationComponent::run_prediction(SemanticSegmentationContext& 
   m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
   // Calculate feature descriptors for the sampled voxels.
-  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, context.get_scene().get(), *m_predictionFeaturesMB);
+  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_context->get_scene().get(), *m_predictionFeaturesMB);
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
 
   // Predict labels for the voxels based on the feature descriptors.
@@ -142,10 +142,10 @@ void SemanticSegmentationComponent::run_prediction(SemanticSegmentationContext& 
   m_predictionLabelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  context.mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB, context.get_scene(), NORMAL_MARKING);
+  m_context->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB, m_context->get_scene(), NORMAL_MARKING);
 }
 
-void SemanticSegmentationComponent::run_training(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState)
+void SemanticSegmentationComponent::run_training(const RenderState_CPtr& samplingRenderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!samplingRenderState) return;
@@ -154,7 +154,7 @@ void SemanticSegmentationComponent::run_training(SemanticSegmentationContext& co
   // Note that we deliberately avoid training from the background label (0), since the entire scene is
   // initially labelled as background and so training from the background would cause us to learn
   // incorrect labels for non-background things.
-  LabelManager_CPtr labelManager = context.get_label_manager();
+  LabelManager_CPtr labelManager = m_context->get_label_manager();
   const size_t maxLabelCount = labelManager->get_max_label_count();
   bool *labelMask = m_trainingLabelMaskMB->GetData(MEMORYDEVICE_CPU);
   labelMask[0] = false;
@@ -166,7 +166,7 @@ void SemanticSegmentationComponent::run_training(SemanticSegmentationContext& co
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
-  m_trainingSampler->sample_voxels(raycastResult, context.get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, m_context->get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
 #if DEBUGGING
   // Output the numbers of voxels sampled for each label (for debugging purposes).
@@ -181,7 +181,7 @@ void SemanticSegmentationComponent::run_training(SemanticSegmentationContext& co
 #endif
 
   // Compute feature vectors for the sampled voxels.
-  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, context.get_scene().get(), *m_trainingFeaturesMB);
+  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_context->get_scene().get(), *m_trainingFeaturesMB);
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::Label> > Example_CPtr;

@@ -36,6 +36,10 @@ public:
   virtual const Scene_Ptr& get_scene() = 0;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SmoothingContext> SmoothingContext_Ptr;
+
 }
 
 #endif

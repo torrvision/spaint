@@ -30,10 +30,10 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, settings));
 
   // Set up the pipeline components.
-  m_propagationComponent.reset(new PropagationComponent(imageSourceEngine->getDepthImageSize(), settings));
-  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()));
+  m_propagationComponent.reset(new PropagationComponent(m_model, imageSourceEngine->getDepthImageSize(), settings));
+  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()));
   m_slamComponent.reset(new SLAMComponent(m_model, imageSourceEngine, settings, trackerType, trackerParams));
-  m_smoothingComponent.reset(new SmoothingComponent(labelManager->get_max_label_count(), settings));
+  m_smoothingComponent.reset(new SmoothingComponent(m_model, labelManager->get_max_label_count(), settings));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -99,29 +99,29 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
   switch(m_mode)
   {
     case MODE_FEATURE_INSPECTION:
-      m_semanticSegmentationComponent->run_feature_inspection(*m_model, renderState);
+      m_semanticSegmentationComponent->run_feature_inspection(renderState);
       break;
     case MODE_PREDICTION:
-      m_semanticSegmentationComponent->run_prediction(*m_model, renderState);
+      m_semanticSegmentationComponent->run_prediction(renderState);
       break;
     case MODE_PROPAGATION:
-      m_propagationComponent->run(*m_model, renderState);
+      m_propagationComponent->run(renderState);
       break;
     case MODE_SMOOTHING:
-      m_smoothingComponent->run(*m_model, renderState);
+      m_smoothingComponent->run(renderState);
       break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) m_semanticSegmentationComponent->run_training(*m_model, renderState);
-      else m_semanticSegmentationComponent->run_prediction(*m_model, renderState);;
+      if(trainThisFrame) m_semanticSegmentationComponent->run_training(renderState);
+      else m_semanticSegmentationComponent->run_prediction(renderState);
 
       break;
     }
     case MODE_TRAINING:
-      m_semanticSegmentationComponent->run_training(*m_model, renderState);
+      m_semanticSegmentationComponent->run_training(renderState);
       break;
     default:
       break;

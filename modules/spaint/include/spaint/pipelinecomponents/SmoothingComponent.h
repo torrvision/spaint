@@ -26,6 +26,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  SmoothingContext_Ptr m_context;
+
   /** The label smoother. */
   LabelSmoother_CPtr m_labelSmoother;
 
@@ -34,12 +37,12 @@ public:
   /**
    * \brief TODO
    */
-  SmoothingComponent(size_t maxLabelCount, const Settings_CPtr& settings);
+  SmoothingComponent(const SmoothingContext_Ptr& context, size_t maxLabelCount, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** TODO */
-  virtual void run(SmoothingContext& context, const RenderState_CPtr& renderState);
+  virtual void run(const RenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

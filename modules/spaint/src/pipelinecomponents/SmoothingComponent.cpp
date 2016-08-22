@@ -11,16 +11,17 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SmoothingComponent::SmoothingComponent(size_t maxLabelCount, const Settings_CPtr& settings)
+SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context, size_t maxLabelCount, const Settings_CPtr& settings)
+: m_context(context)
 {
   m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SmoothingComponent::run(SmoothingContext& context, const RenderState_CPtr& renderState)
+void SmoothingComponent::run(const RenderState_CPtr& renderState)
 {
-  m_labelSmoother->smooth_labels(renderState->raycastResult, context.get_scene().get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, m_context->get_scene().get());
 }
 
 }

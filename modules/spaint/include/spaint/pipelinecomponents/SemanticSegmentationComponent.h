@@ -31,6 +31,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  SemanticSegmentationContext_Ptr m_context;
+
   /** The feature calculator. */
   FeatureCalculator_CPtr m_featureCalculator;
 
@@ -84,8 +87,8 @@ public:
   /**
    * \brief TODO
    */
-  SemanticSegmentationComponent(const Vector2i& depthImageSize, unsigned int seed, const Settings_CPtr& settings,
-                                const std::string& resourcesDir, size_t maxLabelCount);
+  SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const Vector2i& depthImageSize, unsigned int seed,
+                                const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -95,13 +98,13 @@ public:
   void reset_forest();
 
   /** TODO */
-  void run_feature_inspection(SemanticSegmentationContext& context, const RenderState_CPtr& renderState);
+  void run_feature_inspection(const RenderState_CPtr& renderState);
 
   /** TODO */
-  void run_prediction(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState);
+  void run_prediction(const RenderState_CPtr& samplingRenderState);
 
   /** TODO */
-  void run_training(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState);
+  void run_training(const RenderState_CPtr& samplingRenderState);
 };
 
 //#################### TYPEDEFS ####################

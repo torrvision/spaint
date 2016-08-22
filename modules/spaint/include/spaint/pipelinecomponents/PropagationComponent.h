@@ -26,6 +26,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  PropagationContext_Ptr m_context;
+
   /** The label propagator. */
   LabelPropagator_CPtr m_labelPropagator;
 
@@ -34,20 +37,20 @@ public:
   /**
    * \brief Constructs a propagation component.
    *
+   * \param context         The shared context needed for propagation.
    * \param depthImageSize  The size of the depth images from which the target scene has been reconstructed.
    * \param settings        The settings to use for InfiniTAM.
    */
-  PropagationComponent(const Vector2i& depthImageSize, const Settings_CPtr& settings);
+  PropagationComponent(const PropagationContext_Ptr& context, const Vector2i& depthImageSize, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
    * \brief Runs the propagation component, propagating a semantic label over the surfaces of the target scene.
    *
-   * \param context     The shared context needed for propagation.
    * \param renderState The render state associated with the camera position from which to propagate.
    */
-  virtual void run(PropagationContext& context, const RenderState_CPtr& renderState);
+  virtual void run(const RenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

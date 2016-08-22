@@ -41,6 +41,10 @@ public:
   virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode) = 0;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SemanticSegmentationContext> SemanticSegmentationContext_Ptr;
+
 }
 
 #endif

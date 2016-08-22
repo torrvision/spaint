@@ -37,6 +37,10 @@ public:
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<PropagationContext> PropagationContext_Ptr;
+
 }
 
 #endif

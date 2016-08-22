@@ -11,7 +11,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-PropagationComponent::PropagationComponent(const Vector2i& depthImageSize, const Settings_CPtr& settings)
+PropagationComponent::PropagationComponent(const PropagationContext_Ptr& context, const Vector2i& depthImageSize, const Settings_CPtr& settings)
+: m_context(context)
 {
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
   m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
@@ -19,9 +20,9 @@ PropagationComponent::PropagationComponent(const Vector2i& depthImageSize, const
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void PropagationComponent::run(PropagationContext& context, const RenderState_CPtr& renderState)
+void PropagationComponent::run(const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->propagate_label(context.get_semantic_label(), renderState->raycastResult, context.get_scene().get());
+  m_labelPropagator->propagate_label(m_context->get_semantic_label(), renderState->raycastResult, m_context->get_scene().get());
 }
 
 }
