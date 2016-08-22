@@ -6,12 +6,10 @@
 #ifndef H_SPAINT_SMOOTHINGCONTEXT
 #define H_SPAINT_SMOOTHINGCONTEXT
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/LabelManager.h"
-#include "../util/SpaintVoxel.h"
+#include "../util/SpaintScene.h"
 
 namespace spaint {
 
@@ -22,8 +20,6 @@ class SmoothingContext
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### DESTRUCTOR ####################

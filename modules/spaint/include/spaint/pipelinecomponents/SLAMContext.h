@@ -6,13 +6,11 @@
 #ifndef H_SPAINT_SLAMCONTEXT
 #define H_SPAINT_SLAMCONTEXT
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
-#include "../util/SpaintVoxel.h"
+#include "../util/SpaintScene.h"
 
 namespace spaint {
 
@@ -23,9 +21,6 @@ class SLAMContext
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;

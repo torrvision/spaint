@@ -6,12 +6,9 @@
 #ifndef H_SPAINT_PROPAGATIONCONTEXT
 #define H_SPAINT_PROPAGATIONCONTEXT
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "../util/SpaintVoxel.h"
+#include "../util/SpaintScene.h"
 
 namespace spaint {
 
@@ -22,8 +19,6 @@ class PropagationContext
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### DESTRUCTOR ####################

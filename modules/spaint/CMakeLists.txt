@@ -500,6 +500,7 @@ include/spaint/util/ITMImagePtrTypes.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
+include/spaint/util/SpaintScene.h
 include/spaint/util/SpaintVoxel.h
 )
 

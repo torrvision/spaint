@@ -22,14 +22,11 @@ public:
 
   /** Override */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
-                           ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, MarkingMode mode,
-                           ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const;
+                           Scene *scene, MarkingMode mode, ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const;
 
   /** Override */
-  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                           const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
-                           ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, MarkingMode mode,
-                           ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const;
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
+                           Scene *scene, MarkingMode mode, ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB) const;
 };
 
 }

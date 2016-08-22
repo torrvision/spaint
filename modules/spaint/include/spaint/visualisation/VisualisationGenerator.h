@@ -27,9 +27,6 @@ public:
   typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;

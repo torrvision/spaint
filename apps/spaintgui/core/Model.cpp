@@ -68,12 +68,12 @@ const std::string& Model::get_resources_dir() const
   return m_resourcesDir;
 }
 
-const Model::Scene_Ptr& Model::get_scene()
+const Scene_Ptr& Model::get_scene()
 {
   return SLAMContext::get_scene();
 }
 
-Model::Scene_CPtr Model::get_scene() const
+Scene_CPtr Model::get_scene() const
 {
   return SLAMContext::get_scene();
 }

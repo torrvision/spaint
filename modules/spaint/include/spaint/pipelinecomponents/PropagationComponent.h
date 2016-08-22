@@ -7,7 +7,6 @@
 #define H_SPAINT_PROPAGATIONCOMPONENT
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "PropagationContext.h"
 #include "../propagation/interface/LabelPropagator.h"
@@ -22,7 +21,6 @@ class PropagationComponent
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:

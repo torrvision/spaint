@@ -20,6 +20,7 @@
 #include "../trackers/FallibleTracker.h"
 #include "../trackers/TrackerType.h"
 #include "../util/ITMImagePtrTypes.h"
+#include "../util/SpaintScene.h"
 
 namespace spaint {
 
@@ -39,8 +40,6 @@ private:
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;

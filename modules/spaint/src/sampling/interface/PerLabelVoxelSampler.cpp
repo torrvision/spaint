@@ -38,8 +38,7 @@ PerLabelVoxelSampler::~PerLabelVoxelSampler() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void PerLabelVoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult,
-                                         const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+void PerLabelVoxelSampler::sample_voxels(const ITMFloat4Image *raycastResult, const Scene *scene,
                                          const ORUtils::MemoryBlock<bool>& labelMaskMB,
                                          ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
                                          ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const

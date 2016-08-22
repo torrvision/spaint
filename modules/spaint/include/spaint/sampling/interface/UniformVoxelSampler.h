@@ -6,12 +6,9 @@
 #ifndef H_SPAINT_UNIFORMVOXELSAMPLER
 #define H_SPAINT_UNIFORMVOXELSAMPLER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
 
-#include "../../util/SpaintVoxel.h"
+#include "../../util/SpaintScene.h"
 
 namespace tvgutil {
 

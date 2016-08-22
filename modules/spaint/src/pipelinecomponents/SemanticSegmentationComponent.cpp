@@ -115,16 +115,16 @@ void SemanticSegmentationComponent::run_feature_inspection(const RenderState_CPt
 #endif
 }
 
-void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& samplingRenderState)
+void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& renderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
-  if(!samplingRenderState) return;
+  if(!renderState) return;
 
   // If the random forest is not yet valid, early out.
   if(!m_forest->is_valid()) return;
 
   // Sample some voxels for which to predict labels.
-  m_predictionSampler->sample_voxels(samplingRenderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
+  m_predictionSampler->sample_voxels(renderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
   // Calculate feature descriptors for the sampled voxels.
   m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_context->get_scene().get(), *m_predictionFeaturesMB);
@@ -147,10 +147,10 @@ void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& sampl
   m_context->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB, m_context->get_scene(), NORMAL_MARKING);
 }
 
-void SemanticSegmentationComponent::run_training(const RenderState_CPtr& samplingRenderState)
+void SemanticSegmentationComponent::run_training(const RenderState_CPtr& renderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
-  if(!samplingRenderState) return;
+  if(!renderState) return;
 
   // Calculate a mask indicating the labels that are currently in use and from which we want to train.
   // Note that we deliberately avoid training from the background label (0), since the entire scene is
@@ -167,7 +167,7 @@ void SemanticSegmentationComponent::run_training(const RenderState_CPtr& samplin
   m_trainingLabelMaskMB->UpdateDeviceFromHost();
 
   // Sample voxels from the scene to use for training the random forest.
-  const ORUtils::Image<Vector4f> *raycastResult = samplingRenderState->raycastResult;
+  const ORUtils::Image<Vector4f> *raycastResult = renderState->raycastResult;
   m_trainingSampler->sample_voxels(raycastResult, m_context->get_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
 #if DEBUGGING

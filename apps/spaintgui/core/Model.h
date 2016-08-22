@@ -13,6 +13,7 @@
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
+#include <spaint/util/SpaintScene.h>
 
 /**
  * \brief An instance of this class represents our model of the spaint scenario.
@@ -31,9 +32,6 @@ public:
   typedef boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_Ptr;
   typedef boost::shared_ptr<const ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
@@ -116,10 +114,10 @@ public:
   virtual const std::string& get_resources_dir() const;
 
   /** Override */
-  virtual const Scene_Ptr& get_scene();
+  virtual const spaint::Scene_Ptr& get_scene();
 
   /** Override */
-  virtual Scene_CPtr get_scene() const;
+  virtual spaint::Scene_CPtr get_scene() const;
 
   /**
    * \brief Gets the voxels in the scene (if any) that were selected the last time the current selector was updated.
@@ -172,7 +170,7 @@ public:
    * \param mode      The marking mode.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  virtual void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const Scene_Ptr& scene,
+  virtual void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const spaint::Scene_Ptr& scene,
                            spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
   /**
@@ -183,7 +181,7 @@ public:
    * \param scene     The scene.
    * \param mode      The marking mode.
    */
-  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode);
+  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const spaint::Scene_Ptr& scene, spaint::MarkingMode mode);
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.

@@ -9,6 +9,7 @@
 #include "../markers/interface/VoxelMarker.h"
 #include "../selectors/Selector.h"
 #include "../util/LabelManager.h"
+#include "../util/SpaintScene.h"
 
 namespace spaint {
 
@@ -19,9 +20,7 @@ class SemanticSegmentationContext
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<const ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
-  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
@@ -41,7 +40,7 @@ public:
   virtual const Scene_Ptr& get_scene() = 0;
   virtual Selector_CPtr get_selector() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
-  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, spaint::MarkingMode mode) = 0;
+  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, MarkingMode mode) = 0;
 };
 
 //#################### TYPEDEFS ####################

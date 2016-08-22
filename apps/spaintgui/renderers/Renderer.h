@@ -266,7 +266,7 @@ private:
    * \param visualisationType The type of visualisation to generate.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
-  void generate_visualisation(const ITMUChar4Image_Ptr& output, const Model::Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
                               const Model::View_CPtr& view, RenderState_Ptr& renderState,
                               spaint::VisualisationGenerator::VisualisationType visualisationType,
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;

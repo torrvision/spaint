@@ -41,12 +41,12 @@ const Vector2i& SLAMContext::get_rgb_image_size() const
   return m_inputRGBImage->noDims;
 }
 
-const SLAMContext::Scene_Ptr& SLAMContext::get_scene()
+const Scene_Ptr& SLAMContext::get_scene()
 {
   return m_scene;
 }
 
-SLAMContext::Scene_CPtr SLAMContext::get_scene() const
+Scene_CPtr SLAMContext::get_scene() const
 {
   return m_scene;
 }

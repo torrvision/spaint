@@ -19,7 +19,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this pipeline component can be used to semantically-segment a scene.
+ * \brief An instance of this pipeline component can be used to semantically segment a scene.
  */
 class SemanticSegmentationComponent
 {
@@ -79,7 +79,10 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a semantic segmentation component.
+   *
+   * \param context The shared context needed for semantic segmentation.
+   * \param seed    A seed for the random number generators used by the voxel samplers.
    */
   SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, unsigned int seed);
 
@@ -90,14 +93,26 @@ public:
    */
   void reset_forest();
 
-  /** TODO */
+  /**
+   * \brief Runs the feature inspection section of the component.
+   *
+   * \param renderState The render state associated with the camera position from which the user is picking voxels.
+   */
   void run_feature_inspection(const RenderState_CPtr& renderState);
 
-  /** TODO */
-  void run_prediction(const RenderState_CPtr& samplingRenderState);
+  /**
+   * \brief Runs the prediction section of the component.
+   *
+   * \param renderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_prediction(const RenderState_CPtr& renderState);
 
-  /** TODO */
-  void run_training(const RenderState_CPtr& samplingRenderState);
+  /**
+   * \brief Runs the training section of the component.
+   *
+   * \param renderState The render state associated with the camera position from which to sample voxels.
+   */
+  void run_training(const RenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################
