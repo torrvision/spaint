@@ -104,6 +104,10 @@ public:
   void run_training(SemanticSegmentationContext& context, const RenderState_CPtr& samplingRenderState);
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SemanticSegmentationComponent> SemanticSegmentationComponent_Ptr;
+
 }
 
 #endif

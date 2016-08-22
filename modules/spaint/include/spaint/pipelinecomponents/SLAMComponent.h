@@ -201,6 +201,10 @@ private:
   void setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SLAMComponent> SLAMComponent_Ptr;
+
 }
 
 #endif

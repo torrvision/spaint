@@ -14,11 +14,7 @@ using namespace spaint;
 
 Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
                    const LabelManager_Ptr& labelManager, unsigned int seed, TrackerType trackerType, const std::string& trackerParams)
-: m_mode(MODE_NORMAL),
-  m_propagationComponent(imageSourceEngine->getDepthImageSize(), settings),
-  m_semanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()),
-  m_slamComponent(imageSourceEngine, settings, trackerType, trackerParams),
-  m_smoothingComponent(labelManager->get_max_label_count(), settings)
+: m_mode(MODE_NORMAL)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -29,11 +25,17 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   }
 #endif
 
-  // Set up the spaint model and visualisation generator.
-  Vector2i depthImageSize = m_slamComponent.get_input_raw_depth_image()->noDims;
-  Vector2i rgbImageSize = m_slamComponent.get_input_rgb_image()->noDims;
+  // Set up the pipeline components.
+  m_propagationComponent.reset(new PropagationComponent(imageSourceEngine->getDepthImageSize(), settings));
+  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()));
+  m_slamComponent.reset(new SLAMComponent(imageSourceEngine, settings, trackerType, trackerParams));
+  m_smoothingComponent.reset(new SmoothingComponent(labelManager->get_max_label_count(), settings));
 
-  m_model.reset(new Model(m_slamComponent.get_scene(), rgbImageSize, depthImageSize, m_slamComponent.get_tracking_state(), settings, resourcesDir, labelManager));
+  // Set up the spaint model and visualisation generator.
+  Vector2i depthImageSize = m_slamComponent->get_input_raw_depth_image()->noDims;
+  Vector2i rgbImageSize = m_slamComponent->get_input_rgb_image()->noDims;
+
+  m_model.reset(new Model(m_slamComponent->get_scene(), rgbImageSize, depthImageSize, m_slamComponent->get_tracking_state(), settings, resourcesDir, labelManager));
   m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, m_model->get_settings()));
 }
 
@@ -41,12 +43,12 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
 bool Pipeline::get_fusion_enabled() const
 {
-  return m_slamComponent.get_fusion_enabled();
+  return m_slamComponent->get_fusion_enabled();
 }
 
 ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 {
-  ITMShortImage_CPtr inputRawDepthImage = m_slamComponent.get_input_raw_depth_image();
+  ITMShortImage_CPtr inputRawDepthImage = m_slamComponent->get_input_raw_depth_image();
   ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
   copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
@@ -54,7 +56,7 @@ ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 
 ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
 {
-  ITMUChar4Image_CPtr inputRGBImage = m_slamComponent.get_input_rgb_image();
+  ITMUChar4Image_CPtr inputRGBImage = m_slamComponent->get_input_rgb_image();
   ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
   copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
@@ -62,7 +64,7 @@ ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
 
 Pipeline::RenderState_CPtr Pipeline::get_live_render_state() const
 {
-  return m_slamComponent.get_live_render_state();
+  return m_slamComponent->get_live_render_state();
 }
 
 Pipeline::Mode Pipeline::get_mode() const
@@ -87,12 +89,12 @@ VisualisationGenerator_CPtr Pipeline::get_visualisation_generator() const
 
 void Pipeline::reset_forest()
 {
-  m_semanticSegmentationComponent.reset_forest();
+  m_semanticSegmentationComponent->reset_forest();
 }
 
 bool Pipeline::run_main_section()
 {
-  return m_slamComponent.run(*m_model);
+  return m_slamComponent->run(*m_model);
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
@@ -100,29 +102,29 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
   switch(m_mode)
   {
     case MODE_FEATURE_INSPECTION:
-      m_semanticSegmentationComponent.run_feature_inspection(*m_model, renderState);
+      m_semanticSegmentationComponent->run_feature_inspection(*m_model, renderState);
       break;
     case MODE_PREDICTION:
-      m_semanticSegmentationComponent.run_prediction(*m_model, renderState);
+      m_semanticSegmentationComponent->run_prediction(*m_model, renderState);
       break;
     case MODE_PROPAGATION:
-      m_propagationComponent.run(*m_model, renderState);
+      m_propagationComponent->run(*m_model, renderState);
       break;
     case MODE_SMOOTHING:
-      m_smoothingComponent.run(*m_model, renderState);
+      m_smoothingComponent->run(*m_model, renderState);
       break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) m_semanticSegmentationComponent.run_training(*m_model, renderState);
-      else m_semanticSegmentationComponent.run_prediction(*m_model, renderState);;
+      if(trainThisFrame) m_semanticSegmentationComponent->run_training(*m_model, renderState);
+      else m_semanticSegmentationComponent->run_prediction(*m_model, renderState);;
 
       break;
     }
     case MODE_TRAINING:
-      m_semanticSegmentationComponent.run_training(*m_model, renderState);
+      m_semanticSegmentationComponent->run_training(*m_model, renderState);
       break;
     default:
       break;
@@ -131,7 +133,7 @@ void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)
 
 void Pipeline::set_fusion_enabled(bool fusionEnabled)
 {
-  m_slamComponent.set_fusion_enabled(fusionEnabled);
+  m_slamComponent->set_fusion_enabled(fusionEnabled);
 }
 
 void Pipeline::set_mode(Mode mode)

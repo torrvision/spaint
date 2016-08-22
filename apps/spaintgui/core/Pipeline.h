@@ -67,16 +67,16 @@ private:
   Model_Ptr m_model;
 
   /** TODO */
-  spaint::PropagationComponent m_propagationComponent;
+  spaint::PropagationComponent_Ptr m_propagationComponent;
 
   /** TODO */
-  spaint::SemanticSegmentationComponent m_semanticSegmentationComponent;
+  spaint::SemanticSegmentationComponent_Ptr m_semanticSegmentationComponent;
 
   /** TODO */
-  spaint::SLAMComponent m_slamComponent;
+  spaint::SLAMComponent_Ptr m_slamComponent;
 
   /** TODO */
-  spaint::SmoothingComponent m_smoothingComponent;
+  spaint::SmoothingComponent_Ptr m_smoothingComponent;
 
   /** The visualiation generator that is used to render the InfiniTAM scene. */
   spaint::VisualisationGenerator_Ptr m_visualisationGenerator;

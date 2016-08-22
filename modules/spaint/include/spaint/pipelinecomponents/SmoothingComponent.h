@@ -42,6 +42,10 @@ public:
   virtual void run(SmoothingContext& context, const RenderState_CPtr& renderState);
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SmoothingComponent> SmoothingComponent_Ptr;
+
 }
 
 #endif

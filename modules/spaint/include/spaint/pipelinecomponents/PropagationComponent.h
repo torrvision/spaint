@@ -50,6 +50,10 @@ public:
   virtual void run(PropagationContext& context, const RenderState_CPtr& renderState);
 };
 
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<PropagationComponent> PropagationComponent_Ptr;
+
 }
 
 #endif
