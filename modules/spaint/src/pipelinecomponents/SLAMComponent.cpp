@@ -26,8 +26,10 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SLAMComponent::SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams)
-: m_fusedFramesCount(0),
+SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings,
+                             TrackerType trackerType, const std::string& trackerParams)
+: m_context(context),
+  m_fusedFramesCount(0),
   m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
@@ -42,8 +44,8 @@ SLAMComponent::SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEn
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
-  m_inputRGBImage.reset(new ITMUChar4Image(rgbImageSize, true, true));
-  m_inputRawDepthImage.reset(new ITMShortImage(depthImageSize, true, true));
+  context->set_input_rgb_image(new ITMUChar4Image(rgbImageSize, true, true));
+  context->set_input_raw_depth_image(new ITMShortImage(depthImageSize, true, true));
 
   // Set up the low-level engine.
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
@@ -53,21 +55,22 @@ SLAMComponent::SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEn
 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->GetMemoryType();
-  m_scene.reset(new Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+  m_context->set_scene(new Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+  const Scene_Ptr& scene = m_context->get_scene();
 
   // Set up the dense mapper.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
-  m_denseMapper->ResetScene(m_scene.get());
+  m_denseMapper->ResetScene(scene.get());
 
   // Set up the tracker and the tracking controller.
   setup_tracker(rgbImageSize, depthImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
-  m_trackingState.reset(new ITMTrackingState(trackedImageSize, memoryType));
-  m_tracker->UpdateInitialPose(m_trackingState.get());
+  m_context->set_tracking_state(new ITMTrackingState(trackedImageSize, memoryType));
+  m_tracker->UpdateInitialPose(m_context->get_tracking_state().get());
 
   // Set up the live render state.
-  m_liveRenderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, m_scene->sceneParams, memoryType));
+  m_liveRenderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
 
   // Set up the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
@@ -89,50 +92,34 @@ bool SLAMComponent::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
-ITMShortImage_CPtr SLAMComponent::get_input_raw_depth_image() const
-{
-  return m_inputRawDepthImage;
-}
-
-ITMUChar4Image_CPtr SLAMComponent::get_input_rgb_image() const
-{
-  return m_inputRGBImage;
-}
-
 SLAMComponent::RenderState_CPtr SLAMComponent::get_live_render_state() const
 {
   return m_liveRenderState;
 }
 
-const SLAMComponent::Scene_Ptr& SLAMComponent::get_scene()
-{
-  return m_scene;
-}
-
-const SLAMComponent::TrackingState_Ptr& SLAMComponent::get_tracking_state()
-{
-  return m_trackingState;
-}
-
-bool SLAMComponent::run(SLAMContext& context)
+bool SLAMComponent::run()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const View_Ptr& view = context.get_view();
+  const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image();
+  const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image();
+  const Scene_Ptr& scene = m_context->get_scene();
+  const TrackingState_Ptr& trackingState = m_context->get_tracking_state();
+  const View_Ptr& view = m_context->get_view();
 
   // Get the next frame.
   ITMView *newView = view.get();
-  m_imageSourceEngine->getImages(m_inputRGBImage.get(), m_inputRawDepthImage.get());
+  m_imageSourceEngine->getImages(inputRGBImage.get(), inputRawDepthImage.get());
   const bool useBilateralFilter = false;
-  m_viewBuilder->UpdateView(&newView, m_inputRGBImage.get(), m_inputRawDepthImage.get(), useBilateralFilter);
-  context.set_view(newView);
+  m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
+  m_context->set_view(newView);
 
   // Track the camera (we can only do this once we've started reconstructing the scene because we need something to track against).
-  SE3Pose oldPose(*m_trackingState->pose_d);
-  if(m_fusedFramesCount > 0) m_trackingController->Track(m_trackingState.get(), view.get());
+  SE3Pose oldPose(*trackingState->pose_d);
+  if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
   // Determine the tracking quality, taking into account the failure mode being used.
-  ITMTrackingState::TrackingResult trackerResult = m_trackingState->trackerResult;
+  ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
   switch(m_settings->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
@@ -158,19 +145,19 @@ bool SLAMComponent::run(SLAMContext& context)
       {
         // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
         // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
-        m_poseDatabase->storePose(keyframeID, *m_trackingState->pose_d, 0);
+        m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
       }
       else if(trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
       {
         // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
         // of the keyframe and rerun the tracker for this frame.
-        m_trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
+        trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), context.get_visualisation_engine().get(), m_liveRenderState.get());
-        m_trackingController->Track(m_trackingState.get(), view.get());
-        trackerResult = m_trackingState->trackerResult;
+        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), m_liveRenderState.get(), resetVisibleList);
+        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), m_liveRenderState.get());
+        m_trackingController->Track(trackingState.get(), view.get());
+        trackerResult = trackingState->trackerResult;
 
         // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
         // adding a new keyframe.
@@ -208,22 +195,22 @@ bool SLAMComponent::run(SLAMContext& context)
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseMapper->ProcessFrame(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get());
+    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), m_liveRenderState.get());
     ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseMapper->UpdateVisibleList(view.get(), m_trackingState.get(), m_scene.get(), m_liveRenderState.get());
+    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), m_liveRenderState.get());
   }
   else
   {
     // If the tracking has completely failed, restore the pose from the previous frame.
-    *m_trackingState->pose_d = oldPose;
+    *trackingState->pose_d = oldPose;
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(m_trackingState.get(), m_scene.get(), view.get(), context.get_visualisation_engine().get(), m_liveRenderState.get());
+  m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), m_liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
@@ -244,7 +231,8 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
   compositeTracker->SetTracker(primaryTracker, 0);
   compositeTracker->SetTracker(
     ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
-      rgbImageSize, depthImageSize, m_settings->deviceType, ORUtils::KeyValueConfig(m_settings->trackerConfig), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_scene.get()
+      rgbImageSize, depthImageSize, m_settings->deviceType, ORUtils::KeyValueConfig(m_settings->trackerConfig),
+      m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
     ), 1
   );
   return compositeTracker;
@@ -292,7 +280,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     {
       m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
       m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, m_settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_scene.get()
+        rgbImageSize, depthImageSize, m_settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
       ));
     }
   }

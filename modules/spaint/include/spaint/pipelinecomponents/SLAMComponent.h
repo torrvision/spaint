@@ -50,6 +50,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** TODO */
+  SLAMContext_Ptr m_context;
+
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
 
@@ -78,12 +81,6 @@ private:
    */
   size_t m_initialFramesToFuse;
 
-  /** The image into which depth input is read each frame. */
-  ITMShortImage_Ptr m_inputRawDepthImage;
-
-  /** The image into which RGB input is read each frame. */
-  ITMUChar4Image_Ptr m_inputRGBImage;
-
   /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
   size_t m_keyframeDelay;
 
@@ -98,9 +95,6 @@ private:
 
   /** The relocaliser. */
   Relocaliser_Ptr m_relocaliser;
-
-  /** The reconstructed scene. */
-  Scene_Ptr m_scene;
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
@@ -120,9 +114,6 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
-  /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
-  TrackingState_Ptr m_trackingState;
-
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
 
@@ -131,12 +122,13 @@ public:
   /**
    * \brief TODO
    *
+   * \param context           TODO
    * \param imageSourceEngine TODO
    * \param settings          The settings to use for InfiniTAM.
    * \param trackerType       TODO
    * \param trackerParams     TODO
    */
-  SLAMComponent(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams);
+  SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -146,34 +138,14 @@ public:
   bool get_fusion_enabled() const;
 
   /**
-   * \brief TODO
-   */
-  ITMShortImage_CPtr get_input_raw_depth_image() const;
-
-  /**
-   * \brief TODO
-   */
-  ITMUChar4Image_CPtr get_input_rgb_image() const;
-
-  /**
    * \brief Gets the render state corresponding to the live camera pose.
    *
    * \return  The render state corresponding to the live camera pose.
    */
   RenderState_CPtr get_live_render_state() const;
 
-  /**
-   * \brief TODO
-   */
-  const Scene_Ptr& get_scene();
-
-  /**
-   * \brief TODO
-   */
-  const TrackingState_Ptr& get_tracking_state();
-
   /** TODO */
-  virtual bool run(SLAMContext& context);
+  virtual bool run();
 
   /**
    * \brief TODO

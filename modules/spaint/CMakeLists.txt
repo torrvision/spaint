@@ -220,6 +220,7 @@ SET(pipelinecomponents_sources
 src/pipelinecomponents/PropagationComponent.cpp
 src/pipelinecomponents/SemanticSegmentationComponent.cpp
 src/pipelinecomponents/SLAMComponent.cpp
+src/pipelinecomponents/SLAMContext.cpp
 src/pipelinecomponents/SmoothingComponent.cpp
 )
 

@@ -25,18 +25,15 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   }
 #endif
 
+  // Set up the spaint model and visualisation generator.
+  m_model.reset(new Model(settings, resourcesDir, labelManager));
+  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, settings));
+
   // Set up the pipeline components.
   m_propagationComponent.reset(new PropagationComponent(imageSourceEngine->getDepthImageSize(), settings));
   m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()));
-  m_slamComponent.reset(new SLAMComponent(imageSourceEngine, settings, trackerType, trackerParams));
+  m_slamComponent.reset(new SLAMComponent(m_model, imageSourceEngine, settings, trackerType, trackerParams));
   m_smoothingComponent.reset(new SmoothingComponent(labelManager->get_max_label_count(), settings));
-
-  // Set up the spaint model and visualisation generator.
-  Vector2i depthImageSize = m_slamComponent->get_input_raw_depth_image()->noDims;
-  Vector2i rgbImageSize = m_slamComponent->get_input_rgb_image()->noDims;
-
-  m_model.reset(new Model(m_slamComponent->get_scene(), rgbImageSize, depthImageSize, m_slamComponent->get_tracking_state(), settings, resourcesDir, labelManager));
-  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, m_model->get_settings()));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -48,7 +45,7 @@ bool Pipeline::get_fusion_enabled() const
 
 ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 {
-  ITMShortImage_CPtr inputRawDepthImage = m_slamComponent->get_input_raw_depth_image();
+  ITMShortImage_CPtr inputRawDepthImage = m_model->get_input_raw_depth_image();
   ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
   copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
@@ -56,7 +53,7 @@ ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
 
 ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
 {
-  ITMUChar4Image_CPtr inputRGBImage = m_slamComponent->get_input_rgb_image();
+  ITMUChar4Image_CPtr inputRGBImage = m_model->get_input_rgb_image();
   ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
   copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
@@ -94,7 +91,7 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
-  return m_slamComponent->run(*m_model);
+  return m_slamComponent->run();
 }
 
 void Pipeline::run_mode_specific_section(const RenderState_CPtr& renderState)

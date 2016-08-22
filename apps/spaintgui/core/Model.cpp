@@ -26,17 +26,12 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-             const Settings_CPtr& settings, const std::string& resourcesDir, const LabelManager_Ptr& labelManager)
-: m_depthImageSize(depthImageSize),
-  m_labelManager(labelManager),
+Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, const LabelManager_Ptr& labelManager)
+: m_labelManager(labelManager),
   m_resourcesDir(resourcesDir),
-  m_rgbImageSize(rgbImageSize),
-  m_scene(scene),
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
   m_settings(settings),
-  m_trackingState(trackingState),
   m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType)),
   m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType))
 {
@@ -49,18 +44,8 @@ Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2
 
 void Model::clear_labels(ClearingSettings settings)
 {
-  ITMLocalVBA<SpaintVoxel>& localVBA = m_scene->localVBA;
+  ITMLocalVBA<SpaintVoxel>& localVBA = get_scene()->localVBA;
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
-}
-
-const Vector2i& Model::get_depth_image_size() const
-{
-  return m_depthImageSize;
-}
-
-const ITMIntrinsics& Model::get_intrinsics() const
-{
-  return m_view->calib->intrinsics_d;
 }
 
 const LabelManager_Ptr& Model::get_label_manager()
@@ -73,29 +58,19 @@ LabelManager_CPtr Model::get_label_manager() const
   return m_labelManager;
 }
 
-const SE3Pose& Model::get_pose() const
-{
-  return *m_trackingState->pose_d;
-}
-
 const std::string& Model::get_resources_dir() const
 {
   return m_resourcesDir;
 }
 
-const Vector2i& Model::get_rgb_image_size() const
-{
-  return m_rgbImageSize;
-}
-
 const Model::Scene_Ptr& Model::get_scene()
 {
-  return m_scene;
+  return SLAMContext::get_scene();
 }
 
 Model::Scene_CPtr Model::get_scene() const
 {
-  return m_scene;
+  return SLAMContext::get_scene();
 }
 
 Model::Selection_CPtr Model::get_selection() const
@@ -124,26 +99,6 @@ const Model::Settings_CPtr& Model::get_settings() const
   return m_settings;
 }
 
-const Model::TrackingState_Ptr& Model::get_tracking_state()
-{
-  return m_trackingState;
-}
-
-Model::TrackingState_CPtr Model::get_tracking_state() const
-{
-  return m_trackingState;
-}
-
-const Model::View_Ptr& Model::get_view()
-{
-  return m_view;
-}
-
-Model::View_CPtr Model::get_view() const
-{
-  return m_view;
-}
-
 Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
 {
   return m_visualisationEngine;
@@ -165,11 +120,6 @@ void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
   m_semanticLabel = semanticLabel;
 }
 
-void Model::set_view(ITMView *view)
-{
-  if(m_view.get() != view) m_view.reset(view);
-}
-
 void Model::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
 {
   // Allow the user to switch between different selectors.
@@ -185,7 +135,7 @@ void Model::update_selector(const InputState& inputState, const RenderState_CPtr
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      m_selector.reset(new TouchSelector(m_settings, touchSettings, m_trackingState, m_view, maxKeptTouchPoints));
+      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state(), get_view(), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
