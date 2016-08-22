@@ -67,12 +67,16 @@ public:
   virtual const Vector2i& get_depth_image_size() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the image into which depth input is read each frame.
+   *
+   * \return  The image into which depth input is read each frame.
    */
   virtual const ITMShortImage_Ptr& get_input_raw_depth_image();
 
   /**
-   * \brief TODO
+   * \brief Gets the image into which RGB input is read each frame.
+   *
+   * \return  The image into which RGB input is read each frame.
    */
   virtual const ITMUChar4Image_Ptr& get_input_rgb_image();
 
@@ -105,9 +109,9 @@ public:
   virtual const Scene_Ptr& get_scene();
 
   /**
-   * \brief Gets the current reconstructed scene.
+   * \brief Gets the reconstructed scene.
    *
-   * \return  The current reconstructed scene.
+   * \return  The reconstructed scene.
    */
   virtual Scene_CPtr get_scene() const;
 
@@ -142,22 +146,30 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Sets the image into which depth input is read each frame.
+   *
+   * \param inputRawDepthImage  The image into which depth input is read each frame.
    */
   void set_input_raw_depth_image(ITMShortImage *inputRawDepthImage);
 
   /**
-   * \brief TODO
+   * \brief Sets the image into which RGB input is read each frame.
+   *
+   * \param inputRGBImage The image into which RGB input is read each frame.
    */
   virtual void set_input_rgb_image(ITMUChar4Image *inputRGBImage);
 
   /**
-   * \brief TODO
+   * \brief Sets the scene that will be reconstructed.
+   *
+   * \param scene The scene that will be reconstructed.
    */
   void set_scene(Scene *scene);
 
   /**
-   * \brief TODO
+   * \brief Sets the current tracking state.
+   *
+   * \param trackingState The new current tracking state.
    */
   void set_tracking_state(ITMLib::ITMTrackingState *trackingState);
 
