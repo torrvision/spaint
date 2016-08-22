@@ -91,6 +91,9 @@ public:
    */
   virtual void clear_labels(spaint::ClearingSettings settings);
 
+  /** Override */
+  virtual const Vector2i& get_depth_image_size() const;
+
   /**
    * \brief Gets the label manager.
    *

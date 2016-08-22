@@ -9,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
 #include "../util/SpaintVoxel.h"
@@ -25,6 +26,7 @@ private:
   typedef ITMLib::ITMScene<spaint::SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef boost::shared_ptr<const Scene> Scene_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
@@ -57,6 +59,7 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  virtual const Settings_CPtr& get_settings() const = 0;
   virtual VisualisationEngine_CPtr get_visualisation_engine() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

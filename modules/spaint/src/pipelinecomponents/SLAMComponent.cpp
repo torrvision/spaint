@@ -26,15 +26,13 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings,
-                             TrackerType trackerType, const std::string& trackerParams)
+SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType, const std::string& trackerParams)
 : m_context(context),
   m_fusedFramesCount(0),
   m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_keyframeDelay(0),
-  m_settings(settings),
   m_trackerParams(trackerParams),
   m_trackerType(trackerType)
 {
@@ -48,6 +46,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImag
   context->set_input_raw_depth_image(new ITMShortImage(depthImageSize, true, true));
 
   // Set up the low-level engine.
+  const Settings_CPtr& settings = context->get_settings();
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
   // Set up the view builder.
@@ -120,7 +119,7 @@ bool SLAMComponent::run()
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
-  switch(m_settings->behaviourOnFailure)
+  switch(m_context->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
@@ -228,18 +227,22 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
 {
   ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+  const Settings_CPtr& settings = m_context->get_settings();
+
   compositeTracker->SetTracker(primaryTracker, 0);
   compositeTracker->SetTracker(
     ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
-      rgbImageSize, depthImageSize, m_settings->deviceType, ORUtils::KeyValueConfig(m_settings->trackerConfig),
+      rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
       m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
     ), 1
   );
+
   return compositeTracker;
 }
 
 void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
+  const Settings_CPtr& settings = m_context->get_settings();
   m_fallibleTracker = NULL;
 
   switch(m_trackerType)
@@ -280,7 +283,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     {
       m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
       m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, m_settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
+        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
       ));
     }
   }

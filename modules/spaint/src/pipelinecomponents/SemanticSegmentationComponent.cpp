@@ -25,9 +25,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const Vector2i& depthImageSize, unsigned int seed,
-                                                             const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
-: m_context(context), m_maxLabelCount(maxLabelCount), m_resourcesDir(resourcesDir)
+SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, unsigned int seed)
+: m_context(context)
 {
   // Set the maximum numbers of voxels to use for training and prediction.
   // FIXME: These values shouldn't be hard-coded here ultimately.
@@ -37,10 +36,13 @@ SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegme
   m_maxPredictionVoxelCount = 512;
 #endif
   m_maxTrainingVoxelsPerLabel = 128;
+  const size_t maxLabelCount = context->get_label_manager()->get_max_label_count();
   const size_t maxTrainingVoxelCount = maxLabelCount * m_maxTrainingVoxelsPerLabel;
 
   // Set up the voxel samplers.
+  const Vector2i& depthImageSize = context->get_depth_image_size();
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
+  const Settings_CPtr& settings = context->get_settings();
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
 
@@ -81,7 +83,7 @@ SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegme
 void SemanticSegmentationComponent::reset_forest()
 {
   const size_t treeCount = 5;
-  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_resourcesDir + "/RaflSettings.xml");
+  DecisionTree<SpaintVoxel::Label>::Settings dtSettings(m_context->get_resources_dir() + "/RaflSettings.xml");
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 }
 

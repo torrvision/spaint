@@ -9,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
+#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/SpaintVoxel.h"
 
@@ -23,6 +24,7 @@ class PropagationContext
 private:
   typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -33,8 +35,10 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  virtual const Vector2i& get_depth_image_size() const = 0;
   virtual const Scene_Ptr& get_scene() = 0;
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
+  virtual const Settings_CPtr& get_settings() const = 0;
 };
 
 //#################### TYPEDEFS ####################

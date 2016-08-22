@@ -26,7 +26,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The shared context needed for propagation. */
   PropagationContext_Ptr m_context;
 
   /** The label propagator. */
@@ -37,11 +37,9 @@ public:
   /**
    * \brief Constructs a propagation component.
    *
-   * \param context         The shared context needed for propagation.
-   * \param depthImageSize  The size of the depth images from which the target scene has been reconstructed.
-   * \param settings        The settings to use for InfiniTAM.
+   * \param context The shared context needed for propagation.
    */
-  PropagationComponent(const PropagationContext_Ptr& context, const Vector2i& depthImageSize, const Settings_CPtr& settings);
+  explicit PropagationComponent(const PropagationContext_Ptr& context);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

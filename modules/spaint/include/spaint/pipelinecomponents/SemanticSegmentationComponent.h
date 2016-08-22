@@ -19,7 +19,7 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this pipeline component can be used to semantically-segment a scene.
  */
 class SemanticSegmentationComponent
 {
@@ -31,7 +31,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The shared context needed for semantic segmentation. */
   SemanticSegmentationContext_Ptr m_context;
 
   /** The feature calculator. */
@@ -39,9 +39,6 @@ private:
 
   /** The random forest. */
   RandomForest_Ptr m_forest;
-
-  /** The maximum number of labels that can be in use. */
-  size_t m_maxLabelCount;
 
   /** The maximum number of voxels for which to predict labels each frame. */
   size_t m_maxPredictionVoxelCount;
@@ -64,9 +61,6 @@ private:
   /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
   Selector::Selection_Ptr m_predictionVoxelLocationsMB;
 
-  /** The path to the resources directory. */
-  std::string m_resourcesDir;
-
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
@@ -87,8 +81,7 @@ public:
   /**
    * \brief TODO
    */
-  SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const Vector2i& depthImageSize, unsigned int seed,
-                                const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, unsigned int seed);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

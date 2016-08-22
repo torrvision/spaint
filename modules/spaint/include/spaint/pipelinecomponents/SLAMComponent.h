@@ -24,7 +24,7 @@
 namespace spaint {
 
 /**
- * \brief TODO
+ * \brief An instance of this pipeline component can be used to perform simultaneous localisation and mapping (SLAM).
  */
 class SLAMComponent
 {
@@ -50,7 +50,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** TODO */
+  /** The shared context needed for SLAM. */
   SLAMContext_Ptr m_context;
 
   /** The dense mapper. */
@@ -96,9 +96,6 @@ private:
   /** The relocaliser. */
   Relocaliser_Ptr m_relocaliser;
 
-  /** The settings to use for InfiniTAM. */
-  Settings_CPtr m_settings;
-
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
@@ -122,13 +119,12 @@ public:
   /**
    * \brief TODO
    *
-   * \param context           TODO
-   * \param imageSourceEngine TODO
-   * \param settings          The settings to use for InfiniTAM.
+   * \param context           The shared context needed for SLAM.
+   * \param imageSourceEngine The engine used to provide input images to the fusion process.
    * \param trackerType       TODO
    * \param trackerParams     TODO
    */
-  SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_CPtr& settings, TrackerType trackerType, const std::string& trackerParams);
+  SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType, const std::string& trackerParams);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

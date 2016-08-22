@@ -10,6 +10,7 @@
 
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
+#include "../util/LabelManager.h"
 #include "../util/SpaintVoxel.h"
 
 namespace spaint {
@@ -23,6 +24,7 @@ class SmoothingContext
 private:
   typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -33,7 +35,9 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
+  virtual const LabelManager_Ptr& get_label_manager() = 0;
   virtual const Scene_Ptr& get_scene() = 0;
+  virtual const Settings_CPtr& get_settings() const = 0;
 };
 
 //#################### TYPEDEFS ####################

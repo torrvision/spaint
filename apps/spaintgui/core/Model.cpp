@@ -48,6 +48,11 @@ void Model::clear_labels(ClearingSettings settings)
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
+const Vector2i& Model::get_depth_image_size() const
+{
+  return SLAMContext::get_depth_image_size();
+}
+
 const LabelManager_Ptr& Model::get_label_manager()
 {
   return m_labelManager;

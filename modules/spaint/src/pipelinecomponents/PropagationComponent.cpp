@@ -11,11 +11,12 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-PropagationComponent::PropagationComponent(const PropagationContext_Ptr& context, const Vector2i& depthImageSize, const Settings_CPtr& settings)
+PropagationComponent::PropagationComponent(const PropagationContext_Ptr& context)
 : m_context(context)
 {
+  const Vector2i& depthImageSize = context->get_depth_image_size();
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, settings->deviceType);
+  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, context->get_settings()->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

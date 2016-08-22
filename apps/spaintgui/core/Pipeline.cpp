@@ -30,10 +30,10 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, settings));
 
   // Set up the pipeline components.
-  m_propagationComponent.reset(new PropagationComponent(m_model, imageSourceEngine->getDepthImageSize(), settings));
-  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, imageSourceEngine->getDepthImageSize(), seed, settings, resourcesDir, labelManager->get_max_label_count()));
-  m_slamComponent.reset(new SLAMComponent(m_model, imageSourceEngine, settings, trackerType, trackerParams));
-  m_smoothingComponent.reset(new SmoothingComponent(m_model, labelManager->get_max_label_count(), settings));
+  m_slamComponent.reset(new SLAMComponent(m_model, imageSourceEngine, trackerType, trackerParams));
+  m_propagationComponent.reset(new PropagationComponent(m_model));
+  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, seed));
+  m_smoothingComponent.reset(new SmoothingComponent(m_model));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

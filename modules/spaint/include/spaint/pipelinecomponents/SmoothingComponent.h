@@ -37,7 +37,7 @@ public:
   /**
    * \brief TODO
    */
-  SmoothingComponent(const SmoothingContext_Ptr& context, size_t maxLabelCount, const Settings_CPtr& settings);
+  explicit SmoothingComponent(const SmoothingContext_Ptr& context);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -11,10 +11,11 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context, size_t maxLabelCount, const Settings_CPtr& settings)
+SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context)
 : m_context(context)
 {
-  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, settings->deviceType);
+  size_t maxLabelCount = context->get_label_manager()->get_max_label_count();
+  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, context->get_settings()->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
