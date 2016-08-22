@@ -46,7 +46,7 @@ public:
    *
    * \param renderState The render state associated with the camera position from which to smoothe.
    */
-  virtual void run(const RenderState_CPtr& renderState);
+  void run(const RenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

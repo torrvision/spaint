@@ -116,19 +116,21 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Constructs a SLAM component.
    *
    * \param context           The shared context needed for SLAM.
    * \param imageSourceEngine The engine used to provide input images to the fusion process.
-   * \param trackerType       TODO
-   * \param trackerParams     TODO
+   * \param trackerType       The type of tracker to use.
+   * \param trackerParams     The parameters for the tracker (if any).
    */
   SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType, const std::string& trackerParams);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets whether or not the user wants fusion to be run.
+   *
+   * \return  true, if the user wants fusion to be run, or false otherwise.
    */
   bool get_fusion_enabled() const;
 
@@ -139,11 +141,18 @@ public:
    */
   RenderState_CPtr get_live_render_state() const;
 
-  /** TODO */
-  virtual bool run();
+  /**
+   * \brief Runs the SLAM component.
+   */
+  bool run();
 
   /**
-   * \brief TODO
+   * \brief Sets whether or not the user wants fusion to be run.
+   *
+   * Note: Just because the user wants fusion to be run doesn't mean that it necessarily will be on every frame.
+   *       In particular, we prevent fusion when we know we have lost tracking, regardless of this setting.
+   *
+   * \param fusionEnabled Whether or not the user wants fusion to be run.
    */
   void set_fusion_enabled(bool fusionEnabled);
 
