@@ -240,6 +240,8 @@ protected:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
    *
+   * FIXME: This comment is now completely inaccurate.
+   *
    * \param pose          The camera pose.
    * \param renderState   The render state corresponding to the camera pose.
    * \param fracWindowPos The fractional position of the mouse within the window's viewport.
@@ -289,20 +291,22 @@ private:
 #endif
 
   /**
-   * \brief Renders the reconstructed scene into a sub-window.
+   * \brief Renders the specified reconstructed scene into a sub-window.
    *
+   * \param sceneID     The scene ID.
    * \param pose        The camera pose.
    * \param renderState The render state corresponding to the camera pose.
    * \param subwindow   The sub-window into which to render.
    */
-  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, spaint::VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, spaint::VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param pose  The camera pose.
+   * \param sceneID The scene ID.
+   * \param pose    The camera pose.
    */
-  void render_synthetic_scene(const ORUtils::SE3Pose& pose) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose) const;
 
 #ifdef WITH_GLUT
   /**

@@ -44,7 +44,7 @@ using namespace spaint;
 
 RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
                            const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode)
-: Renderer(model, visualisationGenerator, subwindowConfiguration, model->get_depth_image_size())
+: Renderer(model, visualisationGenerator, subwindowConfiguration, model->get_depth_image_size("World"))
 {
   // Get a handle to the Rift.
   m_hmd = ovrHmd_Create(0);
@@ -111,7 +111,7 @@ RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, co
   m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, -N_OFFSET))));
 
   // Set up the eye frame buffers.
-  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size("World");
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
@@ -157,7 +157,7 @@ void RiftRenderer::render(const Vector2f& fracWindowPos) const
   // If we're following the reconstruction, update the position and orientation of the camera.
   if(get_camera_mode() == CM_FOLLOW)
   {
-    m_camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose()));
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose("World")));
   }
 
   // Calculate the left and right eye poses.
@@ -179,7 +179,7 @@ void RiftRenderer::render(const Vector2f& fracWindowPos) const
   }
 
   // Set up the Rift eye poses and pass the eye textures to the Rift SDK.
-  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size();
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size("World");
   int width = depthImageSize.width, height = depthImageSize.height;
 
   ovrPosef eyePoses[ovrEye_Count];

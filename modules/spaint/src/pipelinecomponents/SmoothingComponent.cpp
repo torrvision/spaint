@@ -11,8 +11,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context)
-: m_context(context)
+SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context, const std::string& sceneID)
+: m_context(context), m_sceneID(sceneID)
 {
   size_t maxLabelCount = context->get_label_manager()->get_max_label_count();
   m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, context->get_settings()->deviceType);
@@ -22,7 +22,7 @@ SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context)
 
 void SmoothingComponent::run(const RenderState_CPtr& renderState)
 {
-  m_labelSmoother->smooth_labels(renderState->raycastResult, m_context->get_scene().get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, m_context->get_scene(m_sceneID).get());
 }
 
 }

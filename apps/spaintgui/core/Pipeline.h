@@ -108,18 +108,20 @@ public:
   bool get_fusion_enabled() const;
 
   /**
-   * \brief Gets a copy of the image into which depth input is read each frame.
+   * \brief Gets a copy of the image into which depth input is read each frame for the specified scene.
    *
-   * \return  A copy of the image into which depth input is read each frame.
+   * \param sceneID The scene ID.
+   * \return        A copy of the image into which depth input is read each frame for the specified scene.
    */
-  ITMShortImage_Ptr get_input_raw_depth_image_copy() const;
+  ITMShortImage_Ptr get_input_raw_depth_image_copy(const std::string& sceneID) const;
 
   /**
-   * \brief Gets a copy of the image into which RGB input is read each frame.
+   * \brief Gets a copy of the image into which RGB input is read each frame for the specified scene.
    *
-   * \return  A copy of the image into which RGB input is read each frame.
+   * \param sceneID The scene ID.
+   * \return        A copy of the image into which RGB input is read each frame for the specified scene.
    */
-  ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
+  ITMUChar4Image_Ptr get_input_rgb_image_copy(const std::string& sceneID) const;
 
   /**
    * \brief Gets the mode in which the pipeline is currently running.

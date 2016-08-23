@@ -83,7 +83,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The dimensions of the depth images from which the specified scene is being reconstructed.
    */
-  virtual const Vector2i& get_depth_image_size(const std::string& sceneID = "World") const;
+  virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const;
 
   /**
    * \brief Gets the image into which depth input is read each frame for the specified scene.
@@ -91,7 +91,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The image into which depth input is read each frame for the specified scene.
    */
-  virtual const ITMShortImage_Ptr& get_input_raw_depth_image(const std::string& sceneID = "World");
+  virtual const ITMShortImage_Ptr& get_input_raw_depth_image(const std::string& sceneID);
 
   /**
    * \brief Gets the image into which RGB input is read each frame for the specified scene.
@@ -99,7 +99,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The image into which RGB input is read each frame for the specified scene.
    */
-  virtual const ITMUChar4Image_Ptr& get_input_rgb_image(const std::string& sceneID = "World");
+  virtual const ITMUChar4Image_Ptr& get_input_rgb_image(const std::string& sceneID);
 
   /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the specified scene.
@@ -107,7 +107,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The intrinsic parameters for the camera that is being used to reconstruct the specified scene.
    */
-  virtual const ITMLib::ITMIntrinsics& get_intrinsics(const std::string& sceneID = "World") const;
+  virtual const ITMLib::ITMIntrinsics& get_intrinsics(const std::string& sceneID) const;
 
   /**
    * \brief Gets the render state corresponding to the live camera pose for the specified scene.
@@ -115,7 +115,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The render state corresponding to the live camera pose for the specified scene.
    */
-  virtual const RenderState_Ptr& get_live_render_state(const std::string& sceneID = "World");
+  virtual const RenderState_Ptr& get_live_render_state(const std::string& sceneID);
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the specified scene.
@@ -123,7 +123,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The current pose of the camera that is being used to reconstruct the specified scene.
    */
-  virtual const ORUtils::SE3Pose& get_pose(const std::string& sceneID = "World") const;
+  virtual const ORUtils::SE3Pose& get_pose(const std::string& sceneID) const;
 
   /**
    * \brief Gets the dimensions of the RGB images from which the specified scene is being reconstructed.
@@ -131,7 +131,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The dimensions of the RGB images from which the specified scene is being reconstructed.
    */
-  virtual const Vector2i& get_rgb_image_size(const std::string& sceneID = "World") const;
+  virtual const Vector2i& get_rgb_image_size(const std::string& sceneID) const;
 
   /**
    * \brief Gets the specified scene.
@@ -139,7 +139,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The corresponding scene.
    */
-  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID = "World");
+  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID);
 
   /**
    * \brief Gets the specified scene.
@@ -147,7 +147,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The corresponding scene.
    */
-  virtual SpaintScene_CPtr get_scene(const std::string& sceneID = "World") const;
+  virtual SpaintScene_CPtr get_scene(const std::string& sceneID) const;
 
   /**
    * \brief Gets the current tracking state for the specified scene.
@@ -155,7 +155,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The current tracking state for the specified scene.
    */
-  virtual const TrackingState_Ptr& get_tracking_state(const std::string& sceneID = "World");
+  virtual const TrackingState_Ptr& get_tracking_state(const std::string& sceneID);
 
   /**
    * \brief Gets the current tracking state for the specified scene.
@@ -163,7 +163,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The current tracking state for the specified scene.
    */
-  virtual TrackingState_CPtr get_tracking_state(const std::string& sceneID = "World") const;
+  virtual TrackingState_CPtr get_tracking_state(const std::string& sceneID) const;
 
   /**
    * \brief Gets the current view of the specified scene.
@@ -171,7 +171,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The current view of the specified scene.
    */
-  virtual const View_Ptr& get_view(const std::string& sceneID = "World");
+  virtual const View_Ptr& get_view(const std::string& sceneID);
 
   /**
    * \brief Gets the current view of the specified scene.
@@ -179,7 +179,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The current view of the specified scene.
    */
-  virtual View_CPtr get_view(const std::string& sceneID = "World") const;
+  virtual View_CPtr get_view(const std::string& sceneID) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

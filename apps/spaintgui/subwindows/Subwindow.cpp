@@ -8,9 +8,10 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
+Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
   m_image(new ITMUChar4Image(imgSize, true, true)),
+  m_sceneID(sceneID),
   m_topLeft(topLeft),
   m_type(type)
 {}
@@ -30,6 +31,11 @@ const ITMUChar4Image_Ptr& Subwindow::get_image()
 ITMUChar4Image_CPtr Subwindow::get_image() const
 {
   return m_image;
+}
+
+const std::string& Subwindow::get_scene_id() const
+{
+  return m_sceneID;
 }
 
 VisualisationGenerator::VisualisationType Subwindow::get_type() const

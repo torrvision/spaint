@@ -30,14 +30,18 @@ private:
   /** The label smoother. */
   LabelSmoother_CPtr m_labelSmoother;
 
+  /** TODO */
+  std::string m_sceneID;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a smoothing component.
    *
    * \param context The shared context needed for smoothing.
+   * \param sceneID TODO
    */
-  explicit SmoothingComponent(const SmoothingContext_Ptr& context);
+  SmoothingComponent(const SmoothingContext_Ptr& context, const std::string& sceneID);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

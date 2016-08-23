@@ -94,7 +94,7 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // Render the current touch interaction as an overlay.
-    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view()));
+    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view("World")));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -106,7 +106,7 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
+    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size("World");
     const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
 
     const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
@@ -293,29 +293,30 @@ void Renderer::render_scene(const SE3Pose& pose, VisualisationGenerator::RenderS
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // If we have started reconstruction:
-  if(m_model->get_view())
+  // Render all the sub-windows.
+  for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
   {
-    // Render all the sub-windows.
-    for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
-    {
-      // Set the viewport for the sub-window.
-      Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-      int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
-      int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
-      int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
-      int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
-      glViewport(left, top, width, height);
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
 
-      // Render the reconstructed scene, then render a synthetic scene over the top of it.
-      render_reconstructed_scene(pose, renderState, subwindow);
-      render_synthetic_scene(pose);
+    // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
+    const std::string& sceneID = subwindow.get_scene_id();
+    if(!m_model->get_view(sceneID)) continue;
+
+    // Set the viewport for the sub-window.
+    int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
+    int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
+    int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
+    int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
+    glViewport(left, top, width, height);
+
+    // Render the reconstructed scene, then render a synthetic scene over the top of it.
+    render_reconstructed_scene(sceneID, pose, renderState, subwindow);
+    render_synthetic_scene(sceneID, pose);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
-      // Render the value of the pixel to which the user is pointing (for debugging purposes).
-      render_pixel_value(fracWindowPos, subwindow);
+    // Render the value of the pixel to which the user is pointing (for debugging purposes).
+    render_pixel_value(fracWindowPos, subwindow);
 #endif
-    }
   }
 }
 
@@ -398,7 +399,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const SE3Pose& pose, VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -417,7 +418,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, VisualisationGene
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  generate_visualisation(image, m_model->get_scene(), pose, m_model->get_view(), renderState, subwindow.get_type(), postprocessor);
+  generate_visualisation(image, m_model->get_scene(sceneID), pose, m_model->get_view(sceneID), renderState, subwindow.get_type(), postprocessor);
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
@@ -431,7 +432,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, VisualisationGene
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const SE3Pose& pose) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -439,8 +440,8 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose) const
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-    set_projection_matrix(m_model->get_intrinsics(), depthImageSize.width, depthImageSize.height);
+    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size(sceneID);
+    set_projection_matrix(m_model->get_intrinsics(sceneID), depthImageSize.width, depthImageSize.height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

@@ -31,9 +31,9 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
 
   // Set up the pipeline components.
   m_slamComponent.reset(new SLAMComponent(m_model, "World", imageSourceEngine, trackerType, trackerParams));
-  m_propagationComponent.reset(new PropagationComponent(m_model));
-  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, seed));
-  m_smoothingComponent.reset(new SmoothingComponent(m_model));
+  m_propagationComponent.reset(new PropagationComponent(m_model, "World"));
+  m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, "World", seed));
+  m_smoothingComponent.reset(new SmoothingComponent(m_model, "World"));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -43,17 +43,17 @@ bool Pipeline::get_fusion_enabled() const
   return m_slamComponent->get_fusion_enabled();
 }
 
-ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy() const
+ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy(const std::string& sceneID) const
 {
-  ITMShortImage_CPtr inputRawDepthImage = m_model->get_input_raw_depth_image();
+  ITMShortImage_CPtr inputRawDepthImage = m_model->get_input_raw_depth_image(sceneID);
   ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
   copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
 }
 
-ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
+ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy(const std::string& sceneID) const
 {
-  ITMUChar4Image_CPtr inputRGBImage = m_model->get_input_rgb_image();
+  ITMUChar4Image_CPtr inputRGBImage = m_model->get_input_rgb_image(sceneID);
   ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
   copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;

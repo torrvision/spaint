@@ -30,14 +30,18 @@ private:
   /** The label propagator. */
   LabelPropagator_CPtr m_labelPropagator;
 
+  /** TODO */
+  std::string m_sceneID;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a propagation component.
    *
    * \param context The shared context needed for propagation.
+   * \param sceneID TODO
    */
-  explicit PropagationComponent(const PropagationContext_Ptr& context);
+  PropagationComponent(const PropagationContext_Ptr& context, const std::string& sceneID);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

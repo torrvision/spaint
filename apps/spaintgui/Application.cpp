@@ -103,7 +103,7 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
   switch(m_renderer->get_camera_mode())
   {
     case Renderer::CM_FOLLOW:
-      return m_pipeline->get_model()->get_live_render_state();
+      return m_pipeline->get_model()->get_live_render_state("World");
     case Renderer::CM_FREE:
       return m_renderer->get_monocular_render_state();
     default:
@@ -121,7 +121,7 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size("World"));
   }
 
   return m_subwindowConfigurations[i];
@@ -154,28 +154,29 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Model_Ptr& model = m_pipeline->get_model();
+    const std::string sceneID = "World";
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
-      model->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_ALL, 0, 0));
       m_pipeline->reset_forest();
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RCTRL))
     {
       // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
-      model->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, model->get_semantic_label()));
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_EQ_LABEL, 0, model->get_semantic_label()));
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RSHIFT))
     {
       // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene that were not labelled by the user.
-      model->clear_labels(ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
     }
     else
     {
       // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
-      model->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
     }
   }
 
@@ -453,7 +454,7 @@ void Application::process_labelling_input()
         }
         m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, model)), precursors);
       }
-      else model->mark_voxels(selection, packedLabel, model->get_scene(), NORMAL_MARKING);
+      else model->mark_voxels(selection, packedLabel, model->get_scene("World"), NORMAL_MARKING);
     }
   }
   else if(currentlyMarking)
@@ -584,16 +585,18 @@ void Application::save_screenshot() const
 
 void Application::save_sequence_frame()
 {
+  const std::string sceneID = "World";
+
   // If the RGBD calibration hasn't already been saved, save it now.
   boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";
   if(!boost::filesystem::exists(calibrationFile))
   {
-    writeRGBDCalib(calibrationFile.string().c_str(), *m_pipeline->get_model()->get_view()->calib);
+    writeRGBDCalib(calibrationFile.string().c_str(), *m_pipeline->get_model()->get_view(sceneID)->calib);
   }
 
   // Save the current input images.
-  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
-  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(sceneID), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(sceneID), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
   m_sequencePathGenerator->increment_index();
 }
 
@@ -658,7 +661,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size();
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size("World");
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_visualisation_generator(), subwindowConfiguration, windowViewportSize));

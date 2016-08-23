@@ -22,6 +22,9 @@ private:
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
 
+  /** The ID of the scene to render in the sub-window. */
+  std::string m_sceneID;
+
   /** The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_topLeft;
 
@@ -35,10 +38,11 @@ public:
    *
    * \param topLeft     The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]).
    * \param bottomRight The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]).
+   * \param sceneID     The ID of the scene to render in the sub-window.
    * \param type        The type of scene visualisation to render in the sub-window.
    * \param imgSize     The size of image needed to store the scene visualisation for the sub-window.
    */
-  Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, spaint::VisualisationGenerator::VisualisationType type, const Vector2i& imgSize);
+  Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, spaint::VisualisationGenerator::VisualisationType type, const Vector2i& imgSize);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -62,6 +66,13 @@ public:
    * \return  The image in which to store the scene visualisation for the sub-window.
    */
   ITMUChar4Image_CPtr get_image() const;
+
+  /**
+   * \brief Gets the ID of the scene to render in the sub-window.
+   *
+   * \return  The ID of the scene to render in the sub-window.
+   */
+  const std::string& get_scene_id() const;
 
   /**
    * \brief Gets the type of scene visualisation to render in the sub-window.

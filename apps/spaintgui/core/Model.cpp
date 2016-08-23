@@ -42,9 +42,9 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, con
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Model::clear_labels(ClearingSettings settings)
+void Model::clear_labels(const std::string& sceneID, ClearingSettings settings)
 {
-  ITMLocalVBA<SpaintVoxel>& localVBA = get_scene()->localVBA;
+  ITMLocalVBA<SpaintVoxel>& localVBA = get_scene(sceneID)->localVBA;
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
@@ -125,7 +125,7 @@ void Model::update_selector(const InputState& inputState, const RenderState_CPtr
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state(), get_view(), maxKeptTouchPoints));
+      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state("World"), get_view("World"), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
@@ -142,17 +142,17 @@ void Model::update_selector(const InputState& inputState, const RenderState_CPtr
 
 //#################### DISAMBIGUATORS ####################
 
-const Vector2i& Model::get_depth_image_size() const
+const Vector2i& Model::get_depth_image_size(const std::string& sceneID) const
 {
-  return SLAMContext::get_depth_image_size();
+  return SLAMContext::get_depth_image_size(sceneID);
 }
 
-const SpaintScene_Ptr& Model::get_scene()
+const SpaintScene_Ptr& Model::get_scene(const std::string& sceneID)
 {
-  return SLAMContext::get_scene();
+  return SLAMContext::get_scene(sceneID);
 }
 
-SpaintScene_CPtr Model::get_scene() const
+SpaintScene_CPtr Model::get_scene(const std::string& sceneID) const
 {
-  return SLAMContext::get_scene();
+  return SLAMContext::get_scene(sceneID);
 }

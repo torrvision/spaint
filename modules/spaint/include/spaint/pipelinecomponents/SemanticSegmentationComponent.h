@@ -61,6 +61,9 @@ private:
   /** A memory block in which to store the locations of the voxels sampled for prediction purposes. */
   Selector::Selection_Ptr m_predictionVoxelLocationsMB;
 
+  /** TODO */
+  std::string m_sceneID;
+
   /** A memory block in which to store the feature vectors computed for the various voxels during training. */
   boost::shared_ptr<ORUtils::MemoryBlock<float> > m_trainingFeaturesMB;
 
@@ -82,9 +85,10 @@ public:
    * \brief Constructs a semantic segmentation component.
    *
    * \param context The shared context needed for semantic segmentation.
+   * \param sceneID TODO
    * \param seed    A seed for the random number generators used by the voxel samplers.
    */
-  SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, unsigned int seed);
+  SemanticSegmentationComponent(const SemanticSegmentationContext_Ptr& context, const std::string& sceneID, unsigned int seed);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

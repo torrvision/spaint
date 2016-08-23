@@ -78,7 +78,7 @@ void WindowedRenderer::render(const Vector2f& fracWindowPos) const
   switch(get_camera_mode())
   {
     case CM_FOLLOW:
-      pose = get_model()->get_pose();
+      pose = get_model()->get_pose("World");
       break;
     case CM_FREE:
       pose = CameraPoseConverter::camera_to_pose(*m_camera);

@@ -32,7 +32,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   virtual const LabelManager_Ptr& get_label_manager() = 0;
-  virtual const SpaintScene_Ptr& get_scene() = 0;
+  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID) = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
 };
 

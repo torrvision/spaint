@@ -83,11 +83,12 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Clears the semantic labels of some or all of voxels in the scene.
+   * \brief Clears the semantic labels of some or all of voxels in the specified scene.
    *
+   * \param sceneID   The scene ID.
    * \param settings  The settings to use for the label-clearing operation.
    */
-  virtual void clear_labels(spaint::ClearingSettings settings);
+  virtual void clear_labels(const std::string& sceneID, spaint::ClearingSettings settings);
 
   /**
    * \brief Gets the label manager.
@@ -193,13 +194,13 @@ public:
   //#################### DISAMBIGUATORS ####################
 public:
   /** Override */
-  virtual const Vector2i& get_depth_image_size() const;
+  virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const;
 
   /** Override */
-  virtual const spaint::SpaintScene_Ptr& get_scene();
+  virtual const spaint::SpaintScene_Ptr& get_scene(const std::string& sceneID);
 
   /** Override */
-  virtual spaint::SpaintScene_CPtr get_scene() const;
+  virtual spaint::SpaintScene_CPtr get_scene(const std::string& sceneID) const;
 };
 
 //#################### TYPEDEFS ####################

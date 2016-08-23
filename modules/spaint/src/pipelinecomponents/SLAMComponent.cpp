@@ -57,7 +57,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->GetMemoryType();
   m_context->set_scene(sceneID, new SpaintScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
-  const SpaintScene_Ptr& scene = m_context->get_scene();
+  const SpaintScene_Ptr& scene = m_context->get_scene(sceneID);
 
   // Set up the dense mapper.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
@@ -68,7 +68,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   m_context->set_tracking_state(sceneID, new ITMTrackingState(trackedImageSize, memoryType));
-  m_tracker->UpdateInitialPose(m_context->get_tracking_state().get());
+  m_tracker->UpdateInitialPose(m_context->get_tracking_state(sceneID).get());
 
   // Set up the live render state.
   m_context->set_live_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
@@ -97,12 +97,12 @@ bool SLAMComponent::run()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image();
-  const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image();
-  const RenderState_Ptr& liveRenderState = m_context->get_live_render_state();
-  const SpaintScene_Ptr& scene = m_context->get_scene();
-  const TrackingState_Ptr& trackingState = m_context->get_tracking_state();
-  const View_Ptr& view = m_context->get_view();
+  const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image(m_sceneID);
+  const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
+  const RenderState_Ptr& liveRenderState = m_context->get_live_render_state(m_sceneID);
+  const SpaintScene_Ptr& scene = m_context->get_scene(m_sceneID);
+  const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
+  const View_Ptr& view = m_context->get_view(m_sceneID);
 
   // Get the next frame.
   ITMView *newView = view.get();
@@ -231,7 +231,7 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
   compositeTracker->SetTracker(
     ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
       rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
-      m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
+      m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene(m_sceneID).get()
     ), 1
   );
 
@@ -281,7 +281,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     {
       m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
       m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene().get()
+        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene(m_sceneID).get()
       ));
     }
   }
