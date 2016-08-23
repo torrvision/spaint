@@ -101,6 +101,13 @@ public:
   float height() const;
 
   /**
+   * \brief Resets the camera from which to render the scene.
+   *
+   * \param camera  The camera from which to render the scene.
+   */
+  void reset_camera();
+
+  /**
    * \brief Sets the type of scene visualisation to render in the sub-window.
    *
    * \param type  The type of scene visualisation to render in the sub-window.

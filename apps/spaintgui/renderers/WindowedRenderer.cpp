@@ -65,24 +65,8 @@ void WindowedRenderer::render(const Vector2f& fracWindowPos) const
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());
 
-  // Determine the camera pose.
-  SE3Pose pose;
-  switch(get_camera_mode())
-  {
-    case CM_FOLLOW:
-      pose = get_model()->get_pose("World");
-      break;
-    case CM_FREE:
-      // FIXME: Ultimately, render_scene will directly access the sub-window cameras rather than being passed the poses.
-      pose = CameraPoseConverter::camera_to_pose(*get_subwindow_configuration()->subwindow(0).get_camera());
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("Error: Unknown camera mode");
-  }
-
-  // Render the scene from that camera pose.
-  render_scene(pose, m_renderState, fracWindowPos);
+  // Render the scene.
+  render_scene(m_renderState, fracWindowPos);
 
   // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());

@@ -164,7 +164,13 @@ Renderer::Renderer(const Model_CPtr& model, const VisualisationGenerator_CPtr& v
   m_subwindowConfiguration(subwindowConfiguration),
   m_visualisationGenerator(visualisationGenerator),
   m_windowViewportSize(windowViewportSize)
-{}
+{
+  // Reset the camera for each sub-window.
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    m_subwindowConfiguration->subwindow(i).reset_camera();
+  }
+}
 
 //#################### DESTRUCTOR ####################
 
@@ -290,7 +296,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const SE3Pose& pose, VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const
+void Renderer::render_scene(VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos, const std::string& secondaryCameraName) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -315,6 +321,18 @@ void Renderer::render_scene(const SE3Pose& pose, VisualisationGenerator::RenderS
     int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
     int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
     glViewport(left, top, width, height);
+
+    // If the sub-window is in follow mode, update its camera.
+    // FIXME: This should ultimately use the camera mode of the sub-window.
+    if(get_camera_mode() == CM_FOLLOW)
+    {
+      ORUtils::SE3Pose livePose = m_model->get_pose(subwindow.get_scene_id());
+      subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
+    }
+
+    // Determine the pose from which to render.
+    Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
+    ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
     render_reconstructed_scene(sceneID, pose, renderState, subwindow);

@@ -11,12 +11,13 @@ using namespace spaint;
 
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
-  m_camera(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
   m_image(new ITMUChar4Image(imgSize, true, true)),
   m_sceneID(sceneID),
   m_topLeft(topLeft),
   m_type(type)
-{}
+{
+  reset_camera();
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -53,6 +54,11 @@ VisualisationGenerator::VisualisationType Subwindow::get_type() const
 float Subwindow::height() const
 {
   return m_bottomRight.y - m_topLeft.y;
+}
+
+void Subwindow::reset_camera()
+{
+  m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
 }
 
 void Subwindow::set_type(VisualisationGenerator::VisualisationType type)

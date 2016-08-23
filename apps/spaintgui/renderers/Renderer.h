@@ -238,15 +238,15 @@ protected:
   void initialise_common();
 
   /**
-   * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
+   * \brief Renders both the reconstructed scene and the synthetic scene.
    *
    * FIXME: This comment is now completely inaccurate.
    *
-   * \param pose          The camera pose.
-   * \param renderState   The render state corresponding to the camera pose.
-   * \param fracWindowPos The fractional position of the mouse within the window's viewport.
+   * \param renderState         The render state corresponding to the camera pose.
+   * \param fracWindowPos       The fractional position of the mouse within the window's viewport.
+   * \param secondaryCameraName TODO
    */
-  void render_scene(const ORUtils::SE3Pose& pose, spaint::VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos) const;
+  void render_scene(spaint::VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos, const std::string& secondaryCameraName = "") const;
 
   /**
    * \brief Sets the window into which to render.

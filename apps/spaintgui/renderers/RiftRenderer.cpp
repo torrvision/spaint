@@ -153,30 +153,14 @@ void RiftRenderer::render(const Vector2f& fracWindowPos) const
   // Start the frame.
   ovrHmd_BeginFrame(m_hmd, 0);
 
-  // If we're following the reconstruction, update the position and orientation of the camera.
-  // FIXME: Ultimately, each sub-window should have its own camera mode.
-  const Subwindow& subwindow = get_subwindow_configuration()->subwindow(0);
-  const CompositeCamera_Ptr& camera = subwindow.get_camera();
-  if(get_camera_mode() == CM_FOLLOW)
-  {
-    camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose(subwindow.get_scene_id())));
-  }
-
-  // Calculate the left and right eye poses.
-  // FIXME: Ultimately, render_scene will directly access the sub-window cameras rather than being passed the poses.
-  SE3Pose poses[] =
-  {
-    CameraPoseConverter::camera_to_pose(*camera->get_secondary_camera("left")),
-    CameraPoseConverter::camera_to_pose(*camera->get_secondary_camera("right"))
-  };
-
   // Render the scene into OpenGL textures from the left and right eye poses.
+  const std::string secondaryCameraNames[] = { "left", "right" };
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
     glUseProgram(0);
 
-    render_scene(poses[i], m_renderStates[i], fracWindowPos);
+    render_scene(m_renderStates[i], fracWindowPos, secondaryCameraNames[i]);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
