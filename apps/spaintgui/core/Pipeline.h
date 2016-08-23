@@ -67,6 +67,9 @@ private:
   Model_Ptr m_model;
 
   /** TODO */
+  spaint::SLAMComponent_Ptr m_objectSlamComponent;
+
+  /** TODO */
   spaint::PropagationComponent_Ptr m_propagationComponent;
 
   /** TODO */

@@ -6,6 +6,9 @@
 #include "Pipeline.h"
 using namespace spaint;
 
+#include <InputSource/CompositeImageSourceEngine.h>
+using namespace InputSource;
+
 #ifdef WITH_OPENCV
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
@@ -35,6 +38,13 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_propagationComponent.reset(new PropagationComponent(m_model, worldSceneID));
   m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, worldSceneID, seed));
   m_smoothingComponent.reset(new SmoothingComponent(m_model, worldSceneID));
+
+  // TEMPORARY
+  boost::shared_ptr<CompositeImageSourceEngine> objectImageSourceEngine(new CompositeImageSourceEngine);
+  ImageMaskPathGenerator pathGenerator("C:/fr4_tsukuba/rgb_rnm/%06i.ppm", "C:/fr4_tsukuba/depth_rnm/%06i.pgm");
+  objectImageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>("C:/fr4_tsukuba/calibration.txt", pathGenerator, 0));
+  const std::string objectSceneID = "Object";
+  m_objectSlamComponent.reset(new SLAMComponent(m_model, objectSceneID, objectImageSourceEngine, trackerType, trackerParams));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -87,6 +97,7 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
+  m_objectSlamComponent->run();
   return m_slamComponent->run();
 }
 
