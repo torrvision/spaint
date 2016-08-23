@@ -40,9 +40,6 @@ private:
   /** The Rift handle. */
   ovrHmd m_hmd;
 
-  /** The render states for the two eye views. */
-  mutable spaint::VisualisationGenerator::RenderState_Ptr m_renderStates[ovrEye_Count];
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -73,7 +70,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual RenderState_CPtr get_monocular_render_state() const;
+  virtual RenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const;
 
   /** Override */
   virtual bool is_mono() const;

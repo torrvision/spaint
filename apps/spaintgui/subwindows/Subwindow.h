@@ -16,6 +16,11 @@
   */
 class Subwindow
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+
   //#################### ENUMERATIONS ####################
 public:
   /**
@@ -43,6 +48,9 @@ private:
 
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
+
+  /** The render state(s) for the free camera view(s). */
+  mutable std::map<int,RenderState_Ptr> m_renderStates;
 
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
@@ -102,6 +110,20 @@ public:
    * \return  The image in which to store the scene visualisation for the sub-window.
    */
   ITMUChar4Image_CPtr get_image() const;
+
+  /**
+   * \brief Gets the render state for the specified free camera view for the sub-window.
+   *
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  RenderState_Ptr& get_render_state(int viewIndex);
+
+  /**
+   * \brief Gets the render state for the specified free camera view for the sub-window.
+   *
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  RenderState_CPtr get_render_state(int viewIndex) const;
 
   /**
    * \brief Gets the ID of the scene to render in the sub-window.

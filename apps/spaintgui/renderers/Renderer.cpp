@@ -294,7 +294,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos, const std::string& secondaryCameraName) const
+void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const std::string& secondaryCameraName) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -332,7 +332,7 @@ void Renderer::render_scene(VisualisationGenerator::RenderState_Ptr& renderState
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, renderState, subwindow);
+    render_reconstructed_scene(sceneID, pose, subwindow.get_render_state(viewIndex), subwindow);
     render_synthetic_scene(sceneID, pose);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
@@ -421,7 +421,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, RenderState_Ptr& renderState, Subwindow& subwindow) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.

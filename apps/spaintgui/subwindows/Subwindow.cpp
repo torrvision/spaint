@@ -47,6 +47,16 @@ ITMUChar4Image_CPtr Subwindow::get_image() const
   return m_image;
 }
 
+Subwindow::RenderState_Ptr& Subwindow::get_render_state(int viewIndex)
+{
+  return m_renderStates[viewIndex];
+}
+
+Subwindow::RenderState_CPtr Subwindow::get_render_state(int viewIndex) const
+{
+  return m_renderStates[viewIndex];
+}
+
 const std::string& Subwindow::get_scene_id() const
 {
   return m_sceneID;

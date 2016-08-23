@@ -134,10 +134,10 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state() const
+RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state(size_t subwindowIndex) const
 {
   // The Rift is a stereo display, so return the render state corresponding to the left eye.
-  return m_renderStates[ovrEye_Left];
+  return get_subwindow_configuration()->subwindow(subwindowIndex).get_render_state(ovrEye_Left);
 }
 
 bool RiftRenderer::is_mono() const
@@ -160,7 +160,7 @@ void RiftRenderer::render(const Vector2f& fracWindowPos) const
     glBindFramebuffer(GL_FRAMEBUFFER, m_eyeFrameBuffers[i]->get_id());
     glUseProgram(0);
 
-    render_scene(m_renderStates[i], fracWindowPos, secondaryCameraNames[i]);
+    render_scene(fracWindowPos, i, secondaryCameraNames[i]);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }

@@ -100,16 +100,13 @@ boost::filesystem::path Application::resources_dir()
 
 Application::RenderState_CPtr Application::get_monocular_render_state() const
 {
-  // TODO: Check that this is reasonable.
-  const size_t subwindowIndex = m_activeSubwindowIndex;
-  const Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(subwindowIndex);
-
+  const Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
   switch(subwindow.get_camera_mode())
   {
     case Subwindow::CM_FOLLOW:
       return m_pipeline->get_model()->get_live_render_state(subwindow.get_scene_id());
     case Subwindow::CM_FREE:
-      return m_renderer->get_monocular_render_state();
+      return m_renderer->get_monocular_render_state(m_activeSubwindowIndex);
     default:
       // This should never happen.
       throw std::runtime_error("Unknown camera mode");

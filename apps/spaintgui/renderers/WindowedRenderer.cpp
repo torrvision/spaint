@@ -50,9 +50,9 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state() const
+WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(size_t subwindowIndex) const
 {
-  return m_renderState;
+  return get_subwindow_configuration()->subwindow(subwindowIndex).get_render_state(0);
 }
 
 bool WindowedRenderer::is_mono() const
@@ -66,7 +66,7 @@ void WindowedRenderer::render(const Vector2f& fracWindowPos) const
   SDL_RaiseWindow(get_window());
 
   // Render the scene.
-  render_scene(m_renderState, fracWindowPos);
+  render_scene(fracWindowPos);
 
   // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());

@@ -88,13 +88,14 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the monocular render state for the camera.
+   * \brief Gets the monocular render state for the camera associated with the specified sub-window.
    *
    * If the camera is a stereo one, this will return the render state corresponding to the left eye.
    *
-   * \return  The monocular render state for the camera.
+   * \param subwindowIndex  The index of the sub-window.
+   * \return                The monocular render state for the camera associated with the sub-window.
    */
-  virtual RenderState_CPtr get_monocular_render_state() const = 0;
+  virtual RenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const = 0;
 
   /**
    * \brief Gets whether or not the renderer is rendering the scene in mono.
@@ -226,13 +227,11 @@ protected:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene.
    *
-   * FIXME: This comment is now completely inaccurate.
-   *
-   * \param renderState         The render state corresponding to the camera pose.
    * \param fracWindowPos       The fractional position of the mouse within the window's viewport.
+   * \param viewIndex           The index of the free camera view for the sub-window.
    * \param secondaryCameraName TODO
    */
-  void render_scene(spaint::VisualisationGenerator::RenderState_Ptr& renderState, const Vector2f& fracWindowPos, const std::string& secondaryCameraName = "") const;
+  void render_scene(const Vector2f& fracWindowPos, int viewIndex = 0, const std::string& secondaryCameraName = "") const;
 
   /**
    * \brief Sets the window into which to render.
@@ -284,7 +283,7 @@ private:
    * \param renderState The render state corresponding to the camera pose.
    * \param subwindow   The sub-window into which to render.
    */
-  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, spaint::VisualisationGenerator::RenderState_Ptr& renderState, Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, RenderState_Ptr& renderState, Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
