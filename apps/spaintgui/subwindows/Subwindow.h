@@ -16,6 +16,20 @@
   */
 class Subwindow
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief An enumeration containing the possible camera modes we can use.
+   */
+  enum CameraMode
+  {
+    /** A mode that follows the camera that is reconstructing the scene. */
+    CM_FOLLOW,
+
+    /** A mode that allows the user to freely move the camera around to view the scene from different angles. */
+    CM_FREE
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]). */
@@ -23,6 +37,9 @@ private:
 
   /** The camera from which to render the scene. */
   rigging::CompositeCamera_Ptr m_camera;
+
+  /** The current camera mode. */
+  CameraMode m_cameraMode;
 
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
@@ -66,6 +83,13 @@ public:
   const rigging::CompositeCamera_Ptr& get_camera() const;
 
   /**
+   * \brief Gets the current camera mode.
+   *
+   * \return  The current camera mode.
+   */
+  CameraMode get_camera_mode() const;
+
+  /**
    * \brief Gets the image in which to store the scene visualisation for the sub-window.
    *
    * \return  The image in which to store the scene visualisation for the sub-window.
@@ -106,6 +130,13 @@ public:
    * \param camera  The camera from which to render the scene.
    */
   void reset_camera();
+
+  /**
+   * \brief Sets the current camera mode.
+   *
+   * \param cameraMode  The new camera mode.
+   */
+  void set_camera_mode(CameraMode cameraMode);
 
   /**
    * \brief Sets the type of scene visualisation to render in the sub-window.

@@ -158,8 +158,7 @@ private:
 
 Renderer::Renderer(const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
                    const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
-: m_cameraMode(CM_FOLLOW),
-  m_medianFilteringEnabled(true),
+: m_medianFilteringEnabled(true),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
   m_visualisationGenerator(visualisationGenerator),
@@ -210,9 +209,9 @@ MoveableCamera_Ptr Renderer::get_camera(size_t subwindowIndex) const
   return m_subwindowConfiguration->subwindow(subwindowIndex).get_camera();
 }
 
-Renderer::CameraMode Renderer::get_camera_mode() const
+Subwindow::CameraMode Renderer::get_camera_mode(size_t subwindowIndex) const
 {
-  return m_cameraMode;
+  return m_subwindowConfiguration->subwindow(subwindowIndex).get_camera_mode();
 }
 
 bool Renderer::get_median_filtering_enabled() const
@@ -230,9 +229,9 @@ SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
   return m_subwindowConfiguration;
 }
 
-void Renderer::set_camera_mode(CameraMode cameraMode)
+void Renderer::set_camera_mode(size_t subwindowIndex, Subwindow::CameraMode cameraMode)
 {
-  m_cameraMode = cameraMode;
+  m_subwindowConfiguration->subwindow(subwindowIndex).set_camera_mode(cameraMode);
 }
 
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
@@ -322,8 +321,7 @@ void Renderer::render_scene(VisualisationGenerator::RenderState_Ptr& renderState
     glViewport(left, top, width, height);
 
     // If the sub-window is in follow mode, update its camera.
-    // FIXME: This should ultimately use the camera mode of the sub-window.
-    if(get_camera_mode() == CM_FOLLOW)
+    if(get_camera_mode(subwindowIndex) == Subwindow::CM_FOLLOW)
     {
       ORUtils::SE3Pose livePose = m_model->get_pose(subwindow.get_scene_id());
       subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));

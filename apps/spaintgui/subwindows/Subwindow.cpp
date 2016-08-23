@@ -11,6 +11,7 @@ using namespace spaint;
 
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
+  m_cameraMode(CM_FOLLOW),
   m_image(new ITMUChar4Image(imgSize, true, true)),
   m_sceneID(sceneID),
   m_topLeft(topLeft),
@@ -29,6 +30,11 @@ const Vector2f& Subwindow::bottom_right() const
 const CompositeCamera_Ptr& Subwindow::get_camera() const
 {
   return m_camera;
+}
+
+Subwindow::CameraMode Subwindow::get_camera_mode() const
+{
+  return m_cameraMode;
 }
 
 const ITMUChar4Image_Ptr& Subwindow::get_image()
@@ -59,6 +65,11 @@ float Subwindow::height() const
 void Subwindow::reset_camera()
 {
   m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+}
+
+void Subwindow::set_camera_mode(CameraMode cameraMode)
+{
+  m_cameraMode = cameraMode;
 }
 
 void Subwindow::set_type(VisualisationGenerator::VisualisationType type)

@@ -30,20 +30,6 @@
  */
 class Renderer
 {
-  //#################### ENUMERATIONS ####################
-public:
-  /**
-   * \brief An enumeration containing the possible camera modes we can use.
-   */
-  enum CameraMode
-  {
-    /** A mode that follows the camera that is reconstructing the scene. */
-    CM_FOLLOW,
-
-    /** A mode that allows the user to freely move the camera around to view the scene from different angles. */
-    CM_FREE
-  };
-
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
@@ -55,9 +41,6 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The current camera mode. */
-  CameraMode m_cameraMode;
-
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
@@ -154,11 +137,12 @@ public:
   rigging::MoveableCamera_Ptr get_camera(size_t subwindowIndex) const;
 
   /**
-   * \brief Gets the current camera mode.
+   * \brief Gets the current camera mode for the specified sub-window.
    *
-   * \return  The current camera mode.
+   * \param subwindow The index of the sub-window whose camera mode we want to get.
+   * \return          The current camera mode for sub-window.
    */
-  CameraMode get_camera_mode() const;
+  Subwindow::CameraMode get_camera_mode(size_t subwindowIndex) const;
 
   /**
    * \brief Gets whether or not to use median filtering when rendering the scene raycast.
@@ -182,11 +166,12 @@ public:
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
 
   /**
-   * \brief Sets the current camera mode.
+   * \brief Sets the current camera mode for the specified sub-window.
    *
-   * \param cameraMode  The new camera mode.
+   * \param subwindowIndex  The index of the sub-window whose camera mode we want to set.
+   * \param cameraMode      The new camera mode for the sub-window.
    */
-  void set_camera_mode(CameraMode cameraMode);
+  void set_camera_mode(size_t subwindowIndex, Subwindow::CameraMode cameraMode);
 
   /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.

@@ -100,11 +100,15 @@ boost::filesystem::path Application::resources_dir()
 
 Application::RenderState_CPtr Application::get_monocular_render_state() const
 {
-  switch(m_renderer->get_camera_mode())
+  // TODO: Check that this is reasonable.
+  const size_t subwindowIndex = m_activeSubwindowIndex;
+  const Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(subwindowIndex);
+
+  switch(subwindow.get_camera_mode())
   {
-    case Renderer::CM_FOLLOW:
-      return m_pipeline->get_model()->get_live_render_state("World");
-    case Renderer::CM_FREE:
+    case Subwindow::CM_FOLLOW:
+      return m_pipeline->get_model()->get_live_render_state(subwindow.get_scene_id());
+    case Subwindow::CM_FREE:
       return m_renderer->get_monocular_render_state();
     default:
       // This should never happen.
@@ -298,12 +302,12 @@ void Application::process_camera_input()
   // Allow the user to switch camera modes.
   if(m_inputState.key_down(KEYCODE_v))
   {
-    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_camera_mode(Renderer::CM_FOLLOW);
-    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
+    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_camera_mode(m_activeSubwindowIndex, Subwindow::CM_FOLLOW);
+    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_camera_mode(m_activeSubwindowIndex, Subwindow::CM_FREE);
   }
 
   // If we're in free camera mode, allow the user to move the camera around.
-  if(m_renderer->get_camera_mode() == Renderer::CM_FREE)
+  if(m_renderer->get_camera_mode(m_activeSubwindowIndex) == Subwindow::CM_FREE)
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
