@@ -122,13 +122,6 @@ public:
   ITMUChar4Image_Ptr get_input_rgb_image_copy() const;
 
   /**
-   * \brief Gets the render state corresponding to the live camera pose.
-   *
-   * \return  The render state corresponding to the live camera pose.
-   */
-  RenderState_CPtr get_live_render_state() const;
-
-  /**
    * \brief Gets the mode in which the pipeline is currently running.
    *
    * \return  The mode in which the pipeline is currently running.

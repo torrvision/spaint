@@ -12,7 +12,6 @@
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
@@ -83,9 +82,6 @@ private:
   /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
   size_t m_keyframeDelay;
 
-  /** The render state corresponding to the live camera pose. */
-  RenderState_Ptr m_liveRenderState;
-
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
@@ -133,13 +129,6 @@ public:
    * \return  true, if the user wants fusion to be run, or false otherwise.
    */
   bool get_fusion_enabled() const;
-
-  /**
-   * \brief Gets the render state corresponding to the live camera pose.
-   *
-   * \return  The render state corresponding to the live camera pose.
-   */
-  RenderState_CPtr get_live_render_state() const;
 
   /**
    * \brief Runs the SLAM component.

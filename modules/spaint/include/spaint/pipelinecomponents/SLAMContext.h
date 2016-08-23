@@ -7,6 +7,7 @@
 #define H_SPAINT_SLAMCONTEXT
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
+#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
@@ -21,6 +22,7 @@ class SLAMContext
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
@@ -35,6 +37,9 @@ private:
 
   /** The image into which RGB input is read each frame. */
   ITMUChar4Image_Ptr m_inputRGBImage;
+
+  /** The render state corresponding to the live camera pose. */
+  RenderState_Ptr m_liveRenderState;
 
   /** The current reconstructed scene. */
   SpaintScene_Ptr m_scene;
@@ -86,6 +91,13 @@ public:
    * \return  The intrinsic parameters for the camera.
    */
   virtual const ITMLib::ITMIntrinsics& get_intrinsics() const;
+
+  /**
+   * \brief Gets the render state corresponding to the live camera pose.
+   *
+   * \return  The render state corresponding to the live camera pose.
+   */
+  virtual const RenderState_Ptr& get_live_render_state();
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
@@ -158,6 +170,13 @@ private:
    * \param inputRGBImage The image into which RGB input is read each frame.
    */
   virtual void set_input_rgb_image(ITMUChar4Image *inputRGBImage);
+
+  /**
+   * \brief Sets the render state corresponding to the live camera pose.
+   *
+   * \param liveRenderState The render state corresponding to the live camera pose.
+   */
+  virtual void set_live_render_state(ITMLib::ITMRenderState *liveRenderState);
 
   /**
    * \brief Sets the scene that will be reconstructed.

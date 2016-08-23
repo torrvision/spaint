@@ -103,7 +103,7 @@ Application::RenderState_CPtr Application::get_monocular_render_state() const
   switch(m_renderer->get_camera_mode())
   {
     case Renderer::CM_FOLLOW:
-      return m_pipeline->get_live_render_state();
+      return m_pipeline->get_model()->get_live_render_state();
     case Renderer::CM_FREE:
       return m_renderer->get_monocular_render_state();
     default:

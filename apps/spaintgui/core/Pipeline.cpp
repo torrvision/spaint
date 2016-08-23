@@ -59,11 +59,6 @@ ITMUChar4Image_Ptr Pipeline::get_input_rgb_image_copy() const
   return copy;
 }
 
-Pipeline::RenderState_CPtr Pipeline::get_live_render_state() const
-{
-  return m_slamComponent->get_live_render_state();
-}
-
 Pipeline::Mode Pipeline::get_mode() const
 {
   return m_mode;

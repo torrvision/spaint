@@ -69,7 +69,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImag
   m_tracker->UpdateInitialPose(m_context->get_tracking_state().get());
 
   // Set up the live render state.
-  m_liveRenderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
+  m_context->set_live_render_state(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
 
   // Set up the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
@@ -91,17 +91,13 @@ bool SLAMComponent::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
-SLAMComponent::RenderState_CPtr SLAMComponent::get_live_render_state() const
-{
-  return m_liveRenderState;
-}
-
 bool SLAMComponent::run()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
   const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image();
+  const RenderState_Ptr& liveRenderState = m_context->get_live_render_state();
   const SpaintScene_Ptr& scene = m_context->get_scene();
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state();
   const View_Ptr& view = m_context->get_view();
@@ -153,8 +149,8 @@ bool SLAMComponent::run()
         trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), m_liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), m_liveRenderState.get());
+        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), resetVisibleList);
+        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
 
@@ -194,13 +190,13 @@ bool SLAMComponent::run()
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), m_liveRenderState.get());
+    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
     ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), m_liveRenderState.get());
+    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
   }
   else
   {
@@ -209,7 +205,7 @@ bool SLAMComponent::run()
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), m_liveRenderState.get());
+  m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;

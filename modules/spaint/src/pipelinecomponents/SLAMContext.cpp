@@ -31,6 +31,11 @@ const ITMIntrinsics& SLAMContext::get_intrinsics() const
   return m_view->calib->intrinsics_d;
 }
 
+const SLAMContext::RenderState_Ptr& SLAMContext::get_live_render_state()
+{
+  return m_liveRenderState;
+}
+
 const SE3Pose& SLAMContext::get_pose() const
 {
   return *m_trackingState->pose_d;
@@ -81,6 +86,11 @@ void SLAMContext::set_input_raw_depth_image(ITMShortImage *inputRawDepthImage)
 void SLAMContext::set_input_rgb_image(ITMUChar4Image *inputRGBImage)
 {
   if(m_inputRGBImage.get() != inputRGBImage) m_inputRGBImage.reset(inputRGBImage);
+}
+
+void SLAMContext::set_live_render_state(ITMLib::ITMRenderState *liveRenderState)
+{
+  if(m_liveRenderState.get() != liveRenderState) m_liveRenderState.reset(liveRenderState);
 }
 
 void SLAMContext::set_scene(SpaintScene *scene)
