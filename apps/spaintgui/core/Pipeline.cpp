@@ -30,7 +30,7 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, settings));
 
   // Set up the pipeline components.
-  m_slamComponent.reset(new SLAMComponent(m_model, imageSourceEngine, trackerType, trackerParams));
+  m_slamComponent.reset(new SLAMComponent(m_model, "World", imageSourceEngine, trackerType, trackerParams));
   m_propagationComponent.reset(new PropagationComponent(m_model));
   m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, seed));
   m_smoothingComponent.reset(new SmoothingComponent(m_model));

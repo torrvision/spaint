@@ -91,6 +91,9 @@ private:
   /** The relocaliser. */
   Relocaliser_Ptr m_relocaliser;
 
+  /** The ID of the scene to reconstruct. */
+  std::string m_sceneID;
+
   /** The tracker. */
   ITMTracker_Ptr m_tracker;
 
@@ -115,11 +118,13 @@ public:
    * \brief Constructs a SLAM component.
    *
    * \param context           The shared context needed for SLAM.
+   * \param sceneID           The ID of the scene to reconstruct.
    * \param imageSourceEngine The engine used to provide input images to the fusion process.
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
    */
-  SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType, const std::string& trackerParams);
+  SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+                TrackerType trackerType, const std::string& trackerParams);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

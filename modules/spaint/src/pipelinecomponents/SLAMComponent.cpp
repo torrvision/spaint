@@ -26,13 +26,15 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType, const std::string& trackerParams)
+SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+                             TrackerType trackerType, const std::string& trackerParams)
 : m_context(context),
   m_fusedFramesCount(0),
   m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_keyframeDelay(0),
+  m_sceneID(sceneID),
   m_trackerParams(trackerParams),
   m_trackerType(trackerType)
 {
@@ -42,8 +44,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImag
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
-  context->set_input_rgb_image(new ITMUChar4Image(rgbImageSize, true, true));
-  context->set_input_raw_depth_image(new ITMShortImage(depthImageSize, true, true));
+  context->set_input_rgb_image(sceneID, new ITMUChar4Image(rgbImageSize, true, true));
+  context->set_input_raw_depth_image(sceneID, new ITMShortImage(depthImageSize, true, true));
 
   // Set up the low-level engine.
   const Settings_CPtr& settings = context->get_settings();
@@ -54,7 +56,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImag
 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->GetMemoryType();
-  m_context->set_scene(new SpaintScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+  m_context->set_scene(sceneID, new SpaintScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
   const SpaintScene_Ptr& scene = m_context->get_scene();
 
   // Set up the dense mapper.
@@ -65,11 +67,11 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImag
   setup_tracker(rgbImageSize, depthImageSize);
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
-  m_context->set_tracking_state(new ITMTrackingState(trackedImageSize, memoryType));
+  m_context->set_tracking_state(sceneID, new ITMTrackingState(trackedImageSize, memoryType));
   m_tracker->UpdateInitialPose(m_context->get_tracking_state().get());
 
   // Set up the live render state.
-  m_context->set_live_render_state(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
+  m_context->set_live_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
 
   // Set up the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
@@ -107,7 +109,7 @@ bool SLAMComponent::run()
   m_imageSourceEngine->getImages(inputRGBImage.get(), inputRawDepthImage.get());
   const bool useBilateralFilter = false;
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
-  m_context->set_view(newView);
+  m_context->set_view(m_sceneID, newView);
 
   // Track the camera (we can only do this once we've started reconstructing the scene because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);

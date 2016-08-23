@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_SLAMCONTEXT
 #define H_SPAINT_SLAMCONTEXT
 
+#include <map>
+
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
@@ -16,8 +18,8 @@
 namespace spaint {
 
 /**
-* \brief An instance of a class deriving from this one provides the shared context needed by a SLAM component.
-*/
+ * \brief An instance of a class deriving from this one provides the shared context needed by SLAM components.
+ */
 class SLAMContext
 {
   //#################### TYPEDEFS ####################
@@ -30,25 +32,36 @@ private:
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief An instance of this struct contains the shared context for a single reconstructed scene.
+   */
+  struct SceneContext
+  {
+    /** The image into which depth input is read each frame. */
+    ITMShortImage_Ptr m_inputRawDepthImage;
+
+    /** The image into which RGB input is read each frame. */
+    ITMUChar4Image_Ptr m_inputRGBImage;
+
+    /** The render state corresponding to the live camera pose. */
+    RenderState_Ptr m_liveRenderState;
+
+    /** The current reconstructed scene. */
+    SpaintScene_Ptr m_scene;
+
+    /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
+    TrackingState_Ptr m_trackingState;
+
+    /** The current view of the scene. */
+    View_Ptr m_view;
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The image into which depth input is read each frame. */
-  ITMShortImage_Ptr m_inputRawDepthImage;
-
-  /** The image into which RGB input is read each frame. */
-  ITMUChar4Image_Ptr m_inputRGBImage;
-
-  /** The render state corresponding to the live camera pose. */
-  RenderState_Ptr m_liveRenderState;
-
-  /** The current reconstructed scene. */
-  SpaintScene_Ptr m_scene;
-
-  /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
-  TrackingState_Ptr m_trackingState;
-
-  /** The current view of the scene. */
-  View_Ptr m_view;
+  /** The shared contexts for the various reconstructed scenes. */
+  std::map<std::string,SceneContext> m_sceneContexts;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -65,139 +78,172 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the dimensions of the depth images from which the scene is being reconstructed.
+   * \brief Gets the dimensions of the depth images from which the specified scene is being reconstructed.
    *
-   * \return  The dimensions of the depth images from which the scene is being reconstructed.
+   * \param sceneID The scene ID.
+   * \return        The dimensions of the depth images from which the specified scene is being reconstructed.
    */
-  virtual const Vector2i& get_depth_image_size() const;
+  virtual const Vector2i& get_depth_image_size(const std::string& sceneID = "World") const;
 
   /**
-   * \brief Gets the image into which depth input is read each frame.
+   * \brief Gets the image into which depth input is read each frame for the specified scene.
    *
-   * \return  The image into which depth input is read each frame.
+   * \param sceneID The scene ID.
+   * \return        The image into which depth input is read each frame for the specified scene.
    */
-  virtual const ITMShortImage_Ptr& get_input_raw_depth_image();
+  virtual const ITMShortImage_Ptr& get_input_raw_depth_image(const std::string& sceneID = "World");
 
   /**
-   * \brief Gets the image into which RGB input is read each frame.
+   * \brief Gets the image into which RGB input is read each frame for the specified scene.
    *
-   * \return  The image into which RGB input is read each frame.
+   * \param sceneID The scene ID.
+   * \return        The image into which RGB input is read each frame for the specified scene.
    */
-  virtual const ITMUChar4Image_Ptr& get_input_rgb_image();
+  virtual const ITMUChar4Image_Ptr& get_input_rgb_image(const std::string& sceneID = "World");
 
   /**
-   * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the scene.
+   * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the specified scene.
    *
-   * \return  The intrinsic parameters for the camera.
+   * \param sceneID The scene ID.
+   * \return        The intrinsic parameters for the camera that is being used to reconstruct the specified scene.
    */
-  virtual const ITMLib::ITMIntrinsics& get_intrinsics() const;
+  virtual const ITMLib::ITMIntrinsics& get_intrinsics(const std::string& sceneID = "World") const;
 
   /**
-   * \brief Gets the render state corresponding to the live camera pose.
+   * \brief Gets the render state corresponding to the live camera pose for the specified scene.
    *
-   * \return  The render state corresponding to the live camera pose.
+   * \param sceneID The scene ID.
+   * \return        The render state corresponding to the live camera pose for the specified scene.
    */
-  virtual const RenderState_Ptr& get_live_render_state();
+  virtual const RenderState_Ptr& get_live_render_state(const std::string& sceneID = "World");
 
   /**
-   * \brief Gets the current pose of the camera that is being used to reconstruct the scene.
+   * \brief Gets the current pose of the camera that is being used to reconstruct the specified scene.
    *
-   * \return  The current camera pose.
+   * \param sceneID The scene ID.
+   * \return        The current pose of the camera that is being used to reconstruct the specified scene.
    */
-  virtual const ORUtils::SE3Pose& get_pose() const;
+  virtual const ORUtils::SE3Pose& get_pose(const std::string& sceneID = "World") const;
 
   /**
-   * \brief Gets the dimensions of the RGB images from which the scene is being reconstructed.
+   * \brief Gets the dimensions of the RGB images from which the specified scene is being reconstructed.
    *
-   * \return  The dimensions of the RGB images from which the scene is being reconstructed.
+   * \param sceneID The scene ID.
+   * \return        The dimensions of the RGB images from which the specified scene is being reconstructed.
    */
-  virtual const Vector2i& get_rgb_image_size() const;
+  virtual const Vector2i& get_rgb_image_size(const std::string& sceneID = "World") const;
 
   /**
-   * \brief Gets the reconstructed scene.
+   * \brief Gets the specified scene.
    *
-   * \return  The reconstructed scene.
+   * \param sceneID The scene ID.
+   * \return        The corresponding scene.
    */
-  virtual const SpaintScene_Ptr& get_scene();
+  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID = "World");
 
   /**
-   * \brief Gets the reconstructed scene.
+   * \brief Gets the specified scene.
    *
-   * \return  The reconstructed scene.
+   * \param sceneID The scene ID.
+   * \return        The corresponding scene.
    */
-  virtual SpaintScene_CPtr get_scene() const;
+  virtual SpaintScene_CPtr get_scene(const std::string& sceneID = "World") const;
 
   /**
-   * \brief Gets the current tracking state.
+   * \brief Gets the current tracking state for the specified scene.
    *
-   * \return  The current tracking state.
+   * \param sceneID The scene ID.
+   * \return        The current tracking state for the specified scene.
    */
-  virtual const TrackingState_Ptr& get_tracking_state();
+  virtual const TrackingState_Ptr& get_tracking_state(const std::string& sceneID = "World");
 
   /**
-   * \brief Gets the current tracking state.
+   * \brief Gets the current tracking state for the specified scene.
    *
-   * \return  The current tracking state.
+   * \param sceneID The scene ID.
+   * \return        The current tracking state for the specified scene.
    */
-  virtual TrackingState_CPtr get_tracking_state() const;
+  virtual TrackingState_CPtr get_tracking_state(const std::string& sceneID = "World") const;
 
   /**
-   * \brief Gets the current view of the scene.
+   * \brief Gets the current view of the specified scene.
    *
-   * \return  The current view of the scene.
+   * \param sceneID The scene ID.
+   * \return        The current view of the specified scene.
    */
-  virtual const View_Ptr& get_view();
+  virtual const View_Ptr& get_view(const std::string& sceneID = "World");
 
   /**
-   * \brief Gets the current view of the scene.
+   * \brief Gets the current view of the specified scene.
    *
-   * \return  The current view of the scene.
+   * \param sceneID The scene ID.
+   * \return        The current view of the specified scene.
    */
-  virtual View_CPtr get_view() const;
+  virtual View_CPtr get_view(const std::string& sceneID = "World") const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Sets the image into which depth input is read each frame.
-   *
-   * \param inputRawDepthImage  The image into which depth input is read each frame.
+   * \brief TODO
    */
-  void set_input_raw_depth_image(ITMShortImage *inputRawDepthImage);
+  const SceneContext& get_scene_context(const std::string& sceneID) const;
 
   /**
-   * \brief Sets the image into which RGB input is read each frame.
+   * \brief TODO
+   */
+  template <typename T>
+  void set_if_different(boost::shared_ptr<T>& dest, T *src)
+  {
+    if(dest.get() != src) dest.reset(src);
+  }
+
+  /**
+   * \brief Sets the image into which depth input is read each frame for the specified scene.
    *
+   * \param sceneID             The scene ID.
+   * \param inputRawDepthImage  The image into which depth input is read each frame for the specified scene.
+   */
+  void set_input_raw_depth_image(const std::string& sceneID, ITMShortImage *inputRawDepthImage);
+
+  /**
+   * \brief Sets the image into which RGB input is read each frame for the specified scene.
+   *
+   * \param sceneID       The scene ID.
    * \param inputRGBImage The image into which RGB input is read each frame.
    */
-  virtual void set_input_rgb_image(ITMUChar4Image *inputRGBImage);
+  virtual void set_input_rgb_image(const std::string& sceneID, ITMUChar4Image *inputRGBImage);
 
   /**
-   * \brief Sets the render state corresponding to the live camera pose.
+   * \brief Sets the render state corresponding to the live camera pose for the specified scene.
    *
-   * \param liveRenderState The render state corresponding to the live camera pose.
+   * \param sceneID         The scene ID.
+   * \param liveRenderState The render state corresponding to the live camera pose for the specified scene.
    */
-  virtual void set_live_render_state(ITMLib::ITMRenderState *liveRenderState);
+  virtual void set_live_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState);
 
   /**
-   * \brief Sets the scene that will be reconstructed.
+   * \brief Sets the specified scene.
    *
-   * \param scene The scene that will be reconstructed.
+   * \param sceneID The scene ID.
+   * \param scene   The scene.
    */
-  void set_scene(SpaintScene *scene);
+  void set_scene(const std::string& sceneID, SpaintScene *scene);
 
   /**
-   * \brief Sets the current tracking state.
+   * \brief Sets the current tracking state for the specified scene.
    *
-   * \param trackingState The new current tracking state.
+   * \param sceneID       The scene ID.
+   * \param trackingState The new current tracking state for the specified scene.
    */
-  void set_tracking_state(ITMLib::ITMTrackingState *trackingState);
+  void set_tracking_state(const std::string& sceneID, ITMLib::ITMTrackingState *trackingState);
 
   /**
-   * \brief Sets the current view of the scene.
+   * \brief Sets the current view of the specified scene.
    *
-   * \param view  The new current view of the scene.
+   * \param sceneID The scene ID.
+   * \param view    The new current view of the specified scene.
    */
-  void set_view(ITMLib::ITMView *view);
+  void set_view(const std::string& sceneID, ITMLib::ITMView *view);
 
   //#################### FRIENDS ####################
 
