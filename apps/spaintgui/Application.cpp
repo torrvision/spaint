@@ -98,9 +98,24 @@ boost::filesystem::path Application::resources_dir()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
+const std::string& Application::get_active_scene_id() const
+{
+  return get_active_subwindow().get_scene_id();
+}
+
+Subwindow& Application::get_active_subwindow()
+{
+  return m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+}
+
+const Subwindow& Application::get_active_subwindow() const
+{
+  return m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+}
+
 Application::RenderState_CPtr Application::get_monocular_render_state() const
 {
-  const Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+  const Subwindow& subwindow = get_active_subwindow();
   switch(subwindow.get_camera_mode())
   {
     case Subwindow::CM_FOLLOW:
@@ -453,9 +468,9 @@ void Application::process_labelling_input()
           m_commandManager.execute_command(Command_CPtr(new NoOpCommand(beginMarkVoxelsDesc)));
           currentlyMarking = true;
         }
-        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, model)), precursors);
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(get_active_scene_id(), selection, packedLabel, model)), precursors);
       }
-      else model->mark_voxels(selection, packedLabel, model->get_scene("World"), NORMAL_MARKING);
+      else model->mark_voxels(get_active_scene_id(), selection, packedLabel, NORMAL_MARKING);
     }
   }
   else if(currentlyMarking)
@@ -526,7 +541,7 @@ void Application::process_renderer_input()
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
-    Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+    Subwindow& subwindow = get_active_subwindow();
     subwindow.set_type(
       m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_VOXEL_SEMANTICLAMBERTIAN :
       m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_VOXEL_SEMANTICPHONG :
@@ -586,7 +601,8 @@ void Application::save_screenshot() const
 
 void Application::save_sequence_frame()
 {
-  const std::string sceneID = "World";
+  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
+  const std::string& sceneID = mainSubwindow.get_scene_id();
 
   // If the RGBD calibration hasn't already been saved, save it now.
   boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";

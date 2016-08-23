@@ -111,6 +111,21 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief TODO
+   */
+  const std::string& get_active_scene_id() const;
+
+  /**
+   * \brief TODO
+   */
+  Subwindow& get_active_subwindow();
+
+  /**
+   * \brief TODO
+   */
+  const Subwindow& get_active_subwindow() const;
+
+  /**
    * \brief Gets the current monocular render state.
    *
    * If we're rendering in stereo, this will return the render state corresponding to the left eye.

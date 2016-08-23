@@ -144,7 +144,7 @@ void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& rende
   m_predictionLabelsMB->UpdateDeviceFromHost();
 
   // Mark the voxels with their predicted labels.
-  m_context->mark_voxels(m_predictionVoxelLocationsMB, m_predictionLabelsMB, m_context->get_scene(m_sceneID), NORMAL_MARKING);
+  m_context->mark_voxels(m_sceneID, m_predictionVoxelLocationsMB, m_predictionLabelsMB, NORMAL_MARKING);
 }
 
 void SemanticSegmentationComponent::run_training(const RenderState_CPtr& renderState)

@@ -94,15 +94,15 @@ Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
   return m_visualisationEngine;
 }
 
-void Model::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const SpaintScene_Ptr& scene,
+void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, SpaintVoxel::PackedLabel label,
                         MarkingMode mode, const PackedLabels_Ptr& oldLabels)
 {
-  m_voxelMarker->mark_voxels(*selection, label, scene.get(), mode, oldLabels.get());
+  m_voxelMarker->mark_voxels(*selection, label, get_scene(sceneID).get(), mode, oldLabels.get());
 }
 
-void Model::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const SpaintScene_Ptr& scene, MarkingMode mode)
+void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
 {
-  m_voxelMarker->mark_voxels(*selection, *labels, scene.get(), mode);
+  m_voxelMarker->mark_voxels(*selection, *labels, get_scene(sceneID).get(), mode);
 }
 
 void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)

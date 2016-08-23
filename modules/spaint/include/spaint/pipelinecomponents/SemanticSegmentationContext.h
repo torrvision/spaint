@@ -40,7 +40,7 @@ public:
   virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID) = 0;
   virtual Selector_CPtr get_selector() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
-  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const SpaintScene_Ptr& scene, MarkingMode mode) = 0;
+  virtual void mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode) = 0;
 };
 
 //#################### TYPEDEFS ####################

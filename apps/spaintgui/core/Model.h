@@ -156,24 +156,24 @@ public:
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.
    *
+   * \param sceneID   The scene ID.
    * \param selection The selection of voxels.
    * \param label     The semantic label with which to mark the voxels.
-   * \param scene     The scene.
    * \param mode      The marking mode.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  virtual void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const spaint::SpaintScene_Ptr& scene,
+  virtual void mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label,
                            spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic labels.
    *
+   * \param sceneID   The scene ID.
    * \param selection The selection of voxels.
    * \param labels    The semantic labels with which to mark the voxels (one per voxel).
-   * \param scene     The scene.
    * \param mode      The marking mode.
    */
-  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const spaint::SpaintScene_Ptr& scene, spaint::MarkingMode mode);
+  virtual void mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, spaint::MarkingMode mode);
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.
