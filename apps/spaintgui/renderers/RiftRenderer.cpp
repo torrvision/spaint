@@ -103,12 +103,16 @@ RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, co
   }
 #endif
 
-  // Set up the stereo camera.
-  const float HALF_IPD = 0.032f; // the average (male) interpupillary distance (IPD) is about 6.4cm
-  const float N_OFFSET = 0.3f;   // the amount by which we move the camera away from the scene to ensure that the user can see enough
-  m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-  m_camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, -N_OFFSET))));
-  m_camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(m_camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, -N_OFFSET))));
+  // Set up a stereo camera for each sub-window.
+  for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    const float HALF_IPD = 0.032f; // the average (male) interpupillary distance (IPD) is about 6.4cm
+    const float N_OFFSET = 0.3f;   // the amount by which we move the camera away from the scene to ensure that the user can see enough
+
+    const CompositeCamera_Ptr& camera = subwindowConfiguration->subwindow(i).get_camera();
+    camera->add_secondary_camera("left", Camera_CPtr(new DerivedCamera(camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(HALF_IPD, 0.0f, -N_OFFSET))));
+    camera->add_secondary_camera("right", Camera_CPtr(new DerivedCamera(camera, Eigen::Matrix3f::Identity(), Eigen::Vector3f(-HALF_IPD, 0.0f, -N_OFFSET))));
+  }
 
   // Set up the eye frame buffers.
   ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size("World");
@@ -130,11 +134,6 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-MoveableCamera_Ptr RiftRenderer::get_camera()
-{
-  return m_camera;
-}
-
 RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state() const
 {
   // The Rift is a stereo display, so return the render state corresponding to the left eye.
@@ -155,16 +154,20 @@ void RiftRenderer::render(const Vector2f& fracWindowPos) const
   ovrHmd_BeginFrame(m_hmd, 0);
 
   // If we're following the reconstruction, update the position and orientation of the camera.
+  // FIXME: Ultimately, each sub-window should have its own camera mode.
+  const Subwindow& subwindow = get_subwindow_configuration()->subwindow(0);
+  const CompositeCamera_Ptr& camera = subwindow.get_camera();
   if(get_camera_mode() == CM_FOLLOW)
   {
-    m_camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose("World")));
+    camera->set_from(CameraPoseConverter::pose_to_camera(get_model()->get_pose(subwindow.get_scene_id())));
   }
 
   // Calculate the left and right eye poses.
+  // FIXME: Ultimately, render_scene will directly access the sub-window cameras rather than being passed the poses.
   SE3Pose poses[] =
   {
-    CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("left")),
-    CameraPoseConverter::camera_to_pose(*m_camera->get_secondary_camera("right"))
+    CameraPoseConverter::camera_to_pose(*camera->get_secondary_camera("left")),
+    CameraPoseConverter::camera_to_pose(*camera->get_secondary_camera("right"))
   };
 
   // Render the scene into OpenGL textures from the left and right eye poses.

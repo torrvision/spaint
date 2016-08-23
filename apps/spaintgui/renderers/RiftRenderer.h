@@ -34,9 +34,6 @@ public:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The camera from which to render the scene. */
-  rigging::CompositeCamera_Ptr m_camera;
-
   /** The eye frame buffers. */
   spaint::FrameBuffer_CPtr m_eyeFrameBuffers[ovrEye_Count];
 
@@ -75,9 +72,6 @@ private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual rigging::MoveableCamera_Ptr get_camera();
-
   /** Override */
   virtual RenderState_CPtr get_monocular_render_state() const;
 

@@ -17,9 +17,6 @@ class WindowedRenderer : public Renderer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The camera from which to render the scene. */
-  rigging::MoveableCamera_Ptr m_camera;
-
   /** The render state for the free camera view. */
   mutable spaint::VisualisationGenerator::RenderState_Ptr m_renderState;
 
@@ -52,9 +49,6 @@ private:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  /** Override */
-  virtual rigging::MoveableCamera_Ptr get_camera();
-
   /** Override */
   virtual RenderState_CPtr get_monocular_render_state() const;
 

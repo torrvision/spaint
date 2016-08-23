@@ -6,6 +6,7 @@
 #include "Renderer.h"
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace rigging;
 
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
@@ -196,6 +197,12 @@ Vector2f Renderer::compute_fractional_window_position(int x, int y) const
 {
   const Vector2f windowViewportSize = get_window_viewport_size().toFloat();
   return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
+}
+
+MoveableCamera_Ptr Renderer::get_camera() const
+{
+  // FIXME: Return the camera of the active sub-window.
+  return m_subwindowConfiguration->subwindow(0).get_camera();
 }
 
 Renderer::CameraMode Renderer::get_camera_mode() const

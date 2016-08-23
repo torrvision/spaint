@@ -4,12 +4,14 @@
  */
 
 #include "Subwindow.h"
+using namespace rigging;
 using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
+  m_camera(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f))),
   m_image(new ITMUChar4Image(imgSize, true, true)),
   m_sceneID(sceneID),
   m_topLeft(topLeft),
@@ -21,6 +23,11 @@ Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const
 const Vector2f& Subwindow::bottom_right() const
 {
   return m_bottomRight;
+}
+
+const CompositeCamera_Ptr& Subwindow::get_camera() const
+{
+  return m_camera;
 }
 
 const ITMUChar4Image_Ptr& Subwindow::get_image()

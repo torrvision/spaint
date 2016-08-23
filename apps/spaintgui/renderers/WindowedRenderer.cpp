@@ -37,9 +37,6 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
     &SDL_DestroyWindow
   ));
 
-  // Set up the camera.
-  m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-
   // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();
 }
@@ -52,11 +49,6 @@ WindowedRenderer::~WindowedRenderer()
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-
-rigging::MoveableCamera_Ptr WindowedRenderer::get_camera()
-{
-  return m_camera;
-}
 
 WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state() const
 {
@@ -81,7 +73,8 @@ void WindowedRenderer::render(const Vector2f& fracWindowPos) const
       pose = get_model()->get_pose("World");
       break;
     case CM_FREE:
-      pose = CameraPoseConverter::camera_to_pose(*m_camera);
+      // FIXME: Ultimately, render_scene will directly access the sub-window cameras rather than being passed the poses.
+      pose = CameraPoseConverter::camera_to_pose(*get_subwindow_configuration()->subwindow(0).get_camera());
       break;
     default:
       // This should never happen.

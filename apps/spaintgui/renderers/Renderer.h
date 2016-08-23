@@ -105,13 +105,6 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the camera from which to render the scene.
-   *
-   * \return  The camera from which to render the scene.
-   */
-  virtual rigging::MoveableCamera_Ptr get_camera() = 0;
-
-  /**
    * \brief Gets the monocular render state for the camera.
    *
    * If the camera is a stereo one, this will return the render state corresponding to the left eye.
@@ -151,6 +144,13 @@ public:
    * \return  The fractional position of the specified point in the window.
    */
   Vector2f compute_fractional_window_position(int x, int y) const;
+
+  /**
+   * \brief Gets the camera from which to render the scene.
+   *
+   * \return  The camera from which to render the scene.
+   */
+  rigging::MoveableCamera_Ptr get_camera() const;
 
   /**
    * \brief Gets the current camera mode.

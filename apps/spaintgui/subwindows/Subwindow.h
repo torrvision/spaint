@@ -6,6 +6,8 @@
 #ifndef H_SPAINTGUI_SUBWINDOW
 #define H_SPAINTGUI_SUBWINDOW
 
+#include <rigging/CompositeCamera.h>
+
 #include <spaint/visualisation/VisualisationGenerator.h>
 
 /**
@@ -18,6 +20,9 @@ class Subwindow
 private:
   /** The location of the bottom-right of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_bottomRight;
+
+  /** The camera from which to render the scene. */
+  rigging::CompositeCamera_Ptr m_camera;
 
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
@@ -52,6 +57,13 @@ public:
    * \return  The location of the bottom-right of the sub-window.
    */
   const Vector2f& bottom_right() const;
+
+  /**
+   * \brief Gets the camera from which to render the scene.
+   *
+   * \return  The camera from which to render the scene.
+   */
+  const rigging::CompositeCamera_Ptr& get_camera() const;
 
   /**
    * \brief Gets the image in which to store the scene visualisation for the sub-window.
