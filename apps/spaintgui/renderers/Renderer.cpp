@@ -338,7 +338,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                       const Model::View_CPtr& view, RenderState_Ptr& renderState,
                                       VisualisationGenerator::VisualisationType visualisationType,
                                       const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const

@@ -48,11 +48,6 @@ void Model::clear_labels(ClearingSettings settings)
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
-const Vector2i& Model::get_depth_image_size() const
-{
-  return SLAMContext::get_depth_image_size();
-}
-
 const LabelManager_Ptr& Model::get_label_manager()
 {
   return m_labelManager;
@@ -66,16 +61,6 @@ LabelManager_CPtr Model::get_label_manager() const
 const std::string& Model::get_resources_dir() const
 {
   return m_resourcesDir;
-}
-
-const Scene_Ptr& Model::get_scene()
-{
-  return SLAMContext::get_scene();
-}
-
-Scene_CPtr Model::get_scene() const
-{
-  return SLAMContext::get_scene();
 }
 
 Model::Selection_CPtr Model::get_selection() const
@@ -109,13 +94,13 @@ Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
   return m_visualisationEngine;
 }
 
-void Model::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const Scene_Ptr& scene,
+void Model::mark_voxels(const Selection_CPtr& selection, SpaintVoxel::PackedLabel label, const SpaintScene_Ptr& scene,
                         MarkingMode mode, const PackedLabels_Ptr& oldLabels)
 {
   m_voxelMarker->mark_voxels(*selection, label, scene.get(), mode, oldLabels.get());
 }
 
-void Model::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, MarkingMode mode)
+void Model::mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const SpaintScene_Ptr& scene, MarkingMode mode)
 {
   m_voxelMarker->mark_voxels(*selection, *labels, scene.get(), mode);
 }
@@ -153,4 +138,21 @@ void Model::update_selector(const InputState& inputState, const RenderState_CPtr
 
   // Update the current selector.
   m_selector->update(inputState, renderState, renderingInMono);
+}
+
+//#################### DISAMBIGUATORS ####################
+
+const Vector2i& Model::get_depth_image_size() const
+{
+  return SLAMContext::get_depth_image_size();
+}
+
+const SpaintScene_Ptr& Model::get_scene()
+{
+  return SLAMContext::get_scene();
+}
+
+SpaintScene_CPtr Model::get_scene() const
+{
+  return SLAMContext::get_scene();
 }

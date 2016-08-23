@@ -14,9 +14,9 @@
 
 namespace spaint {
 
-typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-typedef boost::shared_ptr<Scene> Scene_Ptr;
-typedef boost::shared_ptr<const Scene> Scene_CPtr;
+typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> SpaintScene;
+typedef boost::shared_ptr<SpaintScene> SpaintScene_Ptr;
+typedef boost::shared_ptr<const SpaintScene> SpaintScene_CPtr;
 
 }
 

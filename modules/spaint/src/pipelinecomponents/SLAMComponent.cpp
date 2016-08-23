@@ -54,8 +54,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const CompositeImag
 
   // Set up the scene.
   MemoryDeviceType memoryType = settings->GetMemoryType();
-  m_context->set_scene(new Scene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
-  const Scene_Ptr& scene = m_context->get_scene();
+  m_context->set_scene(new SpaintScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+  const SpaintScene_Ptr& scene = m_context->get_scene();
 
   // Set up the dense mapper.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
@@ -102,7 +102,7 @@ bool SLAMComponent::run()
 
   const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image();
-  const Scene_Ptr& scene = m_context->get_scene();
+  const SpaintScene_Ptr& scene = m_context->get_scene();
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state();
   const View_Ptr& view = m_context->get_view();
 

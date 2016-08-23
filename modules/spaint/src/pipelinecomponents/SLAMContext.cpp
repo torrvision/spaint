@@ -41,12 +41,12 @@ const Vector2i& SLAMContext::get_rgb_image_size() const
   return m_inputRGBImage->noDims;
 }
 
-const Scene_Ptr& SLAMContext::get_scene()
+const SpaintScene_Ptr& SLAMContext::get_scene()
 {
   return m_scene;
 }
 
-Scene_CPtr SLAMContext::get_scene() const
+SpaintScene_CPtr SLAMContext::get_scene() const
 {
   return m_scene;
 }
@@ -83,7 +83,7 @@ void SLAMContext::set_input_rgb_image(ITMUChar4Image *inputRGBImage)
   if(m_inputRGBImage.get() != inputRGBImage) m_inputRGBImage.reset(inputRGBImage);
 }
 
-void SLAMContext::set_scene(Scene *scene)
+void SLAMContext::set_scene(SpaintScene *scene)
 {
   if(m_scene.get() != scene) m_scene.reset(scene);
 }

@@ -37,10 +37,10 @@ public:
   virtual const Vector2i& get_depth_image_size() const = 0;
   virtual const LabelManager_Ptr& get_label_manager() = 0;
   virtual const std::string& get_resources_dir() const = 0;
-  virtual const Scene_Ptr& get_scene() = 0;
+  virtual const SpaintScene_Ptr& get_scene() = 0;
   virtual Selector_CPtr get_selector() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
-  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const Scene_Ptr& scene, MarkingMode mode) = 0;
+  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const SpaintScene_Ptr& scene, MarkingMode mode) = 0;
 };
 
 //#################### TYPEDEFS ####################

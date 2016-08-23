@@ -89,9 +89,6 @@ public:
    */
   virtual void clear_labels(spaint::ClearingSettings settings);
 
-  /** Override */
-  virtual const Vector2i& get_depth_image_size() const;
-
   /**
    * \brief Gets the label manager.
    *
@@ -112,12 +109,6 @@ public:
    * \return The path to the resources directory.
    */
   virtual const std::string& get_resources_dir() const;
-
-  /** Override */
-  virtual const spaint::Scene_Ptr& get_scene();
-
-  /** Override */
-  virtual spaint::Scene_CPtr get_scene() const;
 
   /**
    * \brief Gets the voxels in the scene (if any) that were selected the last time the current selector was updated.
@@ -170,7 +161,7 @@ public:
    * \param mode      The marking mode.
    * \param oldLabels An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  virtual void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const spaint::Scene_Ptr& scene,
+  virtual void mark_voxels(const Selection_CPtr& selection, spaint::SpaintVoxel::PackedLabel label, const spaint::SpaintScene_Ptr& scene,
                            spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
   /**
@@ -181,7 +172,7 @@ public:
    * \param scene     The scene.
    * \param mode      The marking mode.
    */
-  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const spaint::Scene_Ptr& scene, spaint::MarkingMode mode);
+  virtual void mark_voxels(const Selection_CPtr& selection, const PackedLabels_CPtr& labels, const spaint::SpaintScene_Ptr& scene, spaint::MarkingMode mode);
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.
@@ -198,6 +189,17 @@ public:
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
   virtual void update_selector(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+
+  //#################### DISAMBIGUATORS ####################
+public:
+  /** Override */
+  virtual const Vector2i& get_depth_image_size() const;
+
+  /** Override */
+  virtual const spaint::SpaintScene_Ptr& get_scene();
+
+  /** Override */
+  virtual spaint::SpaintScene_CPtr get_scene() const;
 };
 
 //#################### TYPEDEFS ####################

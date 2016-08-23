@@ -128,7 +128,7 @@ public:
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    * \param voxelCountsForLabelsMB  A memory block into which to write the numbers of voxels sampled for each label.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult, const Scene *scene,
+  void sample_voxels(const ITMFloat4Image *raycastResult, const SpaintScene *scene,
                      const ORUtils::MemoryBlock<bool>& labelMaskMB,
                      ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
                      ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;

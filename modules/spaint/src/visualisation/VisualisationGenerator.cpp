@@ -28,7 +28,7 @@ VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& v
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                    const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
                                                    const boost::optional<Postprocessor>& postprocessor) const
 {

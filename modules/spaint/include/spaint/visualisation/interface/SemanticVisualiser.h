@@ -59,7 +59,7 @@ private:
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
-  virtual void render_internal(const Scene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
+  virtual void render_internal(const SpaintScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
                                LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -76,7 +76,7 @@ public:
    * \param labelAlpha    The proportion (in the range [0,1]) of the final pixel colours that should be based on the voxels' semantic labels rather than their scene colours.
    * \param outputImage   The image into which to write the semantic visualisation of the scene.
    */
-  void render(const Scene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
+  void render(const SpaintScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
               const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const;
 };
 

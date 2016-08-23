@@ -37,7 +37,7 @@ private:
   ITMUChar4Image_Ptr m_inputRGBImage;
 
   /** The current reconstructed scene. */
-  Scene_Ptr m_scene;
+  SpaintScene_Ptr m_scene;
 
   /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
   TrackingState_Ptr m_trackingState;
@@ -106,14 +106,14 @@ public:
    *
    * \return  The reconstructed scene.
    */
-  virtual const Scene_Ptr& get_scene();
+  virtual const SpaintScene_Ptr& get_scene();
 
   /**
    * \brief Gets the reconstructed scene.
    *
    * \return  The reconstructed scene.
    */
-  virtual Scene_CPtr get_scene() const;
+  virtual SpaintScene_CPtr get_scene() const;
 
   /**
    * \brief Gets the current tracking state.
@@ -164,7 +164,7 @@ private:
    *
    * \param scene The scene that will be reconstructed.
    */
-  void set_scene(Scene *scene);
+  void set_scene(SpaintScene *scene);
 
   /**
    * \brief Sets the current tracking state.

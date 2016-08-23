@@ -86,7 +86,7 @@ public:
    * \param visualisationType The type of visualisation to generate.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
-  void generate_free_raycast(const ITMUChar4Image_Ptr& output, const Scene_CPtr& scene, const ORUtils::SE3Pose& pose,
+  void generate_free_raycast(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                              const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
