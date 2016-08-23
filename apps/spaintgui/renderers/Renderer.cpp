@@ -205,10 +205,9 @@ Vector2f Renderer::compute_fractional_window_position(int x, int y) const
   return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
 }
 
-MoveableCamera_Ptr Renderer::get_camera() const
+MoveableCamera_Ptr Renderer::get_camera(size_t subwindowIndex) const
 {
-  // FIXME: Return the camera of the active sub-window.
-  return m_subwindowConfiguration->subwindow(0).get_camera();
+  return m_subwindowConfiguration->subwindow(subwindowIndex).get_camera();
 }
 
 Renderer::CameraMode Renderer::get_camera_mode() const

@@ -309,7 +309,7 @@ void Application::process_camera_input()
     const float ANGULAR_SPEED = 0.05f;
     static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
-    MoveableCamera_Ptr camera = m_renderer->get_camera();
+    MoveableCamera_Ptr camera = m_renderer->get_camera(m_activeSubwindowIndex);
 
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);

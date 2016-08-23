@@ -146,11 +146,12 @@ public:
   Vector2f compute_fractional_window_position(int x, int y) const;
 
   /**
-   * \brief Gets the camera from which to render the scene.
+   * \brief Gets the camera associated with the specified sub-window.
    *
-   * \return  The camera from which to render the scene.
+   * \param subwindowIndex  The index of the sub-window whose camera we want to get.
+   * \return                The camera associated with the sub-window.
    */
-  rigging::MoveableCamera_Ptr get_camera() const;
+  rigging::MoveableCamera_Ptr get_camera(size_t subwindowIndex) const;
 
   /**
    * \brief Gets the current camera mode.
