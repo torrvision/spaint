@@ -79,8 +79,8 @@ void Application::run()
     // Render the scene.
     m_renderer->render(m_fracWindowPos);
 
-    // If the application is unpaused, run the mode-specific section of the pipeline.
-    if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
+    // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
+    if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
 
     // If we're currently recording a video, save the next frame of it to disk.
     if(m_videoPathGenerator) save_video_frame();

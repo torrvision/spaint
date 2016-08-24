@@ -58,6 +58,26 @@ public:
     MODE_TRAINING
   };
 
+  //#################### NESTED TYPES ####################
+private:
+  /**
+   * \brief TODO
+   */
+  struct ScenePipeline
+  {
+    /** TODO */
+    spaint::PropagationComponent_Ptr m_propagationComponent;
+
+    /** TODO */
+    spaint::SemanticSegmentationComponent_Ptr m_semanticSegmentationComponent;
+
+    /** TODO */
+    spaint::SLAMComponent_Ptr m_slamComponent;
+
+    /** TODO */
+    spaint::SmoothingComponent_Ptr m_smoothingComponent;
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The mode in which the pipeline is currently running. */
@@ -67,19 +87,7 @@ private:
   Model_Ptr m_model;
 
   /** TODO */
-  spaint::SLAMComponent_Ptr m_objectSlamComponent;
-
-  /** TODO */
-  spaint::PropagationComponent_Ptr m_propagationComponent;
-
-  /** TODO */
-  spaint::SemanticSegmentationComponent_Ptr m_semanticSegmentationComponent;
-
-  /** TODO */
-  spaint::SLAMComponent_Ptr m_slamComponent;
-
-  /** TODO */
-  spaint::SmoothingComponent_Ptr m_smoothingComponent;
+  std::map<std::string,ScenePipeline> m_scenePipelines;
 
   /** The visualiation generator that is used to render the InfiniTAM scene. */
   spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
@@ -89,20 +97,26 @@ public:
   /**
    * \brief Constructs an instance of the pipeline.
    *
-   * \param imageSourceEngine The engine used to provide input images to the fusion pipeline.
    * \param settings          The settings to use for InfiniTAM.
    * \param resourcesDir      The path to the resouces directory.
    * \param labelManager      The label manager.
+   */
+  Pipeline(const Settings_Ptr& settings, const std::string& resourcesDir, const spaint::LabelManager_Ptr& labelManager);
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief TODO
+   *
+   * \param sceneID           The scene ID.
+   * \param imageSourceEngine The engine used to provide input images to the fusion pipeline.
    * \param seed              The seed to use for the random number generators used by the voxel samplers.
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
    */
-  Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, const Settings_Ptr& settings, const std::string& resourcesDir,
-           const spaint::LabelManager_Ptr& labelManager, unsigned int seed, spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM,
-           const std::string& trackerParams = "");
+  void add_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
+                          spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "");
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
   /**
    * \brief Gets whether or not the user wants fusion to be run as part of the pipeline.
    *
@@ -169,11 +183,12 @@ public:
   bool run_main_section();
 
   /**
-   * \brief Runs the mode-specific section of the pipeline.
+   * \brief Runs the mode-specific section of the pipeline for the specified scene.
    *
+   * \param sceneID     The scene ID.
    * \param renderState The render state to be used by the mode-specific section of the pipeline.
    */
-  void run_mode_specific_section(const RenderState_CPtr& renderState);
+  void run_mode_specific_section(const std::string& sceneID, const RenderState_CPtr& renderState);
 
   /**
    * \brief Sets whether or not the user wants fusion to be run as part of the pipeline.
