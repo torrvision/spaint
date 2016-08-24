@@ -68,6 +68,16 @@ bool Subwindow::get_surfel_flag() const
   return m_surfelFlag;
 }
 
+Subwindow::SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
+{
+  return m_surfelRenderStates[viewIndex];
+}
+
+Subwindow::SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
+{
+  return m_surfelRenderStates[viewIndex];
+}
+
 VisualisationGenerator::VisualisationType Subwindow::get_type() const
 {
   return m_type;

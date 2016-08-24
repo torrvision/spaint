@@ -18,11 +18,12 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const LabelManager_CPtr& labelManager,
-                                               const Settings_CPtr& settings)
+VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
+                                               const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
 : m_labelManager(labelManager),
   m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
   m_settings(settings),
+  m_surfelVisualisationEngine(surfelVisualisationEngine),
   m_visualisationEngine(visualisationEngine)
 {}
 
@@ -82,6 +83,67 @@ void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& out
   }
 
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
+}
+
+void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                                           const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
+{
+  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
+
+  if(!renderState)
+  {
+    renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
+  }
+
+  const bool useRadii = true;
+  m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
+
+  switch(visualisationType)
+  {
+    case VT_SCENE_COLOUR:
+    {
+      m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
+                                               ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_COLOUR);
+      break;
+    }
+    case VT_SCENE_CONFIDENCE:
+    {
+      m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
+                                               ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_CONFIDENCE);
+      break;
+    }
+    case VT_SCENE_DEPTH:
+    {
+      // FIXME: This is a foul hack.
+      static ITMFloatImage temp(output->noDims, true, true);
+      m_surfelVisualisationEngine->RenderDepthImage(scene.get(), &pose, renderState.get(), &temp);
+      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) temp.UpdateHostFromDevice();
+      IITMVisualisationEngine::DepthToUchar4(output.get(), &temp);
+      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateDeviceFromHost();
+      break;
+    }
+    case VT_SCENE_NORMAL:
+    {
+      m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
+                                               ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_NORMAL);
+      break;
+    }
+    case VT_SCENE_PHONG:
+    {
+      m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
+                                               ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_PHONG);
+      break;
+    }
+    case VT_SCENE_LAMBERTIAN:
+    default:
+    {
+      m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
+                                               ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_LAMBERTIAN);
+      break;
+    }
+  }
+
+  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
 }
 
 void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const

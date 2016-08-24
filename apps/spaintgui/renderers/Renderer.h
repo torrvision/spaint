@@ -33,6 +33,7 @@ class Renderer
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
 protected:
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
@@ -247,15 +248,18 @@ private:
    *
    * \param output            The location into which to put the output image.
    * \param scene             The scene to visualise.
+   * \param surfelScene       The surfel scene to visualise.
    * \param pose              The pose from which to visualise the scene (if relevant).
    * \param view              The current view of the scene.
    * \param renderState       The render state to use for intermediate storage (if relevant).
+   * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
    * \param visualisationType The type of visualisation to generate.
+   * \param surfelFlag        TODO
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
-  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                              const Model::View_CPtr& view, RenderState_Ptr& renderState,
-                              spaint::VisualisationGenerator::VisualisationType visualisationType,
+  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintScene_CPtr& scene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
+                              const ORUtils::SE3Pose& pose, const Model::View_CPtr& view, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState,
+                              spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
 
   /**
@@ -278,12 +282,13 @@ private:
   /**
    * \brief Renders the specified reconstructed scene into a sub-window.
    *
-   * \param sceneID     The scene ID.
-   * \param pose        The camera pose.
-   * \param renderState The render state corresponding to the camera pose.
-   * \param subwindow   The sub-window into which to render.
+   * \param sceneID           The scene ID.
+   * \param pose              The camera pose.
+   * \param renderState       The render state corresponding to the camera pose.
+   * \param surfelRenderState The surfel render state corresponding to the camera pose.
+   * \param subwindow         The sub-window into which to render.
    */
-  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, RenderState_Ptr& renderState, Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState, Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.

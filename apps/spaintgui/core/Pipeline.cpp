@@ -32,7 +32,7 @@ Pipeline::Pipeline(const Settings_Ptr& settings, const std::string& resourcesDir
 
   // Set up the spaint model and visualisation generator.
   m_model.reset(new Model(settings, resourcesDir, labelManager));
-  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), labelManager, settings));
+  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_visualisation_engine(), m_model->get_surfel_visualisation_engine(), labelManager, settings));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

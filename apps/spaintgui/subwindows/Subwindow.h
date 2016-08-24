@@ -20,6 +20,8 @@ class Subwindow
 private:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMSurfelRenderState> SurfelRenderState_CPtr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -51,6 +53,9 @@ private:
 
   /** The render state(s) for the free camera view(s). */
   mutable std::map<int,RenderState_Ptr> m_renderStates;
+
+  /** The surfel render state(s) for the free camera view(s). */
+  mutable std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
 
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
@@ -141,6 +146,20 @@ public:
    * \return  A flag indicating whether or not to render a surfel visualisation rather than a voxel one.
    */
   bool get_surfel_flag() const;
+
+  /**
+   * \brief Gets the surfel render state for the specified free camera view for the sub-window.
+   *
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  SurfelRenderState_Ptr& get_surfel_render_state(int viewIndex);
+
+  /**
+   * \brief Gets the surfel render state for the specified free camera view for the sub-window.
+   *
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  SurfelRenderState_CPtr get_surfel_render_state(int viewIndex) const;
 
   /**
    * \brief Gets the type of scene visualisation to render in the sub-window.

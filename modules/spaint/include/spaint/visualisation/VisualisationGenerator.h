@@ -9,11 +9,13 @@
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
 
+#include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "interface/SemanticVisualiser.h"
 #include "../util/ITMImagePtrTypes.h"
+#include "../util/SpaintSurfelScene.h"
 
 namespace spaint {
 
@@ -28,6 +30,8 @@ public:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
@@ -63,6 +67,9 @@ private:
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
+  /** The InfiniTAM engine used for rendering the surfel scene. */
+  SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
+
   /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_CPtr m_visualisationEngine;
 
@@ -71,11 +78,13 @@ public:
   /**
    * \brief Constructs a visualisation generator.
    *
-   * \param visualisationEngine The InfiniTAM engine used for raycasting the scene.
-   * \param labelManager        The label manager.
-   * \param settings            The settings to use for InfiniTAM.
+   * \param visualisationEngine       The InfiniTAM engine used for raycasting a voxel scene.
+   * \param surfelVisualisationEngine The InfinITAM engine used for rendering a surfel scene.
+   * \param labelManager              The label manager.
+   * \param settings                  The settings to use for InfiniTAM.
    */
-  VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
+  VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
+                         const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -93,6 +102,12 @@ public:
   void generate_free_raycast(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                              const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+
+  /**
+   * \brief TODO
+   */
+  void generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                     const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;
 
   /**
    * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).

@@ -332,7 +332,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const 
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, subwindow.get_render_state(viewIndex), subwindow);
+    render_reconstructed_scene(sceneID, pose, subwindow.get_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex), subwindow);
     render_synthetic_scene(sceneID, pose);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
@@ -361,9 +361,9 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                      const Model::View_CPtr& view, RenderState_Ptr& renderState,
-                                      VisualisationGenerator::VisualisationType visualisationType,
+void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const SpaintSurfelScene_CPtr& surfelScene, const ORUtils::SE3Pose& pose,
+                                      const Model::View_CPtr& view, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState,
+                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                                       const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
   switch(visualisationType)
@@ -375,7 +375,8 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
       m_visualisationGenerator->get_depth_input(output, view);
       break;
     default:
-      m_visualisationGenerator->generate_free_raycast(output, scene, pose, view, renderState, visualisationType, postprocessor);
+      if(surfelFlag) m_visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
+      else m_visualisationGenerator->generate_free_raycast(output, scene, pose, view, renderState, visualisationType, postprocessor);
       break;
   }
 }
@@ -421,7 +422,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, RenderState_Ptr& renderState, Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState, Subwindow& subwindow) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -440,7 +441,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  generate_visualisation(image, m_model->get_scene(sceneID), pose, m_model->get_view(sceneID), renderState, subwindow.get_type(), postprocessor);
+  generate_visualisation(
+    image, m_model->get_scene(sceneID), m_model->get_surfel_scene(sceneID),
+    pose, m_model->get_view(sceneID), renderState, surfelRenderState,
+    subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+  );
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
