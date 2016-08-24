@@ -16,7 +16,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 RobustViconTracker::RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                                       const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene)
+                                       const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const SpaintScene_Ptr& scene)
 {
   m_viconTracker.reset(new ViconTracker(host, subjectName));
   m_icpTracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(

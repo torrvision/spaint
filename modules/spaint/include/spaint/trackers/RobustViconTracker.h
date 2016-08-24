@@ -7,13 +7,12 @@
 #define H_SPAINT_ROBUSTVICONTRACKER
 
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
-#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include <rigging/SimpleCamera.h>
 
 #include "ViconTracker.h"
-#include "../util/SpaintVoxel.h"
+#include "../util/SpaintScene.h"
 
 namespace spaint {
 
@@ -30,7 +29,6 @@ class RobustViconTracker : public FallibleTracker
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::ITMLowLevelEngine> LowLevelEngine_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> > Scene_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
@@ -55,7 +53,7 @@ public:
    * \param scene             The scene.
    */
   RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const Scene_Ptr& scene);
+                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const SpaintScene_Ptr& scene);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

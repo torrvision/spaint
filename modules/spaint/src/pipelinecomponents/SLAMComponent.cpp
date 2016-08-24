@@ -240,6 +240,7 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
 
 void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
+  const SpaintScene_Ptr& scene = m_context->get_scene(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
   m_fallibleTracker = NULL;
 
@@ -281,7 +282,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     {
       m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
       m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene(m_sceneID).get()
+        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
       ));
     }
   }
