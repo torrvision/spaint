@@ -45,6 +45,7 @@ Application::Application(const Pipeline_Ptr& pipeline)
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
+  m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
@@ -160,6 +161,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
   }
 
+  // If the P key is pressed, toggle pose mirroring.
+  if(keysym.sym == KEYCODE_p)
+  {
+    m_usePoseMirroring = !m_usePoseMirroring;
+  }
+
   // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
   if(keysym.sym == KEYCODE_n)
   {
@@ -222,7 +229,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Q = Move Up\n"
               << "E = Move Down\n"
               << "F = Toggle Fusion\n"
-              << "P = Toggle Phong Lighting\n"
+              << "P = Toggle Pose Mirroring\n"
               << "Up = Look Down\n"
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
@@ -311,14 +318,14 @@ void Application::handle_mousebutton_up(const SDL_MouseButtonEvent& e)
 
 void Application::process_camera_input()
 {
-  // Allow the user to switch camera modes.
+  // Allow the user to change the camera mode of the active sub-window.
   if(m_inputState.key_down(KEYCODE_v))
   {
     if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_camera_mode(m_activeSubwindowIndex, Subwindow::CM_FOLLOW);
     else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_camera_mode(m_activeSubwindowIndex, Subwindow::CM_FREE);
   }
 
-  // If we're in free camera mode, allow the user to move the camera around.
+  // If the active sub-window is in free camera mode, allow the user to move its camera around.
   if(m_renderer->get_camera_mode(m_activeSubwindowIndex) == Subwindow::CM_FREE)
   {
     const float SPEED = 0.1f;
@@ -338,6 +345,21 @@ void Application::process_camera_input()
     if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
+
+    // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
+    // and are in free camera mode from this one.
+    if(m_usePoseMirroring)
+    {
+      const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
+      for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+      {
+        Subwindow& subwindow = subwindowConfiguration->subwindow(i);
+        if(subwindow.get_scene_id() == get_active_scene_id() && subwindow.get_camera_mode() == Subwindow::CM_FREE)
+        {
+          subwindow.get_camera()->set_from(*camera);
+        }
+      }
+    }
   }
 }
 

@@ -26,7 +26,7 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
     {
       const float x = 0.5f;
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), worldSceneID, VisualisationGenerator::VT_VOXEL_SEMANTICLAMBERTIAN, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), "Object", VisualisationGenerator::VT_VOXEL_SEMANTICLAMBERTIAN, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), worldSceneID, VisualisationGenerator::VT_VOXEL_SEMANTICLAMBERTIAN, imgSize));
       break;
     }
     case 3:

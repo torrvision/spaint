@@ -77,6 +77,9 @@ private:
   /** A set of sub-window configurations that the user can switch between as desired. */
   mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
 
+  /** Whether or not to mirror poses between sub-windows that show the same scene. */
+  bool m_usePoseMirroring;
+
   /** The path generator for the current video recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_videoPathGenerator;
 

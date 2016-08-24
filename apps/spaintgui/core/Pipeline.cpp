@@ -40,11 +40,13 @@ Pipeline::Pipeline(const CompositeImageSourceEngine_Ptr& imageSourceEngine, cons
   m_smoothingComponent.reset(new SmoothingComponent(m_model, worldSceneID));
 
   // TEMPORARY
+#if 0
   boost::shared_ptr<CompositeImageSourceEngine> objectImageSourceEngine(new CompositeImageSourceEngine);
   ImageMaskPathGenerator pathGenerator("C:/fr4_tsukuba/rgb_rnm/%06i.ppm", "C:/fr4_tsukuba/depth_rnm/%06i.pgm");
   objectImageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>("C:/fr4_tsukuba/calibration.txt", pathGenerator, 0));
   const std::string objectSceneID = "Object";
   m_objectSlamComponent.reset(new SLAMComponent(m_model, objectSceneID, objectImageSourceEngine, trackerType, trackerParams));
+#endif
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -97,7 +99,9 @@ void Pipeline::reset_forest()
 
 bool Pipeline::run_main_section()
 {
+#if 0
   m_objectSlamComponent->run();
+#endif
   return m_slamComponent->run();
 }
 
