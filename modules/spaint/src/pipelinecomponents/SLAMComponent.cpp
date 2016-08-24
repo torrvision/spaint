@@ -63,7 +63,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(sceneID);
 
-  // Set up the dense mappers
+  // Set up the dense mappers.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
   m_denseMapper->ResetScene(scene.get());
   m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
