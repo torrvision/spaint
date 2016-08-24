@@ -242,14 +242,6 @@ try
   Pipeline_Ptr pipeline(new Pipeline(settings, Application::resources_dir().string(), labelManager));
   pipeline->add_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams);
 
-#if 1
-  // TEMPORARY
-  boost::shared_ptr<CompositeImageSourceEngine> objectImageSourceEngine(new CompositeImageSourceEngine);
-  ImageMaskPathGenerator objectPathGenerator("C:/fr4_tsukuba/rgb_rnm/%06i.ppm", "C:/fr4_tsukuba/depth_rnm/%06i.pgm");
-  objectImageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>("C:/fr4_tsukuba/calibration.txt", objectPathGenerator, 0));
-  pipeline->add_scene_pipeline("Object", objectImageSourceEngine, seed, trackerType, trackerParams);
-#endif
-
   // Run the application.
   Application app(pipeline);
   app.run();
