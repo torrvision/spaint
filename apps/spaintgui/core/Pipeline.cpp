@@ -47,10 +47,9 @@ void Pipeline::add_scene_pipeline(const std::string& sceneID, const CompositeIma
   scenePipeline.m_smoothingComponent.reset(new SmoothingComponent(m_model, sceneID));
 }
 
-bool Pipeline::get_fusion_enabled() const
+bool Pipeline::get_fusion_enabled(const std::string& sceneID) const
 {
-  // FIXME: This should be done on a per-scene basis.
-  return MapUtil::lookup(m_scenePipelines, "World").m_slamComponent->get_fusion_enabled();
+  return MapUtil::lookup(m_scenePipelines, sceneID).m_slamComponent->get_fusion_enabled();
 }
 
 ITMShortImage_Ptr Pipeline::get_input_raw_depth_image_copy(const std::string& sceneID) const
@@ -141,10 +140,9 @@ void Pipeline::run_mode_specific_section(const std::string& sceneID, const Rende
   }
 }
 
-void Pipeline::set_fusion_enabled(bool fusionEnabled)
+void Pipeline::set_fusion_enabled(const std::string& sceneID, bool fusionEnabled)
 {
-  // FIXME: This should be done on a per-scene basis.
-  MapUtil::lookup(m_scenePipelines, "World").m_slamComponent->set_fusion_enabled(fusionEnabled);
+  MapUtil::lookup(m_scenePipelines, sceneID).m_slamComponent->set_fusion_enabled(fusionEnabled);
 }
 
 void Pipeline::set_mode(Mode mode)

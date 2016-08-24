@@ -155,10 +155,11 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_paused = false;
   }
 
-  // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
+  // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline for the active scene.
   if(keysym.sym == KEYCODE_f)
   {
-    m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
+    const std::string& sceneID = get_active_scene_id();
+    m_pipeline->set_fusion_enabled(sceneID, !m_pipeline->get_fusion_enabled(sceneID));
   }
 
   // If the P key is pressed, toggle pose mirroring.
@@ -599,9 +600,9 @@ void Application::process_voice_input()
       if(command == changeLabelCommand) m_pipeline->get_model()->set_semantic_label(label);
     }
 
-    // Process any requests to disable/enable fusion.
-    if(command == "disable fusion") m_pipeline->set_fusion_enabled(false);
-    if(command == "enable fusion") m_pipeline->set_fusion_enabled(true);
+    // Process any requests to disable/enable fusion for the active scene.
+    if(command == "disable fusion") m_pipeline->set_fusion_enabled(get_active_scene_id(), false);
+    if(command == "enable fusion") m_pipeline->set_fusion_enabled(get_active_scene_id(), true);
 
     // Process any requests to change pipeline mode.
     if(command == "switch to normal mode") m_pipeline->set_mode(Pipeline::MODE_NORMAL);
