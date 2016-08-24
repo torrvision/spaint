@@ -14,6 +14,7 @@ Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const
   m_cameraMode(CM_FOLLOW),
   m_image(new ITMUChar4Image(imgSize, true, true)),
   m_sceneID(sceneID),
+  m_surfelFlag(false),
   m_topLeft(topLeft),
   m_type(type)
 {
@@ -62,6 +63,11 @@ const std::string& Subwindow::get_scene_id() const
   return m_sceneID;
 }
 
+bool Subwindow::get_surfel_flag() const
+{
+  return m_surfelFlag;
+}
+
 VisualisationGenerator::VisualisationType Subwindow::get_type() const
 {
   return m_type;
@@ -80,6 +86,11 @@ void Subwindow::reset_camera()
 void Subwindow::set_camera_mode(CameraMode cameraMode)
 {
   m_cameraMode = cameraMode;
+}
+
+void Subwindow::set_surfel_flag(bool surfelFlag)
+{
+  m_surfelFlag = surfelFlag;
 }
 
 void Subwindow::set_type(VisualisationGenerator::VisualisationType type)

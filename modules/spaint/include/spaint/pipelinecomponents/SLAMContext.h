@@ -8,12 +8,14 @@
 
 #include <map>
 
+#include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
 #include "../util/SpaintScene.h"
+#include "../util/SpaintSurfelScene.h"
 
 namespace spaint {
 
@@ -26,6 +28,7 @@ class SLAMContext
 private:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
@@ -73,6 +76,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   virtual const Settings_CPtr& get_settings() const = 0;
+  virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
   virtual VisualisationEngine_CPtr get_visualisation_engine() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

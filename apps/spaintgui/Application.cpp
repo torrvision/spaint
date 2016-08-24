@@ -238,6 +238,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "C + 1 = To Semantic Lambertian Raycast\n"
               << "C + 2 = To Semantic Phong Raycast\n"
               << "C + 3 = To Semantic Colour Raycast\n"
+              << "C + 4 = To Semantic Flag Raycast\n"
+              << "C + 5 = To Lambertian Raycast\n"
+              << "C + 6 = To Phong Raycast\n"
+              << "C + 7 = To Colour Raycast\n"
+              << "C + 8 = To Normal Raycast\n"
+              << "C + 9 = To Depth Raycast\n"
+              << "C + 0 = To Confidence Raycast\n"
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
@@ -565,13 +572,24 @@ void Application::process_renderer_input()
   if(m_inputState.key_down(KEYCODE_c))
   {
     Subwindow& subwindow = get_active_subwindow();
-    subwindow.set_type(
-      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_VOXEL_SEMANTICLAMBERTIAN :
-      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_VOXEL_SEMANTICPHONG :
-      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_VOXEL_SEMANTICCOLOUR :
-      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_VOXEL_SEMANTICFLAT :
-      subwindow.get_type()
-    );
+    boost::optional<VisualisationGenerator::VisualisationType> type =
+      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN :
+      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_SCENE_SEMANTICPHONG :
+      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR :
+      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SCENE_SEMANTICFLAT :
+      m_inputState.key_down(KEYCODE_5) ? VisualisationGenerator::VT_SCENE_LAMBERTIAN :
+      m_inputState.key_down(KEYCODE_6) ? VisualisationGenerator::VT_SCENE_PHONG :
+      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_COLOUR :
+      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_NORMAL :
+      m_inputState.key_down(KEYCODE_9) ? VisualisationGenerator::VT_SCENE_DEPTH :
+      m_inputState.key_down(KEYCODE_0) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_SCENE_CONFIDENCE) :
+      boost::none;
+
+    if(type)
+    {
+      subwindow.set_type(*type);
+      subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
+    }
   }
 }
 

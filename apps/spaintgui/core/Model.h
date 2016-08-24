@@ -35,6 +35,7 @@ public:
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<spaint::SpaintSurfel> > SurfelVisualisationEngine_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
@@ -62,6 +63,9 @@ private:
 
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
+
+  /** The InfiniTAM engine used for rendering the surfel scene. */
+  SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
   /** The InfiniTAM engine used for raycasting the scene. */
   VisualisationEngine_Ptr m_visualisationEngine;
@@ -145,6 +149,13 @@ public:
    * \return  The settings to use for InfiniTAM.
    */
   virtual const Settings_CPtr& get_settings() const;
+
+  /**
+   * \brief Gets the InfiniTAM engine used for rendering the surfel scene.
+   *
+   * \return  The InfiniTAM engine used for rendering the surfel scene.
+   */
+  virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
 
   /**
    * \brief Gets the InfiniTAM engine used for raycasting the scene.

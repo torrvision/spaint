@@ -501,6 +501,8 @@ include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintScene.h
+include/spaint/util/SpaintSurfel.h
+include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
 )
 

@@ -55,6 +55,9 @@ private:
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
 
+  /** A flag indicating whether or not to render a surfel visualisation rather than a voxel one. */
+  bool m_surfelFlag;
+
   /** The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_topLeft;
 
@@ -133,6 +136,13 @@ public:
   const std::string& get_scene_id() const;
 
   /**
+   * \brief Gets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.
+   *
+   * \return  A flag indicating whether or not to render a surfel visualisation rather than a voxel one.
+   */
+  bool get_surfel_flag() const;
+
+  /**
    * \brief Gets the type of scene visualisation to render in the sub-window.
    *
    * \return  The type of scene visualisation to render in the sub-window.
@@ -159,6 +169,13 @@ public:
    * \param cameraMode  The new camera mode.
    */
   void set_camera_mode(CameraMode cameraMode);
+
+  /**
+   * \brief Sets a flag indicating whether or not to render a surfel visualisation rather than a voxel one.
+   *
+   * \param surfelFlag  A flag indicating whether or not to render a surfel visualisation rather than a voxel one.
+   */
+  void set_surfel_flag(bool surfelFlag);
 
   /**
    * \brief Sets the type of scene visualisation to render in the sub-window.

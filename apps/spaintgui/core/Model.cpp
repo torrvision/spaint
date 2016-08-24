@@ -89,6 +89,11 @@ const Model::Settings_CPtr& Model::get_settings() const
   return m_settings;
 }
 
+Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() const
+{
+  return m_surfelVisualisationEngine;
+}
+
 Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
 {
   return m_visualisationEngine;
