@@ -178,12 +178,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Model_Ptr& model = m_pipeline->get_model();
-    const std::string sceneID = "World";
+    const std::string& sceneID = get_active_scene_id();
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
     {
-      // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
+      // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the active scene, and reset the random forest and command manager.
       model->clear_labels(sceneID, ClearingSettings(CLEAR_ALL, 0, 0));
-      m_pipeline->reset_forest();
+      m_pipeline->reset_forest(sceneID);
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RCTRL))
@@ -194,7 +194,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     }
     else if(m_inputState.key_down(KEYCODE_RSHIFT))
     {
-      // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene that were not labelled by the user.
+      // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the active scene that were not labelled by the user.
       model->clear_labels(sceneID, ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
     }
     else

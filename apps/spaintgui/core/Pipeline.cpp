@@ -88,10 +88,9 @@ VisualisationGenerator_CPtr Pipeline::get_visualisation_generator() const
   return m_visualisationGenerator;
 }
 
-void Pipeline::reset_forest()
+void Pipeline::reset_forest(const std::string& sceneID)
 {
-  // FIXME: This should be done on a per-scene basis.
-  MapUtil::lookup(m_scenePipelines, "World").m_semanticSegmentationComponent->reset_forest();
+  MapUtil::lookup(m_scenePipelines, sceneID).m_semanticSegmentationComponent->reset_forest();
 }
 
 bool Pipeline::run_main_section()

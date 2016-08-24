@@ -170,9 +170,11 @@ public:
   spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
 
   /**
-   * \brief Resets the random forest.
+   * \brief Resets the random forest for the specified scene.
+   *
+   * \param sceneID The scene ID.
    */
-  void reset_forest();
+  void reset_forest(const std::string& sceneID);
 
   /**
    * \brief Runs the main section of the pipeline.
