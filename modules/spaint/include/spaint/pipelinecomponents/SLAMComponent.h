@@ -8,6 +8,7 @@
 
 #include <InputSource/CompositeImageSourceEngine.h>
 #include <ITMLib/Core/ITMDenseMapper.h>
+#include <ITMLib/Core/ITMDenseSurfelMapper.h>
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
@@ -32,6 +33,7 @@ class SLAMComponent
 private:
   typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
+  typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
@@ -40,6 +42,8 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
+  typedef boost::shared_ptr<const ITMLib::ITMSurfelRenderState> SurfelRenderState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
@@ -53,6 +57,9 @@ private:
 
   /** The dense mapper. */
   DenseMapper_Ptr m_denseMapper;
+
+  /** The dense surfel mapper. */
+  DenseSurfelMapper_Ptr m_denseSurfelMapper;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
   FallibleTracker *m_fallibleTracker;

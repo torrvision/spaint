@@ -39,6 +39,11 @@ const SLAMContext::RenderState_Ptr& SLAMContext::get_live_render_state(const std
   return get_scene_context(sceneID).m_liveRenderState;
 }
 
+const SLAMContext::SurfelRenderState_Ptr& SLAMContext::get_live_surfel_render_state(const std::string& sceneID)
+{
+  return get_scene_context(sceneID).m_liveSurfelRenderState;
+}
+
 const SE3Pose& SLAMContext::get_pose(const std::string& sceneID) const
 {
   return *get_scene_context(sceneID).m_trackingState->pose_d;
@@ -57,6 +62,16 @@ const SpaintScene_Ptr& SLAMContext::get_scene(const std::string& sceneID)
 SpaintScene_CPtr SLAMContext::get_scene(const std::string& sceneID) const
 {
   return get_scene_context(sceneID).m_scene;
+}
+
+const SpaintSurfelScene_Ptr& SLAMContext::get_surfel_scene(const std::string& sceneID)
+{
+  return get_scene_context(sceneID).m_surfelScene;
+}
+
+SpaintSurfelScene_CPtr SLAMContext::get_surfel_scene(const std::string& sceneID) const
+{
+  return get_scene_context(sceneID).m_surfelScene;
 }
 
 const SLAMContext::TrackingState_Ptr& SLAMContext::get_tracking_state(const std::string& sceneID)
@@ -101,9 +116,19 @@ void SLAMContext::set_live_render_state(const std::string& sceneID, ITMLib::ITMR
   set_if_different(m_sceneContexts[sceneID].m_liveRenderState, liveRenderState);
 }
 
+void SLAMContext::set_live_surfel_render_state(const std::string& sceneID, ITMLib::ITMSurfelRenderState *liveSurfelRenderState)
+{
+  set_if_different(m_sceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
+}
+
 void SLAMContext::set_scene(const std::string& sceneID, SpaintScene *scene)
 {
   set_if_different(m_sceneContexts[sceneID].m_scene, scene);
+}
+
+void SLAMContext::set_surfel_scene(const std::string& sceneID, SpaintSurfelScene *surfelScene)
+{
+  set_if_different(m_sceneContexts[sceneID].m_surfelScene, surfelScene);
 }
 
 void SLAMContext::set_tracking_state(const std::string& sceneID, ITMLib::ITMTrackingState *trackingState)

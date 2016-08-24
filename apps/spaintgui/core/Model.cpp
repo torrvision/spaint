@@ -7,6 +7,7 @@
 using namespace ORUtils;
 using namespace tvginput;
 
+#include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 using namespace ITMLib;
 
@@ -32,6 +33,7 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, con
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
   m_settings(settings),
+  m_surfelVisualisationEngine(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType)),
   m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType)),
   m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType))
 {

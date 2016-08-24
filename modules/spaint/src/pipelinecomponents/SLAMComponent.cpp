@@ -54,14 +54,19 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   // Set up the view builder.
   m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
 
-  // Set up the scene.
+  // Set up the scenes.
   MemoryDeviceType memoryType = settings->GetMemoryType();
+
   m_context->set_scene(sceneID, new SpaintScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
   const SpaintScene_Ptr& scene = m_context->get_scene(sceneID);
 
-  // Set up the dense mapper.
+  m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));
+  const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(sceneID);
+
+  // Set up the dense mappers
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
   m_denseMapper->ResetScene(scene.get());
+  m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
 
   // Set up the tracker and the tracking controller.
   setup_tracker(rgbImageSize, depthImageSize);
@@ -70,8 +75,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_context->set_tracking_state(sceneID, new ITMTrackingState(trackedImageSize, memoryType));
   m_tracker->UpdateInitialPose(m_context->get_tracking_state(sceneID).get());
 
-  // Set up the live render state.
+  // Set up the live render states.
   m_context->set_live_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
+  m_context->set_live_surfel_render_state(sceneID, new ITMSurfelRenderState(trackedImageSize, surfelScene->GetParams().supersamplingFactor));
 
   // Set up the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
@@ -101,6 +107,8 @@ bool SLAMComponent::run()
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
   const RenderState_Ptr& liveRenderState = m_context->get_live_render_state(m_sceneID);
   const SpaintScene_Ptr& scene = m_context->get_scene(m_sceneID);
+  const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
+  const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
   const View_Ptr& view = m_context->get_view(m_sceneID);
 
@@ -193,6 +201,7 @@ bool SLAMComponent::run()
   {
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
     ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
@@ -208,6 +217,9 @@ bool SLAMComponent::run()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
+
+  // Render a supersampled index image to use when finding surfel correspondences in the next frame.
+  m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib->intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;

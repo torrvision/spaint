@@ -28,6 +28,7 @@ class SLAMContext
 private:
   typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
+  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
@@ -51,8 +52,14 @@ private:
     /** The render state corresponding to the live camera pose. */
     RenderState_Ptr m_liveRenderState;
 
+    /** The surfel render state corresponding to the live camera pose. */
+    SurfelRenderState_Ptr m_liveSurfelRenderState;
+
     /** The current reconstructed scene. */
     SpaintScene_Ptr m_scene;
+
+    /** The current reconstructed surfel scene. */
+    SpaintSurfelScene_Ptr m_surfelScene;
 
     /** The current tracking state (containing the camera pose and additional tracking information used by InfiniTAM). */
     TrackingState_Ptr m_trackingState;
@@ -122,6 +129,14 @@ public:
   virtual const RenderState_Ptr& get_live_render_state(const std::string& sceneID);
 
   /**
+   * \brief Gets the surfel render state corresponding to the live camera pose for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The surfel render state corresponding to the live camera pose for the specified scene.
+   */
+  virtual const SurfelRenderState_Ptr& get_live_surfel_render_state(const std::string& sceneID);
+
+  /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the specified scene.
    *
    * \param sceneID The scene ID.
@@ -152,6 +167,22 @@ public:
    * \return        The corresponding scene.
    */
   virtual SpaintScene_CPtr get_scene(const std::string& sceneID) const;
+
+  /**
+   * \brief Gets the specified surfel scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The corresponding scene.
+   */
+  virtual const SpaintSurfelScene_Ptr& get_surfel_scene(const std::string& sceneID);
+
+  /**
+   * \brief Gets the specified surfel scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The corresponding scene.
+   */
+  virtual SpaintSurfelScene_CPtr get_surfel_scene(const std::string& sceneID) const;
 
   /**
    * \brief Gets the current tracking state for the specified scene.
@@ -215,7 +246,7 @@ private:
    * \param sceneID       The scene ID.
    * \param inputRGBImage The image into which RGB input is read each frame.
    */
-  virtual void set_input_rgb_image(const std::string& sceneID, ITMUChar4Image *inputRGBImage);
+  void set_input_rgb_image(const std::string& sceneID, ITMUChar4Image *inputRGBImage);
 
   /**
    * \brief Sets the render state corresponding to the live camera pose for the specified scene.
@@ -223,7 +254,15 @@ private:
    * \param sceneID         The scene ID.
    * \param liveRenderState The render state corresponding to the live camera pose for the specified scene.
    */
-  virtual void set_live_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState);
+  void set_live_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState);
+
+  /**
+   * \brief Sets the surfel render state corresponding to the live camera pose for the specified scene.
+   *
+   * \param sceneID               The scene ID.
+   * \param liveSurfelRenderState The surfel render state corresponding to the live camera pose for the specified scene.
+   */
+  void set_live_surfel_render_state(const std::string& sceneID, ITMLib::ITMSurfelRenderState *liveSurfelRenderState);
 
   /**
    * \brief Sets the specified scene.
@@ -232,6 +271,14 @@ private:
    * \param scene   The scene.
    */
   void set_scene(const std::string& sceneID, SpaintScene *scene);
+
+  /**
+   * \brief Sets the specified surfel scene.
+   *
+   * \param sceneID     The scene ID.
+   * \param surfelScene The surfel scene.
+   */
+  void set_surfel_scene(const std::string& sceneID, SpaintSurfelScene *surfelScene);
 
   /**
    * \brief Sets the current tracking state for the specified scene.
