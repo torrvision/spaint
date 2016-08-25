@@ -118,7 +118,7 @@ bool SLAMComponent::run()
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   m_context->set_view(m_sceneID, newView);
 
-  // Track the camera (we can only do this once we've started reconstructing the scene because we need something to track against).
+  // Track the camera (we can only do this once we've started reconstruction because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
