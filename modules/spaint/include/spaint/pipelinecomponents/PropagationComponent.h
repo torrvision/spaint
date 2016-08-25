@@ -18,10 +18,6 @@ namespace spaint {
  */
 class PropagationComponent
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The shared context needed for propagation. */
@@ -48,9 +44,9 @@ public:
   /**
    * \brief Runs the propagation component, propagating a semantic label over the surfaces of the target scene.
    *
-   * \param renderState The render state associated with the camera position from which to propagate.
+   * \param renderState The voxel render state associated with the camera position from which to propagate.
    */
-  void run(const RenderState_CPtr& renderState);
+  void run(const VoxelRenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

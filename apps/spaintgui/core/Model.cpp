@@ -86,7 +86,7 @@ SpaintVoxel::Label Model::get_semantic_label() const
   return m_semanticLabel;
 }
 
-const Model::Settings_CPtr& Model::get_settings() const
+const Settings_CPtr& Model::get_settings() const
 {
   return m_settings;
 }
@@ -117,7 +117,7 @@ void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
   m_semanticLabel = semanticLabel;
 }
 
-void Model::update_selector(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
+void Model::update_selector(const InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Allow the user to switch between different selectors.
   if(inputState.key_down(KEYCODE_i))

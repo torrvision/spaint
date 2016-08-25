@@ -14,6 +14,7 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
+#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintSurfelScene.h"
 #include "../util/SpaintVoxelScene.h"
 
@@ -26,14 +27,7 @@ class SLAMContext
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
   //#################### NESTED TYPES ####################
@@ -49,11 +43,11 @@ private:
     /** The image into which RGB input is read each frame. */
     ITMUChar4Image_Ptr m_inputRGBImage;
 
-    /** The render state corresponding to the live camera pose. */
-    RenderState_Ptr m_liveRenderState;
-
     /** The surfel render state corresponding to the live camera pose. */
     SurfelRenderState_Ptr m_liveSurfelRenderState;
+
+    /** The voxel render state corresponding to the live camera pose. */
+    VoxelRenderState_Ptr m_liveVoxelRenderState;
 
     /** The current reconstructed surfel scene. */
     SpaintSurfelScene_Ptr m_surfelScene;
@@ -121,20 +115,20 @@ public:
   virtual const ITMLib::ITMIntrinsics& get_intrinsics(const std::string& sceneID) const;
 
   /**
-   * \brief Gets the render state corresponding to the live camera pose for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The render state corresponding to the live camera pose for the specified scene.
-   */
-  virtual const RenderState_Ptr& get_live_render_state(const std::string& sceneID);
-
-  /**
    * \brief Gets the surfel render state corresponding to the live camera pose for the specified scene.
    *
    * \param sceneID The scene ID.
    * \return        The surfel render state corresponding to the live camera pose for the specified scene.
    */
   virtual const SurfelRenderState_Ptr& get_live_surfel_render_state(const std::string& sceneID);
+
+  /**
+   * \brief Gets the voxel render state corresponding to the live camera pose for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The voxel render state corresponding to the live camera pose for the specified scene.
+   */
+  virtual const VoxelRenderState_Ptr& get_live_voxel_render_state(const std::string& sceneID);
 
   /**
    * \brief Gets the current pose of the camera that is being used to reconstruct the specified scene.
@@ -249,20 +243,20 @@ private:
   void set_input_rgb_image(const std::string& sceneID, ITMUChar4Image *inputRGBImage);
 
   /**
-   * \brief Sets the render state corresponding to the live camera pose for the specified scene.
-   *
-   * \param sceneID         The scene ID.
-   * \param liveRenderState The render state corresponding to the live camera pose for the specified scene.
-   */
-  void set_live_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState);
-
-  /**
    * \brief Sets the surfel render state corresponding to the live camera pose for the specified scene.
    *
    * \param sceneID               The scene ID.
    * \param liveSurfelRenderState The surfel render state corresponding to the live camera pose for the specified scene.
    */
   void set_live_surfel_render_state(const std::string& sceneID, ITMLib::ITMSurfelRenderState *liveSurfelRenderState);
+
+  /**
+   * \brief Sets the voxel render state corresponding to the live camera pose for the specified scene.
+   *
+   * \param sceneID         The scene ID.
+   * \param liveRenderState The voxel render state corresponding to the live camera pose for the specified scene.
+   */
+  void set_live_voxel_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveVoxelRenderState);
 
   /**
    * \brief Sets the specified surfel scene.

@@ -31,14 +31,9 @@
 class Renderer
 {
   //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
 protected:
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
-public:
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -89,14 +84,14 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the monocular render state for the camera associated with the specified sub-window.
+   * \brief Gets the monocular voxel render state for the camera associated with the specified sub-window.
    *
-   * If the camera is a stereo one, this will return the render state corresponding to the left eye.
+   * If the camera is a stereo one, this will return the voxel render state corresponding to the left eye.
    *
    * \param subwindowIndex  The index of the sub-window.
-   * \return                The monocular render state for the camera associated with the sub-window.
+   * \return                The monocular voxel render state for the camera associated with the sub-window.
    */
-  virtual RenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const = 0;
+  virtual VoxelRenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const = 0;
 
   /**
    * \brief Gets whether or not the renderer is rendering the scene in mono.
@@ -258,7 +253,7 @@ private:
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
-                              const ORUtils::SE3Pose& pose, const Model::View_CPtr& view, RenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                              const ORUtils::SE3Pose& pose, const View_CPtr& view, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
                               spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
 
@@ -284,11 +279,12 @@ private:
    *
    * \param sceneID           The scene ID.
    * \param pose              The camera pose.
-   * \param renderState       The render state corresponding to the camera pose.
+   * \param voxelRenderState  The voxel render state corresponding to the camera pose.
    * \param surfelRenderState The surfel render state corresponding to the camera pose.
    * \param subwindow         The sub-window into which to render.
    */
-  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState, Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                  Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.

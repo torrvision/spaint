@@ -45,7 +45,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual RenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const;
+  virtual VoxelRenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const;
 
   /** Override */
   virtual bool is_mono() const;

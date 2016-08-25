@@ -19,8 +19,6 @@
 #include "SLAMContext.h"
 #include "../trackers/FallibleTracker.h"
 #include "../trackers/TrackerType.h"
-#include "../util/ITMImagePtrTypes.h"
-#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -35,19 +33,11 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTracker> ITMTracker_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMSurfelRenderState> SurfelRenderState_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### ENUMERATIONS ####################
@@ -119,7 +109,7 @@ private:
   std::string m_sceneID;
 
   /** The tracker. */
-  ITMTracker_Ptr m_tracker;
+  Tracker_Ptr m_tracker;
 
   /**
    * The parameters for the tracker (if any). For example, this would be the host on which the

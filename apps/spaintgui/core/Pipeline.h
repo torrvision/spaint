@@ -23,10 +23,6 @@ class Pipeline
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMLibSettings> Settings_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### ENUMERATIONS ####################
@@ -191,9 +187,9 @@ public:
    * \brief Runs the mode-specific section of the pipeline for the specified scene.
    *
    * \param sceneID     The scene ID.
-   * \param renderState The render state to be used by the mode-specific section of the pipeline.
+   * \param renderState The voxel render state to be used by the mode-specific section of the pipeline.
    */
-  void run_mode_specific_section(const std::string& sceneID, const RenderState_CPtr& renderState);
+  void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 
   /**
    * \brief Sets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.

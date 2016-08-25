@@ -18,10 +18,6 @@ namespace spaint {
  */
 class SmoothingComponent
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The shared context needed for smoothing. */
@@ -48,9 +44,9 @@ public:
   /**
    * \brief Runs the smoothing component, smoothing the labels in the target scene to remove noise.
    *
-   * \param renderState The render state associated with the camera position from which to smoothe.
+   * \param renderState The voxel render state associated with the camera position from which to smoothe.
    */
-  void run(const RenderState_CPtr& renderState);
+  void run(const VoxelRenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

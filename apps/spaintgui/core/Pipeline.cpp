@@ -103,7 +103,7 @@ bool Pipeline::run_main_section()
   return result;
 }
 
-void Pipeline::run_mode_specific_section(const std::string& sceneID, const RenderState_CPtr& renderState)
+void Pipeline::run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState)
 {
   ScenePipeline& scenePipeline = MapUtil::lookup(m_scenePipelines, sceneID);
 

@@ -20,7 +20,7 @@ SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context, cons
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SmoothingComponent::run(const RenderState_CPtr& renderState)
+void SmoothingComponent::run(const VoxelRenderState_CPtr& renderState)
 {
   m_labelSmoother->smooth_labels(renderState->raycastResult, m_context->get_voxel_scene(m_sceneID).get());
 }

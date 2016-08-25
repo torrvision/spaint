@@ -34,14 +34,14 @@ const ITMIntrinsics& SLAMContext::get_intrinsics(const std::string& sceneID) con
   return get_scene_context(sceneID).m_view->calib->intrinsics_d;
 }
 
-const SLAMContext::RenderState_Ptr& SLAMContext::get_live_render_state(const std::string& sceneID)
-{
-  return get_scene_context(sceneID).m_liveRenderState;
-}
-
-const SLAMContext::SurfelRenderState_Ptr& SLAMContext::get_live_surfel_render_state(const std::string& sceneID)
+const SurfelRenderState_Ptr& SLAMContext::get_live_surfel_render_state(const std::string& sceneID)
 {
   return get_scene_context(sceneID).m_liveSurfelRenderState;
+}
+
+const VoxelRenderState_Ptr& SLAMContext::get_live_voxel_render_state(const std::string& sceneID)
+{
+  return get_scene_context(sceneID).m_liveVoxelRenderState;
 }
 
 const SE3Pose& SLAMContext::get_pose(const std::string& sceneID) const
@@ -64,22 +64,22 @@ SpaintSurfelScene_CPtr SLAMContext::get_surfel_scene(const std::string& sceneID)
   return get_scene_context(sceneID).m_surfelScene;
 }
 
-const SLAMContext::TrackingState_Ptr& SLAMContext::get_tracking_state(const std::string& sceneID)
+const TrackingState_Ptr& SLAMContext::get_tracking_state(const std::string& sceneID)
 {
   return get_scene_context(sceneID).m_trackingState;
 }
 
-SLAMContext::TrackingState_CPtr SLAMContext::get_tracking_state(const std::string& sceneID) const
+TrackingState_CPtr SLAMContext::get_tracking_state(const std::string& sceneID) const
 {
   return get_scene_context(sceneID).m_trackingState;
 }
 
-const SLAMContext::View_Ptr& SLAMContext::get_view(const std::string& sceneID)
+const View_Ptr& SLAMContext::get_view(const std::string& sceneID)
 {
   return get_scene_context(sceneID).m_view;
 }
 
-SLAMContext::View_CPtr SLAMContext::get_view(const std::string& sceneID) const
+View_CPtr SLAMContext::get_view(const std::string& sceneID) const
 {
   return get_scene_context(sceneID).m_view;
 }
@@ -111,14 +111,14 @@ void SLAMContext::set_input_rgb_image(const std::string& sceneID, ITMUChar4Image
   set_if_different(m_sceneContexts[sceneID].m_inputRGBImage, inputRGBImage);
 }
 
-void SLAMContext::set_live_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState)
-{
-  set_if_different(m_sceneContexts[sceneID].m_liveRenderState, liveRenderState);
-}
-
 void SLAMContext::set_live_surfel_render_state(const std::string& sceneID, ITMLib::ITMSurfelRenderState *liveSurfelRenderState)
 {
   set_if_different(m_sceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
+}
+
+void SLAMContext::set_live_voxel_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState)
+{
+  set_if_different(m_sceneContexts[sceneID].m_liveVoxelRenderState, liveRenderState);
 }
 
 void SLAMContext::set_surfel_scene(const std::string& sceneID, SpaintSurfelScene *surfelScene)

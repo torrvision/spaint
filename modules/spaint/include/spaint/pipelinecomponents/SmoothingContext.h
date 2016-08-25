@@ -9,6 +9,7 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/LabelManager.h"
+#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
@@ -18,10 +19,6 @@ namespace spaint {
  */
 class SmoothingContext
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
-
   //#################### DESTRUCTOR ####################
 public:
   /**

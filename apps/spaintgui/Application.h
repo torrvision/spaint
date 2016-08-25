@@ -43,7 +43,6 @@ class Application
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
-  typedef Renderer::RenderState_CPtr RenderState_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -135,7 +134,7 @@ private:
    *
    * \return  The current monocular render state.
    */
-  Renderer::RenderState_CPtr get_monocular_render_state() const;
+  VoxelRenderState_CPtr get_monocular_render_state() const;
 
   /**
    * \brief Gets the specified sub-window configuration.

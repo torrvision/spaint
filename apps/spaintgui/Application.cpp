@@ -114,13 +114,13 @@ const Subwindow& Application::get_active_subwindow() const
   return m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
 }
 
-Application::RenderState_CPtr Application::get_monocular_render_state() const
+VoxelRenderState_CPtr Application::get_monocular_render_state() const
 {
   const Subwindow& subwindow = get_active_subwindow();
   switch(subwindow.get_camera_mode())
   {
     case Subwindow::CM_FOLLOW:
-      return m_pipeline->get_model()->get_live_render_state(subwindow.get_scene_id());
+      return m_pipeline->get_model()->get_live_voxel_render_state(subwindow.get_scene_id());
     case Subwindow::CM_FREE:
       return m_renderer->get_monocular_render_state(m_activeSubwindowIndex);
     default:

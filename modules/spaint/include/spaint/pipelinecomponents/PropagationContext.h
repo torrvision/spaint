@@ -8,6 +8,7 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
@@ -17,10 +18,6 @@ namespace spaint {
  */
 class PropagationContext
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
-
   //#################### DESTRUCTOR ####################
 public:
   /**

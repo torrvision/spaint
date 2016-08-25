@@ -15,6 +15,7 @@
 
 #include "interface/SemanticVisualiser.h"
 #include "../util/ITMImagePtrTypes.h"
+#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintSurfelScene.h"
 
 namespace spaint {
@@ -27,12 +28,7 @@ class VisualisationGenerator
   //#################### TYPEDEFS ####################
 public:
   typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
-  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
 
   //#################### ENUMERATIONS ####################
@@ -113,17 +109,17 @@ public:
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                    const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
+                                    const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
                                     const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
-   * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).
+   * \brief Gets a Lambertian raycast of a voxel scene from the default pose (the current camera pose).
    *
-   * \param output          The location into which to put the output image.
-   * \param liveRenderState The render state corresponding to the current camera pose.
-   * \param postprocessor   An optional function with which to postprocess the raycast before returning it.
+   * \param output                The location into which to put the output image.
+   * \param liveVoxelRenderState  The render state corresponding to the voxel scene and the current camera pose.
+   * \param postprocessor         An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+  void get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveVoxelRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets the depth image from the most recently processed frame.

@@ -134,10 +134,10 @@ RiftRenderer::~RiftRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-RiftRenderer::RenderState_CPtr RiftRenderer::get_monocular_render_state(size_t subwindowIndex) const
+VoxelRenderState_CPtr RiftRenderer::get_monocular_render_state(size_t subwindowIndex) const
 {
   // The Rift is a stereo display, so return the render state corresponding to the left eye.
-  return get_subwindow_configuration()->subwindow(subwindowIndex).get_render_state(ovrEye_Left);
+  return get_subwindow_configuration()->subwindow(subwindowIndex).get_voxel_render_state(ovrEye_Left);
 }
 
 bool RiftRenderer::is_mono() const

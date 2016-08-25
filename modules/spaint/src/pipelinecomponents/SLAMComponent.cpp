@@ -75,7 +75,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_tracker->UpdateInitialPose(m_context->get_tracking_state(sceneID).get());
 
   // Set up the live render states.
-  m_context->set_live_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType));
+  m_context->set_live_voxel_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType));
   m_context->set_live_surfel_render_state(sceneID, new ITMSurfelRenderState(trackedImageSize, surfelScene->GetParams().supersamplingFactor));
 
   // Set up the pose database and the relocaliser.
@@ -104,9 +104,9 @@ bool SLAMComponent::run()
 
   const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image(m_sceneID);
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
-  const RenderState_Ptr& liveRenderState = m_context->get_live_render_state(m_sceneID);
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
   const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
+  const VoxelRenderState_Ptr& liveVoxelRenderState = m_context->get_live_voxel_render_state(m_sceneID);
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
   const View_Ptr& view = m_context->get_view(m_sceneID);
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
@@ -158,8 +158,8 @@ bool SLAMComponent::run()
         trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
+        m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+        m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveVoxelRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
 
@@ -199,7 +199,7 @@ bool SLAMComponent::run()
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
+    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
 
     if(m_mappingMode != MAP_VOXELS_ONLY)
     {
@@ -211,7 +211,7 @@ bool SLAMComponent::run()
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
   }
   else
   {
@@ -220,7 +220,7 @@ bool SLAMComponent::run()
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
+  m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveVoxelRenderState.get());
 
   if(m_mappingMode != MAP_VOXELS_ONLY)
   {

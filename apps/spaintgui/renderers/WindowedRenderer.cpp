@@ -50,9 +50,9 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state(size_t subwindowIndex) const
+VoxelRenderState_CPtr WindowedRenderer::get_monocular_render_state(size_t subwindowIndex) const
 {
-  return get_subwindow_configuration()->subwindow(subwindowIndex).get_render_state(0);
+  return get_subwindow_configuration()->subwindow(subwindowIndex).get_voxel_render_state(0);
 }
 
 bool WindowedRenderer::is_mono() const

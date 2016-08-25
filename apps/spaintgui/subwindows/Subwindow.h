@@ -16,13 +16,6 @@
   */
 class Subwindow
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<ITMLib::ITMRenderState> RenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMSurfelRenderState> SurfelRenderState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMSurfelRenderState> SurfelRenderState_CPtr;
-
   //#################### ENUMERATIONS ####################
 public:
   /**
@@ -51,9 +44,6 @@ private:
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
 
-  /** The render state(s) for the free camera view(s). */
-  mutable std::map<int,RenderState_Ptr> m_renderStates;
-
   /** The surfel render state(s) for the free camera view(s). */
   mutable std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
 
@@ -68,6 +58,9 @@ private:
 
   /** The type of scene visualisation to render in the sub-window. */
   spaint::VisualisationGenerator::VisualisationType m_type;
+
+  /** The voxel render state(s) for the free camera view(s). */
+  mutable std::map<int,VoxelRenderState_Ptr> m_voxelRenderStates;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -120,20 +113,6 @@ public:
   ITMUChar4Image_CPtr get_image() const;
 
   /**
-   * \brief Gets the render state for the specified free camera view for the sub-window.
-   *
-   * \param viewIndex The index of the free camera view for the sub-window.
-   */
-  RenderState_Ptr& get_render_state(int viewIndex);
-
-  /**
-   * \brief Gets the render state for the specified free camera view for the sub-window.
-   *
-   * \param viewIndex The index of the free camera view for the sub-window.
-   */
-  RenderState_CPtr get_render_state(int viewIndex) const;
-
-  /**
    * \brief Gets the ID of the scene to render in the sub-window.
    *
    * \return  The ID of the scene to render in the sub-window.
@@ -167,6 +146,20 @@ public:
    * \return  The type of scene visualisation to render in the sub-window.
    */
   spaint::VisualisationGenerator::VisualisationType get_type() const;
+
+  /**
+   * \brief Gets the voxel render state for the specified free camera view for the sub-window.
+   *
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  VoxelRenderState_Ptr& get_voxel_render_state(int viewIndex);
+
+  /**
+   * \brief Gets the voxel render state for the specified free camera view for the sub-window.
+   *
+   * \param viewIndex The index of the free camera view for the sub-window.
+   */
+  VoxelRenderState_CPtr get_voxel_render_state(int viewIndex) const;
 
   /**
    * \brief Gets the height of the sub-window (as a fraction of the window viewport height, in the range [0,1]).

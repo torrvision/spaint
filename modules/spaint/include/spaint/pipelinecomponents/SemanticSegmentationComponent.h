@@ -26,8 +26,6 @@ class SemanticSegmentationComponent
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<rafl::RandomForest<SpaintVoxel::Label> > RandomForest_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -100,23 +98,23 @@ public:
   /**
    * \brief Runs the feature inspection section of the component.
    *
-   * \param renderState The render state associated with the camera position from which the user is picking voxels.
+   * \param renderState The voxel render state associated with the camera position from which the user is picking voxels.
    */
-  void run_feature_inspection(const RenderState_CPtr& renderState);
+  void run_feature_inspection(const VoxelRenderState_CPtr& renderState);
 
   /**
    * \brief Runs the prediction section of the component.
    *
-   * \param renderState The render state associated with the camera position from which to sample voxels.
+   * \param renderState The voxel render state associated with the camera position from which to sample voxels.
    */
-  void run_prediction(const RenderState_CPtr& renderState);
+  void run_prediction(const VoxelRenderState_CPtr& renderState);
 
   /**
    * \brief Runs the training section of the component.
    *
-   * \param renderState The render state associated with the camera position from which to sample voxels.
+   * \param renderState The voxel render state associated with the camera position from which to sample voxels.
    */
-  void run_training(const RenderState_CPtr& renderState);
+  void run_training(const VoxelRenderState_CPtr& renderState);
 };
 
 //#################### TYPEDEFS ####################

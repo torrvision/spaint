@@ -31,15 +31,9 @@ class Model
 public:
   typedef boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_Ptr;
   typedef boost::shared_ptr<const ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > PackedLabels_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<spaint::SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMTrackingState> TrackingState_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
   typedef ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> VisualisationEngine;
   typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
   typedef boost::shared_ptr<const VisualisationEngine> VisualisationEngine_CPtr;
@@ -197,10 +191,10 @@ public:
    * \brief Allows the user to change selector or update the current selector.
    *
    * \param inputState      The current input state.
-   * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
+   * \param renderState     The voxel render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update_selector(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update_selector(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 
   //#################### DISAMBIGUATORS ####################
 public:

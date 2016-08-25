@@ -87,7 +87,7 @@ void SemanticSegmentationComponent::reset_forest()
   m_forest.reset(new RandomForest<SpaintVoxel::Label>(treeCount, dtSettings));
 }
 
-void SemanticSegmentationComponent::run_feature_inspection(const RenderState_CPtr& renderState)
+void SemanticSegmentationComponent::run_feature_inspection(const VoxelRenderState_CPtr& renderState)
 {
   // Get the voxels (if any) selected by the user (prior to selection transformation).
   Selector::Selection_CPtr selection = m_context->get_selector()->get_selection();
@@ -115,7 +115,7 @@ void SemanticSegmentationComponent::run_feature_inspection(const RenderState_CPt
 #endif
 }
 
-void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& renderState)
+void SemanticSegmentationComponent::run_prediction(const VoxelRenderState_CPtr& renderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!renderState) return;
@@ -147,7 +147,7 @@ void SemanticSegmentationComponent::run_prediction(const RenderState_CPtr& rende
   m_context->mark_voxels(m_sceneID, m_predictionVoxelLocationsMB, m_predictionLabelsMB, NORMAL_MARKING);
 }
 
-void SemanticSegmentationComponent::run_training(const RenderState_CPtr& renderState)
+void SemanticSegmentationComponent::run_training(const VoxelRenderState_CPtr& renderState)
 {
   // If we haven't been provided with a camera position from which to sample, early out.
   if(!renderState) return;

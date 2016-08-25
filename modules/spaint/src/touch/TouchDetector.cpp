@@ -37,7 +37,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
 :
   // Debugging variables.
   m_debugDelayMs(30),
@@ -74,7 +74,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 try
 {
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -377,7 +377,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
   return bestCandidateID;
 }
 
-void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 {
   // Make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
   // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera,

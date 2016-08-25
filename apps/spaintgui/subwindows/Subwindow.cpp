@@ -48,16 +48,6 @@ ITMUChar4Image_CPtr Subwindow::get_image() const
   return m_image;
 }
 
-Subwindow::RenderState_Ptr& Subwindow::get_render_state(int viewIndex)
-{
-  return m_renderStates[viewIndex];
-}
-
-Subwindow::RenderState_CPtr Subwindow::get_render_state(int viewIndex) const
-{
-  return m_renderStates[viewIndex];
-}
-
 const std::string& Subwindow::get_scene_id() const
 {
   return m_sceneID;
@@ -68,12 +58,12 @@ bool Subwindow::get_surfel_flag() const
   return m_surfelFlag;
 }
 
-Subwindow::SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
+SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
 {
   return m_surfelRenderStates[viewIndex];
 }
 
-Subwindow::SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
+SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
 {
   return m_surfelRenderStates[viewIndex];
 }
@@ -81,6 +71,16 @@ Subwindow::SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewInd
 VisualisationGenerator::VisualisationType Subwindow::get_type() const
 {
   return m_type;
+}
+
+VoxelRenderState_Ptr& Subwindow::get_voxel_render_state(int viewIndex)
+{
+  return m_voxelRenderStates[viewIndex];
+}
+
+VoxelRenderState_CPtr Subwindow::get_voxel_render_state(int viewIndex) const
+{
+  return m_voxelRenderStates[viewIndex];
 }
 
 float Subwindow::height() const
