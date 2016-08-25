@@ -55,9 +55,6 @@ private:
     /** The surfel render state corresponding to the live camera pose. */
     SurfelRenderState_Ptr m_liveSurfelRenderState;
 
-    /** The current reconstructed scene. */
-    SpaintVoxelScene_Ptr m_scene;
-
     /** The current reconstructed surfel scene. */
     SpaintSurfelScene_Ptr m_surfelScene;
 
@@ -66,6 +63,9 @@ private:
 
     /** The current view of the scene. */
     View_Ptr m_view;
+
+    /** The current reconstructed voxel scene. */
+    SpaintVoxelScene_Ptr m_voxelScene;
   };
 
   //#################### PRIVATE VARIABLES ####################
@@ -153,22 +153,6 @@ public:
   virtual const Vector2i& get_rgb_image_size(const std::string& sceneID) const;
 
   /**
-   * \brief Gets the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The corresponding scene.
-   */
-  virtual const SpaintVoxelScene_Ptr& get_scene(const std::string& sceneID);
-
-  /**
-   * \brief Gets the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The corresponding scene.
-   */
-  virtual SpaintVoxelScene_CPtr get_scene(const std::string& sceneID) const;
-
-  /**
    * \brief Gets the specified surfel scene.
    *
    * \param sceneID The scene ID.
@@ -215,6 +199,22 @@ public:
    * \return        The current view of the specified scene.
    */
   virtual View_CPtr get_view(const std::string& sceneID) const;
+
+  /**
+   * \brief Gets the specified voxel scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The corresponding scene.
+   */
+  virtual const SpaintVoxelScene_Ptr& get_voxel_scene(const std::string& sceneID);
+
+  /**
+   * \brief Gets the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The corresponding scene.
+   */
+  virtual SpaintVoxelScene_CPtr get_voxel_scene(const std::string& sceneID) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -265,14 +265,6 @@ private:
   void set_live_surfel_render_state(const std::string& sceneID, ITMLib::ITMSurfelRenderState *liveSurfelRenderState);
 
   /**
-   * \brief Sets the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \param scene   The scene.
-   */
-  void set_scene(const std::string& sceneID, SpaintVoxelScene *scene);
-
-  /**
    * \brief Sets the specified surfel scene.
    *
    * \param sceneID     The scene ID.
@@ -295,6 +287,14 @@ private:
    * \param view    The new current view of the specified scene.
    */
   void set_view(const std::string& sceneID, ITMLib::ITMView *view);
+
+  /**
+   * \brief Sets the specified voxel scene.
+   *
+   * \param sceneID     The scene ID.
+   * \param voxelScene  The voxel scene.
+   */
+  void set_voxel_scene(const std::string& sceneID, SpaintVoxelScene *voxelScene);
 
   //#################### FRIENDS ####################
 

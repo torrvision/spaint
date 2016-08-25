@@ -208,10 +208,10 @@ public:
   virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const;
 
   /** Override */
-  virtual const spaint::SpaintVoxelScene_Ptr& get_scene(const std::string& sceneID);
+  virtual const spaint::SpaintVoxelScene_Ptr& get_voxel_scene(const std::string& sceneID);
 
   /** Override */
-  virtual spaint::SpaintVoxelScene_CPtr get_scene(const std::string& sceneID) const;
+  virtual spaint::SpaintVoxelScene_CPtr get_voxel_scene(const std::string& sceneID) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -442,7 +442,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
   generate_visualisation(
-    image, m_model->get_scene(sceneID), m_model->get_surfel_scene(sceneID),
+    image, m_model->get_voxel_scene(sceneID), m_model->get_surfel_scene(sceneID),
     pose, m_model->get_view(sceneID), renderState, surfelRenderState,
     subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );

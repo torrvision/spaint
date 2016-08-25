@@ -54,16 +54,6 @@ const Vector2i& SLAMContext::get_rgb_image_size(const std::string& sceneID) cons
   return get_scene_context(sceneID).m_inputRGBImage->noDims;
 }
 
-const SpaintVoxelScene_Ptr& SLAMContext::get_scene(const std::string& sceneID)
-{
-  return get_scene_context(sceneID).m_scene;
-}
-
-SpaintVoxelScene_CPtr SLAMContext::get_scene(const std::string& sceneID) const
-{
-  return get_scene_context(sceneID).m_scene;
-}
-
 const SpaintSurfelScene_Ptr& SLAMContext::get_surfel_scene(const std::string& sceneID)
 {
   return get_scene_context(sceneID).m_surfelScene;
@@ -94,6 +84,16 @@ SLAMContext::View_CPtr SLAMContext::get_view(const std::string& sceneID) const
   return get_scene_context(sceneID).m_view;
 }
 
+const SpaintVoxelScene_Ptr& SLAMContext::get_voxel_scene(const std::string& sceneID)
+{
+  return get_scene_context(sceneID).m_voxelScene;
+}
+
+SpaintVoxelScene_CPtr SLAMContext::get_voxel_scene(const std::string& sceneID) const
+{
+  return get_scene_context(sceneID).m_voxelScene;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 const SLAMContext::SceneContext& SLAMContext::get_scene_context(const std::string& sceneID) const
@@ -121,11 +121,6 @@ void SLAMContext::set_live_surfel_render_state(const std::string& sceneID, ITMLi
   set_if_different(m_sceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
 }
 
-void SLAMContext::set_scene(const std::string& sceneID, SpaintVoxelScene *scene)
-{
-  set_if_different(m_sceneContexts[sceneID].m_scene, scene);
-}
-
 void SLAMContext::set_surfel_scene(const std::string& sceneID, SpaintSurfelScene *surfelScene)
 {
   set_if_different(m_sceneContexts[sceneID].m_surfelScene, surfelScene);
@@ -139,6 +134,11 @@ void SLAMContext::set_tracking_state(const std::string& sceneID, ITMLib::ITMTrac
 void SLAMContext::set_view(const std::string& sceneID, ITMView *view)
 {
   set_if_different(m_sceneContexts[sceneID].m_view, view);
+}
+
+void SLAMContext::set_voxel_scene(const std::string& sceneID, SpaintVoxelScene *voxelScene)
+{
+  set_if_different(m_sceneContexts[sceneID].m_voxelScene, voxelScene);
 }
 
 }

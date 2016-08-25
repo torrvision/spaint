@@ -57,16 +57,14 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the scenes.
   MemoryDeviceType memoryType = settings->GetMemoryType();
-
-  m_context->set_scene(sceneID, new SpaintVoxelScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
-  const SpaintVoxelScene_Ptr& scene = m_context->get_scene(sceneID);
-
+  m_context->set_voxel_scene(sceneID, new SpaintVoxelScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
   m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(sceneID);
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(sceneID);
 
   // Set up the dense mappers.
   m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
-  m_denseMapper->ResetScene(scene.get());
+  m_denseMapper->ResetScene(voxelScene.get());
   m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
 
   // Set up the tracker and the tracking controller.
@@ -77,7 +75,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_tracker->UpdateInitialPose(m_context->get_tracking_state(sceneID).get());
 
   // Set up the live render states.
-  m_context->set_live_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, scene->sceneParams, memoryType));
+  m_context->set_live_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType));
   m_context->set_live_surfel_render_state(sceneID, new ITMSurfelRenderState(trackedImageSize, surfelScene->GetParams().supersamplingFactor));
 
   // Set up the pose database and the relocaliser.
@@ -107,11 +105,11 @@ bool SLAMComponent::run()
   const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image(m_sceneID);
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
   const RenderState_Ptr& liveRenderState = m_context->get_live_render_state(m_sceneID);
-  const SpaintVoxelScene_Ptr& scene = m_context->get_scene(m_sceneID);
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
   const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
   const View_Ptr& view = m_context->get_view(m_sceneID);
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
 
   // Get the next frame.
   ITMView *newView = view.get();
@@ -160,8 +158,8 @@ bool SLAMComponent::run()
         trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
+        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get(), resetVisibleList);
+        m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
 
@@ -201,7 +199,7 @@ bool SLAMComponent::run()
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
 
     if(m_mappingMode != MAP_VOXELS_ONLY)
     {
@@ -213,7 +211,7 @@ bool SLAMComponent::run()
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
+    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
   }
   else
   {
@@ -222,7 +220,7 @@ bool SLAMComponent::run()
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
+  m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
 
   if(m_mappingMode != MAP_VOXELS_ONLY)
   {
@@ -252,7 +250,7 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
   compositeTracker->SetTracker(
     ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
       rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
-      m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_scene(m_sceneID).get()
+      m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_voxel_scene(m_sceneID).get()
     ), 1
   );
 
@@ -261,7 +259,7 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
 
 void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
-  const SpaintVoxelScene_Ptr& scene = m_context->get_scene(m_sceneID);
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
   m_fallibleTracker = NULL;
 
@@ -280,7 +278,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     case TRACKER_ROBUSTVICON:
     {
 #ifdef WITH_VICON
-      m_fallibleTracker = new RobustViconTracker(m_trackerParams, "kinect", rgbImageSize, depthImageSize, settings, m_lowLevelEngine, scene);
+      m_fallibleTracker = new RobustViconTracker(m_trackerParams, "kinect", rgbImageSize, depthImageSize, settings, m_lowLevelEngine, voxelScene);
       m_tracker.reset(m_fallibleTracker);
       break;
 #else
@@ -303,7 +301,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     {
       m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
       m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), scene.get()
+        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene.get()
       ));
     }
   }

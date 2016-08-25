@@ -23,7 +23,7 @@ PropagationComponent::PropagationComponent(const PropagationContext_Ptr& context
 
 void PropagationComponent::run(const RenderState_CPtr& renderState)
 {
-  m_labelPropagator->propagate_label(m_context->get_semantic_label(), renderState->raycastResult, m_context->get_scene(m_sceneID).get());
+  m_labelPropagator->propagate_label(m_context->get_semantic_label(), renderState->raycastResult, m_context->get_voxel_scene(m_sceneID).get());
 }
 
 }

@@ -46,7 +46,7 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, con
 
 void Model::clear_labels(const std::string& sceneID, ClearingSettings settings)
 {
-  ITMLocalVBA<SpaintVoxel>& localVBA = get_scene(sceneID)->localVBA;
+  ITMLocalVBA<SpaintVoxel>& localVBA = get_voxel_scene(sceneID)->localVBA;
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
@@ -104,12 +104,12 @@ Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
 void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, SpaintVoxel::PackedLabel label,
                         MarkingMode mode, const PackedLabels_Ptr& oldLabels)
 {
-  m_voxelMarker->mark_voxels(*selection, label, get_scene(sceneID).get(), mode, oldLabels.get());
+  m_voxelMarker->mark_voxels(*selection, label, get_voxel_scene(sceneID).get(), mode, oldLabels.get());
 }
 
 void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
 {
-  m_voxelMarker->mark_voxels(*selection, *labels, get_scene(sceneID).get(), mode);
+  m_voxelMarker->mark_voxels(*selection, *labels, get_voxel_scene(sceneID).get(), mode);
 }
 
 void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
@@ -125,7 +125,7 @@ void Model::update_selector(const InputState& inputState, const RenderState_CPtr
     if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(m_settings));
     else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(m_settings));
 #ifdef WITH_LEAP
-    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings, get_scene("World")));
+    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings, get_voxel_scene("World")));
 #endif
 #ifdef WITH_ARRAYFIRE
     else if(inputState.key_down(KEYCODE_4))
@@ -154,12 +154,12 @@ const Vector2i& Model::get_depth_image_size(const std::string& sceneID) const
   return SLAMContext::get_depth_image_size(sceneID);
 }
 
-const SpaintVoxelScene_Ptr& Model::get_scene(const std::string& sceneID)
+const SpaintVoxelScene_Ptr& Model::get_voxel_scene(const std::string& sceneID)
 {
-  return SLAMContext::get_scene(sceneID);
+  return SLAMContext::get_voxel_scene(sceneID);
 }
 
-SpaintVoxelScene_CPtr Model::get_scene(const std::string& sceneID) const
+SpaintVoxelScene_CPtr Model::get_voxel_scene(const std::string& sceneID) const
 {
-  return SLAMContext::get_scene(sceneID);
+  return SLAMContext::get_voxel_scene(sceneID);
 }
