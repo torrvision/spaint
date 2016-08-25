@@ -46,7 +46,7 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The index of the sub-window that will be affected by visualisation type changes. */
+  /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
 
   /** The command manager. */
@@ -113,17 +113,23 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Gets the scene ID for the active sub-window.
+   *
+   * \return  The scene ID for the active sub-window.
    */
   const std::string& get_active_scene_id() const;
 
   /**
-   * \brief TODO
+   * \brief Gets the sub-window with which the user is interacting.
+   *
+   * \return  The sub-window with which the user is interacting.
    */
   Subwindow& get_active_subwindow();
 
   /**
-   * \brief TODO
+   * \brief Gets the sub-window with which the user is interacting.
+   *
+   * \return  The sub-window with which the user is interacting.
    */
   const Subwindow& get_active_subwindow() const;
 
