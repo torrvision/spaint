@@ -225,7 +225,7 @@ protected:
    *
    * \param fracWindowPos       The fractional position of the mouse within the window's viewport.
    * \param viewIndex           The index of the free camera view for the sub-window.
-   * \param secondaryCameraName TODO
+   * \param secondaryCameraName The name of the secondary camera from which to get the pose (if any).
    */
   void render_scene(const Vector2f& fracWindowPos, int viewIndex = 0, const std::string& secondaryCameraName = "") const;
 
