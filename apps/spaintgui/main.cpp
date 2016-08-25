@@ -37,7 +37,7 @@ using namespace spaint;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-#include "core/Pipeline.h"
+#include "core/MultiScenePipeline.h"
 
 //#################### TYPES ####################
 
@@ -237,10 +237,10 @@ try
   const size_t maxLabelCount = 10;
   LabelManager_Ptr labelManager(new LabelManager(maxLabelCount));
 
-  // Construct the pipeline.
+  // Construct the multi-scene pipeline.
   const unsigned int seed = 12345;
-  Pipeline_Ptr pipeline(new Pipeline(settings, Application::resources_dir().string(), labelManager));
-  pipeline->add_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams);
+  MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), labelManager));
+  pipeline->add_single_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams);
 
   // Run the application.
   Application app(pipeline);

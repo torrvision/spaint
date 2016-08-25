@@ -1,10 +1,10 @@
 /**
- * spaintgui: Pipeline.h
+ * spaintgui: MultiScenePipeline.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINTGUI_PIPELINE
-#define H_SPAINTGUI_PIPELINE
+#ifndef H_SPAINTGUI_MULTISCENEPIPELINE
+#define H_SPAINTGUI_MULTISCENEPIPELINE
 
 #include <spaint/pipelinecomponents/PropagationComponent.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationComponent.h>
@@ -16,14 +16,10 @@
 #include "Model.h"
 
 /**
- * \brief An instance of this class is used to represent the spaintgui processing pipeline.
+ * \brief An instance of this class can be used to represent the processing pipeline for multiple scenes.
  */
-class Pipeline
+class MultiScenePipeline
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
-
   //#################### ENUMERATIONS ####################
 public:
   /**
@@ -56,63 +52,63 @@ public:
   //#################### NESTED TYPES ####################
 private:
   /**
-   * \brief TODO
+   * \brief An instance of this struct holds the pipeline components for an individual scene.
    */
-  struct ScenePipeline
+  struct SingleScenePipeline
   {
-    /** TODO */
+    /** The propagation component for the scene. */
     spaint::PropagationComponent_Ptr m_propagationComponent;
 
-    /** TODO */
+    /** The semantic segmentation component for the scene. */
     spaint::SemanticSegmentationComponent_Ptr m_semanticSegmentationComponent;
 
-    /** TODO */
+    /** The SLAM component for the scene. */
     spaint::SLAMComponent_Ptr m_slamComponent;
 
-    /** TODO */
+    /** The smoothing component for the scene. */
     spaint::SmoothingComponent_Ptr m_smoothingComponent;
   };
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The mode in which the pipeline is currently running. */
+  /** The mode in which the multi-scene pipeline is currently running. */
   Mode m_mode;
 
   /** The spaint model. */
   Model_Ptr m_model;
 
-  /** TODO */
-  std::map<std::string,ScenePipeline> m_scenePipelines;
+  /** The pipelines for the individual scenes. */
+  std::map<std::string,SingleScenePipeline> m_singleScenePipelines;
 
-  /** The visualiation generator that is used to render the InfiniTAM scene. */
+  /** The visualisation generator that is used to render a scene. */
   spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of the pipeline.
+   * \brief Constructs an instance of the multi-scene pipeline.
    *
    * \param settings          The settings to use for InfiniTAM.
    * \param resourcesDir      The path to the resouces directory.
    * \param labelManager      The label manager.
    */
-  Pipeline(const Settings_Ptr& settings, const std::string& resourcesDir, const spaint::LabelManager_Ptr& labelManager);
+  MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, const spaint::LabelManager_Ptr& labelManager);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Adds a pipeline for an individual scene to the multi-scene pipeline.
    *
-   * \param sceneID           The scene ID.
-   * \param imageSourceEngine The engine used to provide input images to the fusion pipeline.
+   * \param sceneID           The ID of the individual scene.
+   * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
    * \param seed              The seed to use for the random number generators used by the voxel samplers.
-   * \param trackerType       The type of tracker to use.
+   * \param trackerType       The type of tracker to use when reconstructing the scene.
    * \param trackerParams     The parameters for the tracker (if any).
-   * \param mappingMode       The mapping mode to use for SLAM.
+   * \param mappingMode       The mapping mode that the scene's SLAM component should use.
    */
-  void add_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                          spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
-                          spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY);
+  void add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
+                                 spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
+                                 spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY);
 
   /**
    * \brief Gets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
@@ -139,9 +135,9 @@ public:
   ITMUChar4Image_Ptr get_input_rgb_image_copy(const std::string& sceneID) const;
 
   /**
-   * \brief Gets the mode in which the pipeline is currently running.
+   * \brief Gets the mode in which the multi-scene pipeline is currently running.
    *
-   * \return  The mode in which the pipeline is currently running.
+   * \return  The mode in which the multi-scene pipeline is currently running.
    */
   Mode get_mode() const;
 
@@ -160,9 +156,9 @@ public:
   Model_CPtr get_model() const;
 
   /**
-   * \brief Gets the visualisation generator that is used to render the InfiniTAM scene.
+   * \brief Gets the visualisation generator that is used to render a scene.
    *
-   * \return  The visualisation generator that is used to render the InfiniTAM scene.
+   * \return  The visualisation generator that is used to render a scene.
    */
   spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
 
@@ -174,11 +170,11 @@ public:
   void reset_forest(const std::string& sceneID);
 
   /**
-   * \brief Runs the main section of the pipeline.
+   * \brief Runs the main section of the multi-scene pipeline.
    *
-   * This involves processing the next frame from the image source engine (if any).
+   * This involves processing the next frame (if any) for each individual scene.
    *
-   * \return  true, if a frame was available from the image source engine, or false otherwise.
+   * \return  true, if a new frame was available for every individual scene, or false otherwise.
    */
   bool run_main_section();
 
@@ -202,16 +198,16 @@ public:
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
 
   /**
-   * \brief Sets the mode in which the pipeline should now run.
+   * \brief Sets the mode in which the multi-scene pipeline should now run.
    *
-   * \param mode  The mode in which the pipeline should now run.
+   * \param mode  The mode in which the multi-scene pipeline should now run.
    */
   void set_mode(Mode mode);
 };
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<Pipeline> Pipeline_Ptr;
-typedef boost::shared_ptr<const Pipeline> Pipeline_CPtr;
+typedef boost::shared_ptr<MultiScenePipeline> MultiScenePipeline_Ptr;
+typedef boost::shared_ptr<const MultiScenePipeline> MultiScenePipeline_CPtr;
 
 #endif

@@ -28,7 +28,7 @@
 #include <tvgutil/commands/CommandManager.h>
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 
-#include "core/Pipeline.h"
+#include "core/MultiScenePipeline.h"
 #include "renderers/Renderer.h"
 
 #ifdef WITH_OVR
@@ -64,8 +64,8 @@ private:
   /** Whether or not the application is currently paused. */
   bool m_paused;
 
-  /** The pipeline that the application should use. */
-  Pipeline_Ptr m_pipeline;
+  /** The multi-scene pipeline that the application should use. */
+  MultiScenePipeline_Ptr m_pipeline;
 
   /** The current renderer. */
   Renderer_Ptr m_renderer;
@@ -90,9 +90,9 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline  The pipeline that the application should use.
+   * \param pipeline  The multi-scene pipeline that the application should use.
    */
-  explicit Application(const Pipeline_Ptr& pipeline);
+  explicit Application(const MultiScenePipeline_Ptr& pipeline);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
