@@ -104,7 +104,14 @@ public:
                              const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
-   * \brief TODO
+   * \brief Generates a visualisation of a surfel scene from the specified pose.
+   *
+   * \param output            The location into which to put the output image.
+   * \param scene             The scene to visualise.
+   * \param pose              The pose from which to visualise the scene.
+   * \param view              The current view of the scene.
+   * \param renderState       The render state to use for intermediate storage.
+   * \param visualisationType The type of visualisation to generate.
    */
   void generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                      const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;

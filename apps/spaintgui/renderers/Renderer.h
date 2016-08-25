@@ -254,7 +254,7 @@ private:
    * \param renderState       The render state to use for intermediate storage (if relevant).
    * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
    * \param visualisationType The type of visualisation to generate.
-   * \param surfelFlag        TODO
+   * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintScene_CPtr& scene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
