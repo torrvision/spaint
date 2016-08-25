@@ -9,7 +9,7 @@
 #include "../markers/interface/VoxelMarker.h"
 #include "../selectors/Selector.h"
 #include "../util/LabelManager.h"
-#include "../util/SpaintScene.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -37,7 +37,7 @@ public:
   virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const = 0;
   virtual const LabelManager_Ptr& get_label_manager() = 0;
   virtual const std::string& get_resources_dir() const = 0;
-  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID) = 0;
+  virtual const SpaintVoxelScene_Ptr& get_scene(const std::string& sceneID) = 0;
   virtual Selector_CPtr get_selector() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual void mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode) = 0;

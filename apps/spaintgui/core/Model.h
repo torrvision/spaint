@@ -13,7 +13,7 @@
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
-#include <spaint/util/SpaintScene.h>
+#include <spaint/util/SpaintVoxelScene.h>
 
 /**
  * \brief An instance of this class represents our model of the spaint scenario.
@@ -208,10 +208,10 @@ public:
   virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const;
 
   /** Override */
-  virtual const spaint::SpaintScene_Ptr& get_scene(const std::string& sceneID);
+  virtual const spaint::SpaintVoxelScene_Ptr& get_scene(const std::string& sceneID);
 
   /** Override */
-  virtual spaint::SpaintScene_CPtr get_scene(const std::string& sceneID) const;
+  virtual spaint::SpaintVoxelScene_CPtr get_scene(const std::string& sceneID) const;
 };
 
 //#################### TYPEDEFS ####################

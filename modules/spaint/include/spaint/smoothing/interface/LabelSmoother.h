@@ -8,7 +8,7 @@
 
 #include <ITMLib/Utils/ITMImageTypes.h>
 
-#include "../../util/SpaintScene.h"
+#include "../../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -50,7 +50,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void smooth_labels(const ITMFloat4Image *raycastResult, SpaintScene *scene) const = 0;
+  virtual void smooth_labels(const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
 };
 
 //#################### TYPEDEFS ####################

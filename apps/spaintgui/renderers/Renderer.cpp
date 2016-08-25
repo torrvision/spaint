@@ -361,8 +361,8 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const SpaintSurfelScene_CPtr& surfelScene, const ORUtils::SE3Pose& pose,
-                                      const Model::View_CPtr& view, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState,
+void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
+                                      const ORUtils::SE3Pose& pose, const Model::View_CPtr& view, RenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
                                       VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                                       const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
@@ -376,7 +376,7 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
       break;
     default:
       if(surfelFlag) m_visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
-      else m_visualisationGenerator->generate_free_raycast(output, scene, pose, view, renderState, visualisationType, postprocessor);
+      else m_visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
       break;
   }
 }

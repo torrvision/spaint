@@ -89,21 +89,6 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Generates a raycast of the scene from the specified pose.
-   *
-   * \param output            The location into which to put the output image.
-   * \param scene             The scene to visualise.
-   * \param pose              The pose from which to visualise the scene.
-   * \param view              The current view of the scene.
-   * \param renderState       The render state to use for intermediate storage.
-   * \param visualisationType The type of visualisation to generate.
-   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
-   */
-  void generate_free_raycast(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                             const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
-                             const boost::optional<Postprocessor>& postprocessor = boost::none) const;
-
-  /**
    * \brief Generates a visualisation of a surfel scene from the specified pose.
    *
    * \param output            The location into which to put the output image.
@@ -115,6 +100,21 @@ public:
    */
   void generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                      const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const;
+
+  /**
+   * \brief Generates a visualisation of a voxel scene from the specified pose.
+   *
+   * \param output            The location into which to put the output image.
+   * \param scene             The scene to visualise.
+   * \param pose              The pose from which to visualise the scene.
+   * \param view              The current view of the scene.
+   * \param renderState       The render state to use for intermediate storage.
+   * \param visualisationType The type of visualisation to generate.
+   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
+   */
+  void generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                    const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
+                                    const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
    * \brief Gets a Lambertian raycast of the scene from the default pose (the current camera pose).

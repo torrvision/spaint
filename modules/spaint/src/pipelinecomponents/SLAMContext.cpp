@@ -54,12 +54,12 @@ const Vector2i& SLAMContext::get_rgb_image_size(const std::string& sceneID) cons
   return get_scene_context(sceneID).m_inputRGBImage->noDims;
 }
 
-const SpaintScene_Ptr& SLAMContext::get_scene(const std::string& sceneID)
+const SpaintVoxelScene_Ptr& SLAMContext::get_scene(const std::string& sceneID)
 {
   return get_scene_context(sceneID).m_scene;
 }
 
-SpaintScene_CPtr SLAMContext::get_scene(const std::string& sceneID) const
+SpaintVoxelScene_CPtr SLAMContext::get_scene(const std::string& sceneID) const
 {
   return get_scene_context(sceneID).m_scene;
 }
@@ -121,7 +121,7 @@ void SLAMContext::set_live_surfel_render_state(const std::string& sceneID, ITMLi
   set_if_different(m_sceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
 }
 
-void SLAMContext::set_scene(const std::string& sceneID, SpaintScene *scene)
+void SLAMContext::set_scene(const std::string& sceneID, SpaintVoxelScene *scene)
 {
   set_if_different(m_sceneContexts[sceneID].m_scene, scene);
 }

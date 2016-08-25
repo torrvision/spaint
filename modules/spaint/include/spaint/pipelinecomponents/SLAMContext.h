@@ -14,8 +14,8 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
-#include "../util/SpaintScene.h"
 #include "../util/SpaintSurfelScene.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -56,7 +56,7 @@ private:
     SurfelRenderState_Ptr m_liveSurfelRenderState;
 
     /** The current reconstructed scene. */
-    SpaintScene_Ptr m_scene;
+    SpaintVoxelScene_Ptr m_scene;
 
     /** The current reconstructed surfel scene. */
     SpaintSurfelScene_Ptr m_surfelScene;
@@ -158,7 +158,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The corresponding scene.
    */
-  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID);
+  virtual const SpaintVoxelScene_Ptr& get_scene(const std::string& sceneID);
 
   /**
    * \brief Gets the specified scene.
@@ -166,7 +166,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The corresponding scene.
    */
-  virtual SpaintScene_CPtr get_scene(const std::string& sceneID) const;
+  virtual SpaintVoxelScene_CPtr get_scene(const std::string& sceneID) const;
 
   /**
    * \brief Gets the specified surfel scene.
@@ -270,7 +270,7 @@ private:
    * \param sceneID The scene ID.
    * \param scene   The scene.
    */
-  void set_scene(const std::string& sceneID, SpaintScene *scene);
+  void set_scene(const std::string& sceneID, SpaintVoxelScene *scene);
 
   /**
    * \brief Sets the specified surfel scene.

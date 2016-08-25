@@ -29,62 +29,6 @@ VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& v
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VisualisationGenerator::generate_free_raycast(const ITMUChar4Image_Ptr& output, const SpaintScene_CPtr& scene, const ORUtils::SE3Pose& pose,
-                                                   const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
-                                                   const boost::optional<Postprocessor>& postprocessor) const
-{
-  if(!renderState)
-  {
-    MemoryDeviceType memoryType = m_settings->GetMemoryType();
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, memoryType));
-  }
-
-  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
-
-  switch(visualisationType)
-  {
-    case VT_SCENE_COLOUR:
-    {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
-      break;
-    }
-    case VT_SCENE_NORMAL:
-    {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
-      break;
-    }
-    case VT_SCENE_SEMANTICCOLOUR:
-    case VT_SCENE_SEMANTICFLAT:
-    case VT_SCENE_SEMANTICLAMBERTIAN:
-    case VT_SCENE_SEMANTICPHONG:
-    {
-      const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
-
-      LightingType lightingType = LT_LAMBERTIAN;
-      if(visualisationType == VT_SCENE_SEMANTICFLAT) lightingType = LT_FLAT;
-      else if(visualisationType == VT_SCENE_SEMANTICPHONG) lightingType = LT_PHONG;
-
-      float labelAlpha = visualisationType == VT_SCENE_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
-      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
-      break;
-    }
-    case VT_SCENE_LAMBERTIAN:
-    default:
-    {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
-      break;
-    }
-  }
-
-  make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
-}
-
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                            const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
 {
@@ -144,6 +88,62 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
   }
 
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) output->UpdateHostFromDevice();
+}
+
+void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
+                                                          const View_CPtr& view, RenderState_Ptr& renderState, VisualisationType visualisationType,
+                                                          const boost::optional<Postprocessor>& postprocessor) const
+{
+  if(!renderState)
+  {
+    MemoryDeviceType memoryType = m_settings->GetMemoryType();
+    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, memoryType));
+  }
+
+  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
+  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+
+  switch(visualisationType)
+  {
+    case VT_SCENE_COLOUR:
+    {
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
+      break;
+    }
+    case VT_SCENE_NORMAL:
+    {
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
+      break;
+    }
+    case VT_SCENE_SEMANTICCOLOUR:
+    case VT_SCENE_SEMANTICFLAT:
+    case VT_SCENE_SEMANTICLAMBERTIAN:
+    case VT_SCENE_SEMANTICPHONG:
+    {
+      const std::vector<Vector3u>& labelColours = m_labelManager->get_label_colours();
+
+      LightingType lightingType = LT_LAMBERTIAN;
+      if(visualisationType == VT_SCENE_SEMANTICFLAT) lightingType = LT_FLAT;
+      else if(visualisationType == VT_SCENE_SEMANTICPHONG) lightingType = LT_PHONG;
+
+      float labelAlpha = visualisationType == VT_SCENE_SEMANTICCOLOUR ? 0.4f : 1.0f;
+      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+      m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
+      break;
+    }
+    case VT_SCENE_LAMBERTIAN:
+    default:
+    {
+      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                         ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
+      break;
+    }
+  }
+
+  make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
 void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& output, const RenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const

@@ -154,12 +154,12 @@ const Vector2i& Model::get_depth_image_size(const std::string& sceneID) const
   return SLAMContext::get_depth_image_size(sceneID);
 }
 
-const SpaintScene_Ptr& Model::get_scene(const std::string& sceneID)
+const SpaintVoxelScene_Ptr& Model::get_scene(const std::string& sceneID)
 {
   return SLAMContext::get_scene(sceneID);
 }
 
-SpaintScene_CPtr Model::get_scene(const std::string& sceneID) const
+SpaintVoxelScene_CPtr Model::get_scene(const std::string& sceneID) const
 {
   return SLAMContext::get_scene(sceneID);
 }

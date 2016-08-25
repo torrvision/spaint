@@ -8,7 +8,7 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
-#include "../util/SpaintScene.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -31,7 +31,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const = 0;
-  virtual const SpaintScene_Ptr& get_scene(const std::string& sceneID) = 0;
+  virtual const SpaintVoxelScene_Ptr& get_scene(const std::string& sceneID) = 0;
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
 };

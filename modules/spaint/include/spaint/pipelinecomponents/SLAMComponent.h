@@ -20,7 +20,7 @@
 #include "../trackers/FallibleTracker.h"
 #include "../trackers/TrackerType.h"
 #include "../util/ITMImagePtrTypes.h"
-#include "../util/SpaintScene.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 

@@ -8,7 +8,7 @@
 
 #include <ITMLib/Utils/ITMImageTypes.h>
 
-#include "../../util/SpaintScene.h"
+#include "../../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -51,7 +51,7 @@ private:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const SpaintScene *scene) const = 0;
+  virtual void calculate_normals(const ITMFloat4Image *raycastResult, const SpaintVoxelScene *scene) const = 0;
 
   /**
    * \brief Performs the propagation of the specified label across the scene in a device-specific way.
@@ -60,7 +60,7 @@ private:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintScene *scene) const = 0;
+  virtual void perform_propagation(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -71,7 +71,7 @@ public:
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintScene *scene) const;
+  void propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const;
 };
 
 //#################### TYPEDEFS ####################

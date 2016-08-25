@@ -247,18 +247,18 @@ private:
    * \brief Generates a visualisation of the scene.
    *
    * \param output            The location into which to put the output image.
-   * \param scene             The scene to visualise.
-   * \param surfelScene       The surfel scene to visualise.
+   * \param voxelScene        The voxel version of the scene to visualise.
+   * \param surfelScene       The surfel version of the scene to visualise.
    * \param pose              The pose from which to visualise the scene (if relevant).
    * \param view              The current view of the scene.
-   * \param renderState       The render state to use for intermediate storage (if relevant).
+   * \param voxelRenderState  The voxel render state to use for intermediate storage (if relevant).
    * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
    * \param visualisationType The type of visualisation to generate.
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
-  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintScene_CPtr& scene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
-                              const ORUtils::SE3Pose& pose, const Model::View_CPtr& view, RenderState_Ptr& renderState, SurfelRenderState_Ptr& surfelRenderState,
+  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
+                              const ORUtils::SE3Pose& pose, const Model::View_CPtr& view, RenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
                               spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
 

@@ -58,8 +58,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   // Set up the scenes.
   MemoryDeviceType memoryType = settings->GetMemoryType();
 
-  m_context->set_scene(sceneID, new SpaintScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
-  const SpaintScene_Ptr& scene = m_context->get_scene(sceneID);
+  m_context->set_scene(sceneID, new SpaintVoxelScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+  const SpaintVoxelScene_Ptr& scene = m_context->get_scene(sceneID);
 
   m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(sceneID);
@@ -107,7 +107,7 @@ bool SLAMComponent::run()
   const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image(m_sceneID);
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
   const RenderState_Ptr& liveRenderState = m_context->get_live_render_state(m_sceneID);
-  const SpaintScene_Ptr& scene = m_context->get_scene(m_sceneID);
+  const SpaintVoxelScene_Ptr& scene = m_context->get_scene(m_sceneID);
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
   const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
@@ -261,7 +261,7 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
 
 void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
 {
-  const SpaintScene_Ptr& scene = m_context->get_scene(m_sceneID);
+  const SpaintVoxelScene_Ptr& scene = m_context->get_scene(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
   m_fallibleTracker = NULL;
 

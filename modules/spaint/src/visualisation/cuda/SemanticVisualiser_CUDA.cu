@@ -30,7 +30,7 @@ SemanticVisualiser_CUDA::SemanticVisualiser_CUDA(size_t maxLabelCount)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SemanticVisualiser_CUDA::render_internal(const SpaintScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
+void SemanticVisualiser_CUDA::render_internal(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
                                               LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const
 {
   // Calculate the light and viewer positions in voxel coordinates (the same coordinate space as the raycast results).

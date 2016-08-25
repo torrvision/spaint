@@ -31,7 +31,7 @@ LabelSmoother_CUDA::LabelSmoother_CUDA(size_t maxLabelCount, float maxSquaredDis
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void LabelSmoother_CUDA::smooth_labels(const ITMFloat4Image *raycastResult, SpaintScene *scene) const
+void LabelSmoother_CUDA::smooth_labels(const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const
 {
   const int raycastResultSize = static_cast<int>(raycastResult->dataSize);
 

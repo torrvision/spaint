@@ -34,7 +34,7 @@ VOPFeatureCalculator::VOPFeatureCalculator(size_t maxVoxelLocationCount, size_t 
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintScene *scene, ORUtils::MemoryBlock<float>& featuresMB) const
+void VOPFeatureCalculator::calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxelScene *scene, ORUtils::MemoryBlock<float>& featuresMB) const
 {
 #if defined(WITH_OPENCV) && DEBUG_FEATURE_DISPLAY
   process_debug_window();

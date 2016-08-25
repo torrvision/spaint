@@ -8,7 +8,7 @@
 
 #include <ITMLib/Utils/ITMImageTypes.h>
 
-#include "../../util/SpaintScene.h"
+#include "../../util/SpaintVoxelScene.h"
 
 namespace tvgutil {
 
