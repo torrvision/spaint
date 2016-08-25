@@ -50,6 +50,20 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration denote the different mapping modes that can be used by a SLAM component.
+   */
+  enum MappingMode
+  {
+    /** Produce both voxel and surfel maps. */
+    MAP_BOTH,
+
+    /** Produce only a voxel map. */
+    MAP_VOXELS_ONLY
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The shared context needed for SLAM. */
@@ -92,6 +106,9 @@ private:
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
+  /** The mapping mode to use. */
+  MappingMode m_mappingMode;
+
   /** The database of previous poses for relocalisation. */
   PoseDatabase_Ptr m_poseDatabase;
 
@@ -129,9 +146,10 @@ public:
    * \param imageSourceEngine The engine used to provide input images to the fusion process.
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
+   * \param mappingMode       The mapping mode to use.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                TrackerType trackerType, const std::string& trackerParams);
+                TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

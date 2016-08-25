@@ -38,10 +38,10 @@ Pipeline::Pipeline(const Settings_Ptr& settings, const std::string& resourcesDir
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void Pipeline::add_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                                  spaint::TrackerType trackerType, const std::string& trackerParams)
+                                  spaint::TrackerType trackerType, const std::string& trackerParams, SLAMComponent::MappingMode mappingMode)
 {
   ScenePipeline& scenePipeline = m_scenePipelines[sceneID];
-  scenePipeline.m_slamComponent.reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams));
+  scenePipeline.m_slamComponent.reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode));
   scenePipeline.m_propagationComponent.reset(new PropagationComponent(m_model, sceneID));
   scenePipeline.m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   scenePipeline.m_smoothingComponent.reset(new SmoothingComponent(m_model, sceneID));

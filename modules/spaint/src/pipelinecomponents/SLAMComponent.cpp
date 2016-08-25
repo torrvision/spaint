@@ -27,13 +27,14 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                             TrackerType trackerType, const std::string& trackerParams)
+                             TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode)
 : m_context(context),
   m_fusedFramesCount(0),
   m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_keyframeDelay(0),
+  m_mappingMode(mappingMode),
   m_sceneID(sceneID),
   m_trackerParams(trackerParams),
   m_trackerType(trackerType)
@@ -201,7 +202,12 @@ bool SLAMComponent::run()
   {
     // Run the fusion process.
     m_denseMapper->ProcessFrame(view.get(), trackingState.get(), scene.get(), liveRenderState.get());
-    m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
+
+    if(m_mappingMode != MAP_VOXELS_ONLY)
+    {
+      m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());
+    }
+
     ++m_fusedFramesCount;
   }
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
@@ -218,8 +224,11 @@ bool SLAMComponent::run()
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), scene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
 
-  // Render a supersampled index image to use when finding surfel correspondences in the next frame.
-  m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib->intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
+  if(m_mappingMode != MAP_VOXELS_ONLY)
+  {
+    // Render a supersampled index image to use when finding surfel correspondences in the next frame.
+    m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib->intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
+  }
 
   // If the current sub-engine has run out of images, disable fusion.
   if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;

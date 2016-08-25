@@ -113,9 +113,11 @@ public:
    * \param seed              The seed to use for the random number generators used by the voxel samplers.
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
+   * \param mappingMode       The mapping mode to use for SLAM.
    */
   void add_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                          spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "");
+                          spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
+                          spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY);
 
   /**
    * \brief Gets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
