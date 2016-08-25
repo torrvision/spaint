@@ -34,8 +34,8 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, con
   m_semanticLabel(0),
   m_settings(settings),
   m_surfelVisualisationEngine(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType)),
-  m_visualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType)),
-  m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType))
+  m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType)),
+  m_voxelVisualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType))
 {
   // Set up the selection transformer.
   const int initialSelectionRadius = 2;
@@ -96,9 +96,9 @@ Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() c
   return m_surfelVisualisationEngine;
 }
 
-Model::VisualisationEngine_CPtr Model::get_visualisation_engine() const
+Model::VoxelVisualisationEngine_CPtr Model::get_voxel_visualisation_engine() const
 {
-  return m_visualisationEngine;
+  return m_voxelVisualisationEngine;
 }
 
 void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, SpaintVoxel::PackedLabel label,

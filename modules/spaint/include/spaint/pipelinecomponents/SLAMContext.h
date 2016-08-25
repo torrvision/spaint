@@ -28,7 +28,7 @@ class SLAMContext
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
 
   //#################### NESTED TYPES ####################
 private:
@@ -78,7 +78,7 @@ public:
 public:
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
-  virtual VisualisationEngine_CPtr get_visualisation_engine() const = 0;
+  virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

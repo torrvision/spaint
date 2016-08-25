@@ -18,13 +18,13 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-VisualisationGenerator::VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
+VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
                                                const LabelManager_CPtr& labelManager, const Settings_CPtr& settings)
 : m_labelManager(labelManager),
   m_semanticVisualiser(VisualiserFactory::make_semantic_visualiser(labelManager->get_max_label_count(), settings->deviceType)),
   m_settings(settings),
   m_surfelVisualisationEngine(surfelVisualisationEngine),
-  m_visualisationEngine(visualisationEngine)
+  m_voxelVisualisationEngine(voxelVisualisationEngine)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -101,21 +101,21 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
   }
 
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
-  m_visualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
-  m_visualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
+  m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 
   switch(visualisationType)
   {
     case VT_SCENE_COLOUR:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                              ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_VOLUME);
       break;
     }
     case VT_SCENE_NORMAL:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                              ITMLib::IITMVisualisationEngine::RENDER_COLOUR_FROM_NORMAL);
       break;
     }
     case VT_SCENE_SEMANTICCOLOUR:
@@ -130,15 +130,15 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
       else if(visualisationType == VT_SCENE_SEMANTICPHONG) lightingType = LT_PHONG;
 
       float labelAlpha = visualisationType == VT_SCENE_SEMANTICCOLOUR ? 0.4f : 1.0f;
-      m_visualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
+      m_voxelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, renderState.get());
       m_semanticVisualiser->render(scene.get(), &pose, intrinsics, renderState.get(), labelColours, lightingType, labelAlpha, renderState->raycastImage);
       break;
     }
     case VT_SCENE_LAMBERTIAN:
     default:
     {
-      m_visualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
-                                         ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
+      m_voxelVisualisationEngine->RenderImage(scene.get(), &pose, intrinsics, renderState.get(), renderState->raycastImage,
+                                              ITMLib::IITMVisualisationEngine::RENDER_SHADED_GREYSCALE);
       break;
     }
   }
@@ -155,7 +155,7 @@ void VisualisationGenerator::get_depth_input(const ITMUChar4Image_Ptr& output, c
 {
   prepare_to_copy_visualisation(view->depth->noDims, output);
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) view->depth->UpdateHostFromDevice();
-  m_visualisationEngine->DepthToUchar4(output.get(), view->depth);
+  m_voxelVisualisationEngine->DepthToUchar4(output.get(), view->depth);
 }
 
 void VisualisationGenerator::get_rgb_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const

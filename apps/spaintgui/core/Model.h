@@ -34,9 +34,9 @@ public:
   typedef spaint::Selector::Selection Selection;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<spaint::SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> VisualisationEngine;
-  typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
-  typedef boost::shared_ptr<const VisualisationEngine> VisualisationEngine_CPtr;
+  typedef ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> VoxelVisualisationEngine;
+  typedef boost::shared_ptr<VoxelVisualisationEngine> VoxelVisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const VoxelVisualisationEngine> VoxelVisualisationEngine_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -58,14 +58,14 @@ private:
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
-  /** The InfiniTAM engine used for rendering the surfel scene. */
+  /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
-
-  /** The InfiniTAM engine used for raycasting the scene. */
-  VisualisationEngine_Ptr m_visualisationEngine;
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   spaint::VoxelMarker_CPtr m_voxelMarker;
+
+  /** The InfiniTAM engine used for rendering a voxel scene. */
+  VoxelVisualisationEngine_Ptr m_voxelVisualisationEngine;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -145,18 +145,18 @@ public:
   virtual const Settings_CPtr& get_settings() const;
 
   /**
-   * \brief Gets the InfiniTAM engine used for rendering the surfel scene.
+   * \brief Gets the InfiniTAM engine used for rendering a surfel scene.
    *
-   * \return  The InfiniTAM engine used for rendering the surfel scene.
+   * \return  The InfiniTAM engine used for rendering a surfel scene.
    */
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
 
   /**
-   * \brief Gets the InfiniTAM engine used for raycasting the scene.
+   * \brief Gets the InfiniTAM engine used for rendering a voxel scene.
    *
-   * \return  The InfiniTAM engine used for raycasting the scene.
+   * \return  The InfiniTAM engine used for rendering a voxel scene.
    */
-  virtual VisualisationEngine_CPtr get_visualisation_engine() const;
+  virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const;
 
   /**
    * \brief Marks a selection of voxels in the scene with the specified semantic label.

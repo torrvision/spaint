@@ -23,7 +23,6 @@ class Pipeline
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:

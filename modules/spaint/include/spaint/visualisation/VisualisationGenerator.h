@@ -29,7 +29,7 @@ class VisualisationGenerator
 public:
   typedef boost::function<void(const ITMUChar4Image_CPtr&,const ITMUChar4Image_Ptr&)> Postprocessor;
   typedef boost::shared_ptr<const ITMLib::ITMSurfelVisualisationEngine<SpaintSurfel> > SurfelVisualisationEngine_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VisualisationEngine_CPtr;
+  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<spaint::SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -63,23 +63,23 @@ private:
   /** The settings to use for InfiniTAM. */
   Settings_CPtr m_settings;
 
-  /** The InfiniTAM engine used for rendering the surfel scene. */
+  /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
-  /** The InfiniTAM engine used for raycasting the scene. */
-  VisualisationEngine_CPtr m_visualisationEngine;
+  /** The InfiniTAM engine used for rendering a voxel scene. */
+  VoxelVisualisationEngine_CPtr m_voxelVisualisationEngine;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a visualisation generator.
    *
-   * \param visualisationEngine       The InfiniTAM engine used for raycasting a voxel scene.
+   * \param voxelVisualisationEngine  The InfiniTAM engine used for rendering a voxel scene.
    * \param surfelVisualisationEngine The InfinITAM engine used for rendering a surfel scene.
    * \param labelManager              The label manager.
    * \param settings                  The settings to use for InfiniTAM.
    */
-  VisualisationGenerator(const VisualisationEngine_CPtr& visualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
+  VisualisationGenerator(const VoxelVisualisationEngine_CPtr& voxelVisualisationEngine, const SurfelVisualisationEngine_CPtr& surfelVisualisationEngine,
                          const spaint::LabelManager_CPtr& labelManager, const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

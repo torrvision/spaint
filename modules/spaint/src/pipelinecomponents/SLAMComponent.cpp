@@ -159,7 +159,7 @@ bool SLAMComponent::run()
 
         const bool resetVisibleList = true;
         m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveVoxelRenderState.get());
+        m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
 
@@ -220,7 +220,7 @@ bool SLAMComponent::run()
   }
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveVoxelRenderState.get());
+  m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
 
   if(m_mappingMode != MAP_VOXELS_ONLY)
   {
