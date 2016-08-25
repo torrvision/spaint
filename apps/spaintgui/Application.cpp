@@ -238,7 +238,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "C + 1 = To Semantic Lambertian Raycast\n"
               << "C + 2 = To Semantic Phong Raycast\n"
               << "C + 3 = To Semantic Colour Raycast\n"
-              << "C + 4 = To Semantic Flag Raycast\n"
+              << "C + 4 = To Semantic Flat Raycast\n"
               << "C + 5 = To Lambertian Raycast\n"
               << "C + 6 = To Phong Raycast\n"
               << "C + 7 = To Colour Raycast\n"
