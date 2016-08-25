@@ -69,11 +69,11 @@ private:
   /** The shared context needed for SLAM. */
   SLAMContext_Ptr m_context;
 
-  /** The dense mapper. */
-  DenseMapper_Ptr m_denseMapper;
-
   /** The dense surfel mapper. */
   DenseSurfelMapper_Ptr m_denseSurfelMapper;
+
+  /** The dense voxel mapper. */
+  DenseMapper_Ptr m_denseVoxelMapper;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
   FallibleTracker *m_fallibleTracker;

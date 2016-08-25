@@ -63,8 +63,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(sceneID);
 
   // Set up the dense mappers.
-  m_denseMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
-  m_denseMapper->ResetScene(voxelScene.get());
+  m_denseVoxelMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
+  m_denseVoxelMapper->ResetScene(voxelScene.get());
   m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
 
   // Set up the tracker and the tracking controller.
@@ -158,7 +158,7 @@ bool SLAMComponent::run()
         trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
-        m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get(), resetVisibleList);
+        m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get(), resetVisibleList);
         m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_visualisation_engine().get(), liveRenderState.get());
         m_trackingController->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
@@ -199,7 +199,7 @@ bool SLAMComponent::run()
   if(runFusion)
   {
     // Run the fusion process.
-    m_denseMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
+    m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
 
     if(m_mappingMode != MAP_VOXELS_ONLY)
     {
@@ -211,7 +211,7 @@ bool SLAMComponent::run()
   else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
-    m_denseMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveRenderState.get());
   }
   else
   {
