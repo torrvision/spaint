@@ -11,7 +11,6 @@
 #include <spaint/pipelinecomponents/SLAMComponent.h>
 #include <spaint/pipelinecomponents/SmoothingComponent.h>
 #include <spaint/visualisation/VisualisationGenerator.h>
-#include <spaint/util/LabelManager.h>
 
 #include "Model.h"
 
@@ -88,11 +87,11 @@ public:
   /**
    * \brief Constructs an instance of the multi-scene pipeline.
    *
-   * \param settings          The settings to use for InfiniTAM.
-   * \param resourcesDir      The path to the resouces directory.
-   * \param labelManager      The label manager.
+   * \param settings      The settings to use for InfiniTAM.
+   * \param resourcesDir  The path to the resouces directory.
+   * \param maxLabelCount The maximum number of labels that can be in use.
    */
-  MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, const spaint::LabelManager_Ptr& labelManager);
+  MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

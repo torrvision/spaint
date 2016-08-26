@@ -26,7 +26,7 @@ private:
   /** A memory block into which to store the old labels of the voxels being marked. */
   boost::shared_ptr<ORUtils::MemoryBlock<spaint::SpaintVoxel::PackedLabel> > m_oldVoxelLabelsMB;
 
-  /** The scene ID. */
+  /** The ID of the scene in which to mark voxels. */
   std::string m_sceneID;
 
   /** The locations of the voxels in the scene to mark. */
@@ -37,7 +37,7 @@ public:
   /**
    * \brief Constructs a mark voxels command.
    *
-   * \param sceneID           The scene ID.
+   * \param sceneID           The ID of the scene in which to mark voxels.
    * \param voxelLocationsMB  The locations of the voxels in the scene to mark.
    * \param label             The semantic label with which to mark the voxels.
    * \param model             The spaint model.

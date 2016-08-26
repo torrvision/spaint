@@ -27,8 +27,8 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, const LabelManager_Ptr& labelManager)
-: m_labelManager(labelManager),
+Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+: m_labelManager(new LabelManager(maxLabelCount)),
   m_resourcesDir(resourcesDir),
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),

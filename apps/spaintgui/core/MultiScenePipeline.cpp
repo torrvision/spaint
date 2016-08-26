@@ -16,7 +16,7 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, const LabelManager_Ptr& labelManager)
+MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount)
 : m_mode(MODE_NORMAL)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
@@ -29,8 +29,8 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
 #endif
 
   // Set up the spaint model and visualisation generator.
-  m_model.reset(new Model(settings, resourcesDir, labelManager));
-  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_voxel_visualisation_engine(), m_model->get_surfel_visualisation_engine(), labelManager, settings));
+  m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
+  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_voxel_visualisation_engine(), m_model->get_surfel_visualisation_engine(), m_model->get_label_manager(), settings));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

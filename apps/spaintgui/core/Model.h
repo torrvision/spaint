@@ -74,9 +74,9 @@ public:
    *
    * \param settings        The settings to use for InfiniTAM.
    * \param resourcesDir    The path to the resources directory.
-   * \param labelManager    The label manager.
+   * \param maxLabelCount   The maximum number of labels that can be in use.
    */
-  Model(const Settings_CPtr& settings, const std::string& resourcesDir, const spaint::LabelManager_Ptr& labelManager);
+  Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

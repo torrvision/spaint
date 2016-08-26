@@ -155,7 +155,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_paused = false;
   }
 
-  // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline for the active scene.
+  // If the F key is pressed, toggle whether or not fusion is run for the active scene.
   if(keysym.sym == KEYCODE_f)
   {
     const std::string& sceneID = get_active_scene_id();
@@ -355,7 +355,7 @@ void Application::process_camera_input()
     if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
 
     // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
-    // and are in free camera mode from this one.
+    // and are in free camera mode to have the same pose as this one.
     if(m_usePoseMirroring)
     {
       const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();

@@ -241,15 +241,12 @@ try
 #endif
   }
 
-  // Construct the label manager.
-  const size_t maxLabelCount = 10;
-  LabelManager_Ptr labelManager(new LabelManager(maxLabelCount));
-
   // Construct the multi-scene pipeline.
+  const size_t maxLabelCount = 10;
   const unsigned int seed = 12345;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-  MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), labelManager));
+  MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), maxLabelCount));
   pipeline->add_single_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
 
   // Run the application.
