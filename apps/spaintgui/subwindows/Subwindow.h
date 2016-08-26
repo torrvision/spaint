@@ -44,14 +44,14 @@ private:
   /** The image in which to store the scene visualisation for the sub-window. */
   ITMUChar4Image_Ptr m_image;
 
-  /** The surfel render state(s) for the free camera view(s). */
-  mutable std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
-
   /** The ID of the scene to render in the sub-window. */
   std::string m_sceneID;
 
   /** A flag indicating whether or not to render a surfel visualisation rather than a voxel one. */
   bool m_surfelFlag;
+
+  /** The surfel render state(s) for the free camera view(s). */
+  mutable std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
 
   /** The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_topLeft;
@@ -148,16 +148,16 @@ public:
   spaint::VisualisationGenerator::VisualisationType get_type() const;
 
   /**
-   * \brief Gets the voxel render state for the specified free camera view for the sub-window.
+   * \brief Gets the voxel render state for the specified free camera view.
    *
-   * \param viewIndex The index of the free camera view for the sub-window.
+   * \param viewIndex The index of the free camera view.
    */
   VoxelRenderState_Ptr& get_voxel_render_state(int viewIndex);
 
   /**
-   * \brief Gets the voxel render state for the specified free camera view for the sub-window.
+   * \brief Gets the voxel render state for the specified free camera view.
    *
-   * \param viewIndex The index of the free camera view for the sub-window.
+   * \param viewIndex The index of the free camera view.
    */
   VoxelRenderState_CPtr get_voxel_render_state(int viewIndex) const;
 

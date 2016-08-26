@@ -84,12 +84,12 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the monocular voxel render state for the camera associated with the specified sub-window.
+   * \brief Gets the monocular render state for the camera associated with the specified sub-window.
    *
-   * If the camera is a stereo one, this will return the voxel render state corresponding to the left eye.
+   * If the camera is a stereo one, this will return the render state corresponding to the left eye.
    *
    * \param subwindowIndex  The index of the sub-window.
-   * \return                The monocular voxel render state for the camera associated with the sub-window.
+   * \return                The monocular render state for the camera associated with the sub-window.
    */
   virtual VoxelRenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const = 0;
 
@@ -265,7 +265,7 @@ private:
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param sceneID The scene ID.
+   * \param sceneID The ID of the reconstructed scene to augment.
    * \param pose    The camera pose.
    */
   void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose) const;
