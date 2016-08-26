@@ -8,8 +8,6 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Objects/Scene/ITMScene.h>
-
 // This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
 // Since the Leap SDK defines PI as a float (static const float PI = ...), things would break if we didn't do this.
 #undef PI
@@ -17,7 +15,6 @@
 #include <Leap.h>
 
 #include "Selector.h"
-#include "../util/SpaintVoxel.h"
 
 namespace spaint {
 
@@ -26,11 +23,6 @@ namespace spaint {
  */
 class LeapSelector : public Selector
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The most recent frame of data from the Leap Motion. */
