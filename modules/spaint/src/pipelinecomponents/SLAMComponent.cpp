@@ -105,9 +105,9 @@ bool SLAMComponent::run()
 
   const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image(m_sceneID);
   const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
-  const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
   const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
   const VoxelRenderState_Ptr& liveVoxelRenderState = m_context->get_live_voxel_render_state(m_sceneID);
+  const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
   const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
   const View_Ptr& view = m_context->get_view(m_sceneID);
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
@@ -115,7 +115,7 @@ bool SLAMComponent::run()
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(inputRGBImage.get(), inputRawDepthImage.get());
-  const bool useBilateralFilter = false;
+  const bool useBilateralFilter = m_trackingMode == TRACK_SURFELS;
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   m_context->set_view(m_sceneID, newView);
 
