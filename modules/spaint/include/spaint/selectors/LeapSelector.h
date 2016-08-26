@@ -42,18 +42,14 @@ private:
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
 
-  /** The InfiniTAM scene. */
-  Scene_CPtr m_scene;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Leap selector.
    *
    * \param settings  The settings to use for InfiniTAM.
-   * \param scene     The InfiniTAM scene.
    */
-  LeapSelector(const Settings_CPtr& settings, const Scene_CPtr& scene);
+  explicit LeapSelector(const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

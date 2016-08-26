@@ -125,7 +125,7 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
     if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(m_settings));
     else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(m_settings));
 #ifdef WITH_LEAP
-    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings, get_voxel_scene("World")));
+    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings));
 #endif
 #ifdef WITH_ARRAYFIRE
     else if(inputState.key_down(KEYCODE_4))
