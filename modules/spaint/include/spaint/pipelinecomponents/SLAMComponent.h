@@ -197,6 +197,13 @@ private:
   ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker) const;
 
   /**
+   * \brief Render from the live camera position to prepare for tracking.
+   *
+   * \param trackingMode  The tracking mode to use.
+   */
+  void prepare_for_tracking(TrackingMode trackingMode);
+
+  /**
    * \brief Sets up the tracker.
    */
   void setup_tracker();

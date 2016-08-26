@@ -160,7 +160,7 @@ bool SLAMComponent::run()
 
         const bool resetVisibleList = true;
         m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-        m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
+        prepare_for_tracking(TRACK_VOXELS);
         m_trackingController->Track(trackingState.get(), view.get());
         trackerResult = trackingState->trackerResult;
 
@@ -220,9 +220,8 @@ bool SLAMComponent::run()
     *trackingState->pose_d = oldPose;
   }
 
-  // Raycast from the live camera position to prepare for tracking in the next frame.
-  m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
-  if(m_trackingMode == TRACK_SURFELS) m_trackingController->Prepare(trackingState.get(), surfelScene.get(), view.get(), m_context->get_surfel_visualisation_engine().get(), liveSurfelRenderState.get());
+  // Render from the live camera position to prepare for tracking in the next frame.
+  prepare_for_tracking(m_trackingMode);
 
   // If we're using surfel mapping, render a supersampled index image to use when finding surfel correspondences in the next frame.
   if(m_mappingMode != MAP_VOXELS_ONLY)
@@ -260,6 +259,31 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
   );
 
   return compositeTracker;
+}
+
+void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
+{
+  const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
+  const View_Ptr& view = m_context->get_view(m_sceneID);
+
+  switch(trackingMode)
+  {
+    case TRACK_SURFELS:
+    {
+      const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
+      const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
+      m_trackingController->Prepare(trackingState.get(), surfelScene.get(), view.get(), m_context->get_surfel_visualisation_engine().get(), liveSurfelRenderState.get());
+      break;
+    }
+    case TRACK_VOXELS:
+    default:
+    {
+      const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
+      const VoxelRenderState_Ptr& liveVoxelRenderState = m_context->get_live_voxel_render_state(m_sceneID);
+      m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
+      break;
+    }
+  }
 }
 
 void SLAMComponent::setup_tracker()
