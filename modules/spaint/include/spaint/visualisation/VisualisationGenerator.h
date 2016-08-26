@@ -11,7 +11,6 @@
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "interface/SemanticVisualiser.h"
 #include "../util/ITMImagePtrTypes.h"
@@ -55,9 +54,9 @@ public:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The label manager. */
-  spaint::LabelManager_CPtr m_labelManager;
+  LabelManager_CPtr m_labelManager;
 
-  /** The platform-specific semantic visualiser. */
+  /** The semantic visualiser. */
   SemanticVisualiser_CPtr m_semanticVisualiser;
 
   /** The settings to use for InfiniTAM. */
@@ -115,14 +114,14 @@ public:
   /**
    * \brief Gets a Lambertian raycast of a voxel scene from the default pose (the current camera pose).
    *
-   * \param output                The location into which to put the output image.
-   * \param liveVoxelRenderState  The render state corresponding to the voxel scene and the current camera pose.
-   * \param postprocessor         An optional function with which to postprocess the raycast before returning it.
+   * \param output          The location into which to put the output image.
+   * \param liveRenderState The render state corresponding to the live camera pose for the voxel scene.
+   * \param postprocessor   An optional function with which to postprocess the raycast before returning it.
    */
-  void get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveVoxelRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
+  void get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor = boost::none) const;
 
   /**
-   * \brief Gets the depth image from the most recently processed frame.
+   * \brief Gets the depth image from the most recently processed frame for a scene.
    *
    * \param output  The location into which to put the output image.
    * \param view    The current view of the scene.
@@ -130,7 +129,7 @@ public:
   void get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const;
 
   /**
-   * \brief Gets the RGB image from the most recently processed frame.
+   * \brief Gets the RGB image from the most recently processed frame for a scene.
    *
    * \param output  The location into which to put the output image.
    * \param view    The current view of the scene.

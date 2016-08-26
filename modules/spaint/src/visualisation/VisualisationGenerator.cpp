@@ -149,9 +149,9 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
   make_postprocessed_cpu_copy(renderState->raycastImage, postprocessor, output);
 }
 
-void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveVoxelRenderState, const boost::optional<Postprocessor>& postprocessor) const
+void VisualisationGenerator::get_default_raycast(const ITMUChar4Image_Ptr& output, const VoxelRenderState_CPtr& liveRenderState, const boost::optional<Postprocessor>& postprocessor) const
 {
-  make_postprocessed_cpu_copy(liveVoxelRenderState->raycastImage, postprocessor, output);
+  make_postprocessed_cpu_copy(liveRenderState->raycastImage, postprocessor, output);
 }
 
 void VisualisationGenerator::get_depth_input(const ITMUChar4Image_Ptr& output, const View_CPtr& view) const
