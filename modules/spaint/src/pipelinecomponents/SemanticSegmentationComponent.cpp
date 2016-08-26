@@ -12,7 +12,6 @@ using namespace rafl;
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
-#include "util/LabelManager.h"
 #include "util/MemoryBlockFactory.h"
 
 #ifdef WITH_OPENCV
