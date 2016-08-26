@@ -6,8 +6,6 @@
 #ifndef H_SPAINT_SMOOTHINGCOMPONENT
 #define H_SPAINT_SMOOTHINGCOMPONENT
 
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-
 #include "SmoothingContext.h"
 #include "../smoothing/interface/LabelSmoother.h"
 
@@ -44,7 +42,7 @@ public:
   /**
    * \brief Runs the smoothing component, smoothing the labels in the target scene to remove noise.
    *
-   * \param renderState The voxel render state associated with the camera position from which to smoothe.
+   * \param renderState The render state associated with the camera position from which to smoothe.
    */
   void run(const VoxelRenderState_CPtr& renderState);
 };

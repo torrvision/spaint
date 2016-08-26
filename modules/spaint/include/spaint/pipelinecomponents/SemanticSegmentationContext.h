@@ -9,7 +9,6 @@
 #include "../markers/interface/VoxelMarker.h"
 #include "../selectors/Selector.h"
 #include "../util/LabelManager.h"
-#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 

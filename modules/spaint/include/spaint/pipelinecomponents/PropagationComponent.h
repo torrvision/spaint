@@ -6,8 +6,6 @@
 #ifndef H_SPAINT_PROPAGATIONCOMPONENT
 #define H_SPAINT_PROPAGATIONCOMPONENT
 
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-
 #include "PropagationContext.h"
 #include "../propagation/interface/LabelPropagator.h"
 
@@ -44,7 +42,7 @@ public:
   /**
    * \brief Runs the propagation component, propagating a semantic label over the surfaces of the target scene.
    *
-   * \param renderState The voxel render state associated with the camera position from which to propagate.
+   * \param renderState The render state associated with the camera position from which to propagate.
    */
   void run(const VoxelRenderState_CPtr& renderState);
 };

@@ -6,8 +6,6 @@
 #ifndef H_SPAINT_SELECTOR
 #define H_SPAINT_SELECTOR
 
-#include <boost/shared_ptr.hpp>
-
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
 #include <tvginput/InputState.h>

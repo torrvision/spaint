@@ -6,8 +6,6 @@
 #ifndef H_SPAINT_PROPAGATIONCONTEXT
 #define H_SPAINT_PROPAGATIONCONTEXT
 
-#include <ITMLib/Utils/ITMLibSettings.h>
-
 #include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintVoxelScene.h"
 

@@ -6,15 +6,12 @@
 #ifndef H_SPAINT_SEMANTICSEGMENTATIONCOMPONENT
 #define H_SPAINT_SEMANTICSEGMENTATIONCOMPONENT
 
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-
 #include <rafl/core/RandomForest.h>
 
 #include "SemanticSegmentationContext.h"
 #include "../features/interface/FeatureCalculator.h"
 #include "../sampling/interface/PerLabelVoxelSampler.h"
 #include "../sampling/interface/UniformVoxelSampler.h"
-#include "../selectors/Selector.h"
 
 namespace spaint {
 
@@ -98,21 +95,21 @@ public:
   /**
    * \brief Runs the feature inspection section of the component.
    *
-   * \param renderState The voxel render state associated with the camera position from which the user is picking voxels.
+   * \param renderState The render state associated with the camera position from which the user is picking voxels.
    */
   void run_feature_inspection(const VoxelRenderState_CPtr& renderState);
 
   /**
    * \brief Runs the prediction section of the component.
    *
-   * \param renderState The voxel render state associated with the camera position from which to sample voxels.
+   * \param renderState The render state associated with the camera position from which to sample voxels.
    */
   void run_prediction(const VoxelRenderState_CPtr& renderState);
 
   /**
    * \brief Runs the training section of the component.
    *
-   * \param renderState The voxel render state associated with the camera position from which to sample voxels.
+   * \param renderState The render state associated with the camera position from which to sample voxels.
    */
   void run_training(const VoxelRenderState_CPtr& renderState);
 };

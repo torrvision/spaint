@@ -6,10 +6,8 @@
 #ifndef H_SPAINT_SMOOTHINGCONTEXT
 #define H_SPAINT_SMOOTHINGCONTEXT
 
-#include <ITMLib/Utils/ITMLibSettings.h>
-
-#include "../util/LabelManager.h"
 #include "../util/ITMObjectPtrTypes.h"
+#include "../util/LabelManager.h"
 #include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
