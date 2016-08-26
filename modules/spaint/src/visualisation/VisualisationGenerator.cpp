@@ -5,12 +5,8 @@
 
 #include "visualisation/VisualisationGenerator.h"
 
-#include <stdexcept>
-
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
-using namespace ORUtils;
 
 #include "visualisation/VisualiserFactory.h"
 
@@ -32,13 +28,12 @@ VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CP
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                            const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
 {
-  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
-
   if(!renderState)
   {
     renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
   }
 
+  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
   const bool useRadii = true;
   m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
 
@@ -99,8 +94,7 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
 {
   if(!renderState)
   {
-    MemoryDeviceType memoryType = m_settings->GetMemoryType();
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, memoryType));
+    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
   }
 
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
