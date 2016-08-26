@@ -54,6 +54,18 @@ public:
     MAP_VOXELS_ONLY
   };
 
+  /**
+   * \brief The values of this enumeration denote the different tracking modes that can be used by a SLAM component.
+   */
+  enum TrackingMode
+  {
+    /** Track against the surfel map, if available, or against the voxel map otherwise. */
+    TRACK_SURFELS,
+
+    /** Track against the voxel map. */
+    TRACK_VOXELS
+  };
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The shared context needed for SLAM. */
@@ -123,6 +135,9 @@ private:
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
 
+  /** The tracking mode to use. */
+  TrackingMode m_trackingMode;
+
   /** The view builder. */
   ViewBuilder_Ptr m_viewBuilder;
 
@@ -137,9 +152,11 @@ public:
    * \param trackerType       The type of tracker to use.
    * \param trackerParams     The parameters for the tracker (if any).
    * \param mappingMode       The mapping mode to use.
+   * \param trackingMode      The tracking mode to use.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY);
+                TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
+                TrackingMode trackingMode = TRACK_VOXELS);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

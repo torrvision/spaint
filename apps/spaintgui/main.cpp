@@ -47,12 +47,13 @@ struct CommandLineArguments
   bool cameraAfterDisk;
   std::string depthImageMask;
   int initialFrameNumber;
+  bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string rgbImageMask;
   std::string sequenceName;
   std::string sequenceType;
-  bool useSurfels;
+  bool trackSurfels;
 };
 
 //#################### FUNCTIONS ####################
@@ -65,8 +66,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("help", "produce help message")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
-    ("useSurfels", po::bool_switch(&args.useSurfels), "enable surfel reconstruction")
+    ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -119,6 +121,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     }
   }
 
+  // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
+  if(args.trackSurfels) args.mapSurfels = true;
+
   return true;
 }
 
@@ -166,7 +171,8 @@ try
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
-  settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+  if(args.trackSurfels) settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
+  else settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
   TrackerType trackerType = TRACKER_INFINITAM;
   std::string trackerParams;
@@ -241,9 +247,10 @@ try
 
   // Construct the multi-scene pipeline.
   const unsigned int seed = 12345;
-  SLAMComponent::MappingMode mappingMode = args.useSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+  SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+  SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
   MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), labelManager));
-  pipeline->add_single_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams, mappingMode);
+  pipeline->add_single_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
 
   // Run the application.
   Application app(pipeline);

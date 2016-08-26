@@ -27,7 +27,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                             TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode)
+                             TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
 : m_context(context),
   m_fusedFramesCount(0),
   m_fusionEnabled(true),
@@ -37,7 +37,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_mappingMode(mappingMode),
   m_sceneID(sceneID),
   m_trackerParams(trackerParams),
-  m_trackerType(trackerType)
+  m_trackerType(trackerType),
+  m_trackingMode(trackingMode)
 {
   // Determine the RGB and depth image sizes.
   Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
@@ -221,10 +222,11 @@ bool SLAMComponent::run()
 
   // Raycast from the live camera position to prepare for tracking in the next frame.
   m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
+  if(m_trackingMode == TRACK_SURFELS) m_trackingController->Prepare(trackingState.get(), surfelScene.get(), view.get(), m_context->get_surfel_visualisation_engine().get(), liveSurfelRenderState.get());
 
+  // If we're using surfel mapping, render a supersampled index image to use when finding surfel correspondences in the next frame.
   if(m_mappingMode != MAP_VOXELS_ONLY)
   {
-    // Render a supersampled index image to use when finding surfel correspondences in the next frame.
     m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib->intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
 

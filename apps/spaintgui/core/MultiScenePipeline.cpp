@@ -35,11 +35,12 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void MultiScenePipeline::add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                                                   spaint::TrackerType trackerType, const std::string& trackerParams, SLAMComponent::MappingMode mappingMode)
+void MultiScenePipeline::add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+                                                   unsigned int seed, TrackerType trackerType, const std::string& trackerParams,
+                                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
 {
   SingleScenePipeline& singleScenePipeline = m_singleScenePipelines[sceneID];
-  singleScenePipeline.m_slamComponent.reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode));
+  singleScenePipeline.m_slamComponent.reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
   singleScenePipeline.m_propagationComponent.reset(new PropagationComponent(m_model, sceneID));
   singleScenePipeline.m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   singleScenePipeline.m_smoothingComponent.reset(new SmoothingComponent(m_model, sceneID));
