@@ -204,16 +204,6 @@ Vector2f Renderer::compute_fractional_window_position(int x, int y) const
   return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
 }
 
-MoveableCamera_Ptr Renderer::get_camera(size_t subwindowIndex) const
-{
-  return m_subwindowConfiguration->subwindow(subwindowIndex).get_camera();
-}
-
-Subwindow::CameraMode Renderer::get_camera_mode(size_t subwindowIndex) const
-{
-  return m_subwindowConfiguration->subwindow(subwindowIndex).get_camera_mode();
-}
-
 bool Renderer::get_median_filtering_enabled() const
 {
   return m_medianFilteringEnabled;
@@ -227,11 +217,6 @@ const SubwindowConfiguration_Ptr& Renderer::get_subwindow_configuration()
 SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
 {
   return m_subwindowConfiguration;
-}
-
-void Renderer::set_camera_mode(size_t subwindowIndex, Subwindow::CameraMode cameraMode)
-{
-  m_subwindowConfiguration->subwindow(subwindowIndex).set_camera_mode(cameraMode);
 }
 
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
@@ -321,7 +306,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const 
     glViewport(left, top, width, height);
 
     // If the sub-window is in follow mode, update its camera.
-    if(get_camera_mode(subwindowIndex) == Subwindow::CM_FOLLOW)
+    if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
     {
       ORUtils::SE3Pose livePose = m_model->get_pose(subwindow.get_scene_id());
       subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
@@ -362,7 +347,7 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
-                                      const ORUtils::SE3Pose& pose, const View_CPtr& view, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
                                       VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                                       const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
@@ -444,7 +429,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
   generate_visualisation(
     image, m_model->get_voxel_scene(sceneID), m_model->get_surfel_scene(sceneID),
-    pose, m_model->get_view(sceneID), voxelRenderState, surfelRenderState,
+    voxelRenderState, surfelRenderState, pose, m_model->get_view(sceneID),
     subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 

@@ -159,7 +159,7 @@ public:
   virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const;
 
   /**
-   * \brief Marks a selection of voxels in the scene with the specified semantic label.
+   * \brief Marks a selection of voxels in a scene with the specified semantic label.
    *
    * \param sceneID   The scene ID.
    * \param selection The selection of voxels.
@@ -171,7 +171,7 @@ public:
                            spaint::MarkingMode mode, const PackedLabels_Ptr& oldLabels = PackedLabels_Ptr());
 
   /**
-   * \brief Marks a selection of voxels in the scene with the specified semantic labels.
+   * \brief Marks a selection of voxels in a scene with the specified semantic labels.
    *
    * \param sceneID   The scene ID.
    * \param selection The selection of voxels.

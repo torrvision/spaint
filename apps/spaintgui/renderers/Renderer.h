@@ -126,22 +126,6 @@ public:
   Vector2f compute_fractional_window_position(int x, int y) const;
 
   /**
-   * \brief Gets the camera associated with the specified sub-window.
-   *
-   * \param subwindowIndex  The index of the sub-window whose camera we want to get.
-   * \return                The camera associated with the sub-window.
-   */
-  rigging::MoveableCamera_Ptr get_camera(size_t subwindowIndex) const;
-
-  /**
-   * \brief Gets the current camera mode for the specified sub-window.
-   *
-   * \param subwindow The index of the sub-window whose camera mode we want to get.
-   * \return          The current camera mode for sub-window.
-   */
-  Subwindow::CameraMode get_camera_mode(size_t subwindowIndex) const;
-
-  /**
    * \brief Gets whether or not to use median filtering when rendering the scene raycast.
    *
    * \return  A flag indicating whether or not to use median filtering when rendering the scene raycast.
@@ -161,14 +145,6 @@ public:
    * \return  The renderer's sub-window configuration.
    */
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
-
-  /**
-   * \brief Sets the current camera mode for the specified sub-window.
-   *
-   * \param subwindowIndex  The index of the sub-window whose camera mode we want to set.
-   * \param cameraMode      The new camera mode for the sub-window.
-   */
-  void set_camera_mode(size_t subwindowIndex, Subwindow::CameraMode cameraMode);
 
   /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.
@@ -244,16 +220,16 @@ private:
    * \param output            The location into which to put the output image.
    * \param voxelScene        The voxel version of the scene to visualise.
    * \param surfelScene       The surfel version of the scene to visualise.
-   * \param pose              The pose from which to visualise the scene (if relevant).
-   * \param view              The current view of the scene.
    * \param voxelRenderState  The voxel render state to use for intermediate storage (if relevant).
    * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
+   * \param pose              The pose from which to visualise the scene (if relevant).
+   * \param view              The current view of the scene.
    * \param visualisationType The type of visualisation to generate.
    * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
    * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
    */
   void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
-                              const ORUtils::SE3Pose& pose, const View_CPtr& view, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                              VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
                               spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                               const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
 

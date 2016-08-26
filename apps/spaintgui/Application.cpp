@@ -329,18 +329,20 @@ void Application::process_camera_input()
   // Allow the user to change the camera mode of the active sub-window.
   if(m_inputState.key_down(KEYCODE_v))
   {
-    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_camera_mode(m_activeSubwindowIndex, Subwindow::CM_FOLLOW);
-    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_camera_mode(m_activeSubwindowIndex, Subwindow::CM_FREE);
+    Subwindow& activeSubwindow = get_active_subwindow();
+    if(m_inputState.key_down(KEYCODE_1)) activeSubwindow.set_camera_mode(Subwindow::CM_FOLLOW);
+    else if(m_inputState.key_down(KEYCODE_2)) activeSubwindow.set_camera_mode(Subwindow::CM_FREE);
   }
 
   // If the active sub-window is in free camera mode, allow the user to move its camera around.
-  if(m_renderer->get_camera_mode(m_activeSubwindowIndex) == Subwindow::CM_FREE)
+  Subwindow& activeSubwindow = get_active_subwindow();
+  if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
     static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
-    MoveableCamera_Ptr camera = m_renderer->get_camera(m_activeSubwindowIndex);
+    MoveableCamera_Ptr camera = activeSubwindow.get_camera();
 
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
