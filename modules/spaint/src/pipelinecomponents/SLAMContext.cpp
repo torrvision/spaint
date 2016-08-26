@@ -116,9 +116,9 @@ void SLAMContext::set_live_surfel_render_state(const std::string& sceneID, ITMLi
   set_if_different(m_singleSceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
 }
 
-void SLAMContext::set_live_voxel_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState)
+void SLAMContext::set_live_voxel_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveVoxelRenderState)
 {
-  set_if_different(m_singleSceneContexts[sceneID].m_liveVoxelRenderState, liveRenderState);
+  set_if_different(m_singleSceneContexts[sceneID].m_liveVoxelRenderState, liveVoxelRenderState);
 }
 
 void SLAMContext::set_surfel_scene(const std::string& sceneID, SpaintSurfelScene *surfelScene)

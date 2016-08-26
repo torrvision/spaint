@@ -69,7 +69,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
 
   // Set up the tracker and the tracking controller.
-  setup_tracker(rgbImageSize, depthImageSize);
+  setup_tracker();
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   m_context->set_tracking_state(sceneID, new ITMTrackingState(trackedImageSize, memoryType));
@@ -243,9 +243,12 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const
+ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
 {
   ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+
+  const Vector2i& depthImageSize = m_context->get_depth_image_size(m_sceneID);
+  const Vector2i& rgbImageSize = m_context->get_rgb_image_size(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
 
   compositeTracker->SetTracker(primaryTracker, 0);
@@ -259,10 +262,12 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker, const
   return compositeTracker;
 }
 
-void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize)
+void SLAMComponent::setup_tracker()
 {
-  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
+  const Vector2i& depthImageSize = m_context->get_depth_image_size(m_sceneID);
+  const Vector2i& rgbImageSize = m_context->get_rgb_image_size(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
   m_fallibleTracker = NULL;
 
   switch(m_trackerType)
@@ -270,7 +275,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     case TRACKER_RIFT:
     {
 #ifdef WITH_OVR
-      m_tracker.reset(make_hybrid_tracker(new RiftTracker, rgbImageSize, depthImageSize));
+      m_tracker.reset(make_hybrid_tracker(new RiftTracker));
       break;
 #else
       // This should never happen as things stand - we never try to use the Rift tracker if Rift support isn't available.
@@ -292,7 +297,7 @@ void SLAMComponent::setup_tracker(const Vector2i& rgbImageSize, const Vector2i& 
     {
 #ifdef WITH_VICON
       m_fallibleTracker = new ViconTracker(m_trackerParams, "kinect");
-      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker, rgbImageSize, depthImageSize));
+      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker));
       break;
 #else
       // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.

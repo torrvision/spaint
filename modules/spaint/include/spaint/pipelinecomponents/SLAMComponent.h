@@ -7,12 +7,14 @@
 #define H_SPAINT_SLAMCOMPONENT
 
 #include <InputSource/CompositeImageSourceEngine.h>
+
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
+
 #include <RelocLib/PoseDatabase.h>
 #include <RelocLib/Relocaliser.h>
 
@@ -59,7 +61,7 @@ public:
    */
   enum TrackingMode
   {
-    /** Track against the surfel map, if available, or against the voxel map otherwise. */
+    /** Track against the surfel map. */
     TRACK_SURFELS,
 
     /** Track against the voxel map. */
@@ -168,7 +170,9 @@ public:
   bool get_fusion_enabled() const;
 
   /**
-   * \brief Runs the SLAM component.
+   * \brief Attempts to run the SLAM component for a single frame.
+   *
+   * \return  true, if a frame was processed, or false otherwise.
    */
   bool run();
 
@@ -188,19 +192,14 @@ private:
    * \brief Makes a hybrid tracker that refines the results of a primary tracker using ICP.
    *
    * \param primaryTracker  The primary tracker (e.g. a Rift or Vicon tracker).
-   * \param rgbImageSize    The RGB image size.
-   * \param depthImageSize  The depth image size.
    * \return                The hybrid tracker.
    */
-  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker, const Vector2i& rgbImageSize, const Vector2i& depthImageSize) const;
+  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker) const;
 
   /**
    * \brief Sets up the tracker.
-   *
-   * \param rgbImageSize    The RGB image size.
-   * \param depthImageSize  The depth image size.
    */
-  void setup_tracker(const Vector2i& rgbImageSize, const Vector2i& depthImageSize);
+  void setup_tracker();
 };
 
 //#################### TYPEDEFS ####################

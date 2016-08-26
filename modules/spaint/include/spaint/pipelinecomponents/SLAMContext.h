@@ -10,8 +10,6 @@
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "../util/ITMImagePtrTypes.h"
 #include "../util/ITMObjectPtrTypes.h"
