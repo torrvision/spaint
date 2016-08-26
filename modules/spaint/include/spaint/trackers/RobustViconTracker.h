@@ -12,7 +12,7 @@
 #include <rigging/SimpleCamera.h>
 
 #include "ViconTracker.h"
-#include "../util/SpaintScene.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -53,7 +53,7 @@ public:
    * \param scene             The scene.
    */
   RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const SpaintScene_Ptr& scene);
+                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const SpaintVoxelScene_Ptr& scene);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
