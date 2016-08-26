@@ -45,6 +45,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
   switch(visualisationType)
   {
     case VT_SCENE_COLOUR:
+    case VT_SCENE_SEMANTICCOLOUR:
     {
       m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
                                                ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_COLOUR);
@@ -73,12 +74,14 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
       break;
     }
     case VT_SCENE_PHONG:
+    case VT_SCENE_SEMANTICPHONG:
     {
       m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
                                                ITMSurfelVisualisationEngine<SpaintSurfel>::RENDER_PHONG);
       break;
     }
     case VT_SCENE_LAMBERTIAN:
+    case VT_SCENE_SEMANTICLAMBERTIAN:
     default:
     {
       m_surfelVisualisationEngine->RenderImage(scene.get(), &pose, renderState.get(), output.get(),
