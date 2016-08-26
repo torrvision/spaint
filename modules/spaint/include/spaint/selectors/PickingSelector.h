@@ -10,8 +10,6 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Utils/ITMLibSettings.h>
-
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
 

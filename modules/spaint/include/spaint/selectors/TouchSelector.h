@@ -11,7 +11,6 @@
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
 #include "../touch/TouchDetector.h"
-#include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
 
