@@ -26,7 +26,7 @@ private:
   /** The label propagator. */
   LabelPropagator_CPtr m_labelPropagator;
 
-  /** The ID of the scene over whose surfaces to propagate. */
+  /** The ID of the scene on which the component should operate. */
   std::string m_sceneID;
 
   //#################### CONSTRUCTORS ####################
@@ -35,7 +35,7 @@ public:
    * \brief Constructs a propagation component.
    *
    * \param context The shared context needed for propagation.
-   * \param sceneID The ID of the scene over whose surfaces to propagate.
+   * \param sceneID The ID of the scene on which the component should operate.
    */
   PropagationComponent(const PropagationContext_Ptr& context, const std::string& sceneID);
 
