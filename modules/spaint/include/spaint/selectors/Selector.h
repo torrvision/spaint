@@ -84,7 +84,7 @@ public:
    * \brief Updates the selector based on the current input state.
    *
    * \param inputState      The current input state.
-   * \param renderState     The voxel render state corresponding to the camera from which the scene is being viewed.
+   * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
   virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono) = 0;
