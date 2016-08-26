@@ -1,6 +1,6 @@
 /**
  * spaintgui: MultiScenePipeline.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
 #ifndef H_SPAINTGUI_MULTISCENEPIPELINE
@@ -15,7 +15,7 @@
 #include "Model.h"
 
 /**
- * \brief An instance of this class can be used to represent the processing pipeline for multiple scenes.
+ * \brief An instance of this class represents a processing pipeline for multiple scenes.
  */
 class MultiScenePipeline
 {
@@ -88,7 +88,7 @@ public:
    * \brief Constructs an instance of the multi-scene pipeline.
    *
    * \param settings      The settings to use for InfiniTAM.
-   * \param resourcesDir  The path to the resouces directory.
+   * \param resourcesDir  The path to the resources directory.
    * \param maxLabelCount The maximum number of labels that can be in use.
    */
   MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
@@ -183,7 +183,7 @@ public:
    * \brief Runs the mode-specific section of the pipeline for the specified scene.
    *
    * \param sceneID     The scene ID.
-   * \param renderState The voxel render state to be used by the mode-specific section of the pipeline.
+   * \param renderState The render state to be used by the mode-specific section of the pipeline.
    */
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 

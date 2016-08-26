@@ -1,6 +1,6 @@
 /**
  * spaintgui: MultiScenePipeline.cpp
- * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
 #include "MultiScenePipeline.h"
@@ -28,9 +28,16 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
   }
 #endif
 
-  // Set up the spaint model and visualisation generator.
+  // Set up the spaint model.
   m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
-  m_visualisationGenerator.reset(new VisualisationGenerator(m_model->get_voxel_visualisation_engine(), m_model->get_surfel_visualisation_engine(), m_model->get_label_manager(), settings));
+
+  // Set up the visualisation generator.
+  m_visualisationGenerator.reset(new VisualisationGenerator(
+    m_model->get_voxel_visualisation_engine(),
+    m_model->get_surfel_visualisation_engine(),
+    m_model->get_label_manager(),
+    settings
+  ));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
