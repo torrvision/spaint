@@ -33,9 +33,9 @@ private:
   //#################### NESTED TYPES ####################
 private:
   /**
-   * \brief An instance of this struct contains the shared context for a single reconstructed scene.
+   * \brief An instance of this struct contains the shared SLAM context for a single reconstructed scene.
    */
-  struct SceneContext
+  struct SingleSceneContext
   {
     /** The image into which depth input is read each frame. */
     ITMShortImage_Ptr m_inputRawDepthImage;
@@ -64,8 +64,8 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The shared contexts for the various reconstructed scenes. */
-  std::map<std::string,SceneContext> m_sceneContexts;
+  /** The shared SLAM contexts for the various reconstructed scenes. */
+  std::map<std::string,SingleSceneContext> m_singleSceneContexts;
 
   //#################### DESTRUCTOR ####################
 public:
@@ -213,12 +213,20 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Gets the shared SLAM context for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The shared SLAM context for the specified scene.
    */
-  const SceneContext& get_scene_context(const std::string& sceneID) const;
+  const SingleSceneContext& get_single_scene_context(const std::string& sceneID) const;
 
   /**
-   * \brief TODO
+   * \brief Sets the target of the specified shared pointer to that of the specified raw pointer.
+   *
+   * If the two pointers already point to the same place, this is a no-op.
+   *
+   * \param dest  The shared pointer whose target is to be set.
+   * \param src   The raw pointer from which to set it.
    */
   template <typename T>
   void set_if_different(boost::shared_ptr<T>& dest, T *src)

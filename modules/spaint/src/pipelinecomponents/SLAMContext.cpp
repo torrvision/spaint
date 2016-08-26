@@ -16,129 +16,129 @@ namespace spaint {
 
 const Vector2i& SLAMContext::get_depth_image_size(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_inputRawDepthImage->noDims;
+  return get_single_scene_context(sceneID).m_inputRawDepthImage->noDims;
 }
 
 const ITMShortImage_Ptr& SLAMContext::get_input_raw_depth_image(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_inputRawDepthImage;
+  return get_single_scene_context(sceneID).m_inputRawDepthImage;
 }
 
 const ITMUChar4Image_Ptr& SLAMContext::get_input_rgb_image(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_inputRGBImage;
+  return get_single_scene_context(sceneID).m_inputRGBImage;
 }
 
 const ITMIntrinsics& SLAMContext::get_intrinsics(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_view->calib->intrinsics_d;
+  return get_single_scene_context(sceneID).m_view->calib->intrinsics_d;
 }
 
 const SurfelRenderState_Ptr& SLAMContext::get_live_surfel_render_state(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_liveSurfelRenderState;
+  return get_single_scene_context(sceneID).m_liveSurfelRenderState;
 }
 
 const VoxelRenderState_Ptr& SLAMContext::get_live_voxel_render_state(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_liveVoxelRenderState;
+  return get_single_scene_context(sceneID).m_liveVoxelRenderState;
 }
 
 const SE3Pose& SLAMContext::get_pose(const std::string& sceneID) const
 {
-  return *get_scene_context(sceneID).m_trackingState->pose_d;
+  return *get_single_scene_context(sceneID).m_trackingState->pose_d;
 }
 
 const Vector2i& SLAMContext::get_rgb_image_size(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_inputRGBImage->noDims;
+  return get_single_scene_context(sceneID).m_inputRGBImage->noDims;
 }
 
 const SpaintSurfelScene_Ptr& SLAMContext::get_surfel_scene(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_surfelScene;
+  return get_single_scene_context(sceneID).m_surfelScene;
 }
 
 SpaintSurfelScene_CPtr SLAMContext::get_surfel_scene(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_surfelScene;
+  return get_single_scene_context(sceneID).m_surfelScene;
 }
 
 const TrackingState_Ptr& SLAMContext::get_tracking_state(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_trackingState;
+  return get_single_scene_context(sceneID).m_trackingState;
 }
 
 TrackingState_CPtr SLAMContext::get_tracking_state(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_trackingState;
+  return get_single_scene_context(sceneID).m_trackingState;
 }
 
 const View_Ptr& SLAMContext::get_view(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_view;
+  return get_single_scene_context(sceneID).m_view;
 }
 
 View_CPtr SLAMContext::get_view(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_view;
+  return get_single_scene_context(sceneID).m_view;
 }
 
 const SpaintVoxelScene_Ptr& SLAMContext::get_voxel_scene(const std::string& sceneID)
 {
-  return get_scene_context(sceneID).m_voxelScene;
+  return get_single_scene_context(sceneID).m_voxelScene;
 }
 
 SpaintVoxelScene_CPtr SLAMContext::get_voxel_scene(const std::string& sceneID) const
 {
-  return get_scene_context(sceneID).m_voxelScene;
+  return get_single_scene_context(sceneID).m_voxelScene;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-const SLAMContext::SceneContext& SLAMContext::get_scene_context(const std::string& sceneID) const
+const SLAMContext::SingleSceneContext& SLAMContext::get_single_scene_context(const std::string& sceneID) const
 {
-  return MapUtil::lookup(m_sceneContexts, sceneID);
+  return MapUtil::lookup(m_singleSceneContexts, sceneID);
 }
 
 void SLAMContext::set_input_raw_depth_image(const std::string& sceneID, ITMShortImage *inputRawDepthImage)
 {
-  set_if_different(m_sceneContexts[sceneID].m_inputRawDepthImage, inputRawDepthImage);
+  set_if_different(m_singleSceneContexts[sceneID].m_inputRawDepthImage, inputRawDepthImage);
 }
 
 void SLAMContext::set_input_rgb_image(const std::string& sceneID, ITMUChar4Image *inputRGBImage)
 {
-  set_if_different(m_sceneContexts[sceneID].m_inputRGBImage, inputRGBImage);
+  set_if_different(m_singleSceneContexts[sceneID].m_inputRGBImage, inputRGBImage);
 }
 
 void SLAMContext::set_live_surfel_render_state(const std::string& sceneID, ITMLib::ITMSurfelRenderState *liveSurfelRenderState)
 {
-  set_if_different(m_sceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
+  set_if_different(m_singleSceneContexts[sceneID].m_liveSurfelRenderState, liveSurfelRenderState);
 }
 
 void SLAMContext::set_live_voxel_render_state(const std::string& sceneID, ITMLib::ITMRenderState *liveRenderState)
 {
-  set_if_different(m_sceneContexts[sceneID].m_liveVoxelRenderState, liveRenderState);
+  set_if_different(m_singleSceneContexts[sceneID].m_liveVoxelRenderState, liveRenderState);
 }
 
 void SLAMContext::set_surfel_scene(const std::string& sceneID, SpaintSurfelScene *surfelScene)
 {
-  set_if_different(m_sceneContexts[sceneID].m_surfelScene, surfelScene);
+  set_if_different(m_singleSceneContexts[sceneID].m_surfelScene, surfelScene);
 }
 
 void SLAMContext::set_tracking_state(const std::string& sceneID, ITMLib::ITMTrackingState *trackingState)
 {
-  set_if_different(m_sceneContexts[sceneID].m_trackingState, trackingState);
+  set_if_different(m_singleSceneContexts[sceneID].m_trackingState, trackingState);
 }
 
 void SLAMContext::set_view(const std::string& sceneID, ITMView *view)
 {
-  set_if_different(m_sceneContexts[sceneID].m_view, view);
+  set_if_different(m_singleSceneContexts[sceneID].m_view, view);
 }
 
 void SLAMContext::set_voxel_scene(const std::string& sceneID, SpaintVoxelScene *voxelScene)
 {
-  set_if_different(m_sceneContexts[sceneID].m_voxelScene, voxelScene);
+  set_if_different(m_singleSceneContexts[sceneID].m_voxelScene, voxelScene);
 }
 
 }
