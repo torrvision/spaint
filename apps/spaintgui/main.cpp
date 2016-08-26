@@ -52,6 +52,7 @@ struct CommandLineArguments
   std::string rgbImageMask;
   std::string sequenceName;
   std::string sequenceType;
+  bool useSurfels;
 };
 
 //#################### FUNCTIONS ####################
@@ -65,6 +66,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
+    ("useSurfels", po::bool_switch(&args.useSurfels), "enable surfel reconstruction")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -239,8 +241,9 @@ try
 
   // Construct the multi-scene pipeline.
   const unsigned int seed = 12345;
+  SLAMComponent::MappingMode mappingMode = args.useSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), labelManager));
-  pipeline->add_single_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams);
+  pipeline->add_single_scene_pipeline("World", imageSourceEngine, seed, trackerType, trackerParams, mappingMode);
 
   // Run the application.
   Application app(pipeline);
