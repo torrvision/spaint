@@ -131,14 +131,14 @@ public:
    *
    * \param viewIndex The index of the free camera view for the sub-window.
    */
-  SurfelRenderState_Ptr& get_surfel_render_state(int viewIndex);
+  SurfelRenderState_Ptr& get_surfel_render_state(int viewIndex = 0);
 
   /**
    * \brief Gets the surfel render state for the specified free camera view for the sub-window.
    *
    * \param viewIndex The index of the free camera view for the sub-window.
    */
-  SurfelRenderState_CPtr get_surfel_render_state(int viewIndex) const;
+  SurfelRenderState_CPtr get_surfel_render_state(int viewIndex = 0) const;
 
   /**
    * \brief Gets the type of scene visualisation to render in the sub-window.
@@ -152,14 +152,14 @@ public:
    *
    * \param viewIndex The index of the free camera view.
    */
-  VoxelRenderState_Ptr& get_voxel_render_state(int viewIndex);
+  VoxelRenderState_Ptr& get_voxel_render_state(int viewIndex = 0);
 
   /**
    * \brief Gets the voxel render state for the specified free camera view.
    *
    * \param viewIndex The index of the free camera view.
    */
-  VoxelRenderState_CPtr get_voxel_render_state(int viewIndex) const;
+  VoxelRenderState_CPtr get_voxel_render_state(int viewIndex = 0) const;
 
   /**
    * \brief Gets the height of the sub-window (as a fraction of the window viewport height, in the range [0,1]).
