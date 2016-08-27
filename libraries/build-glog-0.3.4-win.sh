@@ -39,10 +39,7 @@ else
   echo "[spaint] ...Upgrading Visual Studio project..."
   cmd //c "devenv google-glog.sln /upgrade" > $LOG 2>&1
 
-  echo "[spaint] ...Running Debug build..."
-  cmd //c "msbuild /p:Configuration=Debug google-glog.sln >> $LOG 2>&1"
-
-  echo "[spaint] ...Running Release build..."
+  echo "[spaint] ...Running build..."
   cmd //c "msbuild /p:Configuration=Release google-glog.sln >> $LOG 2>&1"
 
   cd ..
