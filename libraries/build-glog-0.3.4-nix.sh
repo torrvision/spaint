@@ -2,7 +2,7 @@
 
 LOG=../build-glog-0.3.4.log
 
-# Build glew.
+# Build glog.
 echo "[spaint] Building glog 0.3.4"
 
 if [ -d glog-0.3.4 ]
