@@ -40,7 +40,7 @@ else
   cmd //c "devenv google-glog.sln /upgrade" > $LOG 2>&1
 
   echo "[spaint] ...Running build..."
-  cmd //c "msbuild /p:Configuration=Release google-glog.sln >> $LOG 2>&1"
+  cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 google-glog.sln >> $LOG 2>&1"
 
   cd ..
 fi

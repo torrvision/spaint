@@ -61,10 +61,10 @@ else
   cd build
 
   echo "[spaint] ...Configuring using CMake..."
-  cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/src/windows -DGLOG_LIBRARY=../../glog-0.3.4/Release/libglog.lib .. > $LOG 2>&1
+  cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/src/windows -DGLOG_LIBRARY=../../glog-0.3.4/x64/Release/libglog.lib .. > $LOG 2>&1
 
   echo "[spaint] ...Running build..."
-  cmd //c "msbuild /p:Configuration=Release Ceres.sln >> $LOG 2>&1"
+  cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 Ceres.sln >> $LOG 2>&1"
 
   cd ..
 fi
