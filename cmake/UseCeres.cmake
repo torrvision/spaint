@@ -5,25 +5,29 @@
 OPTION(WITH_CERES "Build with Ceres Solver support?" OFF)
 
 IF(WITH_CERES)
+  FIND_PATH(GLOG_ROOT NEWS HINTS "${PROJECT_SOURCE_DIR}/libraries/glog-0.3.4")
+
   IF(MSVC_IDE)
-    FIND_PATH(GLOG_INCLUDE_DIR glog/logging.h HINTS "${PROJECT_SOURCE_DIR}/libraries/glog-0.3.4/src/windows")
-    FIND_LIBRARY(GLOG_LIBRARY libglog.lib HINTS "${PROJECT_SOURCE_DIR}/libraries/glog-0.3.4/x64/Release")
+    FIND_PATH(GLOG_INCLUDE_DIR glog/logging.h HINTS "${GLOG_ROOT}/src/windows")
+    FIND_LIBRARY(GLOG_LIBRARY libglog.lib HINTS "${GLOG_ROOT}/x64/Release")
   ELSEIF(APPLE)
     FIND_LIBRARY(ACCELERATE_LIBRARY Accelerate)
 
-    FIND_PATH(GLOG_INCLUDE_DIR glog/logging.h HINTS "${PROJECT_SOURCE_DIR}/libraries/glog-0.3.4/installed/include")
-    FIND_LIBRARY(GLOG_LIBRARY glog HINTS "${PROJECT_SOURCE_DIR}/libraries/glog-0.3.4/installed/lib")
+    FIND_PATH(GLOG_INCLUDE_DIR glog/logging.h HINTS "${GLOG_ROOT}/installed/include")
+    FIND_LIBRARY(GLOG_LIBRARY glog HINTS "${GLOG_ROOT}/installed/lib")
   ENDIF()
 
   INCLUDE_DIRECTORIES(${GLOG_INCLUDE_DIR})
 
+  FIND_PATH(CERES_ROOT LICENSE HINTS "${PROJECT_SOURCE_DIR}/libraries/ceres-solver-1.11.0")
+
   IF(MSVC_IDE)
-    FIND_PATH(CERES_CONFIG_DIR ceres/internal/config.h HINTS "${PROJECT_SOURCE_DIR}/libraries/ceres-solver-1.11.0/build/config")
-    FIND_PATH(CERES_INCLUDE_DIR ceres/ceres.h HINTS "${PROJECT_SOURCE_DIR}/libraries/ceres-solver-1.11.0/include")
-    FIND_LIBRARY(CERES_LIBRARY ceres HINTS "${PROJECT_SOURCE_DIR}/libraries/ceres-solver-1.11.0/build/x64/Release")
+    FIND_PATH(CERES_CONFIG_DIR ceres/internal/config.h HINTS "${CERES_ROOT}/build/config")
+    FIND_PATH(CERES_INCLUDE_DIR ceres/ceres.h HINTS "${CERES_ROOT}/include")
+    FIND_LIBRARY(CERES_LIBRARY ceres HINTS "${CERES_ROOT}/build/x64/Release")
   ELSE()
-    FIND_PATH(CERES_INCLUDE_DIR ceres/ceres.h HINTS "${PROJECT_SOURCE_DIR}/libraries/ceres-solver-1.11.0/install/include")
-    FIND_LIBRARY(CERES_LIBRARY ceres HINTS "${PROJECT_SOURCE_DIR}/libraries/ceres-solver-1.11.0/install/lib")
+    FIND_PATH(CERES_INCLUDE_DIR ceres/ceres.h HINTS "${CERES_ROOT}/install/include")
+    FIND_LIBRARY(CERES_LIBRARY ceres HINTS "${CERES_ROOT}/install/lib")
   ENDIF()
 
   INCLUDE_DIRECTORIES(${CERES_CONFIG_DIR} ${CERES_INCLUDE_DIR})
