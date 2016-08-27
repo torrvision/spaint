@@ -61,9 +61,15 @@ else
   cd build
 
   echo "[spaint] ...Configuring using CMake..."
+  cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/src/windows -DGLOG_LIBRARY=../../glog-0.3.4/Debug/libglog.lib -G "$1" .. > $LOG 2>&1
+
+  echo "[spaint] ...Running Debug build..."
+  cmd //c "msbuild /p:Configuration=Debug /p:Platform=x64 Ceres.sln >> $LOG 2>&1"
+
+  echo "[spaint] ...Configuring using CMake..."
   cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/src/windows -DGLOG_LIBRARY=../../glog-0.3.4/Release/libglog.lib -G "$1" .. > $LOG 2>&1
 
-  echo "[spaint] ...Running build..."
+  echo "[spaint] ...Running Release build..."
   cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 Ceres.sln >> $LOG 2>&1"
 
   cd ..
@@ -76,6 +82,7 @@ else
   cd build
 
   echo "[spaint] ...Installing..."
+  cmd //c "msbuild /p:Configuration=Debug INSTALL.vcxproj >> $LOG 2>&1"
   cmd //c "msbuild /p:Configuration=Release INSTALL.vcxproj >> $LOG 2>&1"
 
   cd ..

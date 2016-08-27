@@ -32,25 +32,39 @@ fi
 
 cd glog-0.3.4
 
-if [ -d Release ]
+if [ -d Debug ] || [ -d Release ]
 then
-  echo "[spaint] ...Skipping build (already built)"
+  echo "[spaint] ...Skipping solution upgrade (already upgraded)"
 else
   echo "[spaint] ...Upgrading Visual Studio solution..."
   cmd //c "devenv google-glog.sln /upgrade" > $LOG 2>&1
 
   echo "[spaint] ...Converting Visual Studio solution to x64..."
   perl -ibak -pe 's/Win32/x64/g' ./google-glog.sln
+
   find vsprojects -iname '*.vcxproj' | while read f
   do
     perl -ibak -pe 's/Win32/x64/g' $f
     perl -ibak -pe 's/MachineX86/MachineX64/g' $f
   done
 
-  echo "[spaint] ...Running build..."
-  cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 google-glog.sln >> $LOG 2>&1"
+  perl -ibak -pe 's/\_asm/\/\/_asm/g' ./src/logging.cc
+fi
 
-  cd ..
+if [ -d Debug ]
+then
+  echo "[spaint] ...Skipping Debug build (already built)"
+else
+  echo "[spaint] ...Running Debug build..."
+  cmd //c "msbuild /p:Configuration=Debug /p:Platform=x64 google-glog.sln >> $LOG 2>&1"
+fi
+
+if [ -d Release ]
+then
+  echo "[spaint] ...Skipping Release build (already built)"
+else
+  echo "[spaint] ...Running Release build..."
+  cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 google-glog.sln >> $LOG 2>&1"
 fi
 
 cd ..
