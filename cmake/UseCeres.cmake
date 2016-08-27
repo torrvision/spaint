@@ -9,7 +9,7 @@ IF(WITH_CERES)
 
   IF(MSVC_IDE)
     FIND_PATH(GLOG_INCLUDE_DIR glog/logging.h HINTS "${GLOG_ROOT}/src/windows")
-    FIND_LIBRARY(GLOG_LIBRARY libglog.lib HINTS "${GLOG_ROOT}/x64/Release")
+    FIND_LIBRARY(GLOG_LIBRARY libglog.lib HINTS "${GLOG_ROOT}/Release")
   ELSE()
     IF(APPLE)
       FIND_LIBRARY(ACCELERATE_LIBRARY Accelerate)

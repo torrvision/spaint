@@ -36,8 +36,16 @@ if [ -d Release ]
 then
   echo "[spaint] ...Skipping build (already built)"
 else
-  echo "[spaint] ...Upgrading Visual Studio project..."
+  echo "[spaint] ...Upgrading Visual Studio solution..."
   cmd //c "devenv google-glog.sln /upgrade" > $LOG 2>&1
+
+  echo "[spaint] ...Converting Visual Studio solution to x64..."
+  perl -ibak -pe 's/Win32/x64/g' ./google-glog.sln
+  find vsprojects -iname '*.vcxproj' | while read f
+  do
+    perl -ibak -pe 's/Win32/x64/g' $f
+    perl -ibak -pe 's/MachineX86/MachineX64/g' $f
+  done
 
   echo "[spaint] ...Running build..."
   cmd //c "msbuild /p:Configuration=Release /p:Platform=x64 google-glog.sln >> $LOG 2>&1"
