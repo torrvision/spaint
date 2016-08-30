@@ -327,15 +327,14 @@ void Application::handle_mousebutton_up(const SDL_MouseButtonEvent& e)
 void Application::process_camera_input()
 {
   // Allow the user to change the camera mode of the active sub-window.
+  Subwindow& activeSubwindow = get_active_subwindow();
   if(m_inputState.key_down(KEYCODE_v))
   {
-    Subwindow& activeSubwindow = get_active_subwindow();
     if(m_inputState.key_down(KEYCODE_1)) activeSubwindow.set_camera_mode(Subwindow::CM_FOLLOW);
     else if(m_inputState.key_down(KEYCODE_2)) activeSubwindow.set_camera_mode(Subwindow::CM_FREE);
   }
 
   // If the active sub-window is in free camera mode, allow the user to move its camera around.
-  Subwindow& activeSubwindow = get_active_subwindow();
   if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
     const float SPEED = 0.1f;
