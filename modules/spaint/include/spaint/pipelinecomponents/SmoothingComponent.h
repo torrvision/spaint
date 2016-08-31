@@ -12,7 +12,7 @@
 namespace spaint {
 
 /**
- * \brief An instance of this pipeline component can be used to smoothe the labels in a scene to remove noise.
+ * \brief An instance of this pipeline component can be used to smooth the labels in a scene to remove noise.
  */
 class SmoothingComponent
 {
@@ -42,7 +42,7 @@ public:
   /**
    * \brief Runs the smoothing component, smoothing the labels in the target scene to remove noise.
    *
-   * \param renderState The render state associated with the camera position from which to smoothe.
+   * \param renderState The render state associated with the camera position from which to smooth.
    */
   void run(const VoxelRenderState_CPtr& renderState);
 };

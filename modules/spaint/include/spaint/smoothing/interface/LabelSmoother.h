@@ -45,7 +45,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Smoothes the labelling of voxels in the scene, filling in the labels of voxels based on their neighbours.
+   * \brief Smooths the labelling of voxels in the scene, filling in the labels of voxels based on their neighbours.
    *
    * \param raycastResult The raycast result.
    * \param scene         The scene.
