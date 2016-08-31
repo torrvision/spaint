@@ -44,7 +44,7 @@ using namespace spaint;
 
 RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
                            const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode)
-: Renderer(model, visualisationGenerator, subwindowConfiguration, model->get_depth_image_size("World"))
+: Renderer(model, visualisationGenerator, subwindowConfiguration, model->get_depth_image_size(Model::get_world_scene_id()))
 {
   // Get a handle to the Rift.
   m_hmd = ovrHmd_Create(0);
@@ -115,7 +115,7 @@ RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, co
   }
 
   // Set up the eye frame buffers.
-  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size("World");
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size(Model::get_world_scene_id());
   for(int i = 0; i < ovrEye_Count; ++i)
   {
     m_eyeFrameBuffers[i].reset(new FrameBuffer(depthImageSize.width, depthImageSize.height));
@@ -166,7 +166,7 @@ void RiftRenderer::render(const Vector2f& fracWindowPos) const
   }
 
   // Set up the Rift eye poses and pass the eye textures to the Rift SDK.
-  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size("World");
+  ORUtils::Vector2<int> depthImageSize = get_model()->get_depth_image_size(Model::get_world_scene_id());
   int width = depthImageSize.width, height = depthImageSize.height;
 
   ovrPosef eyePoses[ovrEye_Count];

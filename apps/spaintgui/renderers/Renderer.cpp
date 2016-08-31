@@ -95,7 +95,7 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // Render the current touch interaction as an overlay.
-    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view("World")));
+    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view(Model::get_world_scene_id())));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -107,7 +107,7 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size("World");
+    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size(Model::get_world_scene_id());
     const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
 
     const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);

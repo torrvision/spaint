@@ -196,6 +196,15 @@ public:
    */
   virtual void update_selector(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the ID for the world scene.
+   *
+   * \return  The ID for the world scene.
+   */
+  static std::string get_world_scene_id();
+
   //#################### DISAMBIGUATORS ####################
 public:
   /** Override */

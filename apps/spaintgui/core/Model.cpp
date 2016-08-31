@@ -132,7 +132,8 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state("World"), get_view("World"), maxKeptTouchPoints));
+      const std::string worldSceneId = Model::get_world_scene_id();
+      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state(worldSceneID), get_view(worldSceneID), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
@@ -145,6 +146,13 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
 
   // Update the current selector.
   m_selector->update(inputState, renderState, renderingInMono);
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+std::string Model::get_world_scene_id()
+{
+  return "World";
 }
 
 //#################### DISAMBIGUATORS ####################

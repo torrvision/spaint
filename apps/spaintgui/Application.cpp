@@ -138,7 +138,7 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size("World"));
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id()));
   }
 
   return m_subwindowConfigurations[i];
@@ -720,7 +720,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size("World");
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id());
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_visualisation_generator(), subwindowConfiguration, windowViewportSize));
