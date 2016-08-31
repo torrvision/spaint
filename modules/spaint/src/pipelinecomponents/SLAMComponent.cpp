@@ -59,14 +59,19 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   // Set up the scenes.
   MemoryDeviceType memoryType = settings->GetMemoryType();
   m_context->set_voxel_scene(sceneID, new SpaintVoxelScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
-  m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));
-  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(sceneID);
-  const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(sceneID);
+  if(mappingMode != MAP_VOXELS_ONLY)
+  {
+    m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));  
+  }
 
   // Set up the dense mappers.
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(sceneID);
   m_denseVoxelMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
   m_denseVoxelMapper->ResetScene(voxelScene.get());
-  m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
+  if(mappingMode != MAP_VOXELS_ONLY)
+  {
+    m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
+  }
 
   // Set up the tracker and the tracking controller.
   setup_tracker();
@@ -77,7 +82,10 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
 
   // Set up the live render states.
   m_context->set_live_voxel_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType));
-  m_context->set_live_surfel_render_state(sceneID, new ITMSurfelRenderState(trackedImageSize, surfelScene->GetParams().supersamplingFactor));
+  if(mappingMode != MAP_VOXELS_ONLY)
+  {
+    m_context->set_live_surfel_render_state(sceneID, new ITMSurfelRenderState(trackedImageSize, m_context->get_surfel_scene(sceneID)->GetParams().supersamplingFactor));
+  }
 
   // Set up the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
@@ -201,7 +209,6 @@ bool SLAMComponent::process_frame()
   {
     // Run the fusion process.
     m_denseVoxelMapper->ProcessFrame(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
-
     if(m_mappingMode != MAP_VOXELS_ONLY)
     {
       m_denseSurfelMapper->ProcessFrame(view.get(), trackingState.get(), surfelScene.get(), liveSurfelRenderState.get());

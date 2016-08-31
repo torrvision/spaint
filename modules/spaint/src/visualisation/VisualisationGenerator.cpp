@@ -28,10 +28,13 @@ VisualisationGenerator::VisualisationGenerator(const VoxelVisualisationEngine_CP
 void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_Ptr& output, const SpaintSurfelScene_CPtr& scene, const ORUtils::SE3Pose& pose,
                                                            const View_CPtr& view, SurfelRenderState_Ptr& renderState, VisualisationType visualisationType) const
 {
-  if(!renderState)
+  if(!scene)
   {
-    renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
+    output->Clear();
+    return;
   }
+
+  if(!renderState) renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
 
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
   const bool useRadii = true;
@@ -92,10 +95,13 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
                                                           const View_CPtr& view, VoxelRenderState_Ptr& renderState, VisualisationType visualisationType,
                                                           const boost::optional<Postprocessor>& postprocessor) const
 {
-  if(!renderState)
+  if(!scene)
   {
-    renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
+    output->Clear();
+    return;
   }
+
+  if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
 
   const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
