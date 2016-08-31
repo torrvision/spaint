@@ -132,7 +132,7 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      const std::string worldSceneId = Model::get_world_scene_id();
+      const std::string worldSceneID = Model::get_world_scene_id();
       m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state(worldSceneID), get_view(worldSceneID), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
