@@ -91,7 +91,7 @@ bool MultiScenePipeline::run_main_section()
   bool result = true;
   for(std::map<std::string,SingleScenePipeline>::const_iterator it = m_singleScenePipelines.begin(), iend = m_singleScenePipelines.end(); it != iend; ++it)
   {
-    result = result && it->second.m_slamComponent->run();
+    result = result && it->second.m_slamComponent->process_frame();
   }
   return result;
 }

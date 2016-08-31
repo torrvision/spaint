@@ -174,7 +174,7 @@ public:
    *
    * \return  true, if a frame was processed, or false otherwise.
    */
-  bool run();
+  bool process_frame();
 
   /**
    * \brief Sets whether or not the user wants fusion to be run.

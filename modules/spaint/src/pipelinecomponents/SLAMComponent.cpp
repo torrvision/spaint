@@ -99,7 +99,7 @@ bool SLAMComponent::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
-bool SLAMComponent::run()
+bool SLAMComponent::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
