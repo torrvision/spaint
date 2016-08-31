@@ -54,7 +54,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
     }
     case VT_SCENE_DEPTH:
     {
-      // FIXME: This is a foul hack.
+      // FIXME: This is a workaround that is needed because DepthToUchar4 is currently CPU-only.
       static ITMFloatImage temp(output->noDims, true, true);
       m_surfelVisualisationEngine->RenderDepthImage(scene.get(), &pose, renderState.get(), &temp);
       if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) temp.UpdateHostFromDevice();
