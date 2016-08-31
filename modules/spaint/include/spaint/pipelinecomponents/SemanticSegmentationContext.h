@@ -6,9 +6,10 @@
 #ifndef H_SPAINT_SEMANTICSEGMENTATIONCONTEXT
 #define H_SPAINT_SEMANTICSEGMENTATIONCONTEXT
 
-#include "../markers/interface/VoxelMarker.h"
+#include "../markers/shared/VoxelMarker_Settings.h"
 #include "../selectors/Selector.h"
 #include "../util/LabelManager.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 

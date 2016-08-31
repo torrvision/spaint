@@ -6,6 +6,7 @@
 #ifndef H_SPAINTGUI_MODEL
 #define H_SPAINTGUI_MODEL
 
+#include <spaint/markers/interface/VoxelMarker.h>
 #include <spaint/pipelinecomponents/PropagationContext.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationContext.h>
 #include <spaint/pipelinecomponents/SLAMContext.h>
