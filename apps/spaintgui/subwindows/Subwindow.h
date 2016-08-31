@@ -51,7 +51,7 @@ private:
   bool m_surfelFlag;
 
   /** The surfel render state(s) for the free camera view(s). */
-  mutable std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
+  std::map<int,SurfelRenderState_Ptr> m_surfelRenderStates;
 
   /** The location of the top-left of the sub-window (each component is expressed as a fraction in the range [0,1]). */
   Vector2f m_topLeft;
@@ -60,7 +60,7 @@ private:
   spaint::VisualisationGenerator::VisualisationType m_type;
 
   /** The voxel render state(s) for the free camera view(s). */
-  mutable std::map<int,VoxelRenderState_Ptr> m_voxelRenderStates;
+  std::map<int,VoxelRenderState_Ptr> m_voxelRenderStates;
 
   //#################### CONSTRUCTORS ####################
 public:

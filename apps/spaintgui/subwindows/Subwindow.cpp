@@ -7,6 +7,9 @@
 using namespace rigging;
 using namespace spaint;
 
+#include <tvgutil/containers/MapUtil.h>
+using namespace tvgutil;
+
 //#################### CONSTRUCTORS ####################
 
 Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
@@ -65,7 +68,7 @@ SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
 
 SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
 {
-  return m_surfelRenderStates[viewIndex];
+  return MapUtil::lookup(m_surfelRenderStates, viewIndex);
 }
 
 VisualisationGenerator::VisualisationType Subwindow::get_type() const
@@ -80,7 +83,7 @@ VoxelRenderState_Ptr& Subwindow::get_voxel_render_state(int viewIndex)
 
 VoxelRenderState_CPtr Subwindow::get_voxel_render_state(int viewIndex) const
 {
-  return m_voxelRenderStates[viewIndex];
+  return MapUtil::lookup(m_voxelRenderStates, viewIndex);
 }
 
 float Subwindow::height() const
