@@ -10,7 +10,6 @@
 #include <spaint/pipelinecomponents/SemanticSegmentationComponent.h>
 #include <spaint/pipelinecomponents/SLAMComponent.h>
 #include <spaint/pipelinecomponents/SmoothingComponent.h>
-#include <spaint/visualisation/VisualisationGenerator.h>
 
 #include "Model.h"
 
@@ -78,9 +77,6 @@ private:
 
   /** The pipelines for the individual scenes. */
   std::map<std::string,SingleScenePipeline> m_singleScenePipelines;
-
-  /** The visualisation generator that is used to render a scene. */
-  spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -155,13 +151,6 @@ public:
    * \return  The spaint model.
    */
   Model_CPtr get_model() const;
-
-  /**
-   * \brief Gets the visualisation generator that is used to render a scene.
-   *
-   * \return  The visualisation generator that is used to render a scene.
-   */
-  spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
 
   /**
    * \brief Resets the random forest for the specified scene.

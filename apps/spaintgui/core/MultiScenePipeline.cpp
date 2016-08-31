@@ -30,14 +30,6 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
 
   // Set up the spaint model.
   m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
-
-  // Set up the visualisation generator.
-  m_visualisationGenerator.reset(new VisualisationGenerator(
-    m_model->get_voxel_visualisation_engine(),
-    m_model->get_surfel_visualisation_engine(),
-    m_model->get_label_manager(),
-    settings
-  ));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -87,11 +79,6 @@ const Model_Ptr& MultiScenePipeline::get_model()
 Model_CPtr MultiScenePipeline::get_model() const
 {
   return m_model;
-}
-
-VisualisationGenerator_CPtr MultiScenePipeline::get_visualisation_generator() const
-{
-  return m_visualisationGenerator;
 }
 
 void MultiScenePipeline::reset_forest(const std::string& sceneID)

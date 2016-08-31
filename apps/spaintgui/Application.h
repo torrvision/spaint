@@ -23,6 +23,8 @@
 
 #include <SDL.h>
 
+#include <spaint/visualisation/VisualisationGenerator.h>
+
 #include <tvginput/InputState.h>
 
 #include <tvgutil/commands/CommandManager.h>
@@ -81,6 +83,9 @@ private:
 
   /** The path generator for the current video recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_videoPathGenerator;
+
+  /** The visualisation generator that is used to render a scene. */
+  spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
   /** The stream of commands being sent from the voice command server. */
   boost::asio::ip::tcp::iostream m_voiceCommandStream;
