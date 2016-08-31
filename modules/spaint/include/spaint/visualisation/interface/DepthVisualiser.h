@@ -6,11 +6,7 @@
 #ifndef H_SPAINT_DEPTHVISUALISER
 #define H_SPAINT_DEPTHVISUALISER
 
-#include <ITMLib/Objects/Camera/ITMIntrinsics.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Objects/Scene/ITMScene.h>
-
-#include <ORUtils/SE3Pose.h>
 
 #include "../../util/ITMImagePtrTypes.h"
 
