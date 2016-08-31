@@ -18,7 +18,7 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-DepthVisualiser_CPtr VisualiserFactory::make_depth_visualiser(ITMLib::ITMLibSettings::DeviceType deviceType)
+DepthVisualiser_CPtr VisualiserFactory::make_depth_visualiser(ITMLibSettings::DeviceType deviceType)
 {
   DepthVisualiser_CPtr visualiser;
 
@@ -39,7 +39,7 @@ DepthVisualiser_CPtr VisualiserFactory::make_depth_visualiser(ITMLib::ITMLibSett
   return visualiser;
 }
 
-SemanticVisualiser_CPtr VisualiserFactory::make_semantic_visualiser(size_t maxLabelCount, ITMLib::ITMLibSettings::DeviceType deviceType)
+SemanticVisualiser_CPtr VisualiserFactory::make_semantic_visualiser(size_t maxLabelCount, ITMLibSettings::DeviceType deviceType)
 {
   SemanticVisualiser_CPtr visualiser;
 
