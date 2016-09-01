@@ -32,6 +32,7 @@ using namespace ITMLib;
 #endif
 
 #include <spaint/util/MemoryBlockFactory.h>
+#include <spaint/util/AsyncImageSourceEngine.h>
 using namespace spaint;
 
 #include <tvgutil/filesystem/PathFinder.h>
@@ -221,7 +222,9 @@ try
   {
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
-    imageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber));
+
+    size_t asyncEngineBufferSize = 60; // Preload at most 60 frames in advance.
+    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber), asyncEngineBufferSize));
   }
 
   if(args.depthImageMask == "" || args.cameraAfterDisk)
