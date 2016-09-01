@@ -6,12 +6,9 @@
 #ifndef H_SPAINT_PERLABELVOXELSAMPLER
 #define H_SPAINT_PERLABELVOXELSAMPLER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
 
-#include "../../util/SpaintVoxel.h"
+#include "../../util/SpaintVoxelScene.h"
 
 namespace tvgutil {
 
@@ -131,8 +128,7 @@ public:
    * \param sampledVoxelLocationsMB A memory block into which to write the locations of the sampled voxels.
    * \param voxelCountsForLabelsMB  A memory block into which to write the numbers of voxels sampled for each label.
    */
-  void sample_voxels(const ITMFloat4Image *raycastResult,
-                     const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
+  void sample_voxels(const ITMFloat4Image *raycastResult, const SpaintVoxelScene *scene,
                      const ORUtils::MemoryBlock<bool>& labelMaskMB,
                      ORUtils::MemoryBlock<Vector3s>& sampledVoxelLocationsMB,
                      ORUtils::MemoryBlock<unsigned int>& voxelCountsForLabelsMB) const;

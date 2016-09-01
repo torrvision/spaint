@@ -28,7 +28,7 @@
 #include <tvgutil/commands/CommandManager.h>
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 
-#include "core/Pipeline.h"
+#include "core/MultiScenePipeline.h"
 #include "renderers/Renderer.h"
 
 #ifdef WITH_OVR
@@ -43,11 +43,10 @@ class Application
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
-  typedef Renderer::RenderState_CPtr RenderState_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The index of the sub-window that will be affected by visualisation type changes. */
+  /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
 
   /** The command manager. */
@@ -65,8 +64,8 @@ private:
   /** Whether or not the application is currently paused. */
   bool m_paused;
 
-  /** The pipeline that the application should use. */
-  Pipeline_Ptr m_pipeline;
+  /** The multi-scene pipeline that the application should use. */
+  MultiScenePipeline_Ptr m_pipeline;
 
   /** The current renderer. */
   Renderer_Ptr m_renderer;
@@ -76,6 +75,9 @@ private:
 
   /** A set of sub-window configurations that the user can switch between as desired. */
   mutable std::vector<SubwindowConfiguration_Ptr> m_subwindowConfigurations;
+
+  /** Whether or not to mirror poses between sub-windows that show the same scene. */
+  bool m_usePoseMirroring;
 
   /** The path generator for the current video recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_videoPathGenerator;
@@ -88,9 +90,9 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline  The pipeline that the application should use.
+   * \param pipeline  The multi-scene pipeline that the application should use.
    */
-  explicit Application(const Pipeline_Ptr& pipeline);
+  explicit Application(const MultiScenePipeline_Ptr& pipeline);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -111,13 +113,34 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
+   * \brief Gets the scene ID for the active sub-window.
+   *
+   * \return  The scene ID for the active sub-window.
+   */
+  const std::string& get_active_scene_id() const;
+
+  /**
+   * \brief Gets the sub-window with which the user is interacting.
+   *
+   * \return  The sub-window with which the user is interacting.
+   */
+  Subwindow& get_active_subwindow();
+
+  /**
+   * \brief Gets the sub-window with which the user is interacting.
+   *
+   * \return  The sub-window with which the user is interacting.
+   */
+  const Subwindow& get_active_subwindow() const;
+
+  /**
    * \brief Gets the current monocular render state.
    *
    * If we're rendering in stereo, this will return the render state corresponding to the left eye.
    *
    * \return  The current monocular render state.
    */
-  Renderer::RenderState_CPtr get_monocular_render_state() const;
+  VoxelRenderState_CPtr get_monocular_render_state() const;
 
   /**
    * \brief Gets the specified sub-window configuration.

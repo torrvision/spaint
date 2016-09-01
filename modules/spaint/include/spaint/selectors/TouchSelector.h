@@ -8,9 +8,6 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
-#include <ITMLib/Objects/Views/ITMView.h>
-
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
 #include "../touch/TouchDetector.h"
@@ -26,11 +23,7 @@ class TouchSelector : public Selector
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
   typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingState> TrackingState_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMView> View_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -69,7 +62,7 @@ public:
    * \param view                The InfiniTAM view (contains the raw depth image).
    * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
+  TouchSelector(const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
                 const View_Ptr& view, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -96,7 +89,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 };
 
 }

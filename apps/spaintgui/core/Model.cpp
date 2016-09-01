@@ -4,34 +4,53 @@
  */
 
 #include "Model.h"
-using namespace ITMLib;
 using namespace ORUtils;
+using namespace tvginput;
+
+#include <ITMLib/Engines/Visualisation/ITMSurfelVisualisationEngineFactory.h>
+#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
+using namespace ITMLib;
+
+#include <spaint/markers/VoxelMarkerFactory.h>
+#include <spaint/selectiontransformers/SelectionTransformerFactory.h>
+#include <spaint/selectors/NullSelector.h>
+#include <spaint/selectors/PickingSelector.h>
 using namespace spaint;
+
+#ifdef WITH_LEAP
+#include <spaint/selectors/LeapSelector.h>
+#endif
+
+#ifdef WITH_ARRAYFIRE
+#include <spaint/selectors/TouchSelector.h>
+#endif
 
 //#################### CONSTRUCTORS ####################
 
-Model::Model(const Scene_Ptr& scene, const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const TrackingState_Ptr& trackingState,
-             const Settings_CPtr& settings, const std::string& resourcesDir)
-: m_depthImageSize(depthImageSize),
-  m_labelManager(new LabelManager(10)),
+Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+: m_labelManager(new LabelManager(maxLabelCount)),
   m_resourcesDir(resourcesDir),
-  m_rgbImageSize(rgbImageSize),
-  m_scene(scene),
-  m_segmentationImage(new ITMUChar4Image(rgbImageSize, true, false)),
+  m_selector(new NullSelector(settings)),
+  m_semanticLabel(0),
   m_settings(settings),
-  m_trackingState(trackingState)
-{}
+  m_surfelVisualisationEngine(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType)),
+  m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType)),
+  m_voxelVisualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType))
+{
+  // Set up the selection transformer.
+  const int initialSelectionRadius = 2;
+  m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, settings->deviceType);
+
+  // Set up the visualisation generator.
+  m_visualisationGenerator.reset(new VisualisationGenerator(m_voxelVisualisationEngine, m_surfelVisualisationEngine, m_labelManager, settings));
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-const Vector2i& Model::get_depth_image_size() const
+void Model::clear_labels(const std::string& sceneID, ClearingSettings settings)
 {
-  return m_depthImageSize;
-}
-
-const ITMIntrinsics& Model::get_intrinsics() const
-{
-  return m_view->calib->intrinsics_d;
+  ITMLocalVBA<SpaintVoxel>& localVBA = get_voxel_scene(sceneID)->localVBA;
+  m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
 const LabelManager_Ptr& Model::get_label_manager()
@@ -44,67 +63,113 @@ LabelManager_CPtr Model::get_label_manager() const
   return m_labelManager;
 }
 
-const SE3Pose& Model::get_pose() const
-{
-  return *m_trackingState->pose_d;
-}
-
 const std::string& Model::get_resources_dir() const
 {
   return m_resourcesDir;
 }
 
-const Vector2i& Model::get_rgb_image_size() const
+Model::Selection_CPtr Model::get_selection() const
 {
-  return m_rgbImageSize;
+  Selection_CPtr selection = m_selector->get_selection();
+  return selection && m_selectionTransformer ? Selection_CPtr(m_selectionTransformer->transform_selection(*selection)) : selection;
 }
 
-const Model::Scene_Ptr& Model::get_scene()
+SelectionTransformer_CPtr Model::get_selection_transformer() const
 {
-  return m_scene;
+  return m_selectionTransformer;
 }
 
-Model::Scene_CPtr Model::get_scene() const
+Selector_CPtr Model::get_selector() const
 {
-  return m_scene;
+  return m_selector;
 }
 
-const ITMUChar4Image_CPtr& Model::get_segmentation_image() const
+SpaintVoxel::Label Model::get_semantic_label() const
 {
-  return m_segmentationImage;
+  return m_semanticLabel;
 }
 
-const Model::Settings_CPtr& Model::get_settings() const
+const Settings_CPtr& Model::get_settings() const
 {
   return m_settings;
 }
 
-const Model::TrackingState_Ptr& Model::get_tracking_state()
+Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() const
 {
-  return m_trackingState;
+  return m_surfelVisualisationEngine;
 }
 
-Model::TrackingState_CPtr Model::get_tracking_state() const
+VisualisationGenerator_CPtr Model::get_visualisation_generator() const
 {
-  return m_trackingState;
+  return m_visualisationGenerator;
 }
 
-const Model::View_Ptr& Model::get_view()
+Model::VoxelVisualisationEngine_CPtr Model::get_voxel_visualisation_engine() const
 {
-  return m_view;
+  return m_voxelVisualisationEngine;
 }
 
-Model::View_CPtr Model::get_view() const
+void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, SpaintVoxel::PackedLabel label,
+                        MarkingMode mode, const PackedLabels_Ptr& oldLabels)
 {
-  return m_view;
+  m_voxelMarker->mark_voxels(*selection, label, get_voxel_scene(sceneID).get(), mode, oldLabels.get());
 }
 
-void Model::set_segmentation_image(const ITMUChar4Image_CPtr& segmentationImage)
+void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
 {
-  m_segmentationImage = segmentationImage;
+  m_voxelMarker->mark_voxels(*selection, *labels, get_voxel_scene(sceneID).get(), mode);
 }
 
-void Model::set_view(ITMView *view)
+void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
 {
-  if(m_view.get() != view) m_view.reset(view);
+  m_semanticLabel = semanticLabel;
 }
+
+void Model::update_selector(const InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
+{
+  // Allow the user to switch between different selectors.
+  if(inputState.key_down(KEYCODE_i))
+  {
+    if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(m_settings));
+    else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(m_settings));
+#ifdef WITH_LEAP
+    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings));
+#endif
+#ifdef WITH_ARRAYFIRE
+    else if(inputState.key_down(KEYCODE_4))
+    {
+      const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
+      const size_t maxKeptTouchPoints = 50;
+      const std::string worldSceneID = Model::get_world_scene_id();
+      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state(worldSceneID), get_view(worldSceneID), maxKeptTouchPoints));
+
+      const int initialSelectionRadius = 1;
+      m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
+    }
+#endif
+  }
+
+  // Update the current selection transformer (if any).
+  if(m_selectionTransformer) m_selectionTransformer->update(inputState);
+
+  // Update the current selector.
+  m_selector->update(inputState, renderState, renderingInMono);
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+std::string Model::get_world_scene_id()
+{
+  return "World";
+}
+
+//#################### DISAMBIGUATORS ####################
+
+const Vector2i& Model::get_depth_image_size(const std::string& sceneID) const             { return SLAMContext::get_depth_image_size(sceneID); }
+ITMShortImage_Ptr Model::get_input_raw_depth_image_copy(const std::string& sceneID) const { return SLAMContext::get_input_raw_depth_image_copy(sceneID); }
+const ORUtils::SE3Pose& Model::get_pose(const std::string& sceneID) const                 { return SLAMContext::get_pose(sceneID); }
+const Segmenter_Ptr& Model::get_segmenter() const                                         { return ObjectSegmentationContext::get_segmenter(); }
+const View_Ptr& Model::get_view(const std::string& sceneID)                               { return SLAMContext::get_view(sceneID); }
+View_CPtr Model::get_view(const std::string& sceneID) const                               { return SLAMContext::get_view(sceneID); }
+const SpaintVoxelScene_Ptr& Model::get_voxel_scene(const std::string& sceneID)            { return SLAMContext::get_voxel_scene(sceneID); }
+SpaintVoxelScene_CPtr Model::get_voxel_scene(const std::string& sceneID) const            { return SLAMContext::get_voxel_scene(sceneID); }

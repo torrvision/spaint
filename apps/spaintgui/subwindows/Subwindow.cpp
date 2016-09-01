@@ -4,21 +4,41 @@
  */
 
 #include "Subwindow.h"
+using namespace rigging;
+using namespace spaint;
+
+#include <tvgutil/containers/MapUtil.h>
+using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, Raycaster::RaycastType type, const Vector2i& imgSize)
+Subwindow::Subwindow(const Vector2f& topLeft, const Vector2f& bottomRight, const std::string& sceneID, VisualisationGenerator::VisualisationType type, const Vector2i& imgSize)
 : m_bottomRight(bottomRight),
+  m_cameraMode(CM_FOLLOW),
   m_image(new ITMUChar4Image(imgSize, true, true)),
+  m_sceneID(sceneID),
+  m_surfelFlag(false),
   m_topLeft(topLeft),
   m_type(type)
-{}
+{
+  reset_camera();
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 const Vector2f& Subwindow::bottom_right() const
 {
   return m_bottomRight;
+}
+
+const CompositeCamera_Ptr& Subwindow::get_camera() const
+{
+  return m_camera;
+}
+
+Subwindow::CameraMode Subwindow::get_camera_mode() const
+{
+  return m_cameraMode;
 }
 
 const ITMUChar4Image_Ptr& Subwindow::get_image()
@@ -31,9 +51,39 @@ ITMUChar4Image_CPtr Subwindow::get_image() const
   return m_image;
 }
 
-Raycaster::RaycastType Subwindow::get_type() const
+const std::string& Subwindow::get_scene_id() const
+{
+  return m_sceneID;
+}
+
+bool Subwindow::get_surfel_flag() const
+{
+  return m_surfelFlag;
+}
+
+SurfelRenderState_Ptr& Subwindow::get_surfel_render_state(int viewIndex)
+{
+  return m_surfelRenderStates[viewIndex];
+}
+
+SurfelRenderState_CPtr Subwindow::get_surfel_render_state(int viewIndex) const
+{
+  return MapUtil::lookup(m_surfelRenderStates, viewIndex);
+}
+
+VisualisationGenerator::VisualisationType Subwindow::get_type() const
 {
   return m_type;
+}
+
+VoxelRenderState_Ptr& Subwindow::get_voxel_render_state(int viewIndex)
+{
+  return m_voxelRenderStates[viewIndex];
+}
+
+VoxelRenderState_CPtr Subwindow::get_voxel_render_state(int viewIndex) const
+{
+  return MapUtil::lookup(m_voxelRenderStates, viewIndex);
 }
 
 float Subwindow::height() const
@@ -41,7 +91,22 @@ float Subwindow::height() const
   return m_bottomRight.y - m_topLeft.y;
 }
 
-void Subwindow::set_type(Raycaster::RaycastType type)
+void Subwindow::reset_camera()
+{
+  m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+}
+
+void Subwindow::set_camera_mode(CameraMode cameraMode)
+{
+  m_cameraMode = cameraMode;
+}
+
+void Subwindow::set_surfel_flag(bool surfelFlag)
+{
+  m_surfelFlag = surfelFlag;
+}
+
+void Subwindow::set_type(VisualisationGenerator::VisualisationType type)
 {
   m_type = type;
 }

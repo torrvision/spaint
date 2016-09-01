@@ -6,12 +6,8 @@
 #ifndef H_SPAINT_VOXELMARKER
 #define H_SPAINT_VOXELMARKER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
-
 #include "../shared/VoxelMarker_Settings.h"
-#include "../../util/SpaintVoxel.h"
+#include "../../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -44,13 +40,11 @@ public:
    * \param voxelLocationsMB  A memory block containing the locations of the voxels in the scene.
    * \param label             The semantic label with which to mark the voxels.
    * \param scene             The scene.
-   * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
    * \param mode              The marking mode.
+   * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
   virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, SpaintVoxel::PackedLabel label,
-                           ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                           ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
-                           MarkingMode mode = NORMAL_MARKING) const = 0;
+                           SpaintVoxelScene *scene, MarkingMode mode, ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL) const = 0;
 
   /**
    * \brief Marks a set of voxels in the scene with the specified semantic labels.
@@ -58,14 +52,11 @@ public:
    * \param voxelLocationsMB  A memory block containing the locations of the voxels in the scene.
    * \param voxelLabelsMB     A memory block containing the semantic labels with which to mark the voxels (one per voxel).
    * \param scene             The scene.
-   * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
    * \param mode              The marking mode.
+   * \param oldVoxelLabelsMB  An optional memory block into which to store the old semantic labels of the voxels being marked.
    */
-  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                           const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
-                           ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                           ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL,
-                           MarkingMode mode = NORMAL_MARKING) const = 0;
+  virtual void mark_voxels(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const ORUtils::MemoryBlock<SpaintVoxel::PackedLabel>& voxelLabelsMB,
+                           SpaintVoxelScene *scene, MarkingMode mode, ORUtils::MemoryBlock<SpaintVoxel::PackedLabel> *oldVoxelLabelsMB = NULL) const = 0;
 };
 
 //#################### TYPEDEFS ####################

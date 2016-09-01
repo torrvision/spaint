@@ -8,10 +8,6 @@
 
 #include <arrayfire.h>
 
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Objects/Views/ITMView.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
-
 #include <rafl/core/RandomForest.h>
 
 #include <rigging/SimpleCamera.h>
@@ -20,7 +16,8 @@
 
 #include "TouchSettings.h"
 #include "../imageprocessing/interface/ImageProcessor.h"
-#include "../visualisers/interface/DepthVisualiser.h"
+#include "../util/ITMObjectPtrTypes.h"
+#include "../visualisation/interface/DepthVisualiser.h"
 
 namespace spaint {
 
@@ -32,12 +29,9 @@ class TouchDetector
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
   typedef int Label;
   typedef rafl::RandomForest<Label> RF;
   typedef boost::shared_ptr<RF> RF_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMView> View_CPtr;
 
   //#################### PRIVATE DEBUGGING VARIABLES ####################
 private:
@@ -59,7 +53,7 @@ private:
   ITMFloatImage_Ptr m_depthRaycast;
 
   /** The depth visualiser. */
-  boost::shared_ptr<const DepthVisualiser> m_depthVisualiser;
+  DepthVisualiser_CPtr m_depthVisualiser;
 
   /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
@@ -77,7 +71,7 @@ private:
   int m_imageWidth;
 
   /** The settings to use for InfiniTAM. */
-  ITMSettings_CPtr m_itmSettings;
+  Settings_CPtr m_itmSettings;
 
   /** The maximum area (in pixels) that a connected change component can have if it is to be considered as a candidate touch interaction. */
   int m_maxCandidateArea;
@@ -103,7 +97,7 @@ public:
    * \param itmSettings    The settings to use for InfiniTAM.
    * \param touchSettings  The settings needed to configure the touch detector.
    */
-  TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings);
+  TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -115,7 +109,7 @@ public:
    * \param renderState   The render state corresponding to the camera.
    * \return              The points (if any) that the user is touching in the scene.
    */
-  std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
+  std::vector<Eigen::Vector2i> determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState);
 
   /**
    * \brief Generates a colour image containing the current touch interaction (if any).
@@ -201,7 +195,7 @@ private:
    * \param rawDepth      The raw depth image from the camera.
    * \param renderState   The render state corresponding to the camera.
    */
-  void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState);
+  void prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState);
 
 #ifdef WITH_OPENCV
   /**

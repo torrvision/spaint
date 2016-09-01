@@ -6,12 +6,9 @@
 #ifndef H_SPAINT_LABELSMOOTHER
 #define H_SPAINT_LABELSMOOTHER
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
 
-#include "../../util/SpaintVoxel.h"
+#include "../../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -48,12 +45,12 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Smoothes the labelling of voxels in the scene, filling in the labels of voxels based on their neighbours.
+   * \brief Smooths the labelling of voxels in the scene, filling in the labels of voxels based on their neighbours.
    *
    * \param raycastResult The raycast result.
    * \param scene         The scene.
    */
-  virtual void smooth_labels(const ITMFloat4Image *raycastResult, ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene) const = 0;
+  virtual void smooth_labels(const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const = 0;
 };
 
 //#################### TYPEDEFS ####################

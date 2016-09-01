@@ -116,9 +116,7 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB,
-                                  const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene,
-                                  ORUtils::MemoryBlock<float>& featuresMB) const;
+  virtual void calculate_features(const ORUtils::MemoryBlock<Vector3s>& voxelLocationsMB, const SpaintVoxelScene *scene, ORUtils::MemoryBlock<float>& featuresMB) const;
 
   /** Override */
   virtual size_t get_feature_count() const;
