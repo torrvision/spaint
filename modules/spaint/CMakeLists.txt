@@ -485,6 +485,7 @@ ENDIF()
 
 ##
 SET(util_sources
+src/util/AsyncImageSourceEngine.cpp
 src/util/CameraPoseConverter.cpp
 src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
@@ -493,6 +494,7 @@ src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
+include/spaint/util/AsyncImageSourceEngine.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
