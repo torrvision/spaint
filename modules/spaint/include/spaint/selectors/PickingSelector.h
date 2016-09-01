@@ -10,8 +10,6 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Utils/ITMLibSettings.h>
-
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
 
@@ -61,7 +59,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 };
 
 }

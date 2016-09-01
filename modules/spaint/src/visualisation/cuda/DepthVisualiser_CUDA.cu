@@ -3,9 +3,9 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "visualisers/cuda/DepthVisualiser_CUDA.h"
+#include "visualisation/cuda/DepthVisualiser_CUDA.h"
 
-#include "visualisers/shared/DepthVisualiser_Shared.h"
+#include "visualisation/shared/DepthVisualiser_Shared.h"
 
 namespace spaint {
 

@@ -37,7 +37,7 @@ using namespace spaint;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-#include "core/Pipeline.h"
+#include "core/MultiScenePipeline.h"
 
 //#################### TYPES ####################
 
@@ -47,11 +47,13 @@ struct CommandLineArguments
   bool cameraAfterDisk;
   std::string depthImageMask;
   int initialFrameNumber;
+  bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string rgbImageMask;
   std::string sequenceName;
   std::string sequenceType;
+  bool trackSurfels;
 };
 
 //#################### FUNCTIONS ####################
@@ -64,7 +66,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("help", "produce help message")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
+    ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -117,6 +121,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     }
   }
 
+  // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
+  if(args.trackSurfels) args.mapSurfels = true;
+
   return true;
 }
 
@@ -164,25 +171,26 @@ try
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
-  settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+  if(args.trackSurfels) settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
+  else settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
-  Pipeline::TrackerType trackerType = Pipeline::TRACKER_INFINITAM;
+  TrackerType trackerType = TRACKER_INFINITAM;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
-  if(trackerType == Pipeline::TRACKER_RIFT)
+  if(trackerType == TRACKER_RIFT)
   {
 #ifdef WITH_OVR
     // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0) trackerType = Pipeline::TRACKER_INFINITAM;
+    if(ovrHmd_Detect() == 0) trackerType = TRACKER_INFINITAM;
 #else
     // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
-    trackerType = Pipeline::TRACKER_INFINITAM;
+    trackerType = TRACKER_INFINITAM;
 #endif
   }
 
   // If we're trying to use the Vicon tracker:
-  if(trackerType == Pipeline::TRACKER_VICON || trackerType == Pipeline::TRACKER_ROBUSTVICON)
+  if(trackerType == TRACKER_VICON || trackerType == TRACKER_ROBUSTVICON)
   {
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
@@ -199,7 +207,7 @@ try
 #endif
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = Pipeline::TRACKER_INFINITAM;
+    trackerType = TRACKER_INFINITAM;
 #endif
   }
 
@@ -233,8 +241,17 @@ try
 #endif
   }
 
+  // Construct the multi-scene pipeline.
+  const size_t maxLabelCount = 10;
+  MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), maxLabelCount));
+
+  const unsigned int seed = 12345;
+  SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+  SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
+  pipeline->add_single_scene_pipeline(Model::get_world_scene_id(), imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
+
   // Run the application.
-  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), trackerType, trackerParams)));
+  Application app(pipeline);
   app.run();
 
 #ifdef WITH_OVR

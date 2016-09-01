@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_SELECTIONTRANSFORMER
 #define H_SPAINT_SELECTIONTRANSFORMER
 
+#include <boost/shared_ptr.hpp>
+
 #include <ITMLib/Objects/Scene/ITMScene.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 
@@ -92,6 +94,11 @@ public:
    */
   Selection *transform_selection(const Selection& inputSelectionMB) const;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SelectionTransformer> SelectionTransformer_Ptr;
+typedef boost::shared_ptr<const SelectionTransformer> SelectionTransformer_CPtr;
 
 }
 

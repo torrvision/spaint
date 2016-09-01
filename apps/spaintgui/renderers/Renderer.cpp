@@ -6,11 +6,13 @@
 #include "Renderer.h"
 using namespace ITMLib;
 using namespace ORUtils;
+using namespace rigging;
 
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #include <spaint/selectors/PickingSelector.h>
 #include <spaint/util/CameraPoseConverter.h>
+using namespace spaint;
 
 #ifdef WITH_ARRAYFIRE
 #include <spaint/imageprocessing/MedianFilterer.h>
@@ -20,8 +22,6 @@ using namespace ORUtils;
 #ifdef WITH_LEAP
 #include <spaint/selectors/LeapSelector.h>
 #endif
-
-using namespace spaint;
 
 //#################### LOCAL TYPES ####################
 
@@ -95,7 +95,7 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // Render the current touch interaction as an overlay.
-    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view()));
+    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view(Model::get_world_scene_id())));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -107,7 +107,7 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size();
+    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size(Model::get_world_scene_id());
     const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
 
     const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
@@ -156,15 +156,20 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-                   const Vector2i& windowViewportSize)
-: m_cameraMode(CM_FOLLOW),
-  m_medianFilteringEnabled(true),
+Renderer::Renderer(const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
+                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+: m_medianFilteringEnabled(true),
   m_model(model),
-  m_raycaster(raycaster),
   m_subwindowConfiguration(subwindowConfiguration),
+  m_visualisationGenerator(visualisationGenerator),
   m_windowViewportSize(windowViewportSize)
-{}
+{
+  // Reset the camera for each sub-window.
+  for(size_t i = 0, subwindowCount = m_subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+  {
+    m_subwindowConfiguration->subwindow(i).reset_camera();
+  }
+}
 
 //#################### DESTRUCTOR ####################
 
@@ -199,11 +204,6 @@ Vector2f Renderer::compute_fractional_window_position(int x, int y) const
   return Vector2f(x / (windowViewportSize.x - 1), y / (windowViewportSize.y - 1));
 }
 
-Renderer::CameraMode Renderer::get_camera_mode() const
-{
-  return m_cameraMode;
-}
-
 bool Renderer::get_median_filtering_enabled() const
 {
   return m_medianFilteringEnabled;
@@ -217,11 +217,6 @@ const SubwindowConfiguration_Ptr& Renderer::get_subwindow_configuration()
 SubwindowConfiguration_CPtr Renderer::get_subwindow_configuration() const
 {
   return m_subwindowConfiguration;
-}
-
-void Renderer::set_camera_mode(CameraMode cameraMode)
-{
-  m_cameraMode = cameraMode;
 }
 
 void Renderer::set_median_filtering_enabled(bool medianFilteringEnabled)
@@ -284,8 +279,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
-                            const Vector2f& fracWindowPos) const
+void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const std::string& secondaryCameraName) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -295,29 +289,41 @@ void Renderer::render_scene(const SE3Pose& pose, const Interactor_CPtr& interact
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // If we have started reconstruction:
-  if(m_model->get_view())
+  // Render all the sub-windows.
+  for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
   {
-    // Render all the sub-windows.
-    for(size_t subwindowIndex = 0, count = m_subwindowConfiguration->subwindow_count(); subwindowIndex < count; ++subwindowIndex)
-    {
-      // Set the viewport for the sub-window.
-      Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
-      int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
-      int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
-      int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
-      int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
-      glViewport(left, top, width, height);
+    Subwindow& subwindow = m_subwindowConfiguration->subwindow(subwindowIndex);
 
-      // Render the reconstructed scene, then render a synthetic scene over the top of it.
-      render_reconstructed_scene(pose, renderState, subwindow);
-      render_synthetic_scene(pose, interactor);
+    // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
+    const std::string& sceneID = subwindow.get_scene_id();
+    if(!m_model->get_view(sceneID)) continue;
+
+    // Set the viewport for the sub-window.
+    int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
+    int top = (int)ROUND((1 - subwindow.bottom_right().y) * windowViewportSize.height);
+    int width = (int)ROUND(subwindow.width() * windowViewportSize.width);
+    int height = (int)ROUND(subwindow.height() * windowViewportSize.height);
+    glViewport(left, top, width, height);
+
+    // If the sub-window is in follow mode, update its camera.
+    if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
+    {
+      ORUtils::SE3Pose livePose = m_model->get_pose(subwindow.get_scene_id());
+      subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
+    }
+
+    // Determine the pose from which to render.
+    Camera_CPtr camera = secondaryCameraName == "" ? subwindow.get_camera() : subwindow.get_camera()->get_secondary_camera(secondaryCameraName);
+    ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
+
+    // Render the reconstructed scene, then render a synthetic scene over the top of it.
+    render_reconstructed_scene(sceneID, pose, subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex), subwindow);
+    render_synthetic_scene(sceneID, pose);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
-      // Render the value of the pixel to which the user is pointing (for debugging purposes).
-      render_pixel_value(fracWindowPos, subwindow);
+    // Render the value of the pixel to which the user is pointing (for debugging purposes).
+    render_pixel_value(fracWindowPos, subwindow);
 #endif
-    }
   }
 }
 
@@ -339,6 +345,26 @@ void Renderer::set_window(const SDL_Window_Ptr& window)
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const SpaintVoxelScene_CPtr& voxelScene, const SpaintSurfelScene_CPtr& surfelScene,
+                                      VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
+                                      VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
+                                      const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
+{
+  switch(visualisationType)
+  {
+    case VisualisationGenerator::VT_INPUT_COLOUR:
+      m_visualisationGenerator->get_rgb_input(output, view);
+      break;
+    case VisualisationGenerator::VT_INPUT_DEPTH:
+      m_visualisationGenerator->get_depth_input(output, view);
+      break;
+    default:
+      if(surfelFlag) m_visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
+      else m_visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
+      break;
+  }
+}
 
 void Renderer::render_overlay(const ITMUChar4Image_CPtr& overlay) const
 {
@@ -381,11 +407,12 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                          Subwindow& subwindow) const
 {
-  // Set up any post-processing that needs to be applied to the raycast result.
+  // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
-  static boost::optional<Raycaster::Postprocessor> postprocessor = boost::none;
+  static boost::optional<VisualisationGenerator::Postprocessor> postprocessor = boost::none;
   if(!m_medianFilteringEnabled && postprocessor)
   {
     postprocessor.reset();
@@ -400,7 +427,11 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
-  m_raycaster->generate_free_raycast(image, renderState, pose, subwindow.get_type(), postprocessor);
+  generate_visualisation(
+    image, m_model->get_voxel_scene(sceneID), m_model->get_surfel_scene(sceneID),
+    voxelRenderState, surfelRenderState, pose, m_model->get_view(sceneID),
+    subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+  );
 
   // Copy the raycasted scene to a texture.
   glBindTexture(GL_TEXTURE_2D, m_textureID);
@@ -414,7 +445,7 @@ void Renderer::render_reconstructed_scene(const SE3Pose& pose, Raycaster::Render
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr& interactor) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -422,8 +453,8 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size();
-    set_projection_matrix(m_model->get_intrinsics(), depthImageSize.width, depthImageSize.height);
+    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size(sceneID);
+    set_projection_matrix(m_model->get_intrinsics(sceneID), depthImageSize.width, depthImageSize.height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -439,12 +470,12 @@ void Renderer::render_synthetic_scene(const SE3Pose& pose, const Interactor_CPtr
       glEnd();
 
       // Render the current selector to show how we're interacting with the scene.
-      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(interactor->get_semantic_label());
+      Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());
       Vector3f selectorColour(labelColour.r / 255.0f, labelColour.g / 255.0f, labelColour.b / 255.0f);
       SelectorRenderer selectorRenderer(this, selectorColour);
-      Interactor::SelectionTransformer_CPtr transformer = interactor->get_selection_transformer();
+      SelectionTransformer_CPtr transformer = m_model->get_selection_transformer();
       if(transformer) transformer->accept(selectorRenderer);
-      interactor->get_selector()->accept(selectorRenderer);
+      m_model->get_selector()->accept(selectorRenderer);
     }
     glPopMatrix();
   }

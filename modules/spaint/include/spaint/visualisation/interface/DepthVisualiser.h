@@ -6,11 +6,7 @@
 #ifndef H_SPAINT_DEPTHVISUALISER
 #define H_SPAINT_DEPTHVISUALISER
 
-#include <ITMLib/Objects/Camera/ITMIntrinsics.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Objects/Scene/ITMScene.h>
-
-#include <ORUtils/SE3Pose.h>
 
 #include "../../util/ITMImagePtrTypes.h"
 
@@ -58,6 +54,10 @@ public:
   virtual void render_depth(DepthType depthType, const Vector3f& cameraPosition, const Vector3f& cameraLookVector, const ITMLib::ITMRenderState *renderState,
                             float voxelSize, float invalidDepthValue, const ITMFloatImage_Ptr& outputImage) const = 0;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const DepthVisualiser> DepthVisualiser_CPtr;
 
 }
 

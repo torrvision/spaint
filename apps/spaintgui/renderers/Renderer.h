@@ -20,7 +20,9 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include "../core/Interactor.h"
+#include <spaint/visualisation/VisualisationGenerator.h>
+
+#include "../core/Model.h"
 #include "../subwindows/SubwindowConfiguration.h"
 
 /**
@@ -28,32 +30,13 @@
  */
 class Renderer
 {
-  //#################### ENUMERATIONS ####################
-public:
-  /**
-   * \brief An enumeration containing the possible camera modes we can use.
-   */
-  enum CameraMode
-  {
-    /** A mode that follows the camera that is reconstructing the scene. */
-    CM_FOLLOW,
-
-    /** A mode that allows the user to freely move the camera around to view the scene from different angles. */
-    CM_FREE
-  };
-
   //#################### TYPEDEFS ####################
 protected:
   typedef boost::shared_ptr<void> SDL_GLContext_Ptr;
   typedef boost::shared_ptr<SDL_Window> SDL_Window_Ptr;
-public:
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The current camera mode. */
-  CameraMode m_cameraMode;
-
   /** The OpenGL context for the window. */
   SDL_GLContext_Ptr m_context;
 
@@ -63,14 +46,14 @@ private:
   /** The spaint model. */
   Model_CPtr m_model;
 
-  /** The raycaster to use in order to cast rays into the InfiniTAM scene. */
-  Raycaster_CPtr m_raycaster;
-
   /** The sub-window configuration to use for visualising the scene. */
   SubwindowConfiguration_Ptr m_subwindowConfiguration;
 
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
+
+  /** The visualisation generator to use in order to render the InfiniTAM scene. */
+  spaint::VisualisationGenerator_CPtr m_visualisationGenerator;
 
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
@@ -84,12 +67,12 @@ protected:
    * \brief Constructs a renderer.
    *
    * \param model                   The spaint model.
-   * \param raycaster               The raycaster to use in order to cast rays into the InfiniTAM scene.
+   * \param visualisationGenerator  The visualisation generator to use in order to render the InfiniTAM scene.
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    * \param windowViewportSize      The size of the window's viewport.
    */
-  Renderer(const Model_CPtr& model, const Raycaster_CPtr& raycaster, const SubwindowConfiguration_Ptr& subwindowConfiguration,
-           const Vector2i& windowViewportSize);
+  Renderer(const Model_CPtr& model, const spaint::VisualisationGenerator_CPtr& visualisationGenerator,
+           const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -101,20 +84,14 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the camera from which to render the scene.
-   *
-   * \return  The camera from which to render the scene.
-   */
-  virtual rigging::MoveableCamera_Ptr get_camera() = 0;
-
-  /**
-   * \brief Gets the monocular render state for the camera.
+   * \brief Gets the monocular render state for the camera associated with the specified sub-window.
    *
    * If the camera is a stereo one, this will return the render state corresponding to the left eye.
    *
-   * \return  The monocular render state for the camera.
+   * \param subwindowIndex  The index of the sub-window.
+   * \return                The monocular render state for the camera associated with the sub-window.
    */
-  virtual RenderState_CPtr get_monocular_render_state() const = 0;
+  virtual VoxelRenderState_CPtr get_monocular_render_state(size_t subwindowIndex) const = 0;
 
   /**
    * \brief Gets whether or not the renderer is rendering the scene in mono.
@@ -126,10 +103,9 @@ public:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
-   * \param interactor    The interactor that is being used to interact with the scene.
    * \param fracWindowPos The fractional position of the mouse within the window's viewport.
    */
-  virtual void render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const = 0;
+  virtual void render(const Vector2f& fracWindowPos) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -148,13 +124,6 @@ public:
    * \return  The fractional position of the specified point in the window.
    */
   Vector2f compute_fractional_window_position(int x, int y) const;
-
-  /**
-   * \brief Gets the current camera mode.
-   *
-   * \return  The current camera mode.
-   */
-  CameraMode get_camera_mode() const;
 
   /**
    * \brief Gets whether or not to use median filtering when rendering the scene raycast.
@@ -176,13 +145,6 @@ public:
    * \return  The renderer's sub-window configuration.
    */
   SubwindowConfiguration_CPtr get_subwindow_configuration() const;
-
-  /**
-   * \brief Sets the current camera mode.
-   *
-   * \param cameraMode  The new camera mode.
-   */
-  void set_camera_mode(CameraMode cameraMode);
 
   /**
    * \brief Sets whether or not to use median filtering when rendering the scene raycast.
@@ -235,15 +197,13 @@ protected:
   void initialise_common();
 
   /**
-   * \brief Renders both the reconstructed scene and the synthetic scene from a single camera pose.
+   * \brief Renders both the reconstructed scene and the synthetic scene.
    *
-   * \param pose          The camera pose.
-   * \param interactor    The interactor that is being used to interact with the scene.
-   * \param renderState   The render state corresponding to the camera pose.
-   * \param fracWindowPos The fractional position of the mouse within the window's viewport.
+   * \param fracWindowPos       The fractional position of the mouse within the window's viewport.
+   * \param viewIndex           The index of the free camera view for the sub-window.
+   * \param secondaryCameraName The name of the secondary camera from which to get the pose (if any).
    */
-  void render_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor, Raycaster::RenderState_Ptr& renderState,
-                    const Vector2f& fracWindowPos) const;
+  void render_scene(const Vector2f& fracWindowPos, int viewIndex = 0, const std::string& secondaryCameraName = "") const;
 
   /**
    * \brief Sets the window into which to render.
@@ -254,6 +214,25 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Generates a visualisation of the scene.
+   *
+   * \param output            The location into which to put the output image.
+   * \param voxelScene        The voxel version of the scene to visualise.
+   * \param surfelScene       The surfel version of the scene to visualise.
+   * \param voxelRenderState  The voxel render state to use for intermediate storage (if relevant).
+   * \param surfelRenderState The surfel render state to use for intermediate storage (if relevant).
+   * \param pose              The pose from which to visualise the scene (if relevant).
+   * \param view              The current view of the scene.
+   * \param visualisationType The type of visualisation to generate.
+   * \param surfelFlag        Whether or not to render a surfel visualisation rather than a voxel one.
+   * \param postprocessor     An optional function with which to postprocess the visualisation before returning it.
+   */
+  void generate_visualisation(const ITMUChar4Image_Ptr& output, const spaint::SpaintVoxelScene_CPtr& voxelScene, const spaint::SpaintSurfelScene_CPtr& surfelScene,
+                              VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState, const ORUtils::SE3Pose& pose, const View_CPtr& view,
+                              spaint::VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
+                              const boost::optional<spaint::VisualisationGenerator::Postprocessor>& postprocessor) const;
+
   /**
    * \brief Renders a semi-transparent colour overlay over the existing scene.
    *
@@ -272,21 +251,24 @@ private:
 #endif
 
   /**
-   * \brief Renders the reconstructed scene into a sub-window.
+   * \brief Renders the specified reconstructed scene into a sub-window.
    *
-   * \param pose        The camera pose.
-   * \param renderState The render state corresponding to the camera pose.
-   * \param subwindow   The sub-window into which to render.
+   * \param sceneID           The scene ID.
+   * \param pose              The camera pose.
+   * \param voxelRenderState  The voxel render state corresponding to the camera pose.
+   * \param surfelRenderState The surfel render state corresponding to the camera pose.
+   * \param subwindow         The sub-window into which to render.
    */
-  void render_reconstructed_scene(const ORUtils::SE3Pose& pose, Raycaster::RenderState_Ptr& renderState, Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
+                                  Subwindow& subwindow) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param pose        The camera pose.
-   * \param interactor  The interactor that is being used to interact with the scene.
+   * \param sceneID The ID of the reconstructed scene to augment.
+   * \param pose    The camera pose.
    */
-  void render_synthetic_scene(const ORUtils::SE3Pose& pose, const Interactor_CPtr& interactor) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose) const;
 
 #ifdef WITH_GLUT
   /**

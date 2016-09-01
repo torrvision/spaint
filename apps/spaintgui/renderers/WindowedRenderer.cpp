@@ -17,9 +17,9 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const Raycaster_CPtr& raycaster,
+WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
                                    const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
-: Renderer(model, raycaster, subwindowConfiguration, windowViewportSize)
+: Renderer(model, visualisationGenerator, subwindowConfiguration, windowViewportSize)
 {
   // Create the window into which to render.
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -37,9 +37,6 @@ WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& m
     &SDL_DestroyWindow
   ));
 
-  // Set up the camera.
-  m_camera.reset(new SimpleCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
-
   // Initialise the temporary image and texture used for visualising the scene.
   initialise_common();
 }
@@ -53,14 +50,9 @@ WindowedRenderer::~WindowedRenderer()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-rigging::MoveableCamera_Ptr WindowedRenderer::get_camera()
+VoxelRenderState_CPtr WindowedRenderer::get_monocular_render_state(size_t subwindowIndex) const
 {
-  return m_camera;
-}
-
-WindowedRenderer::RenderState_CPtr WindowedRenderer::get_monocular_render_state() const
-{
-  return m_renderState;
+  return get_subwindow_configuration()->subwindow(subwindowIndex).get_voxel_render_state();
 }
 
 bool WindowedRenderer::is_mono() const
@@ -68,28 +60,13 @@ bool WindowedRenderer::is_mono() const
   return true;
 }
 
-void WindowedRenderer::render(const Interactor_CPtr& interactor, const Vector2f& fracWindowPos) const
+void WindowedRenderer::render(const Vector2f& fracWindowPos) const
 {
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());
 
-  // Determine the camera pose.
-  SE3Pose pose;
-  switch(get_camera_mode())
-  {
-    case CM_FOLLOW:
-      pose = get_model()->get_pose();
-      break;
-    case CM_FREE:
-      pose = CameraPoseConverter::camera_to_pose(*m_camera);
-      break;
-    default:
-      // This should never happen.
-      throw std::runtime_error("Error: Unknown camera mode");
-  }
-
-  // Render the scene from that camera pose.
-  render_scene(pose, interactor, m_renderState, fracWindowPos);
+  // Render the scene.
+  render_scene(fracWindowPos);
 
   // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());

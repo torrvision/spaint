@@ -27,8 +27,7 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /** Override */
-  virtual void render_internal(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ORUtils::SE3Pose *pose,
-                               const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
+  virtual void render_internal(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
                                LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const;
 };
 

@@ -5,6 +5,7 @@
 
 #include "touch/TouchDetector.h"
 using namespace ITMLib;
+using namespace rafl;
 
 #include <boost/format.hpp>
 
@@ -14,12 +15,7 @@ using namespace tvgutil;
 #include "imageprocessing/ImageProcessorFactory.h"
 #include "touch/TouchDescriptorCalculator.h"
 #include "util/RGBDUtil.h"
-#include "visualisers/cpu/DepthVisualiser_CPU.h"
-using namespace rafl;
-
-#ifdef WITH_CUDA
-#include "visualisers/cuda/DepthVisualiser_CUDA.h"
-#endif
+#include "visualisation/VisualiserFactory.h"
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"
@@ -41,7 +37,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
+TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
 :
   // Debugging variables.
   m_debugDelayMs(30),
@@ -51,6 +47,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_changeMask(imgSize.y, imgSize.x),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
+  m_depthVisualiser(VisualiserFactory::make_depth_visualiser(itmSettings->deviceType)),
   m_diffRawRaycast(new af::array(imgSize.y, imgSize.x, f32)),
   m_imageHeight(imgSize.y),
   m_imageProcessor(ImageProcessorFactory::make_image_processor(itmSettings->deviceType)),
@@ -60,21 +57,6 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
   m_touchMask(new af::array(imgSize.y, imgSize.x, u8)),
   m_touchSettings(touchSettings)
 {
-  // Set up the depth visualiser.
-  if(itmSettings->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    m_depthVisualiser.reset(new DepthVisualiser_CUDA);
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU to false if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    m_depthVisualiser.reset(new DepthVisualiser_CPU);
-  }
-
   // Set the maximum and minimum areas (in pixels) of a connected change component for it to be considered a candidate touch interaction.
   // The thresholds are set relative to the image area to avoid depending on a particular size of image.
   const int imageArea = m_imageHeight * m_imageWidth;
@@ -92,7 +74,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const ITMSettings_CPtr& it
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+std::vector<Eigen::Vector2i> TouchDetector::determine_touch_points(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 try
 {
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
@@ -395,7 +377,7 @@ int TouchDetector::pick_best_candidate_component_based_on_forest(const af::array
   return bestCandidateID;
 }
 
-void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const RenderState_CPtr& renderState)
+void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, const ITMFloatImage_CPtr& rawDepth, const VoxelRenderState_CPtr& renderState)
 {
   // Make a copy of the raw depth image in which any parts of the scene that are at a distance of > 2m are set to -1.
   // We deliberately ignore parts of the scene that are > 2m away, since although they are picked up by the camera,

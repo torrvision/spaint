@@ -6,15 +6,10 @@
 #ifndef H_SPAINT_SELECTOR
 #define H_SPAINT_SELECTOR
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Objects/RenderStates/ITMRenderState.h>
-#include <ITMLib/Objects/Scene/ITMScene.h>
-#include <ITMLib/Utils/ITMLibSettings.h>
-
 #include <tvginput/InputState.h>
 
 #include "SelectorVisitor.h"
+#include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
 
@@ -25,11 +20,9 @@ class Selector
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef boost::shared_ptr<const ITMLib::ITMRenderState> RenderState_CPtr;
   typedef ORUtils::MemoryBlock<Vector3s> Selection;
   typedef boost::shared_ptr<Selection> Selection_Ptr;
   typedef boost::shared_ptr<const Selection> Selection_CPtr;
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> Settings_CPtr;
 
   //#################### PROTECTED VARIABLES ####################
 protected:
@@ -90,7 +83,7 @@ public:
    * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono) = 0;
+  virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono) = 0;
 };
 
 //#################### TYPEDEFS ####################

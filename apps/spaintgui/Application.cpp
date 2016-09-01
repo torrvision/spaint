@@ -39,14 +39,24 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const Pipeline_Ptr& pipeline)
+Application::Application(const MultiScenePipeline_Ptr& pipeline)
 : m_activeSubwindowIndex(0),
   m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
+  m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
+  // Set up the visualisation generator.
+  const Model_Ptr& model = pipeline->get_model();
+  m_visualisationGenerator.reset(new VisualisationGenerator(
+    model->get_voxel_visualisation_engine(),
+    model->get_surfel_visualisation_engine(),
+    model->get_label_manager(),
+    model->get_settings()
+  ));
+
   setup_labels();
   switch_to_windowed_renderer(1);
 }
@@ -76,10 +86,10 @@ void Application::run()
     }
 
     // Render the scene.
-    m_renderer->render(m_pipeline->get_interactor(), m_fracWindowPos);
+    m_renderer->render(m_fracWindowPos);
 
-    // If the application is unpaused, run the mode-specific section of the pipeline.
-    if(!m_paused) m_pipeline->run_mode_specific_section(get_monocular_render_state());
+    // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
+    if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
 
     // If we're currently recording a video, save the next frame of it to disk.
     if(m_videoPathGenerator) save_video_frame();
@@ -98,14 +108,30 @@ boost::filesystem::path Application::resources_dir()
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-Application::RenderState_CPtr Application::get_monocular_render_state() const
+const std::string& Application::get_active_scene_id() const
 {
-  switch(m_renderer->get_camera_mode())
+  return get_active_subwindow().get_scene_id();
+}
+
+Subwindow& Application::get_active_subwindow()
+{
+  return m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+}
+
+const Subwindow& Application::get_active_subwindow() const
+{
+  return m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
+}
+
+VoxelRenderState_CPtr Application::get_monocular_render_state() const
+{
+  const Subwindow& subwindow = get_active_subwindow();
+  switch(subwindow.get_camera_mode())
   {
-    case Renderer::CM_FOLLOW:
-      return m_pipeline->get_raycaster()->get_live_render_state();
-    case Renderer::CM_FREE:
-      return m_renderer->get_monocular_render_state();
+    case Subwindow::CM_FOLLOW:
+      return m_pipeline->get_model()->get_live_voxel_render_state(subwindow.get_scene_id());
+    case Subwindow::CM_FREE:
+      return m_renderer->get_monocular_render_state(m_activeSubwindowIndex);
     default:
       // This should never happen.
       throw std::runtime_error("Unknown camera mode");
@@ -121,7 +147,7 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size());
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id()));
   }
 
   return m_subwindowConfigurations[i];
@@ -138,10 +164,17 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_paused = false;
   }
 
-  // If the F key is pressed, toggle whether or not fusion is run as part of the pipeline.
+  // If the F key is pressed, toggle whether or not fusion is run for the active scene.
   if(keysym.sym == KEYCODE_f)
   {
-    m_pipeline->set_fusion_enabled(!m_pipeline->get_fusion_enabled());
+    const std::string& sceneID = get_active_scene_id();
+    m_pipeline->set_fusion_enabled(sceneID, !m_pipeline->get_fusion_enabled(sceneID));
+  }
+
+  // If the P key is pressed, toggle pose mirroring.
+  if(keysym.sym == KEYCODE_p)
+  {
+    m_usePoseMirroring = !m_usePoseMirroring;
   }
 
   // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
@@ -153,29 +186,30 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
-    const Interactor_Ptr& interactor = m_pipeline->get_interactor();
+    const Model_Ptr& model = m_pipeline->get_model();
+    const std::string& sceneID = get_active_scene_id();
     if(m_inputState.key_down(KEYCODE_RCTRL) && m_inputState.key_down(KEYCODE_RSHIFT))
     {
-      // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene, and reset the random forest and command manager.
-      interactor->clear_labels(ClearingSettings(CLEAR_ALL, 0, 0));
-      m_pipeline->reset_forest();
+      // If right control + right shift + backspace is pressed, clear the semantic labels of all the voxels in the active scene, and reset the random forest and command manager.
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_ALL, 0, 0));
+      m_pipeline->reset_forest(sceneID);
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RCTRL))
     {
       // If right control + backspace is pressed, clear the labels of all voxels with the current semantic label, and reset the command manager.
-      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL, 0, interactor->get_semantic_label()));
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_EQ_LABEL, 0, model->get_semantic_label()));
       m_commandManager.reset();
     }
     else if(m_inputState.key_down(KEYCODE_RSHIFT))
     {
-      // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the scene that were not labelled by the user.
-      interactor->clear_labels(ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
+      // If right shift + backspace is pressed, clear the semantic labels of all the voxels in the active scene that were not labelled by the user.
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_NEQ_GROUP, SpaintVoxel::LG_USER, 0));
     }
     else
     {
       // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
-      interactor->clear_labels(ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, interactor->get_semantic_label()));
+      model->clear_labels(sceneID, ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
     }
   }
 
@@ -205,7 +239,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Q = Move Up\n"
               << "E = Move Down\n"
               << "F = Toggle Fusion\n"
-              << "P = Toggle Phong Lighting\n"
+              << "P = Toggle Pose Mirroring\n"
               << "Up = Look Down\n"
               << "Down = Look Up\n"
               << "Left = Turn Left\n"
@@ -213,6 +247,13 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "C + 1 = To Semantic Lambertian Raycast\n"
               << "C + 2 = To Semantic Phong Raycast\n"
               << "C + 3 = To Semantic Colour Raycast\n"
+              << "C + 4 = To Semantic Flat Raycast\n"
+              << "C + 5 = To Colour Raycast\n"
+              << "C + 6 = To Normal Raycast\n"
+              << "C + 7 = To Depth Raycast\n"
+              << "C + 8 = To Confidence Raycast\n"
+              << "C + 9 = To Colour Input\n"
+              << "C + 0 = To Depth Input\n"
               << "I + 1 = To Null Selector\n"
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
@@ -294,21 +335,22 @@ void Application::handle_mousebutton_up(const SDL_MouseButtonEvent& e)
 
 void Application::process_camera_input()
 {
-  // Allow the user to switch camera modes.
+  // Allow the user to change the camera mode of the active sub-window.
+  Subwindow& activeSubwindow = get_active_subwindow();
   if(m_inputState.key_down(KEYCODE_v))
   {
-    if(m_inputState.key_down(KEYCODE_1)) m_renderer->set_camera_mode(Renderer::CM_FOLLOW);
-    else if(m_inputState.key_down(KEYCODE_2)) m_renderer->set_camera_mode(Renderer::CM_FREE);
+    if(m_inputState.key_down(KEYCODE_1)) activeSubwindow.set_camera_mode(Subwindow::CM_FOLLOW);
+    else if(m_inputState.key_down(KEYCODE_2)) activeSubwindow.set_camera_mode(Subwindow::CM_FREE);
   }
 
-  // If we're in free camera mode, allow the user to move the camera around.
-  if(m_renderer->get_camera_mode() == Renderer::CM_FREE)
+  // If the active sub-window is in free camera mode, allow the user to move its camera around.
+  if(activeSubwindow.get_camera_mode() == Subwindow::CM_FREE)
   {
     const float SPEED = 0.1f;
     const float ANGULAR_SPEED = 0.05f;
     static const Eigen::Vector3f UP(0.0f, -1.0f, 0.0f);
 
-    MoveableCamera_Ptr camera = m_renderer->get_camera();
+    MoveableCamera_Ptr camera = activeSubwindow.get_camera();
 
     if(m_inputState.key_down(KEYCODE_w)) camera->move_n(SPEED);
     if(m_inputState.key_down(KEYCODE_s)) camera->move_n(-SPEED);
@@ -321,6 +363,21 @@ void Application::process_camera_input()
     if(m_inputState.key_down(KEYCODE_LEFT)) camera->rotate(UP, ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_UP)) camera->rotate(camera->u(), ANGULAR_SPEED);
     if(m_inputState.key_down(KEYCODE_DOWN)) camera->rotate(camera->u(), -ANGULAR_SPEED);
+
+    // If pose mirroring is enabled, set the cameras of all other sub-windows that show the same scene
+    // and are in free camera mode to have the same pose as this one.
+    if(m_usePoseMirroring)
+    {
+      const SubwindowConfiguration_Ptr& subwindowConfiguration = m_renderer->get_subwindow_configuration();
+      for(size_t i = 0, subwindowCount = subwindowConfiguration->subwindow_count(); i < subwindowCount; ++i)
+      {
+        Subwindow& subwindow = subwindowConfiguration->subwindow(i);
+        if(subwindow.get_scene_id() == get_active_scene_id() && subwindow.get_camera_mode() == Subwindow::CM_FREE)
+        {
+          subwindow.get_camera()->set_from(*camera);
+        }
+      }
+    }
   }
 }
 
@@ -404,9 +461,9 @@ void Application::process_labelling_input()
 {
   // Allow the user to change the current semantic label.
   static bool canChangeLabel = true;
-  const Interactor_Ptr& interactor = m_pipeline->get_interactor();
-  LabelManager_CPtr labelManager = m_pipeline->get_model()->get_label_manager();
-  SpaintVoxel::Label semanticLabel = interactor->get_semantic_label();
+  const Model_Ptr& model = m_pipeline->get_model();
+  LabelManager_CPtr labelManager = model->get_label_manager();
+  SpaintVoxel::Label semanticLabel = model->get_semantic_label();
 
   if(m_inputState.key_down(KEYCODE_RSHIFT) && m_inputState.key_down(KEYCODE_RIGHTBRACKET))
   {
@@ -420,10 +477,10 @@ void Application::process_labelling_input()
   }
   else canChangeLabel = true;
 
-  interactor->set_semantic_label(semanticLabel);
+  model->set_semantic_label(semanticLabel);
 
   // Update the current selector.
-  interactor->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
+  model->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
 
   // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
   static bool currentlyMarking = false;
@@ -434,10 +491,10 @@ void Application::process_labelling_input()
   static std::map<std::string,std::string> precursors = map_list_of(beginMarkVoxelsDesc,markVoxelsDesc)(markVoxelsDesc,markVoxelsDesc);
 
   // If the current selector is active:
-  if(interactor->selector_is_active())
+  if(model->get_selector()->is_active())
   {
     // Get the voxels selected by the user (if any).
-    Selector::Selection_CPtr selection = interactor->get_selection();
+    Selector::Selection_CPtr selection = model->get_selection();
 
     // If there are selected voxels, mark the voxels with the current semantic label.
     if(selection)
@@ -451,9 +508,9 @@ void Application::process_labelling_input()
           m_commandManager.execute_command(Command_CPtr(new NoOpCommand(beginMarkVoxelsDesc)));
           currentlyMarking = true;
         }
-        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(selection, packedLabel, interactor)), precursors);
+        m_commandManager.execute_compressible_command(Command_CPtr(new MarkVoxelsCommand(get_active_scene_id(), selection, packedLabel, model)), precursors);
       }
-      else interactor->mark_voxels(selection, packedLabel);
+      else model->mark_voxels(get_active_scene_id(), selection, packedLabel, NORMAL_MARKING);
     }
   }
   else if(currentlyMarking)
@@ -465,16 +522,16 @@ void Application::process_labelling_input()
 
 void Application::process_mode_input()
 {
-  Pipeline::Mode mode = m_pipeline->get_mode();
+  MultiScenePipeline::Mode mode = m_pipeline->get_mode();
   if(m_inputState.key_down(KEYCODE_m))
   {
-    if(m_inputState.key_down(KEYCODE_1))      mode = Pipeline::MODE_NORMAL;
-    else if(m_inputState.key_down(KEYCODE_2)) mode = Pipeline::MODE_PROPAGATION;
-    else if(m_inputState.key_down(KEYCODE_3)) mode = Pipeline::MODE_TRAINING;
-    else if(m_inputState.key_down(KEYCODE_4)) mode = Pipeline::MODE_PREDICTION;
-    else if(m_inputState.key_down(KEYCODE_5)) mode = Pipeline::MODE_TRAIN_AND_PREDICT;
-    else if(m_inputState.key_down(KEYCODE_6)) mode = Pipeline::MODE_SMOOTHING;
-    else if(m_inputState.key_down(KEYCODE_7)) mode = Pipeline::MODE_FEATURE_INSPECTION;
+    if(m_inputState.key_down(KEYCODE_1))      mode = MultiScenePipeline::MODE_NORMAL;
+    else if(m_inputState.key_down(KEYCODE_2)) mode = MultiScenePipeline::MODE_PROPAGATION;
+    else if(m_inputState.key_down(KEYCODE_3)) mode = MultiScenePipeline::MODE_TRAINING;
+    else if(m_inputState.key_down(KEYCODE_4)) mode = MultiScenePipeline::MODE_PREDICTION;
+    else if(m_inputState.key_down(KEYCODE_5)) mode = MultiScenePipeline::MODE_TRAIN_AND_PREDICT;
+    else if(m_inputState.key_down(KEYCODE_6)) mode = MultiScenePipeline::MODE_SMOOTHING;
+    else if(m_inputState.key_down(KEYCODE_7)) mode = MultiScenePipeline::MODE_FEATURE_INSPECTION;
   }
   m_pipeline->set_mode(mode);
 }
@@ -524,14 +581,25 @@ void Application::process_renderer_input()
   // Allow the user to change the visualisation type of the active sub-window.
   if(m_inputState.key_down(KEYCODE_c))
   {
-    Subwindow& subwindow = m_renderer->get_subwindow_configuration()->subwindow(m_activeSubwindowIndex);
-    subwindow.set_type(
-      m_inputState.key_down(KEYCODE_1) ? Raycaster::RT_SEMANTICLAMBERTIAN :
-      m_inputState.key_down(KEYCODE_2) ? Raycaster::RT_SEMANTICPHONG :
-      m_inputState.key_down(KEYCODE_3) ? Raycaster::RT_SEMANTICCOLOUR :
-      m_inputState.key_down(KEYCODE_4) ? Raycaster::RT_SEMANTICFLAT :
-      subwindow.get_type()
-    );
+    Subwindow& subwindow = get_active_subwindow();
+    boost::optional<VisualisationGenerator::VisualisationType> type =
+      m_inputState.key_down(KEYCODE_1) ? VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN :
+      m_inputState.key_down(KEYCODE_2) ? VisualisationGenerator::VT_SCENE_SEMANTICPHONG :
+      m_inputState.key_down(KEYCODE_3) ? VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR :
+      m_inputState.key_down(KEYCODE_4) ? VisualisationGenerator::VT_SCENE_SEMANTICFLAT :
+      m_inputState.key_down(KEYCODE_5) ? VisualisationGenerator::VT_SCENE_COLOUR :
+      m_inputState.key_down(KEYCODE_6) ? VisualisationGenerator::VT_SCENE_NORMAL :
+      m_inputState.key_down(KEYCODE_7) ? VisualisationGenerator::VT_SCENE_DEPTH :
+      m_inputState.key_down(KEYCODE_8) ? VisualisationGenerator::VT_SCENE_CONFIDENCE :
+      m_inputState.key_down(KEYCODE_9) ? VisualisationGenerator::VT_INPUT_COLOUR :
+      m_inputState.key_down(KEYCODE_0) ? boost::optional<VisualisationGenerator::VisualisationType>(VisualisationGenerator::VT_INPUT_DEPTH) :
+      boost::none;
+
+    if(type)
+    {
+      subwindow.set_type(*type);
+      subwindow.set_surfel_flag(m_inputState.key_down(KEYCODE_LSHIFT));
+    }
   }
 }
 
@@ -557,20 +625,20 @@ void Application::process_voice_input()
     {
       SpaintVoxel::Label label = static_cast<SpaintVoxel::Label>(i);
       std::string changeLabelCommand = "label " + labelManager->get_label_name(label);
-      if(command == changeLabelCommand) m_pipeline->get_interactor()->set_semantic_label(label);
+      if(command == changeLabelCommand) m_pipeline->get_model()->set_semantic_label(label);
     }
 
-    // Process any requests to disable/enable fusion.
-    if(command == "disable fusion") m_pipeline->set_fusion_enabled(false);
-    if(command == "enable fusion") m_pipeline->set_fusion_enabled(true);
+    // Process any requests to disable/enable fusion for the active scene.
+    if(command == "disable fusion") m_pipeline->set_fusion_enabled(get_active_scene_id(), false);
+    if(command == "enable fusion") m_pipeline->set_fusion_enabled(get_active_scene_id(), true);
 
     // Process any requests to change pipeline mode.
-    if(command == "switch to normal mode") m_pipeline->set_mode(Pipeline::MODE_NORMAL);
-    if(command == "switch to propagation mode") m_pipeline->set_mode(Pipeline::MODE_PROPAGATION);
-    if(command == "switch to training mode") m_pipeline->set_mode(Pipeline::MODE_TRAINING);
-    if(command == "switch to prediction mode") m_pipeline->set_mode(Pipeline::MODE_PREDICTION);
-    if(command == "switch to correction mode") m_pipeline->set_mode(Pipeline::MODE_TRAIN_AND_PREDICT);
-    if(command == "switch to smoothing mode") m_pipeline->set_mode(Pipeline::MODE_SMOOTHING);
+    if(command == "switch to normal mode") m_pipeline->set_mode(MultiScenePipeline::MODE_NORMAL);
+    if(command == "switch to propagation mode") m_pipeline->set_mode(MultiScenePipeline::MODE_PROPAGATION);
+    if(command == "switch to training mode") m_pipeline->set_mode(MultiScenePipeline::MODE_TRAINING);
+    if(command == "switch to prediction mode") m_pipeline->set_mode(MultiScenePipeline::MODE_PREDICTION);
+    if(command == "switch to correction mode") m_pipeline->set_mode(MultiScenePipeline::MODE_TRAIN_AND_PREDICT);
+    if(command == "switch to smoothing mode") m_pipeline->set_mode(MultiScenePipeline::MODE_SMOOTHING);
   }
 }
 
@@ -584,16 +652,19 @@ void Application::save_screenshot() const
 
 void Application::save_sequence_frame()
 {
+  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
+  const std::string& sceneID = mainSubwindow.get_scene_id();
+
   // If the RGBD calibration hasn't already been saved, save it now.
   boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";
   if(!boost::filesystem::exists(calibrationFile))
   {
-    writeRGBDCalib(calibrationFile.string().c_str(), *m_pipeline->get_model()->get_view()->calib);
+    writeRGBDCalib(calibrationFile.string().c_str(), *m_pipeline->get_model()->get_view(sceneID)->calib);
   }
 
   // Save the current input images.
-  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
-  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(sceneID), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
+  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(sceneID), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
   m_sequencePathGenerator->increment_index();
 }
 
@@ -638,7 +709,7 @@ void Application::setup_labels()
   }
 
   // Set the initial semantic label to use for painting.
-  m_pipeline->get_interactor()->set_semantic_label(1);
+  m_pipeline->get_model()->set_semantic_label(1);
 }
 
 #ifdef WITH_OVR
@@ -648,7 +719,7 @@ void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
   SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(riftSubwindowConfigurationIndex);
   if(!subwindowConfiguration) return;
 
-  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, mode));
+  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_visualisationGenerator, subwindowConfiguration, mode));
 }
 #endif
 
@@ -658,10 +729,10 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size();
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id());
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_pipeline->get_raycaster(), subwindowConfiguration, windowViewportSize));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_visualisationGenerator, subwindowConfiguration, windowViewportSize));
 }
 
 void Application::toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator)

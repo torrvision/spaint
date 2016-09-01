@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "visualisers/interface/SemanticVisualiser.h"
+#include "visualisation/interface/SemanticVisualiser.h"
 
 #include "util/MemoryBlockFactory.h"
 
@@ -21,10 +21,8 @@ SemanticVisualiser::~SemanticVisualiser() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void SemanticVisualiser::render(const ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> *scene, const ORUtils::SE3Pose *pose,
-                                const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
-                                const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha,
-                                ITMUChar4Image *outputImage) const
+void SemanticVisualiser::render(const SpaintVoxelScene *scene, const ORUtils::SE3Pose *pose, const ITMLib::ITMIntrinsics *intrinsics, const ITMLib::ITMRenderState *renderState,
+                                const std::vector<Vector3u>& labelColours, LightingType lightingType, float labelAlpha, ITMUChar4Image *outputImage) const
 {
   // Update the label colours in the memory block.
   Vector3u *labelColoursData = m_labelColoursMB->GetData(MEMORYDEVICE_CPU);

@@ -6,7 +6,7 @@ OPTION(WITH_LEAP "Build with Leap Motion support?" OFF)
 
 IF(WITH_LEAP)
   IF(MSVC_IDE)
-    FIND_PATH(LEAP_ROOT head_sha.txt HINTS "$ENV{HOMEPATH}/Downloads/LeapDeveloperKit_2.2.1+24116_win/LeapSDK")
+    FIND_PATH(LEAP_ROOT head_sha.txt HINTS "$ENV{HOMEPATH}/Downloads/LeapDeveloperKit_2.3.1+31549_win/LeapSDK")
     FIND_LIBRARY(LEAP_LIBRARY Leap HINTS "${LEAP_ROOT}/lib/x64")
   ELSEIF(APPLE)
     FIND_PATH(LEAP_ROOT head_sha.txt HINTS ~/Downloads/LeapDeveloperKit_2.2.1+24116_mac/LeapSDK)
