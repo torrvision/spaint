@@ -29,6 +29,7 @@ private:
    */
   struct RGBDImage
   {
+    ITMLib::ITMRGBDCalib calib;
     ITMShortImage_Ptr rawDepth;
     ITMUChar4Image_Ptr rgb;
   };
@@ -50,16 +51,8 @@ private:
   /** A condition variable used to wait for elements to be removed from the buffer. */
   boost::condition_variable m_bufferNotFull;
 
-  /** The size of depth image yielded by the existing image source. */
-  Vector2i m_depthImageSize;
-
   /** The thread on which images are grabbed from the existing image source. */
   boost::thread m_grabbingThread;
-
-  /** Signals if m_innerSource has more images (other than those already in m_bufferedImages).
-   *  Stores the result of the most recent call to m_innerSource->hasMoreImages().
-   */
-  bool m_hasMoreImages;
 
   /** The image source to be decorated. */
   ImageSourceEngine_Ptr m_innerSource;
@@ -69,9 +62,6 @@ private:
 
   /** The maximum number of elements that can be stored in the RGB-D image pool. */
   size_t m_rgbdImagePoolCapacity;
-
-  /** The size of RGB image yielded by the existing image source. */
-  Vector2i m_rgbImageSize;
 
   /** A flag set in the destructor to indicate that the grabbing thread should terminate. */
   bool m_terminate;
