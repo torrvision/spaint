@@ -9,7 +9,6 @@
 #include <queue>
 
 #include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include "../util/ITMImagePtrTypes.h"
 #include "../util/ITMObjectPtrTypes.h"
@@ -17,15 +16,18 @@
 namespace spaint {
 
 /**
- * \brief An instance of this class can be used to wrap an ImageSourceEngine in a separate thread.
- *        The actual image grabbing process is run in a different thread and having an in-memory buffer
- *        stores the cached images. This allows a latency reduction when processing a sequence stored on disk.
+ * \brief An instance of this class can be used to read RGB-D images asynchronously from an existing image source.
+ *        Images are read from the existing source on a separate thread and stored in an in-memory buffer. This
+ *        leads to lower latency when processing a disk sequence.
  */
 class AsyncImageSourceEngine : public InputSource::ImageSourceEngine
 {
   //#################### NESTED TYPES ####################
 private:
-  struct RGBDImagePair
+  /**
+   * \brief An instance of this struct can be used to represent an RGB-D image.
+   */
+  struct RGBDImage
   {
     ITMShortImage_Ptr rawDepth;
     ITMUChar4Image_Ptr rgb;
@@ -33,25 +35,25 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** Maximum number of elements allowed in the buffer. */
+  /** The maximum number of elements allowed in the buffer. */
   size_t m_bufferCapacity;
 
-  /** Queue of cached image pairs. */
-  std::queue<RGBDImagePair> m_bufferedImages;
+  /** A queue of cached RGB-D images. */
+  std::queue<RGBDImage> m_bufferedImages;
 
-  /** Synchronization mutex. */
+  /** The synchronisation mutex. */
   boost::mutex m_bufferMutex;
 
-  /** Condition variable used to wait for elements to be inserted in the buffer. */
+  /** A condition variable used to wait for elements to be inserted in the buffer. */
   boost::condition_variable m_bufferNotEmpty;
 
-  /** Condition variable used to wait for elements to be removed from the buffer. */
+  /** A condition variable used to wait for elements to be removed from the buffer. */
   boost::condition_variable m_bufferNotFull;
 
-  /** Image size for the depth images read by m_innerSource. */
+  /** The size of depth image yielded by the existing image source. */
   Vector2i m_depthImageSize;
 
-  /** The thread where the getImages() method of m_innerSource is called. */
+  /** The thread on which images are grabbed from the existing image source. */
   boost::thread m_grabbingThread;
 
   /** Signals if m_innerSource has more images (other than those already in m_bufferedImages).
@@ -59,31 +61,28 @@ private:
    */
   bool m_hasMoreImages;
 
-  /** The actual image source. */
+  /** The image source to be decorated. */
   ImageSourceEngine_Ptr m_innerSource;
 
-  /** Image size for the RGB images read by m_innerSource. */
-  Vector2i m_rgbImageSize;
+  /** A pool of reusable RGB-D images. */
+  std::queue<RGBDImage> m_rgbdImagePool;
 
-  /** A pool where previously used RGBDImagePair are stored to avoid continuously allocating and deallocating them. */
-  std::queue<RGBDImagePair> m_rgbdImagePool;
-
-  /** Maximum number of elements stored in m_rgbdImagePool. */
+  /** The maximum number of elements that can be stored in the RGB-D image pool. */
   size_t m_rgbdImagePoolCapacity;
 
-  /** Set to true when the inner thread must terminate (used in the destructor). */
+  /** The size of RGB image yielded by the existing image source. */
+  Vector2i m_rgbImageSize;
+
+  /** A flag set in the destructor to indicate that the grabbing thread should terminate. */
   bool m_terminate;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an AsyncImageSourceEngine.
-   *        An instance of this class can be used to wrap an ImageSourceEngine in a separate thread.
-   *        The actual image grabbing process is run in a different thread and having an in-memory buffer
-   *        stores the cached images. This allows a latency reduction when processing a sequence stored on disk.
+   * \brief Constructs an asynchronous image source engine.
    *
-   * \param innerSource    An ImageSourceEngine that will be queried in a separate thread.
-   * \param bufferCapacity The maximum number of elements that will be cached. 0 means no limit.
+   * \param innerSource    The image source to be decorated.
+   * \param bufferCapacity The maximum number of RGB-D images that will be cached (0 means no limit).
    */
   explicit AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity = 0);
 
@@ -113,7 +112,9 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  /** Loop executed by the inner thread to grab images from m_innerSource. */
+  /**
+   * \brief Loop executed by the inner thread to grab images from m_innerSource.
+   */
   void grabbing_loop();
 };
 

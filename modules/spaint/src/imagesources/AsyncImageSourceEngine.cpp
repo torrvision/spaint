@@ -29,7 +29,7 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
   // Fill the pool to avoid allocating memory at runtime (assuming m_bufferCapacity <= m_rgbdImagePoolCapacity).
   for (size_t i = 0; i < m_rgbdImagePoolCapacity; ++i)
   {
-    RGBDImagePair pair;
+    RGBDImage pair;
     pair.rgb.reset(new ITMUChar4Image(m_rgbImageSize, true, false));
     pair.rawDepth.reset(new ITMShortImage(m_depthImageSize, true, false));
 
@@ -76,7 +76,7 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
   // getImages should not be called if hasMoreImages returned false.
   if (m_bufferedImages.empty()) throw std::runtime_error("No more images to get. Need to call hasMoreImages() before getImages()");
 
-  RGBDImagePair &imagePair = m_bufferedImages.front();
+  RGBDImage &imagePair = m_bufferedImages.front();
 
   // Copy images
   rgb->SetFrom(imagePair.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
@@ -136,7 +136,7 @@ void AsyncImageSourceEngine::grabbing_loop()
       return;
     }
 
-    RGBDImagePair newImages;
+    RGBDImage newImages;
     if (!m_rgbdImagePool.empty())
     {
       // If m_rgbdImagePool contains a preallocated pair use that instead of allocating new memory
