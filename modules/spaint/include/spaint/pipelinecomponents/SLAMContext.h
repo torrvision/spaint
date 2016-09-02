@@ -97,12 +97,28 @@ public:
   virtual const ITMShortImage_Ptr& get_input_raw_depth_image(const std::string& sceneID);
 
   /**
+   * \brief Gets a copy of the image into which depth input is read each frame for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        A copy of the image into which depth input is read each frame for the specified scene.
+   */
+  virtual ITMShortImage_Ptr get_input_raw_depth_image_copy(const std::string& sceneID) const;
+
+  /**
    * \brief Gets the image into which RGB input is read each frame for the specified scene.
    *
    * \param sceneID The scene ID.
    * \return        The image into which RGB input is read each frame for the specified scene.
    */
   virtual const ITMUChar4Image_Ptr& get_input_rgb_image(const std::string& sceneID);
+
+  /**
+   * \brief Gets a copy of the image into which RGB input is read each frame for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        A copy of the image into which RGB input is read each frame for the specified scene.
+   */
+  virtual ITMUChar4Image_Ptr get_input_rgb_image_copy(const std::string& sceneID) const;
 
   /**
    * \brief Gets the intrinsic parameters for the camera that is being used to reconstruct the specified scene.

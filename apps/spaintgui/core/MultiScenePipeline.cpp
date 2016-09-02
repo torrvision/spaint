@@ -51,22 +51,6 @@ bool MultiScenePipeline::get_fusion_enabled(const std::string& sceneID) const
   return MapUtil::lookup(m_singleScenePipelines, sceneID).m_slamComponent->get_fusion_enabled();
 }
 
-ITMShortImage_Ptr MultiScenePipeline::get_input_raw_depth_image_copy(const std::string& sceneID) const
-{
-  ITMShortImage_CPtr inputRawDepthImage = m_model->get_input_raw_depth_image(sceneID);
-  ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
-  copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
-  return copy;
-}
-
-ITMUChar4Image_Ptr MultiScenePipeline::get_input_rgb_image_copy(const std::string& sceneID) const
-{
-  ITMUChar4Image_CPtr inputRGBImage = m_model->get_input_rgb_image(sceneID);
-  ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
-  copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
-  return copy;
-}
-
 MultiScenePipeline::Mode MultiScenePipeline::get_mode() const
 {
   return m_mode;

@@ -647,15 +647,16 @@ void Application::save_sequence_frame()
   const std::string& sceneID = mainSubwindow.get_scene_id();
 
   // If the RGBD calibration hasn't already been saved, save it now.
+  Model_CPtr model = m_pipeline->get_model();
   boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";
   if(!boost::filesystem::exists(calibrationFile))
   {
-    writeRGBDCalib(calibrationFile.string().c_str(), *m_pipeline->get_model()->get_view(sceneID)->calib);
+    writeRGBDCalib(calibrationFile.string().c_str(), *model->get_view(sceneID)->calib);
   }
 
   // Save the current input images.
-  ImagePersister::save_image_on_thread(m_pipeline->get_input_raw_depth_image_copy(sceneID), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
-  ImagePersister::save_image_on_thread(m_pipeline->get_input_rgb_image_copy(sceneID), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+  ImagePersister::save_image_on_thread(model->get_input_raw_depth_image_copy(sceneID), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
+  ImagePersister::save_image_on_thread(model->get_input_rgb_image_copy(sceneID), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
   m_sequencePathGenerator->increment_index();
 }
 

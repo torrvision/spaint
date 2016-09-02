@@ -24,9 +24,25 @@ const ITMShortImage_Ptr& SLAMContext::get_input_raw_depth_image(const std::strin
   return get_single_scene_context(sceneID).m_inputRawDepthImage;
 }
 
+ITMShortImage_Ptr SLAMContext::get_input_raw_depth_image_copy(const std::string& sceneID) const
+{
+  ITMShortImage_CPtr inputRawDepthImage = get_single_scene_context(sceneID).m_inputRawDepthImage;
+  ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
+  copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
+  return copy;
+}
+
 const ITMUChar4Image_Ptr& SLAMContext::get_input_rgb_image(const std::string& sceneID)
 {
   return get_single_scene_context(sceneID).m_inputRGBImage;
+}
+
+ITMUChar4Image_Ptr SLAMContext::get_input_rgb_image_copy(const std::string& sceneID) const
+{
+  ITMUChar4Image_CPtr inputRGBImage = get_single_scene_context(sceneID).m_inputRGBImage;
+  ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
+  copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  return copy;
 }
 
 const ITMIntrinsics& SLAMContext::get_intrinsics(const std::string& sceneID) const
