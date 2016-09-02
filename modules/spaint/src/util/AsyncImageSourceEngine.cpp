@@ -21,6 +21,17 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
   m_rgbImageSize = m_innerSource->getRGBImageSize();
   m_depthImageSize = m_innerSource->getDepthImageSize();
 
+  m_rgbdImagePoolCapacity = std::min<size_t>(m_bufferCapacity, 60);
+  // Fill the pool to avoid allocating memory at runtime (assuming m_bufferCapacity <= m_rgbdImagePoolCapacity).
+  for (size_t i = 0; i < m_rgbdImagePoolCapacity; ++i)
+  {
+    RGBDImagePair pair;
+    pair.rgb.reset(new ITMUChar4Image(m_rgbImageSize, true, false));
+    pair.rawDepth.reset(new ITMShortImage(m_depthImageSize, true, false));
+
+    m_rgbdImagePool.push(pair);
+  }
+
   m_terminate = false;
   m_hasMoreImages = m_innerSource->hasMoreImages();
 
@@ -45,7 +56,7 @@ void AsyncImageSourceEngine::grabbingLoop()
     boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
     // If the buffer is full wait until some images have been consumed or termination is requested.
-    while (!m_terminate && m_bufferedImages.size() > m_bufferCapacity) m_bufferNotFull.wait(lock);
+    while (!m_terminate && m_bufferedImages.size() >= m_bufferCapacity) m_bufferNotFull.wait(lock);
 
     // If we need to terminate, return.
     if (m_terminate)
@@ -53,17 +64,26 @@ void AsyncImageSourceEngine::grabbingLoop()
       return;
     }
 
-    if (!m_innerSource->hasMoreImages())
+    m_hasMoreImages = m_innerSource->hasMoreImages();
+    if (!m_hasMoreImages)
     {
-      m_hasMoreImages = false;
       m_bufferNotEmpty.notify_one(); // Wake up waiting thread
       return;
     }
 
-    // CPU-only allocation
     RGBDImagePair newImages;
-    newImages.rgb.reset(new ITMUChar4Image(m_rgbImageSize, true, false));
-    newImages.rawDepth.reset(new ITMShortImage(m_depthImageSize, true, false));
+    if (!m_rgbdImagePool.empty())
+    {
+      // If m_rgbdImagePool contains a preallocated pair use that instead of allocating new memory
+      newImages = m_rgbdImagePool.front();
+      m_rgbdImagePool.pop();
+    }
+    else
+    {
+      // Perform CPU-only allocation
+      newImages.rgb.reset(new ITMUChar4Image(m_rgbImageSize, true, false));
+      newImages.rawDepth.reset(new ITMShortImage(m_depthImageSize, true, false));
+    }
 
     // Get image data
     m_innerSource->getImages(newImages.rgb.get(), newImages.rawDepth.get());
@@ -94,12 +114,12 @@ bool AsyncImageSourceEngine::hasMoreImages()
   return !m_bufferedImages.empty();
 }
 
-Vector2i AsyncImageSourceEngine::getRGBImageSize(void)
+Vector2i AsyncImageSourceEngine::getRGBImageSize()
 {
   return m_rgbImageSize;
 }
 
-Vector2i AsyncImageSourceEngine::getDepthImageSize(void)
+Vector2i AsyncImageSourceEngine::getDepthImageSize()
 {
   return m_depthImageSize;
 }
@@ -114,13 +134,19 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
   // getImages should not be called if hasMoreImages returned false.
   if (m_bufferedImages.empty()) throw std::runtime_error("No more images to get. Need to call hasMoreImages() before getImages()");
 
-  const RGBDImagePair &imagePair = m_bufferedImages.front();
+  RGBDImagePair &imagePair = m_bufferedImages.front();
 
   // Copy images
   rgb->SetFrom(imagePair.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
   rawDepth->SetFrom(imagePair.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
 
-  m_bufferedImages.pop();
+  // If there is space available in m_rgbdImagePool, store the imagePair to avoid reallocating memory later.
+  if (m_rgbdImagePool.size() < m_rgbdImagePoolCapacity)
+  {
+    m_rgbdImagePool.push(imagePair);
+  }
+
+  m_bufferedImages.pop(); // Remove element from the buffer.
   // Notify producer that the buffer has one less element.
   m_bufferNotFull.notify_one();
 }

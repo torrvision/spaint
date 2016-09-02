@@ -66,6 +66,12 @@ private:
   /** Image size for the RGB images read by m_innerSource. */
   Vector2i m_rgbImageSize;
 
+  /** A pool where previously used RGBDImagePair are stored to avoid continuously allocating and deallocating them. */
+  std::queue<RGBDImagePair> m_rgbdImagePool;
+
+  /** Maximum number of elements stored in m_rgbdImagePool. */
+  size_t m_rgbdImagePoolCapacity;
+
   /** Set to true when the inner thread must terminate (used in the destructor). */
   bool m_terminate;
 
