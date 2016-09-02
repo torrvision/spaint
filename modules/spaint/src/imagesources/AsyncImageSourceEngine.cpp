@@ -57,7 +57,7 @@ AsyncImageSourceEngine::~AsyncImageSourceEngine()
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-ITMLib::ITMRGBDCalib& AsyncImageSourceEngine::getCalib()
+ITMLib::ITMRGBDCalib AsyncImageSourceEngine::getCalib() const
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 

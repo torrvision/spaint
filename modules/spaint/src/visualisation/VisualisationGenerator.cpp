@@ -36,7 +36,7 @@ void VisualisationGenerator::generate_surfel_visualisation(const ITMUChar4Image_
 
   if(!renderState) renderState.reset(new ITMSurfelRenderState(view->depth->noDims, scene->GetParams().supersamplingFactor));
 
-  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
+  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
   const bool useRadii = true;
   m_surfelVisualisationEngine->FindSurface(scene.get(), &pose, intrinsics, useRadii, USR_DONOTRENDER, renderState.get());
 
@@ -103,7 +103,7 @@ void VisualisationGenerator::generate_voxel_visualisation(const ITMUChar4Image_P
 
   if(!renderState) renderState.reset(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(view->depth->noDims, scene->sceneParams, m_settings->GetMemoryType()));
 
-  const ITMIntrinsics *intrinsics = &view->calib->intrinsics_d;
+  const ITMIntrinsics *intrinsics = &view->calib.intrinsics_d;
   m_voxelVisualisationEngine->FindVisibleBlocks(scene.get(), &pose, intrinsics, renderState.get());
   m_voxelVisualisationEngine->CreateExpectedDepths(scene.get(), &pose, intrinsics, renderState.get());
 

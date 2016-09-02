@@ -31,7 +31,7 @@ const ITMUChar4Image_Ptr& SLAMContext::get_input_rgb_image(const std::string& sc
 
 const ITMIntrinsics& SLAMContext::get_intrinsics(const std::string& sceneID) const
 {
-  return get_single_scene_context(sceneID).m_view->calib->intrinsics_d;
+  return get_single_scene_context(sceneID).m_view->calib.intrinsics_d;
 }
 
 const SurfelRenderState_Ptr& SLAMContext::get_live_surfel_render_state(const std::string& sceneID)

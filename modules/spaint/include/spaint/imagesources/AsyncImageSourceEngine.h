@@ -43,7 +43,7 @@ private:
   std::queue<RGBDImage> m_bufferedImages;
 
   /** The synchronisation mutex. */
-  boost::mutex m_bufferMutex;
+  mutable boost::mutex m_bufferMutex;
 
   /** A condition variable used to wait for elements to be inserted in the buffer. */
   boost::condition_variable m_bufferNotEmpty;
@@ -86,7 +86,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual ITMLib::ITMRGBDCalib& getCalib();
+  virtual ITMLib::ITMRGBDCalib getCalib() const;
 
   /** Override */
   virtual Vector2i getDepthImageSize();
