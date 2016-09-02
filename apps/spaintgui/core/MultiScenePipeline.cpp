@@ -5,6 +5,7 @@
 
 #include "MultiScenePipeline.h"
 using namespace InputSource;
+using namespace ITMLib;
 using namespace spaint;
 
 #ifdef WITH_OPENCV
