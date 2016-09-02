@@ -40,6 +40,9 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
   // Set up the selection transformer.
   const int initialSelectionRadius = 2;
   m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, settings->deviceType);
+
+  // Set up the visualisation generator.
+  m_visualisationGenerator.reset(new VisualisationGenerator(m_voxelVisualisationEngine, m_surfelVisualisationEngine, m_labelManager, settings));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -94,6 +97,11 @@ const Settings_CPtr& Model::get_settings() const
 Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() const
 {
   return m_surfelVisualisationEngine;
+}
+
+VisualisationGenerator_CPtr Model::get_visualisation_generator() const
+{
+  return m_visualisationGenerator;
 }
 
 Model::VoxelVisualisationEngine_CPtr Model::get_voxel_visualisation_engine() const

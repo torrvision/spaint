@@ -48,15 +48,6 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline)
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
-  // Set up the visualisation generator.
-  const Model_Ptr& model = pipeline->get_model();
-  m_visualisationGenerator.reset(new VisualisationGenerator(
-    model->get_voxel_visualisation_engine(),
-    model->get_surfel_visualisation_engine(),
-    model->get_label_manager(),
-    model->get_settings()
-  ));
-
   setup_labels();
   switch_to_windowed_renderer(1);
 }
@@ -719,7 +710,7 @@ void Application::switch_to_rift_renderer(RiftRenderer::RiftRenderingMode mode)
   SubwindowConfiguration_Ptr subwindowConfiguration = get_subwindow_configuration(riftSubwindowConfigurationIndex);
   if(!subwindowConfiguration) return;
 
-  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), m_visualisationGenerator, subwindowConfiguration, mode));
+  m_renderer.reset(new RiftRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, mode));
 }
 #endif
 
@@ -732,7 +723,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id());
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
-  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), m_visualisationGenerator, subwindowConfiguration, windowViewportSize));
+  m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));
 }
 
 void Application::toggle_recording(const std::string& type, boost::optional<tvgutil::SequentialPathGenerator>& pathGenerator)

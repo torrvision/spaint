@@ -156,12 +156,10 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
-                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
 : m_medianFilteringEnabled(true),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
-  m_visualisationGenerator(visualisationGenerator),
   m_windowViewportSize(windowViewportSize)
 {
   // Reset the camera for each sub-window.
@@ -351,17 +349,19 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
                                       VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                                       const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
+  VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
+
   switch(visualisationType)
   {
     case VisualisationGenerator::VT_INPUT_COLOUR:
-      m_visualisationGenerator->get_rgb_input(output, view);
+      visualisationGenerator->get_rgb_input(output, view);
       break;
     case VisualisationGenerator::VT_INPUT_DEPTH:
-      m_visualisationGenerator->get_depth_input(output, view);
+      visualisationGenerator->get_depth_input(output, view);
       break;
     default:
-      if(surfelFlag) m_visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
-      else m_visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
+      if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
+      else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
       break;
   }
 }

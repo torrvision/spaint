@@ -15,6 +15,7 @@
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
 #include <spaint/util/SpaintVoxelScene.h>
+#include <spaint/visualisation/VisualisationGenerator.h>
 
 /**
  * \brief An instance of this class represents our model of the spaint scenario.
@@ -61,6 +62,9 @@ private:
 
   /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
+
+  /** The visualisation generator that is used to render a scene. */
+  spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   spaint::VoxelMarker_CPtr m_voxelMarker;
@@ -151,6 +155,13 @@ public:
    * \return  The InfiniTAM engine used for rendering a surfel scene.
    */
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
+
+  /**
+   * \brief Gets the visualisation generator that is used to render a scene.
+   *
+   * \return  The visualisation generator that is used to render a scene.
+   */
+  virtual spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
 
   /**
    * \brief Gets the InfiniTAM engine used for rendering a voxel scene.

@@ -42,9 +42,8 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
-                           const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode)
-: Renderer(model, visualisationGenerator, subwindowConfiguration, model->get_depth_image_size(Model::get_world_scene_id()))
+RiftRenderer::RiftRenderer(const std::string& title, const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode)
+: Renderer(model, subwindowConfiguration, model->get_depth_image_size(Model::get_world_scene_id()))
 {
   // Get a handle to the Rift.
   m_hmd = ovrHmd_Create(0);
