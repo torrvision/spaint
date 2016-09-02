@@ -31,8 +31,8 @@ using namespace ITMLib;
   #include <OVR_CAPI.h>
 #endif
 
-#include <spaint/util/MemoryBlockFactory.h>
 #include <spaint/util/AsyncImageSourceEngine.h>
+#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
 #include <tvgutil/filesystem/PathFinder.h>
@@ -51,6 +51,7 @@ struct CommandLineArguments
   bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
+  size_t prefetchBufferCapacity;
   std::string rgbImageMask;
   std::string sequenceName;
   std::string sequenceType;
@@ -82,6 +83,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
+    ("bufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
@@ -223,8 +225,7 @@ try
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
 
-    size_t asyncEngineBufferSize = 60; // Preload at most 60 frames in advance.
-    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber), asyncEngineBufferSize));
+    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber), args.prefetchBufferCapacity));
   }
 
   if(args.depthImageMask == "" || args.cameraAfterDisk)
