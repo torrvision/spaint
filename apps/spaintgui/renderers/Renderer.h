@@ -20,8 +20,6 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/visualisation/VisualisationGenerator.h>
-
 #include "../core/Model.h"
 #include "../subwindows/SubwindowConfiguration.h"
 

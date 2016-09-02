@@ -17,7 +17,8 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+WindowedRenderer::WindowedRenderer(const std::string& title, const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration,
+                                   const Vector2i& windowViewportSize)
 : Renderer(model, subwindowConfiguration, windowViewportSize)
 {
   // Create the window into which to render.

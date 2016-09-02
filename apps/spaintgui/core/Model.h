@@ -16,6 +16,7 @@
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
 #include <spaint/util/SpaintVoxelScene.h>
+#include <spaint/visualisation/VisualisationGenerator.h>
 
 /**
  * \brief An instance of this class represents our model of the spaint scenario.
