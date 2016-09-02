@@ -82,8 +82,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
-    ("bufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
@@ -224,8 +224,9 @@ try
   {
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
-
-    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber), args.prefetchBufferCapacity));
+    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(new ImageFileReader<ImageMaskPathGenerator>(
+      args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber), args.prefetchBufferCapacity
+    ));
   }
 
   if(args.depthImageMask == "" || args.cameraAfterDisk)
