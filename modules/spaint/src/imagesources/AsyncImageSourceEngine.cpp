@@ -82,6 +82,10 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
 
   RGBDImage &imagePair = m_bufferedImages.front();
 
+  // Resize output images (no-op in the typical case)
+  rgb->ChangeDims(imagePair.rgb->noDims);
+  rawDepth->ChangeDims(imagePair.rawDepth->noDims);
+
   // Copy images
   rgb->SetFrom(imagePair.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
   rawDepth->SetFrom(imagePair.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
