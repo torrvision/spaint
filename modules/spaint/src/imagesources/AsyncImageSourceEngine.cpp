@@ -3,12 +3,13 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include <util/AsyncImageSourceEngine.h>
+#include "imagesources/AsyncImageSourceEngine.h"
 
 #include <stdexcept>
 
-namespace spaint
-{
+namespace spaint {
+
+//#################### CONSTRUCTORS ####################
 
 AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity)
 {
@@ -38,8 +39,10 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
   m_terminate = false;
   m_hasMoreImages = m_innerSource->hasMoreImages();
 
-  m_grabbingThread = boost::thread(boost::bind(&AsyncImageSourceEngine::grabbingLoop, this));
+  m_grabbingThread = boost::thread(boost::bind(&AsyncImageSourceEngine::grabbing_loop, this));
 }
+
+//#################### DESTRUCTOR ####################
 
 AsyncImageSourceEngine::~AsyncImageSourceEngine()
 {
@@ -51,7 +54,66 @@ AsyncImageSourceEngine::~AsyncImageSourceEngine()
   m_grabbingThread.join();
 }
 
-void AsyncImageSourceEngine::grabbingLoop()
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+ITMLib::ITMRGBDCalib& AsyncImageSourceEngine::getCalib()
+{
+  return m_innerSource->getCalib();
+}
+
+Vector2i AsyncImageSourceEngine::getDepthImageSize()
+{
+  return m_depthImageSize;
+}
+
+void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
+{
+  boost::unique_lock<boost::mutex> lock(m_bufferMutex);
+
+  // Wait until an image pair is ready
+  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
+
+  // getImages should not be called if hasMoreImages returned false.
+  if (m_bufferedImages.empty()) throw std::runtime_error("No more images to get. Need to call hasMoreImages() before getImages()");
+
+  RGBDImagePair &imagePair = m_bufferedImages.front();
+
+  // Copy images
+  rgb->SetFrom(imagePair.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
+  rawDepth->SetFrom(imagePair.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
+
+  // If there is space available in m_rgbdImagePool, store the imagePair to avoid reallocating memory later.
+  if (m_rgbdImagePool.size() < m_rgbdImagePoolCapacity)
+  {
+    m_rgbdImagePool.push(imagePair);
+  }
+
+  m_bufferedImages.pop(); // Remove element from the buffer.
+  // Notify producer that the buffer has one less element.
+  m_bufferNotFull.notify_one();
+}
+
+Vector2i AsyncImageSourceEngine::getRGBImageSize()
+{
+  return m_rgbImageSize;
+}
+
+bool AsyncImageSourceEngine::hasMoreImages()
+{
+  // Need to grab the mutex in case the buffer is empty, since then we will need to wait to see if one image is coming
+  boost::unique_lock<boost::mutex> lock(m_bufferMutex);
+
+  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
+
+  // If the buffer is empty it means that the other thread finished its work
+  if (m_bufferedImages.empty() && m_hasMoreImages) throw std::runtime_error("Synchronization error.");
+
+  return !m_bufferedImages.empty();
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void AsyncImageSourceEngine::grabbing_loop()
 {
   while (!m_terminate)
   {
@@ -99,58 +161,4 @@ void AsyncImageSourceEngine::grabbingLoop()
   }
 }
 
-ITMLib::ITMRGBDCalib& AsyncImageSourceEngine::getCalib()
-{
-  return m_innerSource->getCalib();
-}
-
-bool AsyncImageSourceEngine::hasMoreImages()
-{
-  // Need to grab the mutex in case the buffer is empty, since then we will need to wait to see if one image is coming
-  boost::unique_lock<boost::mutex> lock(m_bufferMutex);
-
-  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
-
-  // If the buffer is empty it means that the other thread finished its work
-  if (m_bufferedImages.empty() && m_hasMoreImages) throw std::runtime_error("Synchronization error.");
-
-  return !m_bufferedImages.empty();
-}
-
-Vector2i AsyncImageSourceEngine::getRGBImageSize()
-{
-  return m_rgbImageSize;
-}
-
-Vector2i AsyncImageSourceEngine::getDepthImageSize()
-{
-  return m_depthImageSize;
-}
-
-void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
-{
-  boost::unique_lock<boost::mutex> lock(m_bufferMutex);
-
-  // Wait until an image pair is ready
-  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
-
-  // getImages should not be called if hasMoreImages returned false.
-  if (m_bufferedImages.empty()) throw std::runtime_error("No more images to get. Need to call hasMoreImages() before getImages()");
-
-  RGBDImagePair &imagePair = m_bufferedImages.front();
-
-  // Copy images
-  rgb->SetFrom(imagePair.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
-  rawDepth->SetFrom(imagePair.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
-
-  // If there is space available in m_rgbdImagePool, store the imagePair to avoid reallocating memory later.
-  if (m_rgbdImagePool.size() < m_rgbdImagePoolCapacity)
-  {
-    m_rgbdImagePool.push(imagePair);
-  }
-
-  m_bufferedImages.pop(); // Remove element from the buffer.
-  // Notify producer that the buffer has one less element.
-  m_bufferNotFull.notify_one();
-}
 }

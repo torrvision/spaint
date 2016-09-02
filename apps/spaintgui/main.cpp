@@ -31,7 +31,7 @@ using namespace ITMLib;
   #include <OVR_CAPI.h>
 #endif
 
-#include <spaint/util/AsyncImageSourceEngine.h>
+#include <spaint/imagesources/AsyncImageSourceEngine.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 

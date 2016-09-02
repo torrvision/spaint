@@ -8,14 +8,13 @@
 
 #include <queue>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include <InputSource/ImageSourceEngine.h>
+#include "../util/ITMImagePtrTypes.h"
+#include "../util/ITMObjectPtrTypes.h"
 
-namespace spaint
-{
+namespace spaint {
 
 /**
  * \brief An instance of this class can be used to wrap an ImageSourceEngine in a separate thread.
@@ -24,16 +23,16 @@ namespace spaint
  */
 class AsyncImageSourceEngine : public InputSource::ImageSourceEngine
 {
-private:
-
   //#################### NESTED TYPES ####################
+private:
   struct RGBDImagePair
   {
-    boost::shared_ptr<ITMUChar4Image> rgb;
-    boost::shared_ptr<ITMShortImage> rawDepth;
+    ITMShortImage_Ptr rawDepth;
+    ITMUChar4Image_Ptr rgb;
   };
 
-  //#################### PRIVATE VARIABLES ###############
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** Maximum number of elements allowed in the buffer. */
   size_t m_bufferCapacity;
 
@@ -61,7 +60,7 @@ private:
   bool m_hasMoreImages;
 
   /** The actual image source. */
-  boost::shared_ptr<ImageSourceEngine> m_innerSource;
+  ImageSourceEngine_Ptr m_innerSource;
 
   /** Image size for the RGB images read by m_innerSource. */
   Vector2i m_rgbImageSize;
@@ -75,8 +74,8 @@ private:
   /** Set to true when the inner thread must terminate (used in the destructor). */
   bool m_terminate;
 
+  //#################### CONSTRUCTORS ####################
 public:
-  //#################### CONSTRUCTORS ###############
   /**
    * \brief Constructs an AsyncImageSourceEngine.
    *        An instance of this class can be used to wrap an ImageSourceEngine in a separate thread.
@@ -86,24 +85,38 @@ public:
    * \param innerSource    An ImageSourceEngine that will be queried in a separate thread.
    * \param bufferCapacity The maximum number of elements that will be cached. 0 means no limit.
    */
-  AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity = 0);
+  explicit AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity = 0);
 
-  //#################### DESTRUCTOR #################
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys the image source engine.
+   */
   virtual ~AsyncImageSourceEngine();
 
-  //############# PUBLIC MEMBER FUNCTIONS ###########
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
   virtual ITMLib::ITMRGBDCalib& getCalib();
+
+  /** Override */
   virtual Vector2i getDepthImageSize();
+
+  /** Override */
   virtual void getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
+
+  /** Override */
   virtual Vector2i getRGBImageSize();
+
+  /** Override */
   virtual bool hasMoreImages();
 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  //############# PRIVATE MEMBER FUNCTIONS ##########
   /** Loop executed by the inner thread to grab images from m_innerSource. */
-  void grabbingLoop();
+  void grabbing_loop();
 };
 
 }
 
-#endif // H_SPAINT_ASYNCIMAGESOURCEENGINE
+#endif
