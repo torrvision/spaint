@@ -10,13 +10,13 @@
 namespace spaint
 {
 
-AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t maxBufferSize)
+AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity)
 {
   if (!innerSource)
     throw std::runtime_error("Cannot initialise an AsyncImageSourceEngine with a NULL ImageSourceEngine.");
 
   m_innerSource.reset(innerSource);
-  m_bufferCapacity = maxBufferSize > 0 ? maxBufferSize : std::numeric_limits<size_t>::max();
+  m_bufferCapacity = bufferCapacity > 0 ? bufferCapacity : std::numeric_limits<size_t>::max();
 
   m_rgbImageSize = m_innerSource->getRGBImageSize();
   m_depthImageSize = m_innerSource->getDepthImageSize();
@@ -31,7 +31,7 @@ AsyncImageSourceEngine::~AsyncImageSourceEngine()
 {
   // Signal the thread that we are done
   m_terminate = true;
-  m_bufferFull.notify_one(); // To awake the thread if the buffer was full
+  m_bufferNotFull.notify_one(); // To awake the thread if the buffer was full
 
   // Wait for it...
   m_grabbingThread.join();
@@ -45,7 +45,7 @@ void AsyncImageSourceEngine::grabbingLoop()
     boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
     // If the buffer is full wait until some images have been consumed or termination is requested.
-    while (!m_terminate && m_bufferedImages.size() > m_bufferCapacity) m_bufferFull.wait(lock);
+    while (!m_terminate && m_bufferedImages.size() > m_bufferCapacity) m_bufferNotFull.wait(lock);
 
     // If we need to terminate, return.
     if (m_terminate)
@@ -56,7 +56,7 @@ void AsyncImageSourceEngine::grabbingLoop()
     if (!m_innerSource->hasMoreImages())
     {
       m_hasMoreImages = false;
-      m_bufferEmpty.notify_one(); // Wake up waiting thread
+      m_bufferNotEmpty.notify_one(); // Wake up waiting thread
       return;
     }
 
@@ -72,7 +72,7 @@ void AsyncImageSourceEngine::grabbingLoop()
     m_bufferedImages.push(newImages);
 
     // Notify the main thread
-    m_bufferEmpty.notify_one();
+    m_bufferNotEmpty.notify_one();
   }
 }
 
@@ -86,7 +86,7 @@ bool AsyncImageSourceEngine::hasMoreImages()
   // Need to grab the mutex in case the buffer is empty, since then we will need to wait to see if one image is coming
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferEmpty.wait(lock);
+  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
 
   // If the buffer is empty it means that the other thread finished its work
   if (m_bufferedImages.empty() && m_hasMoreImages) throw std::runtime_error("Synchronization error.");
@@ -109,7 +109,7 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
   // Wait until an image pair is ready
-  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferEmpty.wait(lock);
+  while (m_hasMoreImages && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
 
   // getImages should not be called if hasMoreImages returned false.
   if (m_bufferedImages.empty()) throw std::runtime_error("No more images to get. Need to call hasMoreImages() before getImages()");
@@ -122,6 +122,6 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
 
   m_bufferedImages.pop();
   // Notify producer that the buffer has one less element.
-  m_bufferFull.notify_one();
+  m_bufferNotFull.notify_one();
 }
 }
