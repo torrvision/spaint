@@ -12,6 +12,9 @@ namespace spaint
 
 AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity)
 {
+  // Never keep more than this number of pairs allocated in the memory pool.
+  static const size_t MAX_MEMORY_POOL_CAPACITY = 60;
+
   if (!innerSource)
     throw std::runtime_error("Cannot initialise an AsyncImageSourceEngine with a NULL ImageSourceEngine.");
 
@@ -21,7 +24,7 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
   m_rgbImageSize = m_innerSource->getRGBImageSize();
   m_depthImageSize = m_innerSource->getDepthImageSize();
 
-  m_rgbdImagePoolCapacity = std::min<size_t>(m_bufferCapacity, 60);
+  m_rgbdImagePoolCapacity = std::min<size_t>(m_bufferCapacity, MAX_MEMORY_POOL_CAPACITY);
   // Fill the pool to avoid allocating memory at runtime (assuming m_bufferCapacity <= m_rgbdImagePoolCapacity).
   for (size_t i = 0; i < m_rgbdImagePoolCapacity; ++i)
   {
