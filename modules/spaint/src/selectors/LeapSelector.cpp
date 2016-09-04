@@ -23,6 +23,7 @@ namespace spaint {
 LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine)
 : Selector(settings),
   m_picker(PickerFactory::make_picker(settings->deviceType)),
+  m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
   m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
   m_visualisationEngine(visualisationEngine)
 {}
@@ -41,7 +42,7 @@ const Leap::Frame& LeapSelector::get_frame() const
 
 Selector::Selection_CPtr LeapSelector::get_selection() const
 {
-  return m_pickPointShortMB;
+  return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
 }
 
 void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
@@ -71,7 +72,16 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
   m_visualisationEngine->FindSurface(slamState->get_voxel_scene().get(), &indexFingerPose, &slamState->get_intrinsics(), fingerRenderState.get());
 
   // Use the picker to determine the voxel that was hit (if any).
-  // TODO
+  // FIXME: Note that this code is similar to that in PickingSelector - factor out the commonality before merging.
+
+  // Try to pick an individual voxel.
+  m_pickPointValid = false;
+
+  int x = 320;
+  int y = 240;
+
+  m_pickPointValid = m_picker->pick(x, y, fingerRenderState.get(), *m_pickPointFloatMB);
+  if(m_pickPointValid) m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
 #else
   // Convert this world coordinate position into voxel coordinates.
   Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_settings->sceneParams.voxelSize;

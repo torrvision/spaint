@@ -41,8 +41,14 @@ private:
   /** The picker. */
   Picker_CPtr m_picker;
 
+  /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
+  boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;
+
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
+
+  /** Whether or not the most recent update operation returned a valid pick point. */
+  bool m_pickPointValid;
 
   /** The InfiniTAM engine used for rendering a voxel scene. */
   VoxelVisualisationEngine_CPtr m_visualisationEngine;
