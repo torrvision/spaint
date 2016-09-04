@@ -471,7 +471,7 @@ void Application::process_labelling_input()
   model->set_semantic_label(semanticLabel);
 
   // Update the current selector.
-  model->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
+  model->update_selector(m_inputState, model->get_slam_state(get_active_scene_id()), get_monocular_render_state(), m_renderer->is_mono());
 
   // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
   static bool currentlyMarking = false;

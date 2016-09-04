@@ -36,7 +36,7 @@ Selector::Selection_CPtr LeapSelector::get_selection() const
   return m_pickPointShortMB;
 }
 
-void LeapSelector::update(const InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
+void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Get the current frame of data from the Leap Motion.
   m_frame = m_leap.frame();

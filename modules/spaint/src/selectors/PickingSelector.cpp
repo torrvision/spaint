@@ -67,7 +67,7 @@ Selector::Selection_CPtr PickingSelector::get_selection() const
   return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
 }
 
-void PickingSelector::update(const InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
+void PickingSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Update whether or not the selector is active.
   m_isActive = renderingInMono && inputState.mouse_button_down(MOUSE_BUTTON_LEFT);

@@ -202,10 +202,11 @@ public:
    * \brief Allows the user to change selector or update the current selector.
    *
    * \param inputState      The current input state.
+   * \param slamState       The SLAM state of the scene being viewed.
    * \param renderState     The voxel render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update_selector(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update_selector(const tvginput::InputState& inputState, const spaint::SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:

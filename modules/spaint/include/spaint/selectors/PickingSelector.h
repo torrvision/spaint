@@ -59,7 +59,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update(const tvginput::InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 };
 
 }

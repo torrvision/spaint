@@ -125,7 +125,7 @@ void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
   m_semanticLabel = semanticLabel;
 }
 
-void Model::update_selector(const InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
+void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Allow the user to switch between different selectors.
   if(inputState.key_down(KEYCODE_i))
@@ -140,8 +140,7 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      const SLAMState_Ptr& slamState = get_slam_state(Model::get_world_scene_id());
-      m_selector.reset(new TouchSelector(m_settings, touchSettings, slamState->get_tracking_state(), slamState->get_view(), maxKeptTouchPoints));
+      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_slam_state(Model::get_world_scene_id())->get_depth_image_size(), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
@@ -153,7 +152,7 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
   if(m_selectionTransformer) m_selectionTransformer->update(inputState);
 
   // Update the current selector.
-  m_selector->update(inputState, renderState, renderingInMono);
+  m_selector->update(inputState, slamState, renderState, renderingInMono);
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
