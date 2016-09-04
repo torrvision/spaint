@@ -14,9 +14,10 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LeapSelector::LeapSelector(const Settings_CPtr& settings)
+LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine)
 : Selector(settings),
-  m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1))
+  m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
+  m_visualisationEngine(visualisationEngine)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

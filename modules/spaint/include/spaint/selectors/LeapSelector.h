@@ -14,6 +14,8 @@
 
 #include <Leap.h>
 
+#include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
+
 #include "Selector.h"
 
 namespace spaint {
@@ -23,6 +25,10 @@ namespace spaint {
  */
 class LeapSelector : public Selector
 {
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The most recent frame of data from the Leap Motion. */
@@ -34,14 +40,18 @@ private:
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
 
+  /** The InfiniTAM engine used for rendering a voxel scene. */
+  VoxelVisualisationEngine_CPtr m_visualisationEngine;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Leap selector.
    *
-   * \param settings  The settings to use for InfiniTAM.
+   * \param settings            The settings to use for InfiniTAM.
+   * \param visualisationEngine The InfiniTAM engine used for rendering a voxel scene.
    */
-  explicit LeapSelector(const Settings_CPtr& settings);
+  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
