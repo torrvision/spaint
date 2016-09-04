@@ -18,6 +18,7 @@
 
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
+#include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {
 
@@ -53,6 +54,8 @@ private:
   /** The InfiniTAM engine used for rendering a voxel scene. */
   VoxelVisualisationEngine_CPtr m_visualisationEngine;
 
+  VisualisationGenerator_CPtr m_visualisationGenerator;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -61,7 +64,7 @@ public:
    * \param settings            The settings to use for InfiniTAM.
    * \param visualisationEngine The InfiniTAM engine used for rendering a voxel scene.
    */
-  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine);
+  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, const VisualisationGenerator_CPtr& visualisationGenerator);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -74,6 +77,13 @@ public:
    * \return  The most recent frame of data from the Leap Motion.
    */
   const Leap::Frame& get_frame() const;
+
+  /**
+   * \brief Gets the position of the selector (if known).
+   *
+   * \return  The position of the selector (if known), or boost::none otherwise.
+   */
+  boost::optional<Eigen::Vector3f> get_position() const;
 
   /** Override */
   virtual Selection_CPtr get_selection() const;

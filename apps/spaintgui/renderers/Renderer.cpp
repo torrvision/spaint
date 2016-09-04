@@ -79,15 +79,17 @@ public:
       }
     }
 
-    const Leap::Finger& indexFinger = hand.fingers()[1];
-    Eigen::Vector3f start = LeapSelector::from_leap_position(indexFinger.tipPosition());
-    Eigen::Vector3f dir = LeapSelector::from_leap_direction(indexFinger.direction());
-    Eigen::Vector3f end = start + 10 * dir;
-    glColor3f(0.0f, 1.0f, 1.0f);
-    glBegin(GL_LINES);
-      glVertex3f(start.x(), start.y(), start.z());
-      glVertex3f(end.x(), end.y(), end.z());
-    glEnd();
+    if(selector.get_position())
+    {
+      const Leap::Finger& indexFinger = hand.fingers()[1];
+      Eigen::Vector3f start = LeapSelector::from_leap_position(indexFinger.tipPosition());
+      Eigen::Vector3f end = *selector.get_position();
+      glColor3f(0.0f, 1.0f, 1.0f);
+      glBegin(GL_LINES);
+        glVertex3f(start.x(), start.y(), start.z());
+        glVertex3f(end.x(), end.y(), end.z());
+      glEnd();
+    }
   }
 #endif
 
@@ -167,7 +169,7 @@ private:
 //#################### CONSTRUCTORS ####################
 
 Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
-: m_medianFilteringEnabled(true),
+: m_medianFilteringEnabled(false),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
   m_windowViewportSize(windowViewportSize)
