@@ -49,7 +49,7 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
 
 void Model::clear_labels(const std::string& sceneID, ClearingSettings settings)
 {
-  ITMLocalVBA<SpaintVoxel>& localVBA = get_voxel_scene(sceneID)->localVBA;
+  ITMLocalVBA<SpaintVoxel>& localVBA = get_slam_state(sceneID)->get_voxel_scene()->localVBA;
   m_voxelMarker->clear_labels(localVBA.GetVoxelBlocks(), localVBA.allocatedSize, settings);
 }
 
@@ -112,12 +112,12 @@ Model::VoxelVisualisationEngine_CPtr Model::get_voxel_visualisation_engine() con
 void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, SpaintVoxel::PackedLabel label,
                         MarkingMode mode, const PackedLabels_Ptr& oldLabels)
 {
-  m_voxelMarker->mark_voxels(*selection, label, get_voxel_scene(sceneID).get(), mode, oldLabels.get());
+  m_voxelMarker->mark_voxels(*selection, label, get_slam_state(sceneID)->get_voxel_scene().get(), mode, oldLabels.get());
 }
 
 void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode)
 {
-  m_voxelMarker->mark_voxels(*selection, *labels, get_voxel_scene(sceneID).get(), mode);
+  m_voxelMarker->mark_voxels(*selection, *labels, get_slam_state(sceneID)->get_voxel_scene().get(), mode);
 }
 
 void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
@@ -140,8 +140,8 @@ void Model::update_selector(const InputState& inputState, const VoxelRenderState
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      const std::string worldSceneID = Model::get_world_scene_id();
-      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_tracking_state(worldSceneID), get_view(worldSceneID), maxKeptTouchPoints));
+      const SLAMState_Ptr& slamState = get_slam_state(Model::get_world_scene_id());
+      m_selector.reset(new TouchSelector(m_settings, touchSettings, slamState->get_tracking_state(), slamState->get_view(), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
       m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
@@ -165,17 +165,12 @@ std::string Model::get_world_scene_id()
 
 //#################### DISAMBIGUATORS ####################
 
-const Vector2i& Model::get_depth_image_size(const std::string& sceneID) const
+const SLAMState_Ptr& Model::get_slam_state(const std::string& sceneID)
 {
-  return SLAMContext::get_depth_image_size(sceneID);
+  return SLAMContext::get_slam_state(sceneID);
 }
 
-const SpaintVoxelScene_Ptr& Model::get_voxel_scene(const std::string& sceneID)
+SLAMState_CPtr Model::get_slam_state(const std::string& sceneID) const
 {
-  return SLAMContext::get_voxel_scene(sceneID);
-}
-
-SpaintVoxelScene_CPtr Model::get_voxel_scene(const std::string& sceneID) const
-{
-  return SLAMContext::get_voxel_scene(sceneID);
+  return SLAMContext::get_slam_state(sceneID);
 }

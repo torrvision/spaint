@@ -490,6 +490,7 @@ src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
 src/util/RGBDUtil.cpp
+src/util/SLAMState.cpp
 )
 
 SET(util_headers
@@ -501,6 +502,7 @@ include/spaint/util/ITMObjectPtrTypes.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
+include/spaint/util/SLAMState.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
