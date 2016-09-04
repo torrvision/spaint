@@ -9,6 +9,7 @@
 using namespace ITMLib;
 using namespace ORUtils;
 
+#include "picking/PickerFactory.h"
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "util/CameraPoseConverter.h"
 #include "util/MemoryBlockFactory.h"
@@ -21,6 +22,7 @@ namespace spaint {
 
 LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine)
 : Selector(settings),
+  m_picker(PickerFactory::make_picker(settings->deviceType)),
   m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
   m_visualisationEngine(visualisationEngine)
 {}

@@ -17,6 +17,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
 #include "Selector.h"
+#include "../picking/interface/Picker.h"
 
 namespace spaint {
 
@@ -36,6 +37,9 @@ private:
 
   /** The Leap Motion controller. */
   Leap::Controller m_leap;
+
+  /** The picker. */
+  Picker_CPtr m_picker;
 
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
