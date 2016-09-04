@@ -67,17 +67,27 @@ public:
 
         glColor3f(0.8f, 0.8f, 0.8f);
         QuadricRenderer::render_cylinder(
-          LeapSelector::from_leap_vector(bone.prevJoint()),
-          LeapSelector::from_leap_vector(bone.nextJoint()),
+          LeapSelector::from_leap_position(bone.prevJoint()),
+          LeapSelector::from_leap_position(bone.nextJoint()),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           10
         );
 
         glColor3f(1.0f, 0.0f, 0.0f);
-        QuadricRenderer::render_sphere(LeapSelector::from_leap_vector(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
+        QuadricRenderer::render_sphere(LeapSelector::from_leap_position(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
       }
     }
+
+    const Leap::Finger& indexFinger = hand.fingers()[1];
+    Eigen::Vector3f start = LeapSelector::from_leap_position(indexFinger.tipPosition());
+    Eigen::Vector3f dir = LeapSelector::from_leap_direction(indexFinger.direction());
+    Eigen::Vector3f end = start + 10 * dir;
+    glColor3f(0.0f, 1.0f, 1.0f);
+    glBegin(GL_LINES);
+      glVertex3f(start.x(), start.y(), start.z());
+      glVertex3f(end.x(), end.y(), end.z());
+    glEnd();
   }
 #endif
 
