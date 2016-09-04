@@ -74,7 +74,7 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
   if(!m_frame.isValid() || m_frame.hands().count() != 1) return;
 
   // Update whether or not the selector is active.
-  m_isActive = true;
+  m_isActive = inputState.key_down(KEYCODE_l);
 
   // Find the position of the tip of the index finger in world coordinates.
   const Leap::Finger& indexFinger = m_frame.hands()[0].fingers()[1];
