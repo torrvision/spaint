@@ -4,11 +4,16 @@
  */
 
 #include "selectors/LeapSelector.h"
+
+#include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 using namespace ITMLib;
-using namespace tvginput;
+using namespace ORUtils;
 
 #include "selectiontransformers/SelectionTransformerFactory.h"
+#include "util/CameraPoseConverter.h"
 #include "util/MemoryBlockFactory.h"
+using namespace rigging;
+using namespace tvginput;
 
 namespace spaint {
 
@@ -50,15 +55,29 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
   m_isActive = true;
 
   // Find the position of the tip of the index finger in world coordinates.
-  Leap::Vector fingerPosLM = m_frame.hands()[0].fingers()[1].tipPosition();
-  Eigen::Vector3f fingerPosWorld = from_leap_position(fingerPosLM);
+  const Leap::Finger& indexFinger = m_frame.hands()[0].fingers()[1];
+  Eigen::Vector3f fingerPosWorld = from_leap_position(indexFinger.tipPosition());
 
+#if 1
+    // Find the direction of the index finger in world coordinates.
+  Eigen::Vector3f fingerDirWorld = from_leap_direction(indexFinger.direction());
+
+  // Generate a raycast of the scene from a camera that points along the index finger.
+  VoxelRenderState_Ptr fingerRenderState(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(renderState->raycastResult->noDims, &m_settings->sceneParams, m_settings->GetMemoryType()));
+  SimpleCamera indexFingerCamera(fingerPosWorld, fingerDirWorld, Eigen::Vector3f(0.0f, -1.0f, 0.0f));
+  SE3Pose indexFingerPose = CameraPoseConverter::camera_to_pose(indexFingerCamera);
+  m_visualisationEngine->FindSurface(slamState->get_voxel_scene().get(), &indexFingerPose, &slamState->get_intrinsics(), fingerRenderState.get());
+
+  // Use the picker to determine the voxel that was hit (if any).
+  // TODO
+#else
   // Convert this world coordinate position into voxel coordinates.
   Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_settings->sceneParams.voxelSize;
 
   // Record the selected voxel.
   *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
   if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
+#endif
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
