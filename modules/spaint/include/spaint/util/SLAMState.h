@@ -217,7 +217,7 @@ public:
   /**
    * \brief Sets the current view of the scene.
    *
-   * \param view    The new current view of the scene.
+   * \param view  The new current view of the scene.
    */
   void set_view(ITMLib::ITMView *view);
 
