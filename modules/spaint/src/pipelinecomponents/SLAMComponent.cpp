@@ -50,26 +50,27 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   if(depthImageSize.x == -1 || depthImageSize.y == -1) depthImageSize = rgbImageSize;
 
   // Set up the RGB and raw depth images into which input is to be read each frame.
-  context->set_input_rgb_image(sceneID, new ITMUChar4Image(rgbImageSize, true, true));
-  context->set_input_raw_depth_image(sceneID, new ITMShortImage(depthImageSize, true, true));
+  const SLAMState_Ptr& slamState = context->get_slam_state(sceneID);
+  slamState->set_input_rgb_image(ITMUChar4Image_Ptr(new ITMUChar4Image(rgbImageSize, true, true)));
+  slamState->set_input_raw_depth_image(ITMShortImage_Ptr(new ITMShortImage(depthImageSize, true, true)));
 
   // Set up the low-level engine.
   const Settings_CPtr& settings = context->get_settings();
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
   // Set up the view builder.
-  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
+  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(m_imageSourceEngine->getCalib(), settings->deviceType));
 
   // Set up the scenes.
   MemoryDeviceType memoryType = settings->GetMemoryType();
-  m_context->set_voxel_scene(sceneID, new SpaintVoxelScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType));
+  slamState->set_voxel_scene(SpaintVoxelScene_Ptr(new SpaintVoxelScene(&settings->sceneParams, settings->swappingMode == ITMLibSettings::SWAPPINGMODE_ENABLED, memoryType)));
   if(mappingMode != MAP_VOXELS_ONLY)
   {
-    m_context->set_surfel_scene(sceneID, new SpaintSurfelScene(&settings->surfelSceneParams, memoryType));  
+    slamState->set_surfel_scene(SpaintSurfelScene_Ptr(new SpaintSurfelScene(&settings->surfelSceneParams, memoryType)));
   }
 
   // Set up the dense mappers.
-  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(sceneID);
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
   m_denseVoxelMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
   m_denseVoxelMapper->ResetScene(voxelScene.get());
   if(mappingMode != MAP_VOXELS_ONLY)
@@ -81,14 +82,14 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   setup_tracker();
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), settings.get()));
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
-  m_context->set_tracking_state(sceneID, new ITMTrackingState(trackedImageSize, memoryType));
-  m_tracker->UpdateInitialPose(m_context->get_tracking_state(sceneID).get());
+  slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
+  m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 
   // Set up the live render states.
-  m_context->set_live_voxel_render_state(sceneID, ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType));
+  slamState->set_live_voxel_render_state(VoxelRenderState_Ptr(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType)));
   if(mappingMode != MAP_VOXELS_ONLY)
   {
-    m_context->set_live_surfel_render_state(sceneID, new ITMSurfelRenderState(trackedImageSize, m_context->get_surfel_scene(sceneID)->GetParams().supersamplingFactor));
+    slamState->set_live_surfel_render_state(SurfelRenderState_Ptr(new ITMSurfelRenderState(trackedImageSize, settings->surfelSceneParams.supersamplingFactor)));
   }
 
   // Set up the pose database and the relocaliser.
@@ -115,21 +116,22 @@ bool SLAMComponent::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
 
-  const ITMShortImage_Ptr& inputRawDepthImage = m_context->get_input_raw_depth_image(m_sceneID);
-  const ITMUChar4Image_Ptr& inputRGBImage = m_context->get_input_rgb_image(m_sceneID);
-  const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
-  const VoxelRenderState_Ptr& liveVoxelRenderState = m_context->get_live_voxel_render_state(m_sceneID);
-  const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
-  const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
-  const View_Ptr& view = m_context->get_view(m_sceneID);
-  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const SurfelRenderState_Ptr& liveSurfelRenderState = slamState->get_live_surfel_render_state();
+  const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
+  const SpaintSurfelScene_Ptr& surfelScene = slamState->get_surfel_scene();
+  const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
+  const View_Ptr& view = slamState->get_view();
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
   // Get the next frame.
   ITMView *newView = view.get();
   m_imageSourceEngine->getImages(inputRGBImage.get(), inputRawDepthImage.get());
   const bool useBilateralFilter = m_trackingMode == TRACK_SURFELS;
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
-  m_context->set_view(m_sceneID, newView);
+  slamState->set_view(newView);
 
   // If there's an active segmentation target, mask it out in the depth image so that it will be ignored for tracking purposes.
   ITMFloatImage_Ptr maskedDepthImage;
@@ -257,7 +259,7 @@ bool SLAMComponent::process_frame()
   // If we're using surfel mapping, render a supersampled index image to use when finding surfel correspondences in the next frame.
   if(m_mappingMode != MAP_VOXELS_ONLY)
   {
-    m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib->intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
+    m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib.intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
 
   // If the current sub-engine has run out of images, disable fusion.
@@ -277,15 +279,16 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
 {
   ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
 
-  const Vector2i& depthImageSize = m_context->get_depth_image_size(m_sceneID);
-  const Vector2i& rgbImageSize = m_context->get_rgb_image_size(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const Vector2i& depthImageSize = slamState->get_depth_image_size();
+  const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
 
   compositeTracker->SetTracker(primaryTracker, 0);
   compositeTracker->SetTracker(
     ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
       rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
-      m_lowLevelEngine.get(), m_imuCalibrator.get(), m_context->get_voxel_scene(m_sceneID).get()
+      m_lowLevelEngine.get(), m_imuCalibrator.get(), slamState->get_voxel_scene().get()
     ), 1
   );
 
@@ -294,23 +297,24 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
 
 void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 {
-  const TrackingState_Ptr& trackingState = m_context->get_tracking_state(m_sceneID);
-  const View_Ptr& view = m_context->get_view(m_sceneID);
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
+  const View_Ptr& view = slamState->get_view();
 
   switch(trackingMode)
   {
     case TRACK_SURFELS:
     {
-      const SpaintSurfelScene_Ptr& surfelScene = m_context->get_surfel_scene(m_sceneID);
-      const SurfelRenderState_Ptr& liveSurfelRenderState = m_context->get_live_surfel_render_state(m_sceneID);
+      const SpaintSurfelScene_Ptr& surfelScene = slamState->get_surfel_scene();
+      const SurfelRenderState_Ptr& liveSurfelRenderState = slamState->get_live_surfel_render_state();
       m_trackingController->Prepare(trackingState.get(), surfelScene.get(), view.get(), m_context->get_surfel_visualisation_engine().get(), liveSurfelRenderState.get());
       break;
     }
     case TRACK_VOXELS:
     default:
     {
-      const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
-      const VoxelRenderState_Ptr& liveVoxelRenderState = m_context->get_live_voxel_render_state(m_sceneID);
+      const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+      const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
       m_trackingController->Prepare(trackingState.get(), voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
       break;
     }
@@ -319,10 +323,11 @@ void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 
 void SLAMComponent::setup_tracker()
 {
-  const Vector2i& depthImageSize = m_context->get_depth_image_size(m_sceneID);
-  const Vector2i& rgbImageSize = m_context->get_rgb_image_size(m_sceneID);
   const Settings_CPtr& settings = m_context->get_settings();
-  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_voxel_scene(m_sceneID);
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const Vector2i& depthImageSize = slamState->get_depth_image_size();
+  const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
   m_fallibleTracker = NULL;
 
   switch(m_trackerType)

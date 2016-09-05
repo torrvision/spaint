@@ -120,7 +120,7 @@ VoxelRenderState_CPtr Application::get_monocular_render_state() const
   switch(subwindow.get_camera_mode())
   {
     case Subwindow::CM_FOLLOW:
-      return m_pipeline->get_model()->get_live_voxel_render_state(subwindow.get_scene_id());
+      return m_pipeline->get_model()->get_slam_state(subwindow.get_scene_id())->get_live_voxel_render_state();
     case Subwindow::CM_FREE:
       return m_renderer->get_monocular_render_state(m_activeSubwindowIndex);
     default:
@@ -138,7 +138,7 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id()));
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size());
   }
 
   return m_subwindowConfigurations[i];
@@ -471,7 +471,7 @@ void Application::process_labelling_input()
   model->set_semantic_label(semanticLabel);
 
   // Update the current selector.
-  model->update_selector(m_inputState, get_monocular_render_state(), m_renderer->is_mono());
+  model->update_selector(m_inputState, model->get_slam_state(get_active_scene_id()), get_monocular_render_state(), m_renderer->is_mono());
 
   // Record whether or not we're in the middle of marking some voxels (this allows us to make voxel marking atomic for undo/redo purposes).
   static bool currentlyMarking = false;
@@ -649,16 +649,16 @@ void Application::save_sequence_frame()
   const std::string& sceneID = mainSubwindow.get_scene_id();
 
   // If the RGBD calibration hasn't already been saved, save it now.
-  Model_CPtr model = m_pipeline->get_model();
+  SLAMState_CPtr slamState = m_pipeline->get_model()->get_slam_state(sceneID);
   boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";
   if(!boost::filesystem::exists(calibrationFile))
   {
-    writeRGBDCalib(calibrationFile.string().c_str(), *model->get_view(sceneID)->calib);
+    writeRGBDCalib(calibrationFile.string().c_str(), slamState->get_view()->calib);
   }
 
   // Save the current input images.
-  ImagePersister::save_image_on_thread(model->get_input_raw_depth_image_copy(sceneID), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
-  ImagePersister::save_image_on_thread(model->get_input_rgb_image_copy(sceneID), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+  ImagePersister::save_image_on_thread(slamState->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
+  ImagePersister::save_image_on_thread(slamState->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
   m_sequencePathGenerator->increment_index();
 }
 
@@ -723,7 +723,7 @@ void Application::switch_to_windowed_renderer(size_t subwindowConfigurationIndex
   if(!subwindowConfiguration) return;
 
   const Subwindow& mainSubwindow = subwindowConfiguration->subwindow(0);
-  const Vector2i& depthImageSize = m_pipeline->get_model()->get_depth_image_size(Model::get_world_scene_id());
+  const Vector2i& depthImageSize = m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
   Vector2i windowViewportSize((int)ROUND(depthImageSize.width / mainSubwindow.width()), (int)ROUND(depthImageSize.height / mainSubwindow.height()));
 
   m_renderer.reset(new WindowedRenderer("Semantic Paint", m_pipeline->get_model(), subwindowConfiguration, windowViewportSize));

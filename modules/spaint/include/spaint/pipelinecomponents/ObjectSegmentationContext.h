@@ -11,7 +11,7 @@
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 
 #include "../segmentation/Segmenter.h"
-#include "../util/ITMObjectPtrTypes.h"
+#include "../util/SLAMState.h"
 #include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {
@@ -41,11 +41,9 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  virtual ITMShortImage_Ptr get_input_raw_depth_image_copy(const std::string& sceneID) const = 0;
-  virtual const ORUtils::SE3Pose& get_pose(const std::string& sceneID) const = 0;
   virtual const std::string& get_resources_dir() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
-  virtual View_CPtr get_view(const std::string& sceneID) const = 0;
+  virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID) = 0;
   virtual VisualisationGenerator_CPtr get_visualisation_generator() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

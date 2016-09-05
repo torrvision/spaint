@@ -38,7 +38,8 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   if(!segmenter) return;
 
   // Segment the current input images to obtain a mask for the target.
-  ITMUCharImage_CPtr targetMask = segmenter->segment(m_context->get_pose(m_sceneID), renderState);
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  ITMUCharImage_CPtr targetMask = segmenter->segment(slamState->get_pose(), renderState);
 
   // If the mask is empty, early out.
   if(!targetMask)
@@ -48,11 +49,11 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   }
 
   // Make masked versions of the depth and colour inputs.
-  View_CPtr view = m_context->get_view(m_sceneID);
+  View_CPtr view = slamState->get_view();
   ITMUChar4Image_Ptr colouredDepthInput(new ITMUChar4Image(view->depth->dataSize, true, false));
   m_context->get_visualisation_generator()->get_depth_input(colouredDepthInput, view);
-  ITMShortImage_Ptr depthInput = m_context->get_input_raw_depth_image_copy(m_sceneID);
-  ITMUChar4Image_CPtr rgbInput(m_context->get_view(m_sceneID)->rgb, boost::serialization::null_deleter());
+  ITMShortImage_Ptr depthInput = slamState->get_input_raw_depth_image_copy();
+  ITMUChar4Image_CPtr rgbInput(slamState->get_view()->rgb, boost::serialization::null_deleter());
 
   ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput);
   ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
@@ -80,7 +81,7 @@ void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderSta
   const Segmenter_Ptr& segmenter = get_segmenter();
   if(!segmenter) return;
 
-  ITMUChar4Image_Ptr touchImage = segmenter->train(m_context->get_pose(m_sceneID), renderState);
+  ITMUChar4Image_Ptr touchImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
   m_context->set_segmentation_image(touchImage);
 }
 
@@ -92,7 +93,7 @@ const Segmenter_Ptr& ObjectSegmentationComponent::get_segmenter() const
   if(!m_context->get_segmenter())
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_context->get_resources_dir() + "/TouchSettings.xml"));
-    m_context->set_segmenter(Segmenter_Ptr(new BackgroundSubtractingObjectSegmenter(m_context->get_view(m_sceneID), m_context->get_settings(), touchSettings)));
+    m_context->set_segmenter(Segmenter_Ptr(new BackgroundSubtractingObjectSegmenter(m_context->get_slam_state(m_sceneID)->get_view(), m_context->get_settings(), touchSettings)));
   }
 #endif
 
