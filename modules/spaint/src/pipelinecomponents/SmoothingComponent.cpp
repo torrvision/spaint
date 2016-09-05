@@ -22,7 +22,7 @@ SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context, cons
 
 void SmoothingComponent::run(const VoxelRenderState_CPtr& renderState)
 {
-  m_labelSmoother->smooth_labels(renderState->raycastResult, m_context->get_voxel_scene(m_sceneID).get());
+  m_labelSmoother->smooth_labels(renderState->raycastResult, m_context->get_slam_state(m_sceneID)->get_voxel_scene().get());
 }
 
 }

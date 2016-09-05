@@ -45,12 +45,6 @@ private:
   /** The touch detector. */
   TouchDetector_Ptr m_touchDetector;
 
-  /** The tracking state. */
-  TrackingState_Ptr m_trackingState;
-
-  /** The view. */
-  View_Ptr m_view;
-
   //#################### CONSTRUCTORS ####################
 public:
   /*
@@ -58,12 +52,10 @@ public:
    *
    * \param itmSettings         The settings to use for InfiniTAM.
    * \param touchSettings       The settings to use for the touch detector.
-   * \param trackingState       The InfiniTAM tracking state (contains the camera pose).
-   * \param view                The InfiniTAM view (contains the raw depth image).
+   * \param touchImageSize      The size of the images on which the touch detector is to run.
    * \param maxKeptTouchPoints  The maximum number of touch points that we should keep in a single update (we limit this for performance reasons).
    */
-  TouchSelector(const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
-                const View_Ptr& view, size_t maxKeptTouchPoints);
+  TouchSelector(const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const Vector2i& touchImageSize, size_t maxKeptTouchPoints);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -89,7 +81,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update(const tvginput::InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 };
 
 }

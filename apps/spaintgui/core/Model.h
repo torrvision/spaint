@@ -14,7 +14,6 @@
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
-#include <spaint/util/SpaintVoxelScene.h>
 #include <spaint/visualisation/VisualisationGenerator.h>
 
 /**
@@ -203,10 +202,11 @@ public:
    * \brief Allows the user to change selector or update the current selector.
    *
    * \param inputState      The current input state.
+   * \param slamState       The SLAM state of the scene being viewed.
    * \param renderState     The voxel render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update_selector(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update_selector(const tvginput::InputState& inputState, const spaint::SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -219,14 +219,8 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
-  /** Override */
-  virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const;
-
-  /** Override */
-  virtual const spaint::SpaintVoxelScene_Ptr& get_voxel_scene(const std::string& sceneID);
-
-  /** Override */
-  virtual spaint::SpaintVoxelScene_CPtr get_voxel_scene(const std::string& sceneID) const;
+  virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
+  virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };
 
 //#################### TYPEDEFS ####################

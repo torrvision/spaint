@@ -9,7 +9,7 @@
 #include <tvginput/InputState.h>
 
 #include "SelectorVisitor.h"
-#include "../util/ITMObjectPtrTypes.h"
+#include "../util/SLAMState.h"
 
 namespace spaint {
 
@@ -80,10 +80,11 @@ public:
    * \brief Updates the selector based on the current input state.
    *
    * \param inputState      The current input state.
+   * \param slamState       The SLAM state of the scene being viewed.
    * \param renderState     The render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono) = 0;
+  virtual void update(const tvginput::InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono) = 0;
 };
 
 //#################### TYPEDEFS ####################
