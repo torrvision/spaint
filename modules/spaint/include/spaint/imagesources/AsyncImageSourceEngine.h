@@ -46,7 +46,7 @@ private:
   mutable boost::mutex m_bufferMutex;
 
   /** A condition variable used to wait for elements to be inserted in the buffer. */
-  boost::condition_variable m_bufferNotEmpty;
+  mutable boost::condition_variable m_bufferNotEmpty;
 
   /** A condition variable used to wait for elements to be removed from the buffer. */
   boost::condition_variable m_bufferNotFull;
@@ -89,16 +89,16 @@ public:
   virtual ITMLib::ITMRGBDCalib getCalib() const;
 
   /** Override */
-  virtual Vector2i getDepthImageSize();
+  virtual Vector2i getDepthImageSize() const;
 
   /** Override */
   virtual void getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth);
 
   /** Override */
-  virtual Vector2i getRGBImageSize();
+  virtual Vector2i getRGBImageSize() const;
 
   /** Override */
-  virtual bool hasMoreImages();
+  virtual bool hasMoreImages() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

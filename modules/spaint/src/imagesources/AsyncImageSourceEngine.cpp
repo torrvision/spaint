@@ -65,7 +65,7 @@ ITMLib::ITMRGBDCalib AsyncImageSourceEngine::getCalib() const
   return !m_bufferedImages.empty() ? m_bufferedImages.front().calib : m_innerSource->getCalib();
 }
 
-Vector2i AsyncImageSourceEngine::getDepthImageSize()
+Vector2i AsyncImageSourceEngine::getDepthImageSize() const
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
@@ -101,7 +101,7 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
   m_bufferNotFull.notify_one();
 }
 
-Vector2i AsyncImageSourceEngine::getRGBImageSize()
+Vector2i AsyncImageSourceEngine::getRGBImageSize() const
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
@@ -109,7 +109,7 @@ Vector2i AsyncImageSourceEngine::getRGBImageSize()
   return !m_bufferedImages.empty() ? m_bufferedImages.front().rgb->noDims : m_innerSource->getRGBImageSize();
 }
 
-bool AsyncImageSourceEngine::hasMoreImages()
+bool AsyncImageSourceEngine::hasMoreImages() const
 {
   // Need to grab the mutex in case the buffer is empty, since then we will need to wait to see if one image is coming
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
