@@ -166,7 +166,7 @@ ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) c
   touchMask->UpdateHostFromDevice();
 
   // Calculate a matrix that maps points in 3D depth image coordinates to 3D RGB image coordinates.
-  Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(*view->calib);
+  Matrix4f depthToRGB3D = RGBDUtil::calculate_depth_to_rgb_matrix_3D(view->calib);
 
   // Get the relevant data pointers.
   const float *depthData = depth->GetData(MEMORYDEVICE_CPU);

@@ -42,7 +42,7 @@ ITMUChar4Image_Ptr SLAMState::get_input_rgb_image_copy() const
 
 const ITMIntrinsics& SLAMState::get_intrinsics() const
 {
-  return m_view->calib->intrinsics_d;
+  return m_view->calib.intrinsics_d;
 }
 
 const SurfelRenderState_Ptr& SLAMState::get_live_surfel_render_state()

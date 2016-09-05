@@ -651,7 +651,7 @@ void Application::save_sequence_frame()
   boost::filesystem::path calibrationFile = m_sequencePathGenerator->get_base_dir() / "calib.txt";
   if(!boost::filesystem::exists(calibrationFile))
   {
-    writeRGBDCalib(calibrationFile.string().c_str(), *slamState->get_view()->calib);
+    writeRGBDCalib(calibrationFile.string().c_str(), slamState->get_view()->calib);
   }
 
   // Save the current input images.

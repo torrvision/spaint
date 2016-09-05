@@ -55,7 +55,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
   // Set up the view builder.
-  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(&m_imageSourceEngine->getCalib(), settings->deviceType));
+  m_viewBuilder.reset(ITMViewBuilderFactory::MakeViewBuilder(m_imageSourceEngine->getCalib(), settings->deviceType));
 
   // Set up the scenes.
   MemoryDeviceType memoryType = settings->GetMemoryType();
@@ -235,7 +235,7 @@ bool SLAMComponent::process_frame()
   // If we're using surfel mapping, render a supersampled index image to use when finding surfel correspondences in the next frame.
   if(m_mappingMode != MAP_VOXELS_ONLY)
   {
-    m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib->intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
+    m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib.intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
 
   // If the current sub-engine has run out of images, disable fusion.
