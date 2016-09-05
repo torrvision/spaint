@@ -23,9 +23,8 @@ const ITMShortImage_Ptr& SLAMState::get_input_raw_depth_image()
 
 ITMShortImage_Ptr SLAMState::get_input_raw_depth_image_copy() const
 {
-  ITMShortImage_CPtr inputRawDepthImage = m_inputRawDepthImage;
-  ITMShortImage_Ptr copy(new ITMShortImage(inputRawDepthImage->noDims, true, false));
-  copy->SetFrom(inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
+  ITMShortImage_Ptr copy(new ITMShortImage(m_inputRawDepthImage->noDims, true, false));
+  copy->SetFrom(m_inputRawDepthImage.get(), ORUtils::MemoryBlock<short>::CPU_TO_CPU);
   return copy;
 }
 
@@ -36,9 +35,8 @@ const ITMUChar4Image_Ptr& SLAMState::get_input_rgb_image()
 
 ITMUChar4Image_Ptr SLAMState::get_input_rgb_image_copy() const
 {
-  ITMUChar4Image_CPtr inputRGBImage = m_inputRGBImage;
-  ITMUChar4Image_Ptr copy(new ITMUChar4Image(inputRGBImage->noDims, true, false));
-  copy->SetFrom(inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
+  ITMUChar4Image_Ptr copy(new ITMUChar4Image(m_inputRGBImage->noDims, true, false));
+  copy->SetFrom(m_inputRGBImage.get(), ORUtils::MemoryBlock<Vector4u>::CPU_TO_CPU);
   return copy;
 }
 
