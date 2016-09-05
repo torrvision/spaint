@@ -248,7 +248,7 @@ try
   const unsigned int seed = 12345;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-  pipeline->add_single_scene_pipeline(Model::get_world_scene_id(), imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
+  pipeline->add_semantic_components(Model::get_world_scene_id(), imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
 
   // Run the application.
   Application app(pipeline);

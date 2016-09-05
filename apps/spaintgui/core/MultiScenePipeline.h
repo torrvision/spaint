@@ -54,29 +54,6 @@ public:
     MODE_TRAINING
   };
 
-  //#################### NESTED TYPES ####################
-private:
-  /**
-   * \brief An instance of this struct holds the pipeline components for an individual scene.
-   */
-  struct SingleScenePipeline
-  {
-    /** The object segmentation component for the scene. */
-    spaint::ObjectSegmentationComponent_Ptr m_objectSegmentationComponent;
-
-    /** The propagation component for the scene. */
-    spaint::PropagationComponent_Ptr m_propagationComponent;
-
-    /** The semantic segmentation component for the scene. */
-    spaint::SemanticSegmentationComponent_Ptr m_semanticSegmentationComponent;
-
-    /** The SLAM component for the scene. */
-    spaint::SLAMComponent_Ptr m_slamComponent;
-
-    /** The smoothing component for the scene. */
-    spaint::SmoothingComponent_Ptr m_smoothingComponent;
-  };
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The mode in which the multi-scene pipeline is currently running. */
@@ -85,8 +62,20 @@ private:
   /** The spaint model. */
   Model_Ptr m_model;
 
-  /** The pipelines for the individual scenes. */
-  std::map<std::string,SingleScenePipeline> m_singleScenePipelines;
+  /** The object segmentation components for the scenes. */
+  std::map<std::string,spaint::ObjectSegmentationComponent_Ptr> m_objectSegmentationComponents;
+
+  /** The propagation components for the scenes. */
+  std::map<std::string,spaint::PropagationComponent_Ptr> m_propagationComponents;
+
+  /** The semantic segmentation components for the scenes. */
+  std::map<std::string,spaint::SemanticSegmentationComponent_Ptr> m_semanticSegmentationComponents;
+
+  /** The SLAM components for the scenes. */
+  std::map<std::string,spaint::SLAMComponent_Ptr> m_slamComponents;
+
+  /** The smoothing components for the scenes. */
+  std::map<std::string,spaint::SmoothingComponent_Ptr> m_smoothingComponents;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -102,7 +91,7 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Adds a pipeline for an individual scene to the multi-scene pipeline.
+   * \brief Adds semantic pipeline components for an individual scene to the multi-scene pipeline.
    *
    * \param sceneID           The ID of the individual scene.
    * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
@@ -112,10 +101,10 @@ public:
    * \param mappingMode       The mapping mode that the scene's SLAM component should use.
    * \param trackingMode      The tracking mode that the scene's SLAM component should use.
    */
-  void add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                                 spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
-                                 spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
-                                 spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
+  void add_semantic_components(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
+                               spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
+                               spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
+                               spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
 
   /**
    * \brief Gets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.

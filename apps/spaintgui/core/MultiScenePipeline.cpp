@@ -37,21 +37,20 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void MultiScenePipeline::add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                                                   unsigned int seed, TrackerType trackerType, const std::string& trackerParams,
-                                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
+void MultiScenePipeline::add_semantic_components(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+                                                 unsigned int seed, TrackerType trackerType, const std::string& trackerParams,
+                                                 SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
 {
-  SingleScenePipeline& singleScenePipeline = m_singleScenePipelines[sceneID];
-  singleScenePipeline.m_slamComponent.reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
-  singleScenePipeline.m_objectSegmentationComponent.reset(new ObjectSegmentationComponent(m_model, sceneID));
-  singleScenePipeline.m_propagationComponent.reset(new PropagationComponent(m_model, sceneID));
-  singleScenePipeline.m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
-  singleScenePipeline.m_smoothingComponent.reset(new SmoothingComponent(m_model, sceneID));
+  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+  m_objectSegmentationComponents[sceneID].reset(new ObjectSegmentationComponent(m_model, sceneID));
+  m_propagationComponents[sceneID].reset(new PropagationComponent(m_model, sceneID));
+  m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
+  m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
 }
 
 bool MultiScenePipeline::get_fusion_enabled(const std::string& sceneID) const
 {
-  return MapUtil::lookup(m_singleScenePipelines, sceneID).m_slamComponent->get_fusion_enabled();
+  return MapUtil::lookup(m_slamComponents, sceneID)->get_fusion_enabled();
 }
 
 MultiScenePipeline::Mode MultiScenePipeline::get_mode() const
@@ -71,55 +70,53 @@ Model_CPtr MultiScenePipeline::get_model() const
 
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
 {
-  MapUtil::lookup(m_singleScenePipelines, sceneID).m_semanticSegmentationComponent->reset_forest();
+  MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->reset_forest();
 }
 
 bool MultiScenePipeline::run_main_section()
 {
   bool result = true;
-  for(std::map<std::string,SingleScenePipeline>::const_iterator it = m_singleScenePipelines.begin(), iend = m_singleScenePipelines.end(); it != iend; ++it)
+  for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
-    result = result && it->second.m_slamComponent->process_frame();
+    result = result && it->second->process_frame();
   }
   return result;
 }
 
 void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState)
 {
-  SingleScenePipeline& singleScenePipeline = MapUtil::lookup(m_singleScenePipelines, sceneID);
-
   switch(m_mode)
   {
     case MODE_FEATURE_INSPECTION:
-      singleScenePipeline.m_semanticSegmentationComponent->run_feature_inspection(renderState);
+      MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_feature_inspection(renderState);
       break;
     case MODE_PREDICTION:
-      singleScenePipeline.m_semanticSegmentationComponent->run_prediction(renderState);
+      MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_prediction(renderState);
       break;
     case MODE_PROPAGATION:
-      singleScenePipeline.m_propagationComponent->run(renderState);
+      MapUtil::lookup(m_propagationComponents, sceneID)->run(renderState);
       break;
     case MODE_SEGMENTATION:
-      singleScenePipeline.m_objectSegmentationComponent->run_segmentation(renderState);
+      MapUtil::lookup(m_objectSegmentationComponents, sceneID)->run_segmentation(renderState);
       break;
     case MODE_SEGMENTATION_TRAINING:
-      singleScenePipeline.m_objectSegmentationComponent->run_segmentation_training(renderState);
+      MapUtil::lookup(m_objectSegmentationComponents, sceneID)->run_segmentation_training(renderState);
       break;
     case MODE_SMOOTHING:
-      singleScenePipeline.m_smoothingComponent->run(renderState);
+      MapUtil::lookup(m_smoothingComponents, sceneID)->run(renderState);
       break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) singleScenePipeline.m_semanticSegmentationComponent->run_training(renderState);
-      else singleScenePipeline.m_semanticSegmentationComponent->run_prediction(renderState);
+      if(trainThisFrame) MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_training(renderState);
+      else MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_prediction(renderState);
 
       break;
     }
     case MODE_TRAINING:
-      singleScenePipeline.m_semanticSegmentationComponent->run_training(renderState);
+      MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_training(renderState);
       break;
     default:
       break;
@@ -128,7 +125,7 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
 
 void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fusionEnabled)
 {
-  MapUtil::lookup(m_singleScenePipelines, sceneID).m_slamComponent->set_fusion_enabled(fusionEnabled);
+  MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
 }
 
 void MultiScenePipeline::set_mode(Mode mode)
@@ -144,7 +141,7 @@ void MultiScenePipeline::set_mode(Mode mode)
   // If we are switching into segmentation training mode, reset the segmenter.
   if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
   {
-    MapUtil::lookup(m_singleScenePipelines, Model::get_world_scene_id()).m_objectSegmentationComponent->reset_segmenter();
+    MapUtil::lookup(m_objectSegmentationComponents, Model::get_world_scene_id())->reset_segmenter();
   }
 
   // If we are switching out of segmentation training mode, clear the segmentation image.
