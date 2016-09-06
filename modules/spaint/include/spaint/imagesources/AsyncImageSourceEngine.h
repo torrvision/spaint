@@ -47,7 +47,7 @@ private:
   /** A flag set in the destructor to indicate that the image grabber should terminate. */
   bool m_grabberShouldTerminate;
 
-  /** The image source to be decorated. */
+  /** The image source from which to obtain the images to cache. */
   ImageSourceEngine_Ptr m_innerSource;
 
   /** The synchronisation mutex. */
@@ -59,10 +59,10 @@ private:
   /** The maximum number of elements that can be stored in the RGB-D image pool. */
   size_t m_poolCapacity;
 
-  /** A queue of cached RGB-D images. */
+  /** A queue in which to cache images from the inner source. */
   std::queue<RGBDImage> m_queue;
 
-  /** The maximum number of elements that can be stored in the RGB-D image queue. */
+  /** The maximum number of images to cache. */
   size_t m_queueCapacity;
 
   /** A condition variable used to wait for elements to be added to the queue. */
@@ -76,8 +76,8 @@ public:
   /**
    * \brief Constructs an asynchronous image source engine.
    *
-   * \param innerSource   The image source to be decorated.
-   * \param queueCapacity The maximum number of RGB-D images that will be cached (0 means no limit).
+   * \param innerSource   The image source from which to obtain the images to cache.
+   * \param queueCapacity The maximum number of images to cache (0 means no limit).
    */
   explicit AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t queueCapacity = 0);
 
