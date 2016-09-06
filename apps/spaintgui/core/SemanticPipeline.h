@@ -34,23 +34,10 @@ public:
                    spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                    spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
 
-#if 0
-  /**
-   * \brief Adds semantic pipeline components for an individual scene to the multi-scene pipeline.
-   *
-   * \param sceneID           The ID of the individual scene.
-   * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
-   * \param seed              The seed to use for the random number generators used by the voxel samplers.
-   * \param trackerType       The type of tracker to use when reconstructing the scene.
-   * \param trackerParams     The parameters for the tracker (if any).
-   * \param mappingMode       The mapping mode that the scene's SLAM component should use.
-   * \param trackingMode      The tracking mode that the scene's SLAM component should use.
-   */
-  void add_semantic_components(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                               spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
-                               spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
-                               spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
-#endif
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /** Override */
+  virtual void set_mode(Mode mode);
 };
 
 #endif

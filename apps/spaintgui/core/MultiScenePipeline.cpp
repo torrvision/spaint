@@ -10,10 +10,6 @@ using namespace spaint;
 
 #include <boost/bind.hpp>
 
-#ifdef WITH_OPENCV
-#include <spaint/ocv/OpenCVUtil.h>
-#endif
-
 #include <tvgutil/containers/MapUtil.h>
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/timing/TimeUtil.h>
@@ -123,6 +119,7 @@ void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fus
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
 }
 
+#if 0
 void MultiScenePipeline::set_mode(Mode mode)
 {
 #ifdef WITH_OPENCV
@@ -164,3 +161,4 @@ void MultiScenePipeline::set_mode(Mode mode)
 
   m_mode = mode;
 }
+#endif

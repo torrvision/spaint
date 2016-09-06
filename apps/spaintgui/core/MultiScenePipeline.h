@@ -95,6 +95,15 @@ public:
    */
   virtual ~MultiScenePipeline();
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Sets the mode in which the multi-scene pipeline should now run.
+   *
+   * \param mode  The mode in which the multi-scene pipeline should now run.
+   */
+  virtual void set_mode(Mode mode) = 0;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -160,13 +169,6 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    */
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
-
-  /**
-   * \brief Sets the mode in which the multi-scene pipeline should now run.
-   *
-   * \param mode  The mode in which the multi-scene pipeline should now run.
-   */
-  void set_mode(Mode mode);
 };
 
 //#################### TYPEDEFS ####################
