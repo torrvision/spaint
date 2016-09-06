@@ -29,8 +29,13 @@ private:
    */
   struct RGBDImage
   {
+    /** The intrinsic calibration parameters for the camera that produced the RGB-D image. */
     ITMLib::ITMRGBDCalib calib;
+
+    /** The depth component of the RGB-D image. */
     ITMShortImage_Ptr rawDepth;
+
+    /** The RGB component of the RGB-D image. */
     ITMUChar4Image_Ptr rgb;
   };
 
