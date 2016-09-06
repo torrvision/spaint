@@ -116,16 +116,19 @@ Vector2i AsyncImageSourceEngine::getRGBImageSize() const
 
 bool AsyncImageSourceEngine::hasMoreImages() const
 {
-  // Need to grab the mutex in case the buffer is empty, since then we will need to wait to see if one image is coming
+  // We need to grab the mutex in case the buffer is empty, in which case we need to wait to see if an image becomes available.
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-  // If the inner source has more images wait for one to be put in the buffer by the grabbing loop.
-  while (m_innerSource->hasMoreImages() && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
+  // If the inner source has more images, wait for one to be put in the buffer by the image grabbing thread.
+  while(m_innerSource->hasMoreImages() && m_bufferedImages.empty()) m_bufferNotEmpty.wait(lock);
 
+#if 0
   // If the buffer is empty when we reach this point it means that the other thread finished its work
-  if (m_bufferedImages.empty() && m_innerSource->hasMoreImages())
-    throw std::runtime_error("Synchronization error.");
+  if(m_bufferedImages.empty() && m_innerSource->hasMoreImages()) throw std::runtime_error("Synchronization error.");
+#endif
 
+  // At this point, either there is now an image in the buffer, in which case we return true,
+  // or the inner source has terminated, in which case we return false.
   return !m_bufferedImages.empty();
 }
 
@@ -133,55 +136,51 @@ bool AsyncImageSourceEngine::hasMoreImages() const
 
 void AsyncImageSourceEngine::grabbing_loop()
 {
-  while (!m_terminate)
+  while(!m_terminate)
   {
-    // Grab the mutex
     boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-    // If the buffer is full wait until some images have been consumed or termination is requested.
-    while (!m_terminate && m_bufferedImages.size() >= m_bufferCapacity) m_bufferNotFull.wait(lock);
+    // If the buffer is full, wait until some images have been consumed or termination is requested.
+    while(!m_terminate && m_bufferedImages.size() >= m_bufferCapacity) m_bufferNotFull.wait(lock);
 
-    // If we need to terminate, return.
-    if (m_terminate)
+    // If we were asked to terminate, do so.
+    if(m_terminate) return;
+
+    // If there are no more images available from the inner source, notify anyone waiting for an image and terminate.
+    if(!m_innerSource->hasMoreImages())
     {
+      m_bufferNotEmpty.notify_one();
       return;
     }
 
-    if (!m_innerSource->hasMoreImages())
+    // Construct an RGB-D image into which to copy the data from the inner source.
+    RGBDImage rgbdImage;
+    if(!m_rgbdImagePool.empty())
     {
-      m_bufferNotEmpty.notify_one(); // Wake up waiting thread
-      return;
-    }
-
-    RGBDImage newImages;
-    if (!m_rgbdImagePool.empty())
-    {
-      // If m_rgbdImagePool contains a preallocated pair use that instead of allocating new memory
-      newImages = m_rgbdImagePool.front();
+      // If possible, reuse an existing RGB-D image from the pool rather than allocating new memory.
+      rgbdImage = m_rgbdImagePool.front();
       m_rgbdImagePool.pop();
+
+      // Ensure that the depth and RGB images have the correct size (this is a no-op unless the size of
+      // the images produced by the inner source has changed since we put the RGB-D image in the pool).
+      rgbdImage.rawDepth->ChangeDims(m_innerSource->getDepthImageSize());
+      rgbdImage.rgb->ChangeDims(m_innerSource->getRGBImageSize());
     }
     else
     {
-      // Perform CPU-only allocation
-      newImages.rgb.reset(new ITMUChar4Image(m_innerSource->getRGBImageSize(), true, false));
-      newImages.rawDepth.reset(new ITMShortImage(m_innerSource->getDepthImageSize(), true, false));
+      // If there was no existing image available from the pool, allocate new memory for the RGB-D image.
+      rgbdImage.rawDepth.reset(new ITMShortImage(m_innerSource->getDepthImageSize(), true, false));
+      rgbdImage.rgb.reset(new ITMUChar4Image(m_innerSource->getRGBImageSize(), true, false));
     }
 
-    // Get calibration from the inner engine.
-    newImages.calib = m_innerSource->getCalib();
+    // Get the calibration for the RGB-D image from the inner source.
+    rgbdImage.calib = m_innerSource->getCalib();
 
-    // Resize output images if size is different (no-op if the size in the inner engine has not changed or
-    // the images were allocated in the else above).
-    newImages.rgb->ChangeDims(m_innerSource->getRGBImageSize());
-    newImages.rawDepth->ChangeDims(m_innerSource->getDepthImageSize());
+    // Copy the images from the inner source into the RGB-D image.
+    m_innerSource->getImages(rgbdImage.rgb.get(), rgbdImage.rawDepth.get());
 
-    // Get the images
-    m_innerSource->getImages(newImages.rgb.get(), newImages.rawDepth.get());
-
-    // Put the images into the queue
-    m_bufferedImages.push(newImages);
-
-    // Notify the main thread
+    // Add the RGB-D image to the queue and inform the main thread that images are available.
+    m_bufferedImages.push(rgbdImage);
     m_bufferNotEmpty.notify_one();
   }
 }
