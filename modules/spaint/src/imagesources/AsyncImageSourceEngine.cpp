@@ -12,34 +12,33 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity)
+: m_bufferCapacity(bufferCapacity > 0 ? bufferCapacity : std::numeric_limits<size_t>::max()),
+  m_innerSource(innerSource),
+  m_terminate(false)
 {
-  // Never keep more than this number of pairs allocated in the memory pool.
-  static const size_t MAX_MEMORY_POOL_CAPACITY = 60;
-
-  if (!innerSource)
-    throw std::runtime_error("Cannot initialise an AsyncImageSourceEngine with a NULL ImageSourceEngine.");
-
-  m_innerSource.reset(innerSource);
-  m_bufferCapacity = bufferCapacity > 0 ? bufferCapacity : std::numeric_limits<size_t>::max();
-
-  m_rgbdImagePoolCapacity = std::min<size_t>(m_bufferCapacity, MAX_MEMORY_POOL_CAPACITY);
-
-  if (m_innerSource->hasMoreImages())
+  if(!innerSource)
   {
-    // Fill the pool to avoid allocating memory at runtime (assuming m_bufferCapacity <= m_rgbdImagePoolCapacity).
-    // Only do it if the inner source actually has images available. If not then there is no need to allocate.
-    for (size_t i = 0; i < m_rgbdImagePoolCapacity; ++i)
-    {
-      RGBDImage pair;
-      pair.rgb.reset(new ITMUChar4Image(m_innerSource->getRGBImageSize(), true, false));
-      pair.rawDepth.reset(new ITMShortImage(m_innerSource->getDepthImageSize(), true, false));
+    throw std::runtime_error("Error: Cannot initialise an AsyncImageSourceEngine with a NULL ImageSourceEngine.");
+  }
 
-      m_rgbdImagePool.push(pair);
+  // Determine the maximum number of RGB-D images to store in the pool.
+  const size_t MAX_POOL_CAPACITY = 60;
+  m_rgbdImagePoolCapacity = std::min<size_t>(m_bufferCapacity, MAX_POOL_CAPACITY);
+
+  // If the inner source has images available, fill the pool to avoid allocating memory at runtime.
+  // If the inner source doesn't have any images available, there is no need to allocate.
+  if(m_innerSource->hasMoreImages())
+  {
+    for(size_t i = 0; i < m_rgbdImagePoolCapacity; ++i)
+    {
+      RGBDImage rgbdImage;
+      rgbdImage.rawDepth.reset(new ITMShortImage(m_innerSource->getDepthImageSize(), true, false));
+      rgbdImage.rgb.reset(new ITMUChar4Image(m_innerSource->getRGBImageSize(), true, false));
+      m_rgbdImagePool.push(rgbdImage);
     }
   }
 
-  m_terminate = false;
-
+  // Start the image grabbing thread.
   m_grabbingThread = boost::thread(boost::bind(&AsyncImageSourceEngine::grabbing_loop, this));
 }
 
@@ -47,11 +46,13 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
 
 AsyncImageSourceEngine::~AsyncImageSourceEngine()
 {
-  // Signal the thread that we are done
+  // Set the flag that informs the image grabbing thread that it should terminate.
   m_terminate = true;
-  m_bufferNotFull.notify_one(); // To awake the thread if the buffer was full
 
-  // Wait for it...
+  // Wake the image grabbing thread (it might be waiting on a full buffer).
+  m_bufferNotFull.notify_one();
+
+  // Wait for the image grabbing thread to terminate gracefully.
   m_grabbingThread.join();
 }
 
@@ -61,7 +62,7 @@ ITMLib::ITMRGBDCalib AsyncImageSourceEngine::getCalib() const
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-  // If there are images in the buffer return the calib from the first one, otherwise defer to decorated image source.
+  // If there are images in the buffer, return the first image's calibration; if not, defer to the inner source.
   return !m_bufferedImages.empty() ? m_bufferedImages.front().calib : m_innerSource->getCalib();
 }
 
@@ -69,7 +70,7 @@ Vector2i AsyncImageSourceEngine::getDepthImageSize() const
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-  // If there are images in the buffer return the depth size of the first one, otherwise defer to decorated image source.
+  // If there are images in the buffer, return the first image's depth size; if not, defer to the inner source.
   return !m_bufferedImages.empty() ? m_bufferedImages.front().rawDepth->noDims : m_innerSource->getDepthImageSize();
 }
 
@@ -77,27 +78,31 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-  // getImages should not be called if hasMoreImages returned false.
-  if (m_bufferedImages.empty()) throw std::runtime_error("No more images to get. Need to call hasMoreImages() before getImages()");
-
-  RGBDImage &imagePair = m_bufferedImages.front();
-
-  // Resize output images (no-op in the typical case)
-  rgb->ChangeDims(imagePair.rgb->noDims);
-  rawDepth->ChangeDims(imagePair.rawDepth->noDims);
-
-  // Copy images
-  rgb->SetFrom(imagePair.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
-  rawDepth->SetFrom(imagePair.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
-
-  // If there is space available in m_rgbdImagePool, store the imagePair to avoid reallocating memory later.
-  if (m_rgbdImagePool.size() < m_rgbdImagePoolCapacity)
+  // If there are no more images available, early out.
+  if(m_bufferedImages.empty())
   {
-    m_rgbdImagePool.push(imagePair);
+    throw std::runtime_error("Error: No more images to get. Make sure to call hasMoreImages before calling getImages.");
   }
 
-  m_bufferedImages.pop(); // Remove element from the buffer.
-  // Notify producer that the buffer has one less element.
+  // Otherwise, get the first RGB-D image from the buffer.
+  RGBDImage& rgbdImage = m_bufferedImages.front();
+
+  // Ensure that the output images have the correct size (this is generally a no-op).
+  rawDepth->ChangeDims(rgbdImage.rawDepth->noDims);
+  rgb->ChangeDims(rgbdImage.rgb->noDims);
+
+  // Copy the depth and RGB images from the buffered image into the output images.
+  rawDepth->SetFrom(rgbdImage.rawDepth.get(), ITMShortImage::CPU_TO_CPU);
+  rgb->SetFrom(rgbdImage.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
+
+  // If there is space available in the RGB-D image pool, store the RGB-D image to avoid reallocating memory later.
+  if(m_rgbdImagePool.size() < m_rgbdImagePoolCapacity)
+  {
+    m_rgbdImagePool.push(rgbdImage);
+  }
+
+  // Remove the RGB-D image from the buffer and inform the image grabbing thread that the buffer is not full.
+  m_bufferedImages.pop();
   m_bufferNotFull.notify_one();
 }
 
@@ -105,7 +110,7 @@ Vector2i AsyncImageSourceEngine::getRGBImageSize() const
 {
   boost::unique_lock<boost::mutex> lock(m_bufferMutex);
 
-  // If there are images in the buffer return the rgb size of the first one, otherwise defer to decorated image source.
+  // If there are images in the buffer, return the first image's RGB size; if not, defer to the inner source.
   return !m_bufferedImages.empty() ? m_bufferedImages.front().rgb->noDims : m_innerSource->getRGBImageSize();
 }
 
