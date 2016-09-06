@@ -96,10 +96,7 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
   rgb->SetFrom(rgbdImage.rgb.get(), ITMUChar4Image::CPU_TO_CPU);
 
   // If there is space available in the RGB-D image pool, store the RGB-D image to avoid reallocating memory later.
-  if(m_pool.size() < m_poolCapacity)
-  {
-    m_pool.push(rgbdImage);
-  }
+  if(m_pool.size() < m_poolCapacity) m_pool.push(rgbdImage);
 
   // Remove the RGB-D image from the queue and inform the image grabber that the queue is not full.
   m_queue.pop();
