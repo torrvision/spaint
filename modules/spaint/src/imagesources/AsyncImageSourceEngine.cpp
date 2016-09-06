@@ -23,7 +23,7 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
 
   // Determine the maximum number of RGB-D images to store in the pool.
   const size_t MAX_POOL_CAPACITY = 60;
-  m_poolCapacity = std::min<size_t>(m_queueCapacity, MAX_POOL_CAPACITY);
+  m_poolCapacity = std::min(m_queueCapacity, MAX_POOL_CAPACITY);
 
   // If the inner source has images available, fill the pool to avoid allocating memory at runtime.
   // If the inner source doesn't have any images available, there is no need to allocate.
