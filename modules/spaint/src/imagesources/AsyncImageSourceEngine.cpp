@@ -122,11 +122,6 @@ bool AsyncImageSourceEngine::hasMoreImages() const
   // If the inner source has more images, wait for one to be added to the queue by the image grabber.
   while(m_innerSource->hasMoreImages() && m_queue.empty()) m_queueNotEmpty.wait(lock);
 
-#if 0
-  // If the queue is empty when we reach this point, it means that the other thread finished its work.
-  if(m_queue.empty() && m_innerSource->hasMoreImages()) throw std::runtime_error("Synchronization error.");
-#endif
-
   // At this point, either there is now an image in the queue, in which case we return true,
   // or the inner source has terminated, in which case we return false.
   return !m_queue.empty();
