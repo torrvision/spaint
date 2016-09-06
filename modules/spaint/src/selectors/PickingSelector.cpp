@@ -4,15 +4,9 @@
  */
 
 #include "selectors/PickingSelector.h"
-using namespace ITMLib;
 using namespace tvginput;
 
-#include "picking/cpu/Picker_CPU.h"
-
-#ifdef WITH_CUDA
-#include "picking/cuda/Picker_CUDA.h"
-#endif
-
+#include "picking/PickerFactory.h"
 #include "util/MemoryBlockFactory.h"
 
 namespace spaint {
@@ -21,25 +15,11 @@ namespace spaint {
 
 PickingSelector::PickingSelector(const Settings_CPtr& settings)
 : Selector(settings),
+  m_picker(PickerFactory::make_picker(settings->deviceType)),
   m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
   m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
   m_pickPointValid(false)
-{
-  // Make the picker.
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA)
-  {
-#ifdef WITH_CUDA
-    m_picker.reset(new Picker_CUDA);
-#else
-    // This should never happen as things stand - we set deviceType to DEVICE_CPU if CUDA support isn't available.
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-#endif
-  }
-  else
-  {
-    m_picker.reset(new Picker_CPU);
-  }
-}
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -67,7 +47,7 @@ Selector::Selection_CPtr PickingSelector::get_selection() const
   return m_pickPointValid ? m_pickPointShortMB : Selection_CPtr();
 }
 
-void PickingSelector::update(const InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
+void PickingSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Update whether or not the selector is active.
   m_isActive = renderingInMono && inputState.mouse_button_down(MOUSE_BUTTON_LEFT);
@@ -75,7 +55,7 @@ void PickingSelector::update(const InputState& inputState, const VoxelRenderStat
   // If the scene is not being rendered in mono, early out.
   if(!renderingInMono) return;
 
-  // Try and pick an individual voxel.
+  // Try to pick an individual voxel.
   m_pickPointValid = false;
 
   if(!inputState.mouse_position_known()) return;

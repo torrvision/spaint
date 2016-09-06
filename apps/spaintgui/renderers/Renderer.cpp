@@ -95,7 +95,7 @@ public:
   virtual void visit(const TouchSelector& selector) const
   {
     // Render the current touch interaction as an overlay.
-    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_view(Model::get_world_scene_id())));
+    m_base->render_overlay(selector.generate_touch_image(m_base->m_model->get_slam_state(Model::get_world_scene_id())->get_view()));
 
     // Render the points at which the user is touching the scene.
     const int selectionRadius = 1;
@@ -107,7 +107,7 @@ public:
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
-    const Vector2i& depthImageSize = m_base->m_model->get_depth_image_size(Model::get_world_scene_id());
+    const Vector2i& depthImageSize = m_base->m_model->get_slam_state(Model::get_world_scene_id())->get_depth_image_size();
     const float aspectRatio = static_cast<float>(depthImageSize.x) / depthImageSize.y;
 
     const Eigen::Vector3f labelOrbPos(0.9f, aspectRatio * 0.1f, 0.0f);
@@ -156,12 +156,10 @@ private:
 
 //#################### CONSTRUCTORS ####################
 
-Renderer::Renderer(const Model_CPtr& model, const VisualisationGenerator_CPtr& visualisationGenerator,
-                   const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
+Renderer::Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize)
 : m_medianFilteringEnabled(true),
   m_model(model),
   m_subwindowConfiguration(subwindowConfiguration),
-  m_visualisationGenerator(visualisationGenerator),
   m_windowViewportSize(windowViewportSize)
 {
   // Reset the camera for each sub-window.
@@ -296,7 +294,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const 
 
     // If we have not yet started reconstruction for this sub-window's scene, skip rendering it.
     const std::string& sceneID = subwindow.get_scene_id();
-    if(!m_model->get_view(sceneID)) continue;
+    if(!m_model->get_slam_state(sceneID)->get_view()) continue;
 
     // Set the viewport for the sub-window.
     int left = (int)ROUND(subwindow.top_left().x * windowViewportSize.width);
@@ -308,7 +306,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const 
     // If the sub-window is in follow mode, update its camera.
     if(subwindow.get_camera_mode() == Subwindow::CM_FOLLOW)
     {
-      ORUtils::SE3Pose livePose = m_model->get_pose(subwindow.get_scene_id());
+      ORUtils::SE3Pose livePose = m_model->get_slam_state(subwindow.get_scene_id())->get_pose();
       subwindow.get_camera()->set_from(CameraPoseConverter::pose_to_camera(livePose));
     }
 
@@ -351,17 +349,19 @@ void Renderer::generate_visualisation(const ITMUChar4Image_Ptr& output, const Sp
                                       VisualisationGenerator::VisualisationType visualisationType, bool surfelFlag,
                                       const boost::optional<VisualisationGenerator::Postprocessor>& postprocessor) const
 {
+  VisualisationGenerator_CPtr visualisationGenerator = m_model->get_visualisation_generator();
+
   switch(visualisationType)
   {
     case VisualisationGenerator::VT_INPUT_COLOUR:
-      m_visualisationGenerator->get_rgb_input(output, view);
+      visualisationGenerator->get_rgb_input(output, view);
       break;
     case VisualisationGenerator::VT_INPUT_DEPTH:
-      m_visualisationGenerator->get_depth_input(output, view);
+      visualisationGenerator->get_depth_input(output, view);
       break;
     default:
-      if(surfelFlag) m_visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
-      else m_visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
+      if(surfelFlag) visualisationGenerator->generate_surfel_visualisation(output, surfelScene, pose, view, surfelRenderState, visualisationType);
+      else visualisationGenerator->generate_voxel_visualisation(output, voxelScene, pose, view, voxelRenderState, visualisationType, postprocessor);
       break;
   }
 }
@@ -427,9 +427,10 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
 
   // Generate the subwindow image.
   const ITMUChar4Image_Ptr& image = subwindow.get_image();
+  SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   generate_visualisation(
-    image, m_model->get_voxel_scene(sceneID), m_model->get_surfel_scene(sceneID),
-    voxelRenderState, surfelRenderState, pose, m_model->get_view(sceneID),
+    image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
+    voxelRenderState, surfelRenderState, pose, slamState->get_view(),
     subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
@@ -453,8 +454,9 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   {
-    ORUtils::Vector2<int> depthImageSize = m_model->get_depth_image_size(sceneID);
-    set_projection_matrix(m_model->get_intrinsics(sceneID), depthImageSize.width, depthImageSize.height);
+    SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
+    ORUtils::Vector2<int> depthImageSize = slamState->get_depth_image_size();
+    set_projection_matrix(slamState->get_intrinsics(), depthImageSize.width, depthImageSize.height);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

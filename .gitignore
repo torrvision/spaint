@@ -1,11 +1,14 @@
 build*/
+compile_commands.json
 docs/
 install/
 libraries/arrayfire*/
 libraries/boost_1_56_0/
 libraries/boost-setup/
+libraries/ceres-solver-1.11.0/
 libraries/Eigen-3.2.2/
 libraries/glew-1.12.0/
+libraries/glog-0.3.4/
 libraries/lodepng*/
 libraries/opencv*/
 libraries/SDL2-2.0.3/

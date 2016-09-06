@@ -39,7 +39,7 @@ SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegme
   const size_t maxTrainingVoxelCount = maxLabelCount * m_maxTrainingVoxelsPerLabel;
 
   // Set up the voxel samplers.
-  const Vector2i& depthImageSize = context->get_depth_image_size(sceneID);
+  const Vector2i& depthImageSize = context->get_slam_state(sceneID)->get_depth_image_size();
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
   const Settings_CPtr& settings = context->get_settings();
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
@@ -96,7 +96,7 @@ void SemanticSegmentationComponent::run_feature_inspection(const VoxelRenderStat
 
   // Calculate the feature descriptor for the selected voxel.
   boost::shared_ptr<ORUtils::MemoryBlock<float> > featuresMB = MemoryBlockFactory::instance().make_block<float>(m_featureCalculator->get_feature_count());
-  m_featureCalculator->calculate_features(*selection, m_context->get_voxel_scene(m_sceneID).get(), *featuresMB);
+  m_featureCalculator->calculate_features(*selection, m_context->get_slam_state(m_sceneID)->get_voxel_scene().get(), *featuresMB);
 
 #ifdef WITH_OPENCV
   // Convert the feature descriptor into an OpenCV image and show it in a window.
@@ -126,7 +126,7 @@ void SemanticSegmentationComponent::run_prediction(const VoxelRenderState_CPtr& 
   m_predictionSampler->sample_voxels(renderState->raycastResult, m_maxPredictionVoxelCount, *m_predictionVoxelLocationsMB);
 
   // Calculate feature descriptors for the sampled voxels.
-  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_context->get_voxel_scene(m_sceneID).get(), *m_predictionFeaturesMB);
+  m_featureCalculator->calculate_features(*m_predictionVoxelLocationsMB, m_context->get_slam_state(m_sceneID)->get_voxel_scene().get(), *m_predictionFeaturesMB);
   std::vector<Descriptor_CPtr> descriptors = ForestUtil::make_descriptors(*m_predictionFeaturesMB, m_maxPredictionVoxelCount, m_featureCalculator->get_feature_count());
 
   // Predict labels for the voxels based on the feature descriptors.
@@ -167,7 +167,7 @@ void SemanticSegmentationComponent::run_training(const VoxelRenderState_CPtr& re
 
   // Sample voxels from the scene to use for training the random forest.
   const ORUtils::Image<Vector4f> *raycastResult = renderState->raycastResult;
-  m_trainingSampler->sample_voxels(raycastResult, m_context->get_voxel_scene(m_sceneID).get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
+  m_trainingSampler->sample_voxels(raycastResult, m_context->get_slam_state(m_sceneID)->get_voxel_scene().get(), *m_trainingLabelMaskMB, *m_trainingVoxelLocationsMB, *m_trainingVoxelCountsMB);
 
 #if DEBUGGING
   // Output the numbers of voxels sampled for each label (for debugging purposes).
@@ -182,7 +182,7 @@ void SemanticSegmentationComponent::run_training(const VoxelRenderState_CPtr& re
 #endif
 
   // Compute feature vectors for the sampled voxels.
-  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_context->get_voxel_scene(m_sceneID).get(), *m_trainingFeaturesMB);
+  m_featureCalculator->calculate_features(*m_trainingVoxelLocationsMB, m_context->get_slam_state(m_sceneID)->get_voxel_scene().get(), *m_trainingFeaturesMB);
 
   // Make the training examples.
   typedef boost::shared_ptr<const Example<SpaintVoxel::Label> > Example_CPtr;

@@ -22,6 +22,8 @@ ENDIF()
 ADD_SUBDIRECTORY(rafl)
 ADD_SUBDIRECTORY(rigging)
 
-ADD_SUBDIRECTORY(spaint)
+IF(BUILD_SPAINT)
+  ADD_SUBDIRECTORY(spaint)
+ENDIF()
 
 # Note: Ordering is important on Linux!

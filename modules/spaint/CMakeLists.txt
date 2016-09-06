@@ -197,6 +197,15 @@ include/spaint/ogl/WrappedGL.h
 )
 
 ##
+SET(picking_sources
+src/picking/PickerFactory.cpp
+)
+
+SET(picking_headers
+include/spaint/picking/PickerFactory.h
+)
+
+##
 SET(picking_cpu_sources
 src/picking/cpu/Picker_CPU.cpp
 )
@@ -499,6 +508,7 @@ src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
 src/util/RGBDUtil.cpp
+src/util/SLAMState.cpp
 )
 
 SET(util_headers
@@ -510,6 +520,7 @@ include/spaint/util/ITMObjectPtrTypes.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
+include/spaint/util/SLAMState.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
@@ -579,6 +590,7 @@ ${imagesources_sources}
 ${markers_sources}
 ${markers_cpu_sources}
 ${ogl_sources}
+${picking_sources}
 ${picking_cpu_sources}
 ${pipelinecomponents_sources}
 ${propagation_sources}
@@ -614,6 +626,7 @@ ${markers_cpu_headers}
 ${markers_interface_headers}
 ${markers_shared_headers}
 ${ogl_headers}
+${picking_headers}
 ${picking_cpu_headers}
 ${picking_interface_headers}
 ${picking_shared_headers}
@@ -714,6 +727,7 @@ SOURCE_GROUP(markers\\interface FILES ${markers_interface_headers})
 SOURCE_GROUP(markers\\shared FILES ${markers_shared_headers})
 SOURCE_GROUP(ocv FILES ${ocv_sources} ${ocv_headers})
 SOURCE_GROUP(ogl FILES ${ogl_sources} ${ogl_headers})
+SOURCE_GROUP(picking FILES ${picking_sources} ${picking_headers})
 SOURCE_GROUP(picking\\cpu FILES ${picking_cpu_sources} ${picking_cpu_headers})
 SOURCE_GROUP(picking\\cuda FILES ${picking_cuda_sources} ${picking_cuda_headers})
 SOURCE_GROUP(picking\\interface FILES ${picking_interface_headers})

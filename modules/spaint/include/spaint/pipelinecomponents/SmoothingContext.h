@@ -6,9 +6,8 @@
 #ifndef H_SPAINT_SMOOTHINGCONTEXT
 #define H_SPAINT_SMOOTHINGCONTEXT
 
-#include "../util/ITMObjectPtrTypes.h"
 #include "../util/LabelManager.h"
-#include "../util/SpaintVoxelScene.h"
+#include "../util/SLAMState.h"
 
 namespace spaint {
 
@@ -28,7 +27,7 @@ public:
 public:
   virtual const LabelManager_Ptr& get_label_manager() = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
-  virtual const SpaintVoxelScene_Ptr& get_voxel_scene(const std::string& sceneID) = 0;
+  virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID) = 0;
 };
 
 //#################### TYPEDEFS ####################

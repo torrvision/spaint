@@ -20,8 +20,6 @@
 
 #include <rigging/MoveableCamera.h>
 
-#include <spaint/visualisation/VisualisationGenerator.h>
-
 #include "../core/Model.h"
 #include "../subwindows/SubwindowConfiguration.h"
 
@@ -52,9 +50,6 @@ private:
   /** The ID of a texture in which to temporarily store the scene raycast and touch image when rendering. */
   GLuint m_textureID;
 
-  /** The visualisation generator to use in order to render the InfiniTAM scene. */
-  spaint::VisualisationGenerator_CPtr m_visualisationGenerator;
-
   /** The window into which to render. */
   SDL_Window_Ptr m_window;
 
@@ -67,12 +62,10 @@ protected:
    * \brief Constructs a renderer.
    *
    * \param model                   The spaint model.
-   * \param visualisationGenerator  The visualisation generator to use in order to render the InfiniTAM scene.
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    * \param windowViewportSize      The size of the window's viewport.
    */
-  Renderer(const Model_CPtr& model, const spaint::VisualisationGenerator_CPtr& visualisationGenerator,
-           const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize);
+  Renderer(const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, const Vector2i& windowViewportSize);
 
   //#################### DESTRUCTOR ####################
 public:

@@ -47,12 +47,10 @@ public:
    *
    * \param title                   The title of the window.
    * \param model                   The spaint model.
-   * \param visualisationGenerator  The visualisation generator to use in order to render the InfiniTAM scene.
    * \param subwindowConfiguration  The sub-window configuration to use for visualising the scene.
    * \param renderingMode           The rendering mode to use.
    */
-  RiftRenderer(const std::string& title, const Model_CPtr& model, const spaint::VisualisationGenerator_CPtr& visualisationGenerator,
-               const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode);
+  RiftRenderer(const std::string& title, const Model_CPtr& model, const SubwindowConfiguration_Ptr& subwindowConfiguration, RiftRenderingMode renderingMode);
 
   //#################### DESTRUCTOR ####################
 public:

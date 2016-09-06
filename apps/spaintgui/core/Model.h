@@ -14,7 +14,7 @@
 #include <spaint/selectiontransformers/interface/SelectionTransformer.h>
 #include <spaint/selectors/Selector.h>
 #include <spaint/util/LabelManager.h>
-#include <spaint/util/SpaintVoxelScene.h>
+#include <spaint/visualisation/VisualisationGenerator.h>
 
 /**
  * \brief An instance of this class represents our model of the spaint scenario.
@@ -61,6 +61,9 @@ private:
 
   /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
+
+  /** The visualisation generator that is used to render a scene. */
+  spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
   /** The voxel marker (used to apply semantic labels to voxels in the scene). */
   spaint::VoxelMarker_CPtr m_voxelMarker;
@@ -153,6 +156,13 @@ public:
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
 
   /**
+   * \brief Gets the visualisation generator that is used to render a scene.
+   *
+   * \return  The visualisation generator that is used to render a scene.
+   */
+  virtual spaint::VisualisationGenerator_CPtr get_visualisation_generator() const;
+
+  /**
    * \brief Gets the InfiniTAM engine used for rendering a voxel scene.
    *
    * \return  The InfiniTAM engine used for rendering a voxel scene.
@@ -192,10 +202,11 @@ public:
    * \brief Allows the user to change selector or update the current selector.
    *
    * \param inputState      The current input state.
+   * \param slamState       The SLAM state of the scene being viewed.
    * \param renderState     The voxel render state corresponding to the camera from which the scene is being viewed.
    * \param renderingInMono A flag indicating whether or not the scene is currently being rendered in mono.
    */
-  virtual void update_selector(const tvginput::InputState& inputState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update_selector(const tvginput::InputState& inputState, const spaint::SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -208,14 +219,8 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
-  /** Override */
-  virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const;
-
-  /** Override */
-  virtual const spaint::SpaintVoxelScene_Ptr& get_voxel_scene(const std::string& sceneID);
-
-  /** Override */
-  virtual spaint::SpaintVoxelScene_CPtr get_voxel_scene(const std::string& sceneID) const;
+  virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
+  virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -9,7 +9,7 @@
 #include "../markers/shared/VoxelMarker_Settings.h"
 #include "../selectors/Selector.h"
 #include "../util/LabelManager.h"
-#include "../util/SpaintVoxelScene.h"
+#include "../util/SLAMState.h"
 
 namespace spaint {
 
@@ -33,12 +33,11 @@ public:
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  virtual const Vector2i& get_depth_image_size(const std::string& sceneID) const = 0;
   virtual const LabelManager_Ptr& get_label_manager() = 0;
   virtual const std::string& get_resources_dir() const = 0;
   virtual Selector_CPtr get_selector() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
-  virtual const SpaintVoxelScene_Ptr& get_voxel_scene(const std::string& sceneID) = 0;
+  virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID) = 0;
   virtual void mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, MarkingMode mode) = 0;
 };
 
