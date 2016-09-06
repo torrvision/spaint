@@ -8,6 +8,8 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace spaint;
 
+#include <boost/bind.hpp>
+
 #ifdef WITH_OPENCV
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
@@ -63,7 +65,7 @@ Model_CPtr MultiScenePipeline::get_model() const
 
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
 {
-  MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->reset_forest();
+  MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::reset_forest, _1));
 }
 
 bool MultiScenePipeline::run_main_section()
@@ -81,35 +83,35 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
   switch(m_mode)
   {
     case MODE_FEATURE_INSPECTION:
-      MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_feature_inspection(renderState);
+      MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_feature_inspection, _1, renderState));
       break;
     case MODE_PREDICTION:
-      MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_prediction(renderState);
+      MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_prediction, _1, renderState));
       break;
     case MODE_PROPAGATION:
-      MapUtil::lookup(m_propagationComponents, sceneID)->run(renderState);
+      MapUtil::call_if_found(m_propagationComponents, sceneID, boost::bind(&PropagationComponent::run, _1, renderState));
       break;
     case MODE_SEGMENTATION:
-      MapUtil::lookup(m_objectSegmentationComponents, sceneID)->run_segmentation(renderState);
+      MapUtil::call_if_found(m_objectSegmentationComponents, sceneID, boost::bind(&ObjectSegmentationComponent::run_segmentation, _1, renderState));
       break;
     case MODE_SEGMENTATION_TRAINING:
-      MapUtil::lookup(m_objectSegmentationComponents, sceneID)->run_segmentation_training(renderState);
+      MapUtil::call_if_found(m_objectSegmentationComponents, sceneID, boost::bind(&ObjectSegmentationComponent::run_segmentation_training, _1, renderState));
       break;
     case MODE_SMOOTHING:
-      MapUtil::lookup(m_smoothingComponents, sceneID)->run(renderState);
+      MapUtil::call_if_found(m_smoothingComponents, sceneID, boost::bind(&SmoothingComponent::run, _1, renderState));
       break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_training(renderState);
-      else MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_prediction(renderState);
+      if(trainThisFrame) MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_training, _1, renderState));
+      else MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_prediction, _1, renderState));
 
       break;
     }
     case MODE_TRAINING:
-      MapUtil::lookup(m_semanticSegmentationComponents, sceneID)->run_training(renderState);
+      MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_training, _1, renderState));
       break;
     default:
       break;
@@ -134,7 +136,7 @@ void MultiScenePipeline::set_mode(Mode mode)
   // If we are switching into segmentation training mode, reset the segmenter.
   if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
   {
-    MapUtil::lookup(m_objectSegmentationComponents, Model::get_world_scene_id())->reset_segmenter();
+    MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::reset_segmenter, _1));
   }
 
   // If we are switching out of segmentation training mode, clear the segmentation image.
