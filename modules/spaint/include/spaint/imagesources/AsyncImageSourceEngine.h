@@ -108,7 +108,7 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Loop executed by the inner thread to grab images from m_innerSource.
+   * \brief Runs the loop that grabs images from the existing image source.
    */
   void grabbing_loop();
 };
