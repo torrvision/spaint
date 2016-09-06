@@ -23,7 +23,7 @@ class PickingSelector : public Selector
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The picker. */
-  boost::shared_ptr<const Picker> m_picker;
+  Picker_CPtr m_picker;
 
   /** A memory block into which to store the most recent point picked by the user as a Vector3f, in voxel coordinates. */
   boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > m_pickPointFloatMB;
