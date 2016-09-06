@@ -15,7 +15,7 @@
 #include "Model.h"
 
 /**
- * \brief An instance of this class represents a processing pipeline for multiple scenes.
+ * \brief An instance of a class deriving from this one represents a processing pipeline for multiple scenes.
  */
 class MultiScenePipeline
 {

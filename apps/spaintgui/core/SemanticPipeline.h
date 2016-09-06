@@ -9,7 +9,7 @@
 #include "MultiScenePipeline.h"
 
 /**
- * \brief TODO
+ * \brief An instance of this class represents a SemanticPaint processing pipeline.
  */
 class SemanticPipeline : public MultiScenePipeline
 {

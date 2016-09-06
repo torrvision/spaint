@@ -9,7 +9,7 @@
 #include "MultiScenePipeline.h"
 
 /**
- * \brief TODO
+ * \brief An instance of this class represents an ObjectivePaint processing pipeline.
  */
 class ObjectivePipeline : public MultiScenePipeline
 {
