@@ -54,8 +54,8 @@ public:
     MODE_TRAINING
   };
 
-  //#################### PRIVATE VARIABLES ####################
-private:
+  //#################### PROTECTED VARIABLES ####################
+protected:
   /** The mode in which the multi-scene pipeline is currently running. */
   Mode m_mode;
 
@@ -80,7 +80,7 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of the multi-scene pipeline.
+   * \brief Constructs a multi-scene pipeline.
    *
    * \param settings      The settings to use for InfiniTAM.
    * \param resourcesDir  The path to the resources directory.
@@ -88,24 +88,15 @@ public:
    */
   MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Adds semantic pipeline components for an individual scene to the multi-scene pipeline.
-   *
-   * \param sceneID           The ID of the individual scene.
-   * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
-   * \param seed              The seed to use for the random number generators used by the voxel samplers.
-   * \param trackerType       The type of tracker to use when reconstructing the scene.
-   * \param trackerParams     The parameters for the tracker (if any).
-   * \param mappingMode       The mapping mode that the scene's SLAM component should use.
-   * \param trackingMode      The tracking mode that the scene's SLAM component should use.
+   * \brief Destroys the multi-scene pipeline.
    */
-  void add_semantic_components(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                               spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
-                               spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
-                               spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
+  virtual ~MultiScenePipeline();
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Gets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    *

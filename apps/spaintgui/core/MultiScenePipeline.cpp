@@ -35,18 +35,11 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
   m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
 }
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
+//#################### DESTRUCTOR ####################
 
-void MultiScenePipeline::add_semantic_components(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                                                 unsigned int seed, TrackerType trackerType, const std::string& trackerParams,
-                                                 SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
-{
-  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
-  m_objectSegmentationComponents[sceneID].reset(new ObjectSegmentationComponent(m_model, sceneID));
-  m_propagationComponents[sceneID].reset(new PropagationComponent(m_model, sceneID));
-  m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
-  m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
-}
+MultiScenePipeline::~MultiScenePipeline() {}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 bool MultiScenePipeline::get_fusion_enabled(const std::string& sceneID) const
 {

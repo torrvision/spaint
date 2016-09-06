@@ -37,7 +37,7 @@ using namespace spaint;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-#include "core/MultiScenePipeline.h"
+#include "core/SemanticPipeline.h"
 
 //#################### TYPES ####################
 
@@ -241,14 +241,12 @@ try
 #endif
   }
 
-  // Construct the multi-scene pipeline.
+  // Construct the pipeline.
   const size_t maxLabelCount = 10;
-  MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), maxLabelCount));
-
   const unsigned int seed = 12345;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-  pipeline->add_semantic_components(Model::get_world_scene_id(), imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
+  MultiScenePipeline_Ptr pipeline(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
 
   // Run the application.
   Application app(pipeline);
