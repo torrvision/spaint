@@ -11,8 +11,6 @@ using namespace spaint;
 #include <boost/bind.hpp>
 
 #include <tvgutil/containers/MapUtil.h>
-#include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
@@ -118,47 +116,3 @@ void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fus
 {
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
 }
-
-#if 0
-void MultiScenePipeline::set_mode(Mode mode)
-{
-#ifdef WITH_OPENCV
-  // If we are switching out of feature inspection mode, destroy the feature inspection window.
-  if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
-  {
-    cv::destroyAllWindows();
-  }
-#endif
-
-  // If we are switching into segmentation training mode, reset the segmenter.
-  if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
-  {
-    MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::reset_segmenter, _1));
-  }
-
-  // If we are switching out of segmentation training mode, clear the segmentation image.
-  if(m_mode == MODE_SEGMENTATION_TRAINING && mode != MODE_SEGMENTATION_TRAINING)
-  {
-    m_model->set_segmentation_image(ITMUChar4Image_CPtr());
-  }
-
-  // If we are switching into segmentation mode, start a new segmentation video.
-  boost::optional<SequentialPathGenerator>& segmentationPathGenerator = m_model->get_segmentation_path_generator();
-  if(mode == MODE_SEGMENTATION && m_mode != MODE_SEGMENTATION)
-  {
-    segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / TimeUtil::get_iso_timestamp()));
-    boost::filesystem::create_directories(segmentationPathGenerator->get_base_dir());
-  }
-
-  // If we are switching out of segmentation mode, stop recording the segmentation video
-  // and clear the segmentation image and target mask.
-  if(m_mode == MODE_SEGMENTATION && mode != MODE_SEGMENTATION)
-  {
-    segmentationPathGenerator.reset();
-    m_model->set_segmentation_image(ITMUChar4Image_CPtr());
-    m_model->get_segmenter()->get_target_mask().reset();
-  }
-
-  m_mode = mode;
-}
-#endif

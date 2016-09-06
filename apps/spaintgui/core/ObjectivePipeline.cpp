@@ -1,0 +1,68 @@
+/**
+ * spaintgui: ObjectivePipeline.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ */
+
+#include "ObjectivePipeline.h"
+using namespace spaint;
+
+#include <tvgutil/containers/MapUtil.h>
+#include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
+
+//#################### CONSTRUCTORS ####################
+
+ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+                                   TrackerType trackerType, const std::string& trackerParams, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
+: MultiScenePipeline(settings, resourcesDir, maxLabelCount)
+{
+  const std::string sceneID = Model::get_world_scene_id();
+  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+  m_objectSegmentationComponents[sceneID].reset(new ObjectSegmentationComponent(m_model, sceneID));
+}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+void ObjectivePipeline::set_mode(Mode mode)
+{
+  // If we are switching into segmentation training mode, reset the segmenter.
+  if(mode == MODE_SEGMENTATION_TRAINING && m_mode != MODE_SEGMENTATION_TRAINING)
+  {
+    MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::reset_segmenter, _1));
+  }
+
+  // If we are switching out of segmentation training mode, clear the segmentation image.
+  if(m_mode == MODE_SEGMENTATION_TRAINING && mode != MODE_SEGMENTATION_TRAINING)
+  {
+    m_model->set_segmentation_image(ITMUChar4Image_CPtr());
+  }
+
+  // If we are switching into segmentation mode, start a new segmentation video.
+  boost::optional<SequentialPathGenerator>& segmentationPathGenerator = m_model->get_segmentation_path_generator();
+  if(mode == MODE_SEGMENTATION && m_mode != MODE_SEGMENTATION)
+  {
+    segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / TimeUtil::get_iso_timestamp()));
+    boost::filesystem::create_directories(segmentationPathGenerator->get_base_dir());
+  }
+
+  // If we are switching out of segmentation mode, stop recording the segmentation video
+  // and clear the segmentation image and target mask.
+  if(m_mode == MODE_SEGMENTATION && mode != MODE_SEGMENTATION)
+  {
+    segmentationPathGenerator.reset();
+    m_model->set_segmentation_image(ITMUChar4Image_CPtr());
+    m_model->get_segmenter()->get_target_mask().reset();
+  }
+
+  switch(mode)
+  {
+    case MODE_NORMAL:
+    case MODE_SEGMENTATION:
+    case MODE_SEGMENTATION_TRAINING:
+      m_mode = mode;
+      break;
+    default:
+      break;
+  }
+}

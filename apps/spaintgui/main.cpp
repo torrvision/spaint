@@ -37,6 +37,7 @@ using namespace spaint;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
+#include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 
 //#################### TYPES ####################
@@ -246,7 +247,11 @@ try
   const unsigned int seed = 12345;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
+#if 0
   MultiScenePipeline_Ptr pipeline(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
+#else
+  MultiScenePipeline_Ptr pipeline(new ObjectivePipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+#endif
 
   // Run the application.
   Application app(pipeline);
