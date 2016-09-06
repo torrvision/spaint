@@ -224,8 +224,9 @@ try
   {
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
-    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(new ImageFileReader<ImageMaskPathGenerator>(
-      args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber), args.prefetchBufferCapacity
+    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+      args.prefetchBufferCapacity
     ));
   }
 
