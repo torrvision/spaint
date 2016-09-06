@@ -51,6 +51,7 @@ struct CommandLineArguments
   bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
+  std::string pipelineType;
   std::string rgbImageMask;
   std::string sequenceName;
   std::string sequenceType;
@@ -69,6 +70,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
+    ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
@@ -244,14 +246,20 @@ try
 
   // Construct the pipeline.
   const size_t maxLabelCount = 10;
-  const unsigned int seed = 12345;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-#if 0
-  MultiScenePipeline_Ptr pipeline(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
-#else
-  MultiScenePipeline_Ptr pipeline(new ObjectivePipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
-#endif
+
+  MultiScenePipeline_Ptr pipeline;
+  if(args.pipelineType == "semantic")
+  {
+    const unsigned int seed = 12345;
+    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
+  }
+  else if(args.pipelineType == "objective")
+  {
+    pipeline.reset(new ObjectivePipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+  }
+  else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
   // Run the application.
   Application app(pipeline);
