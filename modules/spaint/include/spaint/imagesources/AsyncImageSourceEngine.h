@@ -42,7 +42,10 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The thread on which images are grabbed from the existing image source. */
-  boost::thread m_grabbingThread;
+  boost::thread m_grabber;
+
+  /** A flag set in the destructor to indicate that the image grabber should terminate. */
+  bool m_grabberShouldTerminate;
 
   /** The image source to be decorated. */
   ImageSourceEngine_Ptr m_innerSource;
@@ -67,9 +70,6 @@ private:
 
   /** A condition variable used to wait for elements to be removed from the queue. */
   boost::condition_variable m_queueNotFull;
-
-  /** A flag set in the destructor to indicate that the grabbing thread should terminate. */
-  bool m_terminate;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -108,9 +108,9 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief Runs the loop that grabs images from the existing image source.
+   * \brief Runs the image grabber.
    */
-  void grabbing_loop();
+  void run_image_grabber();
 };
 
 }

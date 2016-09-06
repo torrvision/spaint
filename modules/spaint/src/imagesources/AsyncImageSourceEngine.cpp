@@ -12,9 +12,9 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t queueCapacity)
-: m_innerSource(innerSource),
-  m_queueCapacity(queueCapacity > 0 ? queueCapacity : std::numeric_limits<size_t>::max()),
-  m_terminate(false)
+: m_grabberShouldTerminate(false),
+  m_innerSource(innerSource),
+  m_queueCapacity(queueCapacity > 0 ? queueCapacity : std::numeric_limits<size_t>::max())
 {
   if(!innerSource)
   {
@@ -38,22 +38,22 @@ AsyncImageSourceEngine::AsyncImageSourceEngine(ImageSourceEngine *innerSource, s
     }
   }
 
-  // Start the image grabbing thread.
-  m_grabbingThread = boost::thread(boost::bind(&AsyncImageSourceEngine::grabbing_loop, this));
+  // Start the image grabber.
+  m_grabber = boost::thread(boost::bind(&AsyncImageSourceEngine::run_image_grabber, this));
 }
 
 //#################### DESTRUCTOR ####################
 
 AsyncImageSourceEngine::~AsyncImageSourceEngine()
 {
-  // Set the flag that informs the image grabbing thread that it should terminate.
-  m_terminate = true;
+  // Set the flag that informs the image grabber that it should terminate.
+  m_grabberShouldTerminate = true;
 
-  // Wake the image grabbing thread (it might be waiting on a full queue).
+  // Wake the image grabber (it might be waiting on a full queue).
   m_queueNotFull.notify_one();
 
-  // Wait for the image grabbing thread to terminate gracefully.
-  m_grabbingThread.join();
+  // Wait for the image grabber to terminate gracefully.
+  m_grabber.join();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -101,7 +101,7 @@ void AsyncImageSourceEngine::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDe
     m_pool.push(rgbdImage);
   }
 
-  // Remove the RGB-D image from the queue and inform the image grabbing thread that the queue is not full.
+  // Remove the RGB-D image from the queue and inform the image grabber that the queue is not full.
   m_queue.pop();
   m_queueNotFull.notify_one();
 }
@@ -119,11 +119,11 @@ bool AsyncImageSourceEngine::hasMoreImages() const
   // We need to grab the mutex in case the queue is empty, in which case we need to wait to see if an image becomes available.
   boost::unique_lock<boost::mutex> lock(m_mutex);
 
-  // If the inner source has more images, wait for one to be added to the queue by the image grabbing thread.
+  // If the inner source has more images, wait for one to be added to the queue by the image grabber.
   while(m_innerSource->hasMoreImages() && m_queue.empty()) m_queueNotEmpty.wait(lock);
 
 #if 0
-  // If the queue is empty when we reach this point, it means that the other thread finished its work
+  // If the queue is empty when we reach this point, it means that the other thread finished its work.
   if(m_queue.empty() && m_innerSource->hasMoreImages()) throw std::runtime_error("Synchronization error.");
 #endif
 
@@ -134,17 +134,17 @@ bool AsyncImageSourceEngine::hasMoreImages() const
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void AsyncImageSourceEngine::grabbing_loop()
+void AsyncImageSourceEngine::run_image_grabber()
 {
-  while(!m_terminate)
+  while(!m_grabberShouldTerminate)
   {
     boost::unique_lock<boost::mutex> lock(m_mutex);
 
     // If the queue is full, wait until some images have been consumed or termination is requested.
-    while(!m_terminate && m_queue.size() >= m_queueCapacity) m_queueNotFull.wait(lock);
+    while(!m_grabberShouldTerminate && m_queue.size() >= m_queueCapacity) m_queueNotFull.wait(lock);
 
     // If we were asked to terminate, do so.
-    if(m_terminate) return;
+    if(m_grabberShouldTerminate) return;
 
     // If there are no more images available from the inner source, notify anyone waiting for an image and terminate.
     if(!m_innerSource->hasMoreImages())
