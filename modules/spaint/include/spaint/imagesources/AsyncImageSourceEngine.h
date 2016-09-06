@@ -17,7 +17,7 @@ namespace spaint {
 
 /**
  * \brief An instance of this class can be used to read RGB-D images asynchronously from an existing image source.
- *        Images are read from the existing source on a separate thread and stored in an in-memory buffer. This
+ *        Images are read from the existing source on a separate thread and stored in an in-memory queue. This
  *        leads to lower latency when processing a disk sequence.
  */
 class AsyncImageSourceEngine : public InputSource::ImageSourceEngine
@@ -41,32 +41,32 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The maximum number of elements allowed in the buffer. */
-  size_t m_bufferCapacity;
-
-  /** A queue of cached RGB-D images. */
-  std::queue<RGBDImage> m_bufferedImages;
-
-  /** The synchronisation mutex. */
-  mutable boost::mutex m_bufferMutex;
-
-  /** A condition variable used to wait for elements to be inserted in the buffer. */
-  mutable boost::condition_variable m_bufferNotEmpty;
-
-  /** A condition variable used to wait for elements to be removed from the buffer. */
-  boost::condition_variable m_bufferNotFull;
-
   /** The thread on which images are grabbed from the existing image source. */
   boost::thread m_grabbingThread;
 
   /** The image source to be decorated. */
   ImageSourceEngine_Ptr m_innerSource;
 
+  /** The synchronisation mutex. */
+  mutable boost::mutex m_mutex;
+
   /** A pool of reusable RGB-D images. */
-  std::queue<RGBDImage> m_rgbdImagePool;
+  std::queue<RGBDImage> m_pool;
 
   /** The maximum number of elements that can be stored in the RGB-D image pool. */
-  size_t m_rgbdImagePoolCapacity;
+  size_t m_poolCapacity;
+
+  /** A queue of cached RGB-D images. */
+  std::queue<RGBDImage> m_queue;
+
+  /** The maximum number of elements that can be stored in the RGB-D image queue. */
+  size_t m_queueCapacity;
+
+  /** A condition variable used to wait for elements to be added to the queue. */
+  mutable boost::condition_variable m_queueNotEmpty;
+
+  /** A condition variable used to wait for elements to be removed from the queue. */
+  boost::condition_variable m_queueNotFull;
 
   /** A flag set in the destructor to indicate that the grabbing thread should terminate. */
   bool m_terminate;
@@ -76,10 +76,10 @@ public:
   /**
    * \brief Constructs an asynchronous image source engine.
    *
-   * \param innerSource    The image source to be decorated.
-   * \param bufferCapacity The maximum number of RGB-D images that will be cached (0 means no limit).
+   * \param innerSource   The image source to be decorated.
+   * \param queueCapacity The maximum number of RGB-D images that will be cached (0 means no limit).
    */
-  explicit AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t bufferCapacity = 0);
+  explicit AsyncImageSourceEngine(ImageSourceEngine *innerSource, size_t queueCapacity = 0);
 
   //#################### DESTRUCTOR ####################
 public:
