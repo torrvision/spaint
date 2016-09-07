@@ -141,8 +141,7 @@ bool SLAMComponent::process_frame()
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
-  ITMLibSettings::FailureMode failureMode = m_sceneID == "Object" ? ITMLibSettings::FAILUREMODE_IGNORE : m_context->get_settings()->behaviourOnFailure;
-  switch(failureMode)
+  switch(m_context->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
