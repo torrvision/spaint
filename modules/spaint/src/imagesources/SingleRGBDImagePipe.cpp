@@ -10,49 +10,48 @@ using namespace ITMLib;
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+SingleRGBDImagePipe::SingleRGBDImagePipe(const ImageSourceEngine_CPtr& imageSourceEngine)
+: m_calib(imageSourceEngine->getCalib()),
+  m_depthImageSize(imageSourceEngine->getDepthImageSize()),
+  m_rgbImageSize(imageSourceEngine->getRGBImageSize())
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 ITMRGBDCalib SingleRGBDImagePipe::getCalib() const
 {
-  if(m_calib) return *m_calib;
-  else throw std::runtime_error("Error: No calibration parameters available in pipe");
+  return m_calib;
 }
 
 Vector2i SingleRGBDImagePipe::getDepthImageSize() const
 {
-  if(m_rawDepthImage) return m_rawDepthImage->noDims;
-  else throw std::runtime_error("Error: No depth image available in pipe");
+  return m_depthImageSize;
 }
 
 void SingleRGBDImagePipe::getImages(ITMUChar4Image *rgb, ITMShortImage *rawDepth)
 {
-  rawDepth->SetFrom(m_rawDepthImage.get(), ITMShortImage::CPU_TO_CPU);
+  rawDepth->SetFrom(m_depthImage.get(), ITMShortImage::CPU_TO_CPU);
   rgb->SetFrom(m_rgbImage.get(), ITMUChar4Image::CPU_TO_CPU);
 
-  m_calib.reset();
-  m_rawDepthImage.reset();
+  m_depthImage.reset();
   m_rgbImage.reset();
 }
 
 Vector2i SingleRGBDImagePipe::getRGBImageSize() const
 {
-  if(m_rgbImage) return m_rgbImage->noDims;
-  else throw std::runtime_error("Error: No RGB image available in pipe");
+  return m_rgbImageSize;
 }
 
 bool SingleRGBDImagePipe::hasMoreImages() const
 {
-  return m_rawDepthImage || m_rgbImage;
+  return m_depthImage || m_rgbImage;
 }
 
-void SingleRGBDImagePipe::set_calib(const ITMLib::ITMRGBDCalib& calib)
+void SingleRGBDImagePipe::set_images(const ITMUChar4Image_CPtr& rgbImage, const ITMShortImage_CPtr& depthImage)
 {
-  m_calib = calib;
-}
-
-void SingleRGBDImagePipe::set_images(const ITMUChar4Image_CPtr& rgbImage, const ITMShortImage_CPtr& rawDepthImage)
-{
-  m_rawDepthImage = rawDepthImage;
+  m_depthImage = depthImage;
   m_rgbImage = rgbImage;
 }
 

@@ -19,8 +19,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-ObjectSegmentationComponent::ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID)
-: m_context(context), m_sceneID(sceneID)
+ObjectSegmentationComponent::ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID, const SingleRGBDImagePipe_Ptr& outputPipe)
+: m_context(context), m_outputPipe(outputPipe), m_sceneID(sceneID)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -58,6 +58,8 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput);
   ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
   ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput);
+
+  if(m_outputPipe) m_outputPipe->set_images(rgbMasked, depthMasked);
 
   boost::optional<SequentialPathGenerator>& segmentationPathGenerator = m_context->get_segmentation_path_generator();
   if(segmentationPathGenerator)

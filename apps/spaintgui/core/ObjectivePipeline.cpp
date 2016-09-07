@@ -4,6 +4,8 @@
  */
 
 #include "ObjectivePipeline.h"
+
+#include <spaint/imagesources/SingleRGBDImagePipe.h>
 using namespace spaint;
 
 #include <tvgutil/containers/MapUtil.h>
@@ -17,9 +19,13 @@ ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::st
                                    TrackerType trackerType, const std::string& trackerParams, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
 : MultiScenePipeline(settings, resourcesDir, maxLabelCount)
 {
-  const std::string sceneID = Model::get_world_scene_id();
-  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
-  m_objectSegmentationComponents[sceneID].reset(new ObjectSegmentationComponent(m_model, sceneID));
+  const std::string worldSceneID = Model::get_world_scene_id();
+  SingleRGBDImagePipe_Ptr pipe(new SingleRGBDImagePipe(imageSourceEngine));
+  m_slamComponents[worldSceneID].reset(new SLAMComponent(m_model, worldSceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+  m_objectSegmentationComponents[worldSceneID].reset(new ObjectSegmentationComponent(m_model, worldSceneID, pipe));
+
+  const std::string objectSceneID = "Object";
+  m_slamComponents[objectSceneID].reset(new SLAMComponent(m_model, objectSceneID, pipe, trackerType, trackerParams, mappingMode, trackingMode));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -42,8 +48,10 @@ void ObjectivePipeline::set_mode(Mode mode)
   boost::optional<SequentialPathGenerator>& segmentationPathGenerator = m_model->get_segmentation_path_generator();
   if(mode == MODE_SEGMENTATION && m_mode != MODE_SEGMENTATION)
   {
+#if 0
     segmentationPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("segmentations") / TimeUtil::get_iso_timestamp()));
     boost::filesystem::create_directories(segmentationPathGenerator->get_base_dir());
+#endif
   }
 
   // If we are switching out of segmentation mode, stop recording the segmentation video

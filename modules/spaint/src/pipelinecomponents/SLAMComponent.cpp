@@ -11,6 +11,7 @@
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
+using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 using namespace RelocLib;
@@ -30,7 +31,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                              TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
 : m_context(context),
   m_fusedFramesCount(0),
@@ -262,8 +263,9 @@ bool SLAMComponent::process_frame()
     m_context->get_surfel_visualisation_engine()->FindSurfaceSuper(surfelScene.get(), trackingState->pose_d, &view->calib.intrinsics_d, USR_RENDER, liveSurfelRenderState.get());
   }
 
-  // If the current sub-engine has run out of images, disable fusion.
-  if(!m_imageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+  // If we're using a composite image source engine and the current sub-engine has run out of images, disable fusion.
+  CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
+  if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   return true;
 }

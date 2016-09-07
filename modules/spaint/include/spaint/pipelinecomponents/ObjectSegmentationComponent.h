@@ -7,6 +7,7 @@
 #define H_SPAINT_OBJECTSEGMENTATIONCOMPONENT
 
 #include "ObjectSegmentationContext.h"
+#include "../imagesources/SingleRGBDImagePipe.h"
 #include "../segmentation/Segmenter.h"
 
 namespace spaint {
@@ -21,6 +22,9 @@ private:
   /** The shared context needed for object segmentation. */
   ObjectSegmentationContext_Ptr m_context;
 
+  /** TODO */
+  SingleRGBDImagePipe_Ptr m_outputPipe;
+
   /** The ID of the scene on which the component should operate. */
   std::string m_sceneID;
 
@@ -29,10 +33,11 @@ public:
   /**
    * \brief Constructs an object segmentation component.
    *
-   * \param context The shared context needed for object segmentation.
-   * \param sceneID The ID of the scene on which the component should operate.
+   * \param context     The shared context needed for object segmentation.
+   * \param sceneID     The ID of the scene on which the component should operate.
+   * \param outputPipe  TODO
    */
-  ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID);
+  ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID, const SingleRGBDImagePipe_Ptr& outputPipe = SingleRGBDImagePipe_Ptr());
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

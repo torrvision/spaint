@@ -89,7 +89,7 @@ private:
   bool m_fusionEnabled;
 
   /** The engine used to provide input images to the fusion process. */
-  CompositeImageSourceEngine_Ptr m_imageSourceEngine;
+  ImageSourceEngine_Ptr m_imageSourceEngine;
 
   /** The IMU calibrator. */
   IMUCalibrator_Ptr m_imuCalibrator;
@@ -156,7 +156,7 @@ public:
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    */
-  SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+  SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                 TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
                 TrackingMode trackingMode = TRACK_VOXELS);
 

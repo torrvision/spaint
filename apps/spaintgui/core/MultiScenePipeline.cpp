@@ -67,7 +67,7 @@ bool MultiScenePipeline::run_main_section()
   bool result = true;
   for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
-    result = result && it->second->process_frame();
+    if(!it->second->process_frame()) result = false;
   }
   return result;
 }

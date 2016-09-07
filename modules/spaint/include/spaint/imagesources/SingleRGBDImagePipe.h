@@ -8,9 +8,8 @@
 
 #include <boost/optional.hpp>
 
-#include <InputSource/ImageSourceEngine.h>
-
 #include "../util/ITMImagePtrTypes.h"
+#include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
 
@@ -22,13 +21,26 @@ class SingleRGBDImagePipe : public InputSource::ImageSourceEngine
   //#################### PRIVATE VARIABLES ####################
 private:
   /** TODO */
-  boost::optional<ITMLib::ITMRGBDCalib> m_calib;
+  ITMLib::ITMRGBDCalib m_calib;
 
   /** TODO */
-  ITMShortImage_CPtr m_rawDepthImage;
+  ITMShortImage_CPtr m_depthImage;
+
+  /** TODO */
+  Vector2i m_depthImageSize;
 
   /** TODO */
   ITMUChar4Image_CPtr m_rgbImage;
+
+  /** TODO */
+  Vector2i m_rgbImageSize;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief TODO
+   */
+  explicit SingleRGBDImagePipe(const ImageSourceEngine_CPtr& imageSourceEngine);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -50,13 +62,13 @@ public:
   /**
    * \brief TODO
    */
-  void set_calib(const ITMLib::ITMRGBDCalib& calib);
-
-  /**
-   * \brief TODO
-   */
   void set_images(const ITMUChar4Image_CPtr& rgbImage, const ITMShortImage_CPtr& rawDepthImage);
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<SingleRGBDImagePipe> SingleRGBDImagePipe_Ptr;
+typedef boost::shared_ptr<const SingleRGBDImagePipe> SingleRGBDImagePipe_CPtr;
 
 }
 

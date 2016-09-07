@@ -22,10 +22,10 @@ public:
    * \param resourcesDir      The path to the resources directory.
    * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param imageSourceEngine The engine used to provide input images to the SLAM component for the world scene.
-   * \param trackerType       The type of tracker to use when reconstructing the scene.
+   * \param trackerType       The type of tracker to use when reconstructing the world scene.
    * \param trackerParams     The parameters for the tracker (if any).
-   * \param mappingMode       The mapping mode that the scene's SLAM component should use.
-   * \param trackingMode      The tracking mode that the scene's SLAM component should use.
+   * \param mappingMode       The mapping mode that the world scene's SLAM component should use.
+   * \param trackingMode      The tracking mode that the world scene's SLAM component should use.
    */
   ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
                     spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
