@@ -253,10 +253,15 @@ bool SLAMComponent::process_frame()
 
 void SLAMComponent::reset_scene()
 {
-  // Reset the scene and the pose.
+  // Reset the scene.
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   m_denseVoxelMapper->ResetScene(slamState->get_voxel_scene().get());
-  // TODO: Reset the surfel scene as well.
+  if(m_mappingMode != MAP_VOXELS_ONLY)
+  {
+    slamState->get_surfel_scene()->Reset();
+  }
+
+  // Reset the tracking state.
   slamState->set_pose(SE3Pose());
   slamState->get_tracking_state()->age_pointCloud = -1;
 
