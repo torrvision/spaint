@@ -177,6 +177,11 @@ public:
   bool process_frame();
 
   /**
+   * \brief Resets the reconstructed scene.
+   */
+  void reset_scene();
+
+  /**
    * \brief Sets whether or not the user wants fusion to be run.
    *
    * Note: Just because the user wants fusion to be run doesn't mean that it necessarily will be on every frame.

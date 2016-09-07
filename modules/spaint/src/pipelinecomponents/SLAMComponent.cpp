@@ -34,11 +34,8 @@ namespace spaint {
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                              TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
 : m_context(context),
-  m_fusedFramesCount(0),
-  m_fusionEnabled(true),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
-  m_keyframeDelay(0),
   m_mappingMode(mappingMode),
   m_sceneID(sceneID),
   m_trackerParams(trackerParams),
@@ -73,7 +70,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   // Set up the dense mappers.
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
   m_denseVoxelMapper.reset(new ITMDenseMapper<SpaintVoxel,ITMVoxelIndex>(settings.get()));
-  m_denseVoxelMapper->ResetScene(voxelScene.get());
   if(mappingMode != MAP_VOXELS_ONLY)
   {
     m_denseSurfelMapper.reset(new ITMDenseSurfelMapper<SpaintSurfel>(depthImageSize, settings->deviceType));
@@ -93,17 +89,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
     slamState->set_live_surfel_render_state(SurfelRenderState_Ptr(new ITMSurfelRenderState(trackedImageSize, settings->surfelSceneParams.supersamplingFactor)));
   }
 
-  // Set up the pose database and the relocaliser.
-  m_poseDatabase.reset(new PoseDatabase);
-
-  const float harvestingThreshold = 0.2f;
-  const int numFerns = 500;
-  const int numDecisionsPerFern = 4;
-  m_relocaliser.reset(new Relocaliser(
-    depthImageSize,
-    Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max),
-    harvestingThreshold, numFerns, numDecisionsPerFern
-  ));
+  // Set up the scene.
+  reset_scene();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -268,6 +255,35 @@ bool SLAMComponent::process_frame()
   if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
   return true;
+}
+
+void SLAMComponent::reset_scene()
+{
+  // Reset the scene and the pose.
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  m_denseVoxelMapper->ResetScene(slamState->get_voxel_scene().get());
+  // TODO: Reset the surfel scene as well.
+  slamState->set_pose(SE3Pose());
+  slamState->get_tracking_state()->age_pointCloud = -1;
+
+  // Reset the pose database and the relocaliser.
+  m_poseDatabase.reset(new PoseDatabase);
+
+  const Vector2i& depthImageSize = slamState->get_depth_image_size();
+  const float harvestingThreshold = 0.2f;
+  const int numFerns = 500;
+  const int numDecisionsPerFern = 4;
+  const Settings_CPtr& settings = m_context->get_settings();
+  m_relocaliser.reset(new Relocaliser(
+    depthImageSize,
+    Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max),
+    harvestingThreshold, numFerns, numDecisionsPerFern
+  ));
+
+  // Reset some variables to their initial values.
+  m_fusedFramesCount = 0;
+  m_fusionEnabled = true;
+  m_keyframeDelay = 0;
 }
 
 void SLAMComponent::set_fusion_enabled(bool fusionEnabled)

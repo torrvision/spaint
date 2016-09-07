@@ -62,12 +62,20 @@ void MultiScenePipeline::reset_forest(const std::string& sceneID)
   MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::reset_forest, _1));
 }
 
+void MultiScenePipeline::reset_scene(const std::string& sceneID)
+{
+  MapUtil::call_if_found(m_slamComponents, sceneID, boost::bind(&SLAMComponent::reset_scene, _1));
+}
+
 bool MultiScenePipeline::run_main_section()
 {
   bool result = true;
   for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
-    if(!it->second->process_frame()) result = false;
+    if(!it->second->process_frame())
+    {
+      if(it->first == Model::get_world_scene_id()) result = false;
+    }
   }
   return result;
 }

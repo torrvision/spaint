@@ -143,11 +143,18 @@ public:
   void reset_forest(const std::string& sceneID);
 
   /**
+   * \brief Resets the specified scene.
+   *
+   * \param sceneID The scene ID.
+   */
+  void reset_scene(const std::string& sceneID);
+
+  /**
    * \brief Runs the main section of the multi-scene pipeline.
    *
    * This involves processing the next frame (if any) for each individual scene.
    *
-   * \return  true, if a new frame was available for every individual scene, or false otherwise.
+   * \return  true, if a new frame was available for the world scene, or false otherwise.
    */
   bool run_main_section();
 
