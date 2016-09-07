@@ -20,6 +20,9 @@ class SLAMState
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The mask to apply to the input images during tracking. */
+  ITMUCharImage_Ptr m_inputMask;
+
   /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 
@@ -52,6 +55,13 @@ public:
    * \return  The dimensions of the depth images from which the scene is being reconstructed.
    */
   const Vector2i& get_depth_image_size() const;
+
+  /**
+   * \brief Gets the mask to apply to the input images during tracking.
+   *
+   * \return  The mask to apply to the input images during tracking (may be NULL).
+   */
+  ITMUCharImage_CPtr get_input_mask() const;
 
   /**
    * \brief Gets the image into which depth input is read each frame.
@@ -171,6 +181,13 @@ public:
    * \return  The voxel scene.
    */
   SpaintVoxelScene_CPtr get_voxel_scene() const;
+
+  /**
+   * \brief Sets the mask to apply to the input images during tracking.
+   *
+   * \param inputMask The mask to apply to the input images during tracking (may be NULL).
+   */
+  void set_input_mask(const ITMUCharImage_Ptr& inputMask);
 
   /**
    * \brief Sets the image into which depth input is read each frame.

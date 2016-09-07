@@ -55,12 +55,12 @@ void ObjectivePipeline::set_mode(Mode mode)
   }
 
   // If we are switching out of segmentation mode, stop recording the segmentation video
-  // and clear the segmentation image and target mask.
+  // and clear the input mask and segmentation image.
   if(m_mode == MODE_SEGMENTATION && mode != MODE_SEGMENTATION)
   {
     segmentationPathGenerator.reset();
+    m_model->get_slam_state(Model::get_world_scene_id())->set_input_mask(ITMUCharImage_Ptr());
     m_model->set_segmentation_image(ITMUChar4Image_CPtr());
-    m_model->get_segmenter()->get_target_mask().reset();
   }
 
   switch(mode)

@@ -41,9 +41,14 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   ITMUCharImage_CPtr targetMask = segmenter->segment(slamState->get_pose(), renderState);
 
-  // If the mask is empty, early out.
-  if(!targetMask)
+  // If there's a target mask, use its inverse to mask the camera input for tracking purposes. If not, early out.
+  if(targetMask)
   {
+    slamState->set_input_mask(SegmentationUtil::invert_mask(targetMask));
+  }
+  else
+  {
+    slamState->set_input_mask(ITMUCharImage_Ptr());
     m_context->set_segmentation_image(ITMUChar4Image_Ptr());
     return;
   }

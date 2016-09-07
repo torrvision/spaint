@@ -121,16 +121,13 @@ bool SLAMComponent::process_frame()
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   slamState->set_view(newView);
 
-  // If there's an active segmentation target, mask it out in the depth image so that it will be ignored for tracking purposes.
+  // If there's an active input mask, apply it to the depth image.
   ITMFloatImage_Ptr maskedDepthImage;
-  const Segmenter_Ptr& segmenter = m_context->get_segmenter();
-  if(segmenter && segmenter->get_target_mask() && m_sceneID != "Object")
+  ITMUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
+  if(inputMask)
   {
     view->depth->UpdateHostFromDevice();
-    maskedDepthImage = SegmentationUtil::apply_mask(
-      SegmentationUtil::invert_mask(segmenter->get_target_mask()),
-      ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter())
-    );
+    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()));
     maskedDepthImage->UpdateDeviceFromHost();
     view->depth->Swap(*maskedDepthImage);
   }
@@ -139,11 +136,8 @@ bool SLAMComponent::process_frame()
   SE3Pose oldPose(*trackingState->pose_d);
   if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
 
-  // If there was an active segmentation target, restore the original depth image after tracking so that it can be used for segmentation.
-  if(maskedDepthImage)
-  {
-    view->depth->Swap(*maskedDepthImage);
-  }
+  // If there was an active input mask, restore the original depth image after tracking.
+  if(maskedDepthImage) view->depth->Swap(*maskedDepthImage);
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
