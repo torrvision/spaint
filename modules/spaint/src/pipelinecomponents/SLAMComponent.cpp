@@ -124,7 +124,7 @@ bool SLAMComponent::process_frame()
   // If there's an active segmentation target, mask it out in the depth image so that it will be ignored for tracking purposes.
   ITMFloatImage_Ptr maskedDepthImage;
   const Segmenter_Ptr& segmenter = m_context->get_segmenter();
-  if(segmenter && segmenter->get_target_mask())
+  if(segmenter && segmenter->get_target_mask() && m_sceneID != "Object")
   {
     view->depth->UpdateHostFromDevice();
     maskedDepthImage = SegmentationUtil::apply_mask(
@@ -147,7 +147,8 @@ bool SLAMComponent::process_frame()
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
-  switch(m_context->get_settings()->behaviourOnFailure)
+  ITMLibSettings::FailureMode failureMode = m_sceneID == "Object" ? ITMLibSettings::FAILUREMODE_IGNORE : m_context->get_settings()->behaviourOnFailure;
+  switch(failureMode)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
