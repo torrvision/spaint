@@ -23,6 +23,9 @@ private:
   ObjectSegmentationContext_Ptr m_context;
 
   /** TODO */
+  bool m_outputEnabled;
+
+  /** TODO */
   SingleRGBDImagePipe_Ptr m_outputPipe;
 
   /** The ID of the scene on which the component should operate. */
@@ -59,6 +62,11 @@ public:
    * \param renderState The render state associated with the camera position from which to train the segmenter.
    */
   void run_segmentation_training(const VoxelRenderState_CPtr& renderState);
+
+  /**
+   * \brief TODO
+   */
+  void toggle_output();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

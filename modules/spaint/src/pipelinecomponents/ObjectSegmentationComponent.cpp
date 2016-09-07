@@ -20,7 +20,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 ObjectSegmentationComponent::ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID, const SingleRGBDImagePipe_Ptr& outputPipe)
-: m_context(context), m_outputPipe(outputPipe), m_sceneID(sceneID)
+: m_context(context), m_outputEnabled(false), m_outputPipe(outputPipe), m_sceneID(sceneID)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -59,7 +59,7 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
   ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput);
 
-  if(m_outputPipe) m_outputPipe->set_images(rgbMasked, depthMasked);
+  if(m_outputEnabled && m_outputPipe) m_outputPipe->set_images(rgbMasked, depthMasked);
 
   boost::optional<SequentialPathGenerator>& segmentationPathGenerator = m_context->get_segmentation_path_generator();
   if(segmentationPathGenerator)
@@ -85,6 +85,11 @@ void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderSta
 
   ITMUChar4Image_Ptr touchImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
   m_context->set_segmentation_image(touchImage);
+}
+
+void ObjectSegmentationComponent::toggle_output()
+{
+  m_outputEnabled = !m_outputEnabled;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

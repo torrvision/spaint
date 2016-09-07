@@ -480,8 +480,11 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       m_model->get_selector()->accept(selectorRenderer);
 
       // Render any overlay image generated during object segmentation.
-      const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image();
-      if(segmentationImage) render_overlay(segmentationImage);
+      if(sceneID == Model::get_world_scene_id())
+      {
+        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image();
+        if(segmentationImage) render_overlay(segmentationImage);
+      }
     }
     glPopMatrix();
   }

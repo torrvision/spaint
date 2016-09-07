@@ -175,6 +175,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_paused = false;
   }
 
+  // If the O key is pressed, toggle segmentation output.
+  if(keysym.sym == KEYCODE_o)
+  {
+    m_pipeline->toggle_segmentation_output();
+  }
+
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Model_Ptr& model = m_pipeline->get_model();

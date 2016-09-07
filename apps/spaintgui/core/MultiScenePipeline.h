@@ -169,6 +169,11 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    */
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
+
+  /**
+   * \brief TODO
+   */
+  void toggle_segmentation_output();
 };
 
 //#################### TYPEDEFS ####################
