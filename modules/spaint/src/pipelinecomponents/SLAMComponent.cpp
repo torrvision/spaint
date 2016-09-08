@@ -100,6 +100,11 @@ bool SLAMComponent::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
+void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
+{
+  m_mirrorSceneID = mirrorSceneID;
+}
+
 bool SLAMComponent::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
@@ -132,9 +137,20 @@ bool SLAMComponent::process_frame()
     view->depth->Swap(*maskedDepthImage);
   }
 
-  // Track the camera (we can only do this once we've started reconstruction because we need something to track against).
+  // Make a note of the current pose in case tracking fails.
   SE3Pose oldPose(*trackingState->pose_d);
-  if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
+
+  // If we're mirroring the pose of another scene, copy the pose from that scene's tracking state. If not, use our own tracker
+  // to estimate the pose (we can only do this once we've started reconstruction because we need something to track against).
+  if(m_mirrorSceneID != "")
+  {
+    *trackingState->pose_d = m_context->get_slam_state(m_mirrorSceneID)->get_pose();
+    trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
+  }
+  else if(m_fusedFramesCount > 0)
+  {
+    m_trackingController->Track(trackingState.get(), view.get());
+  }
 
   // If there was an active input mask, restore the original depth image after tracking.
   if(maskedDepthImage) view->depth->Swap(*maskedDepthImage);

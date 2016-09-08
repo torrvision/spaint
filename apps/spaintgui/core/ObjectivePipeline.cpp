@@ -25,7 +25,9 @@ ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::st
   m_objectSegmentationComponents[worldSceneID].reset(new ObjectSegmentationComponent(m_model, worldSceneID, pipe));
 
   const std::string objectSceneID = "Object";
-  m_slamComponents[objectSceneID].reset(new SLAMComponent(m_model, objectSceneID, pipe, trackerType, trackerParams, mappingMode, trackingMode));
+  SLAMComponent_Ptr objectSLAMComponent(new SLAMComponent(m_model, objectSceneID, pipe, trackerType, trackerParams, mappingMode, trackingMode));
+  objectSLAMComponent->mirror_pose_of(worldSceneID);
+  m_slamComponents[objectSceneID] = objectSLAMComponent;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
