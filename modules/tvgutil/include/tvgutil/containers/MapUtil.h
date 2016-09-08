@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <boost/function.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/identity.hpp>
 
@@ -22,6 +23,34 @@ class MapUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Applies a function to the value associated with a particular key iff it exists in the map.
+   *
+   * \param map   The map.
+   * \param key   The key.
+   * \param func  The function to apply.
+   */
+  template <typename K, typename V>
+  static void call_if_found(std::map<K,V>& map, typename boost::mpl::identity<const K>::type& key, typename boost::mpl::identity<const boost::function<void(V&)> >::type& func)
+  {
+    typename std::map<K,V>::iterator it = map.find(key);
+    if(it != map.end()) func(it->second);
+  }
+
+  /**
+   * \brief Applies a function to the value associated with a particular key iff it exists in the map.
+   *
+   * \param map   The map.
+   * \param key   The key.
+   * \param func  The function to apply.
+   */
+  template <typename K, typename V>
+  static void call_if_found(const std::map<K,V>& map, typename boost::mpl::identity<const K>::type& key, typename boost::mpl::identity<const boost::function<void(const V&)> >::type& func)
+  {
+    typename std::map<K,V>::const_iterator it = map.find(key);
+    if(it != map.end()) func(it->second);
+  }
+
   /**
    * \brief Gets the value associated with a particular key in the map.
    *
