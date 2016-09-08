@@ -125,6 +125,11 @@ void SLAMState::set_live_voxel_render_state(const VoxelRenderState_Ptr& liveVoxe
   m_liveVoxelRenderState = liveVoxelRenderState;
 }
 
+void SLAMState::set_pose(const ORUtils::SE3Pose& pose)
+{
+  *m_trackingState->pose_d = pose;
+}
+
 void SLAMState::set_surfel_scene(const SpaintSurfelScene_Ptr& surfelScene)
 {
   m_surfelScene = surfelScene;
