@@ -14,7 +14,7 @@
 #include "Model.h"
 
 /**
- * \brief An instance of this class represents a processing pipeline for multiple scenes.
+ * \brief An instance of a class deriving from this one represents a processing pipeline for multiple scenes.
  */
 class MultiScenePipeline
 {
@@ -47,41 +47,30 @@ public:
     MODE_TRAINING
   };
 
-  //#################### NESTED TYPES ####################
-private:
-  /**
-   * \brief An instance of this struct holds the pipeline components for an individual scene.
-   */
-  struct SingleScenePipeline
-  {
-    /** The propagation component for the scene. */
-    spaint::PropagationComponent_Ptr m_propagationComponent;
-
-    /** The semantic segmentation component for the scene. */
-    spaint::SemanticSegmentationComponent_Ptr m_semanticSegmentationComponent;
-
-    /** The SLAM component for the scene. */
-    spaint::SLAMComponent_Ptr m_slamComponent;
-
-    /** The smoothing component for the scene. */
-    spaint::SmoothingComponent_Ptr m_smoothingComponent;
-  };
-
-  //#################### PRIVATE VARIABLES ####################
-private:
+  //#################### PROTECTED VARIABLES ####################
+protected:
   /** The mode in which the multi-scene pipeline is currently running. */
   Mode m_mode;
 
   /** The spaint model. */
   Model_Ptr m_model;
 
-  /** The pipelines for the individual scenes. */
-  std::map<std::string,SingleScenePipeline> m_singleScenePipelines;
+  /** The propagation components for the scenes. */
+  std::map<std::string,spaint::PropagationComponent_Ptr> m_propagationComponents;
+
+  /** The semantic segmentation components for the scenes. */
+  std::map<std::string,spaint::SemanticSegmentationComponent_Ptr> m_semanticSegmentationComponents;
+
+  /** The SLAM components for the scenes. */
+  std::map<std::string,spaint::SLAMComponent_Ptr> m_slamComponents;
+
+  /** The smoothing components for the scenes. */
+  std::map<std::string,spaint::SmoothingComponent_Ptr> m_smoothingComponents;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of the multi-scene pipeline.
+   * \brief Constructs a multi-scene pipeline.
    *
    * \param settings      The settings to use for InfiniTAM.
    * \param resourcesDir  The path to the resources directory.
@@ -89,24 +78,24 @@ public:
    */
   MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
+  //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Adds a pipeline for an individual scene to the multi-scene pipeline.
-   *
-   * \param sceneID           The ID of the individual scene.
-   * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
-   * \param seed              The seed to use for the random number generators used by the voxel samplers.
-   * \param trackerType       The type of tracker to use when reconstructing the scene.
-   * \param trackerParams     The parameters for the tracker (if any).
-   * \param mappingMode       The mapping mode that the scene's SLAM component should use.
-   * \param trackingMode      The tracking mode that the scene's SLAM component should use.
+   * \brief Destroys the multi-scene pipeline.
    */
-  void add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                                 spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
-                                 spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
-                                 spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
+  virtual ~MultiScenePipeline();
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Sets the mode in which the multi-scene pipeline should now run.
+   *
+   * \param mode  The mode in which the multi-scene pipeline should now run.
+   */
+  virtual void set_mode(Mode mode) = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Gets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    *
@@ -144,11 +133,18 @@ public:
   void reset_forest(const std::string& sceneID);
 
   /**
+   * \brief Resets the specified scene.
+   *
+   * \param sceneID The scene ID.
+   */
+  void reset_scene(const std::string& sceneID);
+
+  /**
    * \brief Runs the main section of the multi-scene pipeline.
    *
    * This involves processing the next frame (if any) for each individual scene.
    *
-   * \return  true, if a new frame was available for every individual scene, or false otherwise.
+   * \return  true, if a new frame was available for the world scene, or false otherwise.
    */
   bool run_main_section();
 
@@ -170,13 +166,6 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    */
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
-
-  /**
-   * \brief Sets the mode in which the multi-scene pipeline should now run.
-   *
-   * \param mode  The mode in which the multi-scene pipeline should now run.
-   */
-  void set_mode(Mode mode);
 };
 
 //#################### TYPEDEFS ####################

@@ -175,6 +175,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_paused = false;
   }
 
+  // If left shift + R is pressed, reset the active scene.
+  if(keysym.sym == KEYCODE_r && m_inputState.key_down(KEYCODE_LSHIFT))
+  {
+    m_pipeline->reset_scene(get_active_scene_id());
+  }
+
   if(keysym.sym == KEYCODE_BACKSPACE)
   {
     const Model_Ptr& model = m_pipeline->get_model();

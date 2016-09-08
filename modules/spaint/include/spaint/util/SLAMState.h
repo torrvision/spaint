@@ -201,6 +201,13 @@ public:
   void set_live_voxel_render_state(const VoxelRenderState_Ptr& liveVoxelRenderState);
 
   /**
+   * \brief Sets the pose of the camera that is being used to reconstruct the scene.
+   *
+   * \param pose  The new pose of the camera that is being used to reconstruct the scene.
+   */
+  void set_pose(const ORUtils::SE3Pose& pose);
+
+  /**
    * \brief Sets the surfel scene.
    *
    * \param surfelScene The surfel scene.

@@ -38,7 +38,7 @@ using namespace spaint;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-#include "core/MultiScenePipeline.h"
+#include "core/SemanticPipeline.h"
 
 //#################### TYPES ####################
 
@@ -51,6 +51,7 @@ struct CommandLineArguments
   bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
+  std::string pipelineType;
   size_t prefetchBufferCapacity;
   std::string rgbImageMask;
   std::string sequenceName;
@@ -70,6 +71,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
+    ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
@@ -247,14 +249,18 @@ try
 #endif
   }
 
-  // Construct the multi-scene pipeline.
+  // Construct the pipeline.
   const size_t maxLabelCount = 10;
-  MultiScenePipeline_Ptr pipeline(new MultiScenePipeline(settings, Application::resources_dir().string(), maxLabelCount));
-
-  const unsigned int seed = 12345;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
-  pipeline->add_single_scene_pipeline(Model::get_world_scene_id(), imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode);
+
+  MultiScenePipeline_Ptr pipeline;
+  if(args.pipelineType == "semantic")
+  {
+    const unsigned int seed = 12345;
+    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
+  }
+  else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
   // Run the application.
   Application app(pipeline);

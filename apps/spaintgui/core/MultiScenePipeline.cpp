@@ -8,9 +8,7 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace spaint;
 
-#ifdef WITH_OPENCV
-#include <spaint/ocv/OpenCVUtil.h>
-#endif
+#include <boost/bind.hpp>
 
 #include <tvgutil/containers/MapUtil.h>
 using namespace tvgutil;
@@ -33,22 +31,15 @@ MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::
   m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
 }
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
+//#################### DESTRUCTOR ####################
 
-void MultiScenePipeline::add_single_scene_pipeline(const std::string& sceneID, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                                                   unsigned int seed, TrackerType trackerType, const std::string& trackerParams,
-                                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
-{
-  SingleScenePipeline& singleScenePipeline = m_singleScenePipelines[sceneID];
-  singleScenePipeline.m_slamComponent.reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
-  singleScenePipeline.m_propagationComponent.reset(new PropagationComponent(m_model, sceneID));
-  singleScenePipeline.m_semanticSegmentationComponent.reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
-  singleScenePipeline.m_smoothingComponent.reset(new SmoothingComponent(m_model, sceneID));
-}
+MultiScenePipeline::~MultiScenePipeline() {}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 bool MultiScenePipeline::get_fusion_enabled(const std::string& sceneID) const
 {
-  return MapUtil::lookup(m_singleScenePipelines, sceneID).m_slamComponent->get_fusion_enabled();
+  return MapUtil::lookup(m_slamComponents, sceneID)->get_fusion_enabled();
 }
 
 MultiScenePipeline::Mode MultiScenePipeline::get_mode() const
@@ -68,49 +59,55 @@ Model_CPtr MultiScenePipeline::get_model() const
 
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
 {
-  MapUtil::lookup(m_singleScenePipelines, sceneID).m_semanticSegmentationComponent->reset_forest();
+  MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::reset_forest, _1));
+}
+
+void MultiScenePipeline::reset_scene(const std::string& sceneID)
+{
+  MapUtil::call_if_found(m_slamComponents, sceneID, boost::bind(&SLAMComponent::reset_scene, _1));
 }
 
 bool MultiScenePipeline::run_main_section()
 {
   bool result = true;
-  for(std::map<std::string,SingleScenePipeline>::const_iterator it = m_singleScenePipelines.begin(), iend = m_singleScenePipelines.end(); it != iend; ++it)
+  for(std::map<std::string,SLAMComponent_Ptr>::const_iterator it = m_slamComponents.begin(), iend = m_slamComponents.end(); it != iend; ++it)
   {
-    result = result && it->second.m_slamComponent->process_frame();
+    if(!it->second->process_frame())
+    {
+      if(it->first == Model::get_world_scene_id()) result = false;
+    }
   }
   return result;
 }
 
 void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState)
 {
-  SingleScenePipeline& singleScenePipeline = MapUtil::lookup(m_singleScenePipelines, sceneID);
-
   switch(m_mode)
   {
     case MODE_FEATURE_INSPECTION:
-      singleScenePipeline.m_semanticSegmentationComponent->run_feature_inspection(renderState);
+      MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_feature_inspection, _1, renderState));
       break;
     case MODE_PREDICTION:
-      singleScenePipeline.m_semanticSegmentationComponent->run_prediction(renderState);
+      MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_prediction, _1, renderState));
       break;
     case MODE_PROPAGATION:
-      singleScenePipeline.m_propagationComponent->run(renderState);
+      MapUtil::call_if_found(m_propagationComponents, sceneID, boost::bind(&PropagationComponent::run, _1, renderState));
       break;
     case MODE_SMOOTHING:
-      singleScenePipeline.m_smoothingComponent->run(renderState);
+      MapUtil::call_if_found(m_smoothingComponents, sceneID, boost::bind(&SmoothingComponent::run, _1, renderState));
       break;
     case MODE_TRAIN_AND_PREDICT:
     {
       static bool trainThisFrame = false;
       trainThisFrame = !trainThisFrame;
 
-      if(trainThisFrame) singleScenePipeline.m_semanticSegmentationComponent->run_training(renderState);
-      else singleScenePipeline.m_semanticSegmentationComponent->run_prediction(renderState);
+      if(trainThisFrame) MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_training, _1, renderState));
+      else MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_prediction, _1, renderState));
 
       break;
     }
     case MODE_TRAINING:
-      singleScenePipeline.m_semanticSegmentationComponent->run_training(renderState);
+      MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::run_training, _1, renderState));
       break;
     default:
       break;
@@ -119,18 +116,5 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
 
 void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fusionEnabled)
 {
-  MapUtil::lookup(m_singleScenePipelines, sceneID).m_slamComponent->set_fusion_enabled(fusionEnabled);
-}
-
-void MultiScenePipeline::set_mode(Mode mode)
-{
-#ifdef WITH_OPENCV
-  // If we are switching out of feature inspection mode, destroy the feature inspection window.
-  if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
-  {
-    cv::destroyAllWindows();
-  }
-#endif
-
-  m_mode = mode;
+  MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
 }
