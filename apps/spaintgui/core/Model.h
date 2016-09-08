@@ -221,7 +221,6 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
-  virtual const spaint::Segmenter_Ptr& get_segmenter() const;
   virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
   virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };

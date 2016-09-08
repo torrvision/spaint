@@ -164,6 +164,5 @@ std::string Model::get_world_scene_id()
 
 //#################### DISAMBIGUATORS ####################
 
-const Segmenter_Ptr& Model::get_segmenter() const                       { return ObjectSegmentationContext::get_segmenter(); }
 const SLAMState_Ptr& Model::get_slam_state(const std::string& sceneID)  { return SLAMContext::get_slam_state(sceneID); }
 SLAMState_CPtr Model::get_slam_state(const std::string& sceneID) const  { return SLAMContext::get_slam_state(sceneID); }
