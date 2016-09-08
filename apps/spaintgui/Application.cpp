@@ -181,8 +181,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_pipeline->toggle_segmentation_output();
   }
 
-  // If left shift + R is pressed, reset the active scene.
-  if(keysym.sym == KEYCODE_r && m_inputState.key_down(KEYCODE_LSHIFT))
+  // If left control + R is pressed, reset the active scene.
+  if(keysym.sym == KEYCODE_r && m_inputState.key_down(KEYCODE_LCTRL))
   {
     m_pipeline->reset_scene(get_active_scene_id());
   }
@@ -268,13 +268,14 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 5 = To Correction Mode\n"
               << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
-              << "R + 1 = To Windowed Renderer\n"
-              << "R + 2 = To Rift Renderer (Windowed)\n"
-              << "R + 3 = To Rift Renderer (Fullscreen)\n"
+              << "R + # = To Windowed Renderer (Specified Subwindow Configuration)\n"
+              << "RShift + R + 1 = To Rift Renderer (Windowed)\n"
+              << "RShift + R + 2 = To Rift Renderer (Fullscreen)\n"
               << "V + 1 = To Follow Camera Mode\n"
               << "V + 2 = To Free Camera Mode\n"
               << "B = Process All Frames\n"
               << "N = Process Next Frame\n"
+              << "LCtrl + R = Reset Scene\n"
               << "[ = Decrease Picking Selection Radius\n"
               << "] = Increase Picking Selection Radius\n"
               << "RShift + [ = To Previous Semantic Label\n"
@@ -282,7 +283,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Backspace = Clear Current Label Propagation\n"
               << "RShift + Backspace = Clear All Label Propagations\n"
               << "RCtrl + Backspace = Clear Current Label\n"
-              << "RCtrl + RShift + Backspace = Reset (Clear Labels and Forest)\n"
+              << "RCtrl + RShift + Backspace = Reset Classifier (Clear Labels and Forest)\n"
               << "; = Toggle Median Filtering\n"
               << "/ = Save Screenshot\n"
               << "LShift + / = Toggle Sequence Recording\n"

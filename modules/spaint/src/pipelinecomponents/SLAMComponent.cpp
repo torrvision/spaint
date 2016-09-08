@@ -262,8 +262,7 @@ void SLAMComponent::reset_scene()
   }
 
   // Reset the tracking state.
-  slamState->set_pose(SE3Pose());
-  slamState->get_tracking_state()->age_pointCloud = -1;
+  slamState->get_tracking_state()->Reset();
 
   // Reset the pose database and the relocaliser.
   m_poseDatabase.reset(new PoseDatabase);
