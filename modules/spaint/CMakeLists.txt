@@ -516,6 +516,7 @@ src/util/CameraPoseConverter.cpp
 src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
+src/util/PosePersister.cpp
 src/util/RGBDUtil.cpp
 )
 
@@ -527,6 +528,7 @@ include/spaint/util/ITMImagePtrTypes.h
 include/spaint/util/ITMObjectPtrTypes.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
+include/spaint/util/PosePersister.h
 include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
