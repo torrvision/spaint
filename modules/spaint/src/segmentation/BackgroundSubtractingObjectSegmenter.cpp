@@ -283,43 +283,59 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   {
     changeMaskPtr[i] = 255;
 
+    // No live depth
+    if(thresholdedRawDepthPtr[i] == -1.0f)
+    {
+      changeMaskPtr[i] = 0;
+      continue;
+    }
+
+    // No depth raycast
     if(fabs(depthRaycastPtr[i] - m_touchDetector->invalid_depth_value()) < 1e-3f)
     {
       changeMaskPtr[i] = 0;
+      continue;
     }
 
+    // Live depth too far away (unreliable)
     if(thresholdedRawDepthPtr[i] * 1000.0f > upperDepthThresholdMm)
     {
       changeMaskPtr[i] = 0;
+      continue;
     }
 
+    // If near a depth raycast edge:
     if(dilatedThresholdedGrad.data[i]/* || dilatedThresholdedGrad2.data[i]*/)
     {
       float value = depthRaycastPtr[i];
-      int cx = i % 640, cy = i / 640;
-      for(int dy = -3; dy <= 3; ++dy)
+      //if(value > thresholdedRawDepthPtr[i])
       {
-        int y = cy + dy;
-        if(y < 0 || y >= 480) continue;
-        for(int dx = -3; dx <= 3; ++dx)
+        int cx = i % 640, cy = i / 640;
+        for(int dy = -3; dy <= 3; ++dy)
         {
-          int x = cx + dx;
-          if(x < 0 || x >= 640) continue;
-          value = std::min(value, depthRaycastPtr[y * 640 + x]);
+          int y = cy + dy;
+          if(y < 0 || y >= 480) continue;
+          for(int dx = -3; dx <= 3; ++dx)
+          {
+            int x = cx + dx;
+            if(x < 0 || x >= 640) continue;
+            value = std::min(value, depthRaycastPtr[y * 640 + x]);
+          }
         }
       }
       //if(diffRawRaycastPtr[i] * 1000.0f < 100)
-      if((thresholdedRawDepthPtr[i] - value) * 1000.0f < 100)
+      if(diffRawRaycastPtr[i] * 1000.0f < 100 || (thresholdedRawDepthPtr[i] - value) * 1000.0f < 100)
       {
         changeMaskPtr[i] = 0;
+        continue;
       }
     }
-    else
+
+    // Ignore minor changes (noise)
+    if(diffRawRaycastPtr[i] * 1000.0f < lowerDiffThresholdMm)
     {
-      if(diffRawRaycastPtr[i] * 1000.0f < lowerDiffThresholdMm)
-      {
-        changeMaskPtr[i] = 0;
-      }
+      changeMaskPtr[i] = 0;
+      continue;
     }
   }
 
