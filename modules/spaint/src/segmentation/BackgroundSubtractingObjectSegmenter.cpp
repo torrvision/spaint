@@ -13,6 +13,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "ocv/OpenCVUtil.h"
 #include "util/CameraPoseConverter.h"
 
 namespace spaint {
@@ -218,6 +219,115 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
+
+  // Display the absolute difference between the raw depth image and the depth raycast.
+  static ITMFloatImage_Ptr diffRawRaycast;
+  diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
+
+  ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
+  depthRaycast->UpdateHostFromDevice();
+
+  ITMFloatImage_CPtr thresholdedRawDepth = m_touchDetector->get_thresholded_raw_depth();
+  thresholdedRawDepth->UpdateHostFromDevice();
+  const float *thresholdedRawDepthPtr = thresholdedRawDepth->GetData(MEMORYDEVICE_CPU);
+
+  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(Vector2i(640,480), true, true));
+  uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
+  const float *diffRawRaycastPtr = diffRawRaycast->GetData(MEMORYDEVICE_CPU);
+  const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
+  int pixelCount = static_cast<int>(changeMask->dataSize);
+
+  static bool initialised = false;
+  static int componentSizeThreshold = 50;
+  static int gradThreshold = 127;
+  static int lowerDiffThresholdMm = 10;
+  static int upperDepthThresholdMm = 1000;
+  if(!initialised)
+  {
+    cv::namedWindow("Foo", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("componentSizeThreshold", "Foo", &componentSizeThreshold, 2000);
+    cv::createTrackbar("gradThreshold", "Foo", &gradThreshold, 255);
+    cv::createTrackbar("lowerDiffThresholdMm", "Foo", &lowerDiffThresholdMm, 100);
+    cv::createTrackbar("upperDepthThresholdMm", "Foo", &upperDepthThresholdMm, 2000);
+  }
+
+  //OpenCVUtil::show_scaled_greyscale_figure("Bar", depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
+  cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
+  //cv::Mat cvDepthRaycastEdges;
+  //cv::Canny(cvDepthRaycast, cvDepthRaycastEdges, 0.0, 255.0, 3, true);
+  //cv::imshow("Baz", cvDepthRaycastEdges);
+  cv::Mat gradX, gradY, absGradX, absGradY, grad, thresholdedGrad, dilatedThresholdedGrad;
+  cv::Sobel(cvDepthRaycast, gradX, CV_16S, 1, 0, 3);
+  cv::convertScaleAbs(gradX, absGradX);
+  cv::Sobel(cvDepthRaycast, gradY, CV_16S, 0, 1, 3);
+  cv::convertScaleAbs(gradY, absGradY);
+  cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, grad);
+  cv::threshold(grad, thresholdedGrad, gradThreshold, 255.0, cv::THRESH_BINARY);
+  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
+  cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
+  cv::imshow("Baz", dilatedThresholdedGrad);
+
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    changeMaskPtr[i] = 255;
+
+    if(fabs(depthRaycastPtr[i] - m_touchDetector->invalid_depth_value()) < 1e-3f)
+    {
+      changeMaskPtr[i] = 0;
+    }
+
+    if(thresholdedRawDepthPtr[i] * 1000.0f > upperDepthThresholdMm)
+    {
+      changeMaskPtr[i] = 0;
+    }
+
+    if(dilatedThresholdedGrad.data[i])
+    {
+      if(diffRawRaycastPtr[i] * 1000.0f < 100)
+      {
+        changeMaskPtr[i] = 0;
+      }
+    }
+    else
+    {
+      if(diffRawRaycastPtr[i] * 1000.0f < lowerDiffThresholdMm)
+      {
+        changeMaskPtr[i] = 0;
+      }
+    }
+  }
+
+#if 1
+  static cv::Mat1b cvChangeMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
+  for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
+  {
+    cvChangeMask.data[i] = changeMaskPtr[i];
+  }
+
+  // Find the connected components of the change mask.
+  cv::Mat1i ccsImage, stats;
+  cv::Mat1d centroids;
+  cv::connectedComponentsWithStats(cvChangeMask, ccsImage, stats, centroids);
+
+  // Update the change mask to only contain components over a certain size.
+  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+  for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
+  {
+    int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
+    if(componentSize < componentSizeThreshold)
+    {
+      cvChangeMask.data[i] = 0;
+      changeMaskPtr[i] = 0;
+    }
+  }
+#endif
+
+  OpenCVUtil::show_greyscale_figure("Foo", changeMask->GetData(MEMORYDEVICE_CPU), 640, 480, OpenCVUtil::ROW_MAJOR);
+  cv::waitKey(10);
+
   return m_touchDetector->get_touch_mask();
 }
 

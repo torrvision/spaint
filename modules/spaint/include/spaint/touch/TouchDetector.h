@@ -134,11 +134,26 @@ public:
   ITMFloatImage_CPtr get_depth_raycast() const;
 
   /**
+   * \brief TODO
+   */
+  ITMFloatImage_Ptr get_diff_raw_raycast() const;
+
+  /**
+   * \brief TODO
+   */
+  ITMUCharImage_Ptr get_diff_raw_raycast_cm() const;
+
+  /**
    * \brief Gets a mask denoting the detected touch region.
    *
    * \return  A mask denoting the detected touch region.
    */
   ITMUCharImage_CPtr get_touch_mask() const;
+
+  /**
+   * \brief TODO
+   */
+  ITMFloatImage_CPtr get_thresholded_raw_depth() const;
 
   /**
    * \brief Gets the depth value to use for pixels whose rays do not hit the scene when raycasting.

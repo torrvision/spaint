@@ -143,6 +143,23 @@ public:
 
   /**
    * \brief Makes a greyscale OpenCV image from some pixel data in the specified format,
+   *        applying the specified scaling factor to each pixel value as it goes.
+   *
+   * \param inputData   The pixel data for the image.
+   * \param width       The width of the image.
+   * \param height      The height of the image.
+   * \param order       Whether the pixel data is in row-major or column-major order.
+   * \param scaleFactor The scaling factor.
+   * \return            The OpenCV image.
+   */
+  template <typename T>
+  static cv::Mat1b make_greyscale_image(const T *inputData, int width, int height, Order order, float scaleFactor)
+  {
+    return make_greyscale_image(inputData, width, height, order, ScaleByFactor(scaleFactor));
+  }
+
+  /**
+   * \brief Makes a greyscale OpenCV image from some pixel data in the specified format,
    *        applying the specified scaling function to each pixel value as it goes.
    *
    * \param inputData The pixel data for the image.
