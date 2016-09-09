@@ -239,7 +239,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
 
   static bool initialised = false;
   static int componentSizeThreshold = 50;
-  static int gradThreshold = 127;
+  static int gradThreshold = 3;
   static int lowerDiffThresholdMm = 10;
   static int upperDepthThresholdMm = 1000;
   if(!initialised)
@@ -251,11 +251,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
     cv::createTrackbar("upperDepthThresholdMm", "Foo", &upperDepthThresholdMm, 2000);
   }
 
-  //OpenCVUtil::show_scaled_greyscale_figure("Bar", depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
   cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
-  //cv::Mat cvDepthRaycastEdges;
-  //cv::Canny(cvDepthRaycast, cvDepthRaycastEdges, 0.0, 255.0, 3, true);
-  //cv::imshow("Baz", cvDepthRaycastEdges);
   cv::Mat gradX, gradY, absGradX, absGradY, grad, thresholdedGrad, dilatedThresholdedGrad;
   cv::Sobel(cvDepthRaycast, gradX, CV_16S, 1, 0, 3);
   cv::convertScaleAbs(gradX, absGradX);
@@ -266,6 +262,19 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
   cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
   cv::imshow("Baz", dilatedThresholdedGrad);
+
+#if 0
+  cv::Mat1b cvDepthRaycast2 = OpenCVUtil::make_greyscale_image(thresholdedRawDepthPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
+  cv::Mat gradX2, gradY2, absGradX2, absGradY2, grad2, thresholdedGrad2, dilatedThresholdedGrad2;
+  cv::Sobel(cvDepthRaycast2, gradX2, CV_16S, 1, 0, 3);
+  cv::convertScaleAbs(gradX2, absGradX2);
+  cv::Sobel(cvDepthRaycast2, gradY2, CV_16S, 0, 1, 3);
+  cv::convertScaleAbs(gradY2, absGradY2);
+  cv::addWeighted(absGradX2, 0.5, absGradY2, 0.5, 0, grad2);
+  cv::threshold(grad2, thresholdedGrad2, gradThreshold, 255.0, cv::THRESH_BINARY);
+  cv::dilate(thresholdedGrad2, dilatedThresholdedGrad2, kernel);
+  cv::imshow("Baz2", dilatedThresholdedGrad2);
+#endif
 
 #if WITH_OPENMP
   #pragma omp parallel for
@@ -284,9 +293,23 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
       changeMaskPtr[i] = 0;
     }
 
-    if(dilatedThresholdedGrad.data[i])
+    if(dilatedThresholdedGrad.data[i]/* || dilatedThresholdedGrad2.data[i]*/)
     {
-      if(diffRawRaycastPtr[i] * 1000.0f < 100)
+      float value = depthRaycastPtr[i];
+      int cx = i % 640, cy = i / 640;
+      for(int dy = -3; dy <= 3; ++dy)
+      {
+        int y = cy + dy;
+        if(y < 0 || y >= 480) continue;
+        for(int dx = -3; dx <= 3; ++dx)
+        {
+          int x = cx + dx;
+          if(x < 0 || x >= 640) continue;
+          value = std::min(value, depthRaycastPtr[y * 640 + x]);
+        }
+      }
+      //if(diffRawRaycastPtr[i] * 1000.0f < 100)
+      if((thresholdedRawDepthPtr[i] - value) * 1000.0f < 100)
       {
         changeMaskPtr[i] = 0;
       }
