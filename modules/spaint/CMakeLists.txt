@@ -509,6 +509,7 @@ src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
 src/util/RGBDUtil.cpp
 src/util/SLAMState.cpp
+src/util/ThreadPool.cpp
 )
 
 SET(util_headers
@@ -525,6 +526,7 @@ include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
 include/spaint/util/SpaintVoxelScene.h
+include/spaint/util/ThreadPool.h
 )
 
 ##
