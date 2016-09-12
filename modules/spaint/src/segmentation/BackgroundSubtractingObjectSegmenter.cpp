@@ -140,6 +140,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   static int centreDistThreshold = 70;
   static int componentSizeThreshold = 150;
   static int componentSizeThreshold2 = 800;
+  static int componentSizeThreshold3 = 1000;
   static int gradThreshold = 3;
   static int lowerCompactnessThreshold = 50;
   static int lowerDiffThresholdMm = 15;
@@ -151,6 +152,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     cv::createTrackbar("centreDistThreshold", debugWindowName, &centreDistThreshold, 100);
     cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
     cv::createTrackbar("componentSizeThreshold2", debugWindowName, &componentSizeThreshold2, 2000);
+    cv::createTrackbar("componentSizeThreshold3", debugWindowName, &componentSizeThreshold3, 2000);
     cv::createTrackbar("gradThreshold", debugWindowName, &gradThreshold, 255);
     cv::createTrackbar("lowerCompactnessThreshold", debugWindowName, &lowerCompactnessThreshold, 100);
     cv::createTrackbar("lowerDiffThresholdMm", debugWindowName, &lowerDiffThresholdMm, 100);
@@ -299,6 +301,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     for(size_t i = 0, size = contours.size(); i < size; ++i)
     {
       if(i == largestComponent) continue;
+      if(cv::contourArea(contours[i]) > componentSizeThreshold3) continue;
       cv::Rect componentRect = cv::boundingRect(contours[i]);
       if(!largestComponentRect.contains(componentRect.tl()) || !largestComponentRect.contains(componentRect.br()))
       {
