@@ -238,15 +238,21 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   int pixelCount = static_cast<int>(changeMask->dataSize);
 
   static bool initialised = false;
-  static int componentSizeThreshold = 50;
+  static int centreDistThreshold = 70;
+  static int componentSizeThreshold = 150;
+  static int componentSizeThreshold2 = 800;
   static int gradThreshold = 3;
-  static int lowerDiffThresholdMm = 10;
+  static int lowerCompactnessThreshold = 50;
+  static int lowerDiffThresholdMm = 15;
   static int upperDepthThresholdMm = 1000;
   if(!initialised)
   {
     cv::namedWindow("Foo", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("centreDistThreshold", "Foo", &centreDistThreshold, 100);
     cv::createTrackbar("componentSizeThreshold", "Foo", &componentSizeThreshold, 2000);
+    cv::createTrackbar("componentSizeThreshold2", "Foo", &componentSizeThreshold2, 2000);
     cv::createTrackbar("gradThreshold", "Foo", &gradThreshold, 255);
+    cv::createTrackbar("lowerCompactnessThreshold", "Foo", &lowerCompactnessThreshold, 100);
     cv::createTrackbar("lowerDiffThresholdMm", "Foo", &lowerDiffThresholdMm, 100);
     cv::createTrackbar("upperDepthThresholdMm", "Foo", &upperDepthThresholdMm, 2000);
   }
@@ -263,7 +269,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
   cv::imshow("Baz", dilatedThresholdedGrad);
 
-#if 0
+#if 1
   cv::Mat1b cvDepthRaycast2 = OpenCVUtil::make_greyscale_image(thresholdedRawDepthPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
   cv::Mat gradX2, gradY2, absGradX2, absGradY2, grad2, thresholdedGrad2, dilatedThresholdedGrad2;
   cv::Sobel(cvDepthRaycast2, gradX2, CV_16S, 1, 0, 3);
@@ -304,8 +310,20 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
       continue;
     }
 
+    // Close to the image corners (unreliable)
+    {
+      int cx = i % 640, cy = i / 640;
+      double xDist = fabs(cx - 320.0), yDist = fabs(cy - 240.0);
+      double dist = sqrt((xDist*xDist + yDist*yDist) / (320*320 + 240*240));
+      if(static_cast<int>(dist * 100) > centreDistThreshold)
+      {
+        changeMaskPtr[i] = 0;
+        continue;
+      }
+    }
+
     // If near a depth raycast edge:
-    if(dilatedThresholdedGrad.data[i]/* || dilatedThresholdedGrad2.data[i]*/)
+    if(dilatedThresholdedGrad.data[i] || dilatedThresholdedGrad2.data[i])
     {
       float value = depthRaycastPtr[i];
       //if(value > thresholdedRawDepthPtr[i])
@@ -323,8 +341,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
           }
         }
       }
-      //if(diffRawRaycastPtr[i] * 1000.0f < 100)
-      if(diffRawRaycastPtr[i] * 1000.0f < 100 || (thresholdedRawDepthPtr[i] - value) * 1000.0f < 100)
+      if(diffRawRaycastPtr[i] * 1000.0f < 100)
+      //if(diffRawRaycastPtr[i] * 1000.0f < 100 || (thresholdedRawDepthPtr[i] - value) * 1000.0f < 100)
       {
         changeMaskPtr[i] = 0;
         continue;
@@ -357,6 +375,34 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   {
     int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
     if(componentSize < componentSizeThreshold)
+    {
+      cvChangeMask.data[i] = 0;
+      changeMaskPtr[i] = 0;
+    }
+  }
+
+  // Update the change mask to only contain components that are reasonably compact.
+  std::vector<std::vector<cv::Point> > contours;
+  cv::findContours(cvChangeMask.clone(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+  cv::Mat1b lowCompactnessContours = cv::Mat1b::zeros(cvChangeMask.size());
+  for(size_t i = 0, size = contours.size(); i < size; ++i)
+  {
+    double area = cv::contourArea(contours[i]);
+    size_t perimeter = contours[i].size();
+    double compactness = 4 * M_PI * area / (perimeter * perimeter);
+    if(static_cast<int>(area) < componentSizeThreshold2 && static_cast<int>(compactness * 100 + 0.5) < lowerCompactnessThreshold)
+    {
+      cv::drawContours(lowCompactnessContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
+      //cvChangeMask.data[i] = 0;
+      //changeMaskPtr[i] = 0;
+    }
+  }
+
+  cv::imshow("Wibble", lowCompactnessContours);
+
+  for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
+  {
+    if(lowCompactnessContours.data[i])
     {
       cvChangeMask.data[i] = 0;
       changeMaskPtr[i] = 0;
