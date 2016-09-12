@@ -8,9 +8,9 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <boost/thread.hpp>
-
 #include <ITMLib/Utils/ITMMath.h>
+
+#include <tvgutil/misc/ThreadPool.h>
 
 namespace spaint {
 
@@ -45,9 +45,8 @@ void PosePersister::save_pose_on_thread(const ORUtils::SE3Pose& pose, const std:
   // Select the overload taking a string.
   void (*s) (const ORUtils::SE3Pose&, const std::string&) = &save_pose;
 
-  // Start a thread and call save_pose(...).
-  boost::thread t(s, pose, path);
-  t.detach();
+  // Call save_pose on a separate thread
+  tvgutil::ThreadPool::instance().start_asynch(boost::bind(s, pose, path));
 }
 
 void PosePersister::save_pose_on_thread(const ORUtils::SE3Pose& pose, const boost::filesystem::path& path)
