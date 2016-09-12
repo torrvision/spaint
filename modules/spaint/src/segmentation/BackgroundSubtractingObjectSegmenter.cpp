@@ -291,7 +291,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
 
   if(largestComponent != -1)
   {
-    // Update the change mask to only contain components that are completely within a 200% bounding box around the largest connected component.
+    // Update the change mask to exclude relatively small components that are not completely within a 200% bounding box around the largest connected component.
     std::set<int> componentsToRemove;
     cv::Rect largestComponentRect = cv::boundingRect(contours[largestComponent]);
     largestComponentRect.x -= largestComponentRect.width / 2;
