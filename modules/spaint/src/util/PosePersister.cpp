@@ -28,7 +28,7 @@ void PosePersister::save_pose(const Matrix4f& pose, const std::string& path)
   // Not using Matrix4f::operator<< because it adds commas between matrix entries.
   for (int y = 0; y < 4; ++y)
   {
-    outFile << pose(0, y) << " " << pose(1, y) << " " << pose(2, y) << " " << pose(3, y) << "\n";
+    outFile << pose(0, y) << ' ' << pose(1, y) << ' ' << pose(2, y) << ' ' << pose(3, y) << '\n';
   }
 }
 
