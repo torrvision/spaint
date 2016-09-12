@@ -10,7 +10,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include <ORUtils/SE3Pose.h>
+#include <ITMLib/Utils/ITMMath.h>
 
 namespace spaint {
 
@@ -24,38 +24,38 @@ public:
   /**
    * \brief Attempts to save a camera pose to a file.
    *
-   * \param pose                The pose to save.
+   * \param pose                The pose matrix to save.
    * \param path                The path to the file to which to save it.
    * \throws std::runtime_error If the pose could not be saved.
    */
-  static void save_pose(const ORUtils::SE3Pose& pose, const std::string& path);
+  static void save_pose(const Matrix4f& pose, const std::string& path);
 
   /**
    * \brief Attempts to save a camera pose to a file.
    *
-   * \param pose                The pose to save.
+   * \param pose                The pose matrix to save.
    * \param path                The path to the file to which to save it.
    * \throws std::runtime_error If the pose could not be saved.
    */
-  static void save_pose(const ORUtils::SE3Pose& pose, const boost::filesystem::path& path);
+  static void save_pose(const Matrix4f& pose, const boost::filesystem::path& path);
 
   /**
    * \brief Attempts to save a camera pose to a file on a separate thread.
    *
-   * \param pose                The pose to save.
+   * \param pose                The pose matrix to save.
    * \param path                The path to the file to which to save it.
    * \throws std::runtime_error If the pose could not be saved.
    */
-  static void save_pose_on_thread(const ORUtils::SE3Pose& pose, const std::string& path);
+  static void save_pose_on_thread(const Matrix4f& pose, const std::string& path);
 
   /**
    * \brief Attempts to save a camera pose to a file on a separate thread.
    *
-   * \param pose                The pose to save.
+   * \param pose                The pose matrix to save.
    * \param path                The path to the file to which to save it.
    * \throws std::runtime_error If the pose could not be saved.
    */
-  static void save_pose_on_thread(const ORUtils::SE3Pose& pose, const boost::filesystem::path& path);
+  static void save_pose_on_thread(const Matrix4f& pose, const boost::filesystem::path& path);
 };
 
 }
