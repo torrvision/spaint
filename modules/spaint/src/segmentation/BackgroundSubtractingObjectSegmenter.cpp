@@ -75,6 +75,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 
   // Make the change mask and object mask images.
   ITMUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
+#if 0
   static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
 
   // For each pixel in the current colour input image:
@@ -162,7 +163,9 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 
   // Convert the object mask to InfiniTAM format and return it.
   std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, m_targetMask->GetData(MEMORYDEVICE_CPU));
-  return m_targetMask;
+  //return m_targetMask;
+#endif
+  return changeMask;
 }
 
 ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
@@ -190,6 +193,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
+
+#if 0
   ITMUCharImage_Ptr changeMask = m_touchDetector->get_change_mask();
 
   ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
@@ -211,15 +216,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   }
 
   return changeMask;
-}
-
-ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
-                                                                        const ORUtils::SE3Pose& pose,
-                                                                        const RenderState_CPtr& renderState) const
-{
-  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
-  m_touchDetector->determine_touch_points(camera, depthInput, renderState);
-
+#else
   // Display the absolute difference between the raw depth image and the depth raycast.
   static ITMFloatImage_Ptr diffRawRaycast;
   diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
@@ -423,7 +420,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
     }
   }
 
-  cv::imshow("Wibble", badContours);
+  //cv::imshow("Wibble", badContours);
 
   for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
   {
@@ -435,9 +432,18 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   }
 #endif
 
-  OpenCVUtil::show_greyscale_figure("Foo", changeMask->GetData(MEMORYDEVICE_CPU), 640, 480, OpenCVUtil::ROW_MAJOR);
-  cv::waitKey(10);
+  //OpenCVUtil::show_greyscale_figure("Foo", changeMask->GetData(MEMORYDEVICE_CPU), 640, 480, OpenCVUtil::ROW_MAJOR);
+  //cv::waitKey(10);
+#endif
+  return changeMask;
+}
 
+ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
+                                                                        const ORUtils::SE3Pose& pose,
+                                                                        const RenderState_CPtr& renderState) const
+{
+  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
+  m_touchDetector->determine_touch_points(camera, depthInput, renderState);
   return m_touchDetector->get_touch_mask();
 }
 
