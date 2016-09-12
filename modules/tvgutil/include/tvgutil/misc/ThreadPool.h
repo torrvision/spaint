@@ -48,7 +48,7 @@ public:
    *
    * \param num_threads The number of threads part of the pool.
    */
-  explicit ThreadPool(size_t num_threads = 20);
+  explicit ThreadPool(size_t numThreads = 20);
 
   //#################### DESTRUCTOR ####################
   /**

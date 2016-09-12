@@ -19,11 +19,11 @@ ThreadPool& ThreadPool::instance()
 }
 
 //#################### CONSTRUCTOR ####################
-ThreadPool::ThreadPool(size_t num_threads) :
+ThreadPool::ThreadPool(size_t numThreads) :
     m_worker(new boost::asio::io_service::work(m_scheduler))
 {
   // Create num_threads threads all running the run() function of the io_service.
-  for (size_t i = 0; i < num_threads; ++i)
+  for (size_t i = 0; i < numThreads; ++i)
   {
     m_threadpool.create_thread(boost::bind(&boost::asio::io_service::run, &m_scheduler));
   }
