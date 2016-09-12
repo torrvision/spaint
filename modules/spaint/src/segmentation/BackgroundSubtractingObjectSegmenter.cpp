@@ -323,7 +323,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
     }
 
     // If near a depth raycast edge:
-    if(dilatedThresholdedGrad.data[i] || dilatedThresholdedGrad2.data[i])
+    if(dilatedThresholdedGrad.data[i]/* || dilatedThresholdedGrad2.data[i]*/)
     {
       float value = depthRaycastPtr[i];
       //if(value > thresholdedRawDepthPtr[i])
@@ -384,7 +384,9 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   // Update the change mask to only contain components that are reasonably compact.
   std::vector<std::vector<cv::Point> > contours;
   cv::findContours(cvChangeMask.clone(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-  cv::Mat1b lowCompactnessContours = cv::Mat1b::zeros(cvChangeMask.size());
+  cv::Mat1b badContours = cv::Mat1b::zeros(cvChangeMask.size());
+  int largestComponent = -1;
+  double largestComponentArea = 0.0;
   for(size_t i = 0, size = contours.size(); i < size; ++i)
   {
     double area = cv::contourArea(contours[i]);
@@ -392,17 +394,40 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
     double compactness = 4 * M_PI * area / (perimeter * perimeter);
     if(static_cast<int>(area) < componentSizeThreshold2 && static_cast<int>(compactness * 100 + 0.5) < lowerCompactnessThreshold)
     {
-      cv::drawContours(lowCompactnessContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
-      //cvChangeMask.data[i] = 0;
-      //changeMaskPtr[i] = 0;
+      cv::drawContours(badContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
+    }
+    else if(area > largestComponentArea)
+    {
+      largestComponent = static_cast<int>(i);
+      largestComponentArea = area;
     }
   }
 
-  cv::imshow("Wibble", lowCompactnessContours);
+  if(largestComponent != -1)
+  {
+    // Update the change mask to only contain components that are completely within a 200% bounding box around the largest connected component.
+    std::set<int> componentsToRemove;
+    cv::Rect largestComponentRect = cv::boundingRect(contours[largestComponent]);
+    largestComponentRect.x -= largestComponentRect.width / 2;
+    largestComponentRect.y -= largestComponentRect.height / 2;
+    largestComponentRect.width *= 2;
+    largestComponentRect.height *= 2;
+    for(size_t i = 0, size = contours.size(); i < size; ++i)
+    {
+      if(i == largestComponent) continue;
+      cv::Rect componentRect = cv::boundingRect(contours[i]);
+      if(!largestComponentRect.contains(componentRect.tl()) || !largestComponentRect.contains(componentRect.br()))
+      {
+        cv::drawContours(badContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
+      }
+    }
+  }
+
+  cv::imshow("Wibble", badContours);
 
   for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
   {
-    if(lowCompactnessContours.data[i])
+    if(badContours.data[i])
     {
       cvChangeMask.data[i] = 0;
       changeMaskPtr[i] = 0;
