@@ -24,9 +24,7 @@ BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const
                                                                            const ITMSettings_CPtr& itmSettings,
                                                                            const TouchSettings_Ptr& touchSettings)
 : Segmenter(view), m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings))
-{
-  reset();
-}
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -39,29 +37,14 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 {
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
-  static int closingSize = 15;
-  static int componentSizeThreshold = 1000;
-  static int lowerDepthThresholdMm = 100;
   static int objectProbThreshold = 80;
-  static int useClosing = 1;
-  static int useOnlyLargest = 0;
-  static int useOpening = 0;
   const std::string debugWindowName = "Debug";
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("closingSize", debugWindowName, &closingSize, 50);
-    cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
-    cv::createTrackbar("lowerDepthThresholdMm", debugWindowName, &lowerDepthThresholdMm, 100);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
-    cv::createTrackbar("useClosing", debugWindowName, &useClosing, 1);
-    cv::createTrackbar("useOnlyLargest", debugWindowName, &useOnlyLargest, 1);
-    cv::createTrackbar("useOpening", debugWindowName, &useOpening, 1);
     initialised = true;
   }
-
-  // If the user has not yet trained a hand appearance model, early out.
-  if(!m_handAppearanceModel) return ITMUCharImage_Ptr();
 
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
@@ -70,102 +53,43 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   ITMFloatImage_CPtr depthInput(m_view->depth, boost::serialization::null_deleter());
   depthInput->UpdateHostFromDevice();
 
-  // Update the lower depth threshold for the touch detector.
-  m_touchDetector->set_lower_depth_threshold_mm(lowerDepthThresholdMm);
-
-  // Make the change mask and object mask images.
+  // Make the change mask.
   ITMUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
-#if 0
-  static cv::Mat1b cvObjectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
 
-  // For each pixel in the current colour input image:
+  // Make the object mask.
+  static cv::Mat1b objectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
   const uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
-  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
+  const int pixelCount = static_cast<int>(rgbInput->dataSize);
+
+  // For each pixel in the current colour input image:
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
   {
     // Update the object mask based on whether the pixel is part of the object.
     unsigned char value = 0;
     if(changeMaskPtr[i])
     {
-      float objectProb = 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3());
+      float objectProb = m_handAppearanceModel ? 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3()) : 1.0f;
+
+#if 1
       if(objectProb >= objectProbThreshold / 100.0f) value = 255;
-      //if(objectProb >= objectProbThreshold / 100.0f) value = (uchar)(objectProb * 255);
+#else
+      // For debugging purposes
+      if(objectProb >= objectProbThreshold / 100.0f) value = (uchar)(objectProb * 255);
+#endif
     }
 
-    cvObjectMask.data[i] = value;
+    objectMask.data[i] = value;
   }
 
-  cv::Mat kernel, temp;
-
-  if(useOpening)
-  {
-    // Perform a morphological opening operation on the object mask to reduce the noise.
-    kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-    cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
-    cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
-  }
-
-  // Find the connected components of the object mask.
-  cv::Mat1i ccsImage, stats;
-  cv::Mat1d centroids;
-  cv::connectedComponentsWithStats(cvObjectMask, ccsImage, stats, centroids);
-
-  // Update the object mask to only contain components over a certain size.
-  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-  for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
-  {
-    int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
-    if(componentSize < componentSizeThreshold)
-    {
-      cvObjectMask.data[i] = 0;
-    }
-  }
-
-  if(useClosing)
-  {
-    // Perform a morphological closing operation on the object mask to fill in holes.
-    int k = std::max(closingSize, 3);
-    kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(k, k));
-    cv::dilate(cvObjectMask, temp, kernel); cvObjectMask = temp;
-    cv::erode(cvObjectMask, temp, kernel);  cvObjectMask = temp;
-  }
-
-  if(useOnlyLargest)
-  {
-    // Find the connected components of the object mask again.
-    cv::connectedComponentsWithStats(cvObjectMask, ccsImage, stats, centroids);
-
-    // Determine the largest connected component in the object mask and its size.
-    int largestComponentIndex = -1;
-    int largestComponentSize = INT_MIN;
-    for(int componentIndex = 1; componentIndex < stats.rows; ++componentIndex)
-    {
-      int componentSize = stats(componentIndex, cv::CC_STAT_AREA);
-      if(componentSize > largestComponentSize)
-      {
-        largestComponentIndex = componentIndex;
-        largestComponentSize = componentSize;
-      }
-    }
-
-    // Update the object mask to only contain the largest connected component (if any).
-    const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-    for(size_t i = 0, size = rgbInput->dataSize; i < size; ++i)
-    {
-      if(ccsData[i] != largestComponentIndex)
-      {
-        cvObjectMask.data[i] = 0;
-      }
-    }
-  }
-
-  cv::imshow(debugWindowName, cvObjectMask);
+  cv::imshow(debugWindowName, objectMask);
 
   // Convert the object mask to InfiniTAM format and return it.
-  std::copy(cvObjectMask.data, cvObjectMask.data + m_view->rgb->dataSize, m_targetMask->GetData(MEMORYDEVICE_CPU));
-  //return m_targetMask;
-#endif
-  return changeMask;
+  std::copy(objectMask.data, objectMask.data + m_view->rgb->dataSize, m_targetMask->GetData(MEMORYDEVICE_CPU));
+  return m_targetMask;
 }
 
 ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
@@ -178,6 +102,7 @@ ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE
   depthInput->UpdateHostFromDevice();
 
   // Train a colour appearance model to separate the user's hand from the scene background.
+  if(!m_handAppearanceModel) reset();
   m_handAppearanceModel->train(rgbInput, make_hand_mask(depthInput, pose, renderState));
 
   // Generate a segmented image of the user's hand that can be shown to the user to provide them
@@ -194,29 +119,6 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
 
-#if 0
-  ITMUCharImage_Ptr changeMask = m_touchDetector->get_change_mask();
-
-  ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
-  depthRaycast->UpdateHostFromDevice();
-
-  uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
-  const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
-  int pixelCount = static_cast<int>(changeMask->dataSize);
-
-#if WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int i = 0; i < pixelCount; ++i)
-  {
-    if(fabs(depthRaycastPtr[i] - m_touchDetector->invalid_depth_value()) < 1e-3f)
-    {
-      changeMaskPtr[i] = 0;
-    }
-  }
-
-  return changeMask;
-#else
   // Display the absolute difference between the raw depth image and the depth raycast.
   static ITMFloatImage_Ptr diffRawRaycast;
   diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
@@ -242,16 +144,17 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   static int lowerCompactnessThreshold = 50;
   static int lowerDiffThresholdMm = 15;
   static int upperDepthThresholdMm = 1000;
+  const std::string debugWindowName = "Change Mask";
   if(!initialised)
   {
-    cv::namedWindow("Foo", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("centreDistThreshold", "Foo", &centreDistThreshold, 100);
-    cv::createTrackbar("componentSizeThreshold", "Foo", &componentSizeThreshold, 2000);
-    cv::createTrackbar("componentSizeThreshold2", "Foo", &componentSizeThreshold2, 2000);
-    cv::createTrackbar("gradThreshold", "Foo", &gradThreshold, 255);
-    cv::createTrackbar("lowerCompactnessThreshold", "Foo", &lowerCompactnessThreshold, 100);
-    cv::createTrackbar("lowerDiffThresholdMm", "Foo", &lowerDiffThresholdMm, 100);
-    cv::createTrackbar("upperDepthThresholdMm", "Foo", &upperDepthThresholdMm, 2000);
+    cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("centreDistThreshold", debugWindowName, &centreDistThreshold, 100);
+    cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
+    cv::createTrackbar("componentSizeThreshold2", debugWindowName, &componentSizeThreshold2, 2000);
+    cv::createTrackbar("gradThreshold", debugWindowName, &gradThreshold, 255);
+    cv::createTrackbar("lowerCompactnessThreshold", debugWindowName, &lowerCompactnessThreshold, 100);
+    cv::createTrackbar("lowerDiffThresholdMm", debugWindowName, &lowerDiffThresholdMm, 100);
+    cv::createTrackbar("upperDepthThresholdMm", debugWindowName, &upperDepthThresholdMm, 2000);
   }
 
   cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
@@ -264,9 +167,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::threshold(grad, thresholdedGrad, gradThreshold, 255.0, cv::THRESH_BINARY);
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
   cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
+#if 0
   cv::imshow("Baz", dilatedThresholdedGrad);
+#endif
 
-#if 1
+#if 0
   cv::Mat1b cvDepthRaycast2 = OpenCVUtil::make_greyscale_image(thresholdedRawDepthPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
   cv::Mat gradX2, gradY2, absGradX2, absGradY2, grad2, thresholdedGrad2, dilatedThresholdedGrad2;
   cv::Sobel(cvDepthRaycast2, gradX2, CV_16S, 1, 0, 3);
@@ -322,24 +227,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     // If near a depth raycast edge:
     if(dilatedThresholdedGrad.data[i]/* || dilatedThresholdedGrad2.data[i]*/)
     {
-      float value = depthRaycastPtr[i];
-      //if(value > thresholdedRawDepthPtr[i])
-      {
-        int cx = i % 640, cy = i / 640;
-        for(int dy = -3; dy <= 3; ++dy)
-        {
-          int y = cy + dy;
-          if(y < 0 || y >= 480) continue;
-          for(int dx = -3; dx <= 3; ++dx)
-          {
-            int x = cx + dx;
-            if(x < 0 || x >= 640) continue;
-            value = std::min(value, depthRaycastPtr[y * 640 + x]);
-          }
-        }
-      }
       if(diffRawRaycastPtr[i] * 1000.0f < 100)
-      //if(diffRawRaycastPtr[i] * 1000.0f < 100 || (thresholdedRawDepthPtr[i] - value) * 1000.0f < 100)
       {
         changeMaskPtr[i] = 0;
         continue;
@@ -354,7 +242,6 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     }
   }
 
-#if 1
   static cv::Mat1b cvChangeMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
   for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
   {
@@ -420,8 +307,6 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     }
   }
 
-  //cv::imshow("Wibble", badContours);
-
   for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
   {
     if(badContours.data[i])
@@ -430,11 +315,9 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
       changeMaskPtr[i] = 0;
     }
   }
-#endif
 
-  //OpenCVUtil::show_greyscale_figure("Foo", changeMask->GetData(MEMORYDEVICE_CPU), 640, 480, OpenCVUtil::ROW_MAJOR);
-  //cv::waitKey(10);
-#endif
+  OpenCVUtil::show_greyscale_figure(debugWindowName, changeMask->GetData(MEMORYDEVICE_CPU), 640, 480, OpenCVUtil::ROW_MAJOR);
+  cv::waitKey(10);
   return changeMask;
 }
 
