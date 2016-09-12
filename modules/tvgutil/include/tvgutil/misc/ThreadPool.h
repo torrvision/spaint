@@ -1,17 +1,17 @@
 /**
- * spaint: ThreadPool.h
+ * tvgutil: ThreadPool.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_THREADPOOL
-#define H_SPAINT_THREADPOOL
+#ifndef H_TVGUTIL_THREADPOOL
+#define H_TVGUTIL_THREADPOOL
 
 #include <string>
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
-namespace spaint {
+namespace tvgutil {
 
 /**
  * \brief This class represents a pool of threads that can be used to asynchronously execute
@@ -23,6 +23,7 @@ class ThreadPool
 public:
   static ThreadPool& instance();
 
+  explicit ThreadPool(size_t num_threads = 20);
   ~ThreadPool();
 
   template<typename F>
@@ -32,8 +33,6 @@ public:
   }
 
 private:
-  ThreadPool();
-
   // Kill copy and assignment operations
   ThreadPool(const ThreadPool &);
   const ThreadPool& operator=(const ThreadPool &);
