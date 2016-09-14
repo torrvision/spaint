@@ -8,72 +8,86 @@
 
 #include <string>
 
+#ifdef _MSC_VER
+  // Suppress some VC++ warnings that are produced by boost/asio.hpp.
+  #pragma warning(disable:4267 4996)
+#endif
+
 #include <boost/asio.hpp>
+
+#ifdef _MSC_VER
+  // Re-enable the VC++ warnings for the rest of the code.
+  #pragma warning(default:4267 4996)
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 namespace tvgutil {
 
 /**
- * \brief This class represents a pool of threads that can be used to asynchronously execute
- *        arbitrary functions.
+ * \brief An instance of this class represents a pool of threads that can be used to asynchronously execute arbitrary tasks.
  */
 class ThreadPool
 {
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+  //#################### PRIVATE MEMBER VARIABLES ####################
+private:
+  /** An I/O service used to schedule work for the threads. */
+  boost::asio::io_service m_scheduler;
+
+  /** The threads in the pool. */
+  boost::thread_group m_threads;
+
+  /** A worker variable used to keep the scheduler running until we want it to stop. */
+  boost::shared_ptr<boost::asio::io_service::work> m_worker;
+
+  //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief  Returns a static instance of the ThreadPool constructed with default parameters.
-   *         Can be used when there is no need to determine the lifecycle of the thread pool.
+   * \brief Constructs a thread pool.
    *
-   * \return A static instance of the ThreadPool constructed with default parameters.
-   */
-  static ThreadPool& instance();
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-  /**
-   * \brief Starts a function on a separate thread.
-   *
-   * \param task  The task that will executed on a thread part of the pool.
-   */
-  template<typename F>
-  void start_asynch(F task)
-  {
-    m_scheduler.post(task);
-  }
-
-  //#################### CONSTRUCTOR ####################
-  /**
-   * \brief Constructs a ThreadPool.
-   *
-   * \param num_threads The number of threads part of the pool.
+   * \param numThreads  The number of threads that should be in the pool.
    */
   explicit ThreadPool(size_t numThreads = 20);
 
   //#################### DESTRUCTOR ####################
+public:
   /**
-   * \brief Destructs a ThreadPool. All threads in the pool are joined.
+   * \brief Destroys the thread pool.
    *
-   * \note  Can be blocking.
+   * \note  Since all threads in the pool are joined, this can block.
    */
   ~ThreadPool();
 
+  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
 private:
-  // Disable copy and assignment operations.
-  ThreadPool(const ThreadPool &);
-  const ThreadPool& operator=(const ThreadPool &);
+  // Deliberately private and unimplemented.
+  ThreadPool(const ThreadPool&);
+  ThreadPool& operator=(const ThreadPool&);
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets a global instance of the thread pool that has been constructed with default parameters.
+   *
+   * This can be used when there is no need to control the lifecycle of the thread pool.
+   *
+   * \return The default global instance of the thread pool.
+   */
+  static ThreadPool& instance();
 
-  //#################### PRIVATE MEMBER VARIABLES ####################
-private:
-  // io_service used to schedule work for the threads.
-  boost::asio::io_service m_scheduler;
-
-  // Contains all the threads part of the pool.
-  boost::thread_group m_threadpool;
-
-  // Worker variable used to keep the scheduler running.
-  boost::shared_ptr<boost::asio::io_service::work> m_worker;
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Posts a task to be executed by the thread pool.
+   *
+   * \param task  The task to execute.
+   */
+  template <typename Task>
+  void post_task(Task task)
+  {
+    m_scheduler.post(task);
+  }
 };
 
 }

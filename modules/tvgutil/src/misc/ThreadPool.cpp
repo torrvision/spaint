@@ -9,35 +9,37 @@
 
 namespace tvgutil {
 
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-ThreadPool& ThreadPool::instance()
-{
-  // Use a default constructed instance of the ThreadPool.
-  static ThreadPool instance;
+//#################### CONSTRUCTORS ####################
 
-  return instance;
-}
-
-//#################### CONSTRUCTOR ####################
-ThreadPool::ThreadPool(size_t numThreads) :
-    m_worker(new boost::asio::io_service::work(m_scheduler))
+ThreadPool::ThreadPool(size_t numThreads)
+: m_worker(new boost::asio::io_service::work(m_scheduler))
 {
-  // Create num_threads threads all running the run() function of the io_service.
-  for (size_t i = 0; i < numThreads; ++i)
+  for(size_t i = 0; i < numThreads; ++i)
   {
-    m_threadpool.create_thread(boost::bind(&boost::asio::io_service::run, &m_scheduler));
+    m_threads.create_thread(boost::bind(&boost::asio::io_service::run, &m_scheduler));
   }
 }
 
 //#################### DESTRUCTOR ####################
+
 ThreadPool::~ThreadPool()
 {
-  // Stop executing the io_service::run() function but allow running and queued tasks to finish cleanly.
+  // Stop executing the scheduler's run function, but allow running and queued tasks to finish cleanly.
   m_worker.reset();
+
   // Wait for all threads to terminate.
-  m_threadpool.join_all();
-  //Cleanly stop the io_service
+  m_threads.join_all();
+
+  // Cleanly stop the scheduler.
   m_scheduler.stop();
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+ThreadPool& ThreadPool::instance()
+{
+  static ThreadPool s_instance;
+  return s_instance;
 }
 
 }
