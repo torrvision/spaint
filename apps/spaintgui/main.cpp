@@ -86,7 +86,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
-    ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
+    ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name (can also be a relative/full path)")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
 
@@ -110,7 +110,15 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   // If the user specifies a sequence name, set the depth / RGB image masks and the calibration filename appropriately.
   if(args.sequenceName != "")
   {
-    boost::filesystem::path dir = find_subdir_from_executable(args.sequenceType + "s") / args.sequenceName;
+    boost::filesystem::path dir;
+    if (boost::filesystem::is_directory(args.sequenceName))
+    {
+      dir = args.sequenceName;
+    }
+    else
+    {
+      dir = find_subdir_from_executable(args.sequenceType + "s") / args.sequenceName;
+    }
 
     args.depthImageMask = (dir / "depthm%06i.pgm").string();
     args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
