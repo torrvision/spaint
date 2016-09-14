@@ -56,6 +56,8 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::string poseFilesMask;
+  bool poseFromDisk;
   size_t prefetchBufferCapacity;
   std::string rgbImageMask;
   std::string sequenceSpecifier;
@@ -88,6 +90,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("poseFromDisk", po::bool_switch(&args.poseFromDisk), "track the camera using poses stored on disk")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::string>(&args.sequenceSpecifier)->default_value(""), "sequence specifier")
@@ -121,6 +124,11 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
     args.depthImageMask = (dir / "depthm%06i.pgm").string();
     args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
+
+    if (args.poseFromDisk)
+    {
+      args.poseFilesMask = (dir / "posem%06i.txt").string();
+    }
 
     // If the user hasn't explicitly specified a calibration file, try to find one in the sequence directory.
     if(args.calibrationFilename == "")
@@ -183,8 +191,19 @@ try
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
-  if(args.trackSurfels) settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
-  else settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+
+  std::string trackerConfig = "";
+  if (args.poseFromDisk)
+  {
+    trackerConfig = "type=filebased,mask=" + args.poseFilesMask;
+    if (args.cameraAfterDisk) std::cerr << "WARNING: cannot use --cameraAfterDisk together with --poseFromDisk" << std::endl;
+  }
+  else if(args.trackSurfels) trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
+  else trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+
+  // Copy the pointer in trackerConfig (lifetime of the string ends later than the need
+  // of the tracker factory for trackerConfig.
+  settings->trackerConfig = trackerConfig.c_str();
 
   TrackerType trackerType = TRACKER_INFINITAM;
   std::string trackerParams;
