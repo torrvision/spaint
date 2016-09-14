@@ -8,6 +8,67 @@
 
 namespace spaint {
 
+//#################### SHARED HELPER TYPES ####################
+
+/**
+ * \brief TODO
+ */
+template <typename AFElementType, typename ITMElementType> struct CopyAFPixelToITM;
+
+/**
+ * \brief TODO
+ */
+template <typename ElementType>
+struct CopyAFPixelToITM<ElementType,ElementType>
+{
+  /**
+   * \brief Copies a single-channel pixel value from an ArrayFire image to an InfiniTAM image.
+   *
+   * \param columnMajorIndex  The column-major index of the pixel to be copied.
+   * \param inputData         The data for the input image (in column-major format).
+   * \param width             The width of each image.
+   * \param height            The height of each image.
+   * \param outputData        The data for the output image (in row-major format).
+   */
+  _CPU_AND_GPU_CODE_
+  inline void operator()(int columnMajorIndex, const ElementType *inputData, int width, int height, ElementType *outputData)
+  {
+    int row = columnMajorIndex % height, col = columnMajorIndex / height;
+    int rowMajorIndex = row * width + col;
+    outputData[rowMajorIndex] = inputData[columnMajorIndex];
+  }
+};
+
+/**
+ * \brief TODO
+ */
+template <typename AFElementType>
+struct CopyAFPixelToITM<AFElementType,ORUtils::Vector4<AFElementType> >
+{
+  /**
+   * \brief Copies a four-channel pixel value from an ArrayFire image to an InfiniTAM image.
+   *
+   * \param columnMajorIndex  The column-major index of the pixel to be copied.
+   * \param inputData         The data for the input image (in column-major format).
+   * \param width             The width of each image.
+   * \param height            The height of each image.
+   * \param outputData        The data for the output image (in row-major format).
+   */
+  _CPU_AND_GPU_CODE_
+  inline void operator()(int columnMajorIndex, const unsigned char *inputData, int width, int height, Vector4u *outputData)
+  {
+    int size = width * height;
+    int row = columnMajorIndex % height, col = columnMajorIndex / height;
+    int rowMajorIndex = row * width + col;
+    outputData[rowMajorIndex] = Vector4u(
+      inputData[columnMajorIndex],
+      inputData[columnMajorIndex + size],
+      inputData[columnMajorIndex + 2 * size],
+      inputData[columnMajorIndex + 3 * size]
+    );
+  }
+};
+
 //#################### SHARED HELPER FUNCTIONS ####################
 
 /**
@@ -32,7 +93,7 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
 }
 
 /**
- * \brief Copies a greyscale pixel value from an ArrayFire image to an InfiniTAM image.
+ * \brief Copies a pixel value from an ArrayFire image to an InfiniTAM image.
  *
  * \param columnMajorIndex  The column-major index of the pixel to be copied.
  * \param inputData         The data for the input image (in column-major format).
@@ -40,35 +101,11 @@ inline void calculate_pixel_depth_difference(int rowMajorIndex, const float *fir
  * \param height            The height of each image.
  * \param outputData        The data for the output image (in row-major format).
  */
+template <typename AFElementType, typename ITMElementType>
 _CPU_AND_GPU_CODE_
-inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inputData, int width, int height, unsigned char *outputData)
+inline void copy_af_pixel_to_itm(int columnMajorIndex, const AFElementType *inputData, int width, int height, ITMElementType *outputData)
 {
-  int row = columnMajorIndex % height, col = columnMajorIndex / height;
-  int rowMajorIndex = row * width + col;
-  outputData[rowMajorIndex] = inputData[columnMajorIndex];
-}
-
-/**
- * \brief Copies an RGBA pixel value from an ArrayFire image to an InfiniTAM image.
- *
- * \param columnMajorIndex  The column-major index of the pixel to be copied.
- * \param inputData         The data for the input image (in column-major format).
- * \param width             The width of each image.
- * \param height            The height of each image.
- * \param outputData        The data for the output image (in row-major format).
- */
-_CPU_AND_GPU_CODE_
-inline void copy_af_pixel_to_itm(int columnMajorIndex, const unsigned char *inputData, int width, int height, Vector4u *outputData)
-{
-  int size = width * height;
-  int row = columnMajorIndex % height, col = columnMajorIndex / height;
-  int rowMajorIndex = row * width + col;
-  outputData[rowMajorIndex] = Vector4u(
-    inputData[columnMajorIndex],
-    inputData[columnMajorIndex + size],
-    inputData[columnMajorIndex + 2 * size],
-    inputData[columnMajorIndex + 3 * size]
-  );
+  CopyAFPixelToITM<AFElementType,ITMElementType>()(columnMajorIndex, inputData, width, height, outputData);
 }
 
 /**
