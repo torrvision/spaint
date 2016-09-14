@@ -95,7 +95,7 @@ public:
   static void save_image_on_thread(const boost::shared_ptr<const ORUtils::Image<T> >& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN)
   {
     void (*p)(const boost::shared_ptr<const ORUtils::Image<T> >&, const std::string&, ImageFileType) = &save_image;
-    tvgutil::ThreadPool::instance().start_asynch(boost::bind(p, image, path, fileType));
+    tvgutil::ThreadPool::instance().post_task(boost::bind(p, image, path, fileType));
   }
 
   /**
