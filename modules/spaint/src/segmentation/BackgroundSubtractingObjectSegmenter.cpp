@@ -119,9 +119,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
 
-  // Display the absolute difference between the raw depth image and the depth raycast.
-  static ITMFloatImage_Ptr diffRawRaycast;
-  diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
+  ITMFloatImage_Ptr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
 
   ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
   depthRaycast->UpdateHostFromDevice();
@@ -169,22 +167,6 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::threshold(grad, thresholdedGrad, gradThreshold, 255.0, cv::THRESH_BINARY);
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
   cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
-#if 0
-  cv::imshow("Baz", dilatedThresholdedGrad);
-#endif
-
-#if 0
-  cv::Mat1b cvDepthRaycast2 = OpenCVUtil::make_greyscale_image(thresholdedRawDepthPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
-  cv::Mat gradX2, gradY2, absGradX2, absGradY2, grad2, thresholdedGrad2, dilatedThresholdedGrad2;
-  cv::Sobel(cvDepthRaycast2, gradX2, CV_16S, 1, 0, 3);
-  cv::convertScaleAbs(gradX2, absGradX2);
-  cv::Sobel(cvDepthRaycast2, gradY2, CV_16S, 0, 1, 3);
-  cv::convertScaleAbs(gradY2, absGradY2);
-  cv::addWeighted(absGradX2, 0.5, absGradY2, 0.5, 0, grad2);
-  cv::threshold(grad2, thresholdedGrad2, gradThreshold, 255.0, cv::THRESH_BINARY);
-  cv::dilate(thresholdedGrad2, dilatedThresholdedGrad2, kernel);
-  cv::imshow("Baz2", dilatedThresholdedGrad2);
-#endif
 
 #if WITH_OPENMP
   #pragma omp parallel for
@@ -227,7 +209,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     }
 
     // If near a depth raycast edge:
-    if(dilatedThresholdedGrad.data[i]/* || dilatedThresholdedGrad2.data[i]*/)
+    if(dilatedThresholdedGrad.data[i])
     {
       if(diffRawRaycastPtr[i] * 1000.0f < 100)
       {

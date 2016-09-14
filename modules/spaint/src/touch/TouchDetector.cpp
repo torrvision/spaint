@@ -239,19 +239,6 @@ ITMFloatImage_Ptr TouchDetector::get_diff_raw_raycast() const
   return diffRawRaycast;
 }
 
-ITMUCharImage_Ptr TouchDetector::get_diff_raw_raycast_cm() const
-{
-  // FIXME: The implementation of this is the same as that of get_touch_mask - factor out the commonality.
-  const float mToCm = 100.0f; // the scaling factor needed to convert metres to centimetres
-  static Vector2i imgSize = ImageProcessor::image_size(m_diffRawRaycast);
-  static ITMUCharImage_Ptr result(new ITMUCharImage(imgSize, true, true));
-  AFArray_Ptr diffRawRaycastInCm(new af::array(imgSize.y, imgSize.x));
-  *diffRawRaycastInCm = clamp_to_range(*m_diffRawRaycast * mToCm, 0.0f, 255.0f).as(u8);
-  m_imageProcessor->copy_af_to_itm(diffRawRaycastInCm, result);
-  result->UpdateHostFromDevice();
-  return result;
-}
-
 ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
 {
   // FIXME: The implementation of this is the same as that of get_change_mask - factor out the commonality.

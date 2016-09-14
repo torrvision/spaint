@@ -139,11 +139,6 @@ public:
   ITMFloatImage_Ptr get_diff_raw_raycast() const;
 
   /**
-   * \brief TODO
-   */
-  ITMUCharImage_Ptr get_diff_raw_raycast_cm() const;
-
-  /**
    * \brief Gets a mask denoting the detected touch region.
    *
    * \return  A mask denoting the detected touch region.
