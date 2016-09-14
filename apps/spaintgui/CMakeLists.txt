@@ -8,10 +8,11 @@
 
 SET(targetname spaintgui)
 
-#########################################################################
-# Offer support for low power machines and those with low USB bandwidth #
-#########################################################################
+############################################################################################
+# Offer a variety of options, e.g. for low power machines and those with low USB bandwidth #
+############################################################################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferFocusReacquisition.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowUSBBandwidthSupport.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferPixelDebugging.cmake)
