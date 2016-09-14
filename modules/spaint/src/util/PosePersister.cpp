@@ -43,7 +43,7 @@ void PosePersister::save_pose_on_thread(const Matrix4f& pose, const std::string&
   void (*s) (const Matrix4f&, const std::string&) = &save_pose;
 
   // Call save_pose on a separate thread
-  tvgutil::ThreadPool::instance().start_asynch(boost::bind(s, pose, path));
+  tvgutil::ThreadPool::instance().post_task(boost::bind(s, pose, path));
 }
 
 void PosePersister::save_pose_on_thread(const Matrix4f& pose, const boost::filesystem::path& path)
