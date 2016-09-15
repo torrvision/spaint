@@ -12,10 +12,13 @@ namespace spaint {
 //#################### HELPER FUNCTIONS ####################
 
 /**
- * \brief TODO
+ * \brief Copies an ArrayFire image to an InfiniTAM image using the CPU.
+ *
+ * \param inputImage  The input image.
+ * \param outputImage The output image.
  */
 template <typename AFElementType, typename ITMElementType>
-static void copy_af_to_itm_helper_cpu(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
+static void copy_af_to_itm_cpu(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
 {
   const AFElementType *inputData = inputImage->device<AFElementType>();
   ITMElementType *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
@@ -36,10 +39,13 @@ static void copy_af_to_itm_helper_cpu(const boost::shared_ptr<const af::array>& 
 }
 
 /**
- * \brief TODO
+ * \brief Copies an InfiniTAM image to an ArrayFire image using the CPU.
+ *
+ * \param inputImage  The input image.
+ * \param outputImage The output image.
  */
 template <typename ITMElementType, typename AFElementType>
-static void copy_itm_to_af_helper_cpu(const boost::shared_ptr<const ORUtils::Image<ITMElementType> >& inputImage, const boost::shared_ptr<af::array>& outputImage)
+static void copy_itm_to_af_cpu(const boost::shared_ptr<const ORUtils::Image<ITMElementType> >& inputImage, const boost::shared_ptr<af::array>& outputImage)
 {
   const ITMElementType *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
   AFElementType *outputData = outputImage->device<AFElementType>();
@@ -85,19 +91,19 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_af_to_itm_helper_cpu<unsigned char,unsigned char>(inputImage, outputImage);
+  copy_af_to_itm_cpu<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_af_to_itm_helper_cpu<unsigned char,Vector4u>(inputImage, outputImage);
+  copy_af_to_itm_cpu<unsigned char,Vector4u>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_itm_to_af_helper_cpu<Vector4u,unsigned char>(inputImage, outputImage);
+  copy_itm_to_af_cpu<Vector4u,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
