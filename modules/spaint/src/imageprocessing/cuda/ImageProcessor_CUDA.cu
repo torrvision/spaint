@@ -29,16 +29,8 @@ __global__ void ck_calculate_depth_difference(const float *firstInputData, const
   }
 }
 
-__global__ void ck_copy_af_to_itm(const unsigned char *inputData, int width, int height, unsigned char *outputData)
-{
-  int tid = threadIdx.x + blockDim.x * blockIdx.x;
-  if(tid < width * height)
-  {
-    copy_af_pixel_to_itm(tid, inputData, width, height, outputData);
-  }
-}
-
-__global__ void ck_copy_af_to_itm(const unsigned char *inputData, int width, int height, Vector4u *outputData)
+template <typename AFElementType, typename ITMElementType>
+__global__ void ck_copy_af_to_itm(const AFElementType *inputData, int width, int height, ITMElementType *outputData)
 {
   int tid = threadIdx.x + blockDim.x * blockIdx.x;
   if(tid < width * height)
@@ -65,6 +57,27 @@ __global__ void ck_set_on_threshold(const float *inputData, int pixelCount, Imag
   }
 }
 
+//#################### HELPER FUNCTIONS ####################
+
+template <typename AFElementType, typename ITMElementType>
+void copy_af_to_itm_helper(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
+{
+  const int height = outputImage->noDims.y;
+  const int width = outputImage->noDims.x;
+  const int pixelCount = height * width;
+
+  int threadsPerBlock = 256;
+  int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
+  ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
+    inputImage->device<AFElementType>(),
+    width,
+    height,
+    outputImage->GetData(MEMORYDEVICE_CUDA)
+  );
+
+  inputImage->unlock();
+}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const
@@ -89,43 +102,13 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-
-  // Note: This is a bit of a hack - passing inputImage->device<unsigned char>() to the CUDA kernel doesn't work for some reason.
-  af::array temp = (*inputImage)(af::span, af::span);
-  
-  Vector2i imgSize = outputImage->noDims;
-  int pixelCount = imgSize.x * imgSize.y;
-
-  int threadsPerBlock = 256;
-  int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
-  
-  ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
-    temp.device<unsigned char>(),
-    imgSize.x,
-    imgSize.y,
-    outputImage->GetData(MEMORYDEVICE_CUDA)
-  );
+  copy_af_to_itm_helper<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-
-  const int height = outputImage->noDims.y;
-  const int width = outputImage->noDims.x;
-  const int pixelCount = height * width;
-
-  int threadsPerBlock = 256;
-  int numBlocks = (pixelCount + threadsPerBlock - 1) / threadsPerBlock;
-
-  ck_copy_af_to_itm<<<numBlocks,threadsPerBlock>>>(
-    inputImage->device<unsigned char>(),
-    width,
-    height,
-    outputImage->GetData(MEMORYDEVICE_CUDA)
-  );
-
-  inputImage->unlock();
+  copy_af_to_itm_helper<unsigned char,Vector4u>(inputImage, outputImage);
 }
 
 void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
