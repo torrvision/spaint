@@ -15,7 +15,7 @@ namespace spaint {
  * \brief TODO
  */
 template <typename AFElementType, typename ITMElementType>
-void copy_af_to_itm_helper(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
+static void copy_af_to_itm_helper_cpu(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
 {
   const AFElementType *inputData = inputImage->device<AFElementType>();
   ITMElementType *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
@@ -59,13 +59,13 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_af_to_itm_helper<unsigned char,unsigned char>(inputImage, outputImage);
+  copy_af_to_itm_helper_cpu<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_af_to_itm_helper<unsigned char,Vector4u>(inputImage, outputImage);
+  copy_af_to_itm_helper_cpu<unsigned char,Vector4u>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const

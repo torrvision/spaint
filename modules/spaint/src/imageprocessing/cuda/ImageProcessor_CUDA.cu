@@ -60,7 +60,7 @@ __global__ void ck_set_on_threshold(const float *inputData, int pixelCount, Imag
 //#################### HELPER FUNCTIONS ####################
 
 template <typename AFElementType, typename ITMElementType>
-void copy_af_to_itm_helper(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
+static void copy_af_to_itm_helper_cuda(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
 {
   const int height = outputImage->noDims.y;
   const int width = outputImage->noDims.x;
@@ -102,13 +102,13 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_af_to_itm_helper<unsigned char,unsigned char>(inputImage, outputImage);
+  copy_af_to_itm_helper_cuda<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-  copy_af_to_itm_helper<unsigned char,Vector4u>(inputImage, outputImage);
+  copy_af_to_itm_helper_cuda<unsigned char,Vector4u>(inputImage, outputImage);
 }
 
 void ImageProcessor_CUDA::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
