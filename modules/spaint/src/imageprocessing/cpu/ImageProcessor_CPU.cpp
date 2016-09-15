@@ -31,6 +31,32 @@ static void copy_af_to_itm_helper_cpu(const boost::shared_ptr<const af::array>& 
   {
     copy_af_pixel_to_itm(columnMajorIndex, inputData, width, height, outputData);
   }
+
+  inputImage->unlock();
+}
+
+/**
+ * \brief TODO
+ */
+template <typename ITMElementType, typename AFElementType>
+static void copy_itm_to_af_helper_cpu(const boost::shared_ptr<const ORUtils::Image<ITMElementType> >& inputImage, const boost::shared_ptr<af::array>& outputImage)
+{
+  const ITMElementType *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
+  AFElementType *outputData = outputImage->device<AFElementType>();
+
+  const int height = inputImage->noDims.y;
+  const int width = inputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
+  {
+    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputData);
+  }
+
+  outputImage->unlock();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -71,21 +97,7 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-
-  const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
-  unsigned char *outputData = outputImage->device<unsigned char>();
-
-  const int height = inputImage->noDims.y;
-  const int width = inputImage->noDims.x;
-  const int pixelCount = height * width;
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
-  {
-    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputData);
-  }
+  copy_itm_to_af_helper_cpu<Vector4u,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
