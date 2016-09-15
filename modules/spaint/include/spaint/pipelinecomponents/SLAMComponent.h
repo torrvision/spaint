@@ -126,10 +126,11 @@ private:
   Tracker_Ptr m_tracker;
 
   /**
-   * The parameters for the tracker (if any). For example, this would be the host on which the
-   * Vicon software is running (e.g. "<IP address>:<port>") if we're using the Vicon tracker.
+   * The parameters for the trackers. Each string in the vector will contain the parameters for the respective tracker.
+   * For example, this would be the host on which the Vicon software is running (e.g. "<IP address>:<port>") if we're using the Vicon tracker,
+   * followed by the parameters for the ICP tracker performing pose refinement.
    */
-  std::string m_trackerParams;
+  std::vector<std::string> m_trackerParams;
 
   /** The type of tracker to use. */
   TrackerType m_trackerType;
@@ -157,7 +158,7 @@ public:
    * \param trackingMode      The tracking mode to use.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
+                TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
                 TrackingMode trackingMode = TRACK_VOXELS);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -193,14 +194,6 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  /**
-   * \brief Makes a hybrid tracker that refines the results of a primary tracker using ICP.
-   *
-   * \param primaryTracker  The primary tracker (e.g. a Rift or Vicon tracker).
-   * \return                The hybrid tracker.
-   */
-  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker) const;
-
   /**
    * \brief Render from the live camera position to prepare for tracking.
    *

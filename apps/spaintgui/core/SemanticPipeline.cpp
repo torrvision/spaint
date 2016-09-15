@@ -14,7 +14,7 @@ using namespace spaint;
 
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                                   TrackerType trackerType, const std::string& trackerParams,
+                                   TrackerType trackerType, const std::vector<std::string>& trackerParams,
                                    SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
 : MultiScenePipeline(settings, resourcesDir, maxLabelCount)
 {

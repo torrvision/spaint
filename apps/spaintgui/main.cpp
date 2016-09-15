@@ -190,30 +190,32 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  settings->trackerConfig = NULL;
+
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
-  std::string trackerConfig = "";
+  TrackerType trackerType = TRACKER_INFINITAM;
+  std::vector<std::string> trackerConfigs;
+
   if (args.poseFromDisk)
   {
-    trackerConfig = "type=filebased,mask=" + args.poseFilesMask;
-    if (args.cameraAfterDisk) std::cerr << "WARNING: cannot use --cameraAfterDisk together with --poseFromDisk" << std::endl;
+    trackerType = TRACKER_INFINITAM_NO_REFINE;
+    trackerConfigs.push_back("type=filebased,mask=" + args.poseFilesMask);
   }
-  else if(args.trackSurfels) trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
-  else trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
-
-  // Copy the pointer in trackerConfig (lifetime of the string ends later than the need
-  // of the tracker factory for trackerConfig.
-  settings->trackerConfig = trackerConfig.c_str();
-
-  TrackerType trackerType = TRACKER_INFINITAM;
-  std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
   if(trackerType == TRACKER_RIFT)
   {
 #ifdef WITH_OVR
     // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0) trackerType = TRACKER_INFINITAM;
+    if(ovrHmd_Detect() == 0)
+    {
+      trackerType = TRACKER_INFINITAM;
+    }
+    else
+    {
+      trackerConfigs.push_back("TRACKER_RIFT dummy config entry");
+    }
 #else
     // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
     trackerType = TRACKER_INFINITAM;
@@ -226,7 +228,7 @@ try
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
     // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
-    trackerParams = "192.168.10.1:801";
+    trackerParams.push_back("192.168.10.1:801");
 
 #if 0
     // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
@@ -241,6 +243,10 @@ try
     trackerType = TRACKER_INFINITAM;
 #endif
   }
+
+  // Setup default tracker (last one in the configuration vector).
+  if(args.trackSurfels) trackerConfigs.push_back("type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0");
+  else trackerConfigs.push_back("type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0");
 
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
@@ -284,7 +290,7 @@ try
   if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
+    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerConfigs, mappingMode, trackingMode));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
