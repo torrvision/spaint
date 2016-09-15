@@ -30,7 +30,7 @@ public:
    */
   SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                   spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
+                   spaint::TrackerType trackerType, const std::vector<std::string>& trackerParams,
                    spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                    spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
 
