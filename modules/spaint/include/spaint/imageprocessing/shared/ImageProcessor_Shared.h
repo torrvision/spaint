@@ -31,7 +31,7 @@ struct CopyAFPixelToITM<ElementType,ElementType>
    * \param outputData        The data for the output image (in row-major format).
    */
   _CPU_AND_GPU_CODE_
-  inline void operator()(int columnMajorIndex, const ElementType *inputData, int width, int height, ElementType *outputData)
+  inline void operator()(int columnMajorIndex, const ElementType *inputData, int width, int height, ElementType *outputData) const
   {
     int row = columnMajorIndex % height, col = columnMajorIndex / height;
     int rowMajorIndex = row * width + col;
@@ -55,7 +55,7 @@ struct CopyAFPixelToITM<AFElementType,ORUtils::Vector4<AFElementType> >
    * \param outputData        The data for the output image (in row-major format).
    */
   _CPU_AND_GPU_CODE_
-  inline void operator()(int columnMajorIndex, const AFElementType *inputData, int width, int height, ORUtils::Vector4<AFElementType> *outputData)
+  inline void operator()(int columnMajorIndex, const AFElementType *inputData, int width, int height, ORUtils::Vector4<AFElementType> *outputData) const
   {
     int size = width * height;
     int row = columnMajorIndex % height, col = columnMajorIndex / height;
@@ -90,7 +90,7 @@ struct CopyITMPixelToAF<ORUtils::Vector4<AFElementType>,AFElementType>
    * \param outputData      The data for the output image (in column-major format).
    */
   _CPU_AND_GPU_CODE_
-  inline void operator()(int rowMajorIndex, const ORUtils::Vector4<AFElementType> *inputData, int width, int height, AFElementType *outputData)
+  inline void operator()(int rowMajorIndex, const ORUtils::Vector4<AFElementType> *inputData, int width, int height, AFElementType *outputData) const
   {
     int size = width * height;
     int row = rowMajorIndex / width, col = rowMajorIndex % width;
