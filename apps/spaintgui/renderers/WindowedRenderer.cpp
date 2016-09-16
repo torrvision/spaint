@@ -62,8 +62,10 @@ bool WindowedRenderer::is_mono() const
 
 void WindowedRenderer::render(const Vector2f& fracWindowPos) const
 {
+#if USE_FOCUS_REACQUISITION
   // Reacquire the focus for this window if it has been lost to debugging windows.
   SDL_RaiseWindow(get_window());
+#endif
 
   // Render the scene.
   render_scene(fracWindowPos);

@@ -8,7 +8,6 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-namespace po = boost::program_options;
 
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
@@ -41,6 +40,11 @@ using namespace tvgutil;
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 
+//#################### NAMESPACE ALIASES ####################
+
+namespace bf = boost::filesystem;
+namespace po = boost::program_options;
+
 //#################### TYPES ####################
 
 struct CommandLineArguments
@@ -55,7 +59,7 @@ struct CommandLineArguments
   std::string pipelineType;
   size_t prefetchBufferCapacity;
   std::string rgbImageMask;
-  std::string sequenceName;
+  std::string sequenceSpecifier;
   std::string sequenceType;
   bool trackSurfels;
 };
@@ -87,7 +91,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
-    ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
+    ("sequenceSpecifier,s", po::value<std::string>(&args.sequenceSpecifier)->default_value(""), "sequence specifier")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
 
@@ -108,10 +112,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     return false;
   }
 
-  // If the user specifies a sequence name, set the depth / RGB image masks and the calibration filename appropriately.
-  if(args.sequenceName != "")
+  // If the user specifies a sequence (either via a sequence name or a path),
+  // set the depth / RGB image masks and the calibration filename appropriately.
+  if(args.sequenceSpecifier != "")
   {
-    boost::filesystem::path dir = find_subdir_from_executable(args.sequenceType + "s") / args.sequenceName;
+    const bf::path dir = bf::is_directory(args.sequenceSpecifier)
+      ? args.sequenceSpecifier
+      : find_subdir_from_executable(args.sequenceType + "s") / args.sequenceSpecifier;
 
     args.depthImageMask = (dir / "depthm%06i.pgm").string();
     args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
@@ -119,8 +126,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     // If the user hasn't explicitly specified a calibration file, try to find one in the sequence directory.
     if(args.calibrationFilename == "")
     {
-      boost::filesystem::path defaultCalibrationFilename = dir / "calib.txt";
-      if(boost::filesystem::exists(defaultCalibrationFilename))
+      bf::path defaultCalibrationFilename = dir / "calib.txt";
+      if(bf::exists(defaultCalibrationFilename))
       {
         args.calibrationFilename = defaultCalibrationFilename.string();
       }
