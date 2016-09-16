@@ -58,6 +58,14 @@ public:
   virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
+   * \brief Copies a floating-point ArrayFire image to an InfiniTAM image.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   */
+  virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const = 0;
+
+  /**
    * \brief Copies a greyscale ArrayFire image to an InfiniTAM image.
    *
    * \param inputImage  The input image.
@@ -72,6 +80,22 @@ public:
    * \param outputImage The output image.
    */
   virtual void copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief Copies a floating-point InfiniTAM image to an ArrayFire image.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   */
+  virtual void copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
+
+  /**
+   * \brief Copies a greyscale InfiniTAM image to an ArrayFire image.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   */
+  virtual void copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
    * \brief Copies an RGBA InfiniTAM image to an ArrayFire image.
