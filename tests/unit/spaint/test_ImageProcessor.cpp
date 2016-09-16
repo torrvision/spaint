@@ -22,24 +22,36 @@ using boost::assign::map_list_of;
 using namespace ITMLib;
 using namespace spaint;
 
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<af::array> AFArray_Ptr;
-
 //#################### FIXTURES ####################
 
-struct CopyImageFixture
+/**
+ * \brief An instance of this class provides the context needed for an image-copying test.
+ */
+class CopyImageFixture
 {
-  //#################### PUBLIC VARIABLES ####################
+  //#################### TYPEDEFS ####################
+private:
+  typedef boost::shared_ptr<af::array> AFArray_Ptr;
 
+  //#################### PUBLIC VARIABLES ####################
+public:
+  /** A set of temporary ArrayFire images that can be used for the various image-copying tests. */
   std::map<std::string,AFArray_Ptr> afImages;
+
+  /** The height of the images being copied. */
   int height;
+
+  /** The image processor used to copy the images. */
   ImageProcessor_CPtr imageProcessor;
+
+  /** A set of functions that can be used to make pixel values of the right types for the various image-copying tests. */
   std::map<std::string,boost::function<boost::any(size_t)> > pixelMakers;
+
+  /** The width of the images being copied. */
   int width;
 
   //#################### CONSTRUCTORS ####################
-
+public:
   CopyImageFixture()
   {
     // Choose a device for ArrayFire.
@@ -50,7 +62,9 @@ struct CopyImageFixture
 
     // Set up the fixture.
     imageProcessor = ImageProcessorFactory::make_image_processor(WITH_CUDA ? ITMLibSettings::DEVICE_CUDA : ITMLibSettings::DEVICE_CPU);
-    width = 3, height = 2;
+
+    width = 3;
+    height = 2;
 
     afImages = map_list_of
       (std::string("float"), AFArray_Ptr(new af::array(height, width, f32)))
@@ -65,17 +79,17 @@ struct CopyImageFixture
     .to_container(pixelMakers);
   }
 
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
   template <typename T>
-  static boost::any make_single_channel_pixel(size_t i)
+  static boost::any make_single_channel_pixel(size_t rasterIndex)
   {
-    return static_cast<T>(i);
+    return static_cast<T>(rasterIndex);
   }
 
-  static boost::any make_vector4u_pixel(size_t i)
+  static boost::any make_vector4u_pixel(size_t rasterIndex)
   {
-    unsigned char c = static_cast<unsigned char>(i);
+    unsigned char c = static_cast<unsigned char>(rasterIndex);
     return Vector4u(c, c, c, 255);
   }
 };
@@ -84,6 +98,13 @@ struct CopyImageFixture
 
 namespace ORUtils {
 
+/**
+ * \brief Checks whether two InfiniTAM images are equal.
+ *
+ * \param lhs The left-hand image.
+ * \param rhs The right-hand image.
+ * \return    true, if the two images are equal, or false otherwise.
+ */
 template <typename T>
 bool operator==(const ORUtils::Image<T>& lhs, const ORUtils::Image<T>& rhs)
 {
@@ -99,6 +120,13 @@ bool operator==(const ORUtils::Image<T>& lhs, const ORUtils::Image<T>& rhs)
   return true;
 }
 
+/**
+ * \brief Outputs an InfiniTAM image to a stream.
+ *
+ * \param os  The stream.
+ * \param rhs The image.
+ * \return    The stream.
+ */
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const ORUtils::Image<T>& rhs)
 {
@@ -120,6 +148,12 @@ std::ostream& operator<<(std::ostream& os, const ORUtils::Image<T>& rhs)
 
 //#################### HELPER FUNCTIONS ####################
 
+/**
+ * \brief Runs an image-copying test on the specified type of image.
+ *
+ * \param type    The name of the type of image on which to run the test.
+ * \param fixture The fixture needed for the test.
+ */
 template <typename T>
 void copy_image_test(const std::string& type, CopyImageFixture& fixture)
 {
@@ -148,19 +182,23 @@ void copy_image_test(const std::string& type, CopyImageFixture& fixture)
 
 BOOST_AUTO_TEST_SUITE(test_ImageProcessor)
 
-BOOST_FIXTURE_TEST_CASE(copy_image_float_test, CopyImageFixture)
+BOOST_FIXTURE_TEST_SUITE(test_ImageProcessor_copy_image, CopyImageFixture)
+
+BOOST_AUTO_TEST_CASE(copy_image_float_test)
 {
   copy_image_test<float>("float", *this);
 }
 
-BOOST_FIXTURE_TEST_CASE(copy_image_uchar_test, CopyImageFixture)
+BOOST_AUTO_TEST_CASE(copy_image_uchar_test)
 {
   copy_image_test<unsigned char>("uchar", *this);
 }
 
-BOOST_FIXTURE_TEST_CASE(copy_image_Vector4u_test, CopyImageFixture)
+BOOST_AUTO_TEST_CASE(copy_image_Vector4u_test)
 {
   copy_image_test<Vector4u>("Vector4u", *this);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
