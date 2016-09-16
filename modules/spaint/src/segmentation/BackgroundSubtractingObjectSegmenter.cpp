@@ -182,22 +182,24 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     // Every pixel starts off as part of the change mask.
     changeMaskPtr[i] = 255;
 
-    // If there is no live depth for the pixel, remove it from the change mask (it can't form part of the final mask
-    // that we will use for object reconstruction, since without depth it can't be fused).
+    // If the live depth value for the pixel is invalid, remove it from the change mask (it can't form part of the final
+    // mask that we will use for object reconstruction, since without depth it can't be fused).
     if(thresholdedRawDepthPtr[i] == -1.0f)
     {
       changeMaskPtr[i] = 0;
       continue;
     }
 
-    // No depth raycast
+    // If the depth raycast value for the pixel is invalid, remove it from the change mask (without a depth raycast value,
+    // we can't do background subtraction).
     if(fabs(depthRaycastPtr[i] - m_touchDetector->invalid_depth_value()) < 1e-3f)
     {
       changeMaskPtr[i] = 0;
       continue;
     }
 
-    // Live depth too far away (unreliable)
+    // If the live depth value for the pixel is too large, remove it from the change mask (the depth gets increasingly
+    // unreliable as we get further away from the sensor, so this helps us avoid corrupting our mask with noise).
     if(thresholdedRawDepthPtr[i] * 1000.0f > upperDepthThresholdMm)
     {
       changeMaskPtr[i] = 0;
