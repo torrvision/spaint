@@ -61,7 +61,13 @@ public:
     }
 
     // Set up the fixture.
-    imageProcessor = ImageProcessorFactory::make_image_processor(WITH_CUDA ? ITMLibSettings::DEVICE_CUDA : ITMLibSettings::DEVICE_CPU);
+    imageProcessor = ImageProcessorFactory::make_image_processor(
+#if WITH_CUDA
+      ITMLibSettings::DEVICE_CUDA
+#else
+      ITMLibSettings::DEVICE_CPU
+#endif
+    );
 
     width = 3;
     height = 2;
