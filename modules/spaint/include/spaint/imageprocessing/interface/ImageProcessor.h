@@ -20,7 +20,7 @@ namespace spaint {
 class ImageProcessor
 {
   //#################### TYPEDEFS ####################
-protected:
+public:
   typedef boost::shared_ptr<af::array> AFArray_Ptr;
   typedef boost::shared_ptr<const af::array> AFArray_CPtr;
 
