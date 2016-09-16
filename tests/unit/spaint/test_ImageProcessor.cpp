@@ -3,10 +3,20 @@
 
 #include <map>
 
+#ifdef _MSC_VER
+  // Suppress some VC++ warnings that are produced when including the Boost headers.
+  #pragma warning(disable:4180)
+#endif
+
 #include <boost/any.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/function.hpp>
 using boost::assign::map_list_of;
+
+#ifdef _MSC_VER
+  // Reenable the suppressed warnings for the rest of the translation unit.
+  #pragma warning(default:4180)
+#endif
 
 #include <spaint/imageprocessing/ImageProcessorFactory.h>
 using namespace ITMLib;
@@ -43,21 +53,24 @@ struct CopyImageFixture
     width = 3, height = 2;
 
     afImages = map_list_of
+      (std::string("float"), AFArray_Ptr(new af::array(height, width, f32)))
       (std::string("uchar"), AFArray_Ptr(new af::array(height, width, u8)))
       (std::string("Vector4u"), AFArray_Ptr(new af::array(height, width, 4, u8)))
     .to_container(afImages);
 
     pixelMakers = map_list_of
-      (std::string("uchar"), &make_uchar_pixel)
+      (std::string("float"), &make_single_channel_pixel<float>)
+      (std::string("uchar"), &make_single_channel_pixel<unsigned char>)
       (std::string("Vector4u"), &make_vector4u_pixel)
     .to_container(pixelMakers);
   }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-  static boost::any make_uchar_pixel(size_t i)
+  template <typename T>
+  static boost::any make_single_channel_pixel(size_t i)
   {
-    return static_cast<unsigned char>(i);
+    return static_cast<T>(i);
   }
 
   static boost::any make_vector4u_pixel(size_t i)
@@ -134,6 +147,11 @@ void copy_image_test(const std::string& type, CopyImageFixture& fixture)
 //#################### TESTS ####################
 
 BOOST_AUTO_TEST_SUITE(test_ImageProcessor)
+
+BOOST_FIXTURE_TEST_CASE(copy_image_float_test, CopyImageFixture)
+{
+  copy_image_test<float>("float", *this);
+}
 
 BOOST_FIXTURE_TEST_CASE(copy_image_uchar_test, CopyImageFixture)
 {

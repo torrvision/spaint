@@ -132,6 +132,12 @@ void ImageProcessor_CUDA::calculate_depth_difference(const ITMFloatImage_CPtr& f
   );
 }
 
+void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_af_to_itm_cuda<float,float>(inputImage, outputImage);
+}
+
 void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
@@ -142,6 +148,12 @@ void ImageProcessor_CUDA::copy_af_to_itm(const AFArray_CPtr& inputImage, const I
 {
   check_image_size_equal(inputImage, outputImage);
   copy_af_to_itm_cuda<unsigned char,Vector4u>(inputImage, outputImage);
+}
+
+void ImageProcessor_CUDA::copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_itm_to_af_cuda<float,float>(inputImage, outputImage);
 }
 
 void ImageProcessor_CUDA::copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const

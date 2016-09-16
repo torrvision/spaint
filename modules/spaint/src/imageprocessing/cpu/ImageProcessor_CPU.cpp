@@ -88,6 +88,12 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
   }
 }
 
+void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_af_to_itm_cpu<float,float>(inputImage, outputImage);
+}
+
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
@@ -98,6 +104,12 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
 {
   check_image_size_equal(inputImage, outputImage);
   copy_af_to_itm_cpu<unsigned char,Vector4u>(inputImage, outputImage);
+}
+
+void ImageProcessor_CPU::copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_itm_to_af_cpu<float,float>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
