@@ -74,6 +74,24 @@ inline void copy_af_pixel_to_itm(int columnMajorIndex, const ElementType *inputD
 }
 
 /**
+ * \brief Copies a single-channel pixel value from an InfiniTAM image to an ArrayFire image.
+ *
+ * \param rowMajorIndex   The row-major index of the pixel to be copied.
+ * \param inputData       The data for the input image (in row-major format).
+ * \param width           The width of each image.
+ * \param height          The height of each image.
+ * \param outputData      The data for the output image (in column-major format).
+ */
+template <typename ElementType>
+_CPU_AND_GPU_CODE_
+inline void copy_itm_pixel_to_af(int rowMajorIndex, const ElementType *inputData, int width, int height, ElementType *outputData)
+{
+  int row = rowMajorIndex / width, col = rowMajorIndex % width;
+  int columnMajorIndex = col * height + row;
+  outputData[columnMajorIndex] = inputData[rowMajorIndex];
+}
+
+/**
  * \brief Copies a four-channel pixel value from an InfiniTAM image to an ArrayFire image.
  *
  * \param rowMajorIndex   The row-major index of the pixel to be copied.

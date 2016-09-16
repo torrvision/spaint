@@ -18,19 +18,19 @@ typedef boost::shared_ptr<af::array> AFArray_Ptr;
 
 //#################### FIXTURES ####################
 
-struct Fixture
+struct CopyImageFixture
 {
   //#################### PUBLIC VARIABLES ####################
 
   std::map<std::string,AFArray_Ptr> afImages;
   int height;
   ImageProcessor_CPtr imageProcessor;
-  std::map<std::string,boost::function<boost::any(size_t)> > valueMakers;
+  std::map<std::string,boost::function<boost::any(size_t)> > pixelMakers;
   int width;
 
   //#################### CONSTRUCTORS ####################
 
-  Fixture()
+  CopyImageFixture()
   {
     // Choose a device for ArrayFire.
     if(af::getDeviceCount() > 1)
@@ -43,17 +43,24 @@ struct Fixture
     width = 3, height = 2;
 
     afImages = map_list_of
+      (std::string("uchar"), AFArray_Ptr(new af::array(height, width, u8)))
       (std::string("Vector4u"), AFArray_Ptr(new af::array(height, width, 4, u8)))
     .to_container(afImages);
 
-    valueMakers = map_list_of
-      (std::string("Vector4u"), &make_vector4u)
-    .to_container(valueMakers);
+    pixelMakers = map_list_of
+      (std::string("uchar"), &make_uchar_pixel)
+      (std::string("Vector4u"), &make_vector4u_pixel)
+    .to_container(pixelMakers);
   }
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-  static Vector4u make_vector4u(size_t i)
+  static boost::any make_uchar_pixel(size_t i)
+  {
+    return static_cast<unsigned char>(i);
+  }
+
+  static boost::any make_vector4u_pixel(size_t i)
   {
     unsigned char c = static_cast<unsigned char>(i);
     return Vector4u(c, c, c, 255);
@@ -101,14 +108,14 @@ std::ostream& operator<<(std::ostream& os, const ORUtils::Image<T>& rhs)
 //#################### HELPER FUNCTIONS ####################
 
 template <typename T>
-void copy_af_to_itm_test(const std::string& type, Fixture& fixture)
+void copy_image_test(const std::string& type, CopyImageFixture& fixture)
 {
   // Set up the InfiniTAM input image.
-  ITMUChar4Image_Ptr itmInputImage(new ITMUChar4Image(Vector2i(fixture.width, fixture.height), true, true));
-  Vector4u *itmInputImagePtr = itmInputImage->GetData(MEMORYDEVICE_CPU);
+  boost::shared_ptr<ORUtils::Image<T> > itmInputImage(new ORUtils::Image<T>(Vector2i(fixture.width, fixture.height), true, true));
+  T *itmInputImagePtr = itmInputImage->GetData(MEMORYDEVICE_CPU);
   for(size_t i = 0, size = itmInputImage->dataSize; i < size; ++i)
   {
-    itmInputImagePtr[i] = boost::any_cast<T>(fixture.valueMakers[type](i));
+    itmInputImagePtr[i] = boost::any_cast<T>(fixture.pixelMakers[type](i));
   }
   itmInputImage->UpdateDeviceFromHost();
 
@@ -116,7 +123,7 @@ void copy_af_to_itm_test(const std::string& type, Fixture& fixture)
   fixture.imageProcessor->copy_itm_to_af(itmInputImage, fixture.afImages[type]);
 
   // Copy the ArrayFire image to the InfiniTAM output image.
-  ITMUChar4Image_Ptr itmOutputImage(new ITMUChar4Image(itmInputImage->noDims, true, true));
+  boost::shared_ptr<ORUtils::Image<T> > itmOutputImage(new ORUtils::Image<T>(itmInputImage->noDims, true, true));
   fixture.imageProcessor->copy_af_to_itm(fixture.afImages[type], itmOutputImage);
   itmOutputImage->UpdateHostFromDevice();
 
@@ -128,9 +135,14 @@ void copy_af_to_itm_test(const std::string& type, Fixture& fixture)
 
 BOOST_AUTO_TEST_SUITE(test_ImageProcessor)
 
-BOOST_FIXTURE_TEST_CASE(copy_af_to_itm_Vector4u_test, Fixture)
+BOOST_FIXTURE_TEST_CASE(copy_image_uchar_test, CopyImageFixture)
 {
-  copy_af_to_itm_test<Vector4u>("Vector4u", *this);
+  copy_image_test<unsigned char>("uchar", *this);
+}
+
+BOOST_FIXTURE_TEST_CASE(copy_image_Vector4u_test, CopyImageFixture)
+{
+  copy_image_test<Vector4u>("Vector4u", *this);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

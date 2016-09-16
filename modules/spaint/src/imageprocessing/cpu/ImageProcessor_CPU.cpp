@@ -100,6 +100,12 @@ void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const IT
   copy_af_to_itm_cpu<unsigned char,Vector4u>(inputImage, outputImage);
 }
 
+void ImageProcessor_CPU::copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_itm_to_af_cpu<unsigned char,unsigned char>(inputImage, outputImage);
+}
+
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
