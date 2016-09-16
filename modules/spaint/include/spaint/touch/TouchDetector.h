@@ -134,7 +134,9 @@ public:
   ITMFloatImage_CPtr get_depth_raycast() const;
 
   /**
-   * \brief TODO
+   * \brief Gets an image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
+   *
+   * \return  An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
    */
   ITMFloatImage_Ptr get_diff_raw_raycast() const;
 
@@ -146,7 +148,9 @@ public:
   ITMUCharImage_CPtr get_touch_mask() const;
 
   /**
-   * \brief TODO
+   * \brief Gets a thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out.
+   *
+   * \return  A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out.
    */
   ITMFloatImage_CPtr get_thresholded_raw_depth() const;
 
