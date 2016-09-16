@@ -38,7 +38,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   // TEMPORARY: Debugging controls.
   static bool initialised = false;
   static int objectProbThreshold = 80;
-  const std::string debugWindowName = "Debug";
+  const std::string debugWindowName = "Object Mask";
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
@@ -116,24 +116,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
                                                                           const ORUtils::SE3Pose& pose,
                                                                           const RenderState_CPtr& renderState) const
 {
-  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
-  m_touchDetector->determine_touch_points(camera, depthInput, renderState);
-
-  ITMFloatImage_Ptr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
-
-  ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
-  depthRaycast->UpdateHostFromDevice();
-
-  ITMFloatImage_CPtr thresholdedRawDepth = m_touchDetector->get_thresholded_raw_depth();
-  thresholdedRawDepth->UpdateHostFromDevice();
-  const float *thresholdedRawDepthPtr = thresholdedRawDepth->GetData(MEMORYDEVICE_CPU);
-
-  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(Vector2i(640,480), true, true));
-  uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
-  const float *diffRawRaycastPtr = diffRawRaycast->GetData(MEMORYDEVICE_CPU);
-  const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
-  int pixelCount = static_cast<int>(changeMask->dataSize);
-
+  // TEMPORARY: Debugging controls.
   static bool initialised = false;
   static int centreDistThreshold = 70;
   static int componentSizeThreshold = 150;
@@ -157,6 +140,20 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     cv::createTrackbar("upperDepthThresholdMm", debugWindowName, &upperDepthThresholdMm, 2000);
   }
 
+  rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
+  m_touchDetector->determine_touch_points(camera, depthInput, renderState);
+
+  // Get a thresholded version of the live depth image.
+  ITMFloatImage_CPtr thresholdedRawDepth = m_touchDetector->get_thresholded_raw_depth();
+  thresholdedRawDepth->UpdateHostFromDevice();
+  const float *thresholdedRawDepthPtr = thresholdedRawDepth->GetData(MEMORYDEVICE_CPU);
+
+  // Get the depth raycast of the scene.
+  ITMFloatImage_CPtr depthRaycast = m_touchDetector->get_depth_raycast();
+  depthRaycast->UpdateHostFromDevice();
+  const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
+
+  // Compute a dilated, thresholded version of the gradient magnitude of the depth raycast.
   cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
   cv::Mat gradX, gradY, absGradX, absGradY, grad, thresholdedGrad, dilatedThresholdedGrad;
   cv::Sobel(cvDepthRaycast, gradX, CV_16S, 1, 0, 3);
@@ -168,14 +165,25 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
   cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
 
+  // Get the difference between the live depth image and the depth raycast of the scene.
+  ITMFloatImage_Ptr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
+  const float *diffRawRaycastPtr = diffRawRaycast->GetData(MEMORYDEVICE_CPU);
+
+  // Make an initial change mask, starting from the whole image and filtering out pixels based on some simple criteria.
+  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(Vector2i(640,480), true, true));
+  uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
+  int pixelCount = static_cast<int>(changeMask->dataSize);
+
 #if WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int i = 0; i < pixelCount; ++i)
   {
+    // Every pixel starts off as part of the change mask.
     changeMaskPtr[i] = 255;
 
-    // No live depth
+    // If there is no live depth for the pixel, remove it from the change mask (it can't form part of the final mask
+    // that we will use for object reconstruction, since without depth it can't be fused).
     if(thresholdedRawDepthPtr[i] == -1.0f)
     {
       changeMaskPtr[i] = 0;
