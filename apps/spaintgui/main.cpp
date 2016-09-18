@@ -1,3 +1,30 @@
+//###
+#if 1
+
+#include <vector>
+
+#include <opencv2/aruco.hpp>
+#include <opencv2/opencv.hpp>
+
+int main()
+{
+  cv::Mat3b image = cv::imread("/Users/stuart/Pictures/imagenogre.jpg");
+
+  cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+  std::vector<std::vector<cv::Point2f> > corners;
+  std::vector<int> ids;
+  cv::aruco::detectMarkers(image, dictionary, corners, ids);
+  cv::aruco::drawDetectedMarkers(image, corners, ids);
+
+  cv::imshow("Marker Detection", image);
+  cv::waitKey();
+  return 0;
+}
+
+#endif
+
+//###
+#if 0
 /**
  * spaintgui: main.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
@@ -288,3 +315,4 @@ catch(std::exception& e)
   std::cerr << e.what() << '\n';
   return EXIT_FAILURE;
 }
+#endif
