@@ -19,28 +19,55 @@ int main()
   cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
   std::vector<std::vector<cv::Point2f> > corners;
   std::vector<int> ids;
-  cv::aruco::detectMarkers(image, dictionary, corners, ids);
-  cv::aruco::drawDetectedMarkers(image, corners, ids);
 
-  ITMIntrinsics intrinsics;
-  cv::Mat1f cameraMatrix = cv::Mat1f::zeros(3, 3);
-  cameraMatrix(0, 0) = intrinsics.projectionParamsSimple.fx;
-  cameraMatrix(1, 1) = intrinsics.projectionParamsSimple.fy;
-  cameraMatrix(0, 2) = intrinsics.projectionParamsSimple.px;
-  cameraMatrix(1, 2) = intrinsics.projectionParamsSimple.py;
-  cameraMatrix(2, 2) = 1.0f;
-  std::cout << cameraMatrix << '\n';
+  cv::VideoCapture video;
+  video.open(0);
 
-  std::vector<cv::Vec3d> rvecs, tvecs;
-  cv::aruco::estimatePoseSingleMarkers(corners, 1.0f, cameraMatrix, cv::noArray(), rvecs, tvecs);
+  bool done = false;
 
-  for(size_t i = 0; i < ids.size(); ++i)
+  while(video.grab() && !done)
   {
-    std::cout << ids[i] << ": " << rvecs[i] << ' ' << tvecs[i] << '\n';
-  }
+    video.retrieve(image);
+    std::vector<std::vector<cv::Point2f> > tempCorners;
+    std::vector<int> tempIDs;
+    cv::aruco::detectMarkers(image, dictionary, tempCorners, tempIDs);
 
-  cv::imshow("Marker Detection", image);
-  cv::waitKey();
+    std::vector<std::vector<cv::Point2f> >().swap(corners);
+    std::vector<int>().swap(ids);
+    for(size_t i = 0; i < tempIDs.size(); ++i)
+    {
+      if(tempIDs[i] == 997)
+      {
+        corners.push_back(tempCorners[i]);
+        ids.push_back(tempIDs[i]);
+      }
+    }
+
+    ITMIntrinsics intrinsics;
+    cv::Mat1f cameraMatrix = cv::Mat1f::zeros(3, 3);
+    cameraMatrix(0, 0) = intrinsics.projectionParamsSimple.fx;
+    cameraMatrix(1, 1) = intrinsics.projectionParamsSimple.fy;
+    cameraMatrix(0, 2) = intrinsics.projectionParamsSimple.px;
+    cameraMatrix(1, 2) = intrinsics.projectionParamsSimple.py;
+    cameraMatrix(2, 2) = 1.0f;
+
+    std::vector<cv::Vec3d> rvecs, tvecs;
+    cv::aruco::estimatePoseSingleMarkers(corners, 1.0f, cameraMatrix, cv::noArray(), rvecs, tvecs);
+
+    for(size_t i = 0; i < ids.size(); ++i)
+    {
+      std::cout << ids[i] << ": " << rvecs[i] << ' ' << tvecs[i] << '\n';
+    }
+    //std::cout << '\n';
+
+    cv::Mat3b imageCopy = image.clone();
+    cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+    cv::Mat3b resizedImageCopy;
+    cv::resize(imageCopy, resizedImageCopy, cv::Size(), 0.5, 0.5);
+    cv::imshow("Marker Detection", resizedImageCopy);
+
+    if(cv::waitKey(10) == 27) done = true;
+  }
 
   return 0;
 }
@@ -49,6 +76,7 @@ int main()
 
 //###
 #if 0
+
 /**
  * spaintgui: main.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
@@ -339,4 +367,5 @@ catch(std::exception& e)
   std::cerr << e.what() << '\n';
   return EXIT_FAILURE;
 }
+
 #endif
