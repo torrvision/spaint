@@ -524,22 +524,16 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       }*/
 
       ORUtils::SE3Pose worldToEye = m_model->get_slam_state("World")->get_pose();
-      rigging::SimpleCamera worldToEyeCam = CameraPoseConverter::pose_to_camera(worldToEye);
       ORUtils::SE3Pose eyeToWorld(worldToEye.GetInvM());
       rigging::SimpleCamera eyeToWorldCam = CameraPoseConverter::pose_to_camera(eyeToWorld);
-      //std::cout << eyeToWorldCam.p().transpose() << '\n';
 
       if(!ids.empty())
       {
-        ORUtils::SE3Pose markerEye(tvecs[0](0), tvecs[0](1), tvecs[0](2), rvecs[0](0), rvecs[0](1), rvecs[0](2));
-        rigging::SimpleCamera markerEyeCam = CameraPoseConverter::pose_to_camera(markerEye);
-        //std::cout << markerEyeCam.p().transpose() << '\n';
-        Vector3d markerPosEye = Vector3d(tvecs[0](0), tvecs[0](1), tvecs[0](2));
-        //Vector3d markerPosWorld(tvecs[0](0) + worldToEyeCam.p().x(), tvecs[0](1) + worldToEyeCam.p().y(), tvecs[0](2) + worldToEyeCam.p().z());
+        //ORUtils::SE3Pose markerEye(tvecs[0](0), tvecs[0](1), tvecs[0](2), rvecs[0](0), rvecs[0](1), rvecs[0](2));
+        //rigging::SimpleCamera markerEyeCam = CameraPoseConverter::pose_to_camera(markerEye);
+        Vector3f markerPosEye = Vector3f(tvecs[0](0), tvecs[0](1), tvecs[0](2));
         Vector3f markerPosWorld = eyeToWorld.GetM() * markerPosEye.toFloat();
         std::cout << markerPosWorld << '\n';
-        ORUtils::SE3Pose markerWorld(eyeToWorld.GetM() * markerEye.GetM());
-        rigging::SimpleCamera markerWorldCam = CameraPoseConverter::pose_to_camera(markerWorld);
       }
 
       cv::Mat3b markerImage = rgbImage.clone();
