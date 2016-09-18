@@ -527,13 +527,20 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       ORUtils::SE3Pose eyeToWorld(worldToEye.GetInvM());
       rigging::SimpleCamera eyeToWorldCam = CameraPoseConverter::pose_to_camera(eyeToWorld);
 
+      static boost::optional<Vector3f> markerPosWorld;
       if(!ids.empty())
       {
         //ORUtils::SE3Pose markerEye(tvecs[0](0), tvecs[0](1), tvecs[0](2), rvecs[0](0), rvecs[0](1), rvecs[0](2));
         //rigging::SimpleCamera markerEyeCam = CameraPoseConverter::pose_to_camera(markerEye);
         Vector3f markerPosEye = Vector3f(tvecs[0](0), tvecs[0](1), tvecs[0](2));
-        Vector3f markerPosWorld = eyeToWorld.GetM() * markerPosEye.toFloat();
+        markerPosWorld = eyeToWorld.GetM() * markerPosEye.toFloat();
         std::cout << markerPosWorld << '\n';
+      }
+
+      if(markerPosWorld)
+      {
+        glColor3f(1.0f, 1.0f, 0.0f);
+        QuadricRenderer::render_sphere(Eigen::Vector3f(markerPosWorld->x, markerPosWorld->y, markerPosWorld->z), 0.02, 10, 10);
       }
 
       cv::Mat3b markerImage = rgbImage.clone();
