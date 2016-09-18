@@ -23,6 +23,11 @@ using namespace spaint;
 #include <spaint/selectors/LeapSelector.h>
 #endif
 
+#ifdef WITH_OPENCV
+#include <opencv2/aruco.hpp>
+#include <spaint/ocv/OpenCVUtil.h>
+#endif
+
 //#################### LOCAL TYPES ####################
 
 /**
@@ -478,6 +483,53 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       SelectionTransformer_CPtr transformer = m_model->get_selection_transformer();
       if(transformer) transformer->accept(selectorRenderer);
       m_model->get_selector()->accept(selectorRenderer);
+
+      // BEGIN TEMPORARY
+#ifdef WITH_OPENCV
+      // Render the image with the detected markers as an overlay.
+      const ITMUChar4Image *rgb = m_model->get_slam_state("World")->get_view()->rgb;
+      rgb->UpdateHostFromDevice();
+      cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), 640, 480);
+
+      cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+      std::vector<std::vector<cv::Point2f> > tempCorners;
+      std::vector<int> tempIDs;
+      cv::aruco::detectMarkers(rgbImage, dictionary, tempCorners, tempIDs);
+
+      std::vector<std::vector<cv::Point2f> > corners;
+      std::vector<int> ids;
+      for(size_t i = 0; i < tempIDs.size(); ++i)
+      {
+        if(tempIDs[i] == 997)
+        {
+          corners.push_back(tempCorners[i]);
+          ids.push_back(tempIDs[i]);
+        }
+      }
+
+      const ITMIntrinsics& intrinsics = m_model->get_slam_state("World")->get_view()->calib.intrinsics_rgb;
+      cv::Mat1f cameraMatrix = cv::Mat1f::zeros(3, 3);
+      cameraMatrix(0, 0) = intrinsics.projectionParamsSimple.fx;
+      cameraMatrix(1, 1) = intrinsics.projectionParamsSimple.fy;
+      cameraMatrix(0, 2) = intrinsics.projectionParamsSimple.px;
+      cameraMatrix(1, 2) = intrinsics.projectionParamsSimple.py;
+      cameraMatrix(2, 2) = 1.0f;
+
+      std::vector<cv::Vec3d> rvecs, tvecs;
+      cv::aruco::estimatePoseSingleMarkers(corners, 1.0f, cameraMatrix, cv::noArray(), rvecs, tvecs);
+
+      /*for(size_t i = 0; i < ids.size(); ++i)
+      {
+        std::cout << ids[i] << ": " << rvecs[i] << ' ' << tvecs[i] << '\n';
+      }*/
+
+      cv::Mat3b markerImage = rgbImage.clone();
+      cv::aruco::drawDetectedMarkers(markerImage, corners, ids);
+      cv::Mat3b resizedMarkerImage;
+      cv::resize(markerImage, resizedMarkerImage, cv::Size(), 1.0, 1.0);
+      cv::imshow("Detected Markers", resizedMarkerImage);
+#endif
+      // END TEMPORARY
     }
     glPopMatrix();
   }

@@ -29,6 +29,24 @@ cv::Mat3b OpenCVUtil::make_rgb_image(const float *rgbData, int width, int height
   return result;
 }
 
+cv::Mat3b OpenCVUtil::make_rgb_image(const Vector4u *rgbData, int width, int height)
+{
+  cv::Mat3b result = cv::Mat3b::zeros(height, width);
+  for(int y = 0; y < height; ++y)
+  {
+    for(int x = 0; x < width; ++x)
+    {
+      result(y,x) = cv::Vec3b(
+        static_cast<unsigned char>(rgbData->b),
+        static_cast<unsigned char>(rgbData->g),
+        static_cast<unsigned char>(rgbData->r)
+      );
+      ++rgbData;
+    }
+  }
+  return result;
+}
+
 cv::Mat3b OpenCVUtil::pad_image(const cv::Mat3b& image, int paddingSize)
 {
   cv::Mat3b paddedImage = cv::Mat3b::zeros(image.rows + paddingSize * 2, image.cols + paddingSize * 2);

@@ -1,5 +1,5 @@
 //###
-#if 1
+#if 0
 
 #include <algorithm>
 #include <iostream>
@@ -75,7 +75,7 @@ int main()
 #endif
 
 //###
-#if 0
+#if 1
 
 /**
  * spaintgui: main.cpp
