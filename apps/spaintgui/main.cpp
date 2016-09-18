@@ -1,7 +1,13 @@
 //###
 #if 1
 
+#include <algorithm>
+#include <iostream>
+#include <iterator>
 #include <vector>
+
+#include <ITMLib/Objects/Camera/ITMIntrinsics.h>
+using namespace ITMLib;
 
 #include <opencv2/aruco.hpp>
 #include <opencv2/opencv.hpp>
@@ -16,8 +22,26 @@ int main()
   cv::aruco::detectMarkers(image, dictionary, corners, ids);
   cv::aruco::drawDetectedMarkers(image, corners, ids);
 
+  ITMIntrinsics intrinsics;
+  cv::Mat1f cameraMatrix = cv::Mat1f::zeros(3, 3);
+  cameraMatrix(0, 0) = intrinsics.projectionParamsSimple.fx;
+  cameraMatrix(1, 1) = intrinsics.projectionParamsSimple.fy;
+  cameraMatrix(0, 2) = intrinsics.projectionParamsSimple.px;
+  cameraMatrix(1, 2) = intrinsics.projectionParamsSimple.py;
+  cameraMatrix(2, 2) = 1.0f;
+  std::cout << cameraMatrix << '\n';
+
+  std::vector<cv::Vec3d> rvecs, tvecs;
+  cv::aruco::estimatePoseSingleMarkers(corners, 1.0f, cameraMatrix, cv::noArray(), rvecs, tvecs);
+
+  for(size_t i = 0; i < ids.size(); ++i)
+  {
+    std::cout << ids[i] << ": " << rvecs[i] << ' ' << tvecs[i] << '\n';
+  }
+
   cv::imshow("Marker Detection", image);
   cv::waitKey();
+
   return 0;
 }
 
