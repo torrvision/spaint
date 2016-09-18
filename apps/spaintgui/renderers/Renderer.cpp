@@ -516,12 +516,12 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       cameraMatrix(2, 2) = 1.0f;
 
       std::vector<cv::Vec3d> rvecs, tvecs;
-      cv::aruco::estimatePoseSingleMarkers(corners, 1.0f, cameraMatrix, cv::noArray(), rvecs, tvecs);
+      cv::aruco::estimatePoseSingleMarkers(corners, 0.02f, cameraMatrix, cv::noArray(), rvecs, tvecs);
 
-      /*for(size_t i = 0; i < ids.size(); ++i)
+      for(size_t i = 0; i < ids.size(); ++i)
       {
         std::cout << ids[i] << ": " << rvecs[i] << ' ' << tvecs[i] << '\n';
-      }*/
+      }
 
       cv::Mat3b markerImage = rgbImage.clone();
       cv::aruco::drawDetectedMarkers(markerImage, corners, ids);
