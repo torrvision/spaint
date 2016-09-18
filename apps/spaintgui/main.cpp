@@ -14,7 +14,7 @@ using namespace ITMLib;
 
 int main()
 {
-  cv::Mat3b image = cv::imread("/Users/stuart/Pictures/imagenogre.jpg");
+  cv::Mat3b image;
 
   cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
   std::vector<std::vector<cv::Point2f> > corners;
