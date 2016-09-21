@@ -10,6 +10,7 @@
 #include "ITMObjectPtrTypes.h"
 #include "SpaintSurfelScene.h"
 #include "SpaintVoxelScene.h"
+#include "../fiducials/Fiducial.h" // FIXME: There is a cyclic dependency between fiducials and util.
 
 namespace spaint {
 
@@ -20,6 +21,9 @@ class SLAMState
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The fiducials (if any) that have been detected in the 3D scene. */
+  std::map<std::string,Fiducial_Ptr> m_fiducials;
+
   /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 

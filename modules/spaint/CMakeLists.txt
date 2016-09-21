@@ -81,6 +81,19 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
+SET(fiducials_sources)
+
+SET(fiducials_headers
+include/spaint/fiducials/Fiducial.h
+include/spaint/fiducials/FiducialDetector.h
+)
+
+IF(WITH_OPENCV)
+  SET(fiducials_sources ${fiducials_sources} src/fiducials/ArUcoFiducialDetector.cpp)
+  SET(fiducials_headers ${fiducials_headers} include/spaint/fiducials/ArUcoFiducialDetector.h)
+ENDIF()
+
+##
 SET(imageprocessing_sources)
 SET(imageprocessing_headers)
 
@@ -585,6 +598,7 @@ SET(sources
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
+${fiducials_sources}
 ${imageprocessing_sources}
 ${imagesources_sources}
 ${markers_sources}
@@ -619,6 +633,7 @@ ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${fiducials_headers}
 ${imageprocessing_headers}
 ${imagesources_headers}
 ${markers_headers}
@@ -714,6 +729,7 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers}
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(fiducials FILES ${fiducials_sources} ${fiducials_headers})
 SOURCE_GROUP(imageprocessing FILES ${imageprocessing_sources} ${imageprocessing_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
