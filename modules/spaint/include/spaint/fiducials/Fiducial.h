@@ -8,6 +8,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <ITMLib/Utils/ITMMath.h>
+
 namespace spaint {
 
 /**
@@ -19,6 +21,19 @@ class Fiducial
 private:
   /** The ID of the fiducial. */
   std::string m_id;
+
+  /** The position of the fiducial in the 3D scene. */
+  Vector3f m_pos;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a fiducial.
+   *
+   * \param id  The ID of the fiducial.
+   * \param pos The position of the fiducial in the 3D scene.
+   */
+  Fiducial(const std::string& id, const Vector3f& pos);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

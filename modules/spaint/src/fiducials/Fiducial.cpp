@@ -9,6 +9,12 @@
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+Fiducial::Fiducial(const std::string& id, const Vector3f& pos)
+: m_id(id), m_pos(pos)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 const std::string& Fiducial::id() const
