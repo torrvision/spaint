@@ -240,6 +240,14 @@ public:
    * \param voxelScene  The voxel scene.
    */
   void set_voxel_scene(const SpaintVoxelScene_Ptr& voxelScene);
+
+  /**
+   * \brief Updates the current set of fiducials that we're maintaining with information from
+   *        a live set of fiducials (e.g. those detected in the current frame).
+   *
+   * \param liveFiducials The live set of fiducials.
+   */
+  void update_fiducials(const std::map<std::string,Fiducial_Ptr>& liveFiducials);
 };
 
 //#################### TYPEDEFS ####################

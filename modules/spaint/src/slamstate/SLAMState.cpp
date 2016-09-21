@@ -150,4 +150,24 @@ void SLAMState::set_voxel_scene(const SpaintVoxelScene_Ptr& voxelScene)
   m_voxelScene = voxelScene;
 }
 
+void SLAMState::update_fiducials(const std::map<std::string,Fiducial_Ptr>& liveFiducials)
+{
+  std::map<std::string,Fiducial_Ptr> newFiducials;
+
+  // For each live fiducial:
+  for(std::map<std::string,Fiducial_Ptr>::const_iterator it = liveFiducials.begin(), iend = liveFiducials.end(); it != iend; ++it)
+  {
+    // Try to find a corresponding fiducial among the fiducials we've seen.
+    std::map<std::string,Fiducial_Ptr>::iterator jt = m_fiducials.find(it->first);
+
+    // If there is one, update it with the information from the live fiducial.
+    // If not, mark the live fiducial as new so that it can be added later.
+    if(jt != m_fiducials.end()) jt->second->update(*it->second);
+    else newFiducials.insert(*it);
+  }
+
+  // Add any new fiducials to the set of fiducials we've seen.
+  std::copy(newFiducials.begin(), newFiducials.end(), std::inserter(m_fiducials, m_fiducials.end()));
+}
+
 }

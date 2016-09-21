@@ -81,7 +81,9 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
-SET(fiducials_sources)
+SET(fiducials_sources
+src/fiducials/Fiducial.cpp
+)
 
 SET(fiducials_headers
 include/spaint/fiducials/Fiducial.h

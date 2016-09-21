@@ -232,8 +232,12 @@ bool SLAMComponent::process_frame()
   CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
   if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
-  // If we're using a fiducial detector, try to detect fiducial markers in the current view of the scene.
-  if(m_fiducialDetector) m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d);
+  // If we're using a fiducial detector, try to detect fiducial markers in the current view of the scene
+  // and update the current set of fiducials that we're maintaining accordingly.
+  if(m_fiducialDetector)
+  {
+    slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d));
+  }
 
   return true;
 }

@@ -17,11 +17,25 @@ class Fiducial
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  // TODO
+  /** The ID of the fiducial. */
+  std::string m_id;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  // TODO
+  /**
+   * \brief Gets the ID of the fiducial.
+   *
+   * \return  The ID of the fiducial.
+   */
+  const std::string& id() const;
+
+  /**
+   * \brief Updates the fiducial based on information from a new measurement.
+   *
+   * \param newFiducial         The fiducial containing the new measurement.
+   * \throws std::runtime_error If the two fiducials do not have the same ID.
+   */
+  void update(const Fiducial& newFiducial);
 };
 
 //#################### TYPEDEFS ####################
