@@ -18,7 +18,7 @@ class ArUcoFiducialDetector : public FiducialDetector
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual std::map<std::string,Fiducial_Ptr> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose) const;
+  virtual std::map<std::string,Fiducial> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose) const;
 };
 
 }

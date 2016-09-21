@@ -16,6 +16,11 @@ const Vector2i& SLAMState::get_depth_image_size() const
   return m_inputRawDepthImage->noDims;
 }
 
+const std::map<std::string,Fiducial>& SLAMState::get_fiducials() const
+{
+  return m_fiducials;
+}
+
 const ITMShortImage_Ptr& SLAMState::get_input_raw_depth_image()
 {
   return m_inputRawDepthImage;
@@ -150,19 +155,19 @@ void SLAMState::set_voxel_scene(const SpaintVoxelScene_Ptr& voxelScene)
   m_voxelScene = voxelScene;
 }
 
-void SLAMState::update_fiducials(const std::map<std::string,Fiducial_Ptr>& liveFiducials)
+void SLAMState::update_fiducials(const std::map<std::string,Fiducial>& liveFiducials)
 {
-  std::map<std::string,Fiducial_Ptr> newFiducials;
+  std::map<std::string,Fiducial> newFiducials;
 
   // For each live fiducial:
-  for(std::map<std::string,Fiducial_Ptr>::const_iterator it = liveFiducials.begin(), iend = liveFiducials.end(); it != iend; ++it)
+  for(std::map<std::string,Fiducial>::const_iterator it = liveFiducials.begin(), iend = liveFiducials.end(); it != iend; ++it)
   {
     // Try to find a corresponding fiducial among the fiducials we've seen.
-    std::map<std::string,Fiducial_Ptr>::iterator jt = m_fiducials.find(it->first);
+    std::map<std::string,Fiducial>::iterator jt = m_fiducials.find(it->first);
 
     // If there is one, update it with the information from the live fiducial.
     // If not, mark the live fiducial as new so that it can be added later.
-    if(jt != m_fiducials.end()) jt->second->update(*it->second);
+    if(jt != m_fiducials.end()) jt->second.update(it->second);
     else newFiducials.insert(*it);
   }
 

@@ -32,6 +32,10 @@ using namespace ITMLib;
 
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 #include <spaint/util/MemoryBlockFactory.h>
+
+#ifdef WITH_OPENCV
+  #include <spaint/fiducials/ArUcoFiducialDetector.h>
+#endif
 using namespace spaint;
 
 #include <tvgutil/filesystem/PathFinder.h>
@@ -265,7 +269,10 @@ try
   if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
+#ifdef WITH_OPENCV
+    FiducialDetector_CPtr fiducialDetector(new ArUcoFiducialDetector);
+#endif
+    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 

@@ -484,8 +484,20 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       if(transformer) transformer->accept(selectorRenderer);
       m_model->get_selector()->accept(selectorRenderer);
 
+#if 1
+      // TEMPORARY
+      // Render any fiducials that have been detected.
+      glColor3f(1.0f, 1.0f, 0.0f);
+      const std::map<std::string,Fiducial>& fiducials = slamState->get_fiducials();
+      for(std::map<std::string,Fiducial>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
+      {
+        const Vector3f& p = it->second.pos();
+        QuadricRenderer::render_sphere(Eigen::Vector3f(p.x, p.y, p.z), 0.02, 10, 10);
+      }
+#endif
+
       // BEGIN TEMPORARY
-#ifdef WITH_OPENCV
+#if 0
       // Render the image with the detected markers as an overlay.
       const ITMUChar4Image *rgb = m_model->get_slam_state("World")->get_view()->rgb;
       rgb->UpdateHostFromDevice();

@@ -21,9 +21,9 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::map<std::string,Fiducial_Ptr> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose) const
+std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose) const
 {
-  std::map<std::string,Fiducial_Ptr> fiducials;
+  std::map<std::string,Fiducial> fiducials;
 
   const ITMUChar4Image *rgb = view->rgb;
   rgb->UpdateHostFromDevice();
@@ -52,7 +52,7 @@ std::map<std::string,Fiducial_Ptr> ArUcoFiducialDetector::detect_fiducials(const
     Vector3f eyePos = Vector3d(tvecs[i](0), tvecs[i](1), tvecs[i](2)).toFloat();
     Vector3f worldPos = pose.GetInvM() * eyePos.toFloat();
 
-    fiducials.insert(std::make_pair(id, Fiducial_Ptr(new Fiducial(id, worldPos))));
+    fiducials.insert(std::make_pair(id, Fiducial(id, worldPos)));
   }
 
   return fiducials;

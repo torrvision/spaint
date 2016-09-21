@@ -6,6 +6,8 @@
 #ifndef H_SPAINTGUI_SEMANTICPIPELINE
 #define H_SPAINTGUI_SEMANTICPIPELINE
 
+#include <spaint/fiducials/FiducialDetector.h>
+
 #include "MultiScenePipeline.h"
 
 /**
@@ -27,12 +29,14 @@ public:
    * \param trackerParams     The parameters for the tracker (if any).
    * \param mappingMode       The mapping mode that the scene's SLAM component should use.
    * \param trackingMode      The tracking mode that the scene's SLAM component should use.
+   * \param fiducialDetector  The fiducial detector to use (if any).
    */
   SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
                    spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
                    spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
-                   spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
+                   spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS,
+                   const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr());
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

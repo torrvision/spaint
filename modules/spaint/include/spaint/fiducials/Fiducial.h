@@ -45,6 +45,13 @@ public:
   const std::string& id() const;
 
   /**
+   * \brief Gets the position of the fiducial in the 3D scene.
+   *
+   * \return  The position of the fiducial in the 3D scene.
+   */
+  const Vector3f& pos() const;
+
+  /**
    * \brief Updates the fiducial based on information from a new measurement.
    *
    * \param newFiducial         The fiducial containing the new measurement.
@@ -52,11 +59,6 @@ public:
    */
   void update(const Fiducial& newFiducial);
 };
-
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<Fiducial> Fiducial_Ptr;
-typedef boost::shared_ptr<const Fiducial> Fiducial_CPtr;
 
 }
 

@@ -22,6 +22,11 @@ const std::string& Fiducial::id() const
   return m_id;
 }
 
+const Vector3f& Fiducial::pos() const
+{
+  return m_pos;
+}
+
 void Fiducial::update(const Fiducial& newFiducial)
 {
   if(m_id != newFiducial.m_id)
@@ -31,7 +36,7 @@ void Fiducial::update(const Fiducial& newFiducial)
 
   // For now, just overwrite the properties of this fiducial with those of the new fiducial.
   // (More sophisticated alternatives can be implemented later if necessary.)
-  // TODO
+  m_pos = newFiducial.m_pos;
 }
 
 }
