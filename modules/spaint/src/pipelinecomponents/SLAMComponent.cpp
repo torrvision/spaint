@@ -28,8 +28,10 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                             TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
+                             TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode,
+                             const FiducialDetector_CPtr& fiducialDetector)
 : m_context(context),
+  m_fiducialDetector(fiducialDetector),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
@@ -229,6 +231,9 @@ bool SLAMComponent::process_frame()
   // If we're using a composite image source engine and the current sub-engine has run out of images, disable fusion.
   CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
   if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
+
+  // If we're using a fiducial detector, try to detect fiducial markers in the current view of the scene.
+  if(m_fiducialDetector) m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d);
 
   return true;
 }
