@@ -6,11 +6,13 @@
 #ifndef H_SPAINT_SLAMSTATE
 #define H_SPAINT_SLAMSTATE
 
-#include "ITMImagePtrTypes.h"
-#include "ITMObjectPtrTypes.h"
-#include "SpaintSurfelScene.h"
-#include "SpaintVoxelScene.h"
-#include "../fiducials/Fiducial.h" // FIXME: There is a cyclic dependency between fiducials and util.
+#include <map>
+
+#include "../fiducials/Fiducial.h"
+#include "../util/ITMImagePtrTypes.h"
+#include "../util/ITMObjectPtrTypes.h"
+#include "../util/SpaintSurfelScene.h"
+#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 

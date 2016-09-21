@@ -9,7 +9,7 @@
 #include <map>
 
 #include "Fiducial.h"
-#include "../util/ITMObjectPtrTypes.h" // FIXME: There is a cyclic dependency between fiducials and util.
+#include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
 
