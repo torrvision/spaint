@@ -12,17 +12,21 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
-                                   const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                                   TrackerType trackerType, const std::vector<std::string>& trackerParams,
-                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
-: MultiScenePipeline(settings, resourcesDir, maxLabelCount)
+SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
+    const std::string& resourcesDir,
+    const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+    spaint::TrackerType trackerType,
+    const std::vector<std::string>& trackerParams,
+    spaint::SLAMComponent::MappingMode mappingMode,
+    spaint::SLAMComponent::TrackingMode trackingMode)
+: MultiScenePipeline(settings, resourcesDir, 2)
+// Need to use 2 labels to avoid crash.
+// TODO fix it
+// using 0 crashes for an invalid MemoryBlock allocation
+// using 1 -> Application.cpp#715 needs at least 2 valid labels
 {
   const std::string sceneID = Model::get_world_scene_id();
   m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
-  m_propagationComponents[sceneID].reset(new PropagationComponent(m_model, sceneID));
-  m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
-  m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

@@ -15,11 +15,13 @@ class SLAMPipeline : public MultiScenePipeline
 {
   //#################### CONSTRUCTORS ####################
 public:
-  SLAMPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
-                   const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                   spaint::TrackerType trackerType, const std::vector<std::string>& trackerParams,
-                   spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
-                   spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
+  SLAMPipeline(const Settings_Ptr& settings,
+               const std::string& resourcesDir,
+               const CompositeImageSourceEngine_Ptr& imageSourceEngine,
+               spaint::TrackerType trackerType,
+               const std::vector<std::string>& trackerParams,
+               spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
+               spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
