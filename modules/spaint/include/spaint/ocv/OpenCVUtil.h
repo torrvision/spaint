@@ -193,14 +193,16 @@ public:
   static cv::Mat3b make_rgb_image(const float *rgbData, int width, int height);
 
   /**
-   * \brief Makes an RGB image of the specified size from some pixel data.
+   * \brief Makes an RGB image of the specified size from some RGBA pixel data.
    *
-   * \param rgbData The pixel data for the image, in the format [(R1,G1,B1,A1),(R2,G2,B2,A2),...].
-   * \param width   The width of the image.
-   * \param height  The height of the image.
-   * \return        The image.
+   * Note: The alpha channel is discarded during this process.
+   *
+   * \param rgbaData  The pixel data for the image, in the format [(R1,G1,B1,A1),(R2,G2,B2,A2),...].
+   * \param width     The width of the image.
+   * \param height    The height of the image.
+   * \return          The image.
    */
-  static cv::Mat3b make_rgb_image(const Vector4u *rgbData, int width, int height);
+  static cv::Mat3b make_rgb_image(const Vector4u *rgbaData, int width, int height);
 
   /**
    * \brief Makes a copy of an RGB image that has been padded with a black border.
