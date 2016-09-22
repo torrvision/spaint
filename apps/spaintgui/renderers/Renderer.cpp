@@ -486,7 +486,6 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
 
 #if 1
       // TEMPORARY: Render any fiducials that have been detected.
-      glColor3f(1.0f, 1.0f, 0.0f);
       const std::map<std::string,Fiducial>& fiducials = slamState->get_fiducials();
       for(std::map<std::string,Fiducial>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
       {
@@ -495,6 +494,7 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
         SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second.pose());
         Eigen::Vector3f n = cam.n() * 0.1f, p = cam.p(), u = cam.u() * 0.1f, v = cam.v() * 0.1f;
 
+        glColor3f(1.0f, 1.0f, 0.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         QuadricRenderer::render_sphere(p, 0.02, 10, 10);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

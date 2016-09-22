@@ -46,6 +46,33 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
   cv::imshow("Detected Markers", markerImage);
 #endif
 
+  // Estimate the poses of the fiducials in world space.
+  std::vector<ORUtils::SE3Pose> fiducialPoses = estimate_poses_from_view(corners, view, pose);
+
+  for(size_t i = 0, size = ids.size(); i < size; ++i)
+  {
+    std::string id = boost::lexical_cast<std::string>(ids[i]);
+    fiducials.insert(std::make_pair(id, Fiducial(id, fiducialPoses[i])));
+  }
+
+  return fiducials;
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_tsdf(const std::vector<std::vector<cv::Point2f> >& corners,
+                                                                              const View_CPtr& view, const ORUtils::SE3Pose& pose,
+                                                                              const VoxelRenderState_CPtr& renderState)
+{
+  // TODO
+  throw 23;
+}
+
+std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_view(const std::vector<std::vector<cv::Point2f> >& corners,
+                                                                              const View_CPtr& view, const ORUtils::SE3Pose& pose)
+{
+  std::vector<ORUtils::SE3Pose> fiducialPoses;
+
   // Estimate the poses of the fiducials in eye space.
   const ITMIntrinsics& intrinsics = view->calib.intrinsics_rgb;
   cv::Mat1f cameraMatrix = cv::Mat1f::zeros(3, 3);
@@ -59,10 +86,8 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
   cv::aruco::estimatePoseSingleMarkers(corners, 0.02f, cameraMatrix, cv::noArray(), rvecs, tvecs);
 
   // Convert the poses of the fiducials into world space and return them.
-  for(size_t i = 0, size = ids.size(); i < size; ++i)
+  for(size_t i = 0, size = rvecs.size(); i < size; ++i)
   {
-    std::string id = boost::lexical_cast<std::string>(ids[i]);
-
     cv::Mat1d rot;
     cv::Rodrigues(rvecs[i], rot);
 
@@ -84,11 +109,10 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
 
     ORUtils::SE3Pose fiducialPose;
     fiducialPose.SetInvM(fiducialToWorld);
-
-    fiducials.insert(std::make_pair(id, Fiducial(id, fiducialPose)));
+    fiducialPoses.push_back(fiducialPose);
   }
 
-  return fiducials;
+  return fiducialPoses;
 }
 
 }
