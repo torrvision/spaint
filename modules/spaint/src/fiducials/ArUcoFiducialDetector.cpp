@@ -63,44 +63,27 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
   {
     std::string id = boost::lexical_cast<std::string>(ids[i]);
 
-    Vector3f eyePos = Vector3d(tvecs[i](0), tvecs[i](1), tvecs[i](2)).toFloat();
-    Vector3f worldPos = pose.GetInvM() * eyePos;
-
-    //std::cout << rvecs[i](0) << ' ' << rvecs[i](1) << ' ' << rvecs[i](2) << '\n';
     cv::Mat1d rot;
     cv::Rodrigues(rvecs[i], rot);
 
-    Matrix4f itmRot(0.0f);
-#if 1
+    Matrix4f fiducialToEye(0.0f);
     for(int y = 0; y < 3; ++y)
+    {
       for(int x = 0; x < 3; ++x)
-        itmRot(x,y) = rot(cv::Point2i(x,y));
-#else
-    itmRot(0,0) = itmRot(1,1) = itmRot(2,2) = 1.0f;
-#endif
-    itmRot(3,0) = tvecs[i](0);
-    itmRot(3,1) = tvecs[i](1);
-    itmRot(3,2) = tvecs[i](2);
-    itmRot(3,3) = 1.0f;
+      {
+        fiducialToEye(x,y) = rot(cv::Point2i(x,y));
+      }
+    }
+    fiducialToEye(3,0) = tvecs[i](0);
+    fiducialToEye(3,1) = tvecs[i](1);
+    fiducialToEye(3,2) = tvecs[i](2);
+    fiducialToEye(3,3) = 1.0f;
 
-    std::cout << worldPos << "\n\n";
-    //std::cout << itmRot << "\n\n";
+    const Matrix4f eyeToWorld = pose.GetInvM();
+    const Matrix4f fiducialToWorld = eyeToWorld * fiducialToEye;
 
-    std::cout << pose.GetInvM() * itmRot << "\n\n";
-
-#if 0
-    SimpleCamera fiducialCam(
-      Eigen::Vector3f(worldPos.x, worldPos.y, worldPos.z),
-      Eigen::Vector3f(0.0f, 0.0f, 1.0f),
-      Eigen::Vector3f(0.0f, -1.0f, 0.0f)
-    );
-    ORUtils::SE3Pose fiducialPose = CameraPoseConverter::camera_to_pose(fiducialCam);
-#else
     ORUtils::SE3Pose fiducialPose;
-    fiducialPose.SetInvM(pose.GetInvM() * itmRot);
-#endif
-    std::cout << fiducialPose.GetM() << "\n\n";
-    
+    fiducialPose.SetInvM(fiducialToWorld);
 
     fiducials.insert(std::make_pair(id, Fiducial(id, fiducialPose)));
   }
