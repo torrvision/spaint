@@ -38,6 +38,7 @@ using namespace spaint;
 using namespace tvgutil;
 
 #include "core/SemanticPipeline.h"
+#include "core/SLAMPipeline.h"
 
 //#################### NAMESPACE ALIASES ####################
 
@@ -291,6 +292,11 @@ try
   {
     const unsigned int seed = 12345;
     pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerConfigs, mappingMode, trackingMode));
+  }
+  else if(args.pipelineType == "slam")
+  {
+    const unsigned int seed = 12345;
+    pipeline.reset(new SLAMPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerConfigs, mappingMode, trackingMode));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
