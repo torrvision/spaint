@@ -67,9 +67,6 @@ public:
   CompositeCamera& move_n(float delta);
 
   /** Override */
-  CompositeCamera& move_to(const Eigen::Vector3f& position);
-
-  /** Override */
   CompositeCamera& move_u(float delta);
 
   /** Override */
