@@ -8,6 +8,10 @@
 
 #include "SLAMComponent.h"
 
+#include <boost/shared_ptr.hpp>
+
+#include <DFBP.hpp>
+
 namespace spaint {
 
 /**
@@ -42,6 +46,11 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
+
+  //#################### PRIVATE MEMBER VARIABLES ####################
+private:
+  boost::shared_ptr<DFBP> m_forest;
+
 };
 
 //#################### TYPEDEFS ####################

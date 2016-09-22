@@ -2,7 +2,7 @@
 # UseScoreForests.cmake #
 #########################
 
-SET(ScoreForests_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/" CACHE PATH "The ScoreForests include directory")
+SET(ScoreForests_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/" CACHE PATH "The ScoreForests main directory")
 SET(ScoreForests_BUILD_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/build" CACHE PATH "The ScoreForests build directory")
 
 FIND_LIBRARY(ScoreForests_Datasets_LIBRARY_DEBUG Datasets HINTS "${ScoreForests_BUILD_DIR}/lib" "${ScoreForests_BUILD_DIR}/Datasets/Debug")
@@ -28,7 +28,12 @@ SET(ScoreForests_StatisticalTools_LIBRARY debug ${ScoreForests_StatisticalTools_
 
 SET(ScoreForests_LIBRARIES ${ScoreForests_Datasets_LIBRARY} ${ScoreForests_Features_LIBRARY} ${ScoreForests_Hashes_LIBRARY} ${ScoreForests_Helpers_LIBRARY} ${ScoreForests_Learners_LIBRARY} ${ScoreForests_StatisticalTools_LIBRARY})
 
-INCLUDE_DIRECTORIES(${ScoreForests_INCLUDE_DIR})
+INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Datasets/include/Datasets")
+INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Features/include/Features")
+INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Hashes/include/Hashes")
+INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Helpers/include/Helpers")
+INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/Learners/include/Learners")
+INCLUDE_DIRECTORIES("${ScoreForests_SOURCE_DIR}/modules/StatisticalTools/include/StatisticalTools")
 
 ADD_DEFINITIONS(-DUSING_CMAKE)
 
