@@ -49,6 +49,9 @@ public:
   SimpleCamera& move_n(float delta);
 
   /** Override */
+  SimpleCamera& move_to(const Eigen::Vector3f& position);
+
+  /** Override */
   SimpleCamera& move_u(float delta);
 
   /** Override */

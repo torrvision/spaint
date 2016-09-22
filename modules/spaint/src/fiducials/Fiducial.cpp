@@ -11,8 +11,8 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-Fiducial::Fiducial(const std::string& id, const Vector3f& pos)
-: m_id(id), m_pos(pos)
+Fiducial::Fiducial(const std::string& id, const ORUtils::SE3Pose& pose)
+: m_id(id), m_pose(pose)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -22,9 +22,9 @@ const std::string& Fiducial::id() const
   return m_id;
 }
 
-const Vector3f& Fiducial::pos() const
+const ORUtils::SE3Pose& Fiducial::pose() const
 {
-  return m_pos;
+  return m_pose;
 }
 
 void Fiducial::update(const Fiducial& newFiducial)
@@ -36,7 +36,7 @@ void Fiducial::update(const Fiducial& newFiducial)
 
   // For now, just overwrite the properties of this fiducial with those of the new fiducial.
   // (More sophisticated alternatives can be implemented later if necessary.)
-  m_pos = newFiducial.m_pos;
+  m_pose = newFiducial.m_pose;
 }
 
 }

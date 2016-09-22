@@ -42,6 +42,12 @@ CompositeCamera& CompositeCamera::move_n(float delta)
   return *this;
 }
 
+CompositeCamera& CompositeCamera::move_to(const Eigen::Vector3f& position)
+{
+  m_primaryCamera.move_to(position);
+  return *this;
+}
+
 CompositeCamera& CompositeCamera::move_u(float delta)
 {
   m_primaryCamera.move_u(delta);

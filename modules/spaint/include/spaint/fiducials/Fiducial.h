@@ -8,7 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/SE3Pose.h>
 
 namespace spaint {
 
@@ -22,18 +22,18 @@ private:
   /** The ID of the fiducial. */
   std::string m_id;
 
-  /** The position of the fiducial in the 3D scene. */
-  Vector3f m_pos;
+  /** The pose of the fiducial in the 3D scene. */
+  ORUtils::SE3Pose m_pose;
 
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a fiducial.
    *
-   * \param id  The ID of the fiducial.
-   * \param pos The position of the fiducial in the 3D scene.
+   * \param id    The ID of the fiducial.
+   * \param pose  The pose of the fiducial in the 3D scene.
    */
-  Fiducial(const std::string& id, const Vector3f& pos);
+  Fiducial(const std::string& id, const ORUtils::SE3Pose& pose);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -45,11 +45,11 @@ public:
   const std::string& id() const;
 
   /**
-   * \brief Gets the position of the fiducial in the 3D scene.
+   * \brief Gets the pose of the fiducial in the 3D scene.
    *
-   * \return  The position of the fiducial in the 3D scene.
+   * \return  The pose of the fiducial in the 3D scene.
    */
-  const Vector3f& pos() const;
+  const ORUtils::SE3Pose& pose() const;
 
   /**
    * \brief Updates the fiducial based on information from a new measurement.

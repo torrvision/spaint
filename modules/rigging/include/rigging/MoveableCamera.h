@@ -35,6 +35,14 @@ public:
   virtual MoveableCamera& move_n(float delta) = 0;
 
   /**
+   * \brief Moves the camera to the specified position.
+   *
+   * \param position  The new position of the camera.
+   * \return          This camera, after it has been moved.
+   */
+  virtual MoveableCamera& move_to(const Eigen::Vector3f& position) = 0;
+
+  /**
    * \brief Moves the camera by the specified displacement in the u direction.
    *
    * \param delta The displacement by which to move.

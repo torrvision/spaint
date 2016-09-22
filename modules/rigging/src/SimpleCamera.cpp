@@ -38,6 +38,12 @@ SimpleCamera& SimpleCamera::move_n(float delta)
   return *this;
 }
 
+SimpleCamera& SimpleCamera::move_to(const Eigen::Vector3f& position)
+{
+  m_position = position;
+  return *this;
+}
+
 SimpleCamera& SimpleCamera::move_u(float delta)
 {
   m_position += delta * m_u;

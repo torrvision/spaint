@@ -491,8 +491,25 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       for(std::map<std::string,Fiducial>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
       {
         if(it->first != "997") continue;
-        const Vector3f& p = it->second.pos();
-        QuadricRenderer::render_sphere(Eigen::Vector3f(p.x, p.y, p.z), 0.02, 10, 10);
+
+        SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second.pose());
+        Eigen::Vector3f n = cam.n() * 0.1f, p = cam.p(), u = cam.u() * 0.1f, v = cam.v() * 0.1f;
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        QuadricRenderer::render_sphere(p, 0.02, 10, 10);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glTranslatef(p.x(), p.y(), p.z());
+
+        glBegin(GL_LINES);
+          glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(-u.x(), -u.y(), -u.z());
+          glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(-v.x(), -v.y(), -v.z());
+          glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(n.x(), n.y(), n.z());
+        glEnd();
+
+        glPopMatrix();
       }
 #endif
     }
