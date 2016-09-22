@@ -30,7 +30,7 @@ namespace spaint {
 class SLAMComponent
 {
   //#################### TYPEDEFS ####################
-private:
+protected:
   typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
@@ -41,6 +41,7 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
+  typedef ITMLib::ITMTrackingState::TrackingResult TrackingResult;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -161,6 +162,13 @@ public:
                 TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
                 TrackingMode trackingMode = TRACK_VOXELS);
 
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys a SLAM component.
+   */
+  virtual ~SLAMComponent();
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
@@ -192,8 +200,8 @@ public:
    */
   void set_fusion_enabled(bool fusionEnabled);
 
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
   /**
    * \brief Render from the live camera position to prepare for tracking.
    *
@@ -201,6 +209,10 @@ private:
    */
   void prepare_for_tracking(TrackingMode trackingMode);
 
+  virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /**
    * \brief Sets up the tracker.
    */

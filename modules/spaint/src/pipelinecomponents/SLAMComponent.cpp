@@ -89,6 +89,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   reset_scene();
 }
 
+//#################### DESTRUCTOR ####################
+SLAMComponent::~SLAMComponent() {}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 bool SLAMComponent::get_fusion_enabled() const
@@ -127,46 +130,8 @@ bool SLAMComponent::process_frame()
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
-      // Copy the current depth input across to the CPU for use by the relocaliser.
-      view->depth->UpdateHostFromDevice();
-
-      // Decide whether or not the relocaliser should consider using this frame as a keyframe.
-      bool considerKeyframe = false;
-      if(trackerResult == ITMTrackingState::TRACKING_GOOD)
-      {
-        if(m_keyframeDelay == 0) considerKeyframe = true;
-        else --m_keyframeDelay;
-      }
-
-      // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-      // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
-      // good for some time and the current frame differs sufficiently from the existing keyframes.
-      int nearestNeighbour;
-      int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1, &nearestNeighbour, NULL, considerKeyframe);
-
-      if(keyframeID >= 0)
-      {
-        // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
-        // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
-        m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
-      }
-      else if(trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
-      {
-        // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
-        // of the keyframe and rerun the tracker for this frame.
-        trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
-
-        const bool resetVisibleList = true;
-        m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-        prepare_for_tracking(TRACK_VOXELS);
-        m_trackingController->Track(trackingState.get(), view.get());
-        trackerResult = trackingState->trackerResult;
-
-        // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
-        // adding a new keyframe.
-        m_keyframeDelay = 10;
-      }
-
+      // Allow the relocaliser to either improve the pose or store a new keyframe, update its model, etc...
+      trackerResult = process_relocalisation(trackerResult);
       break;
     }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
@@ -271,7 +236,7 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
   m_fusionEnabled = fusionEnabled;
 }
 
-//#################### PRIVATE MEMBER FUNCTIONS ####################
+//#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 {
@@ -298,6 +263,59 @@ void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
     }
   }
 }
+
+SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResult trackingResult)
+{
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
+  const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
+  const View_Ptr& view = slamState->get_view();
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+
+  // Copy the current depth input across to the CPU for use by the relocaliser.
+  view->depth->UpdateHostFromDevice();
+
+  // Decide whether or not the relocaliser should consider using this frame as a keyframe.
+  bool considerKeyframe = false;
+  if(trackingResult == ITMTrackingState::TRACKING_GOOD)
+  {
+    if(m_keyframeDelay == 0) considerKeyframe = true;
+    else --m_keyframeDelay;
+  }
+
+  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
+  // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
+  // good for some time and the current frame differs sufficiently from the existing keyframes.
+  int nearestNeighbour;
+  int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1, &nearestNeighbour, NULL, considerKeyframe);
+
+  if(keyframeID >= 0)
+  {
+    // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
+    // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
+    m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
+  }
+  else if(trackingResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
+  {
+    // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
+    // of the keyframe and rerun the tracker for this frame.
+    trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
+
+    const bool resetVisibleList = true;
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+    prepare_for_tracking(TRACK_VOXELS);
+    m_trackingController->Track(trackingState.get(), view.get());
+    trackingResult = trackingState->trackerResult;
+
+    // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
+    // adding a new keyframe.
+    m_keyframeDelay = 10;
+  }
+
+  return trackingResult;
+}
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void SLAMComponent::setup_tracker()
 {
