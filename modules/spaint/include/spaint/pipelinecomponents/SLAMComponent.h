@@ -69,11 +69,16 @@ public:
     TRACK_VOXELS
   };
 
-  //#################### PRIVATE VARIABLES ####################
-private:
+  //#################### PROTECTED VARIABLES ####################
+protected:
   /** The shared context needed for SLAM. */
   SLAMContext_Ptr m_context;
 
+  /** The ID of the scene to reconstruct. */
+  std::string m_sceneID;
+
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** The dense surfel mapper. */
   DenseSurfelMapper_Ptr m_denseSurfelMapper;
 
@@ -119,9 +124,6 @@ private:
 
   /** The relocaliser. */
   Relocaliser_Ptr m_relocaliser;
-
-  /** The ID of the scene to reconstruct. */
-  std::string m_sceneID;
 
   /** The tracker. */
   Tracker_Ptr m_tracker;
