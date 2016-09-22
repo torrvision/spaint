@@ -10,6 +10,8 @@ using namespace spaint;
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
 
+#include <spaint/pipelinecomponents/SLAMComponentWithScoreForest.h>
+
 //#################### CONSTRUCTORS ####################
 
 SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
@@ -26,21 +28,21 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
 // using 1 -> Application.cpp#715 needs at least 2 valid labels
 {
   const std::string sceneID = Model::get_world_scene_id();
-  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+  m_slamComponents[sceneID].reset(new SLAMComponentWithScoreForest(
+      m_model,
+      sceneID,
+      imageSourceEngine,
+      trackerType,
+      trackerParams,
+      mappingMode,
+      trackingMode
+  ));
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SLAMPipeline::set_mode(Mode mode)
 {
-#ifdef WITH_OPENCV
-  // If we are switching out of feature inspection mode, destroy the feature inspection window.
-  if(m_mode == MODE_FEATURE_INSPECTION && mode != MODE_FEATURE_INSPECTION)
-  {
-    cv::destroyAllWindows();
-  }
-#endif
-
   // The only supported mode
   m_mode = MODE_NORMAL;
 }
