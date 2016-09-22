@@ -50,12 +50,13 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
 #endif
 
   // Estimate the poses of the fiducials in world space.
-  std::vector<ORUtils::SE3Pose> fiducialPoses = estimate_poses_from_raycast(corners, ids, view, pose, renderState);
+  std::vector<boost::optional<ORUtils::SE3Pose> > fiducialPoses = estimate_poses_from_raycast(corners, renderState);
 
   for(size_t i = 0, size = ids.size(); i < size; ++i)
   {
+    if(!fiducialPoses[i]) continue;
     std::string id = boost::lexical_cast<std::string>(ids[i]);
-    fiducials.insert(std::make_pair(id, Fiducial(id, fiducialPoses[i])));
+    fiducials.insert(std::make_pair(id, Fiducial(id, *fiducialPoses[i])));
   }
 
   return fiducials;
@@ -63,12 +64,11 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_raycast(const std::vector<std::vector<cv::Point2f> >& corners,
-                                                                                 const std::vector<int>& ids,
-                                                                                 const View_CPtr& view, const ORUtils::SE3Pose& pose,
-                                                                                 const VoxelRenderState_CPtr& renderState) const
+std::vector<boost::optional<ORUtils::SE3Pose> >
+ArUcoFiducialDetector::estimate_poses_from_raycast(const std::vector<std::vector<cv::Point2f> >& corners,
+                                                   const VoxelRenderState_CPtr& renderState) const
 {
-  std::vector<ORUtils::SE3Pose> fiducialPoses;
+  std::vector<boost::optional<ORUtils::SE3Pose> > fiducialPoses;
 
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
@@ -76,7 +76,7 @@ std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_raycast
     boost::optional<Vector3f> v1 = pick_corner(corners[i][2], renderState);
     boost::optional<Vector3f> v2 = pick_corner(corners[i][0], renderState);
 
-    ORUtils::SE3Pose fiducialPose;
+    boost::optional<ORUtils::SE3Pose> fiducialPose;
 
     if(v0 && v1 && v2)
     {
@@ -100,10 +100,11 @@ std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_raycast
   return fiducialPoses;
 }
 
-std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_view(const std::vector<std::vector<cv::Point2f> >& corners,
-                                                                              const View_CPtr& view, const ORUtils::SE3Pose& pose) const
+std::vector<boost::optional<ORUtils::SE3Pose> >
+ArUcoFiducialDetector::estimate_poses_from_view(const std::vector<std::vector<cv::Point2f> >& corners,
+                                                const View_CPtr& view, const ORUtils::SE3Pose& pose) const
 {
-  std::vector<ORUtils::SE3Pose> fiducialPoses;
+  std::vector<boost::optional<ORUtils::SE3Pose> > fiducialPoses;
 
   // Estimate the poses of the fiducials in eye space.
   const ITMIntrinsics& intrinsics = view->calib.intrinsics_rgb;
@@ -128,12 +129,12 @@ std::vector<ORUtils::SE3Pose> ArUcoFiducialDetector::estimate_poses_from_view(co
     {
       for(int x = 0; x < 3; ++x)
       {
-        fiducialToEye(x,y) = rot(cv::Point2i(x,y));
+        fiducialToEye(x,y) = static_cast<float>(rot(cv::Point2i(x,y)));
       }
     }
-    fiducialToEye(3,0) = tvecs[i](0);
-    fiducialToEye(3,1) = tvecs[i](1);
-    fiducialToEye(3,2) = tvecs[i](2);
+    fiducialToEye(3,0) = static_cast<float>(tvecs[i](0));
+    fiducialToEye(3,1) = static_cast<float>(tvecs[i](1));
+    fiducialToEye(3,2) = static_cast<float>(tvecs[i](2));
     fiducialToEye(3,3) = 1.0f;
 
     const Matrix4f eyeToWorld = pose.GetInvM();

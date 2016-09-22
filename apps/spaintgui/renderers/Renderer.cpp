@@ -489,8 +489,6 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       const std::map<std::string,Fiducial>& fiducials = slamState->get_fiducials();
       for(std::map<std::string,Fiducial>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
       {
-        if(it->first != "997") continue;
-
         SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second.pose());
         Eigen::Vector3f n = cam.n() * 0.1f, p = cam.p(), u = cam.u() * 0.1f, v = cam.v() * 0.1f;
 
