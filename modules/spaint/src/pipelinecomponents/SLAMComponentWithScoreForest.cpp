@@ -5,6 +5,8 @@
 
 #include "pipelinecomponents/SLAMComponentWithScoreForest.h"
 
+#include <DatasetRGBDInfiniTAM.hpp>
+
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
@@ -18,6 +20,16 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
                              TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
 : SLAMComponent(context, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode)
 {
+  m_dataset.reset(new DatasetRGBDInfiniTAM(
+      "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
+      "/media/data/",
+      5,
+      1.0,
+      "DFBP",
+      true,
+      0,
+      false,
+      42));
 }
 
 //#################### DESTRUCTOR ####################

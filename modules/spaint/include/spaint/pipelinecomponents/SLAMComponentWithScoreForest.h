@@ -10,6 +10,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <Dataset.h>
 #include <DFBP.hpp>
 
 namespace spaint {
@@ -49,6 +50,7 @@ protected:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  boost::shared_ptr<Dataset> m_dataset;
   boost::shared_ptr<DFBP> m_forest;
 
 };

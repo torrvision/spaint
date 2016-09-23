@@ -2,5 +2,5 @@
 # LinkScoreForests.cmake #
 ##########################
 
-TARGET_LINK_LIBRARIES(${targetname} ${ScoreForests_LIBRARIES})
+TARGET_LINK_LIBRARIES(${targetname} ${ScoreForests_LIBRARIES} alglib)
 
