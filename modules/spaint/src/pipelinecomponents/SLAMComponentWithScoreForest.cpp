@@ -5,6 +5,9 @@
 
 #include "pipelinecomponents/SLAMComponentWithScoreForest.h"
 
+#include <tuple>
+
+#include <boost/timer/timer.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include <DatasetRGBDInfiniTAM.hpp>
@@ -48,6 +51,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
   if(trackingResult == TrackingResult::TRACKING_FAILED)
   {
@@ -78,15 +82,64 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     // Now compute features
     std::vector<InputOutputData *> featuresBuffer;
-    m_dataset->ComputeFeaturesForImage(rgbd, featuresBuffer);
+
+    {
+      boost::timer::auto_cpu_timer t;
+      m_dataset->ComputeFeaturesForImage(rgbd, featuresBuffer);
+    }
 
     std::cout << "Computed " << featuresBuffer.size() << " features." << std::endl;
 
+    std::vector<EnsemblePrediction *> predictions;
+
+    // Evaluate forest
+    {
+      boost::timer::auto_cpu_timer t;
+      m_dataset->EvaluateForest(featuresBuffer, predictions);
+    }
+
+    std::cout << "Forest evaluated" << std::endl;
+
+    // Find pose
+    std::tuple<Eigen::MatrixXf, std::vector<std::pair<int, int>>, float, int> result;
+
+    {
+      boost::timer::auto_cpu_timer t;
+      result = m_dataset->PoseFromPredictions(rgbd, featuresBuffer, predictions);
+    }
+
+    std::cout << "Pose estimated: " << std::get<0>(result) << "\nwith "<< std::get<1>(result).size() << " inliers." << std::endl;
+
+    Matrix4f invPose;
+    Eigen::Map<Eigen::Matrix4f> em(invPose.m);
+    em = std::get<0>(result);
+
+    trackingState->pose_d->SetInvM(invPose);
+
+//    for (const auto &p : predictions)
+//    {
+//      auto ep = ToEnsemblePredictionGaussianMean(p);
+//      std::cout << "Prediction has " << ep->_modes.size() << " modes." << std::endl;
+//      for (auto &m : ep->_modes)
+//      {
+//        std::cout << "\tMode has " << m.size() << " components.\n";
+//        for (auto &c : m)
+//        {
+//          std::cout << "\t\t" << c->_mean.transpose() << "\n";
+//        }
+//      }
+//      break;
+//    }
+
+
     // cleanup
     for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
+    for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
+
+    return TrackingResult::TRACKING_POOR;
   }
 
-  return TrackingResult::TRACKING_GOOD;
+  return trackingResult;
 }
 
 }
