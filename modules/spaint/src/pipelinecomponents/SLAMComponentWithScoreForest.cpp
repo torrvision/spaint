@@ -53,6 +53,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
+  const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
+  const View_Ptr& view = slamState->get_view();
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+
   if(trackingResult == TrackingResult::TRACKING_FAILED)
   {
     std::cout << "Tracking failed, trying to relocalize..." << std::endl;
@@ -116,6 +120,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     trackingState->pose_d->SetInvM(invPose);
 
+    const bool resetVisibleList = true;
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+    prepare_for_tracking(TRACK_VOXELS);
+    m_trackingController->Track(trackingState.get(), view.get());
+    trackingResult = trackingState->trackerResult;
+
 //    for (const auto &p : predictions)
 //    {
 //      auto ep = ToEnsemblePredictionGaussianMean(p);
@@ -135,8 +145,6 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     // cleanup
     for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
     for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
-
-    return TrackingResult::TRACKING_POOR;
   }
 
   return trackingResult;

@@ -74,16 +74,19 @@ protected:
   /** The shared context needed for SLAM. */
   SLAMContext_Ptr m_context;
 
+  /** The dense voxel mapper. */
+  DenseMapper_Ptr m_denseVoxelMapper;
+
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
+
+  /** The tracking controller. */
+  TrackingController_Ptr m_trackingController;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The dense surfel mapper. */
   DenseSurfelMapper_Ptr m_denseSurfelMapper;
-
-  /** The dense voxel mapper. */
-  DenseMapper_Ptr m_denseVoxelMapper;
 
   /** A pointer to a tracker that can detect tracking failures (if available). */
   FallibleTracker *m_fallibleTracker;
@@ -137,9 +140,6 @@ private:
 
   /** The type of tracker to use. */
   TrackerType m_trackerType;
-
-  /** The tracking controller. */
-  TrackingController_Ptr m_trackingController;
 
   /** The tracking mode to use. */
   TrackingMode m_trackingMode;
