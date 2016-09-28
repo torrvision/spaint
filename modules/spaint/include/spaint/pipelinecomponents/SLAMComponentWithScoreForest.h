@@ -48,6 +48,10 @@ public:
 protected:
   virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb, const ITMShortImage_Ptr &depth) const;
+
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   boost::shared_ptr<DatasetRGBD7Scenes> m_dataset;

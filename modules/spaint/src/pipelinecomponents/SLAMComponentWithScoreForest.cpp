@@ -6,6 +6,7 @@
 #include "pipelinecomponents/SLAMComponentWithScoreForest.h"
 
 #include <tuple>
+#include <random>
 
 #include <boost/timer/timer.hpp>
 #include <opencv2/imgproc.hpp>
@@ -18,6 +19,8 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 using namespace RelocLib;
+
+#define ENABLE_TIMERS
 
 namespace spaint {
 
@@ -60,63 +63,92 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   if(trackingResult == TrackingResult::TRACKING_FAILED)
   {
     std::cout << "Tracking failed, trying to relocalize..." << std::endl;
-    // Create RGBD Mat to use in the forest
-    cv::Mat rgb = OpenCVUtil::make_rgb_image(inputRGBImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU), inputRGBImage->noDims.width, inputRGBImage->noDims.height);
-    cv::Mat depth(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_16UC1, inputRawDepthImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU));
 
-    // convert to float images
-    rgb.convertTo(rgb, CV_32F);
-    depth.convertTo(depth, CV_32F);
+    cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
+//    boost::shared_ptr<EnsemblePredictionGaussianMean> prediction;
+//
+//    {
+//      boost::timer::auto_cpu_timer t(6, "evaluating pixel: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//
+//      boost::shared_ptr<InputOutputData> feature = m_dataset->ComputeFeaturesForPixel(rgbd, 100, 100);
+//      prediction = boost::dynamic_pointer_cast<EnsemblePredictionGaussianMean>(m_dataset->PredictForFeature(feature));
+//    }
+//
+//    std::cout << "Prediction has " << prediction->_modes.size() << " modes." << std::endl;
+//
+//    for(size_t mode = 0 ; mode < prediction->_modes.size(); ++mode)
+//    {
+//      std::cout << "Mode has " << prediction->_modes[mode].size() << " elements." << std::endl;
+//      for(auto x : prediction->_modes[mode])
+//      {
+//        std::cout << "Npoints: " << x->_nbPoints << " - mean: " << x->_mean.transpose() << std::endl;
+//      }
+//    }
 
-    // Dummy channel to fill the rgbd image
-    cv::Mat dummyFiller = cv::Mat::zeros(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_32FC1);
+//    DatasetRGBD7Scenes::PredictionsCache cache;
+//    std::vector<DatasetRGBD7Scenes::PoseCandidate> candidates;
+//
+//    {
+//      boost::timer::auto_cpu_timer t(6, "generating candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//      m_dataset->GeneratePoseCandidatesFromImage(rgbd, cache, candidates);
+//    }
+//
+//    std::cout << "Cache has " << cache.size() << " entries. computed " << candidates.size() << " candidates." << std::endl;
+//
+//    std::mt19937 random_engine;
+//
+//    std::vector<std::pair<int, int>> sampled_pixels;
+//
+//    {
+//      boost::timer::auto_cpu_timer t(6, "sampling candidates for ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//      std::vector<bool> dummy_mask;
+//      m_dataset->SamplePixelCandidatesForPoseUpdate(rgbd, cache, dummy_mask, sampled_pixels, random_engine);
+//    }
+//
+//    std::cout << "Sampled " << sampled_pixels.size() << " pixels for RANSAC" << std::endl;
 
-    std::vector<cv::Mat> channels;
-    cv::split(rgb, channels);
-    // swap r & b
-    std::swap(channels[0], channels[2]);
-
-    // insert 2 dummies and the depth
-    channels.push_back(dummyFiller);
-    channels.push_back(dummyFiller);
-    channels.push_back(depth);
-
-    cv::Mat rgbd;
-    cv::merge(channels, rgbd);
-
-    // Now compute features
-    std::vector<InputOutputData *> featuresBuffer;
+    DatasetRGBD7Scenes::PoseCandidate pose;
 
     {
-      boost::timer::auto_cpu_timer t;
-      m_dataset->ComputeFeaturesForImage(rgbd, featuresBuffer);
+      boost::timer::auto_cpu_timer t(6, "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+      pose = m_dataset->EstimatePose(rgbd);
     }
 
-    std::cout << "Computed " << featuresBuffer.size() << " features." << std::endl;
+    std::cout << "new impl, pose:\n" << std::get<0>(pose) << "\n" << std::endl;
 
-    std::vector<EnsemblePrediction *> predictions;
-
-    // Evaluate forest
-    {
-      boost::timer::auto_cpu_timer t;
-      m_dataset->EvaluateForest(featuresBuffer, predictions);
-    }
-
-    std::cout << "Forest evaluated" << std::endl;
-
-    // Find pose
-    std::tuple<Eigen::MatrixXf, std::vector<std::pair<int, int>>, float, int> result;
-
-    {
-      boost::timer::auto_cpu_timer t;
-      result = m_dataset->PoseFromPredictions(rgbd, featuresBuffer, predictions);
-    }
-
-    std::cout << "Pose estimated: " << std::get<0>(result) << "\nwith "<< std::get<1>(result).size() << " inliers." << std::endl;
+//    // Now compute features
+//    std::vector<InputOutputData *> featuresBuffer;
+//
+//    {
+//      boost::timer::auto_cpu_timer t(6, "computing features: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//      m_dataset->ComputeFeaturesForImage(rgbd, featuresBuffer);
+//    }
+//
+//    std::cout << "Computed " << featuresBuffer.size() << " features." << std::endl;
+//
+//    std::vector<EnsemblePrediction *> predictions;
+//
+//    // Evaluate forest
+//    {
+//      boost::timer::auto_cpu_timer t(6, "evaluating forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//      m_dataset->EvaluateForest(featuresBuffer, predictions);
+//    }
+//
+//    std::cout << "Forest evaluated" << std::endl;
+//
+//    // Find pose
+//    std::tuple<Eigen::MatrixXf, std::vector<std::pair<int, int>>, float, int> result;
+//
+//    {
+//      boost::timer::auto_cpu_timer t(6, "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//      result = m_dataset->PoseFromPredictions(rgbd, featuresBuffer, predictions);
+//    }
+//
+//    std::cout << "Pose estimated: " << std::get<0>(result) << "\nwith "<< std::get<1>(result).size() << " inliers." << std::endl;
 
     Matrix4f invPose;
     Eigen::Map<Eigen::Matrix4f> em(invPose.m);
-    em = std::get<0>(result);
+    em = std::get<0>(pose);
 
     trackingState->pose_d->SetInvM(invPose);
 
@@ -126,28 +158,50 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     m_trackingController->Track(trackingState.get(), view.get());
     trackingResult = trackingState->trackerResult;
 
-//    for (const auto &p : predictions)
-//    {
-//      auto ep = ToEnsemblePredictionGaussianMean(p);
-//      std::cout << "Prediction has " << ep->_modes.size() << " modes." << std::endl;
-//      for (auto &m : ep->_modes)
-//      {
-//        std::cout << "\tMode has " << m.size() << " components.\n";
-//        for (auto &c : m)
-//        {
-//          std::cout << "\t\t" << c->_mean.transpose() << "\n";
-//        }
-//      }
-//      break;
-//    }
-
-
-    // cleanup
-    for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
-    for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
+//    // cleanup
+//    for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
+//    for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
   }
 
   return trackingResult;
+}
+
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(const ITMUChar4Image_Ptr &inputRGBImage, const ITMShortImage_Ptr &inputRawDepthImage) const
+{
+#ifdef ENABLE_TIMERS
+  boost::timer::auto_cpu_timer t(6, "creating rgbd: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+
+  // Create RGBD Mat wrappers to use in the forest
+  cv::Mat rgb = OpenCVUtil::make_rgb_image(inputRGBImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU), inputRGBImage->noDims.width, inputRGBImage->noDims.height);
+  cv::Mat depth(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_16SC1, inputRawDepthImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU));
+
+  // convert to float images
+  rgb.convertTo(rgb, CV_32F);
+  depth.convertTo(depth, CV_32F);
+
+  // Dummy channel to fill the rgbd image
+  cv::Mat dummyFiller = cv::Mat::zeros(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_32FC1);
+
+  std::vector<cv::Mat> channels;
+  cv::split(rgb, channels);
+  // swap r with b
+  std::swap(channels[0], channels[2]);
+
+  // insert 2 dummies and the depth
+  channels.push_back(dummyFiller);
+  channels.push_back(dummyFiller);
+  channels.push_back(depth);
+  channels.push_back(dummyFiller);
+  channels.push_back(dummyFiller);
+  channels.push_back(dummyFiller); // 9 channels since the sampling functions use Vec9f...
+
+  cv::Mat rgbd;
+  cv::merge(channels, rgbd);
+
+  return rgbd;
 }
 
 }
