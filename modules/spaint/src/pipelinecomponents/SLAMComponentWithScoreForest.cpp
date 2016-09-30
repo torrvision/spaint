@@ -42,6 +42,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
       42));
 
   m_dataset->LoadForest();
+  m_dataset->ResetNodeAndLeaves();
 }
 
 //#################### DESTRUCTOR ####################
@@ -161,6 +162,18 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 //    // cleanup
 //    for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
 //    for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
+  }
+  else if (trackingResult == TrackingResult::TRACKING_GOOD)
+  {
+    cv::Matx44f invPose(trackingState->pose_d->GetInvM().m);
+    cv::Mat cvInvPose(invPose.t()); // Matrix4f is col major
+
+    cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
+
+    {
+      boost::timer::auto_cpu_timer t(6, "integrating new image: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+      m_dataset->AddImageFeaturesToForest(rgbd, cvInvPose);
+    }
   }
 
   return trackingResult;
