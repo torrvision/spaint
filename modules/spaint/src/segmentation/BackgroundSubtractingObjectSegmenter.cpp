@@ -125,6 +125,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   static int gradThreshold = 3;
   static int lowerCompactnessThreshold = 50;
   static int lowerDiffThresholdMm = 15;
+  static int lowerDiffThresholdNearEdgesMm = 100;
   static int upperDepthThresholdMm = 1000;
   const std::string debugWindowName = "Change Mask";
   if(!initialised)
@@ -137,6 +138,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     cv::createTrackbar("gradThreshold", debugWindowName, &gradThreshold, 255);
     cv::createTrackbar("lowerCompactnessThreshold", debugWindowName, &lowerCompactnessThreshold, 100);
     cv::createTrackbar("lowerDiffThresholdMm", debugWindowName, &lowerDiffThresholdMm, 100);
+    cv::createTrackbar("lowerDiffThresholdNearEdgesMm", debugWindowName, &lowerDiffThresholdNearEdgesMm, 100);
     cv::createTrackbar("upperDepthThresholdMm", debugWindowName, &upperDepthThresholdMm, 2000);
   }
 
@@ -154,7 +156,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   const float *depthRaycastPtr = depthRaycast->GetData(MEMORYDEVICE_CPU);
 
   // Compute a dilated, thresholded version of the gradient magnitude of the depth raycast.
-  cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, 640, 480, OpenCVUtil::ROW_MAJOR, 100.0f);
+  const int width = depthRaycast->noDims.x, height = depthRaycast->noDims.y;
+  cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, width, height, OpenCVUtil::ROW_MAJOR, 100.0f);
   cv::Mat gradX, gradY, absGradX, absGradY, grad, thresholdedGrad, dilatedThresholdedGrad;
   cv::Sobel(cvDepthRaycast, gradX, CV_16S, 1, 0, 3);
   cv::convertScaleAbs(gradX, absGradX);
@@ -170,9 +173,10 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   const float *diffRawRaycastPtr = diffRawRaycast->GetData(MEMORYDEVICE_CPU);
 
   // Make an initial change mask, starting from the whole image and filtering out pixels based on some simple criteria.
-  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(Vector2i(640,480), true, true));
+  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(Vector2i(width, height), true, true));
   uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
-  int pixelCount = static_cast<int>(changeMask->dataSize);
+  const double halfWidth = width / 2.0, halfHeight = height / 2.0;
+  const int pixelCount = static_cast<int>(changeMask->dataSize);
 
 #if WITH_OPENMP
   #pragma omp parallel for
@@ -206,30 +210,30 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
       continue;
     }
 
-    // Close to the image corners (unreliable)
+    // If the pixel is close to the corners of the image, remove it from the change mask (the depth gets increasingly
+    // unreliable as we get further away from the centre of the image).
+    const int x = i % width, y = i / width;
+    const double xDist = fabs(x - halfWidth), yDist = fabs(y - halfHeight);
+    const double centreDist = sqrt((xDist * xDist + yDist * yDist) / (halfWidth * halfWidth + halfHeight * halfHeight));
+    if(static_cast<int>(centreDist * 100) > centreDistThreshold)
     {
-      int cx = i % 640, cy = i / 640;
-      double xDist = fabs(cx - 320.0), yDist = fabs(cy - 240.0);
-      double dist = sqrt((xDist*xDist + yDist*yDist) / (320*320 + 240*240));
-      if(static_cast<int>(dist * 100) > centreDistThreshold)
-      {
-        changeMaskPtr[i] = 0;
-        continue;
-      }
+      changeMaskPtr[i] = 0;
+      continue;
     }
 
-    // If near a depth raycast edge:
-    if(dilatedThresholdedGrad.data[i])
+    // If the difference between the pixel's values in the live depth image and the depth raycast is quite small,
+    // remove it from the change mask (this helps exclude minor differences that are caused by sensor noise).
+    const float diffRawRaycastMm = diffRawRaycastPtr[i] * 1000.0f;
+    if(diffRawRaycastMm < lowerDiffThresholdMm)
     {
-      if(diffRawRaycastPtr[i] * 1000.0f < 100)
-      {
-        changeMaskPtr[i] = 0;
-        continue;
-      }
+      changeMaskPtr[i] = 0;
+      continue;
     }
 
-    // Ignore minor changes (noise)
-    if(diffRawRaycastPtr[i] * 1000.0f < lowerDiffThresholdMm)
+    // If the pixel is close to an edge in the depth raycast and there isn't a fairly significant difference between
+    // its values in the live depth image and the depth raycast, remove it from the change mask (we insist on a larger
+    // difference than normal near depth raycast edges because depth values tend to be unreliable along such boundaries).
+    if(dilatedThresholdedGrad.data[i] && diffRawRaycastMm < lowerDiffThresholdNearEdgesMm)
     {
       changeMaskPtr[i] = 0;
       continue;
