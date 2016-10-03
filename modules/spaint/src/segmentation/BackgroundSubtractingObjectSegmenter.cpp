@@ -146,13 +146,13 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
 {
   // Set up the parameters for the change mask.
   static int centreDistThreshold = 70;            // pixels greater than this percentage distance from the centre of the image will be ignored
-  static int componentSizeThreshold = 150;        // components below this size will be ignored
-  static int componentSizeThreshold2 = 800;
-  static int componentSizeThreshold3 = 1000;
   static int depthEdgeThreshold = 3;              // pixels with values above this will be treated as edges in the gradient magnitude image of the depth raycast
   static int lowerCompactnessThreshold = 50;      // small components whose compactness is less than this percentage will be ignored
   static int lowerDiffThresholdMm = 15;           // pixels whose depth difference (in mm) is less than this will be ignored
   static int lowerDiffThresholdNearEdgesMm = 100; // pixels near depth edges whose depth difference (in mm) is less than this will be ignored
+  static int maxContourSizeForBox = 1000;         // contours that are at most this size will be subjected to a box test
+  static int maxContourSizeForCompactness = 800;  // contours that are at most this size will be subjected to a compactness test
+  static int minComponentSize = 150;              // components below this size will be ignored
   static int upperDepthThresholdMm = 1000;        // pixels whose live depth value (in mm) is greater than this will be ignored
 
 #if DEBUGGING
@@ -163,13 +163,13 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("centreDistThreshold", debugWindowName, &centreDistThreshold, 100);
-    cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
-    cv::createTrackbar("componentSizeThreshold2", debugWindowName, &componentSizeThreshold2, 2000);
-    cv::createTrackbar("componentSizeThreshold3", debugWindowName, &componentSizeThreshold3, 2000);
     cv::createTrackbar("depthEdgeThreshold", debugWindowName, &depthEdgeThreshold, 255);
     cv::createTrackbar("lowerCompactnessThreshold", debugWindowName, &lowerCompactnessThreshold, 100);
     cv::createTrackbar("lowerDiffThresholdMm", debugWindowName, &lowerDiffThresholdMm, 100);
     cv::createTrackbar("lowerDiffThresholdNearEdgesMm", debugWindowName, &lowerDiffThresholdNearEdgesMm, 100);
+    cv::createTrackbar("maxContourSizeForBox", debugWindowName, &maxContourSizeForBox, 2000);
+    cv::createTrackbar("maxContourSizeForCompactness", debugWindowName, &maxContourSizeForCompactness, 2000);
+    cv::createTrackbar("minComponentSize", debugWindowName, &minComponentSize, 2000);
     cv::createTrackbar("upperDepthThresholdMm", debugWindowName, &upperDepthThresholdMm, 2000);
     initialised = true;
   }
@@ -192,15 +192,15 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   // Compute a dilated, thresholded version of the gradient magnitude of the depth raycast.
   const int width = depthRaycast->noDims.x, height = depthRaycast->noDims.y;
   cv::Mat1b cvDepthRaycast = OpenCVUtil::make_greyscale_image(depthRaycastPtr, width, height, OpenCVUtil::ROW_MAJOR, 100.0f);
-  cv::Mat gradX, gradY, absGradX, absGradY, grad, thresholdedGrad, dilatedThresholdedGrad;
+  cv::Mat gradX, gradY, absGradX, absGradY, grad, depthEdges, dilatedDepthEdges;
   cv::Sobel(cvDepthRaycast, gradX, CV_16S, 1, 0, 3);
   cv::convertScaleAbs(gradX, absGradX);
   cv::Sobel(cvDepthRaycast, gradY, CV_16S, 0, 1, 3);
   cv::convertScaleAbs(gradY, absGradY);
   cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, grad);
-  cv::threshold(grad, thresholdedGrad, depthEdgeThreshold, 255.0, cv::THRESH_BINARY);
+  cv::threshold(grad, depthEdges, depthEdgeThreshold, 255.0, cv::THRESH_BINARY);
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
-  cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
+  cv::dilate(depthEdges, dilatedDepthEdges, kernel);
 
   // Get the difference between the live depth image and the depth raycast of the scene.
   ITMFloatImage_Ptr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
@@ -267,7 +267,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     // If the pixel is close to an edge in the depth raycast and there isn't a fairly significant difference between
     // its values in the live depth image and the depth raycast, remove it from the change mask (we insist on a larger
     // difference than normal near depth raycast edges because depth values tend to be unreliable along such boundaries).
-    if(dilatedThresholdedGrad.data[i] && diffRawRaycastMm < lowerDiffThresholdNearEdgesMm)
+    if(dilatedDepthEdges.data[i] && diffRawRaycastMm < lowerDiffThresholdNearEdgesMm)
     {
       changeMaskPtr[i] = 0;
       continue;
@@ -299,7 +299,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   for(int i = 0; i < pixelCount; ++i)
   {
     int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
-    if(componentSize < componentSizeThreshold)
+    if(componentSize < minComponentSize)
     {
       cvChangeMask.data[i] = 0;
       changeMaskPtr[i] = 0;
@@ -323,7 +323,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
 
     // If the contour is small and not sufficiently compact, add it to the bad contour mask.
     // Otherwise, update the largest contour and its area as necessary.
-    if(static_cast<int>(area) < componentSizeThreshold2 && static_cast<int>(CLAMP(ROUND(compactness * 100), 0, 100)) < lowerCompactnessThreshold)
+    if(static_cast<int>(area) <= maxContourSizeForCompactness && static_cast<int>(CLAMP(ROUND(compactness * 100), 0, 100)) < lowerCompactnessThreshold)
     {
       cv::drawContours(badContourMask, contours, i, cv::Scalar(255), cv::FILLED);
     }
@@ -352,7 +352,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
       if(i == largestContour) continue;
 
       // If the contour is sufficiently large, avoid removing it.
-      if(cv::contourArea(contours[i]) > componentSizeThreshold3) continue;
+      if(cv::contourArea(contours[i]) > maxContourSizeForBox) continue;
 
       // Otherwise, if the contour is not within the 200% bounding box around the largest contour, add it to the bad contour mask.
       cv::Rect componentRect = cv::boundingRect(contours[i]);
