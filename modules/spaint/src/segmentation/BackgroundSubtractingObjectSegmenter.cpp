@@ -36,6 +36,7 @@ void BackgroundSubtractingObjectSegmenter::reset()
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // Set up the parameters for the object mask.
+  static int componentSizeThreshold = 1000;
   static int objectProbThreshold = 80;
 
 #if DEBUGGING
@@ -45,6 +46,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
     initialised = true;
   }
@@ -88,6 +90,26 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 
     objectMask.data[i] = value;
   }
+
+  // Find the connected components of the object mask.
+  cv::Mat1i ccsImage, stats;
+  cv::Mat1d centroids;
+  cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
+
+  // Update the object mask to only contain components over a certain size.
+  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
+    if(componentSize < componentSizeThreshold)
+    {
+      objectMask.data[i] = 0;
+    }
+ }
 
 #if DEBUGGING
   // Show the debugging window for the object mask.
