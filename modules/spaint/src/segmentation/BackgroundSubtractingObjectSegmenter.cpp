@@ -145,15 +145,15 @@ ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // Set up the parameters for the change mask.
-  static int centreDistThreshold = 70;
-  static int componentSizeThreshold = 150;
+  static int centreDistThreshold = 70;            // pixels greater than this percentage distance from the centre of the image will be ignored
+  static int componentSizeThreshold = 150;        // components below this size will be ignored
   static int componentSizeThreshold2 = 800;
   static int componentSizeThreshold3 = 1000;
-  static int gradThreshold = 3;
-  static int lowerCompactnessThreshold = 50;
-  static int lowerDiffThresholdMm = 15;
-  static int lowerDiffThresholdNearEdgesMm = 100;
-  static int upperDepthThresholdMm = 1000;
+  static int depthEdgeThreshold = 3;              // pixels with values above this will be treated as edges in the gradient magnitude image of the depth raycast
+  static int lowerCompactnessThreshold = 50;      // small components whose compactness is less than this percentage will be ignored
+  static int lowerDiffThresholdMm = 15;           // pixels whose depth difference (in mm) is less than this will be ignored
+  static int lowerDiffThresholdNearEdgesMm = 100; // pixels near depth edges whose depth difference (in mm) is less than this will be ignored
+  static int upperDepthThresholdMm = 1000;        // pixels whose live depth value (in mm) is greater than this will be ignored
 
 #if DEBUGGING
   // Set up the debugging window for the change mask.
@@ -166,7 +166,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
     cv::createTrackbar("componentSizeThreshold2", debugWindowName, &componentSizeThreshold2, 2000);
     cv::createTrackbar("componentSizeThreshold3", debugWindowName, &componentSizeThreshold3, 2000);
-    cv::createTrackbar("gradThreshold", debugWindowName, &gradThreshold, 255);
+    cv::createTrackbar("depthEdgeThreshold", debugWindowName, &depthEdgeThreshold, 255);
     cv::createTrackbar("lowerCompactnessThreshold", debugWindowName, &lowerCompactnessThreshold, 100);
     cv::createTrackbar("lowerDiffThresholdMm", debugWindowName, &lowerDiffThresholdMm, 100);
     cv::createTrackbar("lowerDiffThresholdNearEdgesMm", debugWindowName, &lowerDiffThresholdNearEdgesMm, 100);
@@ -198,7 +198,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::Sobel(cvDepthRaycast, gradY, CV_16S, 0, 1, 3);
   cv::convertScaleAbs(gradY, absGradY);
   cv::addWeighted(absGradX, 0.5, absGradY, 0.5, 0, grad);
-  cv::threshold(grad, thresholdedGrad, gradThreshold, 255.0, cv::THRESH_BINARY);
+  cv::threshold(grad, thresholdedGrad, depthEdgeThreshold, 255.0, cv::THRESH_BINARY);
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
   cv::dilate(thresholdedGrad, dilatedThresholdedGrad, kernel);
 
@@ -334,28 +334,36 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     }
   }
 
+  // If there is a largest contour:
   if(largestContour != -1)
   {
-    // Update the change mask to exclude relatively small components that are not completely within a 200% bounding box around the largest connected component.
-    std::set<int> componentsToRemove;
+    // Make a 200% bounding box around the largest contour.
     cv::Rect largestContourRect = cv::boundingRect(contours[largestContour]);
     largestContourRect.x -= largestContourRect.width / 2;
     largestContourRect.y -= largestContourRect.height / 2;
     largestContourRect.width *= 2;
     largestContourRect.height *= 2;
-    for(size_t i = 0, size = contours.size(); i < size; ++i)
+
+    // Add any relatively small contours (other than the largest contour itself) that are not completely within this box to the bad contour mask.
+    std::set<int> componentsToRemove;
+    for(int i = 0, size = static_cast<int>(contours.size()); i < size; ++i)
     {
+      // If the contour is the largest, avoid removing it.
       if(i == largestContour) continue;
+
+      // If the contour is sufficiently large, avoid removing it.
       if(cv::contourArea(contours[i]) > componentSizeThreshold3) continue;
+
+      // Otherwise, if the contour is not within the 200% bounding box around the largest contour, add it to the bad contour mask.
       cv::Rect componentRect = cv::boundingRect(contours[i]);
       if(!largestContourRect.contains(componentRect.tl()) || !largestContourRect.contains(componentRect.br()))
       {
-        cv::drawContours(badContourMask, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
+        cv::drawContours(badContourMask, contours, i, cv::Scalar(255), cv::FILLED);
       }
     }
   }
 
-  // Remove the bad contours from the change mask.
+  // Remove any bad contours from the change mask.
 #if WITH_OPENMP
   #pragma omp parallel for
 #endif
