@@ -55,7 +55,7 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
-  /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
+  /** An image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
 
   /** The random forest used to score the candidate connected components. */
@@ -134,9 +134,9 @@ public:
   ITMFloatImage_CPtr get_depth_raycast() const;
 
   /**
-   * \brief Gets an image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
+   * \brief Gets an image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast.
    *
-   * \return  An image in which each pixel is the absolute difference between the raw depth image and the depth raycast.
+   * \return  An image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast.
    */
   ITMFloatImage_Ptr get_diff_raw_raycast() const;
 
