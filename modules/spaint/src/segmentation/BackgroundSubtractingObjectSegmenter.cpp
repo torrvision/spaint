@@ -16,13 +16,13 @@
 #include "ocv/OpenCVUtil.h"
 #include "util/CameraPoseConverter.h"
 
+#define DEBUGGING 1
+
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const View_CPtr& view,
-                                                                           const ITMSettings_CPtr& itmSettings,
-                                                                           const TouchSettings_Ptr& touchSettings)
+BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const View_CPtr& view, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
 : Segmenter(view), m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings))
 {}
 
@@ -35,16 +35,20 @@ void BackgroundSubtractingObjectSegmenter::reset()
 
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  // TEMPORARY: Debugging controls.
-  static bool initialised = false;
+  // Set up the parameters for the object mask.
   static int objectProbThreshold = 80;
+
+#if DEBUGGING
+  // Set up the debugging window for the object mask.
   const std::string debugWindowName = "Object Mask";
+  static bool initialised = false;
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
     initialised = true;
   }
+#endif
 
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
@@ -85,7 +89,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     objectMask.data[i] = value;
   }
 
+#if DEBUGGING
+  // Show the debugging window for the object mask.
   cv::imshow(debugWindowName, objectMask);
+  cv::waitKey(10);
+#endif
 
   // Convert the object mask to InfiniTAM format and return it.
   std::copy(objectMask.data, objectMask.data + m_view->rgb->dataSize, m_targetMask->GetData(MEMORYDEVICE_CPU));
@@ -112,12 +120,9 @@ ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput,
-                                                                          const ORUtils::SE3Pose& pose,
-                                                                          const RenderState_CPtr& renderState) const
+ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  // TEMPORARY: Debugging controls.
-  static bool initialised = false;
+  // Set up the parameters for the change mask.
   static int centreDistThreshold = 70;
   static int componentSizeThreshold = 150;
   static int componentSizeThreshold2 = 800;
@@ -127,7 +132,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   static int lowerDiffThresholdMm = 15;
   static int lowerDiffThresholdNearEdgesMm = 100;
   static int upperDepthThresholdMm = 1000;
+
+#if DEBUGGING
+  // Set up the debugging window for the change mask.
   const std::string debugWindowName = "Change Mask";
+  static bool initialised = false;
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
@@ -140,8 +149,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     cv::createTrackbar("lowerDiffThresholdMm", debugWindowName, &lowerDiffThresholdMm, 100);
     cv::createTrackbar("lowerDiffThresholdNearEdgesMm", debugWindowName, &lowerDiffThresholdNearEdgesMm, 100);
     cv::createTrackbar("upperDepthThresholdMm", debugWindowName, &upperDepthThresholdMm, 2000);
+    initialised = true;
   }
+#endif
 
+  // Run the touch detector.
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
 
@@ -277,7 +289,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::findContours(cvChangeMask.clone(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
   // Add any small contours that are not sufficiently compact to a bad contour mask, and determine the largest remaining contour and its area.
-  cv::Mat1b badContours = cv::Mat1b::zeros(cvChangeMask.size());
+  cv::Mat1b badContourMask = cv::Mat1b::zeros(cvChangeMask.size());
   int largestContour = -1;
   double largestContourArea = 0.0;
   for(int i = 0, size = static_cast<int>(contours.size()); i < size; ++i)
@@ -291,7 +303,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     // Otherwise, update the largest contour and its area as necessary.
     if(static_cast<int>(area) < componentSizeThreshold2 && static_cast<int>(CLAMP(ROUND(compactness * 100), 0, 100)) < lowerCompactnessThreshold)
     {
-      cv::drawContours(badContours, contours, i, cv::Scalar(255), cv::FILLED);
+      cv::drawContours(badContourMask, contours, i, cv::Scalar(255), cv::FILLED);
     }
     else if(area > largestContourArea)
     {
@@ -316,28 +328,33 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
       cv::Rect componentRect = cv::boundingRect(contours[i]);
       if(!largestContourRect.contains(componentRect.tl()) || !largestContourRect.contains(componentRect.br()))
       {
-        cv::drawContours(badContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
+        cv::drawContours(badContourMask, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
       }
     }
   }
 
-  for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
+  // Remove the bad contours from the change mask.
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
   {
-    if(badContours.data[i])
+    if(badContourMask.data[i])
     {
       cvChangeMask.data[i] = 0;
       changeMaskPtr[i] = 0;
     }
   }
 
-  OpenCVUtil::show_greyscale_figure(debugWindowName, changeMask->GetData(MEMORYDEVICE_CPU), 640, 480, OpenCVUtil::ROW_MAJOR);
-  cv::waitKey(10);
+#if DEBUGGING
+  // Show the debugging window for the change mask.
+  OpenCVUtil::show_greyscale_figure(debugWindowName, changeMask->GetData(MEMORYDEVICE_CPU), width, height, OpenCVUtil::ROW_MAJOR);
+#endif
+
   return changeMask;
 }
 
-ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput,
-                                                                        const ORUtils::SE3Pose& pose,
-                                                                        const RenderState_CPtr& renderState) const
+ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
