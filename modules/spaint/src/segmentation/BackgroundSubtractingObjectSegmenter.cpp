@@ -240,8 +240,13 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     }
   }
 
-  static cv::Mat1b cvChangeMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
-  for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
+  // Copy the change mask across to an OpenCV image.
+  static cv::Mat1b cvChangeMask = cv::Mat1b::zeros(height, width);
+
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
   {
     cvChangeMask.data[i] = changeMaskPtr[i];
   }
@@ -253,7 +258,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
 
   // Update the change mask to only contain components over a certain size.
   const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-  for(size_t i = 0, size = changeMask->dataSize; i < size; ++i)
+
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
   {
     int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
     if(componentSize < componentSizeThreshold)
@@ -263,43 +272,49 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     }
   }
 
-  // Update the change mask to only contain components that are reasonably compact.
+  // Find the contours in the change mask.
   std::vector<std::vector<cv::Point> > contours;
   cv::findContours(cvChangeMask.clone(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+
+  // Add any small contours that are not sufficiently compact to a bad contour mask, and determine the largest remaining contour and its area.
   cv::Mat1b badContours = cv::Mat1b::zeros(cvChangeMask.size());
-  int largestComponent = -1;
-  double largestComponentArea = 0.0;
-  for(size_t i = 0, size = contours.size(); i < size; ++i)
+  int largestContour = -1;
+  double largestContourArea = 0.0;
+  for(int i = 0, size = static_cast<int>(contours.size()); i < size; ++i)
   {
+    // Calculate the compactness of the contour.
     double area = cv::contourArea(contours[i]);
     size_t perimeter = contours[i].size();
     double compactness = 4 * M_PI * area / (perimeter * perimeter);
-    if(static_cast<int>(area) < componentSizeThreshold2 && static_cast<int>(compactness * 100 + 0.5) < lowerCompactnessThreshold)
+
+    // If the contour is small and not sufficiently compact, add it to the bad contour mask.
+    // Otherwise, update the largest contour and its area as necessary.
+    if(static_cast<int>(area) < componentSizeThreshold2 && static_cast<int>(CLAMP(ROUND(compactness * 100), 0, 100)) < lowerCompactnessThreshold)
     {
-      cv::drawContours(badContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
+      cv::drawContours(badContours, contours, i, cv::Scalar(255), cv::FILLED);
     }
-    else if(area > largestComponentArea)
+    else if(area > largestContourArea)
     {
-      largestComponent = static_cast<int>(i);
-      largestComponentArea = area;
+      largestContour = i;
+      largestContourArea = area;
     }
   }
 
-  if(largestComponent != -1)
+  if(largestContour != -1)
   {
     // Update the change mask to exclude relatively small components that are not completely within a 200% bounding box around the largest connected component.
     std::set<int> componentsToRemove;
-    cv::Rect largestComponentRect = cv::boundingRect(contours[largestComponent]);
-    largestComponentRect.x -= largestComponentRect.width / 2;
-    largestComponentRect.y -= largestComponentRect.height / 2;
-    largestComponentRect.width *= 2;
-    largestComponentRect.height *= 2;
+    cv::Rect largestContourRect = cv::boundingRect(contours[largestContour]);
+    largestContourRect.x -= largestContourRect.width / 2;
+    largestContourRect.y -= largestContourRect.height / 2;
+    largestContourRect.width *= 2;
+    largestContourRect.height *= 2;
     for(size_t i = 0, size = contours.size(); i < size; ++i)
     {
-      if(i == largestComponent) continue;
+      if(i == largestContour) continue;
       if(cv::contourArea(contours[i]) > componentSizeThreshold3) continue;
       cv::Rect componentRect = cv::boundingRect(contours[i]);
-      if(!largestComponentRect.contains(componentRect.tl()) || !largestComponentRect.contains(componentRect.br()))
+      if(!largestContourRect.contains(componentRect.tl()) || !largestContourRect.contains(componentRect.br()))
       {
         cv::drawContours(badContours, contours, static_cast<int>(i), cv::Scalar(255), cv::FILLED);
       }
