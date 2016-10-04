@@ -60,9 +60,9 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   ITMShortImage_Ptr depthInput = slamState->get_input_raw_depth_image_copy();
   ITMUChar4Image_CPtr rgbInput(slamState->get_view()->rgb, boost::serialization::null_deleter());
 
-  ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput);
-  ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput);
-  ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput);
+  ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput, Vector4u((uchar)0));
+  ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput, 0);
+  ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput, Vector4u((uchar)0));
 
   if(m_outputEnabled && m_outputPipe) m_outputPipe->set_images(rgbMasked, depthMasked);
 

@@ -132,7 +132,7 @@ bool SLAMComponent::process_frame()
   if(inputMask)
   {
     view->depth->UpdateHostFromDevice();
-    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()));
+    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
     maskedDepthImage->UpdateDeviceFromHost();
     view->depth->Swap(*maskedDepthImage);
   }

@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_SEGMENTATIONUTIL
 #define H_SPAINT_SEGMENTATIONUTIL
 
+#include <boost/mpl/identity.hpp>
+
 #include "../util/ITMImagePtrTypes.h"
 
 namespace spaint {
@@ -22,25 +24,29 @@ public:
    *
    * This version of the function is needed to assist the compiler with type deduction.
    *
-   * \param mask  The binary mask.
-   * \param image The image to which to apply it.
-   * \return      A masked version of the input image.
+   * \param mask            The binary mask.
+   * \param image           The image to which to apply it.
+   * \param backgroundValue The value to use for background pixels in the masked image.
+   * \return                A masked version of the input image.
    */
   template <typename T>
-  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<ORUtils::Image<T> >& image)
+  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<ORUtils::Image<T> >& image,
+                                                          const typename boost::mpl::identity<T>::type& backgroundValue)
   {
-    return apply_mask(mask, boost::shared_ptr<const ORUtils::Image<T> >(image));
+    return apply_mask(mask, boost::shared_ptr<const ORUtils::Image<T> >(image), backgroundValue);
   }
 
   /**
    * \brief Applies a binary mask to an image.
    *
-   * \param mask  The binary mask.
-   * \param image The image to which to apply it.
-   * \return      A masked version of the input image.
+   * \param mask            The binary mask.
+   * \param image           The image to which to apply it.
+   * \param backgroundValue The value to use for background pixels in the masked image.
+   * \return                A masked version of the input image.
    */
   template <typename T>
-  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<const ORUtils::Image<T> >& image)
+  static boost::shared_ptr<ORUtils::Image<T> > apply_mask(const ITMUCharImage_CPtr& mask, const boost::shared_ptr<const ORUtils::Image<T> >& image,
+                                                          const typename boost::mpl::identity<T>::type& backgroundValue)
   {
     boost::shared_ptr<ORUtils::Image<T> > maskedImage(new ORUtils::Image<T>(image->noDims, true, true));
 
@@ -54,7 +60,7 @@ public:
   #endif
     for(int i = 0; i < pixelCount; ++i)
     {
-      maskedImagePtr[i] = maskPtr[i] ? imagePtr[i] : T((uchar)0);
+      maskedImagePtr[i] = maskPtr[i] ? imagePtr[i] : backgroundValue;
     }
 
     return maskedImage;
