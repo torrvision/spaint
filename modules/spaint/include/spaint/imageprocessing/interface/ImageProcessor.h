@@ -58,6 +58,26 @@ public:
   virtual void calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const = 0;
 
   /**
+   * \brief Converts an ArrayFire image to an InfiniTAM image.
+   *
+   * \note  If the InfiniTAM image is not already allocated, this function will allocate it.
+   * \note  The resulting InfiniTAM image will be accessible on the CPU.
+   *
+   * \param inputImage  The input image.
+   * \param outputImage The output image.
+   * \return            The output image.
+   */
+  template <typename ITMElementType>
+  boost::shared_ptr<ORUtils::Image<ITMElementType> > convert_af_to_itm(const AFArray_CPtr& inputImage, boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage) const
+  {
+    Vector2i imgSize = image_size(inputImage);
+    if(!outputImage) outputImage.reset(new ORUtils::Image<ITMElementType>(imgSize, true, true));
+    copy_af_to_itm(inputImage, outputImage);
+    outputImage->UpdateHostFromDevice();
+    return outputImage;
+  }
+
+  /**
    * \brief Copies a floating-point ArrayFire image to an InfiniTAM image.
    *
    * \param inputImage  The input image.

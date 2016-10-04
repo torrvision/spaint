@@ -216,12 +216,8 @@ ITMUChar4Image_Ptr TouchDetector::generate_touch_image(const View_CPtr& view) co
 
 ITMUCharImage_Ptr TouchDetector::get_change_mask() const
 {
-  // FIXME: The implementation of this is the same as that of get_touch_mask - factor out the commonality.
-  static Vector2i imgSize = ImageProcessor::image_size(m_changeMask);
-  static ITMUCharImage_Ptr changeMask(new ITMUCharImage(imgSize, true, true));
-  m_imageProcessor->copy_af_to_itm(m_changeMask, changeMask);
-  changeMask->UpdateHostFromDevice();
-  return changeMask;
+  static ITMUCharImage_Ptr changeMask;
+  return m_imageProcessor->convert_af_to_itm(m_changeMask, changeMask);
 }
 
 ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
@@ -231,22 +227,14 @@ ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
 
 ITMFloatImage_Ptr TouchDetector::get_diff_raw_raycast() const
 {
-  // FIXME: The implementation of this is the same as that of get_touch_mask - factor out the commonality.
-  static Vector2i imgSize = ImageProcessor::image_size(m_diffRawRaycast);
-  static ITMFloatImage_Ptr diffRawRaycast(new ITMFloatImage(imgSize, true, true));
-  m_imageProcessor->copy_af_to_itm(m_diffRawRaycast, diffRawRaycast);
-  diffRawRaycast->UpdateHostFromDevice();
-  return diffRawRaycast;
+  static ITMFloatImage_Ptr diffRawRaycast;
+  return m_imageProcessor->convert_af_to_itm(m_diffRawRaycast, diffRawRaycast);
 }
 
 ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
 {
-  // FIXME: The implementation of this is the same as that of get_change_mask - factor out the commonality.
-  static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
-  static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
-  m_imageProcessor->copy_af_to_itm(m_touchMask, touchMask);
-  touchMask->UpdateHostFromDevice();
-  return touchMask;
+  static ITMUCharImage_Ptr touchMask;
+  return m_imageProcessor->convert_af_to_itm(m_touchMask, touchMask);
 }
 
 ITMFloatImage_CPtr TouchDetector::get_thresholded_raw_depth() const
