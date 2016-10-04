@@ -310,10 +310,15 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   std::vector<std::vector<cv::Point> > contours;
   cv::findContours(cvChangeMask.clone(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
-  // Add any small contours that are not sufficiently compact to a bad contour mask, and determine the largest remaining contour and its area.
-  cv::Mat1b badContourMask = cv::Mat1b::zeros(cvChangeMask.size());
+  // Divide the contours into three sets:
+  // - bad contours (small and not compact)
+  // - large contours
+  // - small contours (small and compact)
+  std::set<int> badContours, largeContours, smallContours;
+
   int largestContour = -1;
   double largestContourArea = 0.0;
+
   for(int i = 0, size = static_cast<int>(contours.size()); i < size; ++i)
   {
     // Calculate the compactness of the contour.
@@ -321,46 +326,64 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     size_t perimeter = contours[i].size();
     double compactness = 4 * M_PI * area / (perimeter * perimeter);
 
-    // If the contour is small and not sufficiently compact, add it to the bad contour mask.
-    // Otherwise, update the largest contour and its area as necessary.
     if(static_cast<int>(area) <= maxContourSizeForCompactness && static_cast<int>(CLAMP(ROUND(compactness * 100), 0, 100)) < lowerCompactnessThreshold)
     {
-      cv::drawContours(badContourMask, contours, i, cv::Scalar(255), cv::FILLED);
+      // If the contour is small and not sufficiently compact, add it to the bad contours set.
+      badContours.insert(i);
     }
-    else if(area > largestContourArea)
+    else
     {
-      largestContour = i;
-      largestContourArea = area;
+      // Otherwise, add the contour to the large or small contours set based on its size,
+      // and update the largest contour and its area as necessary.
+      (area >= maxContourSizeForBox ? largeContours : smallContours).insert(i);
+
+      if(area > largestContourArea)
+      {
+        largestContour = i;
+        largestContourArea = area;
+      }
     }
   }
 
-  // If there is a largest contour:
+  // If there is a largest contour, make sure that it is in the large contours set rather than the small contours one.
+  // This has the effect of making sure that the large contours set is never empty.
   if(largestContour != -1)
   {
-    // Make a 200% bounding box around the largest contour.
-    cv::Rect largestContourRect = cv::boundingRect(contours[largestContour]);
-    largestContourRect.x -= largestContourRect.width / 2;
-    largestContourRect.y -= largestContourRect.height / 2;
-    largestContourRect.width *= 2;
-    largestContourRect.height *= 2;
+    largeContours.insert(largestContour);
+    smallContours.erase(largestContour);
+  }
 
-    // Add any relatively small contours (other than the largest contour itself) that are not completely within this box to the bad contour mask.
-    std::set<int> componentsToRemove;
-    for(int i = 0, size = static_cast<int>(contours.size()); i < size; ++i)
+  // Find any remaining small contours that are not contained within a 200% bounding box around one of the large contours.
+  for(std::set<int>::const_iterator it = largeContours.begin(), iend = largeContours.end(); it != iend; ++it)
+  {
+    // Make a 200% bounding box around the current large contour.
+    cv::Rect largeContourRect = cv::boundingRect(contours[*it]);
+    largeContourRect.x -= largeContourRect.width / 2;
+    largeContourRect.y -= largeContourRect.height / 2;
+    largeContourRect.width *= 2;
+    largeContourRect.height *= 2;
+
+    // For each remaining small contour:
+    for(std::set<int>::const_iterator jt = smallContours.begin(), jend = smallContours.end(); jt != jend; /* no-op */)
     {
-      // If the contour is the largest, avoid removing it.
-      if(i == largestContour) continue;
-
-      // If the contour is sufficiently large, avoid removing it.
-      if(cv::contourArea(contours[i]) > maxContourSizeForBox) continue;
-
-      // Otherwise, if the contour is not within the 200% bounding box around the largest contour, add it to the bad contour mask.
-      cv::Rect componentRect = cv::boundingRect(contours[i]);
-      if(!largestContourRect.contains(componentRect.tl()) || !largestContourRect.contains(componentRect.br()))
+      // If the small contour is within the large contour's box, remove it from the small contours set.
+      cv::Rect smallContourRect = cv::boundingRect(contours[*jt]);
+      if(largeContourRect.contains(smallContourRect.tl()) && largeContourRect.contains(smallContourRect.br()))
       {
-        cv::drawContours(badContourMask, contours, i, cv::Scalar(255), cv::FILLED);
+        smallContours.erase(jt++);
       }
+      else ++jt;
     }
+  }
+
+  // Add any remaining small contours to the bad contours set.
+  std::copy(smallContours.begin(), smallContours.end(), std::inserter(badContours, badContours.begin()));
+
+  // Make a mask containing all of the bad contours.
+  cv::Mat1b badContourMask = cv::Mat1b::zeros(cvChangeMask.size());
+  for(std::set<int>::const_iterator it = badContours.begin(), iend = badContours.end(); it != iend; ++it)
+  {
+    cv::drawContours(badContourMask, contours, *it, cv::Scalar(255), cv::FILLED);
   }
 
   // Remove any bad contours from the change mask.
