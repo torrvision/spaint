@@ -152,8 +152,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   static int lowerDiffThresholdNearEdgesMm = 100; // pixels near depth edges whose depth difference (in mm) is less than this will be ignored
   static int maxContourSizeForBox = 1000;         // contours that are at most this size will be subjected to a box test
   static int maxContourSizeForCompactness = 800;  // contours that are at most this size will be subjected to a compactness test
-  static int maxIntraClusterDepthDiffMm = 2;      // the maximum difference in depth to allow between pixels within the same cluster
-  static int minClusterSize = 100;                // clusters of pixels (by depth) that are less than this size will be ignored
+  static int maxIntraClusterDepthDiffMm = 5;      // the maximum difference in depth to allow between pixels within the same cluster
+  static int minClusterSize = 250;                // clusters of pixels (by depth) that are less than this size will be ignored
   static int minComponentSize = 150;              // components below this size will be ignored
   static int upperDepthThresholdMm = 1000;        // pixels whose live depth value (in mm) is greater than this will be ignored
 
