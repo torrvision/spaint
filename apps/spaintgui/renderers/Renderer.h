@@ -251,17 +251,18 @@ private:
    * \param voxelRenderState  The voxel render state corresponding to the camera pose.
    * \param surfelRenderState The surfel render state corresponding to the camera pose.
    * \param subwindow         The sub-window into which to render.
+   * \param viewIndex         The index of the free camera view for the sub-window.
    */
-  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
-                                  Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param sceneID The ID of the reconstructed scene to augment.
-   * \param pose    The camera pose.
+   * \param sceneID     The ID of the reconstructed scene to augment.
+   * \param pose        The camera pose.
+   * \param cameraMode  The camera mode.
    */
-  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow::CameraMode cameraMode) const;
 
 #ifdef WITH_GLUT
   /**

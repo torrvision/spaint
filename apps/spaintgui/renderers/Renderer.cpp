@@ -315,8 +315,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const 
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex), subwindow);
-    render_synthetic_scene(sceneID, pose);
+    render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode());
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
     // Render the value of the pixel to which the user is pointing (for debugging purposes).
@@ -407,8 +407,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
-                                          Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -430,8 +429,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    voxelRenderState, surfelRenderState, pose, slamState->get_view(),
-    subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
   // Copy the raycasted scene to a texture.
@@ -446,7 +445,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -479,8 +478,8 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       if(transformer) transformer->accept(selectorRenderer);
       m_model->get_selector()->accept(selectorRenderer);
 
-      // Render any overlay image generated during object segmentation.
-      if(sceneID == Model::get_world_scene_id())
+      // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
+      if(cameraMode == Subwindow::CM_FOLLOW && sceneID == Model::get_world_scene_id())
       {
         const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image();
         if(segmentationImage) render_overlay(segmentationImage);
