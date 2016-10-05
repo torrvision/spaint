@@ -152,6 +152,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   static int lowerDiffThresholdNearEdgesMm = 100; // pixels near depth edges whose depth difference (in mm) is less than this will be ignored
   static int maxContourSizeForBox = 1000;         // contours that are at most this size will be subjected to a box test
   static int maxContourSizeForCompactness = 800;  // contours that are at most this size will be subjected to a compactness test
+  static int maxIntraClusterDepthDiffMm = 2;      // the maximum difference in depth to allow between pixels within the same cluster
+  static int minClusterSize = 100;                // clusters of pixels (by depth) that are less than this size will be ignored
   static int minComponentSize = 150;              // components below this size will be ignored
   static int upperDepthThresholdMm = 1000;        // pixels whose live depth value (in mm) is greater than this will be ignored
 
@@ -169,6 +171,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     cv::createTrackbar("lowerDiffThresholdNearEdgesMm", debugWindowName, &lowerDiffThresholdNearEdgesMm, 100);
     cv::createTrackbar("maxContourSizeForBox", debugWindowName, &maxContourSizeForBox, 2000);
     cv::createTrackbar("maxContourSizeForCompactness", debugWindowName, &maxContourSizeForCompactness, 2000);
+    cv::createTrackbar("maxIntraClusterDepthDiffMm", debugWindowName, &maxIntraClusterDepthDiffMm, 20);
+    cv::createTrackbar("minClusterSize", debugWindowName, &minClusterSize, 1000);
     cv::createTrackbar("minComponentSize", debugWindowName, &minComponentSize, 2000);
     cv::createTrackbar("upperDepthThresholdMm", debugWindowName, &upperDepthThresholdMm, 2000);
     initialised = true;
@@ -396,6 +400,45 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
     {
       cvChangeMask.data[i] = 0;
       changeMaskPtr[i] = 0;
+    }
+  }
+
+  // Cluster the pixels in the change mask by depth, and discard clusters that are below a certain size.
+  std::multimap<float,int> depthToPixels;
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    if(changeMaskPtr[i])
+    {
+      depthToPixels.insert(std::make_pair(thresholdedRawDepthPtr[i], i));
+    }
+  }
+
+  std::vector<std::vector<int> > clusters;
+  boost::optional<float> lastDepth;
+  for(std::multimap<float,int>::const_iterator it = depthToPixels.begin(), iend = depthToPixels.end(); it != iend; ++it)
+  {
+    float depth = it->first;
+    if(!lastDepth || static_cast<int>(ROUND((depth - *lastDepth) * 1000)) > maxIntraClusterDepthDiffMm)
+    {
+      clusters.push_back(std::vector<int>());
+    }
+    lastDepth = depth;
+
+    clusters.back().push_back(it->second);
+  }
+
+  for(size_t i = 0, clusterCount = clusters.size(); i < clusterCount; ++i)
+  {
+    const std::vector<int>& cluster = clusters[i];
+    const size_t clusterSize = cluster.size();
+
+    if(clusterSize < minClusterSize)
+    {
+      for(size_t j = 0; j < clusterSize; ++j)
+      {
+        cvChangeMask.data[cluster[j]] = 0;
+        changeMaskPtr[cluster[j]] = 0;
+      }
     }
   }
 
