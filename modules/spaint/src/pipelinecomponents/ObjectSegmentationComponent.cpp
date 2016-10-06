@@ -49,7 +49,7 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   else
   {
     slamState->set_input_mask(ITMUCharImage_Ptr());
-    m_context->set_segmentation_image(ITMUChar4Image_Ptr());
+    m_context->set_segmentation_image(m_sceneID, ITMUChar4Image_Ptr());
     return;
   }
 
@@ -80,7 +80,7 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
   }
 
   // Set the masked colour image as the segmentation overlay image so that it will be rendered.
-  m_context->set_segmentation_image(rgbMasked);
+  m_context->set_segmentation_image(m_sceneID, rgbMasked);
 }
 
 void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderState_CPtr& renderState)
@@ -89,7 +89,7 @@ void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderSta
   if(!segmenter) return;
 
   ITMUChar4Image_Ptr touchImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
-  m_context->set_segmentation_image(touchImage);
+  m_context->set_segmentation_image(m_sceneID, touchImage);
 }
 
 void ObjectSegmentationComponent::toggle_output()

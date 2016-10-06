@@ -479,9 +479,9 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       m_model->get_selector()->accept(selectorRenderer);
 
       // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
-      if(cameraMode == Subwindow::CM_FOLLOW && sceneID == Model::get_world_scene_id())
+      if(cameraMode == Subwindow::CM_FOLLOW)
       {
-        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image();
+        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
         if(segmentationImage) render_overlay(segmentationImage);
       }
     }

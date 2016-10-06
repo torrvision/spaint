@@ -23,8 +23,8 @@ class ObjectSegmentationContext
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The overlay image (if any) to render whilst performing segmentation. */
-  ITMUChar4Image_CPtr m_segmentationImage;
+  /** The overlay image (if any) to render whilst performing segmentation in different scenes. */
+  std::map<std::string,ITMUChar4Image_CPtr> m_segmentationImages;
 
   /** The path generator for the current segmentation video (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_segmentationPathGenerator;
@@ -49,11 +49,12 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets the overlay image (if any) to render whilst performing segmentation.
+   * \brief Gets the overlay image (if any) to render whilst performing segmentation in the specified scene.
    *
-   * \return  The overlay image (if any) to render whilst performing segmentation.
+   * \param sceneID The ID of the scene in which segmentation is being performed.
+   * \return        The overlay image (if any) to render whilst performing segmentation.
    */
-  virtual const ITMUChar4Image_CPtr& get_segmentation_image() const;
+  virtual ITMUChar4Image_CPtr get_segmentation_image(const std::string& sceneID) const;
 
   /**
    * \brief Gets the path generator for the current segmentation video (if any).
@@ -70,11 +71,12 @@ public:
   virtual const Segmenter_Ptr& get_segmenter() const;
 
   /**
-   * \brief Sets the overlay image (if any) to render whilst performing segmentation.
+   * \brief Sets the overlay image (if any) to render whilst performing segmentation in the specified scene.
    *
-   * \param segmentationImage The overlay image (if any) to render whilst performing segmentation.
+   * \param segmentationImage The overlay image (if any) to render whilst performing segmentation in the specified scene.
+   * \param sceneID           The ID of the scene in which segmentation is being performed.
    */
-  virtual void set_segmentation_image(const ITMUChar4Image_CPtr& segmentationImage);
+  virtual void set_segmentation_image(const std::string& sceneID, const ITMUChar4Image_CPtr& segmentationImage);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
