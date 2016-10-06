@@ -14,6 +14,7 @@
 #include <DatasetRGBDInfiniTAM.hpp>
 
 #include "ocv/OpenCVUtil.h"
+#include "features/FeatureCalculatorFactory.h"
 
 using namespace InputSource;
 using namespace ITMLib;
@@ -54,12 +55,26 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
+  ITMFloatImage_Ptr inputDepthImage(new ITMFloatImage(slamState->get_view()->depth->noDims, true, true));
+  inputDepthImage->SetFrom(slamState->get_view()->depth, ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
+
   const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
   const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+
+  RGBDPatchFeatureCalculator_CPtr feature_extractor = FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DEVICE_CUDA);
+  boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > features_image(new ORUtils::Image<RGBDPatchFeature>(inputRGBImage->noDims, true, true));
+
+  {
+    boost::timer::auto_cpu_timer t(6, "computing features: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+
+    feature_extractor->ComputeFeature(inputRGBImage, inputDepthImage, features_image);
+  }
+
+  return trackingResult;
 
   if(trackingResult == TrackingResult::TRACKING_FAILED)
   {

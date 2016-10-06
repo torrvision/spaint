@@ -10,6 +10,7 @@ using namespace ITMLib;
 
 #ifdef WITH_CUDA
 #include "features/cuda/VOPFeatureCalculator_CUDA.h"
+#include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
 #endif
 
 namespace spaint {
@@ -32,6 +33,26 @@ FeatureCalculator_CPtr FeatureCalculatorFactory::make_vop_feature_calculator(siz
   else
   {
     calculator.reset(new VOPFeatureCalculator_CPU(maxVoxelLocationCount, patchSize, patchSpacing, binCount));
+  }
+
+  return calculator;
+}
+
+RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
+{
+  RGBDPatchFeatureCalculator_CPtr calculator;
+
+  if(deviceType == ITMLibSettings::DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    calculator.reset(new RGBDPatchFeatureCalculator_CUDA);
+#else
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    throw std::runtime_error("Error: CPU version not implemented yet.");
   }
 
   return calculator;
