@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_PROPAGATIONCONTEXT
 #define H_SPAINT_PROPAGATIONCONTEXT
 
-#include "../util/SLAMState.h"
+#include "../slamstate/SLAMState.h"
 
 namespace spaint {
 

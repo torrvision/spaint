@@ -8,8 +8,8 @@
 
 #include "../markers/shared/VoxelMarker_Settings.h"
 #include "../selectors/Selector.h"
+#include "../slamstate/SLAMState.h"
 #include "../util/LabelManager.h"
-#include "../util/SLAMState.h"
 
 namespace spaint {
 
