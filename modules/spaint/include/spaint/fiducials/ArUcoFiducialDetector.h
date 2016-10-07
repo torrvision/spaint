@@ -42,6 +42,12 @@ private:
   /**
    * \brief TODO
    */
+  std::vector<boost::optional<FiducialMeasurement> > construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                                                                       const View_CPtr& view, const ORUtils::SE3Pose& pose) const;
+
+  /**
+   * \brief TODO
+   */
   std::vector<boost::optional<FiducialMeasurement> > construct_measurements_from_raycast(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
                                                                                          const VoxelRenderState_CPtr& renderState) const;
 

@@ -29,7 +29,7 @@ public:
     PEM_COLOUR,
 
     /** Estimate the poses of the fiducials from the live depth image. */
-    PEM_LIVEDEPTH,
+    PEM_DEPTH,
 
     /** Estimate the poses of the fiducials from a depth raycast of the scene. */
     PEM_RAYCAST

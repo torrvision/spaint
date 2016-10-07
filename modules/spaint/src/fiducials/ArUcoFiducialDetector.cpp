@@ -56,8 +56,8 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
     case PEM_COLOUR:
       measurements = construct_measurements_from_colour(ids, corners, view, pose);
       break;
-    case PEM_LIVEDEPTH:
-      // TODO
+    case PEM_DEPTH:
+      measurements = construct_measurements_from_depth(ids, corners, view, pose);
       break;
     case PEM_RAYCAST:
       measurements = construct_measurements_from_raycast(ids, corners, renderState);
@@ -122,6 +122,17 @@ ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>
     fiducialPoseWorld.SetInvM(fiducialToWorld);
     measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), boost::none, fiducialPoseWorld));
   }
+
+  return measurements;
+}
+
+std::vector<boost::optional<FiducialMeasurement> >
+ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                                         const View_CPtr& view, const ORUtils::SE3Pose& pose) const
+{
+  std::vector<boost::optional<FiducialMeasurement> > measurements;
+
+  // TODO
 
   return measurements;
 }
