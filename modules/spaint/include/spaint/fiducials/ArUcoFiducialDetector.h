@@ -54,7 +54,7 @@ private:
   /**
    * \brief TODO
    */
-  boost::optional<Vector3f> pick_corner_from_depth(const cv::Point2f& corner, const ITMFloatImage *depth) const;
+  boost::optional<Vector3f> pick_corner_from_depth(const cv::Point2f& corner, const View_CPtr& view) const;
 
   /**
    * \brief TODO

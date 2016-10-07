@@ -5,7 +5,7 @@
 
 #include "fiducials/ArUcoFiducialDetector.h"
 
-#include <iostream>
+#include <cmath>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
@@ -126,13 +126,51 @@ ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>
   return measurements;
 }
 
+// FIXME: Copied from the surfel engine.
+inline Vector3f transform_point(const Matrix4f& T, const Vector3f& p)
+{
+  Vector4f v(p.x, p.y, p.z, 1.0f);
+  return (T * v).toVector3();
+}
+
 std::vector<boost::optional<FiducialMeasurement> >
 ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
                                                          const View_CPtr& view, const ORUtils::SE3Pose& pose) const
 {
   std::vector<boost::optional<FiducialMeasurement> > measurements;
 
-  // TODO
+  // Make sure that the live depth image is available on the CPU.
+  view->depth->UpdateHostFromDevice();
+
+  for(size_t i = 0, size = corners.size(); i < size; ++i)
+  {
+#if 1
+    boost::optional<ORUtils::SE3Pose> fiducialPoseEye = make_pose(
+      pick_corner_from_depth(corners[i][3], view),
+      pick_corner_from_depth(corners[i][2], view),
+      pick_corner_from_depth(corners[i][0], view)
+    );
+
+    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
+    if(fiducialPoseEye) fiducialPoseWorld.reset(fiducialPoseEye->GetM() * pose.GetM());
+#else
+    boost::optional<Vector3f> v0, v1, v2;
+    v0 = pick_corner_from_depth(corners[i][3], view);
+    v1 = pick_corner_from_depth(corners[i][2], view);
+    v2 = pick_corner_from_depth(corners[i][0], view);
+    if(v0 && v1 && v2)
+    {
+      const Matrix4f eyeToWorld = pose.GetInvM();
+      v0 = transform_point(eyeToWorld, *v0);
+      v1 = transform_point(eyeToWorld, *v1);
+      v2 = transform_point(eyeToWorld, *v2);
+    }
+
+    boost::optional<ORUtils::SE3Pose> fiducialPoseEye, fiducialPoseWorld = make_pose(v0, v1, v2);
+#endif
+
+    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
+  }
 
   return measurements;
 }
@@ -159,10 +197,26 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
   return measurements;
 }
 
-boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv::Point2f& corner, const ITMFloatImage *depth) const
+boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv::Point2f& corner, const View_CPtr& view) const
 {
-  // TODO
-  return boost::none;
+  const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
+
+  const int width = view->depth->noDims.x, height = view->depth->noDims.y;
+  const int ux = (int)CLAMP(ROUND(corner.x), 0, width - 1), uy = (int)CLAMP(ROUND(corner.y), 0, height - 1);
+  const int locId = uy * width + ux;
+
+  // FIXME: This is very similar to calculate_vertex_position in ITMSurfelSceneReconstructionEngine.
+  const float depth = view->depth->GetData(MEMORYDEVICE_CPU)[locId];
+  const float EPSILON = 1e-3f;
+  if(fabs(depth + 1) > EPSILON) // i.e. if(depth != -1)
+  {
+    return Vector3f(
+      depth * (ux - intrinsics.projectionParamsSimple.px) / intrinsics.projectionParamsSimple.fx,
+      depth * (uy - intrinsics.projectionParamsSimple.py) / intrinsics.projectionParamsSimple.fy,
+      depth
+    );
+  }
+  else return boost::none;
 }
 
 boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
