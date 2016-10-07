@@ -24,7 +24,7 @@ class SLAMState
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The fiducials (if any) that have been detected in the 3D scene. */
-  std::map<std::string,Fiducial> m_fiducials;
+  std::map<std::string,Fiducial_Ptr> m_fiducials;
 
   /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
@@ -64,7 +64,7 @@ public:
    *
    * \return  The fiducials (if any) that have been detected in the 3D scene.
    */
-  const std::map<std::string,Fiducial>& get_fiducials() const;
+  const std::map<std::string,Fiducial_Ptr>& get_fiducials() const;
 
   /**
    * \brief Gets the image into which depth input is read each frame.

@@ -15,6 +15,10 @@ Fiducial::Fiducial(const std::string& id, const ORUtils::SE3Pose& pose)
 : m_id(id), m_pose(pose)
 {}
 
+//#################### DESTRUCTOR ####################
+
+Fiducial::~Fiducial() {}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 const std::string& Fiducial::id() const
@@ -27,12 +31,12 @@ const ORUtils::SE3Pose& Fiducial::pose() const
   return m_pose;
 }
 
-void Fiducial::integrate(const FiducialMeasurement& measurement)
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
+void Fiducial::check_measurement(const FiducialMeasurement& measurement) const
 {
   if(m_id != measurement.id()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with a different ID");
   if(!measurement.pose_world()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with no world pose");
-
-  m_pose = *measurement.pose_world();
 }
 
 }
