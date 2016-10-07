@@ -7,6 +7,13 @@
 
 namespace spaint {
 
-// TODO
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+boost::optional<ORUtils::SE3Pose> FiducialRelocaliser::estimate_pose(const std::map<std::string,Fiducial_Ptr>& fiducials,
+                                                                     const std::map<std::string,FiducialMeasurement>& measurements)
+{
+  // TODO
+  return boost::none;
+}
 
 }
