@@ -447,6 +447,15 @@ IF(WITH_ARRAYFIRE)
 ENDIF()
 
 ##
+SET(slamstate_sources
+src/slamstate/SLAMState.cpp
+)
+
+SET(slamstate_headers
+include/spaint/slamstate/SLAMState.h
+)
+
+##
 SET(smoothing_sources
 src/smoothing/LabelSmootherFactory.cpp
 )
@@ -532,7 +541,6 @@ src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
 src/util/MemoryBlockFactory.cpp
 src/util/RGBDUtil.cpp
-src/util/SLAMState.cpp
 )
 
 SET(util_headers
@@ -544,7 +552,6 @@ include/spaint/util/ITMObjectPtrTypes.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/RGBDUtil.h
-include/spaint/util/SLAMState.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
@@ -629,6 +636,7 @@ ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
 ${selectors_sources}
+${slamstate_sources}
 ${smoothing_sources}
 ${smoothing_cpu_sources}
 ${smoothing_interface_sources}
@@ -671,6 +679,7 @@ ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
 ${selectiontransformers_shared_headers}
 ${selectors_headers}
+${slamstate_headers}
 ${smoothing_headers}
 ${smoothing_cpu_headers}
 ${smoothing_interface_headers}
@@ -777,6 +786,7 @@ SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sour
 SOURCE_GROUP(selectiontransformers\\interface FILES ${selectiontransformers_interface_sources} ${selectiontransformers_interface_headers})
 SOURCE_GROUP(selectiontransformers\\shared FILES ${selectiontransformers_shared_headers})
 SOURCE_GROUP(selectors FILES ${selectors_sources} ${selectors_headers})
+SOURCE_GROUP(slamstate FILES ${slamstate_sources} ${slamstate_headers})
 SOURCE_GROUP(smoothing FILES ${smoothing_sources} ${smoothing_headers})
 SOURCE_GROUP(smoothing\\cpu FILES ${smoothing_cpu_sources} ${smoothing_cpu_headers})
 SOURCE_GROUP(smoothing\\cuda FILES ${smoothing_cuda_sources} ${smoothing_cuda_headers})

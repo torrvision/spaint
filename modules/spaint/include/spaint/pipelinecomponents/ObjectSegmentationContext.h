@@ -11,7 +11,7 @@
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 
 #include "../segmentation/Segmenter.h"
-#include "../util/SLAMState.h"
+#include "../slamstate/SLAMState.h"
 #include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {

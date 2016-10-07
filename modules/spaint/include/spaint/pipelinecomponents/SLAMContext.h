@@ -11,7 +11,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
-#include "../util/SLAMState.h"
+#include "../slamstate/SLAMState.h"
 
 namespace spaint {
 
