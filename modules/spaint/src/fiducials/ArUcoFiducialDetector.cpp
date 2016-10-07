@@ -145,35 +145,21 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
 
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
-    boost::optional<Vector3f> v0 = pick_corner(corners[i][3], renderState);
-    boost::optional<Vector3f> v1 = pick_corner(corners[i][2], renderState);
-    boost::optional<Vector3f> v2 = pick_corner(corners[i][0], renderState);
-
-    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
-
-    if(v0 && v1 && v2)
-    {
-      Vector3f xp = (*v1 - *v0).normalised();
-      Vector3f yp = (*v2 - *v0).normalised();
-      Vector3f zp = ORUtils::cross(xp, yp);
-      yp = ORUtils::cross(zp, xp);
-
-      SimpleCamera cam(
-        Eigen::Vector3f(v0->x, v0->y, v0->z),
-        Eigen::Vector3f(zp.x, zp.y, zp.z),
-        Eigen::Vector3f(-yp.x, -yp.y, -yp.z)
-      );
-
-      fiducialPoseWorld = CameraPoseConverter::camera_to_pose(cam);
-    }
-
-    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), boost::none, fiducialPoseWorld));
+    measurements.push_back(FiducialMeasurement(
+      boost::lexical_cast<std::string>(ids[i]),
+      boost::none,
+      make_pose(
+        pick_corner_world(corners[i][3], renderState),
+        pick_corner_world(corners[i][2], renderState),
+        pick_corner_world(corners[i][0], renderState)
+      )
+    ));
   }
 
   return measurements;
 }
 
-boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
+boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_world(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
 {
   const int width = renderState->raycastResult->noDims.x, height = renderState->raycastResult->noDims.y;
   Vector2i p((int)CLAMP(ROUND(corner.x), 0, width - 1), (int)CLAMP(ROUND(corner.y), 0, height - 1));
@@ -189,6 +175,31 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner(const cv::Point2f& 
   const float voxelSize = 0.005f; // FIXME: Get this from the scene params.
   const Vector3f& pickPoint = *pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
   return pickPoint * voxelSize;
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+boost::optional<ORUtils::SE3Pose> ArUcoFiducialDetector::make_pose(const boost::optional<Vector3f>& v0, const boost::optional<Vector3f>& v1, const boost::optional<Vector3f>& v2)
+{
+  boost::optional<ORUtils::SE3Pose> pose;
+
+  if(v0 && v1 && v2)
+  {
+    Vector3f xp = (*v1 - *v0).normalised();
+    Vector3f yp = (*v2 - *v0).normalised();
+    Vector3f zp = ORUtils::cross(xp, yp);
+    yp = ORUtils::cross(zp, xp);
+
+    SimpleCamera cam(
+      Eigen::Vector3f(v0->x, v0->y, v0->z),
+      Eigen::Vector3f(zp.x, zp.y, zp.z),
+      Eigen::Vector3f(-yp.x, -yp.y, -yp.z)
+    );
+
+    pose = CameraPoseConverter::camera_to_pose(cam);
+  }
+
+  return pose;
 }
 
 }

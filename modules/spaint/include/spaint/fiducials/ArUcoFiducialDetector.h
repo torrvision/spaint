@@ -54,7 +54,14 @@ private:
   /**
    * \brief TODO
    */
-  boost::optional<Vector3f> pick_corner(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const;
+  boost::optional<Vector3f> pick_corner_world(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const;
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  static boost::optional<ORUtils::SE3Pose> make_pose(const boost::optional<Vector3f>& v0, const boost::optional<Vector3f>& v1, const boost::optional<Vector3f>& v2);
 };
 
 }
