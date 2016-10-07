@@ -6,8 +6,8 @@
 #ifndef H_SPAINT_SMOOTHINGCONTEXT
 #define H_SPAINT_SMOOTHINGCONTEXT
 
+#include "../slamstate/SLAMState.h"
 #include "../util/LabelManager.h"
-#include "../util/SLAMState.h"
 
 namespace spaint {
 

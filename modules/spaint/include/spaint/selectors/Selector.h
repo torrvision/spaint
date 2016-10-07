@@ -9,7 +9,7 @@
 #include <tvginput/InputState.h>
 
 #include "SelectorVisitor.h"
-#include "../util/SLAMState.h"
+#include "../slamstate/SLAMState.h"
 
 namespace spaint {
 
