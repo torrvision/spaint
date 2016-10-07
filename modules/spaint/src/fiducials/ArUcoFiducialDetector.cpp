@@ -126,13 +126,6 @@ ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>
   return measurements;
 }
 
-// FIXME: Copied from the surfel engine.
-inline Vector3f transform_point(const Matrix4f& T, const Vector3f& p)
-{
-  Vector4f v(p.x, p.y, p.z, 1.0f);
-  return (T * v).toVector3();
-}
-
 std::vector<boost::optional<FiducialMeasurement> >
 ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
                                                          const View_CPtr& view, const ORUtils::SE3Pose& pose) const
@@ -144,7 +137,6 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
 
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
-#if 1
     boost::optional<ORUtils::SE3Pose> fiducialPoseEye = make_pose(
       pick_corner_from_depth(corners[i][3], view),
       pick_corner_from_depth(corners[i][2], view),
@@ -153,21 +145,6 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
 
     boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
     if(fiducialPoseEye) fiducialPoseWorld.reset(fiducialPoseEye->GetM() * pose.GetM());
-#else
-    boost::optional<Vector3f> v0, v1, v2;
-    v0 = pick_corner_from_depth(corners[i][3], view);
-    v1 = pick_corner_from_depth(corners[i][2], view);
-    v2 = pick_corner_from_depth(corners[i][0], view);
-    if(v0 && v1 && v2)
-    {
-      const Matrix4f eyeToWorld = pose.GetInvM();
-      v0 = transform_point(eyeToWorld, *v0);
-      v1 = transform_point(eyeToWorld, *v1);
-      v2 = transform_point(eyeToWorld, *v2);
-    }
-
-    boost::optional<ORUtils::SE3Pose> fiducialPoseEye, fiducialPoseWorld = make_pose(v0, v1, v2);
-#endif
 
     measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
   }
@@ -183,15 +160,19 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
 
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
-    measurements.push_back(FiducialMeasurement(
-      boost::lexical_cast<std::string>(ids[i]),
-      boost::none,
-      make_pose(
-        pick_corner_from_raycast(corners[i][3], renderState),
-        pick_corner_from_raycast(corners[i][2], renderState),
-        pick_corner_from_raycast(corners[i][0], renderState)
-      )
-    ));
+    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld = make_pose(
+      pick_corner_from_raycast(corners[i][3], renderState),
+      pick_corner_from_raycast(corners[i][2], renderState),
+      pick_corner_from_raycast(corners[i][0], renderState)
+    );
+
+    boost::optional<ORUtils::SE3Pose> fiducialPoseEye;
+    if(fiducialPoseWorld)
+    {
+      // TODO
+    }
+
+    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
   }
 
   return measurements;
