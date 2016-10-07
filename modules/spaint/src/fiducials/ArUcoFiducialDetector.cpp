@@ -26,10 +26,10 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
-                                                                       PoseEstimationMode poseEstimationMode) const
+std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
+                                                                                  PoseEstimationMode poseEstimationMode) const
 {
-  std::map<std::string,Fiducial> fiducials;
+  std::map<std::string,FiducialMeasurement> fiducials;
 
   // Convert the current colour input image to OpenCV format.
   const ITMUChar4Image *rgb = view->rgb;
@@ -56,7 +56,7 @@ std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const Vie
   {
     if(!fiducialPoses[i]) continue;
     std::string id = boost::lexical_cast<std::string>(ids[i]);
-    fiducials.insert(std::make_pair(id, Fiducial(id, *fiducialPoses[i])));
+    fiducials.insert(std::make_pair(id, FiducialMeasurement(id, boost::none, *fiducialPoses[i])));
   }
 
   return fiducials;

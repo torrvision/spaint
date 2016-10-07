@@ -250,11 +250,11 @@ public:
 
   /**
    * \brief Updates the current set of fiducials that we're maintaining with information from
-   *        a live set of fiducials (e.g. those detected in the current frame).
+   *        a set of fiducial measurements (e.g. from running a detector on the current frame).
    *
-   * \param liveFiducials The live set of fiducials.
+   * \param measurements  The set of measurements with which to update the fiducials.
    */
-  void update_fiducials(const std::map<std::string,Fiducial>& liveFiducials);
+  void update_fiducials(const std::map<std::string,FiducialMeasurement>& measurements);
 };
 
 //#################### TYPEDEFS ####################

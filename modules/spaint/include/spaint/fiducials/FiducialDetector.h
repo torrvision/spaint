@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include "Fiducial.h"
+#include "FiducialMeasurement.h"
 #include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
@@ -51,10 +51,10 @@ public:
    * \param pose                The pose from which the view was captured.
    * \param renderState         A render state corresponding to the camera pose.
    * \param poseEstimationMode  The mode to use when estimating the poses of the fiducials.
-   * \return                    The fiducials (if any) that have been detected in the view.
+   * \return                    Measurements of the fiducials (if any) that have been detected in the view.
    */
-  virtual std::map<std::string,Fiducial> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
-                                                          PoseEstimationMode poseEstimationMode) const = 0;
+  virtual std::map<std::string,FiducialMeasurement> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
+                                                                     PoseEstimationMode poseEstimationMode) const = 0;
 };
 
 //#################### TYPEDEFS ####################

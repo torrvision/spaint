@@ -8,7 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <ORUtils/SE3Pose.h>
+#include "FiducialMeasurement.h"
 
 namespace spaint {
 
@@ -22,7 +22,7 @@ private:
   /** The ID of the fiducial. */
   std::string m_id;
 
-  /** The pose of the fiducial in the 3D scene. */
+  /** The pose of the fiducial in world space. */
   ORUtils::SE3Pose m_pose;
 
   //#################### CONSTRUCTORS ####################
@@ -31,7 +31,7 @@ public:
    * \brief Constructs a fiducial.
    *
    * \param id    The ID of the fiducial.
-   * \param pose  The pose of the fiducial in the 3D scene.
+   * \param pose  The pose of the fiducial in world space.
    */
   Fiducial(const std::string& id, const ORUtils::SE3Pose& pose);
 
@@ -45,19 +45,20 @@ public:
   const std::string& id() const;
 
   /**
-   * \brief Gets the pose of the fiducial in the 3D scene.
-   *
-   * \return  The pose of the fiducial in the 3D scene.
-   */
-  const ORUtils::SE3Pose& pose() const;
-
-  /**
    * \brief Updates the fiducial based on information from a new measurement.
    *
-   * \param newFiducial         The fiducial containing the new measurement.
-   * \throws std::runtime_error If the two fiducials do not have the same ID.
+   * \param measurement         The new measurement.
+   * \throws std::runtime_error If the fiducial and the measurement do not have the same ID,
+   *                            or if the measurement does not contain a valid world pose.
    */
-  void update(const Fiducial& newFiducial);
+  void integrate(const FiducialMeasurement& measurement);
+
+  /**
+   * \brief Gets the pose of the fiducial in world space.
+   *
+   * \return  The pose of the fiducial in world space.
+   */
+  const ORUtils::SE3Pose& pose() const;
 };
 
 }

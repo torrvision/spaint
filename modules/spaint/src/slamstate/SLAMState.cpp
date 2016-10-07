@@ -155,20 +155,23 @@ void SLAMState::set_voxel_scene(const SpaintVoxelScene_Ptr& voxelScene)
   m_voxelScene = voxelScene;
 }
 
-void SLAMState::update_fiducials(const std::map<std::string,Fiducial>& liveFiducials)
+void SLAMState::update_fiducials(const std::map<std::string,FiducialMeasurement>& measurements)
 {
   std::map<std::string,Fiducial> newFiducials;
 
-  // For each live fiducial:
-  for(std::map<std::string,Fiducial>::const_iterator it = liveFiducials.begin(), iend = liveFiducials.end(); it != iend; ++it)
+  // For each fiducial measurement:
+  for(std::map<std::string,FiducialMeasurement>::const_iterator it = measurements.begin(), iend = measurements.end(); it != iend; ++it)
   {
+    // If the measurement doesn't have a valid world pose, ignore it.
+    if(!it->second.pose_world()) continue;
+
     // Try to find a corresponding fiducial among the fiducials we've seen.
     std::map<std::string,Fiducial>::iterator jt = m_fiducials.find(it->first);
 
-    // If there is one, update it with the information from the live fiducial.
-    // If not, mark the live fiducial as new so that it can be added later.
-    if(jt != m_fiducials.end()) jt->second.update(it->second);
-    else newFiducials.insert(*it);
+    // If there is one, update it with the information from the measurement.
+    // If not, create a new fiducial based on the measurement.
+    if(jt != m_fiducials.end()) jt->second.integrate(it->second);
+    else newFiducials.insert(std::make_pair(it->first, Fiducial(it->first, *it->second.pose_world())));
   }
 
   // Add any new fiducials to the set of fiducials we've seen.

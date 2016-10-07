@@ -27,16 +27,12 @@ const ORUtils::SE3Pose& Fiducial::pose() const
   return m_pose;
 }
 
-void Fiducial::update(const Fiducial& newFiducial)
+void Fiducial::integrate(const FiducialMeasurement& measurement)
 {
-  if(m_id != newFiducial.m_id)
-  {
-    throw std::runtime_error("Error: Cannot update a fiducial using a fiducial with a different ID");
-  }
+  if(m_id != measurement.id()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with a different ID");
+  if(!measurement.pose_world()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with no world pose");
 
-  // For now, just overwrite the properties of this fiducial with those of the new fiducial.
-  // (More sophisticated alternatives can be implemented later if necessary.)
-  m_pose = newFiducial.m_pose;
+  m_pose = *measurement.pose_world();
 }
 
 }

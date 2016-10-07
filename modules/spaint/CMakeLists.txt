@@ -83,11 +83,15 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 ##
 SET(fiducials_sources
 src/fiducials/Fiducial.cpp
+src/fiducials/FiducialMeasurement.cpp
+src/fiducials/SimpleFiducial.cpp
 )
 
 SET(fiducials_headers
 include/spaint/fiducials/Fiducial.h
 include/spaint/fiducials/FiducialDetector.h
+include/spaint/fiducials/FiducialMeasurement.h
+include/spaint/fiducials/SimpleFiducial.h
 )
 
 IF(WITH_OPENCV)
