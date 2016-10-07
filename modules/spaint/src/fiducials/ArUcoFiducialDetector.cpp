@@ -29,7 +29,7 @@ namespace spaint {
 std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
                                                                                   PoseEstimationMode poseEstimationMode) const
 {
-  std::map<std::string,FiducialMeasurement> fiducials;
+  std::map<std::string,FiducialMeasurement> result;
 
   // Convert the current colour input image to OpenCV format.
   const ITMUChar4Image *rgb = view->rgb;
@@ -49,62 +49,40 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
   cv::imshow("Detected Markers", markerImage);
 #endif
 
-  // Estimate the poses of the fiducials in world space.
-  std::vector<boost::optional<ORUtils::SE3Pose> > fiducialPoses = estimate_poses_from_raycast(corners, renderState);
+  // Construct the fiducial measurements.
+  std::vector<boost::optional<FiducialMeasurement> > measurements;
+  switch(poseEstimationMode)
+  {
+    case PEM_COLOUR:
+      measurements = construct_measurements_from_colour(ids, corners, view, pose);
+      break;
+    case PEM_LIVEDEPTH:
+      // TODO
+      break;
+    case PEM_RAYCAST:
+      measurements = construct_measurements_from_raycast(ids, corners, renderState);
+      break;
+    default:
+      // This should never happen.
+      throw std::runtime_error("Unknown fiducial pose estimation mode");
+  }
 
   for(size_t i = 0, size = ids.size(); i < size; ++i)
   {
-    if(!fiducialPoses[i]) continue;
-    std::string id = boost::lexical_cast<std::string>(ids[i]);
-    fiducials.insert(std::make_pair(id, FiducialMeasurement(id, boost::none, *fiducialPoses[i])));
+    if(!measurements[i]) continue;
+    result.insert(std::make_pair(boost::lexical_cast<std::string>(ids[i]), *measurements[i]));
   }
 
-  return fiducials;
+  return result;
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-std::vector<boost::optional<ORUtils::SE3Pose> >
-ArUcoFiducialDetector::estimate_poses_from_raycast(const std::vector<std::vector<cv::Point2f> >& corners,
-                                                   const VoxelRenderState_CPtr& renderState) const
+std::vector<boost::optional<FiducialMeasurement> >
+ArUcoFiducialDetector::construct_measurements_from_colour(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                                          const View_CPtr& view, const ORUtils::SE3Pose& pose) const
 {
-  std::vector<boost::optional<ORUtils::SE3Pose> > fiducialPoses;
-
-  for(size_t i = 0, size = corners.size(); i < size; ++i)
-  {
-    boost::optional<Vector3f> v0 = pick_corner(corners[i][3], renderState);
-    boost::optional<Vector3f> v1 = pick_corner(corners[i][2], renderState);
-    boost::optional<Vector3f> v2 = pick_corner(corners[i][0], renderState);
-
-    boost::optional<ORUtils::SE3Pose> fiducialPose;
-
-    if(v0 && v1 && v2)
-    {
-      Vector3f xp = (*v1 - *v0).normalised();
-      Vector3f yp = (*v2 - *v0).normalised();
-      Vector3f zp = ORUtils::cross(xp, yp);
-      yp = ORUtils::cross(zp, xp);
-
-      SimpleCamera cam(
-        Eigen::Vector3f(v0->x, v0->y, v0->z),
-        Eigen::Vector3f(zp.x, zp.y, zp.z),
-        Eigen::Vector3f(-yp.x, -yp.y, -yp.z)
-      );
-
-      fiducialPose = CameraPoseConverter::camera_to_pose(cam);
-    }
-
-    fiducialPoses.push_back(fiducialPose);
-  }
-
-  return fiducialPoses;
-}
-
-std::vector<boost::optional<ORUtils::SE3Pose> >
-ArUcoFiducialDetector::estimate_poses_from_view(const std::vector<std::vector<cv::Point2f> >& corners,
-                                                const View_CPtr& view, const ORUtils::SE3Pose& pose) const
-{
-  std::vector<boost::optional<ORUtils::SE3Pose> > fiducialPoses;
+  std::vector<boost::optional<FiducialMeasurement> > measurements;
 
   // Estimate the poses of the fiducials in eye space.
   const ITMIntrinsics& intrinsics = view->calib.intrinsics_rgb;
@@ -140,12 +118,48 @@ ArUcoFiducialDetector::estimate_poses_from_view(const std::vector<std::vector<cv
     const Matrix4f eyeToWorld = pose.GetInvM();
     const Matrix4f fiducialToWorld = eyeToWorld * fiducialToEye;
 
-    ORUtils::SE3Pose fiducialPose;
-    fiducialPose.SetInvM(fiducialToWorld);
-    fiducialPoses.push_back(fiducialPose);
+    ORUtils::SE3Pose fiducialPoseWorld;
+    fiducialPoseWorld.SetInvM(fiducialToWorld);
+    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), boost::none, fiducialPoseWorld));
   }
 
-  return fiducialPoses;
+  return measurements;
+}
+
+std::vector<boost::optional<FiducialMeasurement> >
+ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
+                                                           const VoxelRenderState_CPtr& renderState) const
+{
+  std::vector<boost::optional<FiducialMeasurement> > measurements;
+
+  for(size_t i = 0, size = corners.size(); i < size; ++i)
+  {
+    boost::optional<Vector3f> v0 = pick_corner(corners[i][3], renderState);
+    boost::optional<Vector3f> v1 = pick_corner(corners[i][2], renderState);
+    boost::optional<Vector3f> v2 = pick_corner(corners[i][0], renderState);
+
+    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld;
+
+    if(v0 && v1 && v2)
+    {
+      Vector3f xp = (*v1 - *v0).normalised();
+      Vector3f yp = (*v2 - *v0).normalised();
+      Vector3f zp = ORUtils::cross(xp, yp);
+      yp = ORUtils::cross(zp, xp);
+
+      SimpleCamera cam(
+        Eigen::Vector3f(v0->x, v0->y, v0->z),
+        Eigen::Vector3f(zp.x, zp.y, zp.z),
+        Eigen::Vector3f(-yp.x, -yp.y, -yp.z)
+      );
+
+      fiducialPoseWorld = CameraPoseConverter::camera_to_pose(cam);
+    }
+
+    measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), boost::none, fiducialPoseWorld));
+  }
+
+  return measurements;
 }
 
 boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
