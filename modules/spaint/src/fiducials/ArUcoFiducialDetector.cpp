@@ -149,9 +149,9 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
       boost::lexical_cast<std::string>(ids[i]),
       boost::none,
       make_pose(
-        pick_corner_world(corners[i][3], renderState),
-        pick_corner_world(corners[i][2], renderState),
-        pick_corner_world(corners[i][0], renderState)
+        pick_corner_from_raycast(corners[i][3], renderState),
+        pick_corner_from_raycast(corners[i][2], renderState),
+        pick_corner_from_raycast(corners[i][0], renderState)
       )
     ));
   }
@@ -159,7 +159,13 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
   return measurements;
 }
 
-boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_world(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
+boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv::Point2f& corner, const ITMFloatImage *depth) const
+{
+  // TODO
+  return boost::none;
+}
+
+boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
 {
   const int width = renderState->raycastResult->noDims.x, height = renderState->raycastResult->noDims.y;
   Vector2i p((int)CLAMP(ROUND(corner.x), 0, width - 1), (int)CLAMP(ROUND(corner.y), 0, height - 1));

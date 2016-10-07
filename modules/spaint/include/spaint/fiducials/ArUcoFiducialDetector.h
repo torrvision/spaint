@@ -54,7 +54,12 @@ private:
   /**
    * \brief TODO
    */
-  boost::optional<Vector3f> pick_corner_world(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const;
+  boost::optional<Vector3f> pick_corner_from_depth(const cv::Point2f& corner, const ITMFloatImage *depth) const;
+
+  /**
+   * \brief TODO
+   */
+  boost::optional<Vector3f> pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const;
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
