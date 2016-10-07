@@ -28,8 +28,8 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual std::map<std::string,Fiducial> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose,
-                                                          const VoxelRenderState_CPtr& renderState) const;
+  virtual std::map<std::string,Fiducial> detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
+                                                          PoseEstimationMode poseEstimationMode) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

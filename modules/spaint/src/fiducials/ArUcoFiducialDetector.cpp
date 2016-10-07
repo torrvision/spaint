@@ -26,8 +26,8 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose,
-                                                                       const VoxelRenderState_CPtr& renderState) const
+std::map<std::string,Fiducial> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
+                                                                       PoseEstimationMode poseEstimationMode) const
 {
   std::map<std::string,Fiducial> fiducials;
 

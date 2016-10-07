@@ -236,7 +236,7 @@ bool SLAMComponent::process_frame()
   // and update the current set of fiducials that we're maintaining accordingly.
   if(m_fiducialDetector)
   {
-    slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState));
+    slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
   }
 
   return true;
