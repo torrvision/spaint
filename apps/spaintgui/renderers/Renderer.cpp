@@ -489,10 +489,14 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       const std::map<std::string,Fiducial_Ptr>& fiducials = slamState->get_fiducials();
       for(std::map<std::string,Fiducial_Ptr>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
       {
+        float confidence = it->second->confidence();
+        if(confidence < 1.0f) continue;
+
         SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second->pose());
         Eigen::Vector3f n = cam.n() * 0.1f, p = cam.p(), u = cam.u() * 0.1f, v = cam.v() * 0.1f;
 
-        glColor3f(1.0f, 1.0f, 0.0f);
+        float y = CLAMP(confidence, 0.0f, 1.0f);
+        glColor3f(y, y, 0.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         QuadricRenderer::render_sphere(p, 0.02, 10, 10);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

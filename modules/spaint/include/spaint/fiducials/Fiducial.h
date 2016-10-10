@@ -19,6 +19,9 @@ class Fiducial
 {
   //#################### PROTECTED VARIABLES ####################
 protected:
+  /** The confidence counter for the fiducial. */
+  float m_confidence;
+
   /** The ID of the fiducial. */
   std::string m_id;
 
@@ -42,19 +45,24 @@ public:
    */
   virtual ~Fiducial();
 
-  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
-public:
+  //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
+private:
   /**
-   * \brief Updates the fiducial based on information from a new measurement.
+   * \brief Updates the derived part of the fiducial based on information from a new measurement.
    *
-   * \param measurement         The new measurement.
-   * \throws std::runtime_error If the fiducial and the measurement do not have the same ID,
-   *                            or if the measurement does not contain a valid world pose.
+   * \param measurement The new measurement.
    */
-  virtual void integrate(const FiducialMeasurement& measurement) = 0;
+  virtual void integrate_sub(const FiducialMeasurement& measurement) = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Gets the confidence counter for the fiducial.
+   *
+   * \return  The confidence counter for the fiducial.
+   */
+  float confidence() const;
+
   /**
    * \brief Gets the ID of the fiducial.
    *
@@ -63,22 +71,20 @@ public:
   const std::string& id() const;
 
   /**
+   * \brief Updates the base part of the fiducial based on information from a new measurement.
+   *
+   * \param measurement         The new measurement.
+   * \throws std::runtime_error If the fiducial and the measurement do not have the same ID,
+   *                            or if the measurement does not contain a valid world pose.
+   */
+  void integrate(const FiducialMeasurement& measurement);
+
+  /**
    * \brief Gets the pose of the fiducial in world space.
    *
    * \return  The pose of the fiducial in world space.
    */
   const ORUtils::SE3Pose& pose() const;
-
-  //#################### PROTECTED MEMBER FUNCTIONS ####################
-protected:
-  /**
-   * \brief Checks that the specified measurement can be integrated into this fiducial.
-   *
-   * \param measurement         A measurement.
-   * \throws std::runtime_error If the fiducial and the measurement do not have the same ID,
-   *                            or if the measurement does not contain a valid world pose.
-   */
-  void check_measurement(const FiducialMeasurement& measurement) const;
 };
 
 //#################### TYPEDEFS ####################

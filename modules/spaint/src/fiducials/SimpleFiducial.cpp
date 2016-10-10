@@ -13,11 +13,10 @@ SimpleFiducial::SimpleFiducial(const std::string& id, const ORUtils::SE3Pose& po
 : Fiducial(id, pose)
 {}
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
-void SimpleFiducial::integrate(const FiducialMeasurement& measurement)
+void SimpleFiducial::integrate_sub(const FiducialMeasurement& measurement)
 {
-  check_measurement(measurement);
   m_pose = *measurement.pose_world();
 }
 

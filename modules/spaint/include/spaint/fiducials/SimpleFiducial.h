@@ -25,10 +25,10 @@ public:
    */
   SimpleFiducial(const std::string& id, const ORUtils::SE3Pose& pose);
 
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /** Override */
-  virtual void integrate(const FiducialMeasurement& measurement);
+  virtual void integrate_sub(const FiducialMeasurement& measurement);
 };
 
 }
