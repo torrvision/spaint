@@ -82,6 +82,7 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 
 ##
 SET(fiducials_sources
+src/fiducials/AveragingFiducial.cpp
 src/fiducials/Fiducial.cpp
 src/fiducials/FiducialMeasurement.cpp
 src/fiducials/FiducialRelocaliser.cpp
@@ -89,6 +90,7 @@ src/fiducials/SimpleFiducial.cpp
 )
 
 SET(fiducials_headers
+include/spaint/fiducials/AveragingFiducial.h
 include/spaint/fiducials/Fiducial.h
 include/spaint/fiducials/FiducialDetector.h
 include/spaint/fiducials/FiducialMeasurement.h

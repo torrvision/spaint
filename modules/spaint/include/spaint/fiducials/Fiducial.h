@@ -85,6 +85,13 @@ public:
    * \return  The pose of the fiducial in world space.
    */
   const ORUtils::SE3Pose& pose() const;
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  static float confidence_increment();
 };
 
 //#################### TYPEDEFS ####################
