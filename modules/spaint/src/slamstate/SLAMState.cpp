@@ -5,7 +5,7 @@
 
 #include "slamstate/SLAMState.h"
 
-#include "fiducials/SimpleFiducial.h"
+#include "fiducials/AveragingFiducial.h"
 using namespace ITMLib;
 using namespace ORUtils;
 
@@ -173,7 +173,7 @@ void SLAMState::update_fiducials(const std::map<std::string,FiducialMeasurement>
     // If there is one, update it with the information from the measurement.
     // If not, create a new fiducial based on the measurement.
     if(jt != m_fiducials.end()) jt->second->integrate(it->second);
-    else newFiducials.insert(std::make_pair(it->first, Fiducial_Ptr(new SimpleFiducial(it->first, *it->second.pose_world()))));
+    else newFiducials.insert(std::make_pair(it->first, Fiducial_Ptr(new AveragingFiducial(it->first, *it->second.pose_world()))));
   }
 
   // Add any new fiducials to the set of fiducials we've seen.
