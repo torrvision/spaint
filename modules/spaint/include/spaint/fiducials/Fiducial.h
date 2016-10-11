@@ -86,12 +86,12 @@ public:
    */
   const ORUtils::SE3Pose& pose() const;
 
-  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
-private:
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief TODO
    */
-  static float confidence_increment();
+  static float confidence_step();
 };
 
 //#################### TYPEDEFS ####################

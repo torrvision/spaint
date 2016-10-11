@@ -14,7 +14,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 Fiducial::Fiducial(const std::string& id, const ORUtils::SE3Pose& pose)
-: m_confidence(confidence_increment()), m_id(id), m_pose(pose)
+: m_confidence(confidence_step()), m_id(id), m_pose(pose)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -38,11 +38,11 @@ void Fiducial::integrate(const FiducialMeasurement& measurement)
   if(m_id != measurement.id()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with a different ID");
   if(!measurement.pose_world()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with no world pose");
 
-  Vector3f R, t, newR, newT;
-  m_pose.GetParams(t, R);
+  Vector3f r, t, newR, newT;
+  m_pose.GetParams(t, r);
   measurement.pose_world()->GetParams(newT, newR);
   float dist = length(t - newT);
-  float angle = acosf(dot(R.normalised(), newR.normalised()));
+  float angle = acosf(dot(r.normalised(), newR.normalised()));
 
   const float distThreshold = 0.05f;
   const float angleThreshold = static_cast<float>(20 * M_PI / 180);
@@ -50,12 +50,12 @@ void Fiducial::integrate(const FiducialMeasurement& measurement)
   if(dist < distThreshold && angle < angleThreshold)
   {
     integrate_sub(measurement);
-    m_confidence = std::min(m_confidence + confidence_increment(), 1.0f);
+    m_confidence = std::min(m_confidence + confidence_step(), 1.0f);
   }
   else
   {
     m_pose = *measurement.pose_world();
-    m_confidence = confidence_increment();
+    m_confidence = confidence_step();
   }
 }
 
@@ -64,9 +64,9 @@ const ORUtils::SE3Pose& Fiducial::pose() const
   return m_pose;
 }
 
-//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-float Fiducial::confidence_increment()
+float Fiducial::confidence_step()
 {
   return 0.1f;
 }

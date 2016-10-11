@@ -22,16 +22,17 @@ AveragingFiducial::AveragingFiducial(const std::string& id, const ORUtils::SE3Po
 
 void AveragingFiducial::integrate_sub(const FiducialMeasurement& measurement)
 {
-  Vector3f R, t, newR, newT;
-  m_pose.GetParams(t, R);
+  // TODO: Comment.
+  Vector3f r, t, newR, newT;
+  m_pose.GetParams(t, r);
   measurement.pose_world()->GetParams(newT, newR);
 
-  // TODO: Rotations.
-  DualQuatf q = DualQuatf::from_translation(t);
-  DualQuatf newQ = DualQuatf::from_translation(newT);
+  // TODO: Comment.
+  DualQuatf q = DualQuatf::from_translation(t) * DualQuatf::from_rotation(r);
+  DualQuatf newQ = DualQuatf::from_translation(newT) * DualQuatf::from_rotation(newR);
 
   // TODO: Calculate the correct interpolation parameter (use the confidence of the fiducial).
-  DualQuatf avgQ = DualQuatf::sclerp(q, newQ, 0.5f);
+  DualQuatf avgQ = DualQuatf::sclerp(newQ, q, m_confidence / (m_confidence + confidence_step()));
 
   // TODO: Determine avgR and avgT from avgQ.
   Vector3f avgR, avgT;
