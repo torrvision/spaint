@@ -6,19 +6,27 @@
 #ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR
 #define H_SPAINT_RGBDPATCHFEATURECALCULATOR
 
-#include "util/ITMImagePtrTypes.h"
+#include "../../util/ITMImagePtrTypes.h"
 
 namespace spaint
 {
 struct RGBDPatchFeature
 {
-  static const int FEATURE_SIZE = 256;
   static const int RGB_OFFSET = 0;
   static const int RGB_FEATURE_COUNT = 128;
   static const int DEPTH_OFFSET = 128;
   static const int DEPTH_FEATURE_COUNT = 128;
+  static const int FEATURE_SIZE = RGB_FEATURE_COUNT + DEPTH_FEATURE_COUNT;
 
-  float data[FEATURE_SIZE];
+  union
+  {
+    float data[FEATURE_SIZE];
+    struct
+    {
+      float rgb[RGB_FEATURE_COUNT];
+      float depth[DEPTH_FEATURE_COUNT];
+    };
+  };
 };
 
 class RGBDPatchFeatureCalculator

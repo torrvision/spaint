@@ -13,6 +13,8 @@
 #include <DatasetRGBD7Scenes.hpp>
 #include <DFBP.hpp>
 
+#include "../features/FeatureCalculatorFactory.h"
+
 namespace spaint {
 
 /**
@@ -56,6 +58,7 @@ private:
 private:
   boost::shared_ptr<DatasetRGBD7Scenes> m_dataset;
   boost::shared_ptr<DFBP> m_forest;
+  RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
 
 };
 

@@ -22,6 +22,19 @@ __global__ void ck_compute_colour_feature(RGBDPatchFeature *features,
       img_size, normalize, x, y);
 }
 
+__global__ void ck_compute_depth_feature(RGBDPatchFeature *features,
+    const float *depth, const Vector4i *offsets_depth,
+    Vector2i img_size, bool normalize)
+{
+  const int x = threadIdx.x + blockIdx.x * blockDim.x;
+  const int y = threadIdx.y + blockIdx.y * blockDim.y;
+
+  if (x >= img_size.x || y >= img_size.y)
+    return;
+
+  compute_depth_patch_feature(features, depth, offsets_depth, img_size, normalize, x, y);
+}
+
 RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
 {
   m_offsetsRgb->UpdateDeviceFromHost();
@@ -50,6 +63,9 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
 
   ck_compute_colour_feature<<<gridSize, blockSize>>>(features, rgb, depth, offsets_rgb, channels_rgb,
       rgb_image->noDims, m_normalizeRgb);
+  cudaDeviceSynchronize();
+
+  ck_compute_depth_feature<<<gridSize, blockSize>>>(features, depth, offsets_depth, depth_image->noDims, m_normalizeDepth);
   cudaDeviceSynchronize();
 }
 
