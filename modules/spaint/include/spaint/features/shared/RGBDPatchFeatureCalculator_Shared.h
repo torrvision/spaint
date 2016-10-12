@@ -50,8 +50,12 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
     const int linear_1 = y1 * img_size.x + x1;
     const int linear_2 = y2 * img_size.x + x2;
 
+    // This would be the correct definition but scoreforests's code has the other one
+//    features[linear_idx].rgb[feat_idx] =
+//        rgb[linear_1][channel] - rgb[linear_2][channel];
+
     features[linear_idx].rgb[feat_idx] =
-        rgb[linear_1][channel] - rgb[linear_2][channel];
+        rgb[linear_1][channel] - rgb[linear_idx][channel];
   }
 }
 
@@ -95,9 +99,16 @@ inline void compute_depth_patch_feature(RGBDPatchFeature *features,
     const int linear_1 = y1 * img_size.x + x1;
     const int linear_2 = y2 * img_size.x + x2;
 
+    const float depth_mm = depth * 1000.f;
+    // because ITM sometimes has invalid depths stored as -1
+    const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
+
     // Features are computed in mm, so we multiply the depth by 1000.
-    features[linear_idx].depth[feat_idx] =
-        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
+//    features[linear_idx].depth[feat_idx] =
+//        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
+
+    // As for colour, the implementation differs from the paper
+    features[linear_idx].depth[feat_idx] = depth_1_mm - depth_mm;
   }
 }
 }

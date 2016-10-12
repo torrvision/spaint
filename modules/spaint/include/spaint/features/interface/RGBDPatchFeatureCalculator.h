@@ -12,10 +12,10 @@ namespace spaint
 {
 struct RGBDPatchFeature
 {
-  static const int RGB_OFFSET = 0;
-  static const int RGB_FEATURE_COUNT = 128;
-  static const int DEPTH_OFFSET = 128;
+  static const int DEPTH_OFFSET = 0;
   static const int DEPTH_FEATURE_COUNT = 128;
+  static const int RGB_OFFSET = 128;
+  static const int RGB_FEATURE_COUNT = 128;
   static const int FEATURE_SIZE = RGB_FEATURE_COUNT + DEPTH_FEATURE_COUNT;
 
   union
@@ -23,8 +23,8 @@ struct RGBDPatchFeature
     float data[FEATURE_SIZE];
     struct
     {
-      float rgb[RGB_FEATURE_COUNT];
       float depth[DEPTH_FEATURE_COUNT];
+      float rgb[RGB_FEATURE_COUNT];
     };
   };
 };
@@ -41,7 +41,7 @@ public:
 
   virtual void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
       const ITMFloatImage_CPtr &depth,
-      boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > &features) const = 0;
+      RGBDPatchFeatureImage_Ptr &features) const = 0;
 
 protected:
   int m_featureStep;

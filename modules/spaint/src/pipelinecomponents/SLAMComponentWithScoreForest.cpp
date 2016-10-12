@@ -57,19 +57,24 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
-  ITMFloatImage_Ptr inputDepthImage(new ITMFloatImage(slamState->get_view()->depth->noDims, true, true));
+  const ITMFloatImage_Ptr inputDepthImage(new ITMFloatImage(slamState->get_view()->depth->noDims, true, true));
   inputDepthImage->SetFrom(slamState->get_view()->depth, ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
 
-  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+//  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const ITMUChar4Image_Ptr inputRGBImage(new ITMUChar4Image(slamState->get_view()->rgb->noDims, true, true));
+  inputRGBImage->SetFrom(slamState->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA);
+  inputRGBImage->UpdateHostFromDevice();
+
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
   const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
-//  if(false)
   {
-    boost::timer::auto_cpu_timer t(6, "computing features: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6, "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
     m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage, m_featureImage);
   }
 
@@ -204,6 +209,9 @@ cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(const ITMUChar4Image_Ptr 
   // Create RGBD Mat wrappers to use in the forest
   cv::Mat rgb = OpenCVUtil::make_rgb_image(inputRGBImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU), inputRGBImage->noDims.width, inputRGBImage->noDims.height);
   cv::Mat depth(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_16SC1, inputRawDepthImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU));
+
+  // scoreforests wants rgb data
+  cv::cvtColor(rgb, rgb, CV_BGR2RGB);
 
   // convert to float images
   rgb.convertTo(rgb, CV_32F);

@@ -61,9 +61,10 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
 
   RGBDPatchFeature *features = features_image->GetData(MEMORYDEVICE_CUDA);
 
+  Vector2i out_dims(rgb_image->noDims.x / m_featureStep, rgb_image->noDims.y / m_featureStep);
+
   dim3 blockSize(32, 32);
-  dim3 gridSize((rgb_image->noDims.x / m_featureStep + blockSize.x - 1) / blockSize.x,
-      (rgb_image->noDims.y / m_featureStep + blockSize.y - 1) / blockSize.y);
+  dim3 gridSize((out_dims.x + blockSize.x - 1) / blockSize.x, (out_dims.y + blockSize.y - 1) / blockSize.y);
 
   ck_compute_colour_feature<<<gridSize, blockSize>>>(features, rgb, depth, offsets_rgb, channels_rgb,
       rgb_image->noDims, m_featureStep, m_normalizeRgb);
