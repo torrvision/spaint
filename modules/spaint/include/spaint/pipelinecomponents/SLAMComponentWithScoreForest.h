@@ -59,6 +59,7 @@ private:
   boost::shared_ptr<DatasetRGBD7Scenes> m_dataset;
   boost::shared_ptr<DFBP> m_forest;
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
+  RGBDPatchFeatureImage_Ptr m_featureImage;
 
 };
 

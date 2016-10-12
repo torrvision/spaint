@@ -14,7 +14,6 @@
 #include <DatasetRGBDInfiniTAM.hpp>
 
 #include "ocv/OpenCVUtil.h"
-#include "features/FeatureCalculatorFactory.h"
 
 using namespace InputSource;
 using namespace ITMLib;
@@ -44,6 +43,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
 
   m_dataset->LoadForest();
   m_dataset->ResetNodeAndLeaves();
+
+  m_featureExtractor = FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DEVICE_CUDA);
+  m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(1,1), true, true)); // Dummy size just to allocate something
 }
 
 //#################### DESTRUCTOR ####################
@@ -65,13 +67,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
-  RGBDPatchFeatureCalculator_CPtr feature_extractor = FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DEVICE_CUDA);
-  boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > features_image(new ORUtils::Image<RGBDPatchFeature>(inputRGBImage->noDims, true, true));
-
+//  if(false)
   {
     boost::timer::auto_cpu_timer t(6, "computing features: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-
-    feature_extractor->ComputeFeature(inputRGBImage, inputDepthImage, features_image);
+    m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage, m_featureImage);
   }
 
   return trackingResult;

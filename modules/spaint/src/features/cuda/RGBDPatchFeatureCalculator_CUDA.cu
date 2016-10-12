@@ -53,8 +53,12 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
   const uchar *channels_rgb = m_channelsRgb->GetData(MEMORYDEVICE_CUDA);
   const Vector4i *offsets_depth = m_offsetsDepth->GetData(MEMORYDEVICE_CUDA);
 
-  features_image->ChangeDims(rgb_image->noDims);
-  features_image->Clear();
+  if(features_image->noDims != rgb_image->noDims) // Just for the call to Clear()
+  {
+    features_image->ChangeDims(rgb_image->noDims);
+    features_image->Clear();
+  }
+
   RGBDPatchFeature *features = features_image->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);

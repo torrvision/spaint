@@ -29,6 +29,10 @@ struct RGBDPatchFeature
   };
 };
 
+typedef ORUtils::Image<RGBDPatchFeature> RGBDPatchFeatureImage;
+typedef boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > RGBDPatchFeatureImage_Ptr;
+typedef boost::shared_ptr<const ORUtils::Image<RGBDPatchFeature> > RGBDPatchFeatureImage_CPtr;
+
 class RGBDPatchFeatureCalculator
 {
 public:
