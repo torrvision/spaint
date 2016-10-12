@@ -44,6 +44,8 @@ public:
       boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > &features) const = 0;
 
 protected:
+  int m_featureStep;
+
   boost::shared_ptr<ORUtils::MemoryBlock<Vector4i> > m_offsetsRgb;
   boost::shared_ptr<ORUtils::MemoryBlock<uchar> > m_channelsRgb;
   bool m_normalizeRgb;

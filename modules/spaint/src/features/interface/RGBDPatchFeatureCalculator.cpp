@@ -14,6 +14,8 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 {
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 // Setup the features in the same way as Julian's code
+  m_featureStep = 4;
+
   m_normalizeRgb = true;
   m_offsetsRgb = mbf.make_block<Vector4i>(RGBDPatchFeature::RGB_FEATURE_COUNT);
   m_channelsRgb = mbf.make_block<uchar>(RGBDPatchFeature::RGB_FEATURE_COUNT);

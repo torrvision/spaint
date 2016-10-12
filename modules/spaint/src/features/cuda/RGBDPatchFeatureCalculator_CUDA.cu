@@ -10,10 +10,10 @@ namespace spaint
 {
 __global__ void ck_compute_colour_feature(RGBDPatchFeature *features,
     const Vector4u *rgb, const float *depth, const Vector4i *offsets_rgb,
-    const uchar *channels_rgb, Vector2i img_size, bool normalize)
+    const uchar *channels_rgb, Vector2i img_size, int feature_step, bool normalize)
 {
-  const int x = threadIdx.x + blockIdx.x * blockDim.x;
-  const int y = threadIdx.y + blockIdx.y * blockDim.y;
+  const int x = (threadIdx.x + blockIdx.x * blockDim.x) * feature_step;
+  const int y = (threadIdx.y + blockIdx.y * blockDim.y) * feature_step;
 
   if (x >= img_size.x || y >= img_size.y)
     return;
@@ -24,10 +24,10 @@ __global__ void ck_compute_colour_feature(RGBDPatchFeature *features,
 
 __global__ void ck_compute_depth_feature(RGBDPatchFeature *features,
     const float *depth, const Vector4i *offsets_depth,
-    Vector2i img_size, bool normalize)
+    Vector2i img_size, int feature_step, bool normalize)
 {
-  const int x = threadIdx.x + blockIdx.x * blockDim.x;
-  const int y = threadIdx.y + blockIdx.y * blockDim.y;
+  const int x = (threadIdx.x + blockIdx.x * blockDim.x) * feature_step;
+  const int y = (threadIdx.y + blockIdx.y * blockDim.y) * feature_step;
 
   if (x >= img_size.x || y >= img_size.y)
     return;
@@ -62,14 +62,15 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
   RGBDPatchFeature *features = features_image->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
-  dim3 gridSize((rgb_image->noDims.x + blockSize.x - 1) / blockSize.x,
-      (rgb_image->noDims.y + blockSize.y - 1) / blockSize.y);
+  dim3 gridSize((rgb_image->noDims.x / m_featureStep + blockSize.x - 1) / blockSize.x,
+      (rgb_image->noDims.y / m_featureStep + blockSize.y - 1) / blockSize.y);
 
   ck_compute_colour_feature<<<gridSize, blockSize>>>(features, rgb, depth, offsets_rgb, channels_rgb,
-      rgb_image->noDims, m_normalizeRgb);
+      rgb_image->noDims, m_featureStep, m_normalizeRgb);
   cudaDeviceSynchronize();
 
-  ck_compute_depth_feature<<<gridSize, blockSize>>>(features, depth, offsets_depth, depth_image->noDims, m_normalizeDepth);
+  ck_compute_depth_feature<<<gridSize, blockSize>>>(features, depth, offsets_depth,
+      depth_image->noDims, m_featureStep, m_normalizeDepth);
   cudaDeviceSynchronize();
 }
 
