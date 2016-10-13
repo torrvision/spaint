@@ -14,6 +14,7 @@
 #include <DFBP.hpp>
 
 #include "../features/FeatureCalculatorFactory.h"
+#include "../randomforest/interface/GPUForest.h"
 
 namespace spaint {
 
@@ -60,6 +61,7 @@ private:
   boost::shared_ptr<DFBP> m_forest;
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
+  GPUForest_Ptr m_gpuForest;
 
 };
 

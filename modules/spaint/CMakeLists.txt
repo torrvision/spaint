@@ -303,6 +303,14 @@ include/spaint/propagation/shared/LabelPropagator_Shared.h
 )
 
 ##
+SET(randomforest_cuda_sources
+src/randomforest/cuda/GPUForest_CUDA.cu
+)
+
+SET(randomforest_interface_sources
+src/randomforest/interface/GPUForest.cpp
+)
+
 SET(randomforest_sources
 src/randomforest/ForestUtil.cpp
 src/randomforest/SpaintDecisionFunctionGenerator.cpp
@@ -311,6 +319,14 @@ src/randomforest/SpaintDecisionFunctionGenerator.cpp
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
+)
+
+SET(randomforest_cuda_headers
+include/spaint/randomforest/cuda/GPUForest_CUDA.h
+)
+
+SET(randomforest_interface_headers
+include/spaint/randomforest/interface/GPUForest.h
 )
 
 ##
@@ -606,6 +622,7 @@ ${pipelinecomponents_sources}
 ${propagation_sources}
 ${propagation_cpu_sources}
 ${propagation_interface_sources}
+${randomforest_interface_sources}
 ${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
@@ -646,6 +663,7 @@ ${propagation_cpu_headers}
 ${propagation_interface_headers}
 ${propagation_shared_headers}
 ${randomforest_headers}
+${randomforest_interface_headers}
 ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
@@ -687,6 +705,7 @@ IF(WITH_CUDA)
     ${markers_cuda_sources}
     ${picking_cuda_sources}
     ${propagation_cuda_sources}
+    ${randomforest_cuda_sources}
     ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
     ${smoothing_cuda_sources}
@@ -698,6 +717,7 @@ IF(WITH_CUDA)
     ${markers_cuda_headers}
     ${picking_cuda_headers}
     ${propagation_cuda_headers}
+    ${randomforest_cuda_headers}
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
     ${smoothing_cuda_headers}

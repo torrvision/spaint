@@ -14,6 +14,7 @@
 #include <DatasetRGBDInfiniTAM.hpp>
 
 #include "ocv/OpenCVUtil.h"
+#include "randomforest/cuda/GPUForest_CUDA.h"
 
 using namespace InputSource;
 using namespace ITMLib;
@@ -46,6 +47,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
 
   m_featureExtractor = FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DEVICE_CUDA);
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(1,1), true, true)); // Dummy size just to allocate something
+  m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
 }
 
 //#################### DESTRUCTOR ####################
