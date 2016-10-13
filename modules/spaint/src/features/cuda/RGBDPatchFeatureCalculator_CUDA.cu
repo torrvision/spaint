@@ -10,29 +10,35 @@ namespace spaint
 {
 __global__ void ck_compute_colour_feature(RGBDPatchFeature *features,
     const Vector4u *rgb, const float *depth, const Vector4i *offsets_rgb,
-    const uchar *channels_rgb, Vector2i img_size, int feature_step, bool normalize)
+    const uchar *channels_rgb, Vector2i img_size, Vector2i out_size,
+    int feature_step, bool normalize)
 {
-  const int x = (threadIdx.x + blockIdx.x * blockDim.x) * feature_step;
-  const int y = (threadIdx.y + blockIdx.y * blockDim.y) * feature_step;
+  const Vector2i xy_out(threadIdx.x + blockIdx.x * blockDim.x,
+      threadIdx.y + blockIdx.y * blockDim.y);
 
-  if (x >= img_size.x || y >= img_size.y)
+  if (xy_out.x >= out_size.x || xy_out.y >= out_size.y)
     return;
 
+  const Vector2i xy_in(xy_out.x * feature_step, xy_out.y * feature_step);
+
   compute_colour_patch_feature(features, rgb, depth, offsets_rgb, channels_rgb,
-      img_size, normalize, x, y);
+      img_size, out_size, normalize, xy_in, xy_out);
 }
 
 __global__ void ck_compute_depth_feature(RGBDPatchFeature *features,
-    const float *depth, const Vector4i *offsets_depth,
-    Vector2i img_size, int feature_step, bool normalize)
+    const float *depth, const Vector4i *offsets_depth, Vector2i img_size,
+    Vector2i out_size, int feature_step, bool normalize)
 {
-  const int x = (threadIdx.x + blockIdx.x * blockDim.x) * feature_step;
-  const int y = (threadIdx.y + blockIdx.y * blockDim.y) * feature_step;
+  const Vector2i xy_out(threadIdx.x + blockIdx.x * blockDim.x,
+      threadIdx.y + blockIdx.y * blockDim.y);
 
-  if (x >= img_size.x || y >= img_size.y)
+  if (xy_out.x >= out_size.x || xy_out.y >= out_size.y)
     return;
 
-  compute_depth_patch_feature(features, depth, offsets_depth, img_size, normalize, x, y);
+  const Vector2i xy_in(xy_out.x * feature_step, xy_out.y * feature_step);
+
+  compute_depth_patch_feature(features, depth, offsets_depth, img_size,
+      out_size, normalize, xy_in, xy_out);
 }
 
 RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
@@ -53,25 +59,28 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
   const uchar *channels_rgb = m_channelsRgb->GetData(MEMORYDEVICE_CUDA);
   const Vector4i *offsets_depth = m_offsetsDepth->GetData(MEMORYDEVICE_CUDA);
 
-  if(features_image->noDims != rgb_image->noDims) // Just for the call to Clear()
+  Vector2i in_dims = rgb_image->noDims;
+  Vector2i out_dims(rgb_image->noDims.x / m_featureStep,
+      rgb_image->noDims.y / m_featureStep);
+
+  if (features_image->noDims != out_dims) // Just for the call to Clear()
   {
-    features_image->ChangeDims(rgb_image->noDims);
+    features_image->ChangeDims(out_dims);
     features_image->Clear();
   }
 
   RGBDPatchFeature *features = features_image->GetData(MEMORYDEVICE_CUDA);
 
-  Vector2i out_dims(rgb_image->noDims.x / m_featureStep, rgb_image->noDims.y / m_featureStep);
-
   dim3 blockSize(32, 32);
-  dim3 gridSize((out_dims.x + blockSize.x - 1) / blockSize.x, (out_dims.y + blockSize.y - 1) / blockSize.y);
+  dim3 gridSize((out_dims.x + blockSize.x - 1) / blockSize.x,
+      (out_dims.y + blockSize.y - 1) / blockSize.y);
 
   ck_compute_colour_feature<<<gridSize, blockSize>>>(features, rgb, depth, offsets_rgb, channels_rgb,
-      rgb_image->noDims, m_featureStep, m_normalizeRgb);
+      in_dims, out_dims, m_featureStep, m_normalizeRgb);
   cudaDeviceSynchronize();
 
   ck_compute_depth_feature<<<gridSize, blockSize>>>(features, depth, offsets_depth,
-      depth_image->noDims, m_featureStep, m_normalizeDepth);
+      in_dims, out_dims, m_featureStep, m_normalizeDepth);
   cudaDeviceSynchronize();
 }
 
