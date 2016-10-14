@@ -10,6 +10,8 @@
 
 #include <ORUtils/MathUtils.h>
 
+#include <tvgutil/misc/AttitudeUtil.h>
+
 #include "DualNumber.h"
 #include "Screw.h"
 
@@ -250,6 +252,19 @@ public:
   DualQuaternion<T> dual_conjugate() const
   {
     return DualQuaternion<T>(w.conjugate(), -x.conjugate(), -y.conjugate(), -z.conjugate());
+  }
+
+  /**
+   * \brief Gets a Lie vector corresponding to the rotation component of the rigid-body transform represented by this dual quaternion.
+   *
+   * \return  A Lie vector corresponding to the rotation component of the rigid-body transform represented by this dual quaternion.
+   */
+  ORUtils::Vector3<T> get_rotation() const
+  {
+    T q[] = { w.r, x.r, y.r, z.r };
+    T rv[3];
+    tvgutil::AttitudeUtil::quaternion_to_rotation_vector(q, rv);
+    return ORUtils::Vector3<T>(rv[0], rv[1], rv[2]);
   }
 
   /**

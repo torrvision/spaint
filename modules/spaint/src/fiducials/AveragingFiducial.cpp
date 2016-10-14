@@ -56,23 +56,7 @@ void AveragingFiducial::integrate_sub(const FiducialMeasurement& measurement)
   DualQuatf avgQ = DualQuatf::sclerp(newQ, q, m_confidence / (m_confidence + confidence_step()));
 
   // TODO: Determine avgR and avgT from avgQ.
-  // FIXME: Push AttitudeUtil down into InfiniTAM and add a get_rotation member function to DualQuaternion.
-  float tempQ[] = { avgQ.w.r, avgQ.x.r, avgQ.y.r, avgQ.z.r };
-  float tempR[3];
-  try
-  {
-    AttitudeUtil::quaternion_to_rotation_vector(tempQ, tempR);
-  }
-  catch(std::runtime_error&)
-  {
-    std::cout << q << '\n';
-    std::cout << newQ << '\n';
-    std::cout << m_confidence / (m_confidence + confidence_step()) << '\n';
-    std::cout << avgQ << '\n';
-    std::cout << tempQ[0] << ' ' << tempQ[1] << ' ' << tempQ[2] << ' ' << tempQ[3] << '\n';
-    throw;
-  }
-  Vector3f avgR(tempR[0], tempR[1], tempR[2]);
+  Vector3f avgR = avgQ.get_rotation();
   Vector3f avgT = avgQ.get_translation();
 
   m_pose.SetFrom(avgT, avgR);
