@@ -93,7 +93,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         m_featureImage);
   }
 
-  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
+//  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
 
   {
 #ifdef ENABLE_TIMERS
@@ -103,43 +103,92 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
   }
 
-  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
+//  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
 
   m_leafImage->UpdateHostFromDevice();
 
-  Vector2i px(84, 46);
-  int linear_px = px.y * m_featureImage->noDims.width + px.x;
-  const auto ptr = m_leafImage->GetData(MEMORYDEVICE_CPU);
-
-  std::vector<size_t> leaf_indices;
-
-  std::cout << "Leaves for pixel " << px << ": "; // << ptr[0 * m_leafImage->noDims.width + linear_px] << " "
-  for (int treeIdx = 0; treeIdx < m_leafImage->noDims.height; ++treeIdx)
   {
-    leaf_indices.push_back(
-        ptr[treeIdx * m_leafImage->noDims.width + linear_px]);
-    std::cout << leaf_indices.back() << " ";
-  }
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "creating predictions from leaves: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
 
-  std::cout << std::endl;
+    const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
 
-  // Get the corresponding ensemble prediction
-  boost::shared_ptr<EnsemblePrediction> prediction =
-      m_dataset->GetForest()->GetPredictionForLeaves(leaf_indices);
+    // Create vectors of leaves
+    std::vector<std::vector<size_t>> leaves_indices(m_leafImage->noDims.width);
 
-  EnsemblePredictionGaussianMean* gm = ToEnsemblePredictionGaussianMean(prediction.get());
-  std::cout << "The prediction has " << gm->_modes.size() << " modes.\n";
-  for(int mode_idx = 0; mode_idx < gm->_modes.size(); ++mode_idx)
-  {
-    std::cout << "Mode " << mode_idx << " has " << gm->_modes[mode_idx].size() << " elements:\n";
-    for(int i = 0; i < gm->_modes[mode_idx].size(); ++i)
+    for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
+        ++prediction_idx)
     {
-      std::cout << "("<< gm->_modes[mode_idx][i]->_mean.transpose() << ") ";
+      auto &tree_leaves = leaves_indices[prediction_idx];
+      tree_leaves.reserve(m_leafImage->noDims.height);
+      for (size_t tree_idx = 0; tree_idx < m_leafImage->noDims.height;
+          ++tree_idx)
+      {
+        tree_leaves.push_back(
+            leafData[tree_idx * m_leafImage->noDims.width + prediction_idx]);
+      }
     }
-    std::cout << "\n";
+
+    // Create ensemble predictions
+    std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
+        m_leafImage->noDims.width);
+    int max_modes = -1;
+
+    for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
+        ++prediction_idx)
+    {
+      predictions[prediction_idx] =
+          m_dataset->GetForest()->GetPredictionForLeaves(
+              leaves_indices[prediction_idx]);
+
+      if (predictions[prediction_idx])
+      {
+        max_modes =
+            std::max<int>(max_modes,
+                ToEnsemblePredictionGaussianMean(
+                    predictions[prediction_idx].get())->_modes.size());
+      }
+    }
+
+    std::cout << "Max number of modes: " << max_modes << std::endl;
   }
 
-  std::cout << std::endl;
+//  Vector2i px(84, 46);
+//  int linear_px = px.y * m_featureImage->noDims.width + px.x;
+//
+//  std::vector<size_t> leaf_indices;
+//
+//  std::cout << "Leaves for pixel " << px << ": "; // << leafData[0 * m_leafImage->noDims.width + linear_px] << " "
+//  for (int treeIdx = 0; treeIdx < m_leafImage->noDims.height; ++treeIdx)
+//  {
+//    leaf_indices.push_back(
+//        leafData[treeIdx * m_leafImage->noDims.width + linear_px]);
+//    std::cout << leaf_indices.back() << " ";
+//  }
+//
+//  std::cout << std::endl;
+//
+//  // Get the corresponding ensemble prediction
+//  boost::shared_ptr<EnsemblePrediction> prediction =
+//      m_dataset->GetForest()->GetPredictionForLeaves(leaf_indices);
+
+//  EnsemblePredictionGaussianMean* gm = ToEnsemblePredictionGaussianMean(
+//      prediction.get());
+//  std::cout << "The prediction has " << gm->_modes.size() << " modes.\n";
+//  for (int mode_idx = 0; mode_idx < gm->_modes.size(); ++mode_idx)
+//  {
+//    std::cout << "Mode " << mode_idx << " has " << gm->_modes[mode_idx].size()
+//        << " elements:\n";
+//    for (int i = 0; i < gm->_modes[mode_idx].size(); ++i)
+//    {
+//      std::cout << "(" << gm->_modes[mode_idx][i]->_mean.transpose() << ") ";
+//    }
+//    std::cout << "\n";
+//  }
+//
+//  std::cout << std::endl;
 
   return trackingResult;
 
