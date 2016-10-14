@@ -35,11 +35,11 @@ IF(WITH_CUDA)
     # the host flag -std=c++11 is automatically propagated to nvcc. Manually setting it prevents
     # the project from building.
     SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
+    SET(CUDA_NVCC_FLAGS -std=c++11 ${CUDA_NVCC_FLAGS})
 #    IF(${CMAKE_VERSION} VERSION_LESS 3.5)
-#      SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
+#      SET(CUDA_NVCC_FLAGS -std=c++11 ${CUDA_NVCC_FLAGS})
 #    ELSE()
-      #SET(CUDA_NVCC_FLAGS -Xcompiler "-std=c++11" ${CUDA_NVCC_FLAGS})
+#      SET(CUDA_NVCC_FLAGS -Xcompiler "-std=c++11" ${CUDA_NVCC_FLAGS})
 #    ENDIF()
 
     # Work around an Ubuntu 16.04 compilation error.
