@@ -12,7 +12,7 @@
 #include <tvgutil/misc/AttitudeUtil.h>
 using namespace tvgutil;
 
-#include "geom/DualQuaternion.h"
+#include "geometry/DualQuaternion.h"
 using namespace spaint;
 
 // TEMPORARY
