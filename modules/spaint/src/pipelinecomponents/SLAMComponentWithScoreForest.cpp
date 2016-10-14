@@ -23,69 +23,82 @@ using namespace RelocLib;
 
 #define ENABLE_TIMERS
 
-namespace spaint {
+namespace spaint
+{
 
 //#################### CONSTRUCTORS ####################
 
-SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                             TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
-: SLAMComponent(context, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode)
+SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
+    const SLAMContext_Ptr& context, const std::string& sceneID,
+    const ImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType,
+    const std::vector<std::string>& trackerParams, MappingMode mappingMode,
+    TrackingMode trackingMode) :
+    SLAMComponent(context, sceneID, imageSourceEngine, trackerType,
+        trackerParams, mappingMode, trackingMode)
 {
-  m_dataset.reset(new DatasetRGBDInfiniTAM(
-      "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
-      "/media/data/",
-      5,
-      1.0,
-      "DFBP",
-      true,
-      0,
-      false,
-      42));
+  m_dataset.reset(
+      new DatasetRGBDInfiniTAM(
+          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
+          "/media/data/", 5, 1.0, "DFBP", true, 0, false, 42));
 
   m_dataset->LoadForest();
 //  m_dataset->ResetNodeAndLeaves();
 
-  m_featureExtractor = FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DEVICE_CUDA);
+  m_featureExtractor =
+      FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
+          ITMLib::ITMLibSettings::DEVICE_CUDA);
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_leafImage.reset(new ITMIntImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
 }
 
 //#################### DESTRUCTOR ####################
-SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest() {}
+SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest()
+{
+}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(TrackingResult trackingResult)
+SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(
+    TrackingResult trackingResult)
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  const ITMShortImage_Ptr& inputRawDepthImage = slamState->get_input_raw_depth_image();
-  const ITMFloatImage_Ptr inputDepthImage(new ITMFloatImage(slamState->get_view()->depth->noDims, true, true));
-  inputDepthImage->SetFrom(slamState->get_view()->depth, ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
+  const ITMShortImage_Ptr& inputRawDepthImage =
+      slamState->get_input_raw_depth_image();
+  const ITMFloatImage_Ptr inputDepthImage(
+      new ITMFloatImage(slamState->get_view()->depth->noDims, true, true));
+  inputDepthImage->SetFrom(slamState->get_view()->depth,
+      ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
 
 //  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
-  const ITMUChar4Image_Ptr inputRGBImage(new ITMUChar4Image(slamState->get_view()->rgb->noDims, true, true));
-  inputRGBImage->SetFrom(slamState->get_view()->rgb, ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA);
+  const ITMUChar4Image_Ptr inputRGBImage(
+      new ITMUChar4Image(slamState->get_view()->rgb->noDims, true, true));
+  inputRGBImage->SetFrom(slamState->get_view()->rgb,
+      ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA);
   inputRGBImage->UpdateHostFromDevice();
 
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
-  const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
+  const VoxelRenderState_Ptr& liveVoxelRenderState =
+      slamState->get_live_voxel_render_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
   {
 #ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6, "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+    boost::timer::auto_cpu_timer t(6,
+        "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage, m_featureImage);
+    m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
+        m_featureImage);
   }
 
   std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
 
   {
 #ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6, "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+    boost::timer::auto_cpu_timer t(6,
+        "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
   }
@@ -94,21 +107,43 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   m_leafImage->UpdateHostFromDevice();
 
-  Vector2i px(84,46);
+  Vector2i px(84, 46);
   int linear_px = px.y * m_featureImage->noDims.width + px.x;
   const auto ptr = m_leafImage->GetData(MEMORYDEVICE_CPU);
 
-  std::cout << "Leaves for pixel " << px << ": ";// << ptr[0 * m_leafImage->noDims.width + linear_px] << " "
-  for(int treeIdx = 0; treeIdx < m_leafImage->noDims.height; ++treeIdx)
+  std::vector<size_t> leaf_indices;
+
+  std::cout << "Leaves for pixel " << px << ": "; // << ptr[0 * m_leafImage->noDims.width + linear_px] << " "
+  for (int treeIdx = 0; treeIdx < m_leafImage->noDims.height; ++treeIdx)
   {
-    std::cout << ptr[treeIdx * m_leafImage->noDims.width + linear_px] << " ";
+    leaf_indices.push_back(
+        ptr[treeIdx * m_leafImage->noDims.width + linear_px]);
+    std::cout << leaf_indices.back() << " ";
+  }
+
+  std::cout << std::endl;
+
+  // Get the corresponding ensemble prediction
+  boost::shared_ptr<EnsemblePrediction> prediction =
+      m_dataset->GetForest()->GetPredictionForLeaves(leaf_indices);
+
+  EnsemblePredictionGaussianMean* gm = ToEnsemblePredictionGaussianMean(prediction.get());
+  std::cout << "The prediction has " << gm->_modes.size() << " modes.\n";
+  for(int mode_idx = 0; mode_idx < gm->_modes.size(); ++mode_idx)
+  {
+    std::cout << "Mode " << mode_idx << " has " << gm->_modes[mode_idx].size() << " elements:\n";
+    for(int i = 0; i < gm->_modes[mode_idx].size(); ++i)
+    {
+      std::cout << "("<< gm->_modes[mode_idx][i]->_mean.transpose() << ") ";
+    }
+    std::cout << "\n";
   }
 
   std::cout << std::endl;
 
   return trackingResult;
 
-  if(trackingResult == TrackingResult::TRACKING_FAILED)
+  if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
     std::cout << "Tracking failed, trying to relocalize..." << std::endl;
 
@@ -160,11 +195,13 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     DatasetRGBD7Scenes::PoseCandidate pose;
 
     {
-      boost::timer::auto_cpu_timer t(6, "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+      boost::timer::auto_cpu_timer t(6,
+          "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
       pose = m_dataset->EstimatePose(rgbd);
     }
 
-    std::cout << "new impl, pose:\n" << std::get<0>(pose) << "\n" << std::endl;
+    std::cout << "new impl, pose:\n" << std::get < 0
+        > (pose) << "\n" << std::endl;
 
 //    // Now compute features
 //    std::vector<boost::shared_ptr<InputOutputData>> featuresBuffer;
@@ -198,12 +235,13 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     Matrix4f invPose;
     Eigen::Map<Eigen::Matrix4f> em(invPose.m);
-    em = std::get<0>(pose);
+    em = std::get < 0 > (pose);
 
     trackingState->pose_d->SetInvM(invPose);
 
     const bool resetVisibleList = true;
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
+        voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
     prepare_for_tracking(TRACK_VOXELS);
     m_trackingController->Track(trackingState.get(), view.get());
     trackingResult = trackingState->trackerResult;
@@ -230,15 +268,22 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(const ITMUChar4Image_Ptr &inputRGBImage, const ITMShortImage_Ptr &inputRawDepthImage) const
+cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
+    const ITMUChar4Image_Ptr &inputRGBImage,
+    const ITMShortImage_Ptr &inputRawDepthImage) const
 {
 #ifdef ENABLE_TIMERS
-  boost::timer::auto_cpu_timer t(6, "creating rgbd: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+  boost::timer::auto_cpu_timer t(6,
+      "creating rgbd: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
   // Create RGBD Mat wrappers to use in the forest
-  cv::Mat rgb = OpenCVUtil::make_rgb_image(inputRGBImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU), inputRGBImage->noDims.width, inputRGBImage->noDims.height);
-  cv::Mat depth(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_16SC1, inputRawDepthImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU));
+  cv::Mat rgb = OpenCVUtil::make_rgb_image(
+      inputRGBImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU),
+      inputRGBImage->noDims.width, inputRGBImage->noDims.height);
+  cv::Mat depth(inputRawDepthImage->noDims.height,
+      inputRawDepthImage->noDims.width, CV_16SC1,
+      inputRawDepthImage->GetData(MemoryDeviceType::MEMORYDEVICE_CPU));
 
   // scoreforests wants rgb data
   cv::cvtColor(rgb, rgb, CV_BGR2RGB);
@@ -248,7 +293,8 @@ cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(const ITMUChar4Image_Ptr 
   depth.convertTo(depth, CV_32F);
 
   // Dummy channel to fill the rgbd image
-  cv::Mat dummyFiller = cv::Mat::zeros(inputRawDepthImage->noDims.height, inputRawDepthImage->noDims.width, CV_32FC1);
+  cv::Mat dummyFiller = cv::Mat::zeros(inputRawDepthImage->noDims.height,
+      inputRawDepthImage->noDims.width, CV_32FC1);
 
   std::vector<cv::Mat> channels;
   cv::split(rgb, channels);

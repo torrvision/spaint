@@ -33,7 +33,7 @@ inline void evaluate_forest(const GPUForestNode* forestTexture, int nbTrees,
     }
 
     // leafData has one row per tree
-    leafData[treeIdx * leafSize.width + linear_feature_idx] = currentNodeIdx;
+    leafData[treeIdx * leafSize.width + linear_feature_idx] = node.leafIdx;
   }
 }
 }
