@@ -104,6 +104,13 @@ IF(WITH_OPENCV)
 ENDIF()
 
 ##
+SET(geom_headers
+include/spaint/geom/DualNumber.h
+include/spaint/geom/DualQuaternion.h
+include/spaint/geom/Screw.h
+)
+
+##
 SET(imageprocessing_sources)
 SET(imageprocessing_headers)
 
@@ -652,6 +659,7 @@ ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
 ${fiducials_headers}
+${geom_headers}
 ${imageprocessing_headers}
 ${imagesources_headers}
 ${markers_headers}
@@ -749,6 +757,7 @@ SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_heade
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(fiducials FILES ${fiducials_sources} ${fiducials_headers})
+SOURCE_GROUP(geom FILES ${geom_headers})
 SOURCE_GROUP(imageprocessing FILES ${imageprocessing_sources} ${imageprocessing_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})

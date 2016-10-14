@@ -9,11 +9,11 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include <ORUtils/DualQuaternion.h>
-using namespace ORUtils;
-
 #include <tvgutil/misc/AttitudeUtil.h>
 using namespace tvgutil;
+
+#include "geom/DualQuaternion.h"
+using namespace spaint;
 
 // TEMPORARY
 template <typename T>
