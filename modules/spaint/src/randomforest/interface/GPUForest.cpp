@@ -52,7 +52,7 @@ int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
   // The assumption is that output_idx is already reserved for the current node
   if (node->IsALeaf())
   {
-    gpuNode.leafIdx = 1; // TODO figure out what to put here
+    gpuNode.leafIdx = node_idx; // Node index in the original tree, could be used to get the modes from there
     gpuNode.leftChildIdx = -1; // Is a leaf
     gpuNode.featureIdx = 0;
     gpuNode.featureThreshold = 0.f;
