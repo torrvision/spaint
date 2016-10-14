@@ -329,6 +329,10 @@ SET(randomforest_interface_headers
 include/spaint/randomforest/interface/GPUForest.h
 )
 
+SET(randomforest_shared_headers
+include/spaint/randomforest/shared/GPUForest_Shared.h
+)
+
 ##
 SET(sampling_sources
 src/sampling/VoxelSamplerFactory.cpp
@@ -664,6 +668,7 @@ ${propagation_interface_headers}
 ${propagation_shared_headers}
 ${randomforest_headers}
 ${randomforest_interface_headers}
+${randomforest_shared_headers}
 ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}

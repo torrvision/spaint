@@ -20,7 +20,7 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nTrees, maxNbNodes));
   m_forestImage->Clear();
 
-  std::cout << "Forest texture has sivirtualze: " << m_forestImage->noDims
+  std::cout << "Forest texture has size: " << m_forestImage->noDims
       << std::endl;
 
   // Fill the nodes
@@ -34,8 +34,8 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
     // We set the first free entry to 1 since we reserve 0 for the root
     int first_free_idx = convert_node(tree, 0, treeIdx, nTrees, 0, 1,
         forestData);
-    std::cout << "Converted tree " << treeIdx << ", had " << nbNodes
-        << ", first free entry is: " << first_free_idx << std::endl;
+    std::cout << "Converted tree " << treeIdx << ", had " << nbNodes << "nodes"
+        << std::endl;
   }
 }
 
