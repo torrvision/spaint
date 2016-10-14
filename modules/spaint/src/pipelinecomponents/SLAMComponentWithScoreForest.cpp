@@ -43,10 +43,11 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
       42));
 
   m_dataset->LoadForest();
-  m_dataset->ResetNodeAndLeaves();
+//  m_dataset->ResetNodeAndLeaves();
 
   m_featureExtractor = FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DEVICE_CUDA);
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(1,1), true, true)); // Dummy size just to allocate something
+  m_leafImage.reset(new ITMIntImage(Vector2i(1,1), true, true)); // Dummy size just to allocate something
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
 }
 
@@ -80,6 +81,31 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage, m_featureImage);
   }
 
+  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6, "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
+  }
+
+  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
+
+  m_leafImage->UpdateHostFromDevice();
+
+  Vector2i px(84,46);
+  int linear_px = px.y * m_featureImage->noDims.width + px.x;
+  const auto ptr = m_leafImage->GetData(MEMORYDEVICE_CPU);
+
+  std::cout << "Leaves for pixel " << px << ": ";// << ptr[0 * m_leafImage->noDims.width + linear_px] << " "
+  for(int treeIdx = 0; treeIdx < m_leafImage->noDims.height; ++treeIdx)
+  {
+    std::cout << ptr[treeIdx * m_leafImage->noDims.width + linear_px] << " ";
+  }
+
+  std::cout << std::endl;
+
   return trackingResult;
 
   if(trackingResult == TrackingResult::TRACKING_FAILED)
@@ -88,13 +114,15 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
 //    boost::shared_ptr<EnsemblePredictionGaussianMean> prediction;
-//
+
 //    {
 //      boost::timer::auto_cpu_timer t(6, "evaluating pixel: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 //
 //      boost::shared_ptr<InputOutputData> feature = m_dataset->ComputeFeaturesForPixel(rgbd, 100, 100);
 //      prediction = boost::dynamic_pointer_cast<EnsemblePredictionGaussianMean>(m_dataset->PredictForFeature(feature));
 //    }
+//
+//    return trackingResult;
 //
 //    std::cout << "Prediction has " << prediction->_modes.size() << " modes." << std::endl;
 //
@@ -139,7 +167,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     std::cout << "new impl, pose:\n" << std::get<0>(pose) << "\n" << std::endl;
 
 //    // Now compute features
-//    std::vector<InputOutputData *> featuresBuffer;
+//    std::vector<boost::shared_ptr<InputOutputData>> featuresBuffer;
 //
 //    {
 //      boost::timer::auto_cpu_timer t(6, "computing features: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -184,18 +212,18 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 //    for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
 //    for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
   }
-  else if (trackingResult == TrackingResult::TRACKING_GOOD)
-  {
-    cv::Matx44f invPose(trackingState->pose_d->GetInvM().m);
-    cv::Mat cvInvPose(invPose.t()); // Matrix4f is col major
-
-    cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
-
-    {
-      boost::timer::auto_cpu_timer t(6, "integrating new image: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-      m_dataset->AddImageFeaturesToForest(rgbd, cvInvPose);
-    }
-  }
+//  else if (trackingResult == TrackingResult::TRACKING_GOOD)
+//  {
+//    cv::Matx44f invPose(trackingState->pose_d->GetInvM().m);
+//    cv::Mat cvInvPose(invPose.t()); // Matrix4f is col major
+//
+//    cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
+//
+//    {
+//      boost::timer::auto_cpu_timer t(6, "integrating new image: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//      m_dataset->AddImageFeaturesToForest(rgbd, cvInvPose);
+//    }
+//  }
 
   return trackingResult;
 }
