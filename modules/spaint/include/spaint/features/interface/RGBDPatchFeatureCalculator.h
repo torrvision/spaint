@@ -27,6 +27,9 @@ struct RGBDPatchFeature
       float rgb[RGB_FEATURE_COUNT];
     };
   };
+
+  Vector4f position;
+  Vector4f colour;
 };
 
 typedef ORUtils::Image<RGBDPatchFeature> RGBDPatchFeatureImage;
@@ -41,6 +44,7 @@ public:
 
   virtual void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
       const ITMFloatImage_CPtr &depth,
+      const Vector4f &intrinsics,
       RGBDPatchFeatureImage_Ptr &features) const = 0;
 
 protected:

@@ -84,13 +84,16 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
+  const Vector4f depthIntrinsics =
+      view->calib.intrinsics_d.projectionParamsSimple.all;
+
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
-        m_featureImage);
+        depthIntrinsics, m_featureImage);
   }
 
 //  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;

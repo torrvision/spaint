@@ -11,7 +11,7 @@ namespace spaint
 __global__ void ck_compute_colour_feature(RGBDPatchFeature *features,
     const Vector4u *rgb, const float *depth, const Vector4i *offsets_rgb,
     const uchar *channels_rgb, Vector2i img_size, Vector2i out_size,
-    int feature_step, bool normalize)
+    Vector4f intrinsics, int feature_step, bool normalize)
 {
   const Vector2i xy_out(threadIdx.x + blockIdx.x * blockDim.x,
       threadIdx.y + blockIdx.y * blockDim.y);
@@ -22,7 +22,7 @@ __global__ void ck_compute_colour_feature(RGBDPatchFeature *features,
   const Vector2i xy_in(xy_out.x * feature_step, xy_out.y * feature_step);
 
   compute_colour_patch_feature(features, rgb, depth, offsets_rgb, channels_rgb,
-      img_size, out_size, normalize, xy_in, xy_out);
+      img_size, out_size, intrinsics, normalize, xy_in, xy_out);
 }
 
 __global__ void ck_compute_depth_feature(RGBDPatchFeature *features,
@@ -50,7 +50,7 @@ RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
 
 void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
     const ITMUChar4Image_CPtr &rgb_image, const ITMFloatImage_CPtr &depth_image,
-    boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > &features_image) const
+    const Vector4f &intrinsics, RGBDPatchFeatureImage_Ptr &features_image) const
 {
   const Vector4u *rgb = rgb_image->GetData(MEMORYDEVICE_CUDA);
   const float *depth = depth_image->GetData(MEMORYDEVICE_CUDA);
@@ -75,8 +75,10 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
   dim3 gridSize((out_dims.x + blockSize.x - 1) / blockSize.x,
       (out_dims.y + blockSize.y - 1) / blockSize.y);
 
+  // The colour feature calculator also computed the 3D pose of the point
+  // and fills the colour in the feature struct. Intrinsics are only needed here
   ck_compute_colour_feature<<<gridSize, blockSize>>>(features, rgb, depth, offsets_rgb, channels_rgb,
-      in_dims, out_dims, m_featureStep, m_normalizeRgb);
+      in_dims, out_dims, intrinsics, m_featureStep, m_normalizeRgb);
   cudaDeviceSynchronize();
 
   ck_compute_depth_feature<<<gridSize, blockSize>>>(features, depth, offsets_depth,

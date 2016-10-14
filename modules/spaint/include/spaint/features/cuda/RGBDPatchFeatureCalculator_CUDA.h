@@ -10,14 +10,14 @@
 
 namespace spaint
 {
-class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator
+class RGBDPatchFeatureCalculator_CUDA: public RGBDPatchFeatureCalculator
 {
 public:
   RGBDPatchFeatureCalculator_CUDA();
 
   virtual void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
-      const ITMFloatImage_CPtr &depth,
-      boost::shared_ptr<ORUtils::Image<RGBDPatchFeature> > &features) const;
+      const ITMFloatImage_CPtr &depth, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage_Ptr &features) const;
 };
 }
 

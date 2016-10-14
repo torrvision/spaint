@@ -13,14 +13,33 @@ _CPU_AND_GPU_CODE_
 inline void compute_colour_patch_feature(RGBDPatchFeature *features,
     const Vector4u *rgb, const float *depths, const Vector4i *offsets_rgb,
     const uchar *channels_rgb, const Vector2i &img_size,
-    const Vector2i &out_size, bool normalize, const Vector2i &xy_in,
-    const Vector2i &xy_out)
+    const Vector2i &out_size, const Vector4f &intrinsics, bool normalize,
+    const Vector2i &xy_in, const Vector2i &xy_out)
 {
   const int linear_idx_in = xy_in.y * img_size.x + xy_in.x;
   const float depth = depths[linear_idx_in];
 
+  const int linear_idx_out = xy_out.y * out_size.x + xy_out.x;
+  RGBDPatchFeature &out_feature = features[linear_idx_out];
+
   if (depth <= 0.f)
+  {
+    // Mark as invalid
+    out_feature.position.w = -1.f;
+    out_feature.colour.w = -1.f;
     return;
+  }
+
+  // Compute position in camera frame
+  out_feature.position.x = depth
+      * ((static_cast<float>(xy_in.x) - intrinsics.z) / intrinsics.x);
+  out_feature.position.y = depth
+      * ((static_cast<float>(xy_in.y) - intrinsics.w) / intrinsics.y);
+  out_feature.position.z = depth;
+  out_feature.position.w = 1.0f;
+
+  // Copy the colour for future reference
+  out_feature.colour = rgb[linear_idx_in].toFloat();
 
   for (int feat_idx = 0; feat_idx < RGBDPatchFeature::RGB_FEATURE_COUNT;
       ++feat_idx)
@@ -56,8 +75,7 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
 //    features[linear_idx].rgb[feat_idx] =
 //        rgb[linear_1][channel] - rgb[linear_2][channel];
 
-    const int linear_idx_out = xy_out.y * out_size.x + xy_out.x;
-    features[linear_idx_out].rgb[feat_idx] = rgb[linear_1][channel]
+    out_feature.rgb[feat_idx] = rgb[linear_1][channel]
         - rgb[linear_idx_in][channel];
   }
 }
