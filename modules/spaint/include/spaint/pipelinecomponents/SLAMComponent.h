@@ -77,6 +77,9 @@ protected:
   /** The dense voxel mapper. */
   DenseMapper_Ptr m_denseVoxelMapper;
 
+  /** The engine used to perform low-level image processing operations. */
+  LowLevelEngine_Ptr m_lowLevelEngine;
+
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
 
@@ -115,9 +118,6 @@ private:
 
   /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
   size_t m_keyframeDelay;
-
-  /** The engine used to perform low-level image processing operations. */
-  LowLevelEngine_Ptr m_lowLevelEngine;
 
   /** The mapping mode to use. */
   MappingMode m_mappingMode;

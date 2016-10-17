@@ -18,6 +18,8 @@
 #include "ocv/OpenCVUtil.h"
 #include "randomforest/cuda/GPUForest_CUDA.h"
 
+#include "Helpers.hpp"
+
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
@@ -55,6 +57,12 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
   // Set params as in scoreforests
   m_kInitRansac = 1024;
+  m_nbPointsForKabschBoostrap = 3;
+  m_useAllModesPerLeafInPoseHypothesisGeneration = true;
+  m_checkMinDistanceBetweenSampledModes = true;
+  m_minDistanceBetweenSampledModes = 0.3f;
+  m_checkRigidTransformationConstraint = true;
+  m_translationErrorMaxForCorrectPose = 0.05f;
 }
 
 //#################### DESTRUCTOR ####################
@@ -92,6 +100,15 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const Vector4f depthIntrinsics =
       view->calib.intrinsics_d.projectionParamsSimple.all;
 
+  if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
+      < m_nbPointsForKabschBoostrap)
+  {
+    std::cout
+        << "Number of valid depth pixels insufficient to perform relocalization."
+        << std::endl;
+    return trackingResult;
+  }
+
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -113,6 +130,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
 //  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
 
+  m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
   m_leafImage->UpdateHostFromDevice();
 
   // Generate pose candidates with the new implementation
@@ -125,6 +143,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #endif
     generate_pose_candidates(poseCandidates);
   }
+
+  std::cout << "Generated " << poseCandidates.size() << " initial candidates."
+      << std::endl;
+
+  return trackingResult;
 
   // Create ensemble predictions
   std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
@@ -399,9 +422,13 @@ cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
 }
 
 void SLAMComponentWithScoreForest::generate_pose_candidates(
-    std::vector<PoseCandidate> &poseCandidates) const
+    std::vector<PoseCandidate> &poseCandidates)
 {
   poseCandidates.reserve(m_kInitRansac);
+
+  // Clear old predictions and prepare array for new results
+  m_featurePredictions.clear();
+  m_featurePredictions.resize(m_featureImage->dataSize);
 
   const int nbThreads = 12;
 
@@ -434,276 +461,281 @@ void SLAMComponentWithScoreForest::generate_pose_candidates(
 }
 
 bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
-    std::mt19937 &eng) const
+    std::mt19937 &eng)
 {
-  return false;
-//  Eigen::MatrixXf worldPoints(3, _nbPointsForKabschBoostraps);
-//  Eigen::MatrixXf localPoints(3, _nbPointsForKabschBoostraps);
-//  std::uniform_int_distribution<int> col_index_generator(0,
-//      rgbd_img.cols / _scaleTest - 1);
-//  std::uniform_int_distribution<int> row_index_generator(0,
-//      rgbd_img.rows / _scaleTest - 1);
-//  Eigen::MatrixXf tmpCameraModel;
-//  std::vector<std::pair<int, int>> tmpInliers;
-//
-//  // TODO check validity outside this call
-//
-//  //  int nbValidPixels = 0;
-//  //
-//  //  for (int p = 0; p < predictions.size(); ++p)
-//  //  {
-//  //    int x = p % (rgbd_img.cols / _scaleTest);
-//  //    int y = p / (rgbd_img.cols / _scaleTest);
-//  //    if (predictions[p] && Helpers::IsAValidKinectDepthMeasurement(
-//  //                              rgbd_img.at<Vec9f>(y * _scaleTest, x * _scaleTest).val[5]))
-//  //    {
-//  //      if (_useFeatureWhichMightRequestOutOfImagePixels)
-//  //        ++nbValidPixels;
-//  //      else if (!FeatureMightRequestOutOfImagePixels(rgbd_img, x * _scaleTest, y * _scaleTest))
-//  //        ++nbValidPixels;
-//  //    }
-//  //  }
-//  //
-//  //  if (nbValidPixels < _nbPointsForKabschBoostraps)
-//  //    Helpers::ExitWithMessage("DatasetRGBD7Scenes::GeneratePoseHypothesis: not enough points to "
-//  //                             "generate any pose candidate");
-//
-//  bool foundIsometricMapping = false;
-//  const int maxIterationsOuter = 20;
-//  int iterationsOuter = 0;
-//
-//  while (!foundIsometricMapping && iterationsOuter < maxIterationsOuter)
-//  {
-//    ++iterationsOuter;
-//    std::vector<std::tuple<int, int, int>> selectedPixelsAndModes;
-//
-//    const int maxIterationsInner = 6000;
-//    int iterationsInner = 0;
-//    while (selectedPixelsAndModes.size() != _nbPointsForKabschBoostraps
-//        && iterationsInner < maxIterationsInner)
-//    {
-//      const int x = col_index_generator(eng) * _scaleTest;
-//      const int y = row_index_generator(eng) * _scaleTest;
+  Eigen::MatrixXf worldPoints(3, m_nbPointsForKabschBoostrap);
+  Eigen::MatrixXf localPoints(3, m_nbPointsForKabschBoostrap);
+
+  std::uniform_int_distribution<int> col_index_generator(0,
+      m_featureImage->noDims.width - 1);
+  std::uniform_int_distribution<int> row_index_generator(0,
+      m_featureImage->noDims.height - 1);
+
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+  const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
+
+  bool foundIsometricMapping = false;
+  const int maxIterationsOuter = 20;
+  int iterationsOuter = 0;
+
+  while (!foundIsometricMapping && iterationsOuter < maxIterationsOuter)
+  {
+    ++iterationsOuter;
+    std::vector<std::tuple<int, int, int>> selectedPixelsAndModes;
+
+    const int maxIterationsInner = 6000;
+    int iterationsInner = 0;
+    while (selectedPixelsAndModes.size() != m_nbPointsForKabschBoostrap
+        && iterationsInner < maxIterationsInner)
+    {
+      const int x = col_index_generator(eng);
+      const int y = row_index_generator(eng);
+      const int linearFeatureIdx = y * m_featureImage->noDims.width + x;
+      const RGBDPatchFeature &selectedFeature =
+          patchFeaturesData[linearFeatureIdx];
+
 //      const int cache_key = y * rgbd_img.cols + x;
-//
 //      const float depth_mm = rgbd_img.at < Vec9f > (y, x).val[5];
-//
-//      if (!Helpers::IsAValidKinectDepthMeasurement(depth_mm))
+
+      if (selectedFeature.position.w < 0.f) // Invalid feature
+        continue;
+
+      boost::shared_ptr<EnsemblePredictionGaussianMean> selectedPrediction;
+
+//#pragma omp critical
+      selectedPrediction = m_featurePredictions[linearFeatureIdx];
+
+      if (!selectedPrediction)
+      {
+        // Get predicted leaves
+        std::vector<size_t> featureLeaves(m_leafImage->noDims.height);
+
+        for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
+            ++tree_idx)
+        {
+          featureLeaves[tree_idx] = leafData[tree_idx
+              * m_leafImage->noDims.width + linearFeatureIdx];
+        }
+
+        auto p = m_dataset->GetForest()->GetPredictionForLeaves(featureLeaves);
+        selectedPrediction = boost::dynamic_pointer_cast<
+            EnsemblePredictionGaussianMean>(p);
+
+        // Store prediction in the vector for future use
+#pragma omp critical
+        m_featurePredictions[linearFeatureIdx] = selectedPrediction;
+      }
+
+      // TODO: the prediction might be null if there are no modes
+      // not checking yet to get a crash if this happens
+//      if(!selectedPrediction)
 //        continue;
-//
-//      boost::shared_ptr<EnsemblePrediction> pred_;
-//
-//// Read only, critical section might not be needed
+
+      ++iterationsInner;
+
+      // Apparently the scoreforests code uses only modes from the first tree to generate hypotheses...
+      // TODO: investigate
+      int nbModesInFirstTree = -1;
+      //int nbModesInFirstTree = selectedPrediction->_modes.size() // Alternatively, use all modes
+
+      {
+        // Apparently the modes are sorted with descending number of inliers (PER TREE)
+        // so when the number of points for a mode is greater than the previous
+        // it means we are seeing a mode of the next tree
+        int prevNbPointsPerMode = INT_MAX;
+        bool found = false;
+
+        for (int i = 0; i < selectedPrediction->_modes.size(); ++i)
+        {
+          if (selectedPrediction->_modes[i][0]->_nbPoints > prevNbPointsPerMode)
+          {
+            nbModesInFirstTree = i;
+            found = true;
+            break;
+          }
+
+          prevNbPointsPerMode = selectedPrediction->_modes[i][0]->_nbPoints;
+        }
+
+        if (!found) // There must be only a single tree...
+        {
+          nbModesInFirstTree = selectedPrediction->_modes.size();
+        }
+      }
+
+      int selectedModeIdx = 0;
+      if (m_useAllModesPerLeafInPoseHypothesisGeneration)
+      {
+        std::uniform_int_distribution<int> mode_generator(0,
+            nbModesInFirstTree - 1);
+        selectedModeIdx = mode_generator(eng);
+      }
+
+      // This is the first pixel, check that the pixel colour corresponds with the selected mode
+      if (selectedPixelsAndModes.empty())
+      {
+        bool consistentColour = true;
+
+        for (int c = 0; c < 3; ++c)
+        {
+          if (std::abs(
+              selectedFeature.colour.v[c]
+                  - selectedPrediction->_modes[selectedModeIdx][1]->_mean(c))
+              > 30)
+          {
+            consistentColour = false;
+            break;
+          }
+        }
+
+        if (!consistentColour)
+          continue;
+      }
+
+      // if (false)
+      if (m_checkMinDistanceBetweenSampledModes)
+      {
+        const Eigen::VectorXd worldPt =
+            selectedPrediction->_modes[selectedModeIdx][0]->_mean;
+
+        // Check that this mode is far enough from the other modes
+        bool farEnough = true;
+
+        for (int idxOther = 0; idxOther < selectedPixelsAndModes.size();
+            ++idxOther)
+        {
+          int xOther, yOther, modeIdxOther;
+          std::tie(xOther, yOther, modeIdxOther) =
+              selectedPixelsAndModes[idxOther];
+
+          const int linearIdxOther = yOther * m_featureImage->noDims.width
+              + xOther;
+
+          boost::shared_ptr<EnsemblePredictionGaussianMean> predOther;
+
+          // Assumption is that since it's already in selectedPixelsAndModes it must be valid
 //#pragma omp critical
-//      {
-//        if (predictions_cache.find(cache_key) != predictions_cache.end())
-//        {
-//          pred_ = std::get < 1 > (predictions_cache[cache_key]);
-//        }
-//      }
-//
-//      if (!pred_)
-//      {
-//        // Compute the features and evaluate the forest
-//        auto feature = ComputeFeaturesForPixel(rgbd_img, x, y);
-//        pred_ = PredictForFeature(feature);
-//
-//// Critical section to insert the value in the cache
+          predOther = m_featurePredictions[linearIdxOther];
+
+          Eigen::VectorXd worldPtOther =
+              predOther->_modes[modeIdxOther][0]->_mean;
+
+          float distOther = (worldPtOther - worldPt).norm();
+          if (distOther < m_minDistanceBetweenSampledModes)
+          {
+            farEnough = false;
+            break;
+          }
+        }
+
+        if (!farEnough)
+          continue;
+      }
+
+      // isometry?
+      // if (false)
+      // if (true)
+      if (m_checkRigidTransformationConstraint)
+      {
+        bool violatesConditions = false;
+
+        for (int m = 0;
+            m < selectedPixelsAndModes.size() && !violatesConditions; ++m)
+        {
+          int xFirst, yFirst, modeIdxFirst;
+          std::tie(xFirst, yFirst, modeIdxFirst) = selectedPixelsAndModes[m];
+
+          const int linearIdxOther = yFirst * m_featureImage->noDims.width
+              + xFirst;
+          boost::shared_ptr<EnsemblePredictionGaussianMean> predFirst;
+
+          // Assumption is that since it's already in selectedPixelsAndModes it must be valid
 //#pragma omp critical
-//        {
-//          predictions_cache[cache_key] = std::make_tuple(feature, pred_);
-//        }
-//      }
-//
-//      if (!pred_)
-//        continue;
-//
-//      if (!_useFeatureWhichMightRequestOutOfImagePixels
-//          && FeatureMightRequestOutOfImagePixels(rgbd_img, x, y))
-//        continue;
-//
-//      ++iterationsInner;
-//
-//      const EnsemblePredictionGaussianMean *pred =
-//          ToEnsemblePredictionGaussianMean(pred_.get());
-//
-//      int nbModesInFirstTree = -1;
-//
-//      {
-//        int prevNbModes = INT_MAX;
-//        bool found = false;
-//
-//        for (int i = 0; i < pred->_modes.size(); ++i)
-//        {
-//          if (pred->_modes[i][0]->_nbPoints > prevNbModes)
-//          {
-//            nbModesInFirstTree = i;
-//            found = true;
-//            break;
-//          }
-//          prevNbModes = pred->_modes[i][0]->_nbPoints;
-//        }
-//
-//        if (!found)
-//        {
-//          nbModesInFirstTree = pred->_modes.size();
-//        }
-//      }
-//
-//      int modeIdx = 0;
-//      // nbModesInFirstTree = _pred->_modes.size();
-//      if (_useAllModesPerLeafInPoseHypothesisGeneration)
-//      {
-//        // std::uniform_int_distribution<int> mode_generator(0, pred->_modes.size() - 1);
-//        std::uniform_int_distribution<int> mode_generator(0,
-//            nbModesInFirstTree - 1);
-//        // Eigen::VectorXd worldPt = pred->_modes[0]._mean;
-//        modeIdx = mode_generator(eng);
-//      }
-//
-//      if (selectedPixelsAndModes.empty())
-//      {
-//        bool consistentColour = true;
-//        for (int c = 0; c < 3; ++c)
-//        {
-//          if (std::abs(
-//              rgbd_img.at < Vec9f
-//                  > (y, x).val[c] - pred->_modes[modeIdx][1]->_mean(c)) > 30)
-//          {
-//            consistentColour = false;
-//            break;
-//          }
-//        }
-//
-//        if (!consistentColour)
-//          continue;
-//      }
-//
-//      // if (false)
-//      if (_checkMinDistanceBetweenSampledModes)
-//      {
-//        Eigen::VectorXd worldPt = pred->_modes[modeIdx][0]->_mean;
-//
-//        // Check that this mode is far enough from the other modes
-//        bool farEnough = true;
-//        for (int i = 0; i < selectedPixelsAndModes.size(); ++i)
-//        {
-//          int xOther, yOther, modeIdxOther;
-//          std::tie(xOther, yOther, modeIdxOther) = selectedPixelsAndModes[i];
-//
-//          const int cache_key_other = yOther * rgbd_img.cols + xOther;
-//          EnsemblePredictionGaussianMean *predOther;
-//#pragma omp critical
-//          {
-//            predOther = ToEnsemblePredictionGaussianMean(
-//                std::get < 1 > (predictions_cache[cache_key_other]).get());
-//          }
-//
-//          Eigen::VectorXd worldPtOther =
-//              predOther->_modes[modeIdxOther][0]->_mean;
-//
-//          float distOther = (worldPtOther - worldPt).norm();
-//          if (distOther < _minDistanceBetweenSampledModes)
-//          {
-//            farEnough = false;
-//            break;
-//          }
-//        }
-//
-//        if (!farEnough)
-//          continue;
-//      }
-//
-//      // isometry?
-//      // if (false)
-//      // if (true)
-//      if (_checkRigidTransformationConstraint)
-//      {
-//        bool violatesConditions = false;
-//
-//        for (int m = 0;
-//            m < selectedPixelsAndModes.size() && !violatesConditions; ++m)
-//        {
-//          int xFirst, yFirst, modeIdxFirst;
-//          std::tie(xFirst, yFirst, modeIdxFirst) = selectedPixelsAndModes[m];
-//
-//          const int cache_key_first = yFirst * rgbd_img.cols + xFirst;
-//          EnsemblePredictionGaussianMean *predFirst;
-//#pragma omp critical
-//          {
-//            predFirst = ToEnsemblePredictionGaussianMean(
-//                std::get < 1 > (predictions_cache[cache_key_first]).get());
-//          }
-//
-//          Eigen::VectorXd worldPtFirst =
-//              predFirst->_modes[modeIdxFirst][0]->_mean;
-//          Eigen::VectorXd worldPtCur = pred->_modes[modeIdx][0]->_mean;
-//
-//          float distWorld = (worldPtFirst - worldPtCur).norm();
-//
-//          Eigen::VectorXf localPred = Helpers::DepthPixelToLocalWorld(xFirst,
-//              yFirst, rgbd_img.at < Vec9f > (yFirst, xFirst).val[5] / 1000.0f);
-//          Eigen::VectorXf localCur = Helpers::DepthPixelToLocalWorld(x, y,
-//              rgbd_img.at < Vec9f > (y, x).val[5] / 1000.0f);
-//
-//          float distLocal = (localPred - localCur).norm();
-//
-//          if (distLocal < _minDistanceBetweenSampledModes)
-//            violatesConditions = true;
-//
-//          if (fabs(distLocal - distWorld)
-//              > 0.5f * this->_translationErrorMaxForCorrectPose)
-//            violatesConditions = true;
-//        }
-//
-//        if (violatesConditions)
-//          continue;
-//      }
-//
-//      selectedPixelsAndModes.push_back(
-//          std::tuple<int, int, int>(x, y, modeIdx));
+          predFirst = m_featurePredictions[linearIdxOther];
+
+          Eigen::VectorXd worldPtFirst =
+              predFirst->_modes[modeIdxFirst][0]->_mean;
+          Eigen::VectorXd worldPtCur =
+              selectedPrediction->_modes[selectedModeIdx][0]->_mean;
+
+          float distWorld = (worldPtFirst - worldPtCur).norm();
+
+          Eigen::VectorXf localPred = Eigen::Map<const Eigen::Vector3f>(
+              patchFeaturesData[linearIdxOther].position.v);
+          Eigen::VectorXf localCur = Eigen::Map<const Eigen::Vector3f>(
+              selectedFeature.position.v);
+
+          float distLocal = (localPred - localCur).norm();
+
+          if (distLocal < m_minDistanceBetweenSampledModes)
+            violatesConditions = true;
+
+          if (std::abs(distLocal - distWorld)
+              > 0.5f * m_translationErrorMaxForCorrectPose)
+          {
+            violatesConditions = true;
+          }
+        }
+
+        if (violatesConditions)
+          continue;
+      }
+
+      selectedPixelsAndModes.push_back(
+          std::tuple<int, int, int>(x, y, selectedModeIdx));
 //      iterationsInner = 0;
-//    }
-//
-//    if (selectedPixelsAndModes.size() != this->_nbPointsForKabschBoostraps)
-//      return false;
-//
-//    tmpInliers.clear();
-//    for (int s = 0; s < selectedPixelsAndModes.size(); ++s)
-//    {
-//      int x, y, modeIdx;
-//      std::tie(x, y, modeIdx) = selectedPixelsAndModes[s];
-//      const int cache_key = y * rgbd_img.cols + x;
-//
-//      Eigen::VectorXf localPt = Helpers::DepthPixelToLocalWorld(x, y,
-//          rgbd_img.at < Vec9f > (y, x).val[5] / 1000.0f);
-//
-//      EnsemblePredictionGaussianMean *pred;
+    }
+
+//    std::cout << "Inner iterations: " << iterationsInner << std::endl;
+
+    // Reached limit of iterations
+    if (selectedPixelsAndModes.size() != m_nbPointsForKabschBoostrap)
+      return false;
+
+    std::vector<std::pair<int, int>> tmpInliers;
+    for (int s = 0; s < selectedPixelsAndModes.size(); ++s)
+    {
+      int x, y, modeIdx;
+      std::tie(x, y, modeIdx) = selectedPixelsAndModes[s];
+      const int linearIdx = y * m_featureImage->noDims.width + x;
+
+      Eigen::VectorXf localPt = Eigen::Map<const Eigen::Vector3f>(
+          patchFeaturesData[linearIdx].position.v);
+
+      boost::shared_ptr<EnsemblePredictionGaussianMean> pred;
 //#pragma omp critical
-//      {
-//        pred = ToEnsemblePredictionGaussianMean(
-//            std::get < 1 > (predictions_cache[cache_key]).get());
-//      }
-//
-//      Eigen::VectorXd worldPt = pred->_modes[modeIdx][0]->_mean;
-//
-//      for (int idx = 0; idx < 3; ++idx)
-//      {
-//        localPoints(idx, s) = localPt(idx);
-//        worldPoints(idx, s) = static_cast<float>(worldPt(idx));
-//      }
-//      tmpInliers.push_back(std::pair<int, int>(cache_key, modeIdx));
-//    }
-//
-//    tmpCameraModel = Helpers::Kabsch(localPoints, worldPoints);
-//
-//    foundIsometricMapping = true;
-//    res = std::make_tuple(tmpCameraModel, tmpInliers, 0.0f, -1);
-//  }
-//
-//  if (iterationsOuter < maxIterationsOuter)
-//    return true;
-//  return false;
+      pred = m_featurePredictions[linearIdx];
+
+      Eigen::VectorXd worldPt = pred->_modes[modeIdx][0]->_mean;
+
+      for (int idx = 0; idx < 3; ++idx)
+      {
+        localPoints(idx, s) = localPt(idx);
+        worldPoints(idx, s) = static_cast<float>(worldPt(idx));
+      }
+
+      tmpInliers.push_back(std::pair<int, int>(linearIdx, modeIdx));
+    }
+
+    Eigen::Matrix4f tmpCameraModel;
+
+    {
+//#ifdef ENABLE_TIMERS
+//      boost::timer::auto_cpu_timer t(6,
+//          "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+      tmpCameraModel = Helpers::Kabsch(localPoints, worldPoints);
+    }
+
+    foundIsometricMapping = true;
+    res = std::make_tuple(tmpCameraModel, tmpInliers, 0.0f, -1);
+  }
+
+  if (iterationsOuter < maxIterationsOuter)
+    return true;
+
+  return false;
 }
 
 }

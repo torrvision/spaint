@@ -64,9 +64,8 @@ protected:
 private:
   cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb,
       const ITMShortImage_Ptr &depth) const;
-  void generate_pose_candidates(
-      std::vector<PoseCandidate> &poseCandidates) const;
-  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng) const;
+  void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
+  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -76,10 +75,16 @@ private:
   RGBDPatchFeatureImage_Ptr m_featureImage;
   ITMIntImage_Ptr m_leafImage;
   GPUForest_Ptr m_gpuForest;
+  std::vector<boost::shared_ptr<EnsemblePredictionGaussianMean>> m_featurePredictions;
 
   // Member variables from scoreforests
   size_t m_kInitRansac;
-
+  int m_nbPointsForKabschBoostrap;
+  bool m_useAllModesPerLeafInPoseHypothesisGeneration;
+  bool m_checkMinDistanceBetweenSampledModes;
+  float m_minDistanceBetweenSampledModes;
+  bool m_checkRigidTransformationConstraint;
+  float m_translationErrorMaxForCorrectPose;
 };
 
 //#################### TYPEDEFS ####################
