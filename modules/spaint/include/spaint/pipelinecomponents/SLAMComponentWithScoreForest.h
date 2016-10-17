@@ -66,6 +66,17 @@ private:
       const ITMShortImage_Ptr &depth) const;
   void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
+  PoseCandidate estimate_pose(std::vector<PoseCandidate> &candidates);
+  void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
+      std::vector<std::pair<int, int>> &sampledPixelIdx, std::mt19937 &eng,
+      int batchSize);
+  void update_inliers_for_optimization(
+      const std::vector<std::pair<int, int>> &sampledPixelIdx,
+      std::vector<PoseCandidate> &poseCandidates) const;
+  void compute_and_sort_energies(
+      std::vector<PoseCandidate> &poseCandidates) const;
+  float compute_pose_energy(const Eigen::Matrix4f &candidateCameraPose,
+      const std::vector<std::pair<int, int>> &inliersIndices) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -85,6 +96,8 @@ private:
   float m_minDistanceBetweenSampledModes;
   bool m_checkRigidTransformationConstraint;
   float m_translationErrorMaxForCorrectPose;
+  int m_batchSizeRansac;
+  int m_trimKinitAfterFirstEnergyComputation;
 };
 
 //#################### TYPEDEFS ####################

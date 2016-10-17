@@ -63,6 +63,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_minDistanceBetweenSampledModes = 0.3f;
   m_checkRigidTransformationConstraint = false; // Speeds up a lot, was true in scoreforests
   m_translationErrorMaxForCorrectPose = 0.05f;
+  m_batchSizeRansac = 500;
+  m_trimKinitAfterFirstEnergyComputation = 64;
 }
 
 //#################### DESTRUCTOR ####################
@@ -101,7 +103,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       view->calib.intrinsics_d.projectionParamsSimple.all;
 
   if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
-      < m_nbPointsForKabschBoostrap)
+      < std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac))
   {
     std::cout
         << "Number of valid depth pixels insufficient to perform relocalization."
@@ -146,6 +148,14 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   std::cout << "Generated " << poseCandidates.size() << " initial candidates."
       << std::endl;
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    estimate_pose(poseCandidates);
+  }
 
   return trackingResult;
 
@@ -528,7 +538,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       }
 
       // The prediction might be null if there are no modes (TODO: improve GetPredictionForLeaves somehow)
-      if(!selectedPrediction)
+      if (!selectedPrediction)
         continue;
 
       ++iterationsInner;
@@ -735,6 +745,311 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
     return true;
 
   return false;
+}
+
+SLAMComponentWithScoreForest::PoseCandidate SLAMComponentWithScoreForest::estimate_pose(
+    std::vector<PoseCandidate> &candidates)
+{
+  std::mt19937 random_engine;
+
+  if (m_trimKinitAfterFirstEnergyComputation < candidates.size())
+  {
+    //    boost::timer::auto_cpu_timer t(6,
+    //                                   "first trim: %ws wall, %us user + %ss system = %ts CPU
+    //                                   (%p%)\n");
+    int nbSamplesPerCamera = std::get < 1 > (candidates[0]).size();
+    std::vector<std::pair<int, int>> sampledPixelIdx;
+    std::vector<bool> dummy_vector;
+
+    {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "sample pixels: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      sample_pixels_for_ransac(dummy_vector, sampledPixelIdx, random_engine,
+          m_batchSizeRansac);
+    }
+
+    {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "update inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      update_inliers_for_optimization(sampledPixelIdx, candidates);
+    }
+
+    {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "compute and sort energies: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      compute_and_sort_energies(candidates);
+    }
+
+    candidates.erase(
+        candidates.begin() + m_trimKinitAfterFirstEnergyComputation,
+        candidates.end());
+
+    if (m_trimKinitAfterFirstEnergyComputation > 1)
+    {
+      for (int p = 0; p < candidates.size(); ++p)
+      {
+        std::vector<std::pair<int, int>> &samples = std::get < 1
+            > (candidates[p]);
+        if (samples.size() > nbSamplesPerCamera)
+          samples.erase(samples.begin() + nbSamplesPerCamera, samples.end());
+      }
+    }
+  }
+
+//  //  std::cout << candidates.size() << " candidates remaining." << std::endl;
+//  //  std::cout << "Premptive RANSAC" << std::endl;
+//
+//  std::vector<bool> maskSampledPixels(rgbd_img_test.cols * rgbd_img_test.rows, false);
+//
+//  float iteration = 0.0f;
+//
+//  while (candidates.size() > 1)
+//  {
+//    //    boost::timer::auto_cpu_timer t(
+//    //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//    ++iteration;
+//    //    std::cout << candidates.size() << " camera remaining" << std::endl;
+//
+//    std::vector<std::pair<int, int>> sampledPixelIdx;
+//    SamplePixelCandidatesForPoseUpdate(rgbd_img_test,
+//                                       predictions_cache,
+//                                       maskSampledPixels,
+//                                       sampledPixelIdx,
+//                                       random_engine,
+//                                       batchSize);
+//
+//    //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
+//    UpdateInliersFor3DcontinuousPoseOptimization(rgbd_img_test, sampledPixelIdx, candidates);
+//
+//    if (_poseUpdate)
+//    {
+//      PoseUpdate3DContinuous(rgbd_img_test, predictions_cache, candidates);
+//    }
+//
+//    ComputeAndSortEnergies3DContinuous(rgbd_img_test, predictions_cache, candidates);
+//
+//    // Remove half of the candidates with the worse energies
+//    candidates.erase(candidates.begin() + candidates.size() / 2,
+//                     candidates.begin() + candidates.size());
+//  }
+
+  return candidates[0];
+}
+
+void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
+    std::vector<bool> &maskSampledPixels,
+    std::vector<std::pair<int, int>> &sampledPixelIdx, std::mt19937 &eng,
+    int batchSize)
+{
+  std::uniform_int_distribution<int> col_index_generator(0,
+      m_featureImage->noDims.width - 1);
+  std::uniform_int_distribution<int> row_index_generator(0,
+      m_featureImage->noDims.height - 1);
+
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+  const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
+
+  for (int i = 0; i < batchSize; ++i)
+  {
+    bool validIndex = false;
+
+    while (!validIndex)
+    {
+      std::pair<int, int> s;
+
+      s.first = col_index_generator(eng);
+      s.second = row_index_generator(eng);
+
+      const int linearIdx = s.second * m_featureImage->noDims.width + s.first;
+
+      if (patchFeaturesData[linearIdx].position.w >= 0.f)
+      {
+        boost::shared_ptr<EnsemblePredictionGaussianMean> selectedPrediction;
+
+        //#pragma omp critical
+        selectedPrediction = m_featurePredictions[linearIdx];
+
+        if (!selectedPrediction)
+        {
+          // Get predicted leaves
+          std::vector<size_t> featureLeaves(m_leafImage->noDims.height);
+
+          for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
+              ++tree_idx)
+          {
+            featureLeaves[tree_idx] = leafData[tree_idx
+                * m_leafImage->noDims.width + linearIdx];
+          }
+
+          auto p = m_dataset->GetForest()->GetPredictionForLeaves(
+              featureLeaves);
+          selectedPrediction = boost::dynamic_pointer_cast<
+              EnsemblePredictionGaussianMean>(p);
+
+          // Store prediction in the vector for future use
+#pragma omp critical
+          m_featurePredictions[linearIdx] = selectedPrediction;
+        }
+
+        if (selectedPrediction)
+        {
+          validIndex = maskSampledPixels.empty()
+              || !maskSampledPixels[linearIdx];
+
+          if (validIndex)
+          {
+            sampledPixelIdx.push_back(s);
+
+            if (!maskSampledPixels.empty())
+              maskSampledPixels[linearIdx] = true;
+          }
+        }
+      }
+    }
+  }
+}
+
+void SLAMComponentWithScoreForest::update_inliers_for_optimization(
+    const std::vector<std::pair<int, int>> &sampledPixelIdx,
+    std::vector<PoseCandidate> &poseCandidates) const
+{
+#pragma omp parallel for
+  for (int p = 0; p < poseCandidates.size(); ++p)
+  {
+    std::vector<std::pair<int, int>> &inliers = std::get < 1
+        > (poseCandidates[p]);
+
+    // add all the samples as inliers
+    for (int s = 0; s < sampledPixelIdx.size(); ++s)
+    {
+      int x = sampledPixelIdx[s].first;
+      int y = sampledPixelIdx[s].second;
+      inliers.push_back(
+          std::pair<int, int>(y * m_featureImage->noDims.width + x, -1));
+    }
+  }
+}
+namespace
+{
+static bool SortByEnergyAsc(
+    std::tuple<Eigen::Matrix4f, std::vector<std::pair<int, int>>, float, int> i,
+    std::tuple<Eigen::Matrix4f, std::vector<std::pair<int, int>>, float, int> j)
+{
+  return (std::get < 2 > (i) < std::get < 2 > (j));
+}
+}
+
+void SLAMComponentWithScoreForest::compute_and_sort_energies(
+    std::vector<PoseCandidate> &poseCandidates) const
+{
+//  int nbPoseProcessed = 0;
+#pragma omp parallel for
+  for (int p = 0; p < poseCandidates.size(); ++p)
+  {
+    //#pragma omp critical
+    //    {
+    //      //#pragma omp flush(nbPoseProcessed)
+    //      //      Helpers::displayPercentage(nbPoseProcessed++, poseCandidates.size());
+    //    }
+
+    const Eigen::Matrix4f &candidateCamera = std::get < 0 > (poseCandidates[p]);
+    const std::vector<std::pair<int, int>> &inliers = std::get < 1
+        > (poseCandidates[p]);
+    const int cameraId = std::get < 3 > (poseCandidates[p]);
+
+    std::get < 2 > (poseCandidates[p]) = compute_pose_energy(candidateCamera,
+        inliers);
+  }
+
+  std::sort(poseCandidates.begin(), poseCandidates.end(), SortByEnergyAsc);
+}
+
+float SLAMComponentWithScoreForest::compute_pose_energy(
+    const Eigen::Matrix4f &candidateCameraPose,
+    const std::vector<std::pair<int, int>> &inliersIndices) const
+{
+  double energy = 0.0;
+
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+
+  for (int s = 0; s < inliersIndices.size(); ++s)
+  {
+//    const int x = inliersIndices[s].first % (m_featureImage->noDims.width);
+//    const int y = inliersIndices[s].first / (m_featureImage->noDims.width);
+    const int linearIdx = inliersIndices[s].first;
+
+    // std::cout << "candidateCameraPose: " << candidateCameraPose << std::endl << std::endl;
+    // std::cout << "Pt: " << Helpers::DepthToWorld(x*_scaleTest, y*_scaleTest,
+    // rgbd_img.at<Vec9f>(y*_scaleTest, x*_scaleTest).val[5] / 1000.0f) << std::endl << std::endl;
+
+    Eigen::VectorXf localPixel = Eigen::Map<const Eigen::Vector3f>(
+        patchFeaturesData[linearIdx].position.v);
+    Eigen::VectorXf projectedPixel(4);
+    Helpers::Rigid3DTransformation(candidateCameraPose, localPixel,
+        projectedPixel);
+
+    boost::shared_ptr<EnsemblePredictionGaussianMean> pred =
+        m_featurePredictions[linearIdx];
+
+    // eval individual energy
+    {
+      std::vector<std::vector<PredictedGaussianMean *>> &modes = pred->_modes;
+      float res = 0.0f;
+      float totalNbPoints = 0.0f;
+      Eigen::VectorXd diff(3);
+      double exponant = std::pow(2.0 * M_PI, 3.0);
+      double normalization;
+      double descriptiveStatistics = 0.0;
+      double nbPts;
+      double evalGaussian1 = 1.0f, evalGaussian2 = 1.0f;
+      double prob;
+      double nbModes = modes.size();
+
+      // totalNbPoints = 1.0;
+      int argmax = pred->GetArgMax3D(projectedPixel, 0);
+      int m = argmax;
+      // for (int m = 0 ; m < modes.size() ; ++m)
+      {
+        nbPts = static_cast<float>(modes[m][0]->_nbPoints);
+        totalNbPoints += nbPts;
+
+        // fast gaussian evaluation
+        {
+          for (int i = 0; i < 3; ++i)
+          {
+            diff(i) = static_cast<double>(projectedPixel(i))
+                - modes[m][0]->_mean(i);
+          }
+          normalization = 1.0f / sqrt(modes[m][0]->_determinant * exponant);
+          descriptiveStatistics = exp(
+              -0.5
+                  * Helpers::MahalanobisSquared3x3(
+                      modes[m][0]->_inverseCovariance, diff));
+          evalGaussian1 = normalization * descriptiveStatistics;
+        }
+
+        res += nbPts * (evalGaussian1 * evalGaussian2) / nbModes;
+      }
+
+      if (totalNbPoints == 0.0)
+        continue;
+
+      prob = res / totalNbPoints;
+      if (prob < 0.0000000001)
+        prob = 0.0000000001;
+      energy += -log10(prob);
+    }
+  }
+
+  return static_cast<float>(energy) / static_cast<float>(inliersIndices.size());
 }
 
 }
