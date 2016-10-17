@@ -8,6 +8,9 @@
 
 #include "SLAMComponent.h"
 
+#include <tuple>
+#include <random>
+
 #include <boost/shared_ptr.hpp>
 
 #include <DatasetRGBD7Scenes.hpp>
@@ -16,13 +19,17 @@
 #include "../features/FeatureCalculatorFactory.h"
 #include "../randomforest/interface/GPUForest.h"
 
-namespace spaint {
+namespace spaint
+{
 
 /**
  * \brief An instance of this pipeline component can be used to perform simultaneous localisation and mapping (SLAM).
  */
-class SLAMComponentWithScoreForest : public SLAMComponent
+class SLAMComponentWithScoreForest: public SLAMComponent
 {
+  typedef std::tuple<Eigen::Matrix4f, std::vector<std::pair<int, int>>, float,
+      int> PoseCandidate;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -36,9 +43,11 @@ public:
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    */
-  SLAMComponentWithScoreForest(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
-                TrackingMode trackingMode = TRACK_VOXELS);
+  SLAMComponentWithScoreForest(const SLAMContext_Ptr& context,
+      const std::string& sceneID,
+      const ImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType,
+      const std::vector<std::string>& trackerParams, MappingMode mappingMode =
+          MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -53,7 +62,10 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb, const ITMShortImage_Ptr &depth) const;
+  cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb,
+      const ITMShortImage_Ptr &depth) const;
+  void generate_pose_candidates();
+  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:

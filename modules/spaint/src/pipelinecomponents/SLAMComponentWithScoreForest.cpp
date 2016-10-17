@@ -110,6 +110,13 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   m_leafImage->UpdateHostFromDevice();
 
+  // Create ensemble predictions
+  std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
+      m_leafImage->noDims.width);
+
+  int max_modes = -1;
+  int total_modes = 0;
+
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -121,24 +128,26 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     // Create vectors of leaves
     std::vector<std::vector<size_t>> leaves_indices(m_leafImage->noDims.width);
 
-    for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
-        ++prediction_idx)
     {
-      auto &tree_leaves = leaves_indices[prediction_idx];
-      tree_leaves.reserve(m_leafImage->noDims.height);
-      for (size_t tree_idx = 0; tree_idx < m_leafImage->noDims.height;
-          ++tree_idx)
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "creating leaves array: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
+          ++prediction_idx)
       {
-        tree_leaves.push_back(
-            leafData[tree_idx * m_leafImage->noDims.width + prediction_idx]);
+        auto &tree_leaves = leaves_indices[prediction_idx];
+        tree_leaves.reserve(m_leafImage->noDims.height);
+        for (size_t tree_idx = 0; tree_idx < m_leafImage->noDims.height;
+            ++tree_idx)
+        {
+          tree_leaves.push_back(
+              leafData[tree_idx * m_leafImage->noDims.width + prediction_idx]);
+        }
       }
     }
 
-    // Create ensemble predictions
-    std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
-        m_leafImage->noDims.width);
-    int max_modes = -1;
-
+#pragma omp parallel for reduction(max:max_modes), reduction(+:total_modes)
     for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
         ++prediction_idx)
     {
@@ -148,15 +157,21 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
       if (predictions[prediction_idx])
       {
-        max_modes =
-            std::max<int>(max_modes,
-                ToEnsemblePredictionGaussianMean(
-                    predictions[prediction_idx].get())->_modes.size());
+        int nbModes = ToEnsemblePredictionGaussianMean(
+            predictions[prediction_idx].get())->_modes.size();
+
+        if (nbModes > max_modes)
+        {
+          max_modes = nbModes;
+        }
+
+        total_modes += nbModes;
       }
     }
-
-    std::cout << "Max number of modes: " << max_modes << std::endl;
   }
+
+  std::cout << "Max number of modes: " << max_modes << std::endl;
+  std::cout << "Total number of modes: " << total_modes << std::endl;
 
 //  Vector2i px(84, 46);
 //  int linear_px = px.y * m_featureImage->noDims.width + px.x;
@@ -365,6 +380,316 @@ cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
   cv::merge(channels, rgbd);
 
   return rgbd;
+}
+
+void SLAMComponentWithScoreForest::generate_pose_candidates()
+{
+//  poseCandidates.resize(_KinitRansac);
+//
+//  const int nbThreads = 12;
+//
+//  std::vector<std::mt19937> engs(nbThreads);
+//  for (int i = 0; i < nbThreads; ++i)
+//  {
+//    engs[i].seed(static_cast<unsigned int>(i + 1));
+//  }
+//
+//  omp_set_num_threads(nbThreads);
+//
+////  std::cout << "Generating pose candidates Kabsch" << std::endl;
+//#pragma omp parallel for
+//  for (int i = 0; i < _KinitRansac; ++i)
+//  {
+//    int threadId = omp_get_thread_num();
+//    PoseCandidate candidate;
+//    if (GeneratePoseHypothesisKabsch(rgbd_img_test, predictions_cache, candidate, engs[threadId]))
+//    {
+//      std::get<3>(candidate) = i;
+//      poseCandidates[i] = candidate;
+//    }
+//  }
+//
+//  for (size_t i = 0; i < poseCandidates.size(); ++i)
+//  {
+//    if (std::get<1>(poseCandidates[i]).empty())  // No inliers
+//    {
+//      poseCandidates.erase(poseCandidates.begin() + i);
+//      --i;
+//    }
+//  }
+}
+
+bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
+    std::mt19937 &eng) const
+{
+  return false;
+//  Eigen::MatrixXf worldPoints(3, _nbPointsForKabschBoostraps);
+//  Eigen::MatrixXf localPoints(3, _nbPointsForKabschBoostraps);
+//  std::uniform_int_distribution<int> col_index_generator(0,
+//      rgbd_img.cols / _scaleTest - 1);
+//  std::uniform_int_distribution<int> row_index_generator(0,
+//      rgbd_img.rows / _scaleTest - 1);
+//  Eigen::MatrixXf tmpCameraModel;
+//  std::vector<std::pair<int, int>> tmpInliers;
+//
+//  // TODO check validity outside this call
+//
+//  //  int nbValidPixels = 0;
+//  //
+//  //  for (int p = 0; p < predictions.size(); ++p)
+//  //  {
+//  //    int x = p % (rgbd_img.cols / _scaleTest);
+//  //    int y = p / (rgbd_img.cols / _scaleTest);
+//  //    if (predictions[p] && Helpers::IsAValidKinectDepthMeasurement(
+//  //                              rgbd_img.at<Vec9f>(y * _scaleTest, x * _scaleTest).val[5]))
+//  //    {
+//  //      if (_useFeatureWhichMightRequestOutOfImagePixels)
+//  //        ++nbValidPixels;
+//  //      else if (!FeatureMightRequestOutOfImagePixels(rgbd_img, x * _scaleTest, y * _scaleTest))
+//  //        ++nbValidPixels;
+//  //    }
+//  //  }
+//  //
+//  //  if (nbValidPixels < _nbPointsForKabschBoostraps)
+//  //    Helpers::ExitWithMessage("DatasetRGBD7Scenes::GeneratePoseHypothesis: not enough points to "
+//  //                             "generate any pose candidate");
+//
+//  bool foundIsometricMapping = false;
+//  const int maxIterationsOuter = 20;
+//  int iterationsOuter = 0;
+//
+//  while (!foundIsometricMapping && iterationsOuter < maxIterationsOuter)
+//  {
+//    ++iterationsOuter;
+//    std::vector<std::tuple<int, int, int>> selectedPixelsAndModes;
+//
+//    const int maxIterationsInner = 6000;
+//    int iterationsInner = 0;
+//    while (selectedPixelsAndModes.size() != _nbPointsForKabschBoostraps
+//        && iterationsInner < maxIterationsInner)
+//    {
+//      const int x = col_index_generator(eng) * _scaleTest;
+//      const int y = row_index_generator(eng) * _scaleTest;
+//      const int cache_key = y * rgbd_img.cols + x;
+//
+//      const float depth_mm = rgbd_img.at < Vec9f > (y, x).val[5];
+//
+//      if (!Helpers::IsAValidKinectDepthMeasurement(depth_mm))
+//        continue;
+//
+//      boost::shared_ptr<EnsemblePrediction> pred_;
+//
+//// Read only, critical section might not be needed
+//#pragma omp critical
+//      {
+//        if (predictions_cache.find(cache_key) != predictions_cache.end())
+//        {
+//          pred_ = std::get < 1 > (predictions_cache[cache_key]);
+//        }
+//      }
+//
+//      if (!pred_)
+//      {
+//        // Compute the features and evaluate the forest
+//        auto feature = ComputeFeaturesForPixel(rgbd_img, x, y);
+//        pred_ = PredictForFeature(feature);
+//
+//// Critical section to insert the value in the cache
+//#pragma omp critical
+//        {
+//          predictions_cache[cache_key] = std::make_tuple(feature, pred_);
+//        }
+//      }
+//
+//      if (!pred_)
+//        continue;
+//
+//      if (!_useFeatureWhichMightRequestOutOfImagePixels
+//          && FeatureMightRequestOutOfImagePixels(rgbd_img, x, y))
+//        continue;
+//
+//      ++iterationsInner;
+//
+//      const EnsemblePredictionGaussianMean *pred =
+//          ToEnsemblePredictionGaussianMean(pred_.get());
+//
+//      int nbModesInFirstTree = -1;
+//
+//      {
+//        int prevNbModes = INT_MAX;
+//        bool found = false;
+//
+//        for (int i = 0; i < pred->_modes.size(); ++i)
+//        {
+//          if (pred->_modes[i][0]->_nbPoints > prevNbModes)
+//          {
+//            nbModesInFirstTree = i;
+//            found = true;
+//            break;
+//          }
+//          prevNbModes = pred->_modes[i][0]->_nbPoints;
+//        }
+//
+//        if (!found)
+//        {
+//          nbModesInFirstTree = pred->_modes.size();
+//        }
+//      }
+//
+//      int modeIdx = 0;
+//      // nbModesInFirstTree = _pred->_modes.size();
+//      if (_useAllModesPerLeafInPoseHypothesisGeneration)
+//      {
+//        // std::uniform_int_distribution<int> mode_generator(0, pred->_modes.size() - 1);
+//        std::uniform_int_distribution<int> mode_generator(0,
+//            nbModesInFirstTree - 1);
+//        // Eigen::VectorXd worldPt = pred->_modes[0]._mean;
+//        modeIdx = mode_generator(eng);
+//      }
+//
+//      if (selectedPixelsAndModes.empty())
+//      {
+//        bool consistentColour = true;
+//        for (int c = 0; c < 3; ++c)
+//        {
+//          if (std::abs(
+//              rgbd_img.at < Vec9f
+//                  > (y, x).val[c] - pred->_modes[modeIdx][1]->_mean(c)) > 30)
+//          {
+//            consistentColour = false;
+//            break;
+//          }
+//        }
+//
+//        if (!consistentColour)
+//          continue;
+//      }
+//
+//      // if (false)
+//      if (_checkMinDistanceBetweenSampledModes)
+//      {
+//        Eigen::VectorXd worldPt = pred->_modes[modeIdx][0]->_mean;
+//
+//        // Check that this mode is far enough from the other modes
+//        bool farEnough = true;
+//        for (int i = 0; i < selectedPixelsAndModes.size(); ++i)
+//        {
+//          int xOther, yOther, modeIdxOther;
+//          std::tie(xOther, yOther, modeIdxOther) = selectedPixelsAndModes[i];
+//
+//          const int cache_key_other = yOther * rgbd_img.cols + xOther;
+//          EnsemblePredictionGaussianMean *predOther;
+//#pragma omp critical
+//          {
+//            predOther = ToEnsemblePredictionGaussianMean(
+//                std::get < 1 > (predictions_cache[cache_key_other]).get());
+//          }
+//
+//          Eigen::VectorXd worldPtOther =
+//              predOther->_modes[modeIdxOther][0]->_mean;
+//
+//          float distOther = (worldPtOther - worldPt).norm();
+//          if (distOther < _minDistanceBetweenSampledModes)
+//          {
+//            farEnough = false;
+//            break;
+//          }
+//        }
+//
+//        if (!farEnough)
+//          continue;
+//      }
+//
+//      // isometry?
+//      // if (false)
+//      // if (true)
+//      if (_checkRigidTransformationConstraint)
+//      {
+//        bool violatesConditions = false;
+//
+//        for (int m = 0;
+//            m < selectedPixelsAndModes.size() && !violatesConditions; ++m)
+//        {
+//          int xFirst, yFirst, modeIdxFirst;
+//          std::tie(xFirst, yFirst, modeIdxFirst) = selectedPixelsAndModes[m];
+//
+//          const int cache_key_first = yFirst * rgbd_img.cols + xFirst;
+//          EnsemblePredictionGaussianMean *predFirst;
+//#pragma omp critical
+//          {
+//            predFirst = ToEnsemblePredictionGaussianMean(
+//                std::get < 1 > (predictions_cache[cache_key_first]).get());
+//          }
+//
+//          Eigen::VectorXd worldPtFirst =
+//              predFirst->_modes[modeIdxFirst][0]->_mean;
+//          Eigen::VectorXd worldPtCur = pred->_modes[modeIdx][0]->_mean;
+//
+//          float distWorld = (worldPtFirst - worldPtCur).norm();
+//
+//          Eigen::VectorXf localPred = Helpers::DepthPixelToLocalWorld(xFirst,
+//              yFirst, rgbd_img.at < Vec9f > (yFirst, xFirst).val[5] / 1000.0f);
+//          Eigen::VectorXf localCur = Helpers::DepthPixelToLocalWorld(x, y,
+//              rgbd_img.at < Vec9f > (y, x).val[5] / 1000.0f);
+//
+//          float distLocal = (localPred - localCur).norm();
+//
+//          if (distLocal < _minDistanceBetweenSampledModes)
+//            violatesConditions = true;
+//
+//          if (fabs(distLocal - distWorld)
+//              > 0.5f * this->_translationErrorMaxForCorrectPose)
+//            violatesConditions = true;
+//        }
+//
+//        if (violatesConditions)
+//          continue;
+//      }
+//
+//      selectedPixelsAndModes.push_back(
+//          std::tuple<int, int, int>(x, y, modeIdx));
+//      iterationsInner = 0;
+//    }
+//
+//    if (selectedPixelsAndModes.size() != this->_nbPointsForKabschBoostraps)
+//      return false;
+//
+//    tmpInliers.clear();
+//    for (int s = 0; s < selectedPixelsAndModes.size(); ++s)
+//    {
+//      int x, y, modeIdx;
+//      std::tie(x, y, modeIdx) = selectedPixelsAndModes[s];
+//      const int cache_key = y * rgbd_img.cols + x;
+//
+//      Eigen::VectorXf localPt = Helpers::DepthPixelToLocalWorld(x, y,
+//          rgbd_img.at < Vec9f > (y, x).val[5] / 1000.0f);
+//
+//      EnsemblePredictionGaussianMean *pred;
+//#pragma omp critical
+//      {
+//        pred = ToEnsemblePredictionGaussianMean(
+//            std::get < 1 > (predictions_cache[cache_key]).get());
+//      }
+//
+//      Eigen::VectorXd worldPt = pred->_modes[modeIdx][0]->_mean;
+//
+//      for (int idx = 0; idx < 3; ++idx)
+//      {
+//        localPoints(idx, s) = localPt(idx);
+//        worldPoints(idx, s) = static_cast<float>(worldPt(idx));
+//      }
+//      tmpInliers.push_back(std::pair<int, int>(cache_key, modeIdx));
+//    }
+//
+//    tmpCameraModel = Helpers::Kabsch(localPoints, worldPoints);
+//
+//    foundIsometricMapping = true;
+//    res = std::make_tuple(tmpCameraModel, tmpInliers, 0.0f, -1);
+//  }
+//
+//  if (iterationsOuter < maxIterationsOuter)
+//    return true;
+//  return false;
 }
 
 }
