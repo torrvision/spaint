@@ -11,6 +11,8 @@
 #include <boost/timer/timer.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include <omp.h>
+
 #include <DatasetRGBDInfiniTAM.hpp>
 
 #include "ocv/OpenCVUtil.h"
@@ -50,6 +52,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_leafImage.reset(new ITMIntImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
+
+  // Set params as in scoreforests
+  m_kInitRansac = 1024;
 }
 
 //#################### DESTRUCTOR ####################
@@ -110,6 +115,17 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   m_leafImage->UpdateHostFromDevice();
 
+  // Generate pose candidates with the new implementation
+  std::vector<PoseCandidate> poseCandidates;
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    generate_pose_candidates(poseCandidates);
+  }
+
   // Create ensemble predictions
   std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
       m_leafImage->noDims.width);
@@ -138,7 +154,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       {
         auto &tree_leaves = leaves_indices[prediction_idx];
         tree_leaves.reserve(m_leafImage->noDims.height);
-        for (size_t tree_idx = 0; tree_idx < m_leafImage->noDims.height;
+        for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
             ++tree_idx)
         {
           tree_leaves.push_back(
@@ -382,41 +398,39 @@ cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
   return rgbd;
 }
 
-void SLAMComponentWithScoreForest::generate_pose_candidates()
+void SLAMComponentWithScoreForest::generate_pose_candidates(
+    std::vector<PoseCandidate> &poseCandidates) const
 {
-//  poseCandidates.resize(_KinitRansac);
-//
-//  const int nbThreads = 12;
-//
-//  std::vector<std::mt19937> engs(nbThreads);
-//  for (int i = 0; i < nbThreads; ++i)
-//  {
-//    engs[i].seed(static_cast<unsigned int>(i + 1));
-//  }
-//
-//  omp_set_num_threads(nbThreads);
-//
-////  std::cout << "Generating pose candidates Kabsch" << std::endl;
-//#pragma omp parallel for
-//  for (int i = 0; i < _KinitRansac; ++i)
-//  {
-//    int threadId = omp_get_thread_num();
-//    PoseCandidate candidate;
-//    if (GeneratePoseHypothesisKabsch(rgbd_img_test, predictions_cache, candidate, engs[threadId]))
-//    {
-//      std::get<3>(candidate) = i;
-//      poseCandidates[i] = candidate;
-//    }
-//  }
-//
-//  for (size_t i = 0; i < poseCandidates.size(); ++i)
-//  {
-//    if (std::get<1>(poseCandidates[i]).empty())  // No inliers
-//    {
-//      poseCandidates.erase(poseCandidates.begin() + i);
-//      --i;
-//    }
-//  }
+  poseCandidates.reserve(m_kInitRansac);
+
+  const int nbThreads = 12;
+
+  std::vector<std::mt19937> engs(nbThreads);
+  for (int i = 0; i < nbThreads; ++i)
+  {
+    engs[i].seed(static_cast<unsigned int>(i + 1));
+  }
+
+  omp_set_num_threads(nbThreads);
+
+//  std::cout << "Generating pose candidates Kabsch" << std::endl;
+#pragma omp parallel for
+  for (size_t i = 0; i < m_kInitRansac; ++i)
+  {
+    int threadId = omp_get_thread_num();
+    PoseCandidate candidate;
+
+    if (hypothesize_pose(candidate, engs[threadId]))
+    {
+      if (!std::get < 1 > (candidate).empty()) // Has some inliers
+      {
+        std::get < 3 > (candidate) = i;
+
+#pragma omp critical
+        poseCandidates.emplace_back(std::move(candidate));
+      }
+    }
+  }
 }
 
 bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,

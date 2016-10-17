@@ -64,7 +64,8 @@ protected:
 private:
   cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb,
       const ITMShortImage_Ptr &depth) const;
-  void generate_pose_candidates();
+  void generate_pose_candidates(
+      std::vector<PoseCandidate> &poseCandidates) const;
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
@@ -75,6 +76,9 @@ private:
   RGBDPatchFeatureImage_Ptr m_featureImage;
   ITMIntImage_Ptr m_leafImage;
   GPUForest_Ptr m_gpuForest;
+
+  // Member variables from scoreforests
+  size_t m_kInitRansac;
 
 };
 
