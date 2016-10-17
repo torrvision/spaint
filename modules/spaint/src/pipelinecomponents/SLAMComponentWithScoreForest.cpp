@@ -61,7 +61,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_useAllModesPerLeafInPoseHypothesisGeneration = true;
   m_checkMinDistanceBetweenSampledModes = true;
   m_minDistanceBetweenSampledModes = 0.3f;
-  m_checkRigidTransformationConstraint = true;
+  m_checkRigidTransformationConstraint = false; // Speeds up a lot, was true in scoreforests
   m_translationErrorMaxForCorrectPose = 0.05f;
 }
 
@@ -527,10 +527,9 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
         m_featurePredictions[linearFeatureIdx] = selectedPrediction;
       }
 
-      // TODO: the prediction might be null if there are no modes
-      // not checking yet to get a crash if this happens
-//      if(!selectedPrediction)
-//        continue;
+      // The prediction might be null if there are no modes (TODO: improve GetPredictionForLeaves somehow)
+      if(!selectedPrediction)
+        continue;
 
       ++iterationsInner;
 
