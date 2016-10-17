@@ -15,6 +15,8 @@
 
 #include <DatasetRGBDInfiniTAM.hpp>
 
+#include <libalglib/optimization.h>
+
 #include "ocv/OpenCVUtil.h"
 #include "randomforest/cuda/GPUForest_CUDA.h"
 
@@ -65,6 +67,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
   m_trimKinitAfterFirstEnergyComputation = 64;
+  m_poseUpdate = true;
+  m_usePredictionCovarianceForPoseOptimization = true;
 }
 
 //#################### DESTRUCTOR ####################
@@ -102,125 +106,149 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const Vector4f depthIntrinsics =
       view->calib.intrinsics_d.projectionParamsSimple.all;
 
-  if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
-      < std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac))
+  if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
-    std::cout
-        << "Number of valid depth pixels insufficient to perform relocalization."
-        << std::endl;
-    return trackingResult;
-  }
-
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-    m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
-        depthIntrinsics, m_featureImage);
-  }
-
-//  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
-
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-    m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
-  }
-
-//  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
-
-  m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
-  m_leafImage->UpdateHostFromDevice();
-
-  // Generate pose candidates with the new implementation
-  std::vector<PoseCandidate> poseCandidates;
-
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-    generate_pose_candidates(poseCandidates);
-  }
-
-  std::cout << "Generated " << poseCandidates.size() << " initial candidates."
-      << std::endl;
-
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-    estimate_pose(poseCandidates);
-  }
-
-  return trackingResult;
-
-  // Create ensemble predictions
-  std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
-      m_leafImage->noDims.width);
-
-  int max_modes = -1;
-  int total_modes = 0;
-
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "creating predictions from leaves: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-
-    const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
-
-    // Create vectors of leaves
-    std::vector<std::vector<size_t>> leaves_indices(m_leafImage->noDims.width);
+    if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
+        < std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac))
+    {
+      std::cout
+          << "Number of valid depth pixels insufficient to perform relocalization."
+          << std::endl;
+      return trackingResult;
+    }
 
     {
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6,
-          "creating leaves array: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+          "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
-          ++prediction_idx)
-      {
-        auto &tree_leaves = leaves_indices[prediction_idx];
-        tree_leaves.reserve(m_leafImage->noDims.height);
-        for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
-            ++tree_idx)
-        {
-          tree_leaves.push_back(
-              leafData[tree_idx * m_leafImage->noDims.width + prediction_idx]);
-        }
-      }
+      m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
+          depthIntrinsics, m_featureImage);
     }
 
-#pragma omp parallel for reduction(max:max_modes), reduction(+:total_modes)
-    for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
-        ++prediction_idx)
+//  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
+
     {
-      predictions[prediction_idx] =
-          m_dataset->GetForest()->GetPredictionForLeaves(
-              leaves_indices[prediction_idx]);
-
-      if (predictions[prediction_idx])
-      {
-        int nbModes = ToEnsemblePredictionGaussianMean(
-            predictions[prediction_idx].get())->_modes.size();
-
-        if (nbModes > max_modes)
-        {
-          max_modes = nbModes;
-        }
-
-        total_modes += nbModes;
-      }
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
     }
+
+//  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
+
+    m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
+    m_leafImage->UpdateHostFromDevice();
+
+    // Generate pose candidates with the new implementation
+    std::vector<PoseCandidate> poseCandidates;
+
+    {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      generate_pose_candidates(poseCandidates);
+    }
+
+    std::cout << "Generated " << poseCandidates.size() << " initial candidates."
+        << std::endl;
+
+    PoseCandidate final_candidate;
+    {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      final_candidate = estimate_pose(poseCandidates);
+    }
+
+    std::cout << "The final pose is:" << std::get < 0
+        > (final_candidate) << "\n and has " << std::get < 1
+        > (final_candidate).size() << " inliers." << std::endl;
+
+    Matrix4f invPose;
+    Eigen::Map<Eigen::Matrix4f> em(invPose.m);
+    em = std::get < 0 > (final_candidate);
+
+    trackingState->pose_d->SetInvM(invPose);
+
+    const bool resetVisibleList = true;
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
+        voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+    prepare_for_tracking(TRACK_VOXELS);
+    m_trackingController->Track(trackingState.get(), view.get());
+    trackingResult = trackingState->trackerResult;
+
   }
 
-  std::cout << "Max number of modes: " << max_modes << std::endl;
-  std::cout << "Total number of modes: " << total_modes << std::endl;
+  return trackingResult;
+
+//  return trackingResult;
+//
+//  // Create ensemble predictions
+//  std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
+//      m_leafImage->noDims.width);
+//
+//  int max_modes = -1;
+//  int total_modes = 0;
+//
+//  {
+//#ifdef ENABLE_TIMERS
+//    boost::timer::auto_cpu_timer t(6,
+//        "creating predictions from leaves: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+//
+//    const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
+//
+//    // Create vectors of leaves
+//    std::vector<std::vector<size_t>> leaves_indices(m_leafImage->noDims.width);
+//
+//    {
+//#ifdef ENABLE_TIMERS
+//      boost::timer::auto_cpu_timer t(6,
+//          "creating leaves array: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+//      for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
+//          ++prediction_idx)
+//      {
+//        auto &tree_leaves = leaves_indices[prediction_idx];
+//        tree_leaves.reserve(m_leafImage->noDims.height);
+//        for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
+//            ++tree_idx)
+//        {
+//          tree_leaves.push_back(
+//              leafData[tree_idx * m_leafImage->noDims.width + prediction_idx]);
+//        }
+//      }
+//    }
+//
+//#pragma omp parallel for reduction(max:max_modes), reduction(+:total_modes)
+//    for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
+//        ++prediction_idx)
+//    {
+//      predictions[prediction_idx] =
+//          m_dataset->GetForest()->GetPredictionForLeaves(
+//              leaves_indices[prediction_idx]);
+//
+//      if (predictions[prediction_idx])
+//      {
+//        int nbModes = ToEnsemblePredictionGaussianMean(
+//            predictions[prediction_idx].get())->_modes.size();
+//
+//        if (nbModes > max_modes)
+//        {
+//          max_modes = nbModes;
+//        }
+//
+//        total_modes += nbModes;
+//      }
+//    }
+//  }
+//
+//  std::cout << "Max number of modes: " << max_modes << std::endl;
+//  std::cout << "Total number of modes: " << total_modes << std::endl;
 
 //  Vector2i px(84, 46);
 //  int linear_px = px.y * m_featureImage->noDims.width + px.x;
@@ -257,7 +285,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 //
 //  std::cout << std::endl;
 
-  return trackingResult;
+//  return trackingResult;
 
   if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
@@ -802,42 +830,38 @@ SLAMComponentWithScoreForest::PoseCandidate SLAMComponentWithScoreForest::estima
     }
   }
 
-//  //  std::cout << candidates.size() << " candidates remaining." << std::endl;
-//  //  std::cout << "Premptive RANSAC" << std::endl;
-//
-//  std::vector<bool> maskSampledPixels(rgbd_img_test.cols * rgbd_img_test.rows, false);
-//
-//  float iteration = 0.0f;
-//
-//  while (candidates.size() > 1)
-//  {
-//    //    boost::timer::auto_cpu_timer t(
-//    //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//    ++iteration;
-//    //    std::cout << candidates.size() << " camera remaining" << std::endl;
-//
-//    std::vector<std::pair<int, int>> sampledPixelIdx;
-//    SamplePixelCandidatesForPoseUpdate(rgbd_img_test,
-//                                       predictions_cache,
-//                                       maskSampledPixels,
-//                                       sampledPixelIdx,
-//                                       random_engine,
-//                                       batchSize);
-//
-//    //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
-//    UpdateInliersFor3DcontinuousPoseOptimization(rgbd_img_test, sampledPixelIdx, candidates);
-//
-//    if (_poseUpdate)
-//    {
-//      PoseUpdate3DContinuous(rgbd_img_test, predictions_cache, candidates);
-//    }
-//
-//    ComputeAndSortEnergies3DContinuous(rgbd_img_test, predictions_cache, candidates);
-//
-//    // Remove half of the candidates with the worse energies
-//    candidates.erase(candidates.begin() + candidates.size() / 2,
-//                     candidates.begin() + candidates.size());
-//  }
+  //  std::cout << candidates.size() << " candidates remaining." << std::endl;
+  //  std::cout << "Premptive RANSAC" << std::endl;
+
+  std::vector<bool> maskSampledPixels(m_featureImage->dataSize, false);
+
+  float iteration = 0.0f;
+
+  while (candidates.size() > 1)
+  {
+    //    boost::timer::auto_cpu_timer t(
+    //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+    ++iteration;
+    //    std::cout << candidates.size() << " camera remaining" << std::endl;
+
+    std::vector<std::pair<int, int>> sampledPixelIdx;
+    sample_pixels_for_ransac(maskSampledPixels, sampledPixelIdx, random_engine,
+        m_batchSizeRansac);
+
+    //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
+    update_inliers_for_optimization(sampledPixelIdx, candidates);
+
+    if (m_poseUpdate)
+    {
+      update_candidate_poses(candidates);
+    }
+
+    compute_and_sort_energies(candidates);
+
+    // Remove half of the candidates with the worse energies
+    candidates.erase(candidates.begin() + candidates.size() / 2,
+        candidates.begin() + candidates.size());
+  }
 
   return candidates[0];
 }
@@ -1050,6 +1074,268 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
   }
 
   return static_cast<float>(energy) / static_cast<float>(inliersIndices.size());
+}
+
+void SLAMComponentWithScoreForest::update_candidate_poses(
+    std::vector<PoseCandidate> &poseCandidates) const
+{
+//  int nbUpdated = 0;
+#pragma omp parallel for
+  for (int i = 0; i < poseCandidates.size(); ++i)
+  {
+    if (update_candidate_pose(poseCandidates[i]))
+    {
+      //#pragma omp atomic
+      //      ++nbUpdated;
+    }
+  }
+  //  std::cout << nbUpdated << "/" << poseCandidates.size() << " updated cameras" << std::endl;
+}
+
+namespace
+{
+struct PointsForLM
+{
+  PointsForLM(int nbPts) :
+      pts(nbPts), blurred_img(NULL)
+  {
+  }
+  ~PointsForLM()
+  {
+  }
+  std::vector<
+      std::pair<std::vector<Eigen::VectorXd>,
+          std::vector<PredictedGaussianMean *>>> pts;
+  GaussianAggregatedRGBImage *blurred_img;
+};
+
+static double EnergyForContinuous3DOptimizationUsingFullCovariance(
+    std::vector<
+        std::pair<std::vector<Eigen::VectorXd>,
+            std::vector<PredictedGaussianMean *>>> &pts,
+    Eigen::MatrixXd &candidateCameraPoseD)
+{
+  double res = 0.0;
+  Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd transformedPthomogeneous(4);
+
+  for (int i = 0; i < pts.size(); ++i)
+  {
+    Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
+        transformedPthomogeneous);
+
+    for (int p = 0; p < 3; ++p)
+    {
+      diff(p) = transformedPthomogeneous(p) - pts[i].second[0]->_mean(p);
+    }
+
+    double err = sqrt(
+        Helpers::MahalanobisSquared3x3(pts[i].second[0]->_inverseCovariance,
+            diff));
+    // double err = (Helpers::MahalanobisSquared3x3(pts[i].second[0]->_inverseCovariance, diff));
+    res += err;
+  }
+  return res;
+}
+
+static void Continuous3DOptimizationUsingFullCovariance(
+    const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr)
+{
+  PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+
+  std::vector<
+      std::pair<std::vector<Eigen::VectorXd>,
+          std::vector<PredictedGaussianMean *>>> &pts = ptsLM->pts;
+  // integrate the size of the clusters?
+  Eigen::VectorXd ksi(6);
+  memcpy(ksi.data(), x.getcontent(), 6 * sizeof(double));
+  /*for (int i = 0 ; i < 6 ; ++i)
+   {
+   ksi(i) = x[i];
+   }*/
+  Eigen::MatrixXd updatedCandidateCameraPoseD =
+      Helpers::LieAlgebraToLieGroupSE3(ksi);
+
+  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(pts,
+      updatedCandidateCameraPoseD);
+  return;
+}
+
+/***************************************************/
+/* Routines to optimize the sum of 3D L2 distances */
+/***************************************************/
+
+static double EnergyForContinuous3DOptimizationUsingL2(
+    std::vector<
+        std::pair<std::vector<Eigen::VectorXd>,
+            std::vector<PredictedGaussianMean *>>> &pts,
+    Eigen::MatrixXd &candidateCameraPoseD)
+{
+  double res = 0.0;
+  Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
+  Eigen::VectorXd transformedPthomogeneous(4);
+
+  for (int i = 0; i < pts.size(); ++i)
+  {
+    Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
+        transformedPthomogeneous);
+
+    for (int p = 0; p < 3; ++p)
+    {
+      diff(p) = transformedPthomogeneous(p) - pts[i].second[0]->_mean(p);
+    }
+
+    double err = diff.norm();
+    err *= err;
+    res += err;
+  }
+  return res;
+}
+
+static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &x,
+    alglib::real_1d_array &fi, void *ptr)
+{
+  PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+
+  std::vector<
+      std::pair<std::vector<Eigen::VectorXd>,
+          std::vector<PredictedGaussianMean *>>> &pts = ptsLM->pts;
+  // integrate the size of the clusters?
+  Eigen::VectorXd ksi(6);
+  memcpy(ksi.data(), x.getcontent(), 6 * sizeof(double));
+  /*for (int i = 0 ; i < 6 ; ++i)
+   {
+   ksi(i) = x[i];
+   }*/
+  Eigen::MatrixXd updatedCandidateCameraPoseD =
+      Helpers::LieAlgebraToLieGroupSE3(ksi);
+
+  fi[0] = EnergyForContinuous3DOptimizationUsingL2(pts,
+      updatedCandidateCameraPoseD);
+  return;
+}
+
+static void call_after_each_step(const alglib::real_1d_array &x, double func,
+    void *ptr)
+{
+  return;
+}
+}
+
+bool SLAMComponentWithScoreForest::update_candidate_pose(
+    PoseCandidate &poseCandidate) const
+{
+  Eigen::Matrix4f &candidateCameraPose = std::get < 0 > (poseCandidate);
+  std::vector<std::pair<int, int>> &samples = std::get < 1 > (poseCandidate);
+
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+
+  PointsForLM ptsForLM(0);
+
+  for (int s = 0; s < samples.size(); ++s)
+  {
+    const int x = samples[s].first % m_featureImage->noDims.width;
+    const int y = samples[s].first / m_featureImage->noDims.width;
+    const int linearizedIdx = samples[s].first;
+
+    std::pair<std::vector<Eigen::VectorXd>, std::vector<PredictedGaussianMean *>> pt;
+
+    Eigen::VectorXf pixelLocalCoordinates = Eigen::Map<const Eigen::Vector4f>(
+        patchFeaturesData[linearizedIdx].position.v);
+
+    pt.first.push_back(pixelLocalCoordinates.cast<double>());
+    // Eigen::VectorXf  projectedPixel = candidateCameraPose * pixelLocalCoordinates;
+    Eigen::VectorXd projectedPixel = (candidateCameraPose
+        * pixelLocalCoordinates).cast<double>();
+
+    boost::shared_ptr<EnsemblePredictionGaussianMean> epgm =
+        m_featurePredictions[linearizedIdx];
+
+    int argmax = epgm->GetArgMax3D(projectedPixel, 0);
+    if (argmax == -1)
+      continue;
+    pt.second.push_back(epgm->_modes[argmax][0]);
+
+    if ((epgm->_modes[argmax][0]->_mean
+        - Helpers::ConvertWorldCoordinatesFromHomogeneousCoordinates(
+            projectedPixel)).norm() < 0.2)
+      ptsForLM.pts.push_back(pt);
+  }
+
+  // Continuous optimization
+  if (ptsForLM.pts.size() > 3)
+  {
+    alglib::real_1d_array ksi_;
+    double ksiD[6];
+    Eigen::MatrixXd candidateCameraPoseD = candidateCameraPose.cast<double>();
+
+    Eigen::VectorXd ksivd = Helpers::LieGroupToLieAlgebraSE3(
+        candidateCameraPoseD);
+
+    for (int i = 0; i < 6; ++i)
+    {
+      ksiD[i] = ksivd(i);
+    }
+
+    ksi_.setcontent(6, ksiD);
+
+    alglib::minlmstate state;
+    alglib::minlmreport rep;
+
+    double differentiationStep = 0.0001;
+    alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
+
+    double epsg = 0.000001;
+    double epsf = 0;
+    double epsx = 0;
+    alglib::ae_int_t maxits = 100;
+    alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
+
+    double energyBefore, energyAfter;
+    if (m_usePredictionCovarianceForPoseOptimization)
+    {
+      energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(
+          ptsForLM.pts, candidateCameraPoseD);
+      alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance,
+          call_after_each_step, &ptsForLM);
+    }
+    else
+    {
+      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
+          candidateCameraPoseD);
+      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
+          call_after_each_step, &ptsForLM);
+    }
+    alglib::minlmresults(state, ksi_, rep);
+
+    memcpy(ksiD, ksi_.getcontent(), sizeof(double) * 6);
+    for (int i = 0; i < 6; ++i)
+    {
+      ksivd(i) = ksiD[i];
+    }
+    Eigen::MatrixXd updatedCandidateCameraPoseD =
+        Helpers::LieAlgebraToLieGroupSE3(ksivd);
+
+    if (m_usePredictionCovarianceForPoseOptimization)
+    {
+      energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(
+          ptsForLM.pts, updatedCandidateCameraPoseD);
+    }
+    else
+    {
+      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
+          updatedCandidateCameraPoseD);
+    }
+
+    if (energyAfter < energyBefore)
+    {
+      candidateCameraPose = updatedCandidateCameraPoseD.cast<float>();
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }

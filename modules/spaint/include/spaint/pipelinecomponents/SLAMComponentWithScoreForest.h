@@ -77,6 +77,8 @@ private:
       std::vector<PoseCandidate> &poseCandidates) const;
   float compute_pose_energy(const Eigen::Matrix4f &candidateCameraPose,
       const std::vector<std::pair<int, int>> &inliersIndices) const;
+  void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
+  bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -98,6 +100,8 @@ private:
   float m_translationErrorMaxForCorrectPose;
   int m_batchSizeRansac;
   int m_trimKinitAfterFirstEnergyComputation;
+  bool m_poseUpdate;
+  bool m_usePredictionCovarianceForPoseOptimization;
 };
 
 //#################### TYPEDEFS ####################
