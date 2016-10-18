@@ -166,6 +166,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     std::cout << "Generated " << poseCandidates.size() << " initial candidates."
         << std::endl;
 
+    if(poseCandidates.empty()) return trackingResult;
+
     PoseCandidate final_candidate;
     {
 #ifdef ENABLE_TIMERS
@@ -561,15 +563,17 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (!selectedPrediction)
       {
         // Get predicted leaves
-        std::vector<size_t> featureLeaves(GPUForest::NTREES);
-        for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
-        {
-          featureLeaves[tree_idx] = leafData[linearFeatureIdx][tree_idx];
-        }
+        selectedPrediction = m_gpuForest->get_prediction_for_leaves(leafData[linearFeatureIdx]);
 
-        auto p = m_dataset->GetForest()->GetPredictionForLeaves(featureLeaves);
-        selectedPrediction = boost::dynamic_pointer_cast<
-            EnsemblePredictionGaussianMean>(p);
+//        std::vector<size_t> featureLeaves(GPUForest::NTREES);
+//        for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
+//        {
+//          featureLeaves[tree_idx] = leafData[linearFeatureIdx][tree_idx];
+//        }
+//
+//        auto p = m_dataset->GetForest()->GetPredictionForLeaves(featureLeaves);
+//        selectedPrediction = boost::dynamic_pointer_cast<
+//            EnsemblePredictionGaussianMean>(p);
 
         if (!selectedPrediction)
           continue;
@@ -930,17 +934,19 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
         if (!selectedPrediction)
         {
           // Get predicted leaves
-          std::vector<size_t> featureLeaves(GPUForest::NTREES);
+          selectedPrediction = m_gpuForest->get_prediction_for_leaves(leafData[linearIdx]);
 
-          for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
-          {
-            featureLeaves[tree_idx] = leafData[linearIdx][tree_idx];
-          }
-
-          auto p = m_dataset->GetForest()->GetPredictionForLeaves(
-              featureLeaves);
-          selectedPrediction = boost::dynamic_pointer_cast<
-              EnsemblePredictionGaussianMean>(p);
+//          std::vector<size_t> featureLeaves(GPUForest::NTREES);
+//
+//          for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
+//          {
+//            featureLeaves[tree_idx] = leafData[linearIdx][tree_idx];
+//          }
+//
+//          auto p = m_dataset->GetForest()->GetPredictionForLeaves(
+//              featureLeaves);
+//          selectedPrediction = boost::dynamic_pointer_cast<
+//              EnsemblePredictionGaussianMean>(p);
 
           if (!selectedPrediction)
             continue;

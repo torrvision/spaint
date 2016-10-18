@@ -5,6 +5,8 @@
 
 #include "randomforest/interface/GPUForest.h"
 
+#include <boost/make_shared.hpp>
+
 #include "util/MemoryBlockFactory.h"
 
 namespace spaint
@@ -40,7 +42,9 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
     // We set the first free entry to 1 since we reserve 0 for the root
     int first_free_idx = convert_node(tree, 0, treeIdx, nTrees, 0, 1,
         forestData);
-    std::cout << "Converted tree " << treeIdx << ", had " << nbNodes << "nodes"
+    std::cout << "Converted tree " << treeIdx << ", had " << nbNodes
+        << " nodes." << std::endl;
+    std::cout << "Total number of leaves: " << m_leafPredictions.size()
         << std::endl;
   }
 }
@@ -58,11 +62,29 @@ int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
   // The assumption is that output_idx is already reserved for the current node
   if (node->IsALeaf())
   {
-    gpuNode.leafIdx = node_idx; // Node index in the original tree, could be used to get the modes from there
+//    gpuNode.leafIdx = node_idx; // Node index in the original tree, could be used to get the modes from there
     gpuNode.leftChildIdx = -1; // Is a leaf
     gpuNode.featureIdx = 0;
     gpuNode.featureThreshold = 0.f;
     // first_free_idx does not change
+
+    gpuNode.leafIdx = m_leafPredictions.size();
+
+    // Copy the prediction
+    // TODO: possibly drop some modes
+    const LeafBPDGaussianMean* leafPtr = ToLeafBPDGaussianMean(node);
+    if (leafPtr->GetPrediction())
+    {
+      const PredictionGaussianMean *pred = ToPredictionGaussianMean(
+          leafPtr->GetPrediction());
+      m_leafPredictions.push_back(*pred);
+    }
+    else
+    {
+      // empty prediction
+      m_leafPredictions.push_back(PredictionGaussianMean());
+    }
+
   }
   else
   {
@@ -85,6 +107,41 @@ int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
   }
 
   return first_free_idx;
+}
+
+boost::shared_ptr<EnsemblePredictionGaussianMean> GPUForest::get_prediction_for_leaves(
+    const LeafIndices &leaves)
+{
+  boost::shared_ptr<EnsemblePredictionGaussianMean> res = boost::make_shared<
+      EnsemblePredictionGaussianMean>();
+
+  for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
+  {
+    PredictionGaussianMean &currentPred = m_leafPredictions[leaves[treeIdx]];
+    const size_t nbModes = currentPred._modes.size();
+
+    res->_modes.reserve(res->_modes.size() + nbModes); // Make some space
+
+//    res->_modes.push_back(std::vector<PredictedGaussianMean*>(nbModes));
+    for (size_t modeIdx = 0; modeIdx < nbModes; ++modeIdx)
+    {
+      // Is a vector because [0] is the position and [1] is the colour of the mode
+      std::vector<PredictedGaussianMean> &currentMode =
+          currentPred._modes[modeIdx];
+      const size_t nbComponents = currentMode.size();
+
+      res->_modes.push_back(std::vector<PredictedGaussianMean*>(nbComponents));
+      for (size_t compIdx = 0; compIdx < nbComponents; ++compIdx)
+      {
+        res->_modes.back()[compIdx] = &currentMode[compIdx];
+      }
+    }
+  }
+
+  if (res->_modes.empty())
+    return nullptr;
+
+  return res;
 }
 
 }
