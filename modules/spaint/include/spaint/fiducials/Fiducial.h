@@ -89,7 +89,9 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief TODO
+   * \brief Gets the confidence value that the fiducial needs to achieve for it to be considered stable.
+   *
+   * \return  The confidence value that the fiducial needs to achieve for it to be considered stable.
    */
   static float stable_confidence();
 };
