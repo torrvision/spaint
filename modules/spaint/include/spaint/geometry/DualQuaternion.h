@@ -36,7 +36,6 @@ public:
   /**
    * \brief Constructs a dual quaternion whose components are all zero.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion() {}
 
   /**
@@ -47,7 +46,6 @@ public:
    * \param y_  The y^ component.
    * \param z_  The z^ component.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion(const DualNumber<T>& w_, const DualNumber<T>& x_, const DualNumber<T>& y_, const DualNumber<T>& z_)
   : w(w_), x(x_), y(y_), z(z_)
   {}
@@ -55,12 +53,26 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Calculates a distance metric between two dual quaternions that represent pure rotations.
+   *
+   * The metric represents the angle needed to rotate one dual quaternion into the other.
+   *
+   * \param q1  The first dual quaternion.
+   * \param q2  The second dual quaternion.
+   * \return    The angle needed to rotate one dual quaternion into the other.
+   */
+  static T distance_between_rotations(const DualQuaternion<T>& q1, const DualQuaternion<T>& q2)
+  {
+    DualQuaternion<T> q1toq2 = q2 * q1.conjugate();
+    return length(q1toq2.get_rotation());
+  }
+
+  /**
    * \brief Constructs a dual quaternion that represents a 3D point.
    *
    * \param p The point.
    * \return  The dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> from_point(const ORUtils::Vector3<T>& p)
   {
     return DualQuaternion<T>(
@@ -79,7 +91,6 @@ public:
    * \return                    The dual quaternion.
    * \throws std::runtime_error If the rotation axis is invalid.
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> from_rotation(ORUtils::Vector3<float> axis, T angle)
   {
     T axisLengthSquared = dot(axis, axis);
@@ -103,7 +114,6 @@ public:
    * \return                    The dual quaternion.
    * \throws std::runtime_error If the rotation vector is invalid.
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> from_rotation(const ORUtils::Vector3<float>& rot)
   {
     T lengthSquared = dot(rot, rot);
@@ -121,7 +131,6 @@ public:
    * \param screw The screw transformation.
    * \return      The dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> from_screw(const Screw<T>& screw)
   {
     // See "Dual-Quaternions: From Classical Mechanics to Computer Graphics and Beyond" by Ben Kenwright.
@@ -140,7 +149,6 @@ public:
    * \param t The translation vector.
    * \return  The dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> from_translation(const ORUtils::Vector3<T>& t)
   {
     return DualQuaternion<T>(
@@ -161,7 +169,6 @@ public:
    * \param count   The number of dual quaternions being blended.
    * \return        The result of blending the dual quaternions.
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> linear_blend(const DualQuaternion<T> *dqs, const T *weights, int count)
   {
     DualQuaternion<T> result;
@@ -179,7 +186,6 @@ public:
    * \param rhs The second dual quaternion.
    * \param t   The interpolation parameter (in the range [0,1]).
    */
-  _CPU_AND_GPU_CODE_
   static DualQuaternion<T> sclerp(const DualQuaternion<T>& lhs, const DualQuaternion<T>& rhs, T t)
   {
     return lhs * (lhs.conjugate() * rhs).pow(t);
@@ -193,7 +199,6 @@ public:
    * \param rhs The other dual quaternion.
    * \return    This dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T>& operator+=(const DualQuaternion<T>& rhs)
   {
     w += rhs.w; x += rhs.x; y += rhs.y; z += rhs.z;
@@ -206,7 +211,6 @@ public:
    * \param rhs The other dual quaternion.
    * \return    This dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T>& operator*=(const DualQuaternion<T>& rhs)
   {
     *this = *this * rhs;
@@ -221,7 +225,6 @@ public:
    * \param p The 3D point.
    * \return  The transformed point.
    */
-  _CPU_AND_GPU_CODE_
   ORUtils::Vector3<T> apply(const ORUtils::Vector3<T>& p) const
   {
     DualQuaternion<T> result(*this);
@@ -235,7 +238,6 @@ public:
    *
    * \return  The conjugate of this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T> conjugate() const
   {
     return DualQuaternion<T>(w, -x, -y, -z);
@@ -248,7 +250,6 @@ public:
    *
    * \return  The "dual conjugate" of this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T> dual_conjugate() const
   {
     return DualQuaternion<T>(w.conjugate(), -x.conjugate(), -y.conjugate(), -z.conjugate());
@@ -272,7 +273,6 @@ public:
    *
    * \return  Gets a dual quaternion corresponding to the rotation component of the rigid-body transform represented by this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T> get_rotation_part() const
   {
     return DualQuaternion<T>(w.r, x.r, y.r, z.r);
@@ -283,7 +283,6 @@ public:
    *
    * \return  The translation component of the rigid-body transform represented by this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   ORUtils::Vector3<T> get_translation() const
   {
     DualQuaternion<T> tp = get_translation_part();
@@ -295,7 +294,6 @@ public:
    *
    * \return  Gets a dual quaternion corresponding to the translation component of the rigid-body transform represented by this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T> get_translation_part() const
   {
     return *this * get_rotation_part().conjugate();
@@ -306,7 +304,6 @@ public:
    *
    * \return  The norm of this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T> norm() const
   {
     return (w * w + x * x + y * y + z * z).sqrt();
@@ -317,7 +314,6 @@ public:
    *
    * \return  A normalised version of this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T> normalised() const
   {
     DualNumber<T> invNorm = norm().inverse();
@@ -330,7 +326,6 @@ public:
    * \param exponent  The exponent.
    * \return          The result of raising this dual quaternion to the specified power.
    */
-  _CPU_AND_GPU_CODE_
   DualQuaternion<T> pow(T exponent) const
   {
     Screw<T> s = to_screw();
@@ -344,7 +339,6 @@ public:
    *
    * \return  A screw representation of this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   Screw<T> to_screw() const
   {
     // See "Dual-Quaternions: From Classical Mechanics to Computer Graphics and Beyond" by Ben Kenwright.
@@ -369,7 +363,6 @@ private:
    *
    * \return  A 3D point corresponding to this dual quaternion.
    */
-  _CPU_AND_GPU_CODE_
   ORUtils::Vector3<double> to_point() const
   {
     return ORUtils::Vector3<double>(x.d, y.d, z.d);
@@ -386,7 +379,6 @@ private:
  * \return        A scaled version of the dual quaternion.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualQuaternion<T> operator*(const DualNumber<T>& factor, const DualQuaternion<T>& q)
 {
   return DualQuaternion<T>(factor * q.w, factor * q.x, factor * q.y, factor * q.z);
@@ -400,7 +392,6 @@ DualQuaternion<T> operator*(const DualNumber<T>& factor, const DualQuaternion<T>
  * \return        A scaled version of the dual quaternion.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualQuaternion<T> operator*(T factor, const DualQuaternion<T>& q)
 {
   return DualNumber<T>(factor) * q;
@@ -414,7 +405,6 @@ DualQuaternion<T> operator*(T factor, const DualQuaternion<T>& q)
  * \return    The result of the operation.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualQuaternion<T> operator*(const DualQuaternion<T>& q1, const DualQuaternion<T>& q2)
 {
   /*
@@ -428,6 +418,15 @@ DualQuaternion<T> operator*(const DualQuaternion<T>& q1, const DualQuaternion<T>
     q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x,
     q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w
   );
+}
+
+//#################### STREAM OPERATORS ####################
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const DualQuaternion<T>& rhs)
+{
+  os << '[' << rhs.w << ',' << rhs.x << ',' << rhs.y << ',' << rhs.z << ']';
+  return os;
 }
 
 //#################### TYPEDEFS ####################

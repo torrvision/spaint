@@ -42,7 +42,6 @@ struct Screw
    * \param direction_  The screw direction.
    * \param moment_     The screw moment.
    */
-  _CPU_AND_GPU_CODE_
   Screw(T angle_, T pitch_, const ORUtils::Vector3<T>& direction_, const ORUtils::Vector3<T>& moment_)
   : angle(angle_), direction(direction_), moment(moment_), pitch(pitch_)
   {}

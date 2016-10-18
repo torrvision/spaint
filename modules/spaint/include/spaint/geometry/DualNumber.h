@@ -8,8 +8,7 @@
 
 #include <cassert>
 #include <cmath>
-
-#include <ORUtils/PlatformIndependence.h>
+#include <iostream>
 
 namespace spaint {
 
@@ -35,7 +34,6 @@ struct DualNumber
   /**
    * \brief Constructs a dual number with zero components.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber()
   : r(T()), d(T())
   {}
@@ -45,7 +43,6 @@ struct DualNumber
    *
    * \param r_  The real number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber(T r_)
   : r(r_), d(0)
   {}
@@ -56,7 +53,6 @@ struct DualNumber
    * \param r_  The real component of the dual number.
    * \param d_  The dual component of the dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber(T r_, T d_)
   : r(r_), d(d_)
   {}
@@ -69,7 +65,6 @@ struct DualNumber
    * \param rhs The other dual number.
    * \return    This dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T>& operator+=(const DualNumber<T>& rhs)
   {
     r += rhs.r;
@@ -83,7 +78,6 @@ struct DualNumber
    * \param rhs The other dual number.
    * \return    This dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T>& operator-=(const DualNumber<T>& rhs)
   {
     r -= rhs.r;
@@ -97,7 +91,6 @@ struct DualNumber
    * \param rhs The other dual number.
    * \return    This dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T>& operator*=(const DualNumber<T>& rhs)
   {
     d = r * rhs.d + d * rhs.r;
@@ -112,7 +105,6 @@ struct DualNumber
    *
    * \return  The conjugate of this dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T> conjugate() const
   {
     return DualNumber<T>(r, -d);
@@ -123,7 +115,6 @@ struct DualNumber
    *
    * \return  The inverse of this dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T> inverse() const
   {
     assert(!is_pure());
@@ -135,7 +126,6 @@ struct DualNumber
    *
    * \return  true, if this dual number is pure, or false otherwise.
    */
-  _CPU_AND_GPU_CODE_
   bool is_pure() const
   {
     return fabs(r) <= 1e-5;
@@ -146,7 +136,6 @@ struct DualNumber
    *
    * \return  The square root of this dual number.
    */
-  _CPU_AND_GPU_CODE_
   DualNumber<T> sqrt() const
   {
     assert(r >= 0);
@@ -165,7 +154,6 @@ struct DualNumber
  * \return    The result of the operation.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualNumber<T> operator+(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
 {
   DualNumber<T> copy(lhs);
@@ -181,7 +169,6 @@ DualNumber<T> operator+(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
  * \return    The result of the operation.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualNumber<T> operator-(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
 {
   DualNumber<T> copy(lhs);
@@ -197,7 +184,6 @@ DualNumber<T> operator-(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
  * \return    The result of the operation.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualNumber<T> operator*(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
 {
   DualNumber<T> copy(lhs);
@@ -212,10 +198,18 @@ DualNumber<T> operator*(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
  * \return    The negation of the dual number.
  */
 template <typename T>
-_CPU_AND_GPU_CODE_
 DualNumber<T> operator-(const DualNumber<T>& rhs)
 {
   return DualNumber<T>(-rhs.r, -rhs.d);
+}
+
+//#################### STREAM OPERATORS ####################
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const DualNumber<T>& rhs)
+{
+  os << '(' << rhs.r << ',' << rhs.d << ')';
+  return os;
 }
 
 //#################### TYPEDEFS ####################
