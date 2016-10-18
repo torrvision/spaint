@@ -86,7 +86,7 @@ private:
   boost::shared_ptr<DFBP> m_forest;
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
-  ITMIntImage_Ptr m_leafImage;
+  GPUForest::LeafIndicesImage_Ptr m_leafImage;
   GPUForest_Ptr m_gpuForest;
   std::vector<boost::shared_ptr<EnsemblePredictionGaussianMean>> m_featurePredictions;
 

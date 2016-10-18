@@ -15,6 +15,12 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   const int nTrees = pretrained_forest.GetNbTrees();
   const int maxNbNodes = pretrained_forest.GetMaxNbNodesInAnyLearner();
 
+  if (nTrees != NTREES)
+  {
+    throw std::runtime_error(
+        "Number of trees in the loaded forest different from the instantiation of GPUForest.");
+  }
+
   // Create texture storing the nodes
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nTrees, maxNbNodes));

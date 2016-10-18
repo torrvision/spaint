@@ -12,6 +12,8 @@
 
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 
+#include "ORUtils/Vector.h"
+
 namespace spaint
 {
 struct GPUForestNode
@@ -28,11 +30,19 @@ typedef boost::shared_ptr<const ORUtils::Image<GPUForestNode> > GPUForestImage_C
 
 class GPUForest
 {
+  // Typedefs
+public:
+  static const int NTREES = 5; // Max number of trees
+  typedef ORUtils::VectorX<int, NTREES> LeafIndices;
+  typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
+  typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
+  typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;
+
 public:
   explicit GPUForest(const EnsembleLearner &pretrained_forest);
   virtual ~GPUForest();
 
-  virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features, ITMIntImage_Ptr &leaf_indices) const = 0;
+  virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features, LeafIndicesImage_Ptr &leaf_indices) const = 0;
 
 protected:
   GPUForestImage_Ptr m_forestImage;

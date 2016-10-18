@@ -55,7 +55,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           ITMLib::ITMLibSettings::DEVICE_CUDA);
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
-  m_leafImage.reset(new ITMIntImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
+  m_leafImage.reset(
+      new GPUForest::LeafIndicesImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
 
   // Set params as in scoreforests
@@ -114,8 +115,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
 #ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6,
-          "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+    boost::timer::auto_cpu_timer t(6,
+        "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
     if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
@@ -521,7 +522,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
-  const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
+  const GPUForest::LeafIndices *leafData = m_leafImage->GetData(
+      MEMORYDEVICE_CPU);
 
   bool foundIsometricMapping = false;
   const int maxIterationsOuter = 20;
@@ -559,20 +561,18 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (!selectedPrediction)
       {
         // Get predicted leaves
-        std::vector<size_t> featureLeaves(m_leafImage->noDims.height);
-
-        for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
-            ++tree_idx)
+        std::vector<size_t> featureLeaves(GPUForest::NTREES);
+        for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
         {
-          featureLeaves[tree_idx] = leafData[tree_idx
-              * m_leafImage->noDims.width + linearFeatureIdx];
+          featureLeaves[tree_idx] = leafData[linearFeatureIdx][tree_idx];
         }
 
         auto p = m_dataset->GetForest()->GetPredictionForLeaves(featureLeaves);
         selectedPrediction = boost::dynamic_pointer_cast<
             EnsemblePredictionGaussianMean>(p);
 
-        if(!selectedPrediction) continue;
+        if (!selectedPrediction)
+          continue;
 
         // Filter predictions and keep only those with the most inliers
         std::sort(selectedPrediction->_modes.begin(),
@@ -903,7 +903,8 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
-  const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
+  const GPUForest::LeafIndices *leafData = m_leafImage->GetData(
+      MEMORYDEVICE_CPU);
 
   for (int i = 0; i < batchSize; ++i)
   {
@@ -929,13 +930,11 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
         if (!selectedPrediction)
         {
           // Get predicted leaves
-          std::vector<size_t> featureLeaves(m_leafImage->noDims.height);
+          std::vector<size_t> featureLeaves(GPUForest::NTREES);
 
-          for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
-              ++tree_idx)
+          for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
           {
-            featureLeaves[tree_idx] = leafData[tree_idx
-                * m_leafImage->noDims.width + linearIdx];
+            featureLeaves[tree_idx] = leafData[linearIdx][tree_idx];
           }
 
           auto p = m_dataset->GetForest()->GetPredictionForLeaves(
@@ -943,7 +942,8 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
           selectedPrediction = boost::dynamic_pointer_cast<
               EnsemblePredictionGaussianMean>(p);
 
-          if(!selectedPrediction) continue;
+          if (!selectedPrediction)
+            continue;
 
           // Filter predictions and keep only those with the most inliers
           std::sort(selectedPrediction->_modes.begin(),
