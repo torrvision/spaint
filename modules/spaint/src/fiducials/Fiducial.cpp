@@ -9,7 +9,7 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include "geometry/DualQuaternion.h"
+#include "geometry/GeometryUtil.h"
 
 namespace spaint {
 
@@ -40,17 +40,7 @@ void Fiducial::integrate(const FiducialMeasurement& measurement)
   if(m_id != measurement.id()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with a different ID");
   if(!measurement.pose_world()) throw std::runtime_error("Error: Cannot update a fiducial using a measurement with no world pose");
 
-  Vector3f r, t, newR, newT;
-  m_pose.GetParams(t, r);
-  measurement.pose_world()->GetParams(newT, newR);
-
-  float dist = length(t - newT);
-  double angle = DualQuatd::angle_between_rotations(DualQuatd::from_rotation(r), DualQuatd::from_rotation(newR));
-
-  const float distThreshold = 0.05f;
-  const double angleThreshold = 20 * M_PI / 180;
-
-  if(dist < distThreshold && angle < angleThreshold)
+  if(GeometryUtil::poses_are_similar(m_pose, *measurement.pose_world()))
   {
     integrate_sub(measurement);
     ++m_confidence;

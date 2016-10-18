@@ -5,6 +5,8 @@
 
 #include "fiducials/FiducialRelocaliser.h"
 
+#include "geometry/DualQuaternion.h"
+
 namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
