@@ -53,7 +53,7 @@ void AveragingFiducial::integrate_sub(const FiducialMeasurement& measurement)
   DualQuatf newQ = DualQuatf::from_translation(newT) * DualQuatf::from_rotation(newR);
 
   // TODO: Calculate the correct interpolation parameter (use the confidence of the fiducial).
-  DualQuatf avgQ = DualQuatf::sclerp(newQ, q, m_confidence / (m_confidence + confidence_step()));
+  DualQuatf avgQ = DualQuatf::sclerp(newQ, q, m_confidence / (m_confidence + 1.0f));
 
   // TODO: Determine avgR and avgT from avgQ.
   Vector3f avgR = avgQ.get_rotation();

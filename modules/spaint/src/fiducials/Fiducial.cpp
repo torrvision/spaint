@@ -14,7 +14,7 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 Fiducial::Fiducial(const std::string& id, const ORUtils::SE3Pose& pose)
-: m_confidence(confidence_step()), m_id(id), m_pose(pose)
+: m_confidence(1.0f), m_id(id), m_pose(pose)
 {}
 
 //#################### DESTRUCTOR ####################
@@ -50,12 +50,12 @@ void Fiducial::integrate(const FiducialMeasurement& measurement)
   if(dist < distThreshold && angle < angleThreshold)
   {
     integrate_sub(measurement);
-    m_confidence = std::min(m_confidence + confidence_step(), 1.0f);
+    ++m_confidence;
   }
   else
   {
     m_pose = *measurement.pose_world();
-    m_confidence = confidence_step();
+    m_confidence = 1.0f;
   }
 }
 
@@ -66,9 +66,9 @@ const ORUtils::SE3Pose& Fiducial::pose() const
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-float Fiducial::confidence_step()
+float Fiducial::stable_confidence()
 {
-  return 0.1f;
+  return 10.0f;
 }
 
 }

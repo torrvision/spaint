@@ -91,7 +91,7 @@ public:
   /**
    * \brief TODO
    */
-  static float confidence_step();
+  static float stable_confidence();
 };
 
 //#################### TYPEDEFS ####################
