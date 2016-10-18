@@ -15,10 +15,10 @@ namespace spaint {
 /**
  * \brief This class can be used to relocalise a camera in a scene using fiducial markers.
  */
-struct FiducialRelocaliser
+class FiducialRelocaliser
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
+public:
   /**
    * \brief Tries to estimate the current camera pose by using correspondences between known fiducials in the scene
    *        and fiducial measurements in the live frame.
@@ -29,6 +29,14 @@ struct FiducialRelocaliser
    */
   static boost::optional<ORUtils::SE3Pose> estimate_pose(const std::map<std::string,Fiducial_Ptr>& fiducials,
                                                          const std::map<std::string,FiducialMeasurement>& measurements);
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  static std::map<std::string,ORUtils::SE3Pose> compute_hypotheses(const std::map<std::string,Fiducial_Ptr>& fiducials,
+                                                                   const std::map<std::string,FiducialMeasurement>& measurements);
 };
 
 }
