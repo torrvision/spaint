@@ -5,6 +5,7 @@
 
 #include "pipelinecomponents/SLAMComponentWithScoreForest.h"
 
+#include <algorithm>
 #include <tuple>
 #include <random>
 
@@ -64,6 +65,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_checkMinDistanceBetweenSampledModes = true;
   m_minDistanceBetweenSampledModes = 0.3f;
   m_checkRigidTransformationConstraint = false; // Speeds up a lot, was true in scoreforests
+//  m_checkRigidTransformationConstraint = true;
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
   m_trimKinitAfterFirstEnergyComputation = 64;
@@ -560,6 +562,21 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
         selectedPrediction = boost::dynamic_pointer_cast<
             EnsemblePredictionGaussianMean>(p);
 
+        if(!selectedPrediction) continue;
+
+        // Filter predictions and keep only those with the most inliers
+        std::sort(selectedPrediction->_modes.begin(),
+            selectedPrediction->_modes.end(),
+            [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
+            { return a.size() > b.size();});
+
+        if (selectedPrediction->_modes.size() > 20)
+        {
+//          std::cout << "Dropping modes from "
+//              << selectedPrediction->_modes.size() << std::endl;
+          selectedPrediction->_modes.resize(20);
+        }
+
         // Store prediction in the vector for future use
 #pragma omp critical
         m_featurePredictions[linearFeatureIdx] = selectedPrediction;
@@ -671,7 +688,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       }
 
       // isometry?
-      // if (false)
+//       if (false)
       // if (true)
       if (m_checkRigidTransformationConstraint)
       {
@@ -860,7 +877,7 @@ SLAMComponentWithScoreForest::PoseCandidate SLAMComponentWithScoreForest::estima
 
     // Remove half of the candidates with the worse energies
     candidates.erase(candidates.begin() + candidates.size() / 2,
-        candidates.begin() + candidates.size());
+        candidates.end());
   }
 
   return candidates[0];
@@ -917,6 +934,21 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
               featureLeaves);
           selectedPrediction = boost::dynamic_pointer_cast<
               EnsemblePredictionGaussianMean>(p);
+
+          if(!selectedPrediction) continue;
+
+          // Filter predictions and keep only those with the most inliers
+          std::sort(selectedPrediction->_modes.begin(),
+              selectedPrediction->_modes.end(),
+              [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
+              { return a.size() > b.size();});
+
+          if (selectedPrediction->_modes.size() > 20)
+          {
+//            std::cout << "Dropping modes from "
+//                << selectedPrediction->_modes.size() << std::endl;
+            selectedPrediction->_modes.resize(20);
+          }
 
           // Store prediction in the vector for future use
 #pragma omp critical
