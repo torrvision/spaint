@@ -71,6 +71,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_trimKinitAfterFirstEnergyComputation = 64;
   m_poseUpdate = true;
   m_usePredictionCovarianceForPoseOptimization = true;
+
+  // Additional stuff
+  m_maxNbModesPerLeaf = 10;
 }
 
 //#################### DESTRUCTOR ####################
@@ -570,11 +573,11 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
             [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
             { return a.size() > b.size();});
 
-        if (selectedPrediction->_modes.size() > 20)
+        if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
         {
-//          std::cout << "Dropping modes from "
-//              << selectedPrediction->_modes.size() << std::endl;
-          selectedPrediction->_modes.resize(20);
+//            std::cout << "Dropping modes from "
+//                << selectedPrediction->_modes.size() << std::endl;
+          selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
         }
 
         // Store prediction in the vector for future use
@@ -902,7 +905,7 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
     bool validIndex = false;
     int innerIterations = 0;
 
-    while (!validIndex && innerIterations < 50)
+    while (!validIndex && innerIterations++ < 50)
     {
       std::pair<int, int> s;
 
@@ -943,11 +946,11 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
               [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
               { return a.size() > b.size();});
 
-          if (selectedPrediction->_modes.size() > 20)
+          if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
           {
 //            std::cout << "Dropping modes from "
 //                << selectedPrediction->_modes.size() << std::endl;
-            selectedPrediction->_modes.resize(20);
+            selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
           }
 
           // Store prediction in the vector for future use

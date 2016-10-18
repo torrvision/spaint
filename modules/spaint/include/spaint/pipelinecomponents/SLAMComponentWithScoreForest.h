@@ -102,6 +102,9 @@ private:
   int m_trimKinitAfterFirstEnergyComputation;
   bool m_poseUpdate;
   bool m_usePredictionCovarianceForPoseOptimization;
+
+  // Additional parameters for online evaluation
+  int m_maxNbModesPerLeaf;
 };
 
 //#################### TYPEDEFS ####################
