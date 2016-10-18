@@ -73,7 +73,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_usePredictionCovarianceForPoseOptimization = true;
 
   // Additional stuff
-  m_maxNbModesPerLeaf = 10;
+  m_maxNbModesPerLeaf = 10; //5-10 seem to be enough
 }
 
 //#################### DESTRUCTOR ####################
@@ -113,6 +113,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+
     if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
         < std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac))
     {
@@ -532,6 +537,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
     while (selectedPixelsAndModes.size() != m_nbPointsForKabschBoostrap
         && iterationsInner < maxIterationsInner)
     {
+      ++iterationsInner;
+
       const int x = col_index_generator(eng);
       const int y = row_index_generator(eng);
       const int linearFeatureIdx = y * m_featureImage->noDims.width + x;
@@ -588,8 +595,6 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       // The prediction might be null if there are no modes (TODO: improve GetPredictionForLeaves somehow)
       if (!selectedPrediction)
         continue;
-
-      ++iterationsInner;
 
       // Apparently the scoreforests code uses only modes from the first tree to generate hypotheses...
       // TODO: investigate
