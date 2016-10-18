@@ -53,17 +53,17 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Calculates a distance metric between two dual quaternions that represent pure rotations.
+   * \brief Calculates the angle needed to rotate one dual quaternion representing a pure rotation into another.
    *
-   * The metric represents the angle needed to rotate one dual quaternion into the other.
+   * This can function as a distance metric between two pure rotations.
    *
    * \param q1  The first dual quaternion.
    * \param q2  The second dual quaternion.
    * \return    The angle needed to rotate one dual quaternion into the other.
    */
-  static T distance_between_rotations(const DualQuaternion<T>& q1, const DualQuaternion<T>& q2)
+  static T angle_between_rotations(const DualQuaternion<T>& q1, const DualQuaternion<T>& q2)
   {
-    DualQuaternion<T> q1toq2 = q2 * q1.conjugate();
+    DualQuaternion<T> q1toq2 = (q2 * q1.conjugate()).normalised();
     return length(q1toq2.get_rotation());
   }
 
