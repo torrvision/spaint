@@ -42,7 +42,7 @@ void Fiducial::integrate(const FiducialMeasurement& measurement)
   m_pose.GetParams(t, r);
   measurement.pose_world()->GetParams(newT, newR);
   float dist = length(t - newT);
-  float angle = acosf(dot(r.normalised(), newR.normalised()));
+  float angle = acosf(dot(r.normalised(), newR.normalised())); // FIXME: Calculate the angle of the rotation that maps r onto newR (or vice-versa).
 
   const float distThreshold = 0.05f;
   const float angleThreshold = static_cast<float>(20 * M_PI / 180);
