@@ -883,8 +883,9 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
   for (int i = 0; i < batchSize; ++i)
   {
     bool validIndex = false;
+    int innerIterations = 0;
 
-    while (!validIndex)
+    while (!validIndex && innerIterations < 50)
     {
       std::pair<int, int> s;
 
@@ -936,6 +937,13 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
           }
         }
       }
+    }
+
+    if (!validIndex)
+    {
+      std::cout << "Couldn't sample a valid pixel. Returning "
+          << sampledPixelIdx.size() << "/" << batchSize << std::endl;
+      break;
     }
   }
 }
