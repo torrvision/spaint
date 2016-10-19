@@ -10,6 +10,8 @@
 
 #include <ORUtils/SE3Pose.h>
 
+#include "DualQuaternion.h"
+
 namespace spaint {
 
 /**
@@ -18,6 +20,32 @@ namespace spaint {
 struct GeometryUtil
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief TODO
+   */
+  template <typename T>
+  static ORUtils::SE3Pose dual_quat_to_pose(const DualQuaternion<T>& dq)
+  {
+    ORUtils::SE3Pose pose;
+    pose.SetFrom(dq.get_translation().toFloat(), dq.get_rotation().toFloat());
+    return pose;
+  }
+
+  /**
+   * \brief TODO
+   */
+  template <typename T>
+  static DualQuaternion<T> pose_to_dual_quat(const ORUtils::SE3Pose& pose)
+  {
+    Vector3f r, t;
+    pose.GetParams(t, r);
+
+    ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));
+    ORUtils::Vector3<T> typedT(static_cast<T>(t.x), static_cast<T>(t.y), static_cast<T>(t.z));
+
+    return DualQuaternion<T>::from_translation(typedT) * DualQuaternion<T>::from_rotation(typedR);
+  }
 
   /**
    * \brief TODO

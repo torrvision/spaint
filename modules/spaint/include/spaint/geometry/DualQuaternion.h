@@ -91,17 +91,26 @@ public:
    * \return                    The dual quaternion.
    * \throws std::runtime_error If the rotation axis is invalid.
    */
-  static DualQuaternion<T> from_rotation(ORUtils::Vector3<float> axis, T angle)
+  template <typename U>
+  static DualQuaternion<T> from_rotation(ORUtils::Vector3<U> axis, U angle)
   {
-    T axisLengthSquared = dot(axis, axis);
+    U axisLengthSquared = dot(axis, axis);
     if(fabs(axisLengthSquared - 1) > 1e-9)
     {
-      if(axisLengthSquared > 1e-6) axis = axis.normalised();
+      if(axisLengthSquared > 1e-6)
+      {
+        // FIXME: Currently, the implementation of Vector3<T>::normalised always returns a Vector3f,
+        //        which is unhelpful when trying to normalise a Vector3d. This should be fixed.
+        U axisLength = sqrt(axisLengthSquared);
+        axis.x /= axisLength;
+        axis.y /= axisLength;
+        axis.z /= axisLength;
+      }
       else throw std::runtime_error("Error: Could not construct dual quaternion - bad rotation axis");
     }
 
-    T cosHalfTheta = cos(angle/2);
-    T sinHalfTheta = sqrt(1 - cosHalfTheta*cosHalfTheta);
+    U cosHalfTheta = cos(angle/2);
+    U sinHalfTheta = sqrt(1 - cosHalfTheta*cosHalfTheta);
     return DualQuaternion<T>(cosHalfTheta, sinHalfTheta * axis.x, sinHalfTheta * axis.y, sinHalfTheta * axis.z);
   }
 
@@ -114,12 +123,13 @@ public:
    * \return                    The dual quaternion.
    * \throws std::runtime_error If the rotation vector is invalid.
    */
-  static DualQuaternion<T> from_rotation(const ORUtils::Vector3<float>& rot)
+  template <typename U>
+  static DualQuaternion<T> from_rotation(const ORUtils::Vector3<U>& rot)
   {
-    T lengthSquared = dot(rot, rot);
+    U lengthSquared = dot(rot, rot);
     if(lengthSquared > 1e-6)
     {
-      T length = sqrt(lengthSquared);
+      U length = sqrt(lengthSquared);
       return from_rotation(rot / length, length);
     }
     else throw std::runtime_error("Error: Could not construct dual quaternion - bad rotation vector");
@@ -363,9 +373,9 @@ private:
    *
    * \return  A 3D point corresponding to this dual quaternion.
    */
-  ORUtils::Vector3<double> to_point() const
+  ORUtils::Vector3<T> to_point() const
   {
-    return ORUtils::Vector3<double>(x.d, y.d, z.d);
+    return ORUtils::Vector3<T>(x.d, y.d, z.d);
   }
 };
 

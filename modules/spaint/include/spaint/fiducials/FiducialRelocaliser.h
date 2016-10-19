@@ -37,6 +37,17 @@ private:
    */
   static std::map<std::string,ORUtils::SE3Pose> compute_hypotheses(const std::map<std::string,Fiducial_Ptr>& fiducials,
                                                                    const std::map<std::string,FiducialMeasurement>& measurements);
+
+  /**
+   * \brief TODO
+   */
+  static std::string find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& cameraPoseHypotheses,
+                                          std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis);
+
+  /**
+   * \brief TODO
+   */
+  static ORUtils::SE3Pose refine_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis);
 };
 
 }

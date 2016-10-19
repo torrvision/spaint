@@ -7,7 +7,7 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include "geometry/DualQuaternion.h"
+#include "geometry/GeometryUtil.h"
 using namespace spaint;
 
 namespace spaint {
@@ -22,19 +22,14 @@ AveragingFiducial::AveragingFiducial(const std::string& id, const ORUtils::SE3Po
 
 void AveragingFiducial::integrate_sub(const FiducialMeasurement& measurement)
 {
-  // Get the rotation and translation components of both the existing fiducial pose and the measurement pose.
-  Vector3f r, t, newR, newT;
-  m_pose.GetParams(t, r);
-  measurement.pose_world()->GetParams(newT, newR);
-
-  // Convert the two poses to dual quaternions.
-  DualQuatf q = DualQuatf::from_translation(t) * DualQuatf::from_rotation(r);
-  DualQuatf newQ = DualQuatf::from_translation(newT) * DualQuatf::from_rotation(newR);
+  // Convert the existing fiducial pose and the measurement pose to dual quaternions.
+  DualQuatd dq = GeometryUtil::pose_to_dual_quat<double>(m_pose);
+  DualQuatd newDQ = GeometryUtil::pose_to_dual_quat<double>(*measurement.pose_world());
 
   // Compute a confidence-weighted average of the two poses using dual quaternion interpolation
   // and set this as the new pose for the fiducial.
-  DualQuatf avgQ = DualQuatf::sclerp(newQ, q, m_confidence / (m_confidence + 1.0f));
-  m_pose.SetFrom(avgQ.get_translation(), avgQ.get_rotation());
+  DualQuatd avgDQ = DualQuatd::sclerp(newDQ, dq, m_confidence / (m_confidence + 1.0f));
+  m_pose = GeometryUtil::dual_quat_to_pose(avgDQ);
 }
 
 }
