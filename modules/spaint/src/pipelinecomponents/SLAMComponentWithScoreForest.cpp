@@ -579,41 +579,11 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (selectedPrediction->_modes.empty())
         continue;
 
-      // Apparently the scoreforests code uses only modes from the first tree to generate hypotheses...
-      // TODO: investigate
-      int nbModesInFirstTree = -1;
-      //int nbModesInFirstTree = selectedPrediction->_modes.size() // Alternatively, use all modes
-
-      {
-        // Apparently the modes are sorted with descending number of inliers (PER TREE)
-        // so when the number of points for a mode is greater than the previous
-        // it means we are seeing a mode of the next tree
-        int prevNbPointsPerMode = INT_MAX;
-        bool found = false;
-
-        for (int i = 0; i < selectedPrediction->_modes.size(); ++i)
-        {
-          if (selectedPrediction->_modes[i][0]->_nbPoints > prevNbPointsPerMode)
-          {
-            nbModesInFirstTree = i;
-            found = true;
-            break;
-          }
-
-          prevNbPointsPerMode = selectedPrediction->_modes[i][0]->_nbPoints;
-        }
-
-        if (!found) // There must be only a single tree...
-        {
-          nbModesInFirstTree = selectedPrediction->_modes.size();
-        }
-      }
-
       int selectedModeIdx = 0;
       if (m_useAllModesPerLeafInPoseHypothesisGeneration)
       {
         std::uniform_int_distribution<int> mode_generator(0,
-            nbModesInFirstTree - 1);
+            selectedPrediction->_modes.size() - 1);
         selectedModeIdx = mode_generator(eng);
       }
 
