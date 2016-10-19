@@ -19,7 +19,7 @@ namespace spaint
 struct GPUForestNode
 {
   int leftChildIdx; // No need to store the right child, it's left + 1
-  int leafIdx;      // Index of the associated leaf (-1 if the node is not a leaf)
+  int leafIdx;    // Index of the associated leaf (-1 if the node is not a leaf)
   int featureIdx;   // Index of the feature to evaluate;
   float featureThreshold; // Feature threshold
 };
@@ -27,6 +27,30 @@ struct GPUForestNode
 typedef ORUtils::Image<GPUForestNode> GPUForestImage;
 typedef boost::shared_ptr<ORUtils::Image<GPUForestNode> > GPUForestImage_Ptr;
 typedef boost::shared_ptr<const ORUtils::Image<GPUForestNode> > GPUForestImage_CPtr;
+
+struct GPUForestMode
+{
+  Vector3f position;
+  Vector3f colour;
+
+  Matrix3f positionCovariance;
+  Matrix3f positionInvCovariance;
+  float determinant;
+
+  int nbInliers;
+};
+
+struct GPUForestPrediction
+{
+  static const int MAX_MODES = 10;
+
+  GPUForestMode modes[MAX_MODES];
+  int nbModes;
+};
+
+typedef ORUtils::MemoryBlock<GPUForestPrediction> GPUForestPredictionsBlock;
+typedef boost::shared_ptr<GPUForestPredictionsBlock> GPUForestPredictionsBlock_Ptr;
+typedef boost::shared_ptr<const GPUForestPredictionsBlock> GPUForestPredictionsBlock_CPtr;
 
 class GPUForest
 {
@@ -42,15 +66,21 @@ public:
   explicit GPUForest(const EnsembleLearner &pretrained_forest);
   virtual ~GPUForest();
 
-  virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features, LeafIndicesImage_Ptr &leaf_indices) const = 0;
-  boost::shared_ptr<EnsemblePredictionGaussianMean> get_prediction_for_leaves(const LeafIndices &leaves);
+  virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+      LeafIndicesImage_Ptr &leaf_indices) const = 0;
+  boost::shared_ptr<EnsemblePredictionGaussianMean> get_prediction_for_leaves(
+      const LeafIndices &leaves);
 
 protected:
   GPUForestImage_Ptr m_forestImage;
+  GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   std::vector<PredictionGaussianMean> m_leafPredictions;
 
 private:
-  int convert_node(const Learner *learner, int node_idx, int tree_idx, int n_trees, int output_idx, int first_free_idx, GPUForestNode *gpu_nodes);
+  int convert_node(const Learner *learner, int node_idx, int tree_idx,
+      int n_trees, int output_idx, int first_free_idx,
+      GPUForestNode *gpu_nodes);
+  void convert_predictions();
 };
 
 typedef boost::shared_ptr<GPUForest> GPUForest_Ptr;

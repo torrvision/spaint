@@ -47,6 +47,10 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
     std::cout << "Total number of leaves: " << m_leafPredictions.size()
         << std::endl;
   }
+
+  m_predictionsBlock = mbf.make_block<GPUForestPrediction>(
+      m_leafPredictions.size());
+  convert_predictions();
 }
 
 GPUForest::~GPUForest()
@@ -139,6 +143,48 @@ boost::shared_ptr<EnsemblePredictionGaussianMean> GPUForest::get_prediction_for_
   }
 
   return res;
+}
+
+void GPUForest::convert_predictions()
+{
+  GPUForestPrediction *gpuPredictions = m_predictionsBlock->GetData(
+      MEMORYDEVICE_CPU);
+
+#pragma omp parallel for
+  for (size_t leafIdx = 0; leafIdx < m_leafPredictions.size(); ++leafIdx)
+  {
+    const PredictionGaussianMean &currentPred = m_leafPredictions[leafIdx];
+
+    // copy to sort modes by descending number of inliers so to keep only the best ones
+    auto modes = currentPred._modes;
+    std::sort(modes.begin(), modes.end(),
+        [](const std::vector<PredictedGaussianMean> &a, const std::vector<PredictedGaussianMean> &b)
+        { return a[0]._nbPoints > b[0]._nbPoints;});
+
+    GPUForestPrediction &currentTargetPred = gpuPredictions[leafIdx];
+    currentTargetPred.nbModes = 0; // Reset modes
+
+    for (size_t modeIdx = 0;
+        modeIdx < modes.size()
+            && currentTargetPred.nbModes < GPUForestPrediction::MAX_MODES;
+        ++modeIdx)
+    {
+      const auto &mode = modes[modeIdx];
+      auto &targetMode = currentTargetPred.modes[currentTargetPred.nbModes++];
+
+      // Not using _meanf and the others because the float variant sometimes seems not set..
+      Eigen::Map<Eigen::Vector3f>(targetMode.position.v) = mode[0]._mean.cast<
+          float>();
+      Eigen::Map<Eigen::Vector3f>(targetMode.colour.v) = mode[1]._mean.cast<
+          float>();
+      Eigen::Map<Eigen::Matrix3f>(targetMode.positionCovariance.m) =
+          mode[0]._covariance.cast<float>();
+      Eigen::Map<Eigen::Matrix3f>(targetMode.positionInvCovariance.m) =
+          mode[0]._inverseCovariance.cast<float>();
+      targetMode.determinant = static_cast<float>(mode[0]._determinant);
+      targetMode.nbInliers = mode[0]._nbPoints;
+    }
+  }
 }
 
 }
