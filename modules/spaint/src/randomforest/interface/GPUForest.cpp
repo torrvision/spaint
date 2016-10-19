@@ -177,8 +177,8 @@ void GPUForest::convert_predictions()
           float>();
       Eigen::Map<Eigen::Vector3f>(targetMode.colour.v) = mode[1]._mean.cast<
           float>();
-      Eigen::Map<Eigen::Matrix3f>(targetMode.positionCovariance.m) =
-          mode[0]._covariance.cast<float>();
+//      Eigen::Map<Eigen::Matrix3f>(targetMode.positionCovariance.m) =
+//          mode[0]._covariance.cast<float>();
       Eigen::Map<Eigen::Matrix3f>(targetMode.positionInvCovariance.m) =
           mode[0]._inverseCovariance.cast<float>();
       targetMode.determinant = static_cast<float>(mode[0]._determinant);

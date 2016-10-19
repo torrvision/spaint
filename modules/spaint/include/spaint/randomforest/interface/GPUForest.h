@@ -33,7 +33,7 @@ struct GPUForestMode
   Vector3f position;
   Vector3f colour;
 
-  Matrix3f positionCovariance;
+//  Matrix3f positionCovariance; // Seems not needed
   Matrix3f positionInvCovariance;
   float determinant;
 
