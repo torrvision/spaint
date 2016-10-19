@@ -50,9 +50,8 @@ std::map<std::string,ORUtils::SE3Pose> FiducialRelocaliser::compute_hypotheses(c
     if(!fiducialPoseEye) continue;
 
     // Use the eye pose from the measurement and the world pose from the fiducial to compute a camera pose hypothesis.
-    ORUtils::SE3Pose cameraPoseHypothesis;
     ORUtils::SE3Pose fiducialPoseWorld = jt->second->pose();
-    // TODO
+    ORUtils::SE3Pose cameraPoseHypothesis(fiducialPoseEye->GetInvM() * fiducialPoseWorld.GetM());
 
     // Add the camera pose hypothesis to the set.
     cameraPoseHypotheses.insert(std::make_pair(it->first, cameraPoseHypothesis));
