@@ -11,6 +11,7 @@
 #include <tuple>
 #include <random>
 
+#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <DatasetRGBD7Scenes.hpp>
@@ -62,11 +63,15 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  boost::optional<PoseCandidate> estimate_pose();
+  void evaluate_forest(const ITMUChar4Image_CPtr &inputRgbImage,
+      const ITMFloatImage_CPtr &inputDepthImage,
+      const Vector4f &depthIntrinsics);
+
   cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb,
       const ITMShortImage_Ptr &depth) const;
   void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
-  PoseCandidate estimate_pose(std::vector<PoseCandidate> &candidates);
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
       std::vector<std::pair<int, int>> &sampledPixelIdx, std::mt19937 &eng,
       int batchSize);

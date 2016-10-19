@@ -70,8 +70,10 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
   m_trimKinitAfterFirstEnergyComputation = 64;
-  m_poseUpdate = true;
-  m_usePredictionCovarianceForPoseOptimization = true;
+  m_poseUpdate = true; // original
+//  m_poseUpdate = false; // faster, might be OK
+  m_usePredictionCovarianceForPoseOptimization = true; // original implementation
+//  m_usePredictionCovarianceForPoseOptimization = false;
 
   // Additional stuff
   m_maxNbModesPerLeaf = 10; //5-10 seem to be enough
@@ -128,72 +130,33 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       return trackingResult;
     }
 
+    evaluate_forest(inputRGBImage, inputDepthImage, depthIntrinsics);
+    boost::optional<PoseCandidate> pose_candidate = estimate_pose();
+
+    if (pose_candidate)
     {
-#ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6,
-          "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-      m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
-          depthIntrinsics, m_featureImage);
+      Eigen::Matrix4f final_pose = std::get < 0 > (*pose_candidate);
+      std::cout << "The final pose is:" << final_pose << "\n and has "
+          << std::get < 1
+          > (*pose_candidate).size() << " inliers." << std::endl;
+
+      Matrix4f invPose;
+      Eigen::Map<Eigen::Matrix4f> em(invPose.m);
+      em = final_pose;
+
+      trackingState->pose_d->SetInvM(invPose);
+
+      const bool resetVisibleList = true;
+      m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
+          voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+      prepare_for_tracking(TRACK_VOXELS);
+      m_trackingController->Track(trackingState.get(), view.get());
+      trackingResult = trackingState->trackerResult;
     }
-
-//  std::cout << "Feature image size: " << m_featureImage->noDims << std::endl;
-
+    else
     {
-#ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6,
-          "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-      m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
+      std::cout << "Cannot estimate a pose candidate." << std::endl;
     }
-
-//  std::cout << "Leaf image size: " << m_leafImage->noDims << std::endl;
-
-    m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
-    m_leafImage->UpdateHostFromDevice();
-
-    // Generate pose candidates with the new implementation
-    std::vector<PoseCandidate> poseCandidates;
-
-    {
-#ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6,
-          "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-      generate_pose_candidates(poseCandidates);
-    }
-
-    std::cout << "Generated " << poseCandidates.size() << " initial candidates."
-        << std::endl;
-
-    if(poseCandidates.empty()) return trackingResult;
-
-    PoseCandidate final_candidate;
-    {
-#ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6,
-          "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-      final_candidate = estimate_pose(poseCandidates);
-    }
-
-    std::cout << "The final pose is:" << std::get < 0
-        > (final_candidate) << "\n and has " << std::get < 1
-        > (final_candidate).size() << " inliers." << std::endl;
-
-    Matrix4f invPose;
-    Eigen::Map<Eigen::Matrix4f> em(invPose.m);
-    em = std::get < 0 > (final_candidate);
-
-    trackingState->pose_d->SetInvM(invPose);
-
-    const bool resetVisibleList = true;
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
-        voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-    prepare_for_tracking(TRACK_VOXELS);
-    m_trackingController->Track(trackingState.get(), view.get());
-    trackingResult = trackingState->trackerResult;
-
   }
 
   return trackingResult;
@@ -425,6 +388,28 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
+void SLAMComponentWithScoreForest::evaluate_forest(
+    const ITMUChar4Image_CPtr &inputRGBImage,
+    const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics)
+{
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
+        depthIntrinsics, m_featureImage);
+  }
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
+  }
+}
+
 cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
     const ITMUChar4Image_Ptr &inputRGBImage,
     const ITMShortImage_Ptr &inputRawDepthImage) const
@@ -563,7 +548,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (!selectedPrediction)
       {
         // Get predicted leaves
-        selectedPrediction = m_gpuForest->get_prediction_for_leaves(leafData[linearFeatureIdx]);
+        selectedPrediction = m_gpuForest->get_prediction_for_leaves(
+            leafData[linearFeatureIdx]);
 
 //        std::vector<size_t> featureLeaves(GPUForest::NTREES);
 //        for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
@@ -804,10 +790,26 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
   return false;
 }
 
-SLAMComponentWithScoreForest::PoseCandidate SLAMComponentWithScoreForest::estimate_pose(
-    std::vector<PoseCandidate> &candidates)
+boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithScoreForest::estimate_pose()
 {
   std::mt19937 random_engine;
+
+  m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
+  m_leafImage->UpdateHostFromDevice();
+
+  // Generate pose candidates with the new implementation
+  std::vector<PoseCandidate> candidates;
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    generate_pose_candidates(candidates);
+  }
+
+  std::cout << "Generated " << candidates.size() << " initial candidates."
+      << std::endl;
 
   if (m_trimKinitAfterFirstEnergyComputation < candidates.size())
   {
@@ -862,6 +864,11 @@ SLAMComponentWithScoreForest::PoseCandidate SLAMComponentWithScoreForest::estima
   //  std::cout << candidates.size() << " candidates remaining." << std::endl;
   //  std::cout << "Premptive RANSAC" << std::endl;
 
+#ifdef ENABLE_TIMERS
+  boost::timer::auto_cpu_timer t(6,
+      "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+
   std::vector<bool> maskSampledPixels(m_featureImage->dataSize, false);
 
   float iteration = 0.0f;
@@ -892,7 +899,7 @@ SLAMComponentWithScoreForest::PoseCandidate SLAMComponentWithScoreForest::estima
         candidates.end());
   }
 
-  return candidates[0];
+  return !candidates.empty() ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
 void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
@@ -934,7 +941,8 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
         if (!selectedPrediction)
         {
           // Get predicted leaves
-          selectedPrediction = m_gpuForest->get_prediction_for_leaves(leafData[linearIdx]);
+          selectedPrediction = m_gpuForest->get_prediction_for_leaves(
+              leafData[linearIdx]);
 
 //          std::vector<size_t> featureLeaves(GPUForest::NTREES);
 //
