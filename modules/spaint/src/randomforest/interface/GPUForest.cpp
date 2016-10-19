@@ -138,9 +138,6 @@ boost::shared_ptr<EnsemblePredictionGaussianMean> GPUForest::get_prediction_for_
     }
   }
 
-  if (res->_modes.empty())
-    return nullptr;
-
   return res;
 }
 

@@ -551,18 +551,11 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
         selectedPrediction = m_gpuForest->get_prediction_for_leaves(
             leafData[linearFeatureIdx]);
 
-//        std::vector<size_t> featureLeaves(GPUForest::NTREES);
-//        for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
-//        {
-//          featureLeaves[tree_idx] = leafData[linearFeatureIdx][tree_idx];
-//        }
-//
-//        auto p = m_dataset->GetForest()->GetPredictionForLeaves(featureLeaves);
-//        selectedPrediction = boost::dynamic_pointer_cast<
-//            EnsemblePredictionGaussianMean>(p);
-
         if (!selectedPrediction)
-          continue;
+        {
+          throw std::runtime_error(
+              "prediction returned by the forest should not be null");
+        }
 
         // Filter predictions and keep only those with the most inliers
         std::sort(selectedPrediction->_modes.begin(),
@@ -583,7 +576,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       }
 
       // The prediction might be null if there are no modes (TODO: improve GetPredictionForLeaves somehow)
-      if (!selectedPrediction)
+      if (selectedPrediction->_modes.empty())
         continue;
 
       // Apparently the scoreforests code uses only modes from the first tree to generate hypotheses...
@@ -944,20 +937,11 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
           selectedPrediction = m_gpuForest->get_prediction_for_leaves(
               leafData[linearIdx]);
 
-//          std::vector<size_t> featureLeaves(GPUForest::NTREES);
-//
-//          for (int tree_idx = 0; tree_idx < GPUForest::NTREES; ++tree_idx)
-//          {
-//            featureLeaves[tree_idx] = leafData[linearIdx][tree_idx];
-//          }
-//
-//          auto p = m_dataset->GetForest()->GetPredictionForLeaves(
-//              featureLeaves);
-//          selectedPrediction = boost::dynamic_pointer_cast<
-//              EnsemblePredictionGaussianMean>(p);
-
           if (!selectedPrediction)
-            continue;
+          {
+            throw std::runtime_error(
+                "prediction returned by the forest should not be null");
+          }
 
           // Filter predictions and keep only those with the most inliers
           std::sort(selectedPrediction->_modes.begin(),
@@ -977,7 +961,7 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
           m_featurePredictions[linearIdx] = selectedPrediction;
         }
 
-        if (selectedPrediction)
+        if (!selectedPrediction->_modes.empty())
         {
           validIndex = maskSampledPixels.empty()
               || !maskSampledPixels[linearIdx];
