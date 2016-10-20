@@ -55,6 +55,10 @@ typedef ORUtils::MemoryBlock<GPUForestPrediction> GPUForestPredictionsBlock;
 typedef boost::shared_ptr<GPUForestPredictionsBlock> GPUForestPredictionsBlock_Ptr;
 typedef boost::shared_ptr<const GPUForestPredictionsBlock> GPUForestPredictionsBlock_CPtr;
 
+typedef ORUtils::Image<GPUForestPrediction> GPUForestPredictionsImage;
+typedef boost::shared_ptr<GPUForestPredictionsImage> GPUForestPredictionsImage_Ptr;
+typedef boost::shared_ptr<const GPUForestPredictionsImage> GPUForestPredictionsImage_CPtr;
+
 class GPUForest
 {
   // Typedefs
@@ -72,6 +76,8 @@ public:
   void reset_predictions();
   virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
+  virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
+      GPUForestPredictionsImage_Ptr &predictions) const = 0;
   boost::shared_ptr<GPUForestPrediction> get_prediction_for_leaves(
       const LeafIndices &leaves);
 

@@ -57,10 +57,12 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_leafImage.reset(
       new GPUForest::LeafIndicesImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
+  m_predictionsImage.reset(
+      new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
 
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
 
-  m_gpuForest->reset_predictions();
+//  m_gpuForest->reset_predictions();
 
   // Set params as in scoreforests
   m_kInitRansac = 1024;
@@ -406,6 +408,14 @@ void SLAMComponentWithScoreForest::evaluate_forest(
 #endif
     m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
   }
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "generating ensemble predictions on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_gpuForest->get_predictions(m_leafImage, m_predictionsImage);
+  }
 }
 
 cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
@@ -458,13 +468,9 @@ cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
 void SLAMComponentWithScoreForest::generate_pose_candidates(
     std::vector<PoseCandidate> &poseCandidates)
 {
-  poseCandidates.reserve(m_kInitRansac);
-
-  // Clear old predictions and prepare array for new results
-  m_featurePredictions.clear();
-  m_featurePredictions.resize(m_featureImage->dataSize);
-
   const int nbThreads = 12;
+
+  poseCandidates.reserve(m_kInitRansac);
 
   std::vector<std::mt19937> engs(nbThreads);
   for (int i = 0; i < nbThreads; ++i)
@@ -509,6 +515,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       MEMORYDEVICE_CPU);
   const GPUForest::LeafIndices *leafData = m_leafImage->GetData(
       MEMORYDEVICE_CPU);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CPU);
 
   bool foundIsometricMapping = false;
   const int maxIterationsOuter = 20;
@@ -532,56 +540,20 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       const RGBDPatchFeature &selectedFeature =
           patchFeaturesData[linearFeatureIdx];
 
-//      const int cache_key = y * rgbd_img.cols + x;
-//      const float depth_mm = rgbd_img.at < Vec9f > (y, x).val[5];
-
       if (selectedFeature.position.w < 0.f) // Invalid feature
         continue;
 
-      boost::shared_ptr<GPUForestPrediction> selectedPrediction;
+      const GPUForestPrediction &selectedPrediction =
+          predictionsData[linearFeatureIdx];
 
-//#pragma omp critical
-      selectedPrediction = m_featurePredictions[linearFeatureIdx];
-
-      if (!selectedPrediction)
-      {
-        // Get predicted leaves
-        selectedPrediction = m_gpuForest->get_prediction_for_leaves(
-            leafData[linearFeatureIdx]);
-
-//        if (!selectedPrediction)
-//        {
-//          throw std::runtime_error(
-//              "prediction returned by the forest should not be null");
-//        }
-//
-//        // Filter predictions and keep only those with the most inliers
-//        std::sort(selectedPrediction->_modes.begin(),
-//            selectedPrediction->_modes.end(),
-//            [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
-//            { return a.size() > b.size();});
-//
-//        if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
-//        {
-////            std::cout << "Dropping modes from "
-////                << selectedPrediction->_modes.size() << std::endl;
-//          selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
-//        }
-
-        // Store prediction in the vector for future use
-#pragma omp critical
-        m_featurePredictions[linearFeatureIdx] = selectedPrediction;
-      }
-
-      // The prediction might be null if there are no modes (TODO: improve GetPredictionForLeaves somehow)
-      if (selectedPrediction->nbModes == 0)
+      if (selectedPrediction.nbModes == 0)
         continue;
 
       int selectedModeIdx = 0;
       if (m_useAllModesPerLeafInPoseHypothesisGeneration)
       {
         std::uniform_int_distribution<int> mode_generator(0,
-            selectedPrediction->nbModes - 1);
+            selectedPrediction.nbModes - 1);
         selectedModeIdx = mode_generator(eng);
       }
 
@@ -589,7 +561,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (selectedPixelsAndModes.empty())
       {
         const Vector3u colourDiff = selectedFeature.colour.toVector3().toUChar()
-            - selectedPrediction->modes[selectedModeIdx].colour;
+            - selectedPrediction.modes[selectedModeIdx].colour;
         const bool consistentColour = abs(colourDiff.x) <= 30
             && abs(colourDiff.y) <= 30 && abs(colourDiff.z) <= 30;
 
@@ -601,12 +573,12 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (m_checkMinDistanceBetweenSampledModes)
       {
         const Vector3f worldPt =
-            selectedPrediction->modes[selectedModeIdx].position;
+            selectedPrediction.modes[selectedModeIdx].position;
 
         // Check that this mode is far enough from the other modes
         bool farEnough = true;
 
-        for (int idxOther = 0; idxOther < selectedPixelsAndModes.size();
+        for (size_t idxOther = 0; idxOther < selectedPixelsAndModes.size();
             ++idxOther)
         {
           int xOther, yOther, modeIdxOther;
@@ -615,14 +587,9 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
 
           const int linearIdxOther = yOther * m_featureImage->noDims.width
               + xOther;
+          const GPUForestPrediction &predOther = predictionsData[linearIdxOther];
 
-          boost::shared_ptr<GPUForestPrediction> predOther;
-
-          // Assumption is that since it's already in selectedPixelsAndModes it must be valid
-//#pragma omp critical
-          predOther = m_featurePredictions[linearIdxOther];
-
-          Vector3f worldPtOther = predOther->modes[modeIdxOther].position;
+          Vector3f worldPtOther = predOther.modes[modeIdxOther].position;
 
           float distOther = length(worldPtOther - worldPt);
           if (distOther < m_minDistanceBetweenSampledModes)
@@ -651,21 +618,17 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
 
           const int linearIdxOther = yFirst * m_featureImage->noDims.width
               + xFirst;
-          boost::shared_ptr<GPUForestPrediction> predFirst;
+          const GPUForestPrediction &predFirst = predictionsData[linearIdxOther];
 
-          // Assumption is that since it's already in selectedPixelsAndModes it must be valid
-//#pragma omp critical
-          predFirst = m_featurePredictions[linearIdxOther];
-
-          Vector3f worldPtFirst = predFirst->modes[modeIdxFirst].position;
-          Vector3f worldPtCur =
-              selectedPrediction->modes[selectedModeIdx].position;
+          const Vector3f worldPtFirst = predFirst.modes[modeIdxFirst].position;
+          const Vector3f worldPtCur =
+              selectedPrediction.modes[selectedModeIdx].position;
 
           float distWorld = length(worldPtFirst - worldPtCur);
 
-          Vector3f localPred =
+          const Vector3f localPred =
               patchFeaturesData[linearIdxOther].position.toVector3();
-          Vector3f localCur = selectedFeature.position.toVector3();
+          const Vector3f localCur = selectedFeature.position.toVector3();
 
           float distLocal = length(localPred - localCur);
 
@@ -695,21 +658,18 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       return false;
 
     std::vector<std::pair<int, int>> tmpInliers;
-    for (int s = 0; s < selectedPixelsAndModes.size(); ++s)
+    for (size_t s = 0; s < selectedPixelsAndModes.size(); ++s)
     {
       int x, y, modeIdx;
       std::tie(x, y, modeIdx) = selectedPixelsAndModes[s];
       const int linearIdx = y * m_featureImage->noDims.width + x;
+      const GPUForestPrediction &pred = predictionsData[linearIdx];
 
       Eigen::VectorXf localPt = Eigen::Map<const Eigen::Vector3f>(
           patchFeaturesData[linearIdx].position.v);
 
-      boost::shared_ptr<GPUForestPrediction> pred;
-//#pragma omp critical
-      pred = m_featurePredictions[linearIdx];
-
-      Eigen::VectorXf worldPt = Eigen::Map<Eigen::Vector3f>(
-          pred->modes[modeIdx].position.v);
+      Eigen::VectorXf worldPt = Eigen::Map<const Eigen::Vector3f>(
+          pred.modes[modeIdx].position.v);
 
       for (int idx = 0; idx < 3; ++idx)
       {
@@ -747,7 +707,7 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
   std::mt19937 random_engine;
 
   m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
-  m_leafImage->UpdateHostFromDevice();
+  m_predictionsImage->UpdateHostFromDevice();
 
   // Generate pose candidates with the new implementation
   std::vector<PoseCandidate> candidates;
@@ -868,6 +828,8 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
       MEMORYDEVICE_CPU);
   const GPUForest::LeafIndices *leafData = m_leafImage->GetData(
       MEMORYDEVICE_CPU);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CPU);
 
   for (int i = 0; i < batchSize; ++i)
   {
@@ -885,42 +847,10 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
 
       if (patchFeaturesData[linearIdx].position.w >= 0.f)
       {
-        boost::shared_ptr<GPUForestPrediction> selectedPrediction;
+        const GPUForestPrediction &selectedPrediction =
+            predictionsData[linearIdx];
 
-        //#pragma omp critical
-        selectedPrediction = m_featurePredictions[linearIdx];
-
-        if (!selectedPrediction)
-        {
-          // Get predicted leaves
-          selectedPrediction = m_gpuForest->get_prediction_for_leaves(
-              leafData[linearIdx]);
-
-//          if (!selectedPrediction)
-//          {
-//            throw std::runtime_error(
-//                "prediction returned by the forest should not be null");
-//          }
-//
-//          // Filter predictions and keep only those with the most inliers
-//          std::sort(selectedPrediction->_modes.begin(),
-//              selectedPrediction->_modes.end(),
-//              [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
-//              { return a.size() > b.size();});
-//
-//          if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
-//          {
-////            std::cout << "Dropping modes from "
-////                << selectedPrediction->_modes.size() << std::endl;
-//            selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
-//          }
-
-          // Store prediction in the vector for future use
-#pragma omp critical
-          m_featurePredictions[linearIdx] = selectedPrediction;
-        }
-
-        if (selectedPrediction->nbModes > 0)
+        if (selectedPrediction.nbModes > 0)
         {
           validIndex = maskSampledPixels.empty()
               || !maskSampledPixels[linearIdx];
@@ -997,6 +927,8 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CPU);
 
   for (size_t s = 0; s < inliersIndices.size(); ++s)
   {
@@ -1005,12 +937,11 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
         patchFeaturesData[linearIdx].position.toVector3();
     const Vector3f projectedPixel = candidateCameraPose * localPixel;
 
-    const boost::shared_ptr<const GPUForestPrediction> pred =
-        m_featurePredictions[linearIdx];
+    const GPUForestPrediction &pred = predictionsData[linearIdx];
 
     // eval individual energy
     float energy;
-    int argmax = pred->get_best_mode_and_energy(projectedPixel, energy);
+    int argmax = pred.get_best_mode_and_energy(projectedPixel, energy);
 
     // Has at least a valid mode
     if (argmax < 0)
@@ -1019,14 +950,14 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
       throw std::runtime_error("prediction has no valid modes");
     }
 
-    if (pred->modes[argmax].nbInliers == 0)
+    if (pred.modes[argmax].nbInliers == 0)
     {
       // the original implementation had a simple continue
       throw std::runtime_error("mode has no inliers");
     }
 
-    energy /= static_cast<float>(pred->nbModes);
-    energy /= static_cast<float>(pred->modes[argmax].nbInliers);
+    energy /= static_cast<float>(pred.nbModes);
+    energy /= static_cast<float>(pred.modes[argmax].nbInliers);
 
     if (energy < 1e-6f)
       energy = 1e-6f;

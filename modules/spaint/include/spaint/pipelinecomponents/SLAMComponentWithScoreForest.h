@@ -97,8 +97,8 @@ private:
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
   GPUForest::LeafIndicesImage_Ptr m_leafImage;
+  GPUForestPredictionsImage_Ptr m_predictionsImage;
   GPUForest_Ptr m_gpuForest;
-  std::vector<boost::shared_ptr<GPUForestPrediction>> m_featurePredictions;
 
   // Member variables from scoreforests
   size_t m_kInitRansac;
