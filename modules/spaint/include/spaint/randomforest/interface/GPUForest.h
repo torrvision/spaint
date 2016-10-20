@@ -69,10 +69,9 @@ public:
   explicit GPUForest(const EnsembleLearner &pretrained_forest);
   virtual ~GPUForest();
 
+  void reset_predictions();
   virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
-//  boost::shared_ptr<EnsemblePredictionGaussianMean> get_prediction_for_leaves(
-//      const LeafIndices &leaves);
   boost::shared_ptr<GPUForestPrediction> get_prediction_for_leaves(
       const LeafIndices &leaves);
 

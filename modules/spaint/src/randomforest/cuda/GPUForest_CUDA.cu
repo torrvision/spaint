@@ -25,8 +25,6 @@ __global__ void ck_evaluate_forest(const GPUForestNode* forestTexture,
 GPUForest_CUDA::GPUForest_CUDA(const EnsembleLearner &pretrained_forest) :
     GPUForest(pretrained_forest)
 {
-  m_forestImage->UpdateDeviceFromHost();
-  m_predictionsBlock->UpdateDeviceFromHost();
 }
 
 void GPUForest_CUDA::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,

@@ -51,6 +51,10 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   m_predictionsBlock = mbf.make_block<GPUForestPrediction>(
       m_leafPredictions.size());
   convert_predictions();
+
+  // NOPs if we use the CPU only implementation
+  m_forestImage->UpdateDeviceFromHost();
+  m_predictionsBlock->UpdateDeviceFromHost();
 }
 
 GPUForest::~GPUForest()
@@ -241,6 +245,12 @@ void GPUForest::convert_predictions()
       targetMode.nbInliers = mode[0]._nbPoints;
     }
   }
+}
+
+void GPUForest::reset_predictions()
+{
+  m_predictionsBlock->Clear(); // Setting nbModes to 0 for each prediction would be enough.
+  m_predictionsBlock->UpdateDeviceFromHost();
 }
 
 int GPUForestPrediction::get_best_mode(const Vector3f &v) const

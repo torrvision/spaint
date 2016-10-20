@@ -57,7 +57,10 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_leafImage.reset(
       new GPUForest::LeafIndicesImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
+
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
+
+  m_gpuForest->reset_predictions();
 
   // Set params as in scoreforests
   m_kInitRansac = 1024;
