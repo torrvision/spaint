@@ -585,18 +585,10 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       // This is the first pixel, check that the pixel colour corresponds with the selected mode
       if (selectedPixelsAndModes.empty())
       {
-        bool consistentColour = true;
-
-        for (int c = 0; c < 3; ++c)
-        {
-          if (std::abs(
-              selectedFeature.colour.v[c]
-                  - selectedPrediction->modes[selectedModeIdx].colour[c]) > 30)
-          {
-            consistentColour = false;
-            break;
-          }
-        }
+        const Vector3u colourDiff = selectedFeature.colour.toVector3().toUChar()
+            - selectedPrediction->modes[selectedModeIdx].colour;
+        const bool consistentColour = abs(colourDiff.x) <= 30
+            && abs(colourDiff.y) <= 30 && abs(colourDiff.z) <= 30;
 
         if (!consistentColour)
           continue;
