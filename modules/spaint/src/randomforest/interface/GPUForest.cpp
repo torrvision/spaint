@@ -175,16 +175,56 @@ void GPUForest::convert_predictions()
       // Not using _meanf and the others because the float variant sometimes seems not set..
       Eigen::Map<Eigen::Vector3f>(targetMode.position.v) = mode[0]._mean.cast<
           float>();
-      Eigen::Map<Eigen::Vector3f>(targetMode.colour.v) = mode[1]._mean.cast<
-          float>();
-//      Eigen::Map<Eigen::Matrix3f>(targetMode.positionCovariance.m) =
-//          mode[0]._covariance.cast<float>();
       Eigen::Map<Eigen::Matrix3f>(targetMode.positionInvCovariance.m) =
           mode[0]._inverseCovariance.cast<float>();
       targetMode.determinant = static_cast<float>(mode[0]._determinant);
+
+      // Downcast the colour from float to uchar (loss of precision is acceptable)
+      targetMode.colour.x = static_cast<uint8_t>(mode[1]._mean(0));
+      targetMode.colour.y = static_cast<uint8_t>(mode[1]._mean(1));
+      targetMode.colour.z = static_cast<uint8_t>(mode[1]._mean(2));
+
       targetMode.nbInliers = mode[0]._nbPoints;
     }
   }
+}
+
+int GPUForestPrediction::get_best_mode(const Vector3f &v) const
+{
+  float energy;
+  return get_best_mode_and_energy(v, energy);
+}
+
+int GPUForestPrediction::get_best_mode_and_energy(const Vector3f &v,
+    float &maxScore) const
+{
+  static const float exponent = powf(2.0f * M_PI, 3);
+
+  int argmax = -1;
+  maxScore = std::numeric_limits<float>::lowest();
+
+  for (int m = 0; m < nbModes; ++m)
+  {
+    const float nbPts = static_cast<float>(modes[m].nbInliers);
+    const Vector3f diff = v - modes[m].position;
+
+    const float normalization = 1.0 / sqrtf(modes[m].determinant * exponent);
+    // This is the textbook implementation of Mahalanobis distance
+    // Helpers::MahalanobisSquared3x3 used in the original code seems wrong
+    const float mahalanobisSq = dot(diff,
+        modes[m].positionInvCovariance * diff);
+    const float descriptiveStatistics = expf(-0.5f * mahalanobisSq);
+    const float evalGaussian = normalization * descriptiveStatistics;
+    const float score = nbPts * evalGaussian;
+
+    if (score > maxScore)
+    {
+      maxScore = score;
+      argmax = m;
+    }
+  }
+
+  return argmax;
 }
 
 }

@@ -31,11 +31,11 @@ typedef boost::shared_ptr<const ORUtils::Image<GPUForestNode> > GPUForestImage_C
 struct GPUForestMode
 {
   Vector3f position;
-  Vector3f colour;
-
 //  Matrix3f positionCovariance; // Seems not needed
-  Matrix3f positionInvCovariance;
+  Matrix3f positionInvCovariance; // Needed to compute Mahalanobis distance
   float determinant;
+
+  Vector3u colour;
 
   int nbInliers;
 };
@@ -46,6 +46,9 @@ struct GPUForestPrediction
 
   GPUForestMode modes[MAX_MODES];
   int nbModes;
+
+  int get_best_mode(const Vector3f &x) const;
+  int get_best_mode_and_energy(const Vector3f &x, float& energy) const;
 };
 
 typedef ORUtils::MemoryBlock<GPUForestPrediction> GPUForestPredictionsBlock;
