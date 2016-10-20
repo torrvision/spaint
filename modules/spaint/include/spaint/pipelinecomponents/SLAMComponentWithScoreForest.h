@@ -28,8 +28,13 @@ namespace spaint
  */
 class SLAMComponentWithScoreForest: public SLAMComponent
 {
-  typedef std::tuple<Eigen::Matrix4f, std::vector<std::pair<int, int>>, float,
-      int> PoseCandidate;
+  struct PoseCandidate
+  {
+    Matrix4f cameraPose;
+    std::vector<std::pair<int, int>> inliers;
+    float energy;
+    int cameraId;
+  };
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -80,7 +85,7 @@ private:
       std::vector<PoseCandidate> &poseCandidates) const;
   void compute_and_sort_energies(
       std::vector<PoseCandidate> &poseCandidates) const;
-  float compute_pose_energy(const Eigen::Matrix4f &candidateCameraPose,
+  float compute_pose_energy(const Matrix4f &candidateCameraPose,
       const std::vector<std::pair<int, int>> &inliersIndices) const;
   void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;

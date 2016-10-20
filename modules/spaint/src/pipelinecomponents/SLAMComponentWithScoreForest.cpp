@@ -135,16 +135,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     if (pose_candidate)
     {
-      Eigen::Matrix4f final_pose = std::get < 0 > (*pose_candidate);
-      std::cout << "The final pose is:" << final_pose << "\n and has "
-          << std::get < 1
-          > (*pose_candidate).size() << " inliers." << std::endl;
+      std::cout << "The final pose is:" << pose_candidate->cameraPose
+          << "\n and has " << pose_candidate->inliers.size() << " inliers."
+          << std::endl;
 
-      Matrix4f invPose;
-      Eigen::Map<Eigen::Matrix4f> em(invPose.m);
-      em = final_pose;
-
-      trackingState->pose_d->SetInvM(invPose);
+      trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
@@ -485,9 +480,9 @@ void SLAMComponentWithScoreForest::generate_pose_candidates(
 
     if (hypothesize_pose(candidate, engs[threadId]))
     {
-      if (!std::get < 1 > (candidate).empty()) // Has some inliers
+      if (!candidate.inliers.empty()) // Has some inliers
       {
-        std::get < 3 > (candidate) = i;
+        candidate.cameraId = i;
 
 #pragma omp critical
         poseCandidates.emplace_back(std::move(candidate));
@@ -730,18 +725,20 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       tmpInliers.push_back(std::pair<int, int>(linearIdx, modeIdx));
     }
 
-    Eigen::Matrix4f tmpCameraModel;
-
     {
 //#ifdef ENABLE_TIMERS
 //      boost::timer::auto_cpu_timer t(6,
 //          "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 //#endif
-      tmpCameraModel = Helpers::Kabsch(localPoints, worldPoints);
+      Eigen::Map<Eigen::Matrix4f>(res.cameraPose.m) = Helpers::Kabsch(
+          localPoints, worldPoints);
     }
 
     foundIsometricMapping = true;
-    res = std::make_tuple(tmpCameraModel, tmpInliers, 0.0f, -1);
+
+    res.inliers = tmpInliers;
+    res.energy = 0.f;
+    res.cameraId = -1;
   }
 
   if (iterationsOuter < maxIterationsOuter)
@@ -773,10 +770,11 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
 
   if (m_trimKinitAfterFirstEnergyComputation < candidates.size())
   {
-    //    boost::timer::auto_cpu_timer t(6,
-    //                                   "first trim: %ws wall, %us user + %ss system = %ts CPU
-    //                                   (%p%)\n");
-    int nbSamplesPerCamera = std::get < 1 > (candidates[0]).size();
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    int nbSamplesPerCamera = candidates[0].inliers.size();
     std::vector<std::pair<int, int>> sampledPixelIdx;
     std::vector<bool> dummy_vector;
 
@@ -811,10 +809,9 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
 
     if (m_trimKinitAfterFirstEnergyComputation > 1)
     {
-      for (int p = 0; p < candidates.size(); ++p)
+      for (size_t p = 0; p < candidates.size(); ++p)
       {
-        std::vector<std::pair<int, int>> &samples = std::get < 1
-            > (candidates[p]);
+        std::vector<std::pair<int, int>> &samples = candidates[p].inliers;
         if (samples.size() > nbSamplesPerCamera)
           samples.erase(samples.begin() + nbSamplesPerCamera, samples.end());
       }
@@ -958,13 +955,12 @@ void SLAMComponentWithScoreForest::update_inliers_for_optimization(
     std::vector<PoseCandidate> &poseCandidates) const
 {
 #pragma omp parallel for
-  for (int p = 0; p < poseCandidates.size(); ++p)
+  for (size_t p = 0; p < poseCandidates.size(); ++p)
   {
-    std::vector<std::pair<int, int>> &inliers = std::get < 1
-        > (poseCandidates[p]);
+    std::vector<std::pair<int, int>> &inliers = poseCandidates[p].inliers;
 
     // add all the samples as inliers
-    for (int s = 0; s < sampledPixelIdx.size(); ++s)
+    for (size_t s = 0; s < sampledPixelIdx.size(); ++s)
     {
       int x = sampledPixelIdx[s].first;
       int y = sampledPixelIdx[s].second;
@@ -973,22 +969,13 @@ void SLAMComponentWithScoreForest::update_inliers_for_optimization(
     }
   }
 }
-namespace
-{
-static bool SortByEnergyAsc(
-    std::tuple<Eigen::Matrix4f, std::vector<std::pair<int, int>>, float, int> i,
-    std::tuple<Eigen::Matrix4f, std::vector<std::pair<int, int>>, float, int> j)
-{
-  return (std::get < 2 > (i) < std::get < 2 > (j));
-}
-}
 
 void SLAMComponentWithScoreForest::compute_and_sort_energies(
     std::vector<PoseCandidate> &poseCandidates) const
 {
 //  int nbPoseProcessed = 0;
 #pragma omp parallel for
-  for (int p = 0; p < poseCandidates.size(); ++p)
+  for (size_t p = 0; p < poseCandidates.size(); ++p)
   {
     //#pragma omp critical
     //    {
@@ -996,122 +983,62 @@ void SLAMComponentWithScoreForest::compute_and_sort_energies(
     //      //      Helpers::displayPercentage(nbPoseProcessed++, poseCandidates.size());
     //    }
 
-    const Eigen::Matrix4f &candidateCamera = std::get < 0 > (poseCandidates[p]);
-    const std::vector<std::pair<int, int>> &inliers = std::get < 1
-        > (poseCandidates[p]);
-    const int cameraId = std::get < 3 > (poseCandidates[p]);
-
-    std::get < 2 > (poseCandidates[p]) = compute_pose_energy(candidateCamera,
-        inliers);
+    PoseCandidate &candidate = poseCandidates[p];
+    candidate.energy = compute_pose_energy(candidate.cameraPose,
+        candidate.inliers);
   }
 
-  std::sort(poseCandidates.begin(), poseCandidates.end(), SortByEnergyAsc);
+  // Sort by ascending energy
+  std::sort(poseCandidates.begin(), poseCandidates.end(),
+      [] (const PoseCandidate &a, const PoseCandidate &b)
+      { return a.energy < b.energy;});
 }
 
 float SLAMComponentWithScoreForest::compute_pose_energy(
-    const Eigen::Matrix4f &candidateCameraPose,
+    const Matrix4f &candidateCameraPose,
     const std::vector<std::pair<int, int>> &inliersIndices) const
 {
-  float energy = 0.0f;
+  float totalEnergy = 0.0f;
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
 
-  for (int s = 0; s < inliersIndices.size(); ++s)
+  for (size_t s = 0; s < inliersIndices.size(); ++s)
   {
-//    const int x = inliersIndices[s].first % (m_featureImage->noDims.width);
-//    const int y = inliersIndices[s].first / (m_featureImage->noDims.width);
     const int linearIdx = inliersIndices[s].first;
+    const Vector3f localPixel =
+        patchFeaturesData[linearIdx].position.toVector3();
+    const Vector3f projectedPixel = candidateCameraPose * localPixel;
 
-    // std::cout << "candidateCameraPose: " << candidateCameraPose << std::endl << std::endl;
-    // std::cout << "Pt: " << Helpers::DepthToWorld(x*_scaleTest, y*_scaleTest,
-    // rgbd_img.at<Vec9f>(y*_scaleTest, x*_scaleTest).val[5] / 1000.0f) << std::endl << std::endl;
-
-    Eigen::VectorXf localPixel = Eigen::Map<const Eigen::Vector3f>(
-        patchFeaturesData[linearIdx].position.v);
-    Eigen::VectorXf projectedPixel(4);
-    Helpers::Rigid3DTransformation(candidateCameraPose, localPixel,
-        projectedPixel);
-
-    boost::shared_ptr<GPUForestPrediction> pred =
+    const boost::shared_ptr<const GPUForestPrediction> pred =
         m_featurePredictions[linearIdx];
 
     // eval individual energy
+    float energy;
+    int argmax = pred->get_best_mode_and_energy(projectedPixel, energy);
+
+    // Has at least a valid mode
+    if (argmax < 0)
     {
-//      auto &modes = pred->modes;
-//      float res = 0.0f;
-//      float totalNbPoints = 0.0f;
-//      Eigen::VectorXd diff(3);
-//      double exponant = std::pow(2.0 * M_PI, 3.0);
-//      double normalization;
-//      double descriptiveStatistics = 0.0;
-//      double nbPts;
-//      double evalGaussian1 = 1.0f, evalGaussian2 = 1.0f;
-//      double prob;
-//      double nbModes = pred->nbModes;
-
-      // totalNbPoints = 1.0;
-      float maxEnergy;
-      int argmax = pred->get_best_mode_and_energy(
-          Vector3f(projectedPixel(0), projectedPixel(1), projectedPixel(2)),
-          maxEnergy);
-
-      // Has at least a valid mode
-      if (argmax < 0)
-      {
-        // should have not been inserted in the inlier set
-        throw std::runtime_error("prediction has no valid modes");
-      }
-
-      if (pred->modes[argmax].nbInliers == 0)
-      {
-        // the original implementation had a simple continue
-        throw std::runtime_error("mode has no inliers");
-      }
-
-      maxEnergy /= static_cast<float>(pred->nbModes);
-      maxEnergy /= static_cast<float>(pred->modes[argmax].nbInliers);
-
-      if (maxEnergy < 1e-6f)
-        maxEnergy = 1e-6f;
-      energy += -log10f(maxEnergy);
-
-//      int m = argmax;
-//      // for (int m = 0 ; m < modes.size() ; ++m)
-//      {
-//        nbPts = static_cast<float>(modes[m].nbInliers);
-//        totalNbPoints += nbPts;
-//
-//        // fast gaussian evaluation
-//        {
-//          for (int i = 0; i < 3; ++i)
-//          {
-//            diff(i) = projectedPixel(i) - modes[m].position[i];
-//          }
-//          normalization = 1.0f / sqrt(modes[m].determinant * exponant);
-//
-//          Eigen::MatrixXf invCov = Eigen::Map<Eigen::Matrix3f>(
-//              modes[m].positionInvCovariance.m);
-//
-//          descriptiveStatistics = exp(
-//              -0.5 * Helpers::MahalanobisSquared3x3(invCov, diff));
-//          evalGaussian1 = normalization * descriptiveStatistics;
-//        }
-//
-//        res += nbPts * (evalGaussian1 * evalGaussian2) / nbModes;
-//      }
-//
-//      if (totalNbPoints == 0.0)
-//        continue;
-//
-//      prob = res / totalNbPoints;
-//      if (prob < 0.0000000001)
-//        prob = 0.0000000001;
-//      energy += -log10(prob);
+      // should have not been inserted in the inlier set
+      throw std::runtime_error("prediction has no valid modes");
     }
+
+    if (pred->modes[argmax].nbInliers == 0)
+    {
+      // the original implementation had a simple continue
+      throw std::runtime_error("mode has no inliers");
+    }
+
+    energy /= static_cast<float>(pred->nbModes);
+    energy /= static_cast<float>(pred->modes[argmax].nbInliers);
+
+    if (energy < 1e-6f)
+      energy = 1e-6f;
+    totalEnergy += -log10f(energy);
   }
 
-  return energy / static_cast<float>(inliersIndices.size());
+  return totalEnergy / static_cast<float>(inliersIndices.size());
 }
 
 void SLAMComponentWithScoreForest::update_candidate_poses(
@@ -1119,7 +1046,7 @@ void SLAMComponentWithScoreForest::update_candidate_poses(
 {
 //  int nbUpdated = 0;
 #pragma omp parallel for
-  for (int i = 0; i < poseCandidates.size(); ++i)
+  for (size_t i = 0; i < poseCandidates.size(); ++i)
   {
     if (update_candidate_pose(poseCandidates[i]))
     {
