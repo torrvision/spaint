@@ -70,8 +70,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
   m_trimKinitAfterFirstEnergyComputation = 64;
-  m_poseUpdate = true; // original
-//  m_poseUpdate = false; // faster, might be OK
+//  m_poseUpdate = true; // original
+  m_poseUpdate = false; // faster, might be OK
   m_usePredictionCovarianceForPoseOptimization = true; // original implementation
 //  m_usePredictionCovarianceForPoseOptimization = false;
 
@@ -540,7 +540,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       if (selectedFeature.position.w < 0.f) // Invalid feature
         continue;
 
-      boost::shared_ptr<EnsemblePredictionGaussianMean> selectedPrediction;
+      boost::shared_ptr<GPUForestPrediction> selectedPrediction;
 
 //#pragma omp critical
       selectedPrediction = m_featurePredictions[linearFeatureIdx];
@@ -551,24 +551,24 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
         selectedPrediction = m_gpuForest->get_prediction_for_leaves(
             leafData[linearFeatureIdx]);
 
-        if (!selectedPrediction)
-        {
-          throw std::runtime_error(
-              "prediction returned by the forest should not be null");
-        }
-
-        // Filter predictions and keep only those with the most inliers
-        std::sort(selectedPrediction->_modes.begin(),
-            selectedPrediction->_modes.end(),
-            [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
-            { return a.size() > b.size();});
-
-        if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
-        {
-//            std::cout << "Dropping modes from "
-//                << selectedPrediction->_modes.size() << std::endl;
-          selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
-        }
+//        if (!selectedPrediction)
+//        {
+//          throw std::runtime_error(
+//              "prediction returned by the forest should not be null");
+//        }
+//
+//        // Filter predictions and keep only those with the most inliers
+//        std::sort(selectedPrediction->_modes.begin(),
+//            selectedPrediction->_modes.end(),
+//            [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
+//            { return a.size() > b.size();});
+//
+//        if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
+//        {
+////            std::cout << "Dropping modes from "
+////                << selectedPrediction->_modes.size() << std::endl;
+//          selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
+//        }
 
         // Store prediction in the vector for future use
 #pragma omp critical
@@ -576,14 +576,14 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       }
 
       // The prediction might be null if there are no modes (TODO: improve GetPredictionForLeaves somehow)
-      if (selectedPrediction->_modes.empty())
+      if (selectedPrediction->nbModes == 0)
         continue;
 
       int selectedModeIdx = 0;
       if (m_useAllModesPerLeafInPoseHypothesisGeneration)
       {
         std::uniform_int_distribution<int> mode_generator(0,
-            selectedPrediction->_modes.size() - 1);
+            selectedPrediction->nbModes - 1);
         selectedModeIdx = mode_generator(eng);
       }
 
@@ -596,8 +596,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
         {
           if (std::abs(
               selectedFeature.colour.v[c]
-                  - selectedPrediction->_modes[selectedModeIdx][1]->_mean(c))
-              > 30)
+                  - selectedPrediction->modes[selectedModeIdx].colour[c]) > 30)
           {
             consistentColour = false;
             break;
@@ -611,8 +610,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       // if (false)
       if (m_checkMinDistanceBetweenSampledModes)
       {
-        const Eigen::VectorXd worldPt =
-            selectedPrediction->_modes[selectedModeIdx][0]->_mean;
+        const Vector3f worldPt =
+            selectedPrediction->modes[selectedModeIdx].position;
 
         // Check that this mode is far enough from the other modes
         bool farEnough = true;
@@ -627,16 +626,15 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
           const int linearIdxOther = yOther * m_featureImage->noDims.width
               + xOther;
 
-          boost::shared_ptr<EnsemblePredictionGaussianMean> predOther;
+          boost::shared_ptr<GPUForestPrediction> predOther;
 
           // Assumption is that since it's already in selectedPixelsAndModes it must be valid
 //#pragma omp critical
           predOther = m_featurePredictions[linearIdxOther];
 
-          Eigen::VectorXd worldPtOther =
-              predOther->_modes[modeIdxOther][0]->_mean;
+          Vector3f worldPtOther = predOther->modes[modeIdxOther].position;
 
-          float distOther = (worldPtOther - worldPt).norm();
+          float distOther = length(worldPtOther - worldPt);
           if (distOther < m_minDistanceBetweenSampledModes)
           {
             farEnough = false;
@@ -663,25 +661,23 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
 
           const int linearIdxOther = yFirst * m_featureImage->noDims.width
               + xFirst;
-          boost::shared_ptr<EnsemblePredictionGaussianMean> predFirst;
+          boost::shared_ptr<GPUForestPrediction> predFirst;
 
           // Assumption is that since it's already in selectedPixelsAndModes it must be valid
 //#pragma omp critical
           predFirst = m_featurePredictions[linearIdxOther];
 
-          Eigen::VectorXd worldPtFirst =
-              predFirst->_modes[modeIdxFirst][0]->_mean;
-          Eigen::VectorXd worldPtCur =
-              selectedPrediction->_modes[selectedModeIdx][0]->_mean;
+          Vector3f worldPtFirst = predFirst->modes[modeIdxFirst].position;
+          Vector3f worldPtCur =
+              selectedPrediction->modes[selectedModeIdx].position;
 
-          float distWorld = (worldPtFirst - worldPtCur).norm();
+          float distWorld = length(worldPtFirst - worldPtCur);
 
-          Eigen::VectorXf localPred = Eigen::Map<const Eigen::Vector3f>(
-              patchFeaturesData[linearIdxOther].position.v);
-          Eigen::VectorXf localCur = Eigen::Map<const Eigen::Vector3f>(
-              selectedFeature.position.v);
+          Vector3f localPred =
+              patchFeaturesData[linearIdxOther].position.toVector3();
+          Vector3f localCur = selectedFeature.position.toVector3();
 
-          float distLocal = (localPred - localCur).norm();
+          float distLocal = length(localPred - localCur);
 
           if (distLocal < m_minDistanceBetweenSampledModes)
             violatesConditions = true;
@@ -718,16 +714,17 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       Eigen::VectorXf localPt = Eigen::Map<const Eigen::Vector3f>(
           patchFeaturesData[linearIdx].position.v);
 
-      boost::shared_ptr<EnsemblePredictionGaussianMean> pred;
+      boost::shared_ptr<GPUForestPrediction> pred;
 //#pragma omp critical
       pred = m_featurePredictions[linearIdx];
 
-      Eigen::VectorXd worldPt = pred->_modes[modeIdx][0]->_mean;
+      Eigen::VectorXf worldPt = Eigen::Map<Eigen::Vector3f>(
+          pred->modes[modeIdx].position.v);
 
       for (int idx = 0; idx < 3; ++idx)
       {
         localPoints(idx, s) = localPt(idx);
-        worldPoints(idx, s) = static_cast<float>(worldPt(idx));
+        worldPoints(idx, s) = worldPt(idx);
       }
 
       tmpInliers.push_back(std::pair<int, int>(linearIdx, modeIdx));
@@ -896,7 +893,7 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
 
       if (patchFeaturesData[linearIdx].position.w >= 0.f)
       {
-        boost::shared_ptr<EnsemblePredictionGaussianMean> selectedPrediction;
+        boost::shared_ptr<GPUForestPrediction> selectedPrediction;
 
         //#pragma omp critical
         selectedPrediction = m_featurePredictions[linearIdx];
@@ -907,31 +904,31 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
           selectedPrediction = m_gpuForest->get_prediction_for_leaves(
               leafData[linearIdx]);
 
-          if (!selectedPrediction)
-          {
-            throw std::runtime_error(
-                "prediction returned by the forest should not be null");
-          }
-
-          // Filter predictions and keep only those with the most inliers
-          std::sort(selectedPrediction->_modes.begin(),
-              selectedPrediction->_modes.end(),
-              [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
-              { return a.size() > b.size();});
-
-          if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
-          {
-//            std::cout << "Dropping modes from "
-//                << selectedPrediction->_modes.size() << std::endl;
-            selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
-          }
+//          if (!selectedPrediction)
+//          {
+//            throw std::runtime_error(
+//                "prediction returned by the forest should not be null");
+//          }
+//
+//          // Filter predictions and keep only those with the most inliers
+//          std::sort(selectedPrediction->_modes.begin(),
+//              selectedPrediction->_modes.end(),
+//              [](const std::vector<PredictedGaussianMean*> &a, const std::vector<PredictedGaussianMean*> &b)
+//              { return a.size() > b.size();});
+//
+//          if (selectedPrediction->_modes.size() > m_maxNbModesPerLeaf)
+//          {
+////            std::cout << "Dropping modes from "
+////                << selectedPrediction->_modes.size() << std::endl;
+//            selectedPrediction->_modes.resize(m_maxNbModesPerLeaf);
+//          }
 
           // Store prediction in the vector for future use
 #pragma omp critical
           m_featurePredictions[linearIdx] = selectedPrediction;
         }
 
-        if (!selectedPrediction->_modes.empty())
+        if (selectedPrediction->nbModes > 0)
         {
           validIndex = maskSampledPixels.empty()
               || !maskSampledPixels[linearIdx];
@@ -1015,7 +1012,7 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
     const Eigen::Matrix4f &candidateCameraPose,
     const std::vector<std::pair<int, int>> &inliersIndices) const
 {
-  double energy = 0.0;
+  float energy = 0.0f;
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
@@ -1036,60 +1033,85 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
     Helpers::Rigid3DTransformation(candidateCameraPose, localPixel,
         projectedPixel);
 
-    boost::shared_ptr<EnsemblePredictionGaussianMean> pred =
+    boost::shared_ptr<GPUForestPrediction> pred =
         m_featurePredictions[linearIdx];
 
     // eval individual energy
     {
-      std::vector<std::vector<PredictedGaussianMean *>> &modes = pred->_modes;
-      float res = 0.0f;
-      float totalNbPoints = 0.0f;
-      Eigen::VectorXd diff(3);
-      double exponant = std::pow(2.0 * M_PI, 3.0);
-      double normalization;
-      double descriptiveStatistics = 0.0;
-      double nbPts;
-      double evalGaussian1 = 1.0f, evalGaussian2 = 1.0f;
-      double prob;
-      double nbModes = modes.size();
+//      auto &modes = pred->modes;
+//      float res = 0.0f;
+//      float totalNbPoints = 0.0f;
+//      Eigen::VectorXd diff(3);
+//      double exponant = std::pow(2.0 * M_PI, 3.0);
+//      double normalization;
+//      double descriptiveStatistics = 0.0;
+//      double nbPts;
+//      double evalGaussian1 = 1.0f, evalGaussian2 = 1.0f;
+//      double prob;
+//      double nbModes = pred->nbModes;
 
       // totalNbPoints = 1.0;
-      int argmax = pred->GetArgMax3D(projectedPixel, 0);
-      int m = argmax;
-      // for (int m = 0 ; m < modes.size() ; ++m)
+      float maxEnergy;
+      int argmax = pred->get_best_mode_and_energy(
+          Vector3f(projectedPixel(0), projectedPixel(1), projectedPixel(2)),
+          maxEnergy);
+
+      // Has at least a valid mode
+      if (argmax < 0)
       {
-        nbPts = static_cast<float>(modes[m][0]->_nbPoints);
-        totalNbPoints += nbPts;
-
-        // fast gaussian evaluation
-        {
-          for (int i = 0; i < 3; ++i)
-          {
-            diff(i) = static_cast<double>(projectedPixel(i))
-                - modes[m][0]->_mean(i);
-          }
-          normalization = 1.0f / sqrt(modes[m][0]->_determinant * exponant);
-          descriptiveStatistics = exp(
-              -0.5
-                  * Helpers::MahalanobisSquared3x3(
-                      modes[m][0]->_inverseCovariance, diff));
-          evalGaussian1 = normalization * descriptiveStatistics;
-        }
-
-        res += nbPts * (evalGaussian1 * evalGaussian2) / nbModes;
+        // should have not been inserted in the inlier set
+        throw std::runtime_error("prediction has no valid modes");
       }
 
-      if (totalNbPoints == 0.0)
-        continue;
+      if (pred->modes[argmax].nbInliers == 0)
+      {
+        // the original implementation had a simple continue
+        throw std::runtime_error("mode has no inliers");
+      }
 
-      prob = res / totalNbPoints;
-      if (prob < 0.0000000001)
-        prob = 0.0000000001;
-      energy += -log10(prob);
+      maxEnergy /= static_cast<float>(pred->nbModes);
+      maxEnergy /= static_cast<float>(pred->modes[argmax].nbInliers);
+
+      if (maxEnergy < 1e-6f)
+        maxEnergy = 1e-6f;
+      energy += -log10f(maxEnergy);
+
+//      int m = argmax;
+//      // for (int m = 0 ; m < modes.size() ; ++m)
+//      {
+//        nbPts = static_cast<float>(modes[m].nbInliers);
+//        totalNbPoints += nbPts;
+//
+//        // fast gaussian evaluation
+//        {
+//          for (int i = 0; i < 3; ++i)
+//          {
+//            diff(i) = projectedPixel(i) - modes[m].position[i];
+//          }
+//          normalization = 1.0f / sqrt(modes[m].determinant * exponant);
+//
+//          Eigen::MatrixXf invCov = Eigen::Map<Eigen::Matrix3f>(
+//              modes[m].positionInvCovariance.m);
+//
+//          descriptiveStatistics = exp(
+//              -0.5 * Helpers::MahalanobisSquared3x3(invCov, diff));
+//          evalGaussian1 = normalization * descriptiveStatistics;
+//        }
+//
+//        res += nbPts * (evalGaussian1 * evalGaussian2) / nbModes;
+//      }
+//
+//      if (totalNbPoints == 0.0)
+//        continue;
+//
+//      prob = res / totalNbPoints;
+//      if (prob < 0.0000000001)
+//        prob = 0.0000000001;
+//      energy += -log10(prob);
     }
   }
 
-  return static_cast<float>(energy) / static_cast<float>(inliersIndices.size());
+  return energy / static_cast<float>(inliersIndices.size());
 }
 
 void SLAMComponentWithScoreForest::update_candidate_poses(
@@ -1241,117 +1263,119 @@ static void call_after_each_step(const alglib::real_1d_array &x, double func,
 bool SLAMComponentWithScoreForest::update_candidate_pose(
     PoseCandidate &poseCandidate) const
 {
-  Eigen::Matrix4f &candidateCameraPose = std::get < 0 > (poseCandidate);
-  std::vector<std::pair<int, int>> &samples = std::get < 1 > (poseCandidate);
+  throw std::runtime_error("not updated yet");
 
-  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
-      MEMORYDEVICE_CPU);
-
-  PointsForLM ptsForLM(0);
-
-  for (int s = 0; s < samples.size(); ++s)
-  {
-    const int x = samples[s].first % m_featureImage->noDims.width;
-    const int y = samples[s].first / m_featureImage->noDims.width;
-    const int linearizedIdx = samples[s].first;
-
-    std::pair<std::vector<Eigen::VectorXd>, std::vector<PredictedGaussianMean *>> pt;
-
-    Eigen::VectorXf pixelLocalCoordinates = Eigen::Map<const Eigen::Vector4f>(
-        patchFeaturesData[linearizedIdx].position.v);
-
-    pt.first.push_back(pixelLocalCoordinates.cast<double>());
-    // Eigen::VectorXf  projectedPixel = candidateCameraPose * pixelLocalCoordinates;
-    Eigen::VectorXd projectedPixel = (candidateCameraPose
-        * pixelLocalCoordinates).cast<double>();
-
-    boost::shared_ptr<EnsemblePredictionGaussianMean> epgm =
-        m_featurePredictions[linearizedIdx];
-
-    int argmax = epgm->GetArgMax3D(projectedPixel, 0);
-    if (argmax == -1)
-      continue;
-    pt.second.push_back(epgm->_modes[argmax][0]);
-
-    if ((epgm->_modes[argmax][0]->_mean
-        - Helpers::ConvertWorldCoordinatesFromHomogeneousCoordinates(
-            projectedPixel)).norm() < 0.2)
-      ptsForLM.pts.push_back(pt);
-  }
-
-  // Continuous optimization
-  if (ptsForLM.pts.size() > 3)
-  {
-    alglib::real_1d_array ksi_;
-    double ksiD[6];
-    Eigen::MatrixXd candidateCameraPoseD = candidateCameraPose.cast<double>();
-
-    Eigen::VectorXd ksivd = Helpers::LieGroupToLieAlgebraSE3(
-        candidateCameraPoseD);
-
-    for (int i = 0; i < 6; ++i)
-    {
-      ksiD[i] = ksivd(i);
-    }
-
-    ksi_.setcontent(6, ksiD);
-
-    alglib::minlmstate state;
-    alglib::minlmreport rep;
-
-    double differentiationStep = 0.0001;
-    alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-
-    double epsg = 0.000001;
-    double epsf = 0;
-    double epsx = 0;
-    alglib::ae_int_t maxits = 100;
-    alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
-
-    double energyBefore, energyAfter;
-    if (m_usePredictionCovarianceForPoseOptimization)
-    {
-      energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(
-          ptsForLM.pts, candidateCameraPoseD);
-      alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance,
-          call_after_each_step, &ptsForLM);
-    }
-    else
-    {
-      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
-          candidateCameraPoseD);
-      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
-          call_after_each_step, &ptsForLM);
-    }
-    alglib::minlmresults(state, ksi_, rep);
-
-    memcpy(ksiD, ksi_.getcontent(), sizeof(double) * 6);
-    for (int i = 0; i < 6; ++i)
-    {
-      ksivd(i) = ksiD[i];
-    }
-    Eigen::MatrixXd updatedCandidateCameraPoseD =
-        Helpers::LieAlgebraToLieGroupSE3(ksivd);
-
-    if (m_usePredictionCovarianceForPoseOptimization)
-    {
-      energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(
-          ptsForLM.pts, updatedCandidateCameraPoseD);
-    }
-    else
-    {
-      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
-          updatedCandidateCameraPoseD);
-    }
-
-    if (energyAfter < energyBefore)
-    {
-      candidateCameraPose = updatedCandidateCameraPoseD.cast<float>();
-      return true;
-    }
-  }
-
-  return false;
+//  Eigen::Matrix4f &candidateCameraPose = std::get < 0 > (poseCandidate);
+//  std::vector<std::pair<int, int>> &samples = std::get < 1 > (poseCandidate);
+//
+//  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+//      MEMORYDEVICE_CPU);
+//
+//  PointsForLM ptsForLM(0);
+//
+//  for (int s = 0; s < samples.size(); ++s)
+//  {
+//    const int x = samples[s].first % m_featureImage->noDims.width;
+//    const int y = samples[s].first / m_featureImage->noDims.width;
+//    const int linearizedIdx = samples[s].first;
+//
+//    std::pair<std::vector<Eigen::VectorXd>, std::vector<PredictedGaussianMean *>> pt;
+//
+//    Eigen::VectorXf pixelLocalCoordinates = Eigen::Map<const Eigen::Vector4f>(
+//        patchFeaturesData[linearizedIdx].position.v);
+//
+//    pt.first.push_back(pixelLocalCoordinates.cast<double>());
+//    // Eigen::VectorXf  projectedPixel = candidateCameraPose * pixelLocalCoordinates;
+//    Eigen::VectorXd projectedPixel = (candidateCameraPose
+//        * pixelLocalCoordinates).cast<double>();
+//
+//    boost::shared_ptr<EnsemblePredictionGaussianMean> epgm =
+//        m_featurePredictions[linearizedIdx];
+//
+//    int argmax = epgm->GetArgMax3D(projectedPixel, 0);
+//    if (argmax == -1)
+//      continue;
+//    pt.second.push_back(epgm->_modes[argmax][0]);
+//
+//    if ((epgm->_modes[argmax][0]->_mean
+//        - Helpers::ConvertWorldCoordinatesFromHomogeneousCoordinates(
+//            projectedPixel)).norm() < 0.2)
+//      ptsForLM.pts.push_back(pt);
+//  }
+//
+//  // Continuous optimization
+//  if (ptsForLM.pts.size() > 3)
+//  {
+//    alglib::real_1d_array ksi_;
+//    double ksiD[6];
+//    Eigen::MatrixXd candidateCameraPoseD = candidateCameraPose.cast<double>();
+//
+//    Eigen::VectorXd ksivd = Helpers::LieGroupToLieAlgebraSE3(
+//        candidateCameraPoseD);
+//
+//    for (int i = 0; i < 6; ++i)
+//    {
+//      ksiD[i] = ksivd(i);
+//    }
+//
+//    ksi_.setcontent(6, ksiD);
+//
+//    alglib::minlmstate state;
+//    alglib::minlmreport rep;
+//
+//    double differentiationStep = 0.0001;
+//    alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
+//
+//    double epsg = 0.000001;
+//    double epsf = 0;
+//    double epsx = 0;
+//    alglib::ae_int_t maxits = 100;
+//    alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
+//
+//    double energyBefore, energyAfter;
+//    if (m_usePredictionCovarianceForPoseOptimization)
+//    {
+//      energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(
+//          ptsForLM.pts, candidateCameraPoseD);
+//      alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance,
+//          call_after_each_step, &ptsForLM);
+//    }
+//    else
+//    {
+//      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
+//          candidateCameraPoseD);
+//      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
+//          call_after_each_step, &ptsForLM);
+//    }
+//    alglib::minlmresults(state, ksi_, rep);
+//
+//    memcpy(ksiD, ksi_.getcontent(), sizeof(double) * 6);
+//    for (int i = 0; i < 6; ++i)
+//    {
+//      ksivd(i) = ksiD[i];
+//    }
+//    Eigen::MatrixXd updatedCandidateCameraPoseD =
+//        Helpers::LieAlgebraToLieGroupSE3(ksivd);
+//
+//    if (m_usePredictionCovarianceForPoseOptimization)
+//    {
+//      energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(
+//          ptsForLM.pts, updatedCandidateCameraPoseD);
+//    }
+//    else
+//    {
+//      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
+//          updatedCandidateCameraPoseD);
+//    }
+//
+//    if (energyAfter < energyBefore)
+//    {
+//      candidateCameraPose = updatedCandidateCameraPoseD.cast<float>();
+//      return true;
+//    }
+//  }
+//
+//  return false;
 }
 
 }
