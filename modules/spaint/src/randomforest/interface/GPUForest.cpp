@@ -55,6 +55,9 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   // NOPs if we use the CPU only implementation
   m_forestImage->UpdateDeviceFromHost();
   m_predictionsBlock->UpdateDeviceFromHost();
+
+  // Allocate the image that will store the leaf indices (dummy size, will be resized as needed)
+  m_leafImage = mbf.make_image<LeafIndices>(Vector2i(0, 0));
 }
 
 GPUForest::~GPUForest()
@@ -117,90 +120,24 @@ int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
   return first_free_idx;
 }
 
-//boost::shared_ptr<EnsemblePredictionGaussianMean> GPUForest::get_prediction_for_leaves(
-//    const LeafIndices &leaves)
-//{
-//  boost::shared_ptr<EnsemblePredictionGaussianMean> res = boost::make_shared<
-//      EnsemblePredictionGaussianMean>();
-//
-//  for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
-//  {
-//    PredictionGaussianMean &currentPred = m_leafPredictions[leaves[treeIdx]];
-//    const size_t nbModes = currentPred._modes.size();
-//
-//    res->_modes.reserve(res->_modes.size() + nbModes); // Make some space
-//
-////    res->_modes.push_back(std::vector<PredictedGaussianMean*>(nbModes));
-//    for (size_t modeIdx = 0; modeIdx < nbModes; ++modeIdx)
-//    {
-//      // Is a vector because [0] is the position and [1] is the colour of the mode
-//      std::vector<PredictedGaussianMean> &currentMode =
-//          currentPred._modes[modeIdx];
-//      const size_t nbComponents = currentMode.size();
-//
-//      res->_modes.push_back(std::vector<PredictedGaussianMean*>(nbComponents));
-//      for (size_t compIdx = 0; compIdx < nbComponents; ++compIdx)
-//      {
-//        res->_modes.back()[compIdx] = &currentMode[compIdx];
-//      }
-//    }
-//  }
-//
-//  return res;
-//}
-
-boost::shared_ptr<GPUForestPrediction> GPUForest::get_prediction_for_leaves(
-    const LeafIndices &leaves)
+void GPUForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+    GPUForestPredictionsImage_Ptr &predictions)
 {
-  boost::shared_ptr<GPUForestPrediction> res = boost::make_shared<
-      GPUForestPrediction>();
-  res->nbModes = 0;
-
-  int treeModeIdx[NTREES];
-  memset(treeModeIdx, 0, sizeof(treeModeIdx));
-
-  const GPUForestPrediction *predictionsData = m_predictionsBlock->GetData(
-      MEMORYDEVICE_CPU);
-
-  const GPUForestPrediction *leafPredictions[NTREES];
-  for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
   {
-    leafPredictions[treeIdx] = &predictionsData[leaves[treeIdx]];
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    find_leaves(features, m_leafImage);
   }
 
-  // Merge first MAX_MODES from the sorted mode arrays
-  while (res->nbModes < GPUForestPrediction::MAX_MODES)
   {
-    int bestTreeIdx = 0;
-    int bestTreeNbInliers = 0;
-
-    // Find the tree with most inliers
-    for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
-    {
-      if (leafPredictions[treeIdx]->nbModes > treeModeIdx[treeIdx]
-          && leafPredictions[treeIdx]->modes[treeModeIdx[treeIdx]].nbInliers
-              > bestTreeNbInliers)
-      {
-        bestTreeIdx = treeIdx;
-        bestTreeNbInliers =
-            leafPredictions[treeIdx]->modes[treeModeIdx[treeIdx]].nbInliers;
-      }
-    }
-
-    if (bestTreeNbInliers == 0)
-    {
-      // No more modes
-      break;
-    }
-
-    // Copy its mode into the output array, increment its index
-    res->modes[res->nbModes] =
-        leafPredictions[bestTreeIdx]->modes[treeModeIdx[bestTreeIdx]];
-    res->nbModes++;
-    treeModeIdx[bestTreeIdx]++;
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "generating ensemble predictions on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    get_predictions(m_leafImage, predictions);
   }
-
-  return res;
 }
 
 void GPUForest::convert_predictions()

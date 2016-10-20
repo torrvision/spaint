@@ -15,7 +15,8 @@ class GPUForest_CUDA: public GPUForest
 public:
   explicit GPUForest_CUDA(const EnsembleLearner &pretrained_forest);
 
-  void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+protected:
+  void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const;
   void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
       GPUForestPredictionsImage_Ptr &predictions) const;

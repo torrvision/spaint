@@ -41,7 +41,7 @@ GPUForest_CUDA::GPUForest_CUDA(const EnsembleLearner &pretrained_forest) :
 {
 }
 
-void GPUForest_CUDA::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+void GPUForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
     LeafIndicesImage_Ptr &leaf_indices) const
 {
   const GPUForestNode* forestTexture = m_forestImage->GetData(

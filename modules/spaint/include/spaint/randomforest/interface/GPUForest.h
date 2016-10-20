@@ -74,23 +74,26 @@ public:
   virtual ~GPUForest();
 
   void reset_predictions();
-  virtual void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
-      LeafIndicesImage_Ptr &leaf_indices) const = 0;
-  virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
-      GPUForestPredictionsImage_Ptr &predictions) const = 0;
-  boost::shared_ptr<GPUForestPrediction> get_prediction_for_leaves(
-      const LeafIndices &leaves);
+  void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+      GPUForestPredictionsImage_Ptr &predictions);
 
 protected:
   GPUForestImage_Ptr m_forestImage;
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   std::vector<PredictionGaussianMean> m_leafPredictions;
 
+  virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
+      LeafIndicesImage_Ptr &leaf_indices) const = 0;
+  virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
+      GPUForestPredictionsImage_Ptr &predictions) const = 0;
+
 private:
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
       int n_trees, int output_idx, int first_free_idx,
       GPUForestNode *gpu_nodes);
   void convert_predictions();
+
+  LeafIndicesImage_Ptr m_leafImage;
 };
 
 typedef boost::shared_ptr<GPUForest> GPUForest_Ptr;

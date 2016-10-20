@@ -406,15 +406,7 @@ void SLAMComponentWithScoreForest::evaluate_forest(
     boost::timer::auto_cpu_timer t(6,
         "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_gpuForest->evaluate_forest(m_featureImage, m_leafImage);
-  }
-
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "generating ensemble predictions on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-    m_gpuForest->get_predictions(m_leafImage, m_predictionsImage);
+    m_gpuForest->evaluate_forest(m_featureImage, m_predictionsImage);
   }
 }
 
