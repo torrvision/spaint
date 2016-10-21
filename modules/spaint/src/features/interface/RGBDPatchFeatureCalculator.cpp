@@ -23,7 +23,8 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   m_channelsRgb = mbf.make_block<uchar>(RGBDPatchFeature::RGB_FEATURE_COUNT);
 
   m_normalizeDepth = true;
-  m_offsetsDepth = mbf.make_block<Vector4i>(RGBDPatchFeature::DEPTH_FEATURE_COUNT);
+  m_offsetsDepth = mbf.make_block<Vector4i>(
+      RGBDPatchFeature::DEPTH_FEATURE_COUNT);
 
   // Setup colour features
   {
@@ -34,21 +35,27 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
     const int radiusMin = 2;
     const int radiusMax = 130;
 
-    std::uniform_int_distribution<size_t> channel_generator(channelMin, channelMax);
-    std::uniform_int_distribution<size_t> offset_generator(radiusMin, radiusMax);
+    std::uniform_int_distribution<size_t> channel_generator(channelMin,
+        channelMax);
+    std::uniform_int_distribution<size_t> offset_generator(radiusMin,
+        radiusMax);
     std::uniform_int_distribution<size_t> sign_generator(0, 1);
 
     Vector4i *offsets = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
     uchar *channels = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
 
-    for(int i = 0; i < RGBDPatchFeature::RGB_FEATURE_COUNT; ++i)
+    for (int i = 0; i < RGBDPatchFeature::RGB_FEATURE_COUNT; ++i)
     {
       // Might be different from the order used in scoreforests (there the random calls are inside a constructor)
       // TODO check that
-      offsets[i][0] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][1] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][2] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][3] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][0] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][1] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][2] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][3] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
 
       channels[i] = 2 - channel_generator(eng); // RGB2BGR
     }
@@ -66,17 +73,22 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
     const int radiusMin = 2 / 2;
     const int radiusMax = 130 / 2;
 
-    std::uniform_int_distribution<size_t> offset_generator(radiusMin, radiusMax);
+    std::uniform_int_distribution<size_t> offset_generator(radiusMin,
+        radiusMax);
     std::uniform_int_distribution<size_t> sign_generator(0, 1);
 
     Vector4i *offsets = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
-    for(int i = 0; i < RGBDPatchFeature::DEPTH_FEATURE_COUNT; ++i)
+    for (int i = 0; i < RGBDPatchFeature::DEPTH_FEATURE_COUNT; ++i)
     {
-      offsets[i][0] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][1] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][2] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][3] = offset_generator(eng) * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][0] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][1] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][2] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][3] = offset_generator(eng)
+          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
     }
 
 //    for(int i = 0; i < RGBDPatchFeature::DEPTH_FEATURE_COUNT; ++i)
@@ -86,5 +98,17 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   }
 }
 
-RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator() {}
+RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator()
+{
+}
+
+void RGBDPatchFeatureCalculator::ComputeFeature(
+    const ITMUChar4Image_CPtr &rgb_image, const ITMFloatImage_CPtr &depth,
+    const Vector4f &intrinsics, RGBDPatchFeatureImage_Ptr &features) const
+{
+  Matrix4f identity;
+  identity.setIdentity();
+
+  ComputeFeature(rgb_image, depth, intrinsics, features, identity);
+}
 }

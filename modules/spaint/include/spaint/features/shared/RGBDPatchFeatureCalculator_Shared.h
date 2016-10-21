@@ -13,8 +13,9 @@ _CPU_AND_GPU_CODE_
 inline void compute_colour_patch_feature(RGBDPatchFeature *features,
     const Vector4u *rgb, const float *depths, const Vector4i *offsets_rgb,
     const uchar *channels_rgb, const Vector2i &img_size,
-    const Vector2i &out_size, const Vector4f &intrinsics, bool normalize,
-    const Vector2i &xy_in, const Vector2i &xy_out)
+    const Vector2i &out_size, const Vector4f &intrinsics,
+    const Matrix4f &cameraPose, bool normalize, const Vector2i &xy_in,
+    const Vector2i &xy_out)
 {
   const int linear_idx_in = xy_in.y * img_size.x + xy_in.x;
   const float depth = depths[linear_idx_in];
@@ -31,12 +32,13 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
   }
 
   // Compute position in camera frame
-  out_feature.position.x = depth
-      * ((static_cast<float>(xy_in.x) - intrinsics.z) / intrinsics.x);
-  out_feature.position.y = depth
-      * ((static_cast<float>(xy_in.y) - intrinsics.w) / intrinsics.y);
-  out_feature.position.z = depth;
-  out_feature.position.w = 1.0f;
+  const Vector4f position(
+      depth * ((static_cast<float>(xy_in.x) - intrinsics.z) / intrinsics.x),
+      depth * ((static_cast<float>(xy_in.y) - intrinsics.w) / intrinsics.y),
+      depth, 1.0f);
+
+  // Bring position in "world frame"
+  out_feature.position = cameraPose * position;
 
   // Copy the colour for future reference
   out_feature.colour = rgb[linear_idx_in].toFloat();

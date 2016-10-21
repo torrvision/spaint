@@ -17,7 +17,7 @@ public:
 
   virtual void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
       const ITMFloatImage_CPtr &depth, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage_Ptr &features) const;
+      RGBDPatchFeatureImage_Ptr &features, const Matrix4f &cameraPose) const;
 };
 }
 

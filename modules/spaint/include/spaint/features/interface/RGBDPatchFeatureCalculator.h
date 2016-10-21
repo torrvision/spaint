@@ -43,9 +43,13 @@ public:
   virtual ~RGBDPatchFeatureCalculator();
 
   virtual void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
-      const ITMFloatImage_CPtr &depth,
-      const Vector4f &intrinsics,
-      RGBDPatchFeatureImage_Ptr &features) const = 0;
+      const ITMFloatImage_CPtr &depth, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage_Ptr &features,
+      const Matrix4f &camera_pose) const = 0;
+
+  void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
+      const ITMFloatImage_CPtr &depth, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage_Ptr &features) const;
 
 protected:
   int m_featureStep;
