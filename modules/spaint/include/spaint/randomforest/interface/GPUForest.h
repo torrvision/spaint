@@ -99,6 +99,8 @@ private:
   void convert_predictions();
 
   LeafIndicesImage_Ptr m_leafImage;
+
+  boost::shared_ptr<MeanShift3D> m_ms3D;
 };
 
 typedef boost::shared_ptr<GPUForest> GPUForest_Ptr;

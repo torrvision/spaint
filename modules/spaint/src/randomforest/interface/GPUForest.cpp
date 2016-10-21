@@ -6,6 +6,7 @@
 #include "randomforest/interface/GPUForest.h"
 
 #include <boost/make_shared.hpp>
+#include <boost/timer/timer.hpp>
 
 #include "util/MemoryBlockFactory.h"
 
@@ -55,6 +56,13 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
 
   // Allocate the image that will store the leaf indices (dummy size, will be resized as needed)
   m_leafImage = mbf.make_image<LeafIndices>(Vector2i(0, 0));
+
+  float meanShiftBandWidth = 0.1f;
+  float cellLength = sqrt(meanShiftBandWidth * meanShiftBandWidth / 3) / 2.0f;
+  float minStep = meanShiftBandWidth / 10.0f;
+
+  m_ms3D = boost::make_shared<MeanShift3D>(meanShiftBandWidth, cellLength,
+      minStep);
 }
 
 GPUForest::~GPUForest()
@@ -227,19 +235,168 @@ void GPUForest::add_features_to_forest(
       const RGBDPatchFeature &currentFeature = featureData[linearIdx];
       const LeafIndices &currentIndices = indicesData[linearIdx];
 
-      const Vector3f featurePosition = currentFeature.position.toVector3();
+      PositionColourPair sample;
+      sample.position = currentFeature.position.toVector3();
+      sample.colour = currentFeature.colour.toVector3().toUChar();
 
       for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
       {
         PositionReservoir& reservoir =
             *m_leafReservoirs[currentIndices[treeIdx]];
-        totalAddedExamples += reservoir.add_example(featurePosition);
+        totalAddedExamples += reservoir.add_example(sample);
       }
     }
   }
 
-  std::cout << "add_features_to_forest: added " << totalAddedExamples << "/"
-      << features->dataSize * NTREES << " examples." << std::endl;
+//  std::cout << "add_features_to_forest: added " << totalAddedExamples << "/"
+//      << features->dataSize * NTREES << " examples." << std::endl;
+
+  // Perform meanshift on each reservoir, just to see if the thing works
+  static int callCount = 0;
+
+  if (callCount++ != 999)
+    return; // only at the last
+
+//#ifdef ENABLE_TIMERS
+  boost::timer::auto_cpu_timer t(6,
+      "meanshift: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+
+  GPUForestPrediction *predictionsData = m_predictionsBlock->GetData(
+      MEMORYDEVICE_CPU);
+
+  int smallModes = 0;
+
+  for (size_t leafIdx = 0; leafIdx < m_leafReservoirs.size(); ++leafIdx)
+  {
+    const PositionReservoir &currentReservoir = *m_leafReservoirs[leafIdx];
+    GPUForestPrediction &currentPrediction = predictionsData[leafIdx];
+    currentPrediction.nbModes = 0;
+
+    const size_t nbSamples = currentReservoir.get_size();
+    const PositionColourPair *samples =
+        currentReservoir.get_examples()->GetData(MEMORYDEVICE_CPU);
+
+    if (nbSamples == 0)
+      continue;
+
+    // Convert samples in a format that scoreforest likes
+    std::vector<IOData> ioDataStoragePos, ioDataStorageCol; // To destruct cleanly
+    ioDataStoragePos.resize(nbSamples);
+    ioDataStorageCol.resize(nbSamples);
+
+    std::vector<IOData *> ioDataForMeanshiftPos, ioDataForMeanshiftCol;
+    ioDataForMeanshiftPos.reserve(nbSamples);
+    ioDataForMeanshiftCol.reserve(nbSamples);
+
+    for (size_t i = 0; i < nbSamples; ++i)
+    {
+      ioDataStoragePos[i].Init(3);
+      ioDataStoragePos[i]._data[0] = samples[i].position.x;
+      ioDataStoragePos[i]._data[1] = samples[i].position.y;
+      ioDataStoragePos[i]._data[2] = samples[i].position.z;
+
+      ioDataStorageCol[i].Init(3);
+      ioDataStorageCol[i]._data[0] = samples[i].colour.x;
+      ioDataStorageCol[i]._data[1] = samples[i].colour.y;
+      ioDataStorageCol[i]._data[2] = samples[i].colour.z;
+    }
+
+    for (size_t i = 0; i < nbSamples; ++i)
+    {
+      ioDataForMeanshiftPos.push_back(&ioDataStoragePos[i]);
+      ioDataForMeanshiftCol.push_back(&ioDataStorageCol[i]);
+    }
+
+    std::vector<std::pair<CellCorner, std::vector<int>>>msResult;
+//    std::cout << "For leaf " << leafIdx << " computing MS for " << nbSamples
+//        << " samples." << std::endl;
+    {
+      boost::timer::auto_cpu_timer t(6,
+          "MS: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+      msResult = m_ms3D->Process(ioDataForMeanshiftPos);
+    }
+
+    std::cout << "For leaf " << leafIdx << " computed MS for " << nbSamples
+        << " samples, found " << msResult.size() << " modes.\n";
+
+    // Sort mode by descending inliers
+    std::sort(msResult.begin(), msResult.end(),
+        [] (const std::pair<CellCorner, std::vector<int>> &a, const std::pair<CellCorner, std::vector<int>> &b)
+        { return a.second.size() > b.second.size();});
+
+    // Keep at most MAX_MODES modes
+    const int nbModes = std::min<size_t>(msResult.size(),
+        GPUForestPrediction::MAX_MODES);
+
+    // convert them into the correct format
+    for (int modeIdx = 0; modeIdx < nbModes; ++modeIdx)
+    {
+      const std::vector<int>& inliers = msResult[modeIdx].second;
+      GPUForestMode &outMode = currentPrediction.modes[modeIdx];
+
+      // TODO: possibly trigger this after a while
+//      if ((int) inliers.size() < _minClusterSize)
+//      {
+//        continue;
+//      }
+
+      outMode.nbInliers = inliers.size();
+      if (outMode.nbInliers == 0)
+        throw std::runtime_error("mode with no inliers");
+
+      if (outMode.nbInliers < 20)
+      {
+        smallModes++;
+        continue;
+      }
+
+      // compute the gaussian for the position (TODO: just need mean and covariance (+ inverse), could be improved)
+      {
+        GaussianAggregator ga(3);
+        for (size_t s = 0; s < inliers.size(); ++s)
+        {
+          ga.Aggregate(ioDataForMeanshiftPos[inliers[s]]);
+        }
+
+        Eigen::Map<Eigen::Vector3f>(outMode.position.v) = ga.GetMean().cast<
+            float>();
+
+        Eigen::MatrixXd cov = ga.GetCovariance();
+        Eigen::Map<Eigen::Matrix3f>(outMode.positionInvCovariance.m) =
+            cov.inverse().cast<float>();
+
+        outMode.determinant = cov.determinant();
+      }
+
+      // Compute the gaussian for the colour (TODO: just computing the mean would be enough)
+      {
+        GaussianAggregator ga(3);
+        for (size_t s = 0; s < inliers.size(); ++s)
+        {
+          ga.Aggregate(ioDataForMeanshiftCol[inliers[s]]);
+        }
+
+        Eigen::Vector3d colMode = ga.GetMean();
+        outMode.colour.x = colMode(0);
+        outMode.colour.y = colMode(1);
+        outMode.colour.z = colMode(2);
+      }
+
+      currentPrediction.nbModes++;
+
+//      std::cout << "Mode " << modeIdx << ", pos: " << outMode.position
+//          << " - col: " << outMode.colour.toFloat() << " - inliers: "
+//          << outMode.nbInliers << std::endl;
+    }
+
+//    break;
+  }
+
+  std::cout << "Modes with few inliers: " << smallModes << std::endl;
+
+  // Copy new predictions on the GPU
+  m_predictionsBlock->UpdateDeviceFromHost();
 }
 
 int GPUForestPrediction::get_best_mode(const Vector3f &v) const

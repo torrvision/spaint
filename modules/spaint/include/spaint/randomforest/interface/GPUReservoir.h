@@ -59,8 +59,9 @@ public:
     }
     else
     {
-      size_t k = m_rng->generate_int_from_uniform(0, static_cast<int>(m_totalAddCalls) - 1);
-      if(k < m_allocatedSize)
+      size_t k = m_rng->generate_int_from_uniform(0,
+          static_cast<int>(m_totalAddCalls) - 1);
+      if (k < m_allocatedSize)
       {
         m_data->GetData(MEMORYDEVICE_CPU)[k] = example;
         added = true;
@@ -90,7 +91,14 @@ private:
   tvgutil::RandomNumberGenerator_Ptr m_rng;
 };
 
-typedef GPUReservoir<Vector3f> PositionReservoir;
+// Ugly, need to put it somewhere better
+struct PositionColourPair
+{
+  Vector3f position;
+  Vector3u colour;
+};
+
+typedef GPUReservoir<PositionColourPair> PositionReservoir;
 typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
 typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 

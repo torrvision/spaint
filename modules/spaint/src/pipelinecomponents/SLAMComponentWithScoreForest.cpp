@@ -193,10 +193,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     evaluate_features(inputRGBImage, inputDepthImage, depthIntrinsics,
         invCameraPose);
 
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
+//#ifdef ENABLE_TIMERS
+//    boost::timer::auto_cpu_timer t(6,
+//        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
 
     m_gpuForest->add_features_to_forest(m_featureImage);
   }
@@ -222,10 +222,10 @@ void SLAMComponentWithScoreForest::evaluate_features(
     const Matrix4f &invCameraPose)
 {
   {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
+//#ifdef ENABLE_TIMERS
+//    boost::timer::auto_cpu_timer t(6,
+//        "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
     m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
         depthIntrinsics, m_featureImage, invCameraPose);
   }
