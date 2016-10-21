@@ -11,6 +11,7 @@
 
 #include <boost/timer/timer.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
 #include <omp.h>
 
@@ -29,6 +30,7 @@ using namespace ORUtils;
 using namespace RelocLib;
 
 #define ENABLE_TIMERS
+//#define VISUALIZE_INLIERS
 
 namespace spaint
 {
@@ -126,7 +128,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
+    if (static_cast<size_t>(m_lowLevelEngine->CountValidDepths(
+        inputDepthImage.get()))
         < std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac))
     {
       std::cout
@@ -143,6 +146,35 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       std::cout << "The final pose is:" << pose_candidate->cameraPose
           << "\n and has " << pose_candidate->inliers.size() << " inliers."
           << std::endl;
+
+#ifdef VISUALIZE_INLIERS
+      cv::Mat inliers = cv::Mat::zeros(
+          cv::Size(m_featureImage->noDims.width, m_featureImage->noDims.height),
+          CV_32FC1);
+      inliers.setTo(std::numeric_limits<float>::quiet_NaN());
+
+      for (size_t i = 0; i < pose_candidate->inliers.size(); ++i)
+      {
+        int idx = pose_candidate->inliers[i].linearIdx;
+        float energy = pose_candidate->inliers[i].energy;
+
+        int x = idx % m_featureImage->noDims.width;
+        int y = idx / m_featureImage->noDims.width;
+
+        inliers.at<float>(cv::Point(x, y)) = energy;
+      }
+
+      double min, max;
+      cv::minMaxIdx(inliers, &min, &max);
+      std::cout << "Min energy: " << min << " - MAx energy: " << max
+          << std::endl;
+
+      cv::normalize(inliers, inliers, 0.0, 1.0, cv::NORM_MINMAX);
+      inliers = 1.f - inliers;
+
+      cv::imshow("Inliers mask", inliers);
+      cv::waitKey(1);
+#endif
 
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
@@ -505,8 +537,6 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
-  const GPUForest::LeafIndices *leafData = m_leafImage->GetData(
-      MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
@@ -602,7 +632,7 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
       {
         bool violatesConditions = false;
 
-        for (int m = 0;
+        for (size_t m = 0;
             m < selectedPixelsAndModes.size() && !violatesConditions; ++m)
         {
           int xFirst, yFirst, modeIdxFirst;
@@ -649,7 +679,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
     if (selectedPixelsAndModes.size() != m_nbPointsForKabschBoostrap)
       return false;
 
-    std::vector<std::pair<int, int>> tmpInliers;
+    // Populate resulting pose
+    res.inliers.clear();
     for (size_t s = 0; s < selectedPixelsAndModes.size(); ++s)
     {
       int x, y, modeIdx;
@@ -669,7 +700,8 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
         worldPoints(idx, s) = worldPt(idx);
       }
 
-      tmpInliers.push_back(std::pair<int, int>(linearIdx, modeIdx));
+      res.inliers.push_back(PoseCandidate::Inlier
+      { linearIdx, modeIdx, 0.f });
     }
 
     {
@@ -683,7 +715,6 @@ bool SLAMComponentWithScoreForest::hypothesize_pose(PoseCandidate &res,
 
     foundIsometricMapping = true;
 
-    res.inliers = tmpInliers;
     res.energy = 0.f;
     res.cameraId = -1;
   }
@@ -721,7 +752,7 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
     boost::timer::auto_cpu_timer t(6,
         "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    int nbSamplesPerCamera = candidates[0].inliers.size();
+    size_t nbSamplesPerCamera = candidates[0].inliers.size();
     std::vector<std::pair<int, int>> sampledPixelIdx;
     std::vector<bool> dummy_vector;
 
@@ -758,7 +789,7 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
     {
       for (size_t p = 0; p < candidates.size(); ++p)
       {
-        std::vector<std::pair<int, int>> &samples = candidates[p].inliers;
+        auto &samples = candidates[p].inliers;
         if (samples.size() > nbSamplesPerCamera)
           samples.erase(samples.begin() + nbSamplesPerCamera, samples.end());
       }
@@ -818,8 +849,6 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
 
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
-  const GPUForest::LeafIndices *leafData = m_leafImage->GetData(
-      MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
@@ -874,15 +903,17 @@ void SLAMComponentWithScoreForest::update_inliers_for_optimization(
 #pragma omp parallel for
   for (size_t p = 0; p < poseCandidates.size(); ++p)
   {
-    std::vector<std::pair<int, int>> &inliers = poseCandidates[p].inliers;
+    auto &inliers = poseCandidates[p].inliers;
 
     // add all the samples as inliers
     for (size_t s = 0; s < sampledPixelIdx.size(); ++s)
     {
-      int x = sampledPixelIdx[s].first;
-      int y = sampledPixelIdx[s].second;
-      inliers.push_back(
-          std::pair<int, int>(y * m_featureImage->noDims.width + x, -1));
+      const int x = sampledPixelIdx[s].first;
+      const int y = sampledPixelIdx[s].second;
+      const int linearIdx = y * m_featureImage->noDims.width + x;
+
+      inliers.push_back(PoseCandidate::Inlier
+      { linearIdx, -1, 0.f });
     }
   }
 }
@@ -913,7 +944,7 @@ void SLAMComponentWithScoreForest::compute_and_sort_energies(
 
 float SLAMComponentWithScoreForest::compute_pose_energy(
     const Matrix4f &candidateCameraPose,
-    const std::vector<std::pair<int, int>> &inliersIndices) const
+    std::vector<PoseCandidate::Inlier> &inliersIndices) const
 {
   float totalEnergy = 0.0f;
 
@@ -924,7 +955,7 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
 
   for (size_t s = 0; s < inliersIndices.size(); ++s)
   {
-    const int linearIdx = inliersIndices[s].first;
+    const int linearIdx = inliersIndices[s].linearIdx;
     const Vector3f localPixel =
         patchFeaturesData[linearIdx].position.toVector3();
     const Vector3f projectedPixel = candidateCameraPose * localPixel;
@@ -953,7 +984,10 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
 
     if (energy < 1e-6f)
       energy = 1e-6f;
-    totalEnergy += -log10f(energy);
+    energy = -log10f(energy);
+
+    inliersIndices[s].energy = energy;
+    totalEnergy += energy;
   }
 
   return totalEnergy / static_cast<float>(inliersIndices.size());
@@ -1002,7 +1036,7 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(
   Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd transformedPthomogeneous(4);
 
-  for (int i = 0; i < pts.size(); ++i)
+  for (size_t i = 0; i < pts.size(); ++i)
   {
     Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
         transformedPthomogeneous);
@@ -1058,7 +1092,7 @@ static double EnergyForContinuous3DOptimizationUsingL2(
   Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
   Eigen::VectorXd transformedPthomogeneous(4);
 
-  for (int i = 0; i < pts.size(); ++i)
+  for (size_t i = 0; i < pts.size(); ++i)
   {
     Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
         transformedPthomogeneous);

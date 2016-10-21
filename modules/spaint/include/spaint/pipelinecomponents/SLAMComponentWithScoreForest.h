@@ -30,8 +30,15 @@ class SLAMComponentWithScoreForest: public SLAMComponent
 {
   struct PoseCandidate
   {
+    struct Inlier
+    {
+      int linearIdx;
+      int modeIdx;
+      float energy;
+    };
+
     Matrix4f cameraPose;
-    std::vector<std::pair<int, int>> inliers;
+    std::vector<Inlier> inliers;
     float energy;
     int cameraId;
   };
@@ -86,7 +93,7 @@ private:
   void compute_and_sort_energies(
       std::vector<PoseCandidate> &poseCandidates) const;
   float compute_pose_energy(const Matrix4f &candidateCameraPose,
-      const std::vector<std::pair<int, int>> &inliersIndices) const;
+      std::vector<PoseCandidate::Inlier> &inliers) const;
   void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
@@ -102,14 +109,14 @@ private:
 
   // Member variables from scoreforests
   size_t m_kInitRansac;
-  int m_nbPointsForKabschBoostrap;
+  size_t m_nbPointsForKabschBoostrap;
   bool m_useAllModesPerLeafInPoseHypothesisGeneration;
   bool m_checkMinDistanceBetweenSampledModes;
   float m_minDistanceBetweenSampledModes;
   bool m_checkRigidTransformationConstraint;
   float m_translationErrorMaxForCorrectPose;
-  int m_batchSizeRansac;
-  int m_trimKinitAfterFirstEnergyComputation;
+  size_t m_batchSizeRansac;
+  size_t m_trimKinitAfterFirstEnergyComputation;
   bool m_poseUpdate;
   bool m_usePredictionCovarianceForPoseOptimization;
 
