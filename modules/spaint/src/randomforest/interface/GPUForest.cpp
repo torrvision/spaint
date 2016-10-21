@@ -28,9 +28,6 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nTrees, maxNbNodes));
   m_forestImage->Clear();
 
-  std::cout << "Forest texture has size: " << m_forestImage->noDims
-      << std::endl;
-
   // Fill the nodes
   GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
 
@@ -96,6 +93,11 @@ int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
       m_leafPredictions.push_back(PredictionGaussianMean());
     }
 
+    // Setup a reservoir for the leaf
+    // cannot directly pass RESERVOIR_SIZE to the PositionReservoir's ctor
+    const int capacity = RESERVOIR_SIZE;
+    m_leafReservoirs.push_back(
+        boost::make_shared<PositionReservoir>(capacity, gpuNode.leafIdx));
   }
   else
   {
@@ -188,6 +190,28 @@ void GPUForest::reset_predictions()
 {
   m_predictionsBlock->Clear(); // Setting nbModes to 0 for each prediction would be enough.
   m_predictionsBlock->UpdateDeviceFromHost();
+
+#pragma omp parallel for
+  for (size_t i = 0; i < m_leafReservoirs.size(); ++i)
+  {
+    m_leafReservoirs[i]->clear();
+  }
+}
+
+void GPUForest::add_features_to_forest(
+    const RGBDPatchFeatureImage_CPtr &features)
+{
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    find_leaves(features, m_leafImage);
+  }
+
+  // Everything on the CPU for now
+  features->UpdateHostFromDevice();
+  m_leafImage->UpdateHostFromDevice();
 }
 
 int GPUForestPrediction::get_best_mode(const Vector3f &v) const

@@ -11,6 +11,7 @@
 #include <Learner.hpp>
 
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
+#include "GPUReservoir.h"
 
 #include "ORUtils/Vector.h"
 
@@ -63,7 +64,9 @@ class GPUForest
 {
   // Typedefs
 public:
+  static const int RESERVOIR_SIZE = 1000; // Max number samples in a leaf reservoir
   static const int NTREES = 5; // Max number of trees
+
   typedef ORUtils::VectorX<int, NTREES> LeafIndices;
   typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
   typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
@@ -76,11 +79,13 @@ public:
   void reset_predictions();
   void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
       GPUForestPredictionsImage_Ptr &predictions);
+  void add_features_to_forest(const RGBDPatchFeatureImage_CPtr &features);
 
 protected:
   GPUForestImage_Ptr m_forestImage;
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   std::vector<PredictionGaussianMean> m_leafPredictions;
+  std::vector<PositionReservoir_Ptr> m_leafReservoirs;
 
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;

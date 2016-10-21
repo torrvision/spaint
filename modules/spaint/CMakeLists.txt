@@ -327,6 +327,7 @@ include/spaint/randomforest/cuda/GPUForest_CUDA.h
 
 SET(randomforest_interface_headers
 include/spaint/randomforest/interface/GPUForest.h
+include/spaint/randomforest/interface/GPUReservoir.h
 )
 
 SET(randomforest_shared_headers
