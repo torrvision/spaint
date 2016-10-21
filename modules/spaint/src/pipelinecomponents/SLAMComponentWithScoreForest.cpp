@@ -57,8 +57,6 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           ITMLib::ITMLibSettings::DEVICE_CUDA);
   m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
-  m_leafImage.reset(
-      new GPUForest::LeafIndicesImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
   m_predictionsImage.reset(
       new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
 

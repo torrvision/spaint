@@ -102,7 +102,6 @@ private:
   boost::shared_ptr<DFBP> m_forest;
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
-  GPUForest::LeafIndicesImage_Ptr m_leafImage;
   GPUForestPredictionsImage_Ptr m_predictionsImage;
   GPUForest_Ptr m_gpuForest;
 
