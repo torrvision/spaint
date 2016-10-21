@@ -54,7 +54,7 @@ public:
     if (m_data->dataSize < m_allocatedSize)
     {
       // Just add it in the first available slot
-      m_data->getData(MEMORYDEVICE_CPU)[m_data->dataSize++] = example;
+      m_data->GetData(MEMORYDEVICE_CPU)[m_data->dataSize++] = example;
       added = true;
     }
     else
@@ -62,7 +62,7 @@ public:
       size_t k = m_rng->generate_int_from_uniform(0, static_cast<int>(m_totalAddCalls) - 1);
       if(k < m_allocatedSize)
       {
-        m_data->getData(MEMORYDEVICE_CPU)[k] = example;
+        m_data->GetData(MEMORYDEVICE_CPU)[k] = example;
         added = true;
       }
     }

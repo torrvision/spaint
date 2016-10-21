@@ -61,8 +61,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
 
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
-
-//  m_gpuForest->reset_predictions();
+  m_gpuForest->reset_predictions();
 
   // Set params as in scoreforests
   m_kInitRansac = 1024;
@@ -188,248 +187,55 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       std::cout << "Cannot estimate a pose candidate." << std::endl;
     }
   }
-
-  return trackingResult;
-
-//  return trackingResult;
-//
-//  // Create ensemble predictions
-//  std::vector<boost::shared_ptr<EnsemblePrediction>> predictions(
-//      m_leafImage->noDims.width);
-//
-//  int max_modes = -1;
-//  int total_modes = 0;
-//
-//  {
-//#ifdef ENABLE_TIMERS
-//    boost::timer::auto_cpu_timer t(6,
-//        "creating predictions from leaves: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-//
-//    const int *leafData = m_leafImage->GetData(MEMORYDEVICE_CPU);
-//
-//    // Create vectors of leaves
-//    std::vector<std::vector<size_t>> leaves_indices(m_leafImage->noDims.width);
-//
-//    {
-//#ifdef ENABLE_TIMERS
-//      boost::timer::auto_cpu_timer t(6,
-//          "creating leaves array: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-//      for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
-//          ++prediction_idx)
-//      {
-//        auto &tree_leaves = leaves_indices[prediction_idx];
-//        tree_leaves.reserve(m_leafImage->noDims.height);
-//        for (int tree_idx = 0; tree_idx < m_leafImage->noDims.height;
-//            ++tree_idx)
-//        {
-//          tree_leaves.push_back(
-//              leafData[tree_idx * m_leafImage->noDims.width + prediction_idx]);
-//        }
-//      }
-//    }
-//
-//#pragma omp parallel for reduction(max:max_modes), reduction(+:total_modes)
-//    for (size_t prediction_idx = 0; prediction_idx < leaves_indices.size();
-//        ++prediction_idx)
-//    {
-//      predictions[prediction_idx] =
-//          m_dataset->GetForest()->GetPredictionForLeaves(
-//              leaves_indices[prediction_idx]);
-//
-//      if (predictions[prediction_idx])
-//      {
-//        int nbModes = ToEnsemblePredictionGaussianMean(
-//            predictions[prediction_idx].get())->_modes.size();
-//
-//        if (nbModes > max_modes)
-//        {
-//          max_modes = nbModes;
-//        }
-//
-//        total_modes += nbModes;
-//      }
-//    }
-//  }
-//
-//  std::cout << "Max number of modes: " << max_modes << std::endl;
-//  std::cout << "Total number of modes: " << total_modes << std::endl;
-
-//  Vector2i px(84, 46);
-//  int linear_px = px.y * m_featureImage->noDims.width + px.x;
-//
-//  std::vector<size_t> leaf_indices;
-//
-//  std::cout << "Leaves for pixel " << px << ": "; // << leafData[0 * m_leafImage->noDims.width + linear_px] << " "
-//  for (int treeIdx = 0; treeIdx < m_leafImage->noDims.height; ++treeIdx)
-//  {
-//    leaf_indices.push_back(
-//        leafData[treeIdx * m_leafImage->noDims.width + linear_px]);
-//    std::cout << leaf_indices.back() << " ";
-//  }
-//
-//  std::cout << std::endl;
-//
-//  // Get the corresponding ensemble prediction
-//  boost::shared_ptr<EnsemblePrediction> prediction =
-//      m_dataset->GetForest()->GetPredictionForLeaves(leaf_indices);
-
-//  EnsemblePredictionGaussianMean* gm = ToEnsemblePredictionGaussianMean(
-//      prediction.get());
-//  std::cout << "The prediction has " << gm->_modes.size() << " modes.\n";
-//  for (int mode_idx = 0; mode_idx < gm->_modes.size(); ++mode_idx)
-//  {
-//    std::cout << "Mode " << mode_idx << " has " << gm->_modes[mode_idx].size()
-//        << " elements:\n";
-//    for (int i = 0; i < gm->_modes[mode_idx].size(); ++i)
-//    {
-//      std::cout << "(" << gm->_modes[mode_idx][i]->_mean.transpose() << ") ";
-//    }
-//    std::cout << "\n";
-//  }
-//
-//  std::cout << std::endl;
-
-//  return trackingResult;
-
-  if (trackingResult == TrackingResult::TRACKING_FAILED)
+  else if (trackingResult == TrackingResult::TRACKING_GOOD)
   {
-    std::cout << "Tracking failed, trying to relocalize..." << std::endl;
+    Matrix4f invCameraPose = trackingState->pose_d->GetInvM();
+    evaluate_features(inputRGBImage, inputDepthImage, depthIntrinsics,
+        invCameraPose);
 
-    cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
-//    boost::shared_ptr<EnsemblePredictionGaussianMean> prediction;
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
 
-//    {
-//      boost::timer::auto_cpu_timer t(6, "evaluating pixel: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//
-//      boost::shared_ptr<InputOutputData> feature = m_dataset->ComputeFeaturesForPixel(rgbd, 100, 100);
-//      prediction = boost::dynamic_pointer_cast<EnsemblePredictionGaussianMean>(m_dataset->PredictForFeature(feature));
-//    }
-//
-//    return trackingResult;
-//
-//    std::cout << "Prediction has " << prediction->_modes.size() << " modes." << std::endl;
-//
-//    for(size_t mode = 0 ; mode < prediction->_modes.size(); ++mode)
-//    {
-//      std::cout << "Mode has " << prediction->_modes[mode].size() << " elements." << std::endl;
-//      for(auto x : prediction->_modes[mode])
-//      {
-//        std::cout << "Npoints: " << x->_nbPoints << " - mean: " << x->_mean.transpose() << std::endl;
-//      }
-//    }
-
-//    DatasetRGBD7Scenes::PredictionsCache cache;
-//    std::vector<DatasetRGBD7Scenes::PoseCandidate> candidates;
-//
-//    {
-//      boost::timer::auto_cpu_timer t(6, "generating candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//      m_dataset->GeneratePoseCandidatesFromImage(rgbd, cache, candidates);
-//    }
-//
-//    std::cout << "Cache has " << cache.size() << " entries. computed " << candidates.size() << " candidates." << std::endl;
-//
-//    std::mt19937 random_engine;
-//
-//    std::vector<std::pair<int, int>> sampled_pixels;
-//
-//    {
-//      boost::timer::auto_cpu_timer t(6, "sampling candidates for ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//      std::vector<bool> dummy_mask;
-//      m_dataset->SamplePixelCandidatesForPoseUpdate(rgbd, cache, dummy_mask, sampled_pixels, random_engine);
-//    }
-//
-//    std::cout << "Sampled " << sampled_pixels.size() << " pixels for RANSAC" << std::endl;
-
-    DatasetRGBD7Scenes::PoseCandidate pose;
-
-    {
-      boost::timer::auto_cpu_timer t(6,
-          "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-      pose = m_dataset->EstimatePose(rgbd);
-    }
-
-    std::cout << "new impl, pose:\n" << std::get < 0
-        > (pose) << "\n" << std::endl;
-
-//    // Now compute features
-//    std::vector<boost::shared_ptr<InputOutputData>> featuresBuffer;
-//
-//    {
-//      boost::timer::auto_cpu_timer t(6, "computing features: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//      m_dataset->ComputeFeaturesForImage(rgbd, featuresBuffer);
-//    }
-//
-//    std::cout << "Computed " << featuresBuffer.size() << " features." << std::endl;
-//
-//    std::vector<EnsemblePrediction *> predictions;
-//
-//    // Evaluate forest
-//    {
-//      boost::timer::auto_cpu_timer t(6, "evaluating forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//      m_dataset->EvaluateForest(featuresBuffer, predictions);
-//    }
-//
-//    std::cout << "Forest evaluated" << std::endl;
-//
-//    // Find pose
-//    std::tuple<Eigen::MatrixXf, std::vector<std::pair<int, int>>, float, int> result;
-//
-//    {
-//      boost::timer::auto_cpu_timer t(6, "estimating pose: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//      result = m_dataset->PoseFromPredictions(rgbd, featuresBuffer, predictions);
-//    }
-//
-//    std::cout << "Pose estimated: " << std::get<0>(result) << "\nwith "<< std::get<1>(result).size() << " inliers." << std::endl;
-
-    Matrix4f invPose;
-    Eigen::Map<Eigen::Matrix4f> em(invPose.m);
-    em = std::get < 0 > (pose);
-
-    trackingState->pose_d->SetInvM(invPose);
-
-    const bool resetVisibleList = true;
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
-        voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-    prepare_for_tracking(TRACK_VOXELS);
-    m_trackingController->Track(trackingState.get(), view.get());
-    trackingResult = trackingState->trackerResult;
-
-//    // cleanup
-//    for(size_t i = 0; i < featuresBuffer.size(); ++i) delete featuresBuffer[i];
-//    for(size_t i = 0; i < predictions.size(); ++i) delete predictions[i];
+    m_gpuForest->add_features_to_forest(m_featureImage);
   }
-//  else if (trackingResult == TrackingResult::TRACKING_GOOD)
-//  {
-//    cv::Matx44f invPose(trackingState->pose_d->GetInvM().m);
-//    cv::Mat cvInvPose(invPose.t()); // Matrix4f is col major
-//
-//    cv::Mat rgbd = build_rgbd_image(inputRGBImage, inputRawDepthImage);
-//
-//    {
-//      boost::timer::auto_cpu_timer t(6, "integrating new image: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//      m_dataset->AddImageFeaturesToForest(rgbd, cvInvPose);
-//    }
-//  }
 
   return trackingResult;
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void SLAMComponentWithScoreForest::evaluate_forest(
-    const ITMUChar4Image_CPtr &inputRGBImage,
+void SLAMComponentWithScoreForest::evaluate_features(
+    const ITMUChar4Image_CPtr &inputRgbImage,
     const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics)
+{
+  Matrix4f identity;
+  identity.setIdentity();
+
+  evaluate_features(inputRgbImage, inputDepthImage, depthIntrinsics, identity);
+}
+
+void SLAMComponentWithScoreForest::evaluate_features(
+    const ITMUChar4Image_CPtr &inputRgbImage,
+    const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics,
+    const Matrix4f &invCameraPose)
 {
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_featureExtractor->ComputeFeature(inputRGBImage, inputDepthImage,
-        depthIntrinsics, m_featureImage);
+    m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
+        depthIntrinsics, m_featureImage, invCameraPose);
   }
+}
+
+void SLAMComponentWithScoreForest::evaluate_forest(
+    const ITMUChar4Image_CPtr &inputRGBImage,
+    const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics)
+{
+  evaluate_features(inputRGBImage, inputDepthImage, depthIntrinsics);
 
   {
 #ifdef ENABLE_TIMERS

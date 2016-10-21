@@ -212,6 +212,34 @@ void GPUForest::add_features_to_forest(
   // Everything on the CPU for now
   features->UpdateHostFromDevice();
   m_leafImage->UpdateHostFromDevice();
+
+  const Vector2i imgSize = features->noDims;
+  const RGBDPatchFeature *featureData = features->GetData(MEMORYDEVICE_CPU);
+  const LeafIndices *indicesData = m_leafImage->GetData(MEMORYDEVICE_CPU);
+
+  int totalAddedExamples = 0;
+
+  for (int y = 0; y < imgSize.height; ++y)
+  {
+    for (int x = 0; x < imgSize.width; ++x)
+    {
+      const int linearIdx = y * imgSize.width + x;
+      const RGBDPatchFeature &currentFeature = featureData[linearIdx];
+      const LeafIndices &currentIndices = indicesData[linearIdx];
+
+      const Vector3f featurePosition = currentFeature.position.toVector3();
+
+      for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
+      {
+        PositionReservoir& reservoir =
+            *m_leafReservoirs[currentIndices[treeIdx]];
+        totalAddedExamples += reservoir.add_example(featurePosition);
+      }
+    }
+  }
+
+  std::cout << "add_features_to_forest: added " << totalAddedExamples << "/"
+      << features->dataSize * NTREES << " examples." << std::endl;
 }
 
 int GPUForestPrediction::get_best_mode(const Vector3f &v) const
