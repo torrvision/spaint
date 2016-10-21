@@ -167,7 +167,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       double min, max;
       cv::minMaxIdx(inliers, &min, &max);
       std::cout << "Min energy: " << min << " - MAx energy: " << max
-          << std::endl;
+      << std::endl;
 
       cv::normalize(inliers, inliers, 0.0, 1.0, cv::NORM_MINMAX);
       inliers = 1.f - inliers;
@@ -753,7 +753,7 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
         "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     size_t nbSamplesPerCamera = candidates[0].inliers.size();
-    std::vector<std::pair<int, int>> sampledPixelIdx;
+    std::vector<Vector2i> sampledPixelIdx;
     std::vector<bool> dummy_vector;
 
     {
@@ -815,7 +815,7 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
     ++iteration;
     //    std::cout << candidates.size() << " camera remaining" << std::endl;
 
-    std::vector<std::pair<int, int>> sampledPixelIdx;
+    std::vector<Vector2i> sampledPixelIdx;
     sample_pixels_for_ransac(maskSampledPixels, sampledPixelIdx, random_engine,
         m_batchSizeRansac);
 
@@ -839,8 +839,7 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
 
 void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
     std::vector<bool> &maskSampledPixels,
-    std::vector<std::pair<int, int>> &sampledPixelIdx, std::mt19937 &eng,
-    int batchSize)
+    std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize)
 {
   std::uniform_int_distribution<int> col_index_generator(0,
       m_featureImage->noDims.width - 1);
@@ -859,12 +858,8 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
 
     while (!validIndex && innerIterations++ < 50)
     {
-      std::pair<int, int> s;
-
-      s.first = col_index_generator(eng);
-      s.second = row_index_generator(eng);
-
-      const int linearIdx = s.second * m_featureImage->noDims.width + s.first;
+      const Vector2i s(col_index_generator(eng), row_index_generator(eng));
+      const int linearIdx = s.y * m_featureImage->noDims.width + s.x;
 
       if (patchFeaturesData[linearIdx].position.w >= 0.f)
       {
@@ -897,7 +892,7 @@ void SLAMComponentWithScoreForest::sample_pixels_for_ransac(
 }
 
 void SLAMComponentWithScoreForest::update_inliers_for_optimization(
-    const std::vector<std::pair<int, int>> &sampledPixelIdx,
+    const std::vector<Vector2i> &sampledPixelIdx,
     std::vector<PoseCandidate> &poseCandidates) const
 {
 #pragma omp parallel for
@@ -908,9 +903,8 @@ void SLAMComponentWithScoreForest::update_inliers_for_optimization(
     // add all the samples as inliers
     for (size_t s = 0; s < sampledPixelIdx.size(); ++s)
     {
-      const int x = sampledPixelIdx[s].first;
-      const int y = sampledPixelIdx[s].second;
-      const int linearIdx = y * m_featureImage->noDims.width + x;
+      const Vector2i &sample = sampledPixelIdx[s];
+      const int linearIdx = sample.y * m_featureImage->noDims.width + sample.x;
 
       inliers.push_back(PoseCandidate::Inlier
       { linearIdx, -1, 0.f });
