@@ -233,6 +233,9 @@ void GPUForest::add_features_to_forest(
     {
       const int linearIdx = y * imgSize.width + x;
       const RGBDPatchFeature &currentFeature = featureData[linearIdx];
+      if (currentFeature.position.w < 0.f)
+        continue;
+
       const LeafIndices &currentIndices = indicesData[linearIdx];
 
       PositionColourPair sample;
