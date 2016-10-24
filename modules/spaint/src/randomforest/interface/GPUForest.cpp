@@ -216,49 +216,14 @@ void GPUForest::add_features_to_forest(
   }
 
   {
+#ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "add examples to reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
     m_leafReservoirs->add_examples(features, m_leafImage);
   }
 
-#if 0
-
-//  // Everything on the CPU for now
-//  features->UpdateHostFromDevice();
-//  m_leafImage->UpdateHostFromDevice();
-//
-//  const Vector2i imgSize = features->noDims;
-//  const RGBDPatchFeature *featureData = features->GetData(MEMORYDEVICE_CPU);
-//  const LeafIndices *indicesData = m_leafImage->GetData(MEMORYDEVICE_CPU);
-//
-//  int totalAddedExamples = 0;
-//
-//  for (int y = 0; y < imgSize.height; ++y)
-//  {
-//    for (int x = 0; x < imgSize.width; ++x)
-//    {
-//      const int linearIdx = y * imgSize.width + x;
-//      const RGBDPatchFeature &currentFeature = featureData[linearIdx];
-//      if (currentFeature.position.w < 0.f)
-//        continue;
-//
-//      const LeafIndices &currentIndices = indicesData[linearIdx];
-//
-//      PositionColourPair sample;
-//      sample.position = currentFeature.position.toVector3();
-//      sample.colour = currentFeature.colour.toVector3().toUChar();
-//
-//      for (int treeIdx = 0; treeIdx < NTREES; ++treeIdx)
-//      {
-//        PositionReservoir& reservoir =
-//            *m_leafReservoirs[currentIndices[treeIdx]];
-//        totalAddedExamples += reservoir.add_example(sample);
-//      }
-//    }
-//  }
-
-//  std::cout << "add_features_to_forest: added " << totalAddedExamples << "/"
-//      << features->dataSize * NTREES << " examples." << std::endl;
+#if 1
 
   // Perform meanshift on each reservoir, just to see if the thing works
   static int callCount = 0;
@@ -271,20 +236,47 @@ void GPUForest::add_features_to_forest(
       "meanshift: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 //#endif
 
+  m_leafReservoirs->get_reservoirs()->UpdateHostFromDevice();
+  const GPUReservoir::ExampleType *reservoirs =
+      m_leafReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
+
+  m_leafReservoirs->get_reservoirs_size()->UpdateHostFromDevice();
+  const int *reservoirsSize = m_leafReservoirs->get_reservoirs_size()->GetData(
+      MEMORYDEVICE_CPU);
+
+  const int nbLeaves = m_predictionsBlock->dataSize; // same as the number of reservoirs
+  const int reservoirCapacity = m_leafReservoirs->get_capacity();
+
+//  const int totalEntries = nbLeaves * reservoirCapacity;
+//  int occupiedEntries = 0;
+//
+//  for (int i = 0; i < nbLeaves; ++i)
+//  {
+//    int x = res[i];
+//    if (x < 0 || x >= 1000)
+//    {
+//      std::cout << "Res: " << i << ": " << x << std::endl;
+//    }
+//
+//    occupiedEntries += x;
+//  }
+//
+//  std::cout << "Occupied entries: " << occupiedEntries << "/" << totalEntries
+//      << std::endl;
+
   GPUForestPrediction *predictionsData = m_predictionsBlock->GetData(
       MEMORYDEVICE_CPU);
 
   int smallModes = 0;
 
-  for (size_t leafIdx = 0; leafIdx < m_leafReservoirs.size(); ++leafIdx)
+  for (size_t leafIdx = 0; leafIdx < nbLeaves; ++leafIdx)
   {
-    const PositionReservoir &currentReservoir = *m_leafReservoirs[leafIdx];
     GPUForestPrediction &currentPrediction = predictionsData[leafIdx];
     currentPrediction.nbModes = 0;
 
-    const size_t nbSamples = currentReservoir.get_size();
-    const PositionColourPair *samples =
-        currentReservoir.get_examples()->GetData(MEMORYDEVICE_CPU);
+    const int nbSamples = reservoirsSize[leafIdx];
+    const PositionColourExample *samples = &reservoirs[leafIdx
+        * reservoirCapacity];
 
     if (nbSamples == 0)
       continue;
