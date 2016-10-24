@@ -47,7 +47,7 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
   example.position = feature.position.toVector3();
   example.colour = feature.colour.toVector3().toUChar();
 
-  for (int treeIdx = 0; treeIdx < leafIndices->vsize; ++treeIdx)
+  for (int treeIdx = 0; treeIdx < LeafIndices::value_size; ++treeIdx)
   {
     const int leafIdx = leaves[treeIdx]; // The row in the reservoirs array
     const int reservoirStartIdx = leafIdx * reservoirCapacity;
