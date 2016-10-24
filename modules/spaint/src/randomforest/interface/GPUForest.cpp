@@ -10,6 +10,7 @@
 
 #include "util/MemoryBlockFactory.h"
 
+#include "randomforest/cuda/GPUClusterer_CUDA.h"
 #include "randomforest/cuda/GPUReservoir_CUDA.h"
 
 namespace spaint
@@ -72,6 +73,9 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
     m_leafReservoirs.reset(
         new GPUReservoir_CUDA(RESERVOIR_SIZE, m_predictionsBlock->dataSize));
   }
+
+  // Tentative values
+  m_gpuClusterer.reset(new GPUClusterer_CUDA(0.1f, 0.05f));
 }
 
 GPUForest::~GPUForest()
@@ -223,6 +227,16 @@ void GPUForest::add_features_to_forest(
     m_leafReservoirs->add_examples(features, m_leafImage);
   }
 
+  const int nbLeaves = m_predictionsBlock->dataSize; // same as the number of reservoirs
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "GPU clustering: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock, 0, nbLeaves);
+  }
+
 #if 1
 
   // Perform meanshift on each reservoir, just to see if the thing works
@@ -244,7 +258,6 @@ void GPUForest::add_features_to_forest(
   const int *reservoirsSize = m_leafReservoirs->get_reservoirs_size()->GetData(
       MEMORYDEVICE_CPU);
 
-  const int nbLeaves = m_predictionsBlock->dataSize; // same as the number of reservoirs
   const int reservoirCapacity = m_leafReservoirs->get_capacity();
 
 //  const int totalEntries = nbLeaves * reservoirCapacity;

@@ -11,6 +11,7 @@
 #include <Learner.hpp>
 
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
+#include "GPUClusterer.h"
 #include "GPUReservoir.h"
 #include "GPUForestTypes.h"
 
@@ -45,6 +46,7 @@ protected:
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   std::vector<PredictionGaussianMean> m_leafPredictions;
   PositionReservoir_Ptr m_leafReservoirs;
+  GPUClusterer_Ptr m_gpuClusterer;
 
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
