@@ -306,10 +306,12 @@ include/spaint/propagation/shared/LabelPropagator_Shared.h
 ##
 SET(randomforest_cuda_sources
 src/randomforest/cuda/GPUForest_CUDA.cu
+src/randomforest/cuda/GPUReservoir_CUDA.cu
 )
 
 SET(randomforest_interface_sources
 src/randomforest/interface/GPUForest.cpp
+src/randomforest/interface/GPUReservoir.cpp
 )
 
 SET(randomforest_sources
@@ -324,6 +326,7 @@ include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 
 SET(randomforest_cuda_headers
 include/spaint/randomforest/cuda/GPUForest_CUDA.h
+include/spaint/randomforest/cuda/GPUReservoir_CUDA.h
 )
 
 SET(randomforest_interface_headers

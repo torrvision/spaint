@@ -44,7 +44,7 @@ protected:
   GPUForestImage_Ptr m_forestImage;
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   std::vector<PredictionGaussianMean> m_leafPredictions;
-  std::vector<PositionReservoir_Ptr> m_leafReservoirs;
+  PositionReservoir_Ptr m_leafReservoirs;
 
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
