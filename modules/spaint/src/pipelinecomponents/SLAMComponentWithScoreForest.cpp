@@ -768,12 +768,23 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
     if (argmax < 0)
     {
       // should have not been inserted in the inlier set
+      std::cout << "prediction " << linearIdx
+          << " has negative argmax, nbModes: " << pred.nbModes << std::endl;
+      for (int i = 0; i < pred.nbModes; ++i)
+      {
+        auto &mode = pred.modes[i];
+        std::cout << "Mode " << i << ": inliers: " << mode.nbInliers
+            << "\npos: " << mode.position << "\ncol: " << mode.colour
+            << "\ndet: " << mode.determinant << "\ninvcov: "
+            << mode.positionInvCovariance << "\n" << std::endl;
+      }
       throw std::runtime_error("prediction has no valid modes");
     }
 
     if (pred.modes[argmax].nbInliers == 0)
     {
       // the original implementation had a simple continue
+      std::cout << "mode has no inliers" << std::endl;
       throw std::runtime_error("mode has no inliers");
     }
 
