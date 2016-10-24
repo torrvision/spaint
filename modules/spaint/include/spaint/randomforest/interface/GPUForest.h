@@ -26,7 +26,7 @@ public:
   static const int RESERVOIR_SIZE = 1000; // Max number samples in a leaf reservoir
   static const int NTREES = GPUFOREST_NTREES; // Max number of trees
 
-  typedef LeafIndices LeafIndices;
+  typedef spaint::LeafIndices LeafIndices; // TODO: remove
   typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
   typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
   typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;

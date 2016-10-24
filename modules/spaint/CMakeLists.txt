@@ -76,6 +76,7 @@ src/features/interface/RGBDPatchFeatureCalculator.cpp
 
 SET(features_interface_headers
 include/spaint/features/interface/FeatureCalculator.h
+include/spaint/features/interface/RGBDPatchFeature.h
 include/spaint/features/interface/RGBDPatchFeatureCalculator.h
 include/spaint/features/interface/VOPFeatureCalculator.h
 )
@@ -327,6 +328,7 @@ include/spaint/randomforest/cuda/GPUForest_CUDA.h
 
 SET(randomforest_interface_headers
 include/spaint/randomforest/interface/GPUForest.h
+include/spaint/randomforest/interface/GPUForestTypes.h
 include/spaint/randomforest/interface/GPUReservoir.h
 )
 
