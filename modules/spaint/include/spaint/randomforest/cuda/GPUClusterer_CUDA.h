@@ -23,6 +23,9 @@ private:
   ITMFloatImage_Ptr m_densities;
   ITMIntImage_Ptr m_parents;
   ITMIntImage_Ptr m_clusterIdx;
+  ITMIntImage_Ptr m_clusterSizes;
+  ITMIntImage_Ptr m_clusterSizesHistogram;
+  ITMIntImage_Ptr m_selectedClusters;
   ITMIntImage_Ptr m_nbClustersPerReservoir;
 };
 }

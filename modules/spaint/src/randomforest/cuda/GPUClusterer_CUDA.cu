@@ -97,9 +97,9 @@ __global__ void ck_link_neighbors(const PositionColourExample *examples,
   clusterIndices[elementOffset] = clusterIdx;
 }
 
-__global__ void ck_identify_cluster(const int *reservoirSizes,
-    const int *parents, int *clusterIndices, int reservoirCapacity,
-    int startReservoirIdx)
+__global__ void ck_identify_clusters(const int *reservoirSizes,
+    const int *parents, int *clusterIndices, int *clusterSizes,
+    int reservoirCapacity, int startReservoirIdx)
 {
   // The assumption is that the kernel indices are always valid.
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
@@ -121,6 +121,203 @@ __global__ void ck_identify_cluster(const int *reservoirSizes,
   // found the root of the subtree, get its cluster idx
   const int clusterIdx = clusterIndices[reservoirOffset + parentIdx];
   clusterIndices[elementOffset] = clusterIdx;
+
+  // If it's a valid cluster then increase its size
+  if (clusterIdx >= 0)
+  {
+    atomicAdd(&clusterSizes[reservoirOffset + clusterIdx], 1);
+  }
+}
+
+__global__ void ck_compute_cluster_histogram(const int *clusterSizes,
+    const int *nbClustersPerReservoir, int *clusterSizesHistogram,
+    int reservoirCapacity, int startReservoirIdx)
+{
+  // The assumption is that the kernel indices are always valid.
+  const int reservoirIdx = blockIdx.x + startReservoirIdx;
+  const int reservoirOffset = reservoirIdx * reservoirCapacity;
+  const int validClusters = nbClustersPerReservoir[reservoirIdx];
+  const int clusterIdx = threadIdx.x;
+
+  if (clusterIdx >= validClusters)
+    return;
+
+  const int clusterSize = clusterSizes[reservoirOffset + clusterIdx];
+  atomicAdd(&clusterSizesHistogram[reservoirOffset + clusterSize], 1);
+}
+
+__global__ void ck_select_clusters(const int *clusterSizes,
+    const int *clusterSizesHistogram, const int *nbClustersPerReservoir,
+    int *selectedClusters, int reservoirCapacity, int startReservoirIdx,
+    int maxSelectedClusters)
+{
+  // The assumption is that the kernel indices are always valid.
+  // "Sequential kernel": 1 thread per block
+  const int reservoirIdx = blockIdx.x + startReservoirIdx;
+  const int reservoirOffset = reservoirIdx * reservoirCapacity;
+  const int validClusters = nbClustersPerReservoir[reservoirIdx];
+  const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
+
+  // Reset output
+  for (int i = 0; i < maxSelectedClusters; ++i)
+  {
+    selectedClusters[selectedClustersOffset + i] = -1;
+  }
+
+  // Scan the histogram from the top to find the minimum cluster size we want to select
+  int nbSelectedClusters = 0;
+  int minClusterSize = reservoirCapacity - 1;
+  // TODO: possibly force minclusterSize to be non zero, maybe 20?
+  for (; minClusterSize >= 0 && nbSelectedClusters < maxSelectedClusters;
+      --minClusterSize)
+  {
+    nbSelectedClusters +=
+        clusterSizesHistogram[reservoirOffset + minClusterSize];
+  }
+
+  // Empty reservoir
+  if (nbSelectedClusters == 0)
+    return;
+
+  // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size,
+  // need to keep this into account: at first add all clusters with size greater than minClusterSize
+  // then another loop over the clusters add as many clusters with size == minClusterSize as possible
+
+  nbSelectedClusters = 0;
+
+  // first loop, >
+  for (int i = 0; i < validClusters && nbSelectedClusters < maxSelectedClusters;
+      ++i)
+  {
+    if (clusterSizes[reservoirOffset + i] > minClusterSize)
+    {
+      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
+    }
+  }
+
+  // second loop, ==
+  for (int i = 0; i < validClusters && nbSelectedClusters < maxSelectedClusters;
+      ++i)
+  {
+    if (clusterSizes[reservoirOffset + i] == minClusterSize)
+    {
+      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
+    }
+  }
+
+  // Sort clusters by descending number of inliers
+  // Quadratic but small enough to not care for now
+  for (int i = 0; i < nbSelectedClusters; ++i)
+  {
+    int maxSize = clusterSizes[reservoirOffset
+        + selectedClusters[selectedClustersOffset + i]];
+    int maxIdx = i;
+
+    for (int j = i + 1; j < nbSelectedClusters; ++j)
+    {
+      int size = clusterSizes[reservoirOffset
+          + selectedClusters[selectedClustersOffset + j]];
+      if (size > maxSize)
+      {
+        maxSize = size;
+        maxIdx = j;
+      }
+    }
+
+    // Swap
+    if (maxIdx != i)
+    {
+      int temp = selectedClusters[selectedClustersOffset + i];
+      selectedClusters[selectedClustersOffset + i] =
+          selectedClusters[selectedClustersOffset + maxIdx];
+      selectedClusters[selectedClustersOffset + maxIdx] = temp;
+    }
+  }
+}
+
+__global__ void ck_compute_modes(const PositionColourExample *examples,
+    const int *reservoirSizes, const int *clusterIndices,
+    const int *selectedClusters, GPUForestPrediction *predictions,
+    int reservoirCapacity, int startReservoirIdx, int maxSelectedClusters)
+{
+  // One thread per cluster, one block per reservoir
+  const int reservoirIdx = blockIdx.x + startReservoirIdx;
+  const int reservoirOffset = reservoirIdx * reservoirCapacity;
+  const int reservoirSize = reservoirSizes[reservoirIdx];
+
+  const int clusterIdx = threadIdx.x;
+  const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
+
+  GPUForestPrediction &reservoirPrediction = predictions[reservoirIdx];
+  if (threadIdx.x == 0)
+    reservoirPrediction.nbModes = 0;
+
+  __syncthreads();
+
+  const int selectedClusterId = selectedClusters[selectedClustersOffset
+      + clusterIdx];
+  if (selectedClusterId >= 0)
+  {
+    // compute position and colour mean
+    int sampleCount = 0;
+    Vector3f positionMean(0.f);
+    Vector3f colourMean(0.f);
+
+    // Iterate over all examples and use only those belonging to selectedClusterId
+    for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
+    {
+      const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
+      if (sampleCluster == selectedClusterId)
+      {
+        const PositionColourExample &sample = examples[reservoirOffset
+            + sampleIdx];
+
+        ++sampleCount;
+        positionMean += sample.position;
+        colourMean += sample.colour.toFloat();
+      }
+    }
+
+    //this mode is invalid..
+    if (sampleCount <= 1)
+      return;
+
+    positionMean /= static_cast<float>(sampleCount);
+    colourMean /= static_cast<float>(sampleCount);
+
+    // Now iterate again and compute the covariance
+    Matrix3f positionCovariance;
+    for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
+    {
+      const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
+      if (sampleCluster == selectedClusterId)
+      {
+        const PositionColourExample &sample = examples[reservoirOffset
+            + sampleIdx];
+
+        for (int i = 0; i < 3; ++i)
+        {
+          for (int j = 0; j < 3; ++j)
+          {
+            positionCovariance.m[i * 3 + j] += (sample.position.v[i]
+                - positionMean.v[i])
+                * (sample.position.v[j] - positionMean.v[j]);
+          }
+        }
+      }
+    }
+
+    positionCovariance /= static_cast<float>(sampleCount - 1);
+
+    // Create the mode (atomicAdd on the number of modes)
+    const int modeIdx = atomicAdd(&reservoirPrediction.nbModes, 1);
+    GPUForestMode &outMode = reservoirPrediction.modes[modeIdx];
+    outMode.nbInliers = sampleCount;
+    outMode.position = positionMean;
+    outMode.determinant = positionCovariance.det();
+    positionCovariance.inv(outMode.positionInvCovariance);
+    outMode.colour = colourMean.toUChar();
+  }
 }
 
 GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
@@ -130,6 +327,9 @@ GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
   m_densities = mbf.make_image<float>(Vector2i(0, 0));
   m_parents = mbf.make_image<int>(Vector2i(0, 0));
   m_clusterIdx = mbf.make_image<int>(Vector2i(0, 0));
+  m_clusterSizes = mbf.make_image<int>(Vector2i(0, 0));
+  m_clusterSizesHistogram = mbf.make_image<int>(Vector2i(0, 0));
+  m_selectedClusters = mbf.make_image<int>(Vector2i(0, 0));
   m_nbClustersPerReservoir = mbf.make_image<int>(Vector2i(0, 0));
 }
 
@@ -148,10 +348,19 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
     m_densities->ChangeDims(temporariesSize);
     m_parents->ChangeDims(temporariesSize);
     m_clusterIdx->ChangeDims(temporariesSize);
+    m_clusterSizes->ChangeDims(temporariesSize);
+    m_clusterSizesHistogram->ChangeDims(temporariesSize);
+
+    m_selectedClusters->ChangeDims(
+        Vector2i(GPUForestPrediction::MAX_MODES, nbReservoirs));
+
     m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
   }
 
+// Could clear only the data needed by the current call (startIdx + count)
   m_nbClustersPerReservoir->Clear();
+  m_clusterSizes->Clear();
+  m_clusterSizesHistogram->Clear();
 
   const PositionColourExample *examples = reservoirs->get_reservoirs()->GetData(
       MEMORYDEVICE_CUDA);
@@ -174,11 +383,34 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
       nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
 //  cudaDeviceSynchronize();
 
-  ck_identify_cluster<<<gridSize, blockSize>>>(reservoirSizes, parents, clusterIndices,
+  int *clusterSizes = m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+
+  ck_identify_clusters<<<gridSize, blockSize>>>(reservoirSizes, parents, clusterIndices, clusterSizes,
       reservoirCapacity, startIdx);
+//  cudaDeviceSynchronize();
+
+  int *clusterSizesHistogram = m_clusterSizesHistogram->GetData(
+      MEMORYDEVICE_CUDA);
+
+  ck_compute_cluster_histogram<<<gridSize, blockSize>>>(clusterSizes, nbClustersPerReservoir,
+      clusterSizesHistogram, reservoirCapacity, startIdx);
+//  cudaDeviceSynchronize();
+
+  int *selectedClusters = m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
+  ck_select_clusters<<<gridSize, 1>>>(clusterSizes, clusterSizesHistogram,
+      nbClustersPerReservoir, selectedClusters, reservoirCapacity, startIdx,
+      GPUForestPrediction::MAX_MODES);
+//  cudaDeviceSynchronize();
+
+  GPUForestPrediction *predictionsData = predictions->GetData(
+      MEMORYDEVICE_CUDA);
+  ck_compute_modes<<<gridSize, GPUForestPrediction::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
+      predictionsData, reservoirCapacity, startIdx,
+      GPUForestPrediction::MAX_MODES);
   cudaDeviceSynchronize();
 
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();
+//  m_clusterSizes->UpdateHostFromDevice();
 //  reservoirs->get_reservoirs_size()->UpdateHostFromDevice();
 //
 //  for (int i = 0; i < count; ++i)
@@ -188,6 +420,14 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
 //        << " clusters and "
 //        << reservoirs->get_reservoirs_size()->GetData(MEMORYDEVICE_CPU)[i
 //            + startIdx] << " elements." << std::endl;
+//    for (int j = 0;
+//        j < m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU)[i + startIdx];
+//        ++j)
+//    {
+//      std::cout << "\tCluster " << j << ": "
+//          << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[(i + startIdx)
+//              * reservoirCapacity + j] << " elements." << std::endl;
+//    }
 //  }
 }
 
