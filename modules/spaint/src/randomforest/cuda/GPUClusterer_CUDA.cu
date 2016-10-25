@@ -60,6 +60,7 @@ __global__ void ck_link_neighbors(const PositionColourExample *examples,
   const int elementOffset = reservoirOffset + elementIdx;
 
   int parentIdx = elementIdx;
+  int clusterIdx = -1;
 
   if (elementIdx < reservoirSize)
   {
@@ -85,15 +86,15 @@ __global__ void ck_link_neighbors(const PositionColourExample *examples,
       }
     }
 
-    // found the root of a subtree, get a unique cluster index
+    // current element is the root of a subtree, get a unique cluster index
     if (parentIdx == elementIdx)
     {
-      clusterIndices[elementOffset] = atomicAdd(
-          &nbClustersPerReservoir[reservoirIdx], 1);
+      clusterIdx = atomicAdd(&nbClustersPerReservoir[reservoirIdx], 1);
     }
   }
 
   parents[elementOffset] = parentIdx;
+  clusterIndices[elementOffset] = clusterIdx;
 }
 
 GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
