@@ -97,6 +97,32 @@ __global__ void ck_link_neighbors(const PositionColourExample *examples,
   clusterIndices[elementOffset] = clusterIdx;
 }
 
+__global__ void ck_identify_cluster(const int *reservoirSizes,
+    const int *parents, int *clusterIndices, int reservoirCapacity,
+    int startReservoirIdx)
+{
+  // The assumption is that the kernel indices are always valid.
+  const int reservoirIdx = blockIdx.x + startReservoirIdx;
+  const int reservoirOffset = reservoirIdx * reservoirCapacity;
+  const int reservoirSize = reservoirSizes[reservoirIdx];
+  const int elementIdx = threadIdx.x;
+  const int elementOffset = reservoirOffset + elementIdx;
+
+  // No need to check if the current element is valid
+  // ck_link_neighbors sets the parent for invalid elements to themselves
+  int parentIdx = parents[elementOffset];
+  int currentIdx = elementIdx;
+  while (parentIdx != currentIdx)
+  {
+    currentIdx = parentIdx;
+    parentIdx = parents[reservoirOffset + parentIdx];
+  }
+
+  // found the root of the subtree, get its cluster idx
+  const int clusterIdx = clusterIndices[reservoirOffset + parentIdx];
+  clusterIndices[elementOffset] = clusterIdx;
+}
+
 GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
     GPUClusterer(sigma, tau)
 {
@@ -146,6 +172,10 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
 
   ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
       nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
+//  cudaDeviceSynchronize();
+
+  ck_identify_cluster<<<gridSize, blockSize>>>(reservoirSizes, parents, clusterIndices,
+      reservoirCapacity, startIdx);
   cudaDeviceSynchronize();
 
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();
