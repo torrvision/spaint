@@ -11,6 +11,24 @@
 
 namespace spaint
 {
+__global__ void ck_reset_temporaries(int *clustersPerReservoir,
+    int *clusterSizes, int *clusterSizesHistogram, int reservoirCapacity,
+    int startReservoirIdx)
+{
+  const int reservoirIdx = threadIdx.x + startReservoirIdx;
+  const int reservoirOffset = reservoirIdx * reservoirCapacity;
+
+  // Reset number of clusters per reservoir
+  clustersPerReservoir[reservoirIdx] = 0;
+
+  // Reset cluster sizes and histogram
+  for (int i = 0; i < reservoirCapacity; ++i)
+  {
+    clusterSizes[reservoirOffset + i] = 0;
+    clusterSizesHistogram[reservoirOffset + i] = 0;
+  }
+}
+
 __global__ void ck_compute_density(const PositionColourExample *examples,
     const int *reservoirSizes, float *densities, int reservoirCapacity,
     int startReservoirIdx, float sigma)
@@ -152,8 +170,8 @@ __global__ void ck_select_clusters(const int *clusterSizes,
     int maxSelectedClusters, int minClusterSize)
 {
   // The assumption is that the kernel indices are always valid.
-  // "Sequential kernel": 1 thread per block
-  const int reservoirIdx = blockIdx.x + startReservoirIdx;
+  // "Sequential kernel": only one block is launched
+  const int reservoirIdx = threadIdx.x + startReservoirIdx;
   const int reservoirOffset = reservoirIdx * reservoirCapacity;
   const int validClusters = nbClustersPerReservoir[reservoirIdx];
   const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
@@ -362,11 +380,6 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
     m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
   }
 
-// Could clear only the data needed by the current call (startIdx + count)
-  m_nbClustersPerReservoir->Clear();
-  m_clusterSizes->Clear();
-  m_clusterSizesHistogram->Clear();
-
   const PositionColourExample *examples = reservoirs->get_reservoirs()->GetData(
       MEMORYDEVICE_CUDA);
   const int *reservoirSizes = reservoirs->get_reservoirs_size()->GetData(
@@ -375,34 +388,40 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
 
   dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
   dim3 gridSize(count); // One block per reservoir to process
+
+  int *nbClustersPerReservoir = m_nbClustersPerReservoir->GetData(
+      MEMORYDEVICE_CUDA);
+  int *clusterSizes = m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizesHistogram = m_clusterSizesHistogram->GetData(
+      MEMORYDEVICE_CUDA);
+
+  // 1 single block, 1 thread per reservoir
+  ck_reset_temporaries<<<1, gridSize>>>(nbClustersPerReservoir, clusterSizes,
+      clusterSizesHistogram, reservoirCapacity, startIdx);
+//  cudaDeviceSynchronize();
+
   ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity,
       startIdx, m_sigma);
 //  cudaDeviceSynchronize();
 
   int *parents = m_parents->GetData(MEMORYDEVICE_CUDA);
   int *clusterIndices = m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
-  int *nbClustersPerReservoir = m_nbClustersPerReservoir->GetData(
-      MEMORYDEVICE_CUDA);
 
   ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
       nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
 //  cudaDeviceSynchronize();
 
-  int *clusterSizes = m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
-
   ck_identify_clusters<<<gridSize, blockSize>>>(reservoirSizes, parents, clusterIndices, clusterSizes,
       reservoirCapacity, startIdx);
 //  cudaDeviceSynchronize();
-
-  int *clusterSizesHistogram = m_clusterSizesHistogram->GetData(
-      MEMORYDEVICE_CUDA);
 
   ck_compute_cluster_histogram<<<gridSize, blockSize>>>(clusterSizes, nbClustersPerReservoir,
       clusterSizesHistogram, reservoirCapacity, startIdx);
 //  cudaDeviceSynchronize();
 
   int *selectedClusters = m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
-  ck_select_clusters<<<gridSize, 1>>>(clusterSizes, clusterSizesHistogram,
+  // 1 single block, 1 thread per reservoir
+  ck_select_clusters<<<1, gridSize>>>(clusterSizes, clusterSizesHistogram,
       nbClustersPerReservoir, selectedClusters, reservoirCapacity, startIdx,
       GPUForestPrediction::MAX_MODES, m_minClusterSize);
 //  cudaDeviceSynchronize();
