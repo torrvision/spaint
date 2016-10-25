@@ -21,8 +21,9 @@ public:
 
 private:
   ITMFloatImage_Ptr m_densities;
-//  ITMFloatImage_Ptr m_minDistances;
-//  ITMIntImage_Ptr m_parents;
+  ITMIntImage_Ptr m_parents;
+  ITMIntImage_Ptr m_clusterIdx;
+  ITMIntImage_Ptr m_nbClustersPerReservoir;
 };
 }
 #endif

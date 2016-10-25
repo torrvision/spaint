@@ -7,6 +7,8 @@
 
 #include "util/MemoryBlockFactory.h"
 
+#include <iostream>
+
 namespace spaint
 {
 __global__ void ck_compute_density(const PositionColourExample *examples,
@@ -18,6 +20,7 @@ __global__ void ck_compute_density(const PositionColourExample *examples,
   const int reservoirOffset = reservoirIdx * reservoirCapacity;
   const int reservoirSize = reservoirSizes[reservoirIdx];
   const int elementIdx = threadIdx.x;
+  const int elementOffset = reservoirOffset + elementIdx;
 
   const float three_sigma_sq = (3.f * sigma) * (3.f * sigma); // Points farther away have small contribution to the density
   const float minus_one_over_two_sigma_sq = -1.f / (2.f * sigma * sigma);
@@ -26,8 +29,7 @@ __global__ void ck_compute_density(const PositionColourExample *examples,
 
   if (elementIdx < reservoirSize)
   {
-    const Vector3f centerPosition =
-        examples[reservoirOffset + elementIdx].position;
+    const Vector3f centerPosition = examples[elementOffset].position;
 
     for (int i = 0; i < reservoirSize; ++i)
     {
@@ -42,7 +44,54 @@ __global__ void ck_compute_density(const PositionColourExample *examples,
     }
   }
 
-  densities[reservoirOffset + elementIdx] = density;
+  densities[elementOffset] = density;
+}
+
+__global__ void ck_link_neighbors(const PositionColourExample *examples,
+    const int *reservoirSizes, const float *densities, int *parents,
+    int *clusterIndices, int *nbClustersPerReservoir, int reservoirCapacity,
+    int startReservoirIdx, float tauSq)
+{
+  // The assumption is that the kernel indices are always valid.
+  const int reservoirIdx = blockIdx.x + startReservoirIdx;
+  const int reservoirOffset = reservoirIdx * reservoirCapacity;
+  const int reservoirSize = reservoirSizes[reservoirIdx];
+  const int elementIdx = threadIdx.x;
+  const int elementOffset = reservoirOffset + elementIdx;
+
+  int parentIdx = elementIdx;
+
+  if (elementIdx < reservoirSize)
+  {
+    const Vector3f centerPosition = examples[elementOffset].position;
+    const float centerDensity = densities[elementOffset];
+    float minDistance = tauSq; // epsilon
+
+    for (int i = 0; i < reservoirSize; ++i)
+    {
+      if (i == elementIdx)
+        continue;
+
+      const Vector3f examplePosition = examples[reservoirOffset + i].position;
+      const Vector3f diff = examplePosition - centerPosition;
+      const float normSq = dot(diff, diff);
+
+      if (normSq < minDistance)
+      {
+        minDistance = normSq;
+        parentIdx = i;
+      }
+    }
+
+    // found the root of a subtree, get a unique cluster index
+    if (parentIdx == elementIdx)
+    {
+      clusterIndices[elementOffset] = atomicAdd(
+          &nbClustersPerReservoir[reservoirIdx], 1);
+    }
+  }
+
+  parents[elementOffset] = parentIdx;
 }
 
 GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
@@ -50,6 +99,9 @@ GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_densities = mbf.make_image<float>(Vector2i(0, 0));
+  m_parents = mbf.make_image<int>(Vector2i(0, 0));
+  m_clusterIdx = mbf.make_image<int>(Vector2i(0, 0));
+  m_nbClustersPerReservoir = mbf.make_image<int>(Vector2i(0, 0));
 }
 
 void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
@@ -61,7 +113,16 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   if (startIdx + count > nbReservoirs)
     throw std::runtime_error("startIdx + count > nbReservoirs");
 
-  m_densities->ChangeDims(Vector2i(reservoirCapacity, nbReservoirs)); // Happens only once
+  {
+    // Happens only once
+    const Vector2i temporariesSize(reservoirCapacity, nbReservoirs);
+    m_densities->ChangeDims(temporariesSize);
+    m_parents->ChangeDims(temporariesSize);
+    m_clusterIdx->ChangeDims(temporariesSize);
+    m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
+  }
+
+  m_nbClustersPerReservoir->Clear();
 
   const PositionColourExample *examples = reservoirs->get_reservoirs()->GetData(
       MEMORYDEVICE_CUDA);
@@ -71,8 +132,26 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
 
   dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
   dim3 gridSize(count); // One block per reservoir to process
-  ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity, startIdx, m_sigma);
+  ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity,
+      startIdx, m_sigma);
+//  cudaDeviceSynchronize();
+
+  int *parents = m_parents->GetData(MEMORYDEVICE_CUDA);
+  int *clusterIndices = m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  int *nbClustersPerReservoir = m_nbClustersPerReservoir->GetData(
+      MEMORYDEVICE_CUDA);
+
+  ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
+      nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
   cudaDeviceSynchronize();
+//
+//  m_nbClustersPerReservoir->UpdateHostFromDevice();
+//  for (int i = 0; i < count; ++i)
+//  {
+//    std::cout << "Reservoir " << i + startIdx << " has "
+//        << m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU)[i + startIdx]
+//        << " clusters." << std::endl;
+//  }
 }
 
 }
