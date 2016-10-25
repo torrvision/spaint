@@ -65,7 +65,7 @@ __global__ void ck_link_neighbors(const PositionColourExample *examples,
   {
     const Vector3f centerPosition = examples[elementOffset].position;
     const float centerDensity = densities[elementOffset];
-    float minDistance = tauSq; // epsilon
+    float minDistance = tauSq;
 
     for (int i = 0; i < reservoirSize; ++i)
     {
@@ -73,10 +73,12 @@ __global__ void ck_link_neighbors(const PositionColourExample *examples,
         continue;
 
       const Vector3f examplePosition = examples[reservoirOffset + i].position;
+      const float exampleDensity = densities[reservoirOffset + i];
+
       const Vector3f diff = examplePosition - centerPosition;
       const float normSq = dot(diff, diff);
 
-      if (normSq < minDistance)
+      if (normSq < minDistance && centerDensity < exampleDensity)
       {
         minDistance = normSq;
         parentIdx = i;
@@ -144,13 +146,17 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
       nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
   cudaDeviceSynchronize();
-//
+
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();
+//  reservoirs->get_reservoirs_size()->UpdateHostFromDevice();
+//
 //  for (int i = 0; i < count; ++i)
 //  {
 //    std::cout << "Reservoir " << i + startIdx << " has "
 //        << m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU)[i + startIdx]
-//        << " clusters." << std::endl;
+//        << " clusters and "
+//        << reservoirs->get_reservoirs_size()->GetData(MEMORYDEVICE_CPU)[i
+//            + startIdx] << " elements." << std::endl;
 //  }
 }
 
