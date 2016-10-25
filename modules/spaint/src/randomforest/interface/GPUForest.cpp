@@ -227,13 +227,14 @@ void GPUForest::add_features_to_forest(
     m_leafReservoirs->add_examples(features, m_leafImage);
   }
 
-  const int nbLeaves = m_predictionsBlock->dataSize; // same as the number of reservoirs
+//  const int nbLeaves = m_predictionsBlock->dataSize; // same as the number of reservoirs
+  const int nbLeaves = 1000;
 
   {
-#ifdef ENABLE_TIMERS
+//#ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "GPU clustering: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
+//#endif
     m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock, 0, nbLeaves);
   }
 

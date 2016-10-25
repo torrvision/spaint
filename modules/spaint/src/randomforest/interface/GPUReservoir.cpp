@@ -41,6 +41,11 @@ const ITMIntImage_CPtr GPUReservoir::get_reservoirs_size() const
   return m_reservoirsSize;
 }
 
+int GPUReservoir::get_reservoirs_count() const
+{
+  return m_data->noDims.height;
+}
+
 int GPUReservoir::get_capacity() const
 {
   return m_data->noDims.width;

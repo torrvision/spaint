@@ -36,6 +36,8 @@ public:
 
   const ITMIntImage_CPtr get_reservoirs_size() const;
 
+  int get_reservoirs_count() const;
+
   int get_capacity() const;
 
   virtual void add_examples(const RGBDPatchFeatureImage_CPtr &features,
