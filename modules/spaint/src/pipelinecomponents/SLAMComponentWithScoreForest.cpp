@@ -30,7 +30,7 @@ using namespace ORUtils;
 using namespace RelocLib;
 
 #define ENABLE_TIMERS
-//#define VISUALIZE_INLIERS
+#define VISUALIZE_INLIERS
 
 namespace spaint
 {

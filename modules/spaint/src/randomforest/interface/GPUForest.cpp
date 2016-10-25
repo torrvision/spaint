@@ -75,7 +75,10 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   }
 
   // Tentative values
-  m_gpuClusterer.reset(new GPUClusterer_CUDA(0.1f, 0.05f));
+  m_gpuClusterer.reset(new GPUClusterer_CUDA(0.1f, 0.05f, 20));
+
+  m_maxReservoirsToUpdate = 1000;
+  m_reservoirUpdateStartIdx = 0;
 }
 
 GPUForest::~GPUForest()
@@ -204,7 +207,6 @@ void GPUForest::convert_predictions()
 void GPUForest::reset_predictions()
 {
   m_predictionsBlock->Clear(); // Setting nbModes to 0 for each prediction would be enough.
-  m_predictionsBlock->UpdateDeviceFromHost();
   m_leafReservoirs->clear();
 }
 
@@ -227,24 +229,32 @@ void GPUForest::add_features_to_forest(
     m_leafReservoirs->add_examples(features, m_leafImage);
   }
 
-//  const int nbLeaves = m_predictionsBlock->dataSize; // same as the number of reservoirs
-  const int nbLeaves = 1000;
+  const int updateCount = std::min<int>(m_maxReservoirsToUpdate,
+      m_predictionsBlock->dataSize - m_reservoirUpdateStartIdx);
 
   {
-//#ifdef ENABLE_TIMERS
+#ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "GPU clustering: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-    m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock, 0, nbLeaves);
+#endif
+    m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock,
+        m_reservoirUpdateStartIdx, updateCount);
   }
 
-#if 1
+  std::cout << "Updated " << updateCount << " reservoirs, starting from "
+      << m_reservoirUpdateStartIdx << std::endl;
+
+  m_reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
+  if (m_reservoirUpdateStartIdx >= m_predictionsBlock->dataSize)
+    m_reservoirUpdateStartIdx = 0;
+
+#if 0
 
   // Perform meanshift on each reservoir, just to see if the thing works
   static int callCount = 0;
 
   if (callCount++ != 999)
-    return; // only at the last
+  return;// only at the last
 
 //#ifdef ENABLE_TIMERS
   boost::timer::auto_cpu_timer t(6,
@@ -253,13 +263,14 @@ void GPUForest::add_features_to_forest(
 
   m_leafReservoirs->get_reservoirs()->UpdateHostFromDevice();
   const GPUReservoir::ExampleType *reservoirs =
-      m_leafReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
+  m_leafReservoirs->get_reservoirs()->GetData(MEMORYDEVICE_CPU);
 
   m_leafReservoirs->get_reservoirs_size()->UpdateHostFromDevice();
   const int *reservoirsSize = m_leafReservoirs->get_reservoirs_size()->GetData(
       MEMORYDEVICE_CPU);
 
   const int reservoirCapacity = m_leafReservoirs->get_capacity();
+  const int nbLeaves = m_predictionsBlock->dataSize;// same as the number of reservoirs
 
 //  const int totalEntries = nbLeaves * reservoirCapacity;
 //  int occupiedEntries = 0;
@@ -290,13 +301,13 @@ void GPUForest::add_features_to_forest(
 
     const int nbSamples = reservoirsSize[leafIdx];
     const PositionColourExample *samples = &reservoirs[leafIdx
-        * reservoirCapacity];
+    * reservoirCapacity];
 
     if (nbSamples == 0)
-      continue;
+    continue;
 
     // Convert samples in a format that scoreforest likes
-    std::vector<IOData> ioDataStoragePos, ioDataStorageCol; // To destruct cleanly
+    std::vector<IOData> ioDataStoragePos, ioDataStorageCol;// To destruct cleanly
     ioDataStoragePos.resize(nbSamples);
     ioDataStorageCol.resize(nbSamples);
 
@@ -333,7 +344,7 @@ void GPUForest::add_features_to_forest(
     }
 
     std::cout << "For leaf " << leafIdx << " computed MS for " << nbSamples
-        << " samples, found " << msResult.size() << " modes.\n";
+    << " samples, found " << msResult.size() << " modes.\n";
 
     // Sort mode by descending inliers
     std::sort(msResult.begin(), msResult.end(),
@@ -358,7 +369,7 @@ void GPUForest::add_features_to_forest(
 
       outMode.nbInliers = inliers.size();
       if (outMode.nbInliers == 0)
-        throw std::runtime_error("mode with no inliers");
+      throw std::runtime_error("mode with no inliers");
 
       if (outMode.nbInliers < 20)
       {
@@ -375,11 +386,11 @@ void GPUForest::add_features_to_forest(
         }
 
         Eigen::Map<Eigen::Vector3f>(outMode.position.v) = ga.GetMean().cast<
-            float>();
+        float>();
 
         Eigen::MatrixXd cov = ga.GetCovariance();
         Eigen::Map<Eigen::Matrix3f>(outMode.positionInvCovariance.m) =
-            cov.inverse().cast<float>();
+        cov.inverse().cast<float>();
 
         outMode.determinant = cov.determinant();
       }

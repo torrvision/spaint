@@ -16,7 +16,7 @@ namespace spaint
 class GPUClusterer
 {
 public:
-  GPUClusterer(float sigma, float tau);
+  GPUClusterer(float sigma, float tau, int minClusterSize);
   virtual ~GPUClusterer();
 
   virtual void find_modes(const PositionReservoir_CPtr &reservoirs,
@@ -26,6 +26,7 @@ public:
 protected:
   float m_sigma;
   float m_tau;
+  int m_minClusterSize;
 };
 
 typedef boost::shared_ptr<GPUClusterer> GPUClusterer_Ptr;

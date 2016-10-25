@@ -149,7 +149,7 @@ __global__ void ck_compute_cluster_histogram(const int *clusterSizes,
 __global__ void ck_select_clusters(const int *clusterSizes,
     const int *clusterSizesHistogram, const int *nbClustersPerReservoir,
     int *selectedClusters, int reservoirCapacity, int startReservoirIdx,
-    int maxSelectedClusters)
+    int maxSelectedClusters, int minClusterSize)
 {
   // The assumption is that the kernel indices are always valid.
   // "Sequential kernel": 1 thread per block
@@ -166,13 +166,13 @@ __global__ void ck_select_clusters(const int *clusterSizes,
 
   // Scan the histogram from the top to find the minimum cluster size we want to select
   int nbSelectedClusters = 0;
-  int minClusterSize = reservoirCapacity - 1;
-  // TODO: possibly force minclusterSize to be non zero, maybe 20?
-  for (; minClusterSize >= 0 && nbSelectedClusters < maxSelectedClusters;
-      --minClusterSize)
+  int selectedClusterSize = reservoirCapacity - 1;
+  for (;
+      selectedClusterSize >= minClusterSize
+          && nbSelectedClusters < maxSelectedClusters; --selectedClusterSize)
   {
-    nbSelectedClusters +=
-        clusterSizesHistogram[reservoirOffset + minClusterSize];
+    nbSelectedClusters += clusterSizesHistogram[reservoirOffset
+        + selectedClusterSize];
   }
 
   // Empty reservoir
@@ -181,7 +181,7 @@ __global__ void ck_select_clusters(const int *clusterSizes,
 
   // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size,
   // need to keep this into account: at first add all clusters with size greater than minClusterSize
-  // then another loop over the clusters add as many clusters with size == minClusterSize as possible
+  // then another loop over the clusters add as many clusters with size == selectedClusterSize as possible
 
   nbSelectedClusters = 0;
 
@@ -189,7 +189,7 @@ __global__ void ck_select_clusters(const int *clusterSizes,
   for (int i = 0; i < validClusters && nbSelectedClusters < maxSelectedClusters;
       ++i)
   {
-    if (clusterSizes[reservoirOffset + i] > minClusterSize)
+    if (clusterSizes[reservoirOffset + i] > selectedClusterSize)
     {
       selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
     }
@@ -199,7 +199,7 @@ __global__ void ck_select_clusters(const int *clusterSizes,
   for (int i = 0; i < validClusters && nbSelectedClusters < maxSelectedClusters;
       ++i)
   {
-    if (clusterSizes[reservoirOffset + i] == minClusterSize)
+    if (clusterSizes[reservoirOffset + i] == selectedClusterSize)
     {
       selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
     }
@@ -279,7 +279,7 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
     }
 
     //this mode is invalid..
-    if (sampleCount <= 1)
+    if (sampleCount <= 1) // Should never reach this point since we check minClusterSize earlier
       return;
 
     positionMean /= static_cast<float>(sampleCount);
@@ -287,6 +287,8 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
 
     // Now iterate again and compute the covariance
     Matrix3f positionCovariance;
+    positionCovariance.setZeros();
+
     for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
     {
       const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
@@ -308,20 +310,23 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
     }
 
     positionCovariance /= static_cast<float>(sampleCount - 1);
+    const float positionDeterminant = positionCovariance.det();
 
-    // Create the mode (atomicAdd on the number of modes)
+    // Get the mode idx
     const int modeIdx = atomicAdd(&reservoirPrediction.nbModes, 1);
+
+    // Fill the mode
     GPUForestMode &outMode = reservoirPrediction.modes[modeIdx];
     outMode.nbInliers = sampleCount;
     outMode.position = positionMean;
-    outMode.determinant = positionCovariance.det();
+    outMode.determinant = positionDeterminant;
     positionCovariance.inv(outMode.positionInvCovariance);
     outMode.colour = colourMean.toUChar();
   }
 }
 
-GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau) :
-    GPUClusterer(sigma, tau)
+GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau, int minClusterSize) :
+    GPUClusterer(sigma, tau, minClusterSize)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_densities = mbf.make_image<float>(Vector2i(0, 0));
@@ -399,7 +404,7 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   int *selectedClusters = m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
   ck_select_clusters<<<gridSize, 1>>>(clusterSizes, clusterSizesHistogram,
       nbClustersPerReservoir, selectedClusters, reservoirCapacity, startIdx,
-      GPUForestPrediction::MAX_MODES);
+      GPUForestPrediction::MAX_MODES, m_minClusterSize);
 //  cudaDeviceSynchronize();
 
   GPUForestPrediction *predictionsData = predictions->GetData(

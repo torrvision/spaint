@@ -13,7 +13,7 @@ namespace spaint
 class GPUClusterer_CUDA: public GPUClusterer
 {
 public:
-  GPUClusterer_CUDA(float sigma, float tau);
+  GPUClusterer_CUDA(float sigma, float tau, int minClusterSize);
 
   virtual void find_modes(const PositionReservoir_CPtr &reservoirs,
       GPUForestPredictionsBlock_Ptr &predictions, size_t startIdx,

@@ -7,8 +7,12 @@
 
 namespace spaint
 {
-GPUClusterer::GPUClusterer(float sigma, float tau) : m_sigma(sigma), m_tau(tau)
-{}
+GPUClusterer::GPUClusterer(float sigma, float tau, int minClusterSize) :
+    m_sigma(sigma), m_tau(tau), m_minClusterSize(minClusterSize)
+{
+}
 
-GPUClusterer::~GPUClusterer() {}
+GPUClusterer::~GPUClusterer()
+{
+}
 }
