@@ -51,7 +51,7 @@ struct CommandLineArguments
 {
   std::string calibrationFilename;
   bool cameraAfterDisk;
-  std::string depthImageMask;
+  std::vector<std::string> depthImageMask;
   int initialFrameNumber;
   bool mapSurfels;
   bool noRelocaliser;
@@ -60,8 +60,8 @@ struct CommandLineArguments
   std::string poseFilesMask;
   bool poseFromDisk;
   size_t prefetchBufferCapacity;
-  std::string rgbImageMask;
-  std::string sequenceSpecifier;
+  std::vector<std::string> rgbImageMask;
+  std::vector<std::string> sequenceSpecifier;
   std::string sequenceType;
   bool trackSurfels;
 };
@@ -89,12 +89,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   po::options_description diskSequenceOptions("Disk sequence options");
   diskSequenceOptions.add_options()
-    ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
+    ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMask)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
     ("poseFromDisk", po::bool_switch(&args.poseFromDisk), "track the camera using poses stored on disk")
+    ("poseMask,p", po::value<std::string>(&args.poseFilesMask)->default_value(""), "pose files mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
-    ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
-    ("sequenceSpecifier,s", po::value<std::string>(&args.sequenceSpecifier)->default_value(""), "sequence specifier")
+    ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMask)->multitoken(), "RGB image mask")
+    ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifier)->multitoken(), "sequence specifier")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
 
@@ -117,28 +118,42 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   // If the user specifies a sequence (either via a sequence name or a path),
   // set the depth / RGB image masks and the calibration filename appropriately.
-  if(args.sequenceSpecifier != "")
+  if(!args.sequenceSpecifier.empty())
   {
-    const bf::path dir = bf::is_directory(args.sequenceSpecifier)
-      ? args.sequenceSpecifier
-      : find_subdir_from_executable(args.sequenceType + "s") / args.sequenceSpecifier;
+    args.depthImageMask.clear();
+    args.rgbImageMask.clear();
 
-    args.depthImageMask = (dir / "depthm%06i.pgm").string();
-    args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
-
-    if (args.poseFromDisk)
+    for(size_t i = 0; i < args.sequenceSpecifier.size(); ++i)
     {
-      args.poseFilesMask = (dir / "posem%06i.txt").string();
+      const std::string currentSequenceSpecifier = args.sequenceSpecifier[i];
+      const bf::path dir = bf::is_directory(currentSequenceSpecifier)
+        ? currentSequenceSpecifier
+        : find_subdir_from_executable(args.sequenceType + "s") / currentSequenceSpecifier;
+
+      args.depthImageMask.push_back((dir / "depthm%06i.pgm").string());
+      args.rgbImageMask.push_back((dir / "rgbm%06i.ppm").string());
     }
 
-    // If the user hasn't explicitly specified a calibration file, try to find one in the sequence directory.
+    const std::string firstSequenceSpecifier = args.sequenceSpecifier[0];
+    const bf::path firstSequenceDir = bf::is_directory(firstSequenceSpecifier)
+      ? firstSequenceSpecifier
+      : find_subdir_from_executable(args.sequenceType + "s") / firstSequenceSpecifier;
+
+    // If the user hasn't explicitly specified a calibration file,
+    // try to find one in the FIRST sequence directory.
     if(args.calibrationFilename == "")
     {
-      bf::path defaultCalibrationFilename = dir / "calib.txt";
+      bf::path defaultCalibrationFilename = firstSequenceDir / "calib.txt";
       if(bf::exists(defaultCalibrationFilename))
       {
         args.calibrationFilename = defaultCalibrationFilename.string();
       }
+    }
+
+    // Poses from disk are supported only for the first sequence at the moment
+    if (args.poseFromDisk)
+    {
+      args.poseFilesMask = (firstSequenceDir / "posem%06i.txt").string();
     }
   }
 
@@ -198,8 +213,9 @@ try
   TrackerType trackerType = TRACKER_INFINITAM;
   std::vector<std::string> trackerConfigs;
 
-  if (args.poseFromDisk)
+  if (!args.poseFilesMask.empty())
   {
+    std::cout << "[spaint] Reading poses from disk: " << args.poseFilesMask << '\n';
     trackerType = TRACKER_INFINITAM_NO_REFINE;
     trackerConfigs.push_back("type=filebased,mask=" + args.poseFilesMask);
   }
@@ -255,17 +271,21 @@ try
   // Construct the image source engine.
   boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
 
-  if(args.depthImageMask != "")
+  // Instantiate an engine for each pair of image masks provided
+  for(size_t i = 0; i < args.depthImageMask.size(); ++i)
   {
-    std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
-    ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
+    const std::string depthImageMask = args.depthImageMask[i];
+    const std::string rgbImageMask = args.rgbImageMask[i];
+
+    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
+    ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
     imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
       new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
       args.prefetchBufferCapacity
     ));
   }
 
-  if(args.depthImageMask == "" || args.cameraAfterDisk)
+  if(args.depthImageMask.empty() || args.cameraAfterDisk)
   {
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << args.openNIDeviceURI << '\n';
