@@ -91,6 +91,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
     ("poseFromDisk", po::bool_switch(&args.poseFromDisk), "track the camera using poses stored on disk")
+    ("poseMask,p", po::value<std::string>(&args.poseFilesMask)->default_value(""), "pose files mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::string>(&args.sequenceSpecifier)->default_value(""), "sequence specifier")
@@ -197,8 +198,9 @@ try
   TrackerType trackerType = TRACKER_INFINITAM;
   std::vector<std::string> trackerConfigs;
 
-  if (args.poseFromDisk)
+  if (!args.poseFilesMask.empty())
   {
+    std::cout << "[spaint] Reading poses from disk: " << args.poseFilesMask << '\n';
     trackerType = TRACKER_INFINITAM_NO_REFINE;
     trackerConfigs.push_back("type=filebased,mask=" + args.poseFilesMask);
   }
