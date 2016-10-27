@@ -38,6 +38,30 @@ Eigen::Matrix4f read_pose_from_file(const fs::path &fileName)
   return res;
 }
 
+float angular_separation(const Eigen::Vector3f& t1, const Eigen::Vector3f& t2)
+{
+  float divisor = t1.norm() * t1.norm();
+  if (divisor > 0.0f)
+  {
+    float cosineTheta = t1.dot(t2) / divisor;
+    if (cosineTheta > 1.0f)
+      cosineTheta = 1.0f;
+    return acos(cosineTheta);
+  }
+  else
+    return 0.0f;
+}
+
+float angular_separation_approx(const Eigen::Matrix3f& r1,
+    const Eigen::Matrix3f& r2)
+{
+  // Rotate a vector with each rotation matrix and return the angular difference.
+  Eigen::Vector3f v(1, 1, 1);
+  Eigen::Vector3f v1 = r1 * v;
+  Eigen::Vector3f v2 = r2 * v;
+  return angular_separation(v1, v2);
+}
+
 float angular_separation(const Eigen::Matrix3f& r1, const Eigen::Matrix3f& r2)
 {
   // First calculate the rotation matrix which maps r1 to r2.
@@ -45,10 +69,6 @@ float angular_separation(const Eigen::Matrix3f& r1, const Eigen::Matrix3f& r2)
 
   Eigen::AngleAxisf aa(dr);
   return aa.angle();
-//  Eigen::Vector3f axis; float angle;
-//  //Eigen::Matrix3f drt = dr.transpose();
-//  AttitudeUtil::rotation_matrix_to_axis_angle(dr.data(), &axis(0), &angle, AttitudeUtil::COL_MAJOR);
-//  return angle;
 }
 
 bool pose_matches(const Eigen::Matrix4f &gtPose,
@@ -64,6 +84,7 @@ bool pose_matches(const Eigen::Matrix4f &gtPose,
 
   const float translationError = (gtT - testT).norm();
   const float angleError = angular_separation(gtR, testR);
+//  const float angleError = angular_separation_approx(gtR, testR);
 
   return translationError <= translationMaxError && angleError <= angleMaxError;
 }
@@ -106,8 +127,8 @@ int main(int argc, char *argv[])
     bool validReloc = pose_matches(gtPose, relocPose);
     bool validICP = pose_matches(gtPose, icpPose);
 
-    std::cout << poseCount << "-> Reloc: " << std::boolalpha << validReloc
-        << " - ICP: " << validICP << std::noboolalpha << '\n';
+//    std::cout << poseCount << "-> Reloc: " << std::boolalpha << validReloc
+//        << " - ICP: " << validICP << std::noboolalpha << '\n';
 
     ++poseCount;
     validPosesAfterReloc += validReloc;
@@ -119,8 +140,12 @@ int main(int argc, char *argv[])
   std::cout << "Processed " << poseCount << " poses.\n";
   std::cout << "Valid poses after reloc: " << validPosesAfterReloc << '\n';
   std::cout << "Valid poses after ICP: " << validPosesAfterICP << '\n';
-  std::cout << "Reloc: " << static_cast<float>(validPosesAfterReloc) / static_cast<float>(poseCount) << '\n';
-  std::cout << "ICP: " << static_cast<float>(validPosesAfterICP) / static_cast<float>(poseCount) << '\n';
+  std::cout << "Reloc: "
+      << static_cast<float>(validPosesAfterReloc)
+          / static_cast<float>(poseCount) << '\n';
+  std::cout << "ICP: "
+      << static_cast<float>(validPosesAfterICP) / static_cast<float>(poseCount)
+      << '\n';
 
   return 0;
 }
