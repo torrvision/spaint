@@ -241,8 +241,8 @@ void GPUForest::add_features_to_forest(
         m_reservoirUpdateStartIdx, updateCount);
   }
 
-  std::cout << "Updated " << updateCount << " reservoirs, starting from "
-      << m_reservoirUpdateStartIdx << std::endl;
+//  std::cout << "Updated " << updateCount << " reservoirs, starting from "
+//      << m_reservoirUpdateStartIdx << std::endl;
 
   m_reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
   if (m_reservoirUpdateStartIdx >= m_predictionsBlock->dataSize)

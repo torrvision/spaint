@@ -19,18 +19,25 @@
 
 #include <libalglib/optimization.h>
 
+#include "ITMLib/Trackers/ITMTrackerFactory.h"
+
 #include "ocv/OpenCVUtil.h"
 #include "randomforest/cuda/GPUForest_CUDA.h"
+#include "util/PosePersister.h"
 
 #include "Helpers.hpp"
+#include "tvgutil/filesystem/PathFinder.h"
+#include "tvgutil/timing/TimeUtil.h"
 
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 using namespace RelocLib;
+using namespace tvgutil;
 
-#define ENABLE_TIMERS
-#define VISUALIZE_INLIERS
+//#define ENABLE_TIMERS
+//#define VISUALIZE_INLIERS
+#define SAVE_RELOC_POSES
 
 namespace spaint
 {
@@ -82,6 +89,32 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
   // Additional stuff
   m_maxNbModesPerLeaf = 10; //5-10 seem to be enough
+
+  // Refinement ICP tracker
+  const Settings_CPtr& settings = m_context->get_settings();
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const Vector2i& depthImageSize = slamState->get_depth_image_size();
+  const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+
+#ifdef SAVE_RELOC_POSES
+  const std::string refineParams =
+      "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+
+  m_refineTracker.reset(
+      ITMTrackerFactory<SpaintVoxel, ITMVoxelIndex>::Instance().Make(
+          refineParams.c_str(), rgbImageSize, depthImageSize, settings.get(),
+          m_lowLevelEngine.get(), NULL, voxelScene.get()));
+  m_sequentialPathGenerator.reset(
+      SequentialPathGenerator(
+          find_subdir_from_executable("reloc_poses")
+              / TimeUtil::get_iso_timestamp()));
+
+  std::cout << "Saving relocalization poses in: "
+      << m_sequentialPathGenerator->get_base_dir() << std::endl;
+  boost::filesystem::create_directories(
+      m_sequentialPathGenerator->get_base_dir());
+#endif
 }
 
 //#################### DESTRUCTOR ####################
@@ -133,6 +166,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       std::cout
           << "Number of valid depth pixels insufficient to perform relocalization."
           << std::endl;
+
+      if (m_sequentialPathGenerator)
+      {
+        m_sequentialPathGenerator->increment_index();
+      }
       return trackingResult;
     }
 
@@ -141,9 +179,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     if (pose_candidate)
     {
-      std::cout << "The final pose is:" << pose_candidate->cameraPose
-          << "\n and has " << pose_candidate->inliers.size() << " inliers."
-          << std::endl;
+//      std::cout << "The final pose is:" << pose_candidate->cameraPose
+//          << "\n and has " << pose_candidate->inliers.size() << " inliers."
+//          << std::endl;
 
 #ifdef VISUALIZE_INLIERS
       cv::Mat inliers = cv::Mat::zeros(
@@ -180,12 +218,51 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
       prepare_for_tracking(TRACK_VOXELS);
+#ifdef SAVE_RELOC_POSES
+      m_refineTracker->TrackCamera(trackingState.get(), view.get());
+#else
       m_trackingController->Track(trackingState.get(), view.get());
+#endif
       trackingResult = trackingState->trackerResult;
+
+//      std::cout << "Refinement: "
+//          << (trackingState->trackerResult == TrackingResult::TRACKING_GOOD ?
+//              "SUCCESS" : "FAIL") << "\n Refined pose:\n"
+//          << trackingState->pose_d->GetInvM() << std::endl;
+
+      if (m_sequentialPathGenerator)
+      {
+        // Save poses
+        PosePersister::save_pose_on_thread(pose_candidate->cameraPose,
+            m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
+        PosePersister::save_pose_on_thread(trackingState->pose_d->GetInvM(),
+            m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
+      }
+
+#ifdef SAVE_RELOC_POSES
+      trackingResult = TrackingResult::TRACKING_POOR;
+#endif
     }
     else
     {
       std::cout << "Cannot estimate a pose candidate." << std::endl;
+
+      if (m_sequentialPathGenerator)
+      {
+        // Save dummy poses
+        Matrix4f invalid_pose;
+        invalid_pose.setValues(std::numeric_limits<float>::quiet_NaN());
+
+        PosePersister::save_pose_on_thread(invalid_pose,
+            m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
+        PosePersister::save_pose_on_thread(invalid_pose,
+            m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
+      }
+    }
+
+    if (m_sequentialPathGenerator)
+    {
+      m_sequentialPathGenerator->increment_index();
     }
   }
   else if (trackingResult == TrackingResult::TRACKING_GOOD)
@@ -548,8 +625,8 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
     generate_pose_candidates(candidates);
   }
 
-  std::cout << "Generated " << candidates.size() << " initial candidates."
-      << std::endl;
+//  std::cout << "Generated " << candidates.size() << " initial candidates."
+//      << std::endl;
 
   if (m_trimKinitAfterFirstEnergyComputation < candidates.size())
   {

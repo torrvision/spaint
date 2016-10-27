@@ -20,6 +20,8 @@
 #include "../features/FeatureCalculatorFactory.h"
 #include "../randomforest/interface/GPUForest.h"
 
+#include "tvgutil/filesystem/SequentialPathGenerator.h"
+
 namespace spaint
 {
 
@@ -110,6 +112,9 @@ private:
   RGBDPatchFeatureImage_Ptr m_featureImage;
   GPUForestPredictionsImage_Ptr m_predictionsImage;
   GPUForest_Ptr m_gpuForest;
+
+  Tracker_Ptr m_refineTracker;
+  boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
 
   // Member variables from scoreforests
   size_t m_kInitRansac;
