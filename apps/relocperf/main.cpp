@@ -142,10 +142,10 @@ int main(int argc, char *argv[])
   std::cout << "Valid poses after ICP: " << validPosesAfterICP << '\n';
   std::cout << "Reloc: "
       << static_cast<float>(validPosesAfterReloc)
-          / static_cast<float>(poseCount) << '\n';
+          / static_cast<float>(poseCount) * 100.f << '\n';
   std::cout << "ICP: "
       << static_cast<float>(validPosesAfterICP) / static_cast<float>(poseCount)
-      << '\n';
+          * 100.f << '\n';
 
   return 0;
 }
