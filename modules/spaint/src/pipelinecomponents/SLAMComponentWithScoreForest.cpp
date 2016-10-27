@@ -77,8 +77,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_useAllModesPerLeafInPoseHypothesisGeneration = true;
   m_checkMinDistanceBetweenSampledModes = true;
   m_minDistanceBetweenSampledModes = 0.3f;
-  m_checkRigidTransformationConstraint = false; // Speeds up a lot, was true in scoreforests
-//  m_checkRigidTransformationConstraint = true;
+//  m_checkRigidTransformationConstraint = false; // Speeds up a lot, was true in scoreforests
+  m_checkRigidTransformationConstraint = true;
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
   m_trimKinitAfterFirstEnergyComputation = 64;
