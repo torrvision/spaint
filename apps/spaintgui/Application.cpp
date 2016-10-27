@@ -50,7 +50,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline)
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
-  switch_to_windowed_renderer(1);
+  switch_to_windowed_renderer(3);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
