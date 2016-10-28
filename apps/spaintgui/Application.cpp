@@ -40,11 +40,12 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const MultiScenePipeline_Ptr& pipeline)
+Application::Application(const MultiScenePipeline_Ptr& pipeline, bool runInBatch)
 : m_activeSubwindowIndex(0),
+  m_runInBatch(runInBatch),
   m_commandManager(10),
-  m_pauseBetweenFrames(true),
-  m_paused(true),
+  m_pauseBetweenFrames(!runInBatch),
+  m_paused(!runInBatch),
   m_pipeline(pipeline),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
@@ -69,6 +70,9 @@ void Application::run()
     {
       // Run the main section of the pipeline.
       bool frameWasProcessed = m_pipeline->run_main_section();
+
+      // Return if we processed the last frame and are running in batch mode.
+      if(m_runInBatch && !frameWasProcessed) return;
 
       // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
       if(frameWasProcessed && m_sequencePathGenerator)

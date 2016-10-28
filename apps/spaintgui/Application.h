@@ -49,6 +49,9 @@ private:
   /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
 
+  /** Whether or not to terminate the application as soon as the last frame has been processeed. */
+  bool m_runInBatch;
+
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
@@ -90,9 +93,11 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline  The multi-scene pipeline that the application should use.
+   * \param pipeline    The multi-scene pipeline that the application should use.
+   * \param runInBatch  Whether the application should start running immediately
+   *                    and terminate as soon as the last frame is processed.
    */
-  explicit Application(const MultiScenePipeline_Ptr& pipeline);
+  explicit Application(const MultiScenePipeline_Ptr& pipeline, bool runInBatch);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -49,6 +49,7 @@ namespace po = boost::program_options;
 
 struct CommandLineArguments
 {
+  bool batch;
   std::string calibrationFilename;
   bool cameraAfterDisk;
   std::vector<std::string> depthImageMask;
@@ -74,6 +75,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   po::options_description genericOptions("Generic options");
   genericOptions.add_options()
     ("help", "produce help message")
+    ("batch", po::bool_switch(&args.batch), "don't wait for user input before starting the reconstruction and terminate immediately")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
@@ -326,7 +328,7 @@ try
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
   // Run the application.
-  Application app(pipeline);
+  Application app(pipeline, args.batch);
   app.run();
 
 #ifdef WITH_OVR
