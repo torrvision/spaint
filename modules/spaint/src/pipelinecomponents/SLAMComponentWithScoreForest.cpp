@@ -243,6 +243,13 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
             m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
         PosePersister::save_pose_on_thread(trackingState->pose_d->GetInvM(),
             m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
+
+        const Matrix4f final_pose =
+            trackingResult == TrackingResult::TRACKING_GOOD ?
+                trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
+
+        PosePersister::save_pose_on_thread(final_pose,
+            m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
       }
 
 #ifdef SAVE_RELOC_POSES
@@ -263,6 +270,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
             m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
         PosePersister::save_pose_on_thread(invalid_pose,
             m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
+        PosePersister::save_pose_on_thread(invalid_pose,
+            m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
       }
     }
 

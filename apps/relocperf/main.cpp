@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
   int poseCount = 0;
   int validPosesAfterReloc = 0;
   int validPosesAfterICP = 0;
+  int validFinalPoses = 0;
 
   while (true)
   {
@@ -111,6 +112,8 @@ int main(int argc, char *argv[])
     const fs::path relocPath = generate_path(relocFolder, "pose-%06i.reloc.txt",
         poseCount);
     const fs::path icpPath = generate_path(relocFolder, "pose-%06i.icp.txt",
+        poseCount);
+    const fs::path finalPath = generate_path(relocFolder, "pose-%06i.final.txt",
         poseCount);
 
     if (!fs::is_regular(gtPath))
@@ -123,9 +126,11 @@ int main(int argc, char *argv[])
     const Eigen::Matrix4f gtPose = read_pose_from_file(gtPath);
     const Eigen::Matrix4f relocPose = read_pose_from_file(relocPath);
     const Eigen::Matrix4f icpPose = read_pose_from_file(icpPath);
+    const Eigen::Matrix4f finalPose = read_pose_from_file(finalPath);
 
     bool validReloc = pose_matches(gtPose, relocPose);
     bool validICP = pose_matches(gtPose, icpPose);
+    bool validFinal = pose_matches(gtPose, finalPose);
 
 //    std::cout << poseCount << "-> Reloc: " << std::boolalpha << validReloc
 //        << " - ICP: " << validICP << std::noboolalpha << '\n';
@@ -133,6 +138,7 @@ int main(int argc, char *argv[])
     ++poseCount;
     validPosesAfterReloc += validReloc;
     validPosesAfterICP += validICP;
+    validFinalPoses += validFinal;
 
 //    break;
   }
@@ -140,11 +146,15 @@ int main(int argc, char *argv[])
   std::cout << "Processed " << poseCount << " poses.\n";
   std::cout << "Valid poses after reloc: " << validPosesAfterReloc << '\n';
   std::cout << "Valid poses after ICP: " << validPosesAfterICP << '\n';
+  std::cout << "Valid final poses: " << validFinalPoses << '\n';
   std::cout << "Reloc: "
       << static_cast<float>(validPosesAfterReloc)
           / static_cast<float>(poseCount) * 100.f << '\n';
   std::cout << "ICP: "
       << static_cast<float>(validPosesAfterICP) / static_cast<float>(poseCount)
+          * 100.f << '\n';
+  std::cout << "Final: "
+      << static_cast<float>(validFinalPoses) / static_cast<float>(poseCount)
           * 100.f << '\n';
 
   return 0;
