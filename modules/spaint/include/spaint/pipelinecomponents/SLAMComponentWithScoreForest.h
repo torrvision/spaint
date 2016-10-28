@@ -128,6 +128,7 @@ private:
   size_t m_trimKinitAfterFirstEnergyComputation;
   bool m_poseUpdate;
   bool m_usePredictionCovarianceForPoseOptimization;
+  float m_poseOptimizationInlierThreshold;
 
   // Additional parameters for online evaluation
   int m_maxNbModesPerLeaf;

@@ -82,10 +82,11 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
   m_trimKinitAfterFirstEnergyComputation = 64;
-//  m_poseUpdate = true; // original
-  m_poseUpdate = false; // faster, might be OK
+  m_poseUpdate = true; // original
+//  m_poseUpdate = false; // faster, might be OK
   m_usePredictionCovarianceForPoseOptimization = true; // original implementation
 //  m_usePredictionCovarianceForPoseOptimization = false;
+  m_poseOptimizationInlierThreshold = 0.2f;
 
   // Additional stuff
   m_maxNbModesPerLeaf = 10; //5-10 seem to be enough
@@ -874,6 +875,7 @@ float SLAMComponentWithScoreForest::compute_pose_energy(
     energy = -log10f(energy);
 
     inliersIndices[s].energy = energy;
+    inliersIndices[s].modeIdx = argmax;
     totalEnergy += energy;
   }
 
@@ -898,127 +900,111 @@ void SLAMComponentWithScoreForest::update_candidate_poses(
 
 namespace
 {
-struct PointsForLM
+struct PointForLM
 {
-  PointsForLM(int nbPts) :
-      pts(nbPts), blurred_img(NULL)
-  {
-  }
-  ~PointsForLM()
-  {
-  }
-  std::vector<
-      std::pair<std::vector<Eigen::VectorXd>,
-          std::vector<PredictedGaussianMean *>>> pts;
-  GaussianAggregatedRGBImage *blurred_img;
+  Vector3f point;
+  GPUForestMode mode;
 };
 
+typedef std::vector<PointForLM> PointsForLM;
+
+//struct PointsForLM
+//{
+//  std::vector<Vector3f, GPUForestMode>> pts;
+////  PointsForLM(int nbPts) :
+////      pts(nbPts), blurred_img(NULL)
+////  {
+////  }
+////  ~PointsForLM()
+////  {
+////  }
+////  std::vector<
+////      std::pair<std::vector<Eigen::VectorXd>,
+////          std::vector<PredictedGaussianMean *>>> pts;
+////  GaussianAggregatedRGBImage *blurred_img;
+//};
+
 static double EnergyForContinuous3DOptimizationUsingFullCovariance(
-    std::vector<
-        std::pair<std::vector<Eigen::VectorXd>,
-            std::vector<PredictedGaussianMean *>>> &pts,
-    Eigen::MatrixXd &candidateCameraPoseD)
+    const PointsForLM &pts, const ORUtils::SE3Pose &candidateCameraPose)
 {
   double res = 0.0;
-  Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd transformedPthomogeneous(4);
 
   for (size_t i = 0; i < pts.size(); ++i)
   {
-    Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
-        transformedPthomogeneous);
-
-    for (int p = 0; p < 3; ++p)
-    {
-      diff(p) = transformedPthomogeneous(p) - pts[i].second[0]->_mean(p);
-    }
-
-    double err = sqrt(
-        Helpers::MahalanobisSquared3x3(pts[i].second[0]->_inverseCovariance,
-            diff));
-    // double err = (Helpers::MahalanobisSquared3x3(pts[i].second[0]->_inverseCovariance, diff));
+    const PointForLM &pt = pts[i];
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pt.point;
+    const Vector3f diff = transformedPt - pt.mode.position;
+    const double err = dot(diff, pt.mode.positionInvCovariance * diff); // Mahalanobis sqr distance
     res += err;
   }
+
   return res;
 }
 
 static void Continuous3DOptimizationUsingFullCovariance(
-    const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr)
+    const alglib::real_1d_array &ksi, alglib::real_1d_array &fi, void *ptr)
 {
-  PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4],
+      ksi[5]);
 
-  std::vector<
-      std::pair<std::vector<Eigen::VectorXd>,
-          std::vector<PredictedGaussianMean *>>> &pts = ptsLM->pts;
-  // integrate the size of the clusters?
-  Eigen::VectorXd ksi(6);
-  memcpy(ksi.data(), x.getcontent(), 6 * sizeof(double));
-  /*for (int i = 0 ; i < 6 ; ++i)
-   {
-   ksi(i) = x[i];
-   }*/
-  Eigen::MatrixXd updatedCandidateCameraPoseD =
-      Helpers::LieAlgebraToLieGroupSE3(ksi);
-
-  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(pts,
-      updatedCandidateCameraPoseD);
-  return;
+  fi[0] = EnergyForContinuous3DOptimizationUsingFullCovariance(*ptsLM,
+      testPose);
 }
 
 /***************************************************/
 /* Routines to optimize the sum of 3D L2 distances */
 /***************************************************/
 
-static double EnergyForContinuous3DOptimizationUsingL2(
-    std::vector<
-        std::pair<std::vector<Eigen::VectorXd>,
-            std::vector<PredictedGaussianMean *>>> &pts,
-    Eigen::MatrixXd &candidateCameraPoseD)
-{
-  double res = 0.0;
-  Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
-  Eigen::VectorXd transformedPthomogeneous(4);
-
-  for (size_t i = 0; i < pts.size(); ++i)
-  {
-    Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
-        transformedPthomogeneous);
-
-    for (int p = 0; p < 3; ++p)
-    {
-      diff(p) = transformedPthomogeneous(p) - pts[i].second[0]->_mean(p);
-    }
-
-    double err = diff.norm();
-    err *= err;
-    res += err;
-  }
-  return res;
-}
-
-static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &x,
-    alglib::real_1d_array &fi, void *ptr)
-{
-  PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-
-  std::vector<
-      std::pair<std::vector<Eigen::VectorXd>,
-          std::vector<PredictedGaussianMean *>>> &pts = ptsLM->pts;
-  // integrate the size of the clusters?
-  Eigen::VectorXd ksi(6);
-  memcpy(ksi.data(), x.getcontent(), 6 * sizeof(double));
-  /*for (int i = 0 ; i < 6 ; ++i)
-   {
-   ksi(i) = x[i];
-   }*/
-  Eigen::MatrixXd updatedCandidateCameraPoseD =
-      Helpers::LieAlgebraToLieGroupSE3(ksi);
-
-  fi[0] = EnergyForContinuous3DOptimizationUsingL2(pts,
-      updatedCandidateCameraPoseD);
-  return;
-}
-
+//static double EnergyForContinuous3DOptimizationUsingL2(
+//    std::vector<
+//        std::pair<std::vector<Eigen::VectorXd>,
+//            std::vector<PredictedGaussianMean *>>> &pts,
+//    Eigen::MatrixXd &candidateCameraPoseD)
+//{
+//  double res = 0.0;
+//  Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
+//  Eigen::VectorXd transformedPthomogeneous(4);
+//
+//  for (size_t i = 0; i < pts.size(); ++i)
+//  {
+//    Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
+//        transformedPthomogeneous);
+//
+//    for (int p = 0; p < 3; ++p)
+//    {
+//      diff(p) = transformedPthomogeneous(p) - pts[i].second[0]->_mean(p);
+//    }
+//
+//    double err = diff.norm();
+//    err *= err;
+//    res += err;
+//  }
+//  return res;
+//}
+//
+//static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &x,
+//    alglib::real_1d_array &fi, void *ptr)
+//{
+//  PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+//
+//  std::vector<
+//      std::pair<std::vector<Eigen::VectorXd>,
+//          std::vector<PredictedGaussianMean *>>> &pts = ptsLM->pts;
+//  // integrate the size of the clusters?
+//  Eigen::VectorXd ksi(6);
+//  memcpy(ksi.data(), x.getcontent(), 6 * sizeof(double));
+//  /*for (int i = 0 ; i < 6 ; ++i)
+//   {
+//   ksi(i) = x[i];
+//   }*/
+//  Eigen::MatrixXd updatedCandidateCameraPoseD =
+//      Helpers::LieAlgebraToLieGroupSE3(ksi);
+//
+//  fi[0] = EnergyForContinuous3DOptimizationUsingL2(pts,
+//      updatedCandidateCameraPoseD);
+//  return;
+//}
 static void call_after_each_step(const alglib::real_1d_array &x, double func,
     void *ptr)
 {
@@ -1029,9 +1015,128 @@ static void call_after_each_step(const alglib::real_1d_array &x, double func,
 bool SLAMComponentWithScoreForest::update_candidate_pose(
     PoseCandidate &poseCandidate) const
 {
-  throw std::runtime_error("not updated yet");
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CPU);
 
-//  Eigen::Matrix4f &candidateCameraPose = std::get < 0 > (poseCandidate);
+  ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
+  std::vector<PoseCandidate::Inlier> &inliers = poseCandidate.inliers;
+
+  PointsForLM ptsForLM;
+  for (int inlierIdx = 0; inlierIdx < inliers.size(); ++inlierIdx)
+  {
+    const PoseCandidate::Inlier &inlier = inliers[inlierIdx];
+    const Vector3f inlierCameraPosition =
+        patchFeaturesData[inlier.linearIdx].position.toVector3();
+    const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
+        * inlierCameraPosition;
+    const GPUForestPrediction &prediction = predictionsData[inlier.linearIdx];
+
+    PointForLM ptLM;
+    // The assumption is that the inlier is valid (checked before)
+    ptLM.point = inlierCameraPosition;
+
+    // Find the best mode
+    // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
+    int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
+    if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
+      throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
+    ptLM.mode = prediction.modes[bestModeIdx];
+
+    if (length(ptLM.mode.position - ptLM.point)
+        < m_poseOptimizationInlierThreshold)
+      ptsForLM.push_back(ptLM);
+  }
+
+  // Continuous optimization
+  if (ptsForLM.size() > 3)
+  {
+    const float *ksiF = candidateCameraPose.GetParams();
+    double ksiD[6];
+
+    // Cast to double
+    for (int i = 0; i < 6; ++i)
+      ksiD[i] = ksiF[i];
+
+    alglib::real_1d_array ksi_;
+    ksi_.setcontent(6, ksiD);
+
+//    Eigen::MatrixXd candidateCameraPoseD = candidateCameraPose.cast<double>();
+//
+//    Eigen::VectorXd ksivd = Helpers::LieGroupToLieAlgebraSE3(
+//        candidateCameraPoseD);
+//
+//    for (int i = 0; i < 6; ++i)
+//    {
+//      ksiD[i] = ksivd(i);
+//    }
+//
+//    ksi_.setcontent(6, ksiD);
+
+    alglib::minlmstate state;
+    alglib::minlmreport rep;
+
+    double differentiationStep = 0.0001;
+    alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
+
+    double epsg = 0.000001;
+    double epsf = 0;
+    double epsx = 0;
+    alglib::ae_int_t maxits = 100;
+    alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
+
+    double energyBefore, energyAfter;
+    if (m_usePredictionCovarianceForPoseOptimization)
+    {
+      energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(
+          ptsForLM, candidateCameraPose);
+      alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance,
+          call_after_each_step, &ptsForLM);
+    }
+    else
+    {
+      throw std::runtime_error("Not updated yet");
+//      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
+//          candidateCameraPoseD);
+//      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
+//          call_after_each_step, &ptsForLM);
+    }
+
+    alglib::minlmresults(state, ksi_, rep);
+
+    candidateCameraPose.SetFrom(ksi_[0], ksi_[1], ksi_[2], ksi_[3], ksi_[4],
+        ksi_[5]);
+
+//    memcpy(ksiD, ksi_.getcontent(), sizeof(double) * 6);
+//    for (int i = 0; i < 6; ++i)
+//    {
+//      ksivd(i) = ksiD[i];
+//    }
+//    Eigen::MatrixXd updatedCandidateCameraPoseD =
+//        Helpers::LieAlgebraToLieGroupSE3(ksivd);
+
+    if (m_usePredictionCovarianceForPoseOptimization)
+    {
+      energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(
+          ptsForLM, candidateCameraPose);
+    }
+    else
+    {
+      throw std::runtime_error("Not updated yet");
+//      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
+//          updatedCandidateCameraPoseD);
+    }
+
+    if (energyAfter < energyBefore)
+    {
+      poseCandidate.cameraPose = candidateCameraPose.GetM();
+      return true;
+    }
+  }
+
+  ////////////////////////////
+
 //  std::vector<std::pair<int, int>> &samples = std::get < 1 > (poseCandidate);
 //
 //  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
@@ -1068,80 +1173,8 @@ bool SLAMComponentWithScoreForest::update_candidate_pose(
 //            projectedPixel)).norm() < 0.2)
 //      ptsForLM.pts.push_back(pt);
 //  }
-//
-//  // Continuous optimization
-//  if (ptsForLM.pts.size() > 3)
-//  {
-//    alglib::real_1d_array ksi_;
-//    double ksiD[6];
-//    Eigen::MatrixXd candidateCameraPoseD = candidateCameraPose.cast<double>();
-//
-//    Eigen::VectorXd ksivd = Helpers::LieGroupToLieAlgebraSE3(
-//        candidateCameraPoseD);
-//
-//    for (int i = 0; i < 6; ++i)
-//    {
-//      ksiD[i] = ksivd(i);
-//    }
-//
-//    ksi_.setcontent(6, ksiD);
-//
-//    alglib::minlmstate state;
-//    alglib::minlmreport rep;
-//
-//    double differentiationStep = 0.0001;
-//    alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-//
-//    double epsg = 0.000001;
-//    double epsf = 0;
-//    double epsx = 0;
-//    alglib::ae_int_t maxits = 100;
-//    alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
-//
-//    double energyBefore, energyAfter;
-//    if (m_usePredictionCovarianceForPoseOptimization)
-//    {
-//      energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(
-//          ptsForLM.pts, candidateCameraPoseD);
-//      alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance,
-//          call_after_each_step, &ptsForLM);
-//    }
-//    else
-//    {
-//      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
-//          candidateCameraPoseD);
-//      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
-//          call_after_each_step, &ptsForLM);
-//    }
-//    alglib::minlmresults(state, ksi_, rep);
-//
-//    memcpy(ksiD, ksi_.getcontent(), sizeof(double) * 6);
-//    for (int i = 0; i < 6; ++i)
-//    {
-//      ksivd(i) = ksiD[i];
-//    }
-//    Eigen::MatrixXd updatedCandidateCameraPoseD =
-//        Helpers::LieAlgebraToLieGroupSE3(ksivd);
-//
-//    if (m_usePredictionCovarianceForPoseOptimization)
-//    {
-//      energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(
-//          ptsForLM.pts, updatedCandidateCameraPoseD);
-//    }
-//    else
-//    {
-//      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
-//          updatedCandidateCameraPoseD);
-//    }
-//
-//    if (energyAfter < energyBefore)
-//    {
-//      candidateCameraPose = updatedCandidateCameraPoseD.cast<float>();
-//      return true;
-//    }
-//  }
-//
-//  return false;
+
+  return false;
 }
 
 }
