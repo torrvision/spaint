@@ -1044,7 +1044,7 @@ bool SLAMComponentWithScoreForest::update_candidate_pose(
       throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
     ptLM.mode = prediction.modes[bestModeIdx];
 
-    if (length(ptLM.mode.position - ptLM.point)
+    if (length(ptLM.mode.position - inlierWorldPosition)
         < m_poseOptimizationInlierThreshold)
       ptsForLM.push_back(ptLM);
   }
