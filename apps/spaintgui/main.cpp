@@ -212,6 +212,11 @@ try
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
   settings->trackerConfig = NULL;
 
+  // 7scenes GT
+  settings->sceneParams.mu = 0.04f;
+  settings->sceneParams.voxelSize = 0.01f;
+  settings->sceneParams.viewFrustum_max = 5.0f;
+
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
   TrackerType trackerType = TRACKER_INFINITAM;
