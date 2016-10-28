@@ -8,7 +8,6 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-namespace po = boost::program_options;
 
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
@@ -31,13 +30,19 @@ using namespace ITMLib;
   #include <OVR_CAPI.h>
 #endif
 
+#include <spaint/imagesources/AsyncImageSourceEngine.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
-#include "core/Pipeline.h"
+#include "core/SemanticPipeline.h"
+
+//#################### NAMESPACE ALIASES ####################
+
+namespace bf = boost::filesystem;
+namespace po = boost::program_options;
 
 //#################### TYPES ####################
 
@@ -47,11 +52,15 @@ struct CommandLineArguments
   bool cameraAfterDisk;
   std::string depthImageMask;
   int initialFrameNumber;
+  bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
+  std::string pipelineType;
+  size_t prefetchBufferCapacity;
   std::string rgbImageMask;
-  std::string sequenceName;
+  std::string sequenceSpecifier;
   std::string sequenceType;
+  bool trackSurfels;
 };
 
 //#################### FUNCTIONS ####################
@@ -64,7 +73,10 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("help", "produce help message")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
+    ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -76,8 +88,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
-    ("sequenceName,s", po::value<std::string>(&args.sequenceName)->default_value(""), "sequence name")
+    ("sequenceSpecifier,s", po::value<std::string>(&args.sequenceSpecifier)->default_value(""), "sequence specifier")
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
 
@@ -98,10 +111,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     return false;
   }
 
-  // If the user specifies a sequence name, set the depth / RGB image masks and the calibration filename appropriately.
-  if(args.sequenceName != "")
+  // If the user specifies a sequence (either via a sequence name or a path),
+  // set the depth / RGB image masks and the calibration filename appropriately.
+  if(args.sequenceSpecifier != "")
   {
-    boost::filesystem::path dir = find_subdir_from_executable(args.sequenceType + "s") / args.sequenceName;
+    const bf::path dir = bf::is_directory(args.sequenceSpecifier)
+      ? args.sequenceSpecifier
+      : find_subdir_from_executable(args.sequenceType + "s") / args.sequenceSpecifier;
 
     args.depthImageMask = (dir / "depthm%06i.pgm").string();
     args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
@@ -109,13 +125,16 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     // If the user hasn't explicitly specified a calibration file, try to find one in the sequence directory.
     if(args.calibrationFilename == "")
     {
-      boost::filesystem::path defaultCalibrationFilename = dir / "calib.txt";
-      if(boost::filesystem::exists(defaultCalibrationFilename))
+      bf::path defaultCalibrationFilename = dir / "calib.txt";
+      if(bf::exists(defaultCalibrationFilename))
       {
         args.calibrationFilename = defaultCalibrationFilename.string();
       }
     }
   }
+
+  // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
+  if(args.trackSurfels) args.mapSurfels = true;
 
   return true;
 }
@@ -164,25 +183,26 @@ try
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
-  settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+  if(args.trackSurfels) settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
+  else settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
-  Pipeline::TrackerType trackerType = Pipeline::TRACKER_INFINITAM;
+  TrackerType trackerType = TRACKER_INFINITAM;
   std::string trackerParams;
 
   // If we're trying to use the Rift tracker:
-  if(trackerType == Pipeline::TRACKER_RIFT)
+  if(trackerType == TRACKER_RIFT)
   {
 #ifdef WITH_OVR
     // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0) trackerType = Pipeline::TRACKER_INFINITAM;
+    if(ovrHmd_Detect() == 0) trackerType = TRACKER_INFINITAM;
 #else
     // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
-    trackerType = Pipeline::TRACKER_INFINITAM;
+    trackerType = TRACKER_INFINITAM;
 #endif
   }
 
   // If we're trying to use the Vicon tracker:
-  if(trackerType == Pipeline::TRACKER_VICON || trackerType == Pipeline::TRACKER_ROBUSTVICON)
+  if(trackerType == TRACKER_VICON || trackerType == TRACKER_ROBUSTVICON)
   {
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
@@ -199,7 +219,7 @@ try
 #endif
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = Pipeline::TRACKER_INFINITAM;
+    trackerType = TRACKER_INFINITAM;
 #endif
   }
 
@@ -213,7 +233,10 @@ try
   {
     std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
-    imageSourceEngine->addSubengine(new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber));
+    imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
+      new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
+      args.prefetchBufferCapacity
+    ));
   }
 
   if(args.depthImageMask == "" || args.cameraAfterDisk)
@@ -233,8 +256,21 @@ try
 #endif
   }
 
+  // Construct the pipeline.
+  const size_t maxLabelCount = 10;
+  SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
+  SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
+
+  MultiScenePipeline_Ptr pipeline;
+  if(args.pipelineType == "semantic")
+  {
+    const unsigned int seed = 12345;
+    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode));
+  }
+  else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
+
   // Run the application.
-  Application app(Pipeline_Ptr(new Pipeline(imageSourceEngine, settings, Application::resources_dir().string(), trackerType, trackerParams)));
+  Application app(pipeline);
   app.run();
 
 #ifdef WITH_OVR

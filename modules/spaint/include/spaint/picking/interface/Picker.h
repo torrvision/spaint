@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_PICKER
 #define H_SPAINT_PICKER
 
+#include <boost/shared_ptr.hpp>
+
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
 namespace spaint {
@@ -45,6 +47,10 @@ public:
    */
   virtual void to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointsFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointsShortMB) const = 0;
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<const Picker> Picker_CPtr;
 
 }
 

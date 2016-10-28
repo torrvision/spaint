@@ -28,16 +28,13 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-TouchSelector::TouchSelector(const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const TrackingState_Ptr& trackingState,
-                             const View_Ptr& view, size_t maxKeptTouchPoints)
+TouchSelector::TouchSelector(const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings, const Vector2i& touchImageSize, size_t maxKeptTouchPoints)
 : Selector(itmSettings),
   m_keptTouchPointCount(0),  
   m_keptTouchPointsFloatMB(new ORUtils::MemoryBlock<Vector3f>(maxKeptTouchPoints, true, true)),
   m_keptTouchPointsShortMB(new ORUtils::MemoryBlock<Vector3s>(maxKeptTouchPoints, true, true)),
   m_maxKeptTouchPoints(maxKeptTouchPoints),
-  m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings)),
-  m_trackingState(trackingState),
-  m_view(view)
+  m_touchDetector(new TouchDetector(touchImageSize, itmSettings, touchSettings))
 {
   m_isActive = true;
 
@@ -95,11 +92,11 @@ Selector::Selection_CPtr TouchSelector::get_selection() const
   return m_keptTouchPointCount > 0 ? m_keptTouchPointsShortMB : Selection_CPtr();
 }
 
-void TouchSelector::update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
+void TouchSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Detect any points that the user is touching in the scene.
-  MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(*m_trackingState->pose_d)));
-  ITMFloatImage_Ptr depthImage(m_view->depth, boost::serialization::null_deleter());
+  MoveableCamera_CPtr camera(new SimpleCamera(CameraPoseConverter::pose_to_camera(slamState->get_pose())));
+  ITMFloatImage_Ptr depthImage(slamState->get_view()->depth, boost::serialization::null_deleter());
   TIME(std::vector<Eigen::Vector2i> touchPoints = m_touchDetector->determine_touch_points(camera, depthImage, renderState), milliseconds, runningTouchDetectorOnFrame);
 #if DEBUGGING
   std::cout << runningTouchDetectorOnFrame << '\n';

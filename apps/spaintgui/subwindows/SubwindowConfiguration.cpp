@@ -4,6 +4,7 @@
  */
 
 #include "SubwindowConfiguration.h"
+using namespace spaint;
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
@@ -12,27 +13,29 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
   SubwindowConfiguration_Ptr config;
   if(subwindowCount > 0) config.reset(new SubwindowConfiguration);
 
+  const std::string worldSceneID = "World";
+
   switch(subwindowCount)
   {
     case 1:
     {
-      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(1, 1), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(1, 1), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN, imgSize));
       break;
     }
     case 2:
     {
       const float x = 0.5f;
-      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), Raycaster::RT_SEMANTICCOLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR, imgSize));
       break;
     }
     case 3:
     {
       const float x = 0.665f;
       const float y = 0.5f;
-      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y * 2), Raycaster::RT_SEMANTICLAMBERTIAN, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), Raycaster::RT_SEMANTICCOLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), Raycaster::RT_SEMANTICPHONG, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y * 2), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICPHONG, imgSize));
       break;
     }
     default:

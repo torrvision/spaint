@@ -9,6 +9,62 @@
 
 namespace spaint {
 
+//#################### HELPER FUNCTIONS ####################
+
+/**
+ * \brief Copies an ArrayFire image to an InfiniTAM image using the CPU.
+ *
+ * \param inputImage  The input image.
+ * \param outputImage The output image.
+ */
+template <typename AFElementType, typename ITMElementType>
+static void copy_af_to_itm_cpu(const boost::shared_ptr<const af::array>& inputImage, const boost::shared_ptr<ORUtils::Image<ITMElementType> >& outputImage)
+{
+  const AFElementType *inputData = inputImage->device<AFElementType>();
+  ITMElementType *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
+
+  const int height = outputImage->noDims.y;
+  const int width = outputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
+  {
+    copy_af_pixel_to_itm(columnMajorIndex, inputData, width, height, outputData);
+  }
+
+  inputImage->unlock();
+}
+
+/**
+ * \brief Copies an InfiniTAM image to an ArrayFire image using the CPU.
+ *
+ * \param inputImage  The input image.
+ * \param outputImage The output image.
+ */
+template <typename ITMElementType, typename AFElementType>
+static void copy_itm_to_af_cpu(const boost::shared_ptr<const ORUtils::Image<ITMElementType> >& inputImage, const boost::shared_ptr<af::array>& outputImage)
+{
+  const ITMElementType *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
+  AFElementType *outputData = outputImage->device<AFElementType>();
+
+  const int height = inputImage->noDims.y;
+  const int width = inputImage->noDims.x;
+  const int pixelCount = height * width;
+
+#ifdef WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
+  {
+    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputData);
+  }
+
+  outputImage->unlock();
+}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& firstInputImage, const ITMFloatImage_CPtr& secondInputImage, const AFArray_Ptr& outputImage) const
@@ -32,78 +88,40 @@ void ImageProcessor_CPU::calculate_depth_difference(const ITMFloatImage_CPtr& fi
   }
 }
 
+void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMFloatImage_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_af_to_itm_cpu<float,float>(inputImage, outputImage);
+}
+
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUCharImage_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-
-  const unsigned char *inputData = inputImage->device<unsigned char>();
-  unsigned char *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
-
-  const int height = outputImage->noDims.y;
-  const int width = outputImage->noDims.x;
-  const int pixelCount = height * width;
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
-  {
-    copy_af_pixel_to_itm(columnMajorIndex, inputData, width, height, outputData);
-  }
+  copy_af_to_itm_cpu<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_af_to_itm(const AFArray_CPtr& inputImage, const ITMUChar4Image_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
+  copy_af_to_itm_cpu<unsigned char,Vector4u>(inputImage, outputImage);
+}
 
-  af::array inputChannels[4];
-  const unsigned char *inputData[4];
-  for(int i = 0; i < 4; ++i)
-  {
-    inputChannels[i] = (*inputImage)(af::span, af::span, i);
-    inputData[i] = inputChannels[i].device<unsigned char>();
-  }
+void ImageProcessor_CPU::copy_itm_to_af(const ITMFloatImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_itm_to_af_cpu<float,float>(inputImage, outputImage);
+}
 
-  Vector4u *outputData = outputImage->GetData(MEMORYDEVICE_CPU);
-
-  const int height = outputImage->noDims.y;
-  const int width = outputImage->noDims.x;
-  const int pixelCount = height * width;
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int columnMajorIndex = 0; columnMajorIndex < pixelCount; ++columnMajorIndex)
-  {
-    copy_af_pixel_to_itm(columnMajorIndex, inputData[0], inputData[1], inputData[2], inputData[3], width, height, outputData);
-  }
+void ImageProcessor_CPU::copy_itm_to_af(const ITMUCharImage_CPtr& inputImage, const AFArray_Ptr& outputImage) const
+{
+  check_image_size_equal(inputImage, outputImage);
+  copy_itm_to_af_cpu<unsigned char,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::copy_itm_to_af(const ITMUChar4Image_CPtr& inputImage, const AFArray_Ptr& outputImage) const
 {
   check_image_size_equal(inputImage, outputImage);
-
-  const Vector4u *inputData = inputImage->GetData(MEMORYDEVICE_CPU);
-
-  af::array outputChannels[4];
-  unsigned char *outputData[4];
-  for(int i = 0; i < 4; ++i)
-  {
-    outputChannels[i] = (*outputImage)(af::span, af::span, i);
-    outputData[i] = outputChannels[i].device<unsigned char>();
-  }
-
-  const int height = inputImage->noDims.y;
-  const int width = inputImage->noDims.x;
-  const int pixelCount = height * width;
-
-#ifdef WITH_OPENMP
-  #pragma omp parallel for
-#endif
-  for(int rowMajorIndex = 0; rowMajorIndex < pixelCount; ++rowMajorIndex)
-  {
-    copy_itm_pixel_to_af(rowMajorIndex, inputData, width, height, outputData[0], outputData[1], outputData[2], outputData[3]);
-  }
+  copy_itm_to_af_cpu<Vector4u,unsigned char>(inputImage, outputImage);
 }
 
 void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, ComparisonOperator op, float threshold, float value, const ITMFloatImage_Ptr& outputImage) const
@@ -115,7 +133,7 @@ void ImageProcessor_CPU::set_on_threshold(const ITMFloatImage_CPtr& inputImage, 
   const int pixelCount = inputImage->noDims.x * inputImage->noDims.y;
 
 #ifdef WITH_OPENMP
-#pragma omp parallel for
+  #pragma omp parallel for
 #endif
   for(int pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
   {

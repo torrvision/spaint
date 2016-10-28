@@ -14,10 +14,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LeapSelector::LeapSelector(const Settings_CPtr& settings, const Scene_CPtr& scene)
+LeapSelector::LeapSelector(const Settings_CPtr& settings)
 : Selector(settings),
-  m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
-  m_scene(scene)
+  m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1))
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -37,7 +36,7 @@ Selector::Selection_CPtr LeapSelector::get_selection() const
   return m_pickPointShortMB;
 }
 
-void LeapSelector::update(const InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono)
+void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Get the current frame of data from the Leap Motion.
   m_frame = m_leap.frame();
@@ -54,7 +53,7 @@ void LeapSelector::update(const InputState& inputState, const RenderState_CPtr& 
   Eigen::Vector3f fingerPosWorld = from_leap_vector(fingerPosLM);
 
   // Convert this world coordinate position into voxel coordinates.
-  Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_scene->sceneParams->voxelSize;
+  Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_settings->sceneParams.voxelSize;
 
   // Record the selected voxel.
   *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();

@@ -17,6 +17,7 @@ ArgUtil
 AttitudeUtil
 CommandManager
 LimitedContainer
+MapUtil
 PriorityQueue
 RandomNumberGenerator
 )

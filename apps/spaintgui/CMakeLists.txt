@@ -8,10 +8,11 @@
 
 SET(targetname spaintgui)
 
-#########################################################################
-# Offer support for low power machines and those with low USB bandwidth #
-#########################################################################
+############################################################################################
+# Offer a variety of options, e.g. for low power machines and those with low USB bandwidth #
+############################################################################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferFocusReacquisition.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowPowerSupport.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferLowUSBBandwidthSupport.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferPixelDebugging.cmake)
@@ -53,17 +54,15 @@ commands/MarkVoxelsCommand.h
 
 ##
 SET(core_sources
-core/Interactor.cpp
 core/Model.cpp
-core/Pipeline.cpp
-core/Raycaster.cpp
+core/MultiScenePipeline.cpp
+core/SemanticPipeline.cpp
 )
 
 SET(core_headers
-core/Interactor.h
 core/Model.h
-core/Pipeline.h
-core/Raycaster.h
+core/MultiScenePipeline.h
+core/SemanticPipeline.h
 )
 
 ##

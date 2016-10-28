@@ -8,8 +8,6 @@
 
 #include <Eigen/Dense>
 
-#include <ITMLib/Objects/Scene/ITMScene.h>
-
 // This #undef is a disgusting hack that is needed to work around the fact that InfiniTAM #defines PI in a header.
 // Since the Leap SDK defines PI as a float (static const float PI = ...), things would break if we didn't do this.
 #undef PI
@@ -17,7 +15,6 @@
 #include <Leap.h>
 
 #include "Selector.h"
-#include "../util/SpaintVoxel.h"
 
 namespace spaint {
 
@@ -26,11 +23,6 @@ namespace spaint {
  */
 class LeapSelector : public Selector
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef ITMLib::ITMScene<SpaintVoxel,ITMVoxelIndex> Scene;
-  typedef boost::shared_ptr<const Scene> Scene_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The most recent frame of data from the Leap Motion. */
@@ -42,18 +34,14 @@ private:
   /** A selection into which to store the most recent point picked by the user as a Vector3s, in voxel coordinates. */
   Selection_Ptr m_pickPointShortMB;
 
-  /** The InfiniTAM scene. */
-  Scene_CPtr m_scene;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a Leap selector.
    *
    * \param settings  The settings to use for InfiniTAM.
-   * \param scene     The InfiniTAM scene.
    */
-  LeapSelector(const Settings_CPtr& settings, const Scene_CPtr& scene);
+  explicit LeapSelector(const Settings_CPtr& settings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -71,7 +59,7 @@ public:
   virtual Selection_CPtr get_selection() const;
 
   /** Override */
-  virtual void update(const tvginput::InputState& inputState, const RenderState_CPtr& renderState, bool renderingInMono);
+  virtual void update(const tvginput::InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
