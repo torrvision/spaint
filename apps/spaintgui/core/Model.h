@@ -62,6 +62,9 @@ private:
   /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
+  /** The tag used to identify the SLAM experiment. */
+  std::string m_tag;
+
   /** The visualisation generator that is used to render a scene. */
   spaint::VisualisationGenerator_Ptr m_visualisationGenerator;
 
@@ -79,8 +82,9 @@ public:
    * \param settings        The settings to use for InfiniTAM.
    * \param resourcesDir    The path to the resources directory.
    * \param maxLabelCount   The maximum number of labels that can be in use.
+   * \param experimentTag   The tag to associate to the current experiment.
    */
-  Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount, const std::string& experimentTag = "");
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -154,6 +158,13 @@ public:
    * \return  The InfiniTAM engine used for rendering a surfel scene.
    */
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const;
+
+  /**
+   * \brief Gets the tag used to identify the current experiment.
+   *
+   * \return The tag used to identify the current experiment.
+   */
+  virtual std::string get_tag() const;
 
   /**
    * \brief Gets the visualisation generator that is used to render a scene.

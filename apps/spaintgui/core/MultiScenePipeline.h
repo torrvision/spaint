@@ -75,8 +75,9 @@ public:
    * \param settings      The settings to use for InfiniTAM.
    * \param resourcesDir  The path to the resources directory.
    * \param maxLabelCount The maximum number of labels that can be in use.
+   * \param experimentTag   The tag to associate to the current experiment.
    */
-  MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const std::string &experimentTag = "");
 
   //#################### DESTRUCTOR ####################
 public:

@@ -53,6 +53,7 @@ struct CommandLineArguments
   std::string calibrationFilename;
   bool cameraAfterDisk;
   std::vector<std::string> depthImageMask;
+  std::string experimentTag;
   int initialFrameNumber;
   bool mapSurfels;
   bool noRelocaliser;
@@ -78,6 +79,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("batch", po::bool_switch(&args.batch), "don't wait for user input before starting the reconstruction and terminate immediately")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
@@ -318,6 +320,7 @@ try
   else if(args.pipelineType == "slam")
   {
     pipeline.reset(new SLAMPipeline(settings,
+                                    args.experimentTag,
                                     Application::resources_dir().string(),
                                     imageSourceEngine,
                                     trackerType,

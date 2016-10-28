@@ -41,6 +41,7 @@ public:
 public:
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
+  virtual std::string get_tag() const = 0;
   virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################

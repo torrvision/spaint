@@ -27,13 +27,14 @@ using namespace spaint;
 
 //#################### CONSTRUCTORS ####################
 
-Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, size_t maxLabelCount, const std::string& experimentTag)
 : m_labelManager(new LabelManager(maxLabelCount)),
   m_resourcesDir(resourcesDir),
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
   m_settings(settings),
   m_surfelVisualisationEngine(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType)),
+  m_tag(experimentTag),
   m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType)),
   m_voxelVisualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType))
 {
@@ -97,6 +98,11 @@ const Settings_CPtr& Model::get_settings() const
 Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() const
 {
   return m_surfelVisualisationEngine;
+}
+
+std::string Model::get_tag() const
+{
+  return m_tag;
 }
 
 VisualisationGenerator_CPtr Model::get_visualisation_generator() const

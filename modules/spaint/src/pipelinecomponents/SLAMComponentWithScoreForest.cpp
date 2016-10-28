@@ -54,8 +54,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 {
   m_dataset.reset(
       new DatasetRGBDInfiniTAM(
-          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
-//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesChessOnline.yml",
+//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
+          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesChessOnline.yml",
           "/media/data/", 5, 1.0, "DFBP", true, 0, false, 42));
 
   m_dataset->LoadForest();
@@ -106,10 +106,14 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       ITMTrackerFactory<SpaintVoxel, ITMVoxelIndex>::Instance().Make(
           refineParams.c_str(), rgbImageSize, depthImageSize, settings.get(),
           m_lowLevelEngine.get(), NULL, voxelScene.get()));
+
+  const std::string poses_folder =
+      m_context->get_tag().empty() ?
+          TimeUtil::get_iso_timestamp() : m_context->get_tag();
+
   m_sequentialPathGenerator.reset(
       SequentialPathGenerator(
-          find_subdir_from_executable("reloc_poses")
-              / TimeUtil::get_iso_timestamp()));
+          find_subdir_from_executable("reloc_poses") / poses_folder));
 
   std::cout << "Saving relocalization poses in: "
       << m_sequentialPathGenerator->get_base_dir() << std::endl;
