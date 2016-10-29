@@ -141,7 +141,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   inputDepthImage->SetFrom(slamState->get_view()->depth,
       ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
 
-  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
+  const ITMUChar4Image_Ptr inputRGBImage(
+      new ITMUChar4Image(slamState->get_rgb_image_size(), true, true));
+  inputRGBImage->SetFrom(slamState->get_view()->rgb,
+      ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA);
+
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
   const View_Ptr& view = slamState->get_view();
