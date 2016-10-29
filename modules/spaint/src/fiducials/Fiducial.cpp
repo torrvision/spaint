@@ -42,11 +42,13 @@ void Fiducial::integrate(const FiducialMeasurement& measurement)
 
   if(GeometryUtil::poses_are_similar(m_pose, *measurement.pose_world()))
   {
+    // If the measurement pose is sufficiently similar to the existing fiducial pose, integrate the measurement into the fiducial.
     integrate_sub(measurement);
     ++m_confidence;
   }
   else
   {
+    // Otherwise, reset the fiducial pose to the measurement pose, and reset the confidence counter accordingly.
     m_pose = *measurement.pose_world();
     m_confidence = 1.0f;
   }
