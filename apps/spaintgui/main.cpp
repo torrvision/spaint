@@ -30,12 +30,12 @@ using namespace ITMLib;
   #include <OVR_CAPI.h>
 #endif
 
-#include <spaint/imagesources/AsyncImageSourceEngine.h>
-#include <spaint/util/MemoryBlockFactory.h>
-
 #ifdef WITH_OPENCV
   #include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
+
+#include <spaint/imagesources/AsyncImageSourceEngine.h>
+#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
 #include <tvgutil/filesystem/PathFinder.h>
@@ -65,6 +65,7 @@ struct CommandLineArguments
   std::string sequenceSpecifier;
   std::string sequenceType;
   bool trackSurfels;
+  bool useFiducials;
 };
 
 //#################### FUNCTIONS ####################
@@ -81,6 +82,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
+    ("useFiducials", po::bool_switch(&args.useFiducials), "enable fiducial support")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -260,6 +262,12 @@ try
 #endif
   }
 
+  // Construct the fiducial detector (if any).
+  FiducialDetector_CPtr fiducialDetector;
+#ifdef WITH_OPENCV
+  if(args.useFiducials) fiducialDetector.reset(new ArUcoFiducialDetector);
+#endif
+
   // Construct the pipeline.
   const size_t maxLabelCount = 10;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
@@ -269,9 +277,6 @@ try
   if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
-#ifdef WITH_OPENCV
-    FiducialDetector_CPtr fiducialDetector(new ArUcoFiducialDetector);
-#endif
     pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
