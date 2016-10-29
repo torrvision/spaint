@@ -23,6 +23,7 @@
 
 #include "ocv/OpenCVUtil.h"
 #include "randomforest/cuda/GPUForest_CUDA.h"
+#include "randomforest/cuda/GPURansac_CUDA.h"
 #include "util/PosePersister.h"
 
 #include "Helpers.hpp"
@@ -72,7 +73,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
   m_gpuForest->reset_predictions();
 
-  m_gpuRansac.reset(new GPURansac());
+  m_gpuRansac.reset(new GPURansac_CUDA());
 
   // Set params as in scoreforests
   m_kInitRansac = 1024;
