@@ -188,6 +188,7 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv
 {
   const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
 
+  // FIXME: I'm currently assuming that there is an identity mapping between the depth and colour cameras - in general, this won't be the case.
   const int width = view->depth->noDims.x, height = view->depth->noDims.y;
   const int ux = (int)CLAMP(ROUND(corner.x), 0, width - 1), uy = (int)CLAMP(ROUND(corner.y), 0, height - 1);
   const int locId = uy * width + ux;
@@ -208,6 +209,7 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv
 
 boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const
 {
+  // FIXME: I'm currently assuming that there is an identity mapping between the depth and colour cameras - in general, this won't be the case.
   const int width = renderState->raycastResult->noDims.x, height = renderState->raycastResult->noDims.y;
   Vector2i p((int)CLAMP(ROUND(corner.x), 0, width - 1), (int)CLAMP(ROUND(corner.y), 0, height - 1));
 

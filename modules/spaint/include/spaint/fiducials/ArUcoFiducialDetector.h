@@ -64,12 +64,22 @@ private:
                                                                                          const VoxelRenderState_CPtr& renderState) const;
 
   /**
-   * \brief TODO
+   * \brief Tries to determine the 3D point in eye space that corresponds to a fiducial corner in the live colour image
+   *        by back-projecting into 3D using the depth value from the live depth image.
+   *
+   * \param corner  The fiducial corner in the live colour image.
+   * \param view    The view of the scene containing the live images.
+   * \return        The 3D point in eye space corresponding to the fiducial corner (if any), or boost::none otherwise.
    */
   boost::optional<Vector3f> pick_corner_from_depth(const cv::Point2f& corner, const View_CPtr& view) const;
 
   /**
-   * \brief TODO
+   * \brief Tries to determine the 3D point in world space that corresponds to a fiducial corner in the live colour image
+   *        by looking it up in a raycast of the scene from the pose of the depth camera.
+   *
+   * \param corner      The fiducial corner in the live colour image.
+   * \param renderState The render state containing the scene raycast.
+   * \return            The 3D point in world space corresponding to the fiducial corner (if any), or boost::none otherwise.
    */
   boost::optional<Vector3f> pick_corner_from_raycast(const cv::Point2f& corner, const VoxelRenderState_CPtr& renderState) const;
 
