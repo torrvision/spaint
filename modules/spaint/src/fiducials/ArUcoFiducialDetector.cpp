@@ -24,6 +24,12 @@ using namespace rigging;
 
 namespace spaint {
 
+//#################### CONSTRUCTORS ####################
+
+ArUcoFiducialDetector::ArUcoFiducialDetector(const Settings_CPtr& settings)
+: m_settings(settings)
+{}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducials(const View_CPtr& view, const ORUtils::SE3Pose& pose, const VoxelRenderState_CPtr& renderState,
@@ -213,9 +219,8 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const 
 
   // FIXME: This is pretty much the same as PickingSelector::get_position().
   pickPointFloatMB->UpdateHostFromDevice();
-  const float voxelSize = 0.005f; // FIXME: Get this from the scene params.
   const Vector3f& pickPoint = *pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
-  return pickPoint * voxelSize;
+  return pickPoint * m_settings->sceneParams.voxelSize;
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################

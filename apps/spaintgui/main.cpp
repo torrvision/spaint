@@ -265,7 +265,7 @@ try
   // Construct the fiducial detector (if any).
   FiducialDetector_CPtr fiducialDetector;
 #ifdef WITH_OPENCV
-  if(args.useFiducials) fiducialDetector.reset(new ArUcoFiducialDetector);
+  if(args.useFiducials) fiducialDetector.reset(new ArUcoFiducialDetector(settings));
 #endif
 
   // Construct the pipeline.

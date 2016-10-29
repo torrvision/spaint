@@ -25,6 +25,18 @@ private:
   /** The picker used when estimating poses from the scene raycast. */
   mutable Picker_CPtr m_picker;
 
+  /** The settings to use for InfiniTAM. */
+  Settings_CPtr m_settings;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs an ArUco fiducial detector.
+   *
+   * \param settings  The settings to use for InfiniTAM.
+   */
+  explicit ArUcoFiducialDetector(const Settings_CPtr& settings);
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
