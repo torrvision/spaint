@@ -134,26 +134,15 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     TrackingResult trackingResult)
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  const ITMShortImage_Ptr& inputRawDepthImage =
-      slamState->get_input_raw_depth_image();
   const ITMFloatImage_Ptr inputDepthImage(
-      new ITMFloatImage(slamState->get_view()->depth->noDims, true, true));
+      new ITMFloatImage(slamState->get_depth_image_size(), true, true));
   inputDepthImage->SetFrom(slamState->get_view()->depth,
       ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
 
-//  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
-  const ITMUChar4Image_Ptr inputRGBImage(
-      new ITMUChar4Image(slamState->get_view()->rgb->noDims, true, true));
-  inputRGBImage->SetFrom(slamState->get_view()->rgb,
-      ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA);
-  inputRGBImage->UpdateHostFromDevice();
-
+  const ITMUChar4Image_Ptr& inputRGBImage = slamState->get_input_rgb_image();
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
-  const VoxelRenderState_Ptr& liveVoxelRenderState =
-      slamState->get_live_voxel_render_state();
   const View_Ptr& view = slamState->get_view();
-  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
   const Vector4f depthIntrinsics =
       view->calib.intrinsics_d.projectionParamsSimple.all;
@@ -180,7 +169,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       return trackingResult;
     }
 
-    evaluate_forest(inputRGBImage, inputDepthImage, depthIntrinsics);
+    compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
+    evaluate_forest();
     boost::optional<PoseCandidate> pose_candidate = estimate_pose();
 
     if (pose_candidate)
@@ -220,6 +210,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
+      const VoxelRenderState_Ptr& liveVoxelRenderState =
+          slamState->get_live_voxel_render_state();
+      const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
@@ -283,13 +276,13 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   else if (trackingResult == TrackingResult::TRACKING_GOOD)
   {
     Matrix4f invCameraPose = trackingState->pose_d->GetInvM();
-    evaluate_features(inputRGBImage, inputDepthImage, depthIntrinsics,
+    compute_features(inputRGBImage, inputDepthImage, depthIntrinsics,
         invCameraPose);
 
-//#ifdef ENABLE_TIMERS
-//    boost::timer::auto_cpu_timer t(6,
-//        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
 
     m_gpuForest->add_features_to_forest(m_featureImage);
   }
@@ -299,44 +292,37 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
-void SLAMComponentWithScoreForest::evaluate_features(
+void SLAMComponentWithScoreForest::compute_features(
     const ITMUChar4Image_CPtr &inputRgbImage,
     const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics)
 {
   Matrix4f identity;
   identity.setIdentity();
 
-  evaluate_features(inputRgbImage, inputDepthImage, depthIntrinsics, identity);
+  compute_features(inputRgbImage, inputDepthImage, depthIntrinsics, identity);
 }
 
-void SLAMComponentWithScoreForest::evaluate_features(
+void SLAMComponentWithScoreForest::compute_features(
     const ITMUChar4Image_CPtr &inputRgbImage,
     const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics,
     const Matrix4f &invCameraPose)
 {
-  {
-//#ifdef ENABLE_TIMERS
-//    boost::timer::auto_cpu_timer t(6,
-//        "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-    m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
-        depthIntrinsics, m_featureImage, invCameraPose);
-  }
+#ifdef ENABLE_TIMERS
+  boost::timer::auto_cpu_timer t(6,
+      "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+  m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
+      depthIntrinsics, m_featureImage, invCameraPose);
+
 }
 
-void SLAMComponentWithScoreForest::evaluate_forest(
-    const ITMUChar4Image_CPtr &inputRGBImage,
-    const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics)
+void SLAMComponentWithScoreForest::evaluate_forest()
 {
-  evaluate_features(inputRGBImage, inputDepthImage, depthIntrinsics);
-
-  {
 #ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+  boost::timer::auto_cpu_timer t(6,
+      "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_gpuForest->evaluate_forest(m_featureImage, m_predictionsImage);
-  }
+  m_gpuForest->evaluate_forest(m_featureImage, m_predictionsImage);
 }
 
 cv::Mat SLAMComponentWithScoreForest::build_rgbd_image(
@@ -627,9 +613,8 @@ boost::optional<SLAMComponentWithScoreForest::PoseCandidate> SLAMComponentWithSc
   std::mt19937 random_engine;
 
   m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
-  m_predictionsImage->UpdateHostFromDevice();
+  m_predictionsImage->UpdateHostFromDevice(); // Also the predictions
 
-  // Generate pose candidates with the new implementation
   std::vector<PoseCandidate> candidates;
 
   {
@@ -1038,7 +1023,7 @@ bool SLAMComponentWithScoreForest::update_candidate_pose(
   std::vector<PoseCandidate::Inlier> &inliers = poseCandidate.inliers;
 
   PointsForLM ptsForLM;
-  for (int inlierIdx = 0; inlierIdx < inliers.size(); ++inlierIdx)
+  for (size_t inlierIdx = 0; inlierIdx < inliers.size(); ++inlierIdx)
   {
     const PoseCandidate::Inlier &inlier = inliers[inlierIdx];
     const Vector3f inlierCameraPosition =

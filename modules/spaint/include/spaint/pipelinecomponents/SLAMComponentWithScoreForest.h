@@ -78,15 +78,13 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   boost::optional<PoseCandidate> estimate_pose();
-  void evaluate_features(const ITMUChar4Image_CPtr &inputRgbImage,
+  void compute_features(const ITMUChar4Image_CPtr &inputRgbImage,
       const ITMFloatImage_CPtr &inputDepthImage,
       const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose);
-  void evaluate_features(const ITMUChar4Image_CPtr &inputRgbImage,
+  void compute_features(const ITMUChar4Image_CPtr &inputRgbImage,
       const ITMFloatImage_CPtr &inputDepthImage,
       const Vector4f &depthIntrinsics);
-  void evaluate_forest(const ITMUChar4Image_CPtr &inputRgbImage,
-      const ITMFloatImage_CPtr &inputDepthImage,
-      const Vector4f &depthIntrinsics);
+  void evaluate_forest();
 
   cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb,
       const ITMShortImage_Ptr &depth) const;

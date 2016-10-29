@@ -10,7 +10,7 @@
 
 #include <Learner.hpp>
 
-#include "../../features/interface/RGBDPatchFeatureCalculator.h"
+#include "../../features/interface/RGBDPatchFeature.h"
 #include "GPUClusterer.h"
 #include "GPUReservoir.h"
 #include "GPUForestTypes.h"
