@@ -19,6 +19,7 @@
 
 #include "../features/FeatureCalculatorFactory.h"
 #include "../randomforest/interface/GPUForest.h"
+#include "../randomforest/interface/GPURansac.h"
 
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
 
@@ -30,20 +31,20 @@ namespace spaint
  */
 class SLAMComponentWithScoreForest: public SLAMComponent
 {
-  struct PoseCandidate
-  {
-    struct Inlier
-    {
-      int linearIdx;
-      int modeIdx;
-      float energy;
-    };
-
-    Matrix4f cameraPose;
-    std::vector<Inlier> inliers;
-    float energy;
-    int cameraId;
-  };
+//  struct PoseCandidate
+//  {
+//    struct Inlier
+//    {
+//      int linearIdx;
+//      int modeIdx;
+//      float energy;
+//    };
+//
+//    Matrix4f cameraPose;
+//    std::vector<Inlier> inliers;
+//    float energy;
+//    int cameraId;
+//  };
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -86,21 +87,19 @@ private:
       const Vector4f &depthIntrinsics);
   void evaluate_forest();
 
-  cv::Mat build_rgbd_image(const ITMUChar4Image_Ptr &rgb,
-      const ITMShortImage_Ptr &depth) const;
-  void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
-  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
-  void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
-      std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
-  void update_inliers_for_optimization(
-      const std::vector<Vector2i> &sampledPixelIdx,
-      std::vector<PoseCandidate> &poseCandidates) const;
-  void compute_and_sort_energies(
-      std::vector<PoseCandidate> &poseCandidates) const;
-  float compute_pose_energy(const Matrix4f &candidateCameraPose,
-      std::vector<PoseCandidate::Inlier> &inliers) const;
-  void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
-  bool update_candidate_pose(PoseCandidate &poseCandidate) const;
+//  void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
+//  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
+//  void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
+//      std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
+//  void update_inliers_for_optimization(
+//      const std::vector<Vector2i> &sampledPixelIdx,
+//      std::vector<PoseCandidate> &poseCandidates) const;
+//  void compute_and_sort_energies(
+//      std::vector<PoseCandidate> &poseCandidates) const;
+//  float compute_pose_energy(const Matrix4f &candidateCameraPose,
+//      std::vector<PoseCandidate::Inlier> &inliers) const;
+//  void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
+//  bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -110,6 +109,7 @@ private:
   RGBDPatchFeatureImage_Ptr m_featureImage;
   GPUForestPredictionsImage_Ptr m_predictionsImage;
   GPUForest_Ptr m_gpuForest;
+  GPURansac_Ptr m_gpuRansac;
 
   Tracker_Ptr m_refineTracker;
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;

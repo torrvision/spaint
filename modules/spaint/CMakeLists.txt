@@ -314,6 +314,7 @@ SET(randomforest_interface_sources
 src/randomforest/interface/GPUClusterer.cpp
 src/randomforest/interface/GPUForest.cpp
 src/randomforest/interface/GPUReservoir.cpp
+src/randomforest/interface/GPURansac.cpp
 )
 
 SET(randomforest_sources
@@ -336,6 +337,7 @@ SET(randomforest_interface_headers
 include/spaint/randomforest/interface/GPUClusterer.h
 include/spaint/randomforest/interface/GPUForest.h
 include/spaint/randomforest/interface/GPUForestTypes.h
+include/spaint/randomforest/interface/GPURansac.h
 include/spaint/randomforest/interface/GPUReservoir.h
 )
 
