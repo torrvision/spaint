@@ -42,10 +42,9 @@ std::map<std::string,ORUtils::SE3Pose> FiducialRelocaliser::compute_hypotheses(c
   {
     // Try to find a stable fiducial corresponding to the measurement. If there isn't one, continue.
     std::map<std::string,Fiducial_Ptr>::const_iterator jt = fiducials.find(it->first);
-    if(jt == fiducials.end()) continue;
-    if(jt->second->confidence() < Fiducial::stable_confidence()) continue;
+    if(jt == fiducials.end() || jt->second->confidence() < Fiducial::stable_confidence()) continue;
 
-    // Try to get the pose of the measurement in eye space. If there isn't one, continue.
+    // Try to get the pose of the measurement in eye space. If it isn't available, continue.
     boost::optional<ORUtils::SE3Pose> fiducialPoseEye = it->second.pose_eye();
     if(!fiducialPoseEye) continue;
 
@@ -93,13 +92,14 @@ ORUtils::SE3Pose FiducialRelocaliser::refine_best_hypothesis(const std::map<std:
 {
   std::vector<DualQuatd> dqs;
   std::vector<double> weights;
-  int count = static_cast<int>(inliersForBestHypothesis.size());
+  const int count = static_cast<int>(inliersForBestHypothesis.size());
 
   // Compute a uniformly-weighted linear blend of all of the inlier poses and return it.
+  const double weight = 1.0 / count;
   for(std::map<std::string,ORUtils::SE3Pose>::const_iterator it = inliersForBestHypothesis.begin(), iend = inliersForBestHypothesis.end(); it != iend; ++it)
   {
     dqs.push_back(GeometryUtil::pose_to_dual_quat<double>(it->second));
-    weights.push_back(1.0 / count);
+    weights.push_back(weight);
   }
 
   return GeometryUtil::dual_quat_to_pose(DualQuatd::linear_blend(&dqs[0], &weights[0], count));
