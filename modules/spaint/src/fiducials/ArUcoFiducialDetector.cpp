@@ -211,7 +211,7 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const 
   const int width = renderState->raycastResult->noDims.x, height = renderState->raycastResult->noDims.y;
   Vector2i p((int)CLAMP(ROUND(corner.x), 0, width - 1), (int)CLAMP(ROUND(corner.y), 0, height - 1));
 
-  if(!m_picker) m_picker = PickerFactory::make_picker(ITMLibSettings::DEVICE_CUDA); // FIXME: Correct device type.
+  if(!m_picker) m_picker = PickerFactory::make_picker(m_settings->deviceType);
 
   static boost::shared_ptr<ORUtils::MemoryBlock<Vector3f> > pickPointFloatMB = MemoryBlockFactory::instance().make_block<Vector3f>(1);
   bool pickPointFound = m_picker->pick(p.x, p.y, renderState.get(), *pickPointFloatMB);
