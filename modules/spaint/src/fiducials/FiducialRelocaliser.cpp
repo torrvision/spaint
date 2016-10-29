@@ -91,11 +91,11 @@ std::string FiducialRelocaliser::find_best_hypothesis(const std::map<std::string
 
 ORUtils::SE3Pose FiducialRelocaliser::refine_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis)
 {
-  // Compute a uniformly-weighted linear blend of all of the inlier poses and return it.
   std::vector<DualQuatd> dqs;
   std::vector<double> weights;
   int count = static_cast<int>(inliersForBestHypothesis.size());
 
+  // Compute a uniformly-weighted linear blend of all of the inlier poses and return it.
   for(std::map<std::string,ORUtils::SE3Pose>::const_iterator it = inliersForBestHypothesis.begin(), iend = inliersForBestHypothesis.end(); it != iend; ++it)
   {
     dqs.push_back(GeometryUtil::pose_to_dual_quat<double>(it->second));
