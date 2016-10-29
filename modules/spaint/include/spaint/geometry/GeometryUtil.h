@@ -44,7 +44,7 @@ struct GeometryUtil
   template <typename T>
   static DualQuaternion<T> pose_to_dual_quat(const ORUtils::SE3Pose& pose)
   {
-    Vector3f r, t;
+    ORUtils::Vector3<float> r, t;
     pose.GetParams(t, r);
 
     ORUtils::Vector3<T> typedR(static_cast<T>(r.x), static_cast<T>(r.y), static_cast<T>(r.z));

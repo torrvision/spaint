@@ -8,7 +8,6 @@
 #include <ITMLib/Utils/ITMMath.h>
 
 #include "geometry/GeometryUtil.h"
-using namespace spaint;
 
 namespace spaint {
 
