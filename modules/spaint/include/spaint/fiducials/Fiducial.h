@@ -34,7 +34,7 @@ public:
    * \brief Constructs a fiducial.
    *
    * \param id    The ID of the fiducial.
-   * \param pose  The pose of the fiducial in world space.
+   * \param pose  The initial pose of the fiducial in world space.
    */
   Fiducial(const std::string& id, const ORUtils::SE3Pose& pose);
 
