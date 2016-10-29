@@ -8,14 +8,24 @@
 
 #include "randomforest/interface/GPURansac.h"
 
+#include <curand_kernel.h>
+
 namespace spaint {
 class GPURansac_CUDA : public GPURansac
 {
 public:
+  typedef curandState_t RandomState;
+  typedef ORUtils::MemoryBlock<RandomState> RandomStateMemoryBlock;
+  typedef boost::shared_ptr<RandomStateMemoryBlock> RandomStateMemoryBlock_Ptr;
+  typedef boost::shared_ptr<const RandomStateMemoryBlock> RandomStateMemoryBlock_CPtr;
+
   GPURansac_CUDA();
 
 private:
+  RandomStateMemoryBlock_Ptr m_randomStates;
+  uint32_t m_rngSeed;
 
+  void init_random();
 };
 
 }

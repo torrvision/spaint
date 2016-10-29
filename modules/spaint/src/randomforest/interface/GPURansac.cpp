@@ -15,6 +15,8 @@
 #include "ORUtils/SE3Pose.h"
 #include <Helpers.hpp>
 
+#include "util/MemoryBlockFactory.h"
+
 //#define ENABLE_TIMERS
 
 namespace spaint
@@ -37,6 +39,10 @@ GPURansac::GPURansac()
   m_usePredictionCovarianceForPoseOptimization = true; // original implementation
 //  m_usePredictionCovarianceForPoseOptimization = false;
   m_poseOptimizationInlierThreshold = 0.2f;
+
+  m_poseCandidates = MemoryBlockFactory::instance().make_block<PoseCandidate>(
+      m_kInitRansac);
+  m_nbPoseCandidates = 0;
 }
 
 GPURansac::~GPURansac()
@@ -60,20 +66,21 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
   m_featureImage = features;
   m_predictionsImage = forestPredictions;
 
-  std::vector<PoseCandidate> candidates;
+//  std::vector<PoseCandidate> candidates;
+  PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    generate_pose_candidates(candidates);
+    generate_pose_candidates();
   }
 
-//  std::cout << "Generated " << candidates.size() << " initial candidates."
+//  std::cout << "Generated " << m_nbPoseCandidates << " initial candidates."
 //      << std::endl;
 
-  if (m_trimKinitAfterFirstEnergyComputation < candidates.size())
+  if (m_trimKinitAfterFirstEnergyComputation < m_nbPoseCandidates)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -97,7 +104,7 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
       boost::timer::auto_cpu_timer t(6,
           "update inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      update_inliers_for_optimization(sampledPixelIdx, candidates);
+      update_inliers_for_optimization(sampledPixelIdx);
     }
 
     {
@@ -105,16 +112,14 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
       boost::timer::auto_cpu_timer t(6,
           "compute and sort energies: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      compute_and_sort_energies(candidates);
+      compute_and_sort_energies();
     }
 
-    candidates.erase(
-        candidates.begin() + m_trimKinitAfterFirstEnergyComputation,
-        candidates.end());
+    m_nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
 
     if (m_trimKinitAfterFirstEnergyComputation > 1)
     {
-      for (size_t p = 0; p < candidates.size(); ++p)
+      for (size_t p = 0; p < m_nbPoseCandidates; ++p)
       {
         PoseCandidate &candidate = candidates[p];
         if (candidate.nbInliers > nbSamplesPerCamera)
@@ -135,7 +140,7 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
 
   float iteration = 0.0f;
 
-  while (candidates.size() > 1)
+  while (m_nbPoseCandidates > 1)
   {
     //    boost::timer::auto_cpu_timer t(
     //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -147,29 +152,29 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
         m_batchSizeRansac);
 
     //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
-    update_inliers_for_optimization(sampledPixelIdx, candidates);
+    update_inliers_for_optimization(sampledPixelIdx);
 
     if (m_poseUpdate)
     {
-      update_candidate_poses(candidates);
+      update_candidate_poses();
     }
 
-    compute_and_sort_energies(candidates);
+    compute_and_sort_energies();
 
     // Remove half of the candidates with the worse energies
-    candidates.erase(candidates.begin() + candidates.size() / 2,
-        candidates.end());
+    m_nbPoseCandidates /= 2;
   }
 
-  return !candidates.empty() ? candidates[0] : boost::optional<PoseCandidate>();
+  return
+      m_nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
-void GPURansac::generate_pose_candidates(
-    std::vector<PoseCandidate> &poseCandidates)
+void GPURansac::generate_pose_candidates()
 {
   const int nbThreads = 12;
 
-  poseCandidates.reserve(m_kInitRansac);
+  m_nbPoseCandidates = 0;
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
   std::vector<std::mt19937> engs(nbThreads);
   for (int i = 0; i < nbThreads; ++i)
@@ -193,7 +198,9 @@ void GPURansac::generate_pose_candidates(
         candidate.cameraId = i;
 
 #pragma omp critical
-        poseCandidates.emplace_back(std::move(candidate));
+        {
+          poseCandidates[m_nbPoseCandidates++] = candidate;
+        }
       }
     }
   }
@@ -457,11 +464,12 @@ void GPURansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
 }
 
 void GPURansac::update_inliers_for_optimization(
-    const std::vector<Vector2i> &sampledPixelIdx,
-    std::vector<PoseCandidate> &poseCandidates) const
+    const std::vector<Vector2i> &sampledPixelIdx)
 {
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+
 #pragma omp parallel for
-  for (size_t p = 0; p < poseCandidates.size(); ++p)
+  for (size_t p = 0; p < m_nbPoseCandidates; ++p)
   {
     PoseCandidate &candidate = poseCandidates[p];
 
@@ -477,12 +485,13 @@ void GPURansac::update_inliers_for_optimization(
   }
 }
 
-void GPURansac::compute_and_sort_energies(
-    std::vector<PoseCandidate> &poseCandidates) const
+void GPURansac::compute_and_sort_energies()
 {
 //  int nbPoseProcessed = 0;
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+
 #pragma omp parallel for
-  for (size_t p = 0; p < poseCandidates.size(); ++p)
+  for (size_t p = 0; p < m_nbPoseCandidates; ++p)
   {
     //#pragma omp critical
     //    {
@@ -494,7 +503,7 @@ void GPURansac::compute_and_sort_energies(
   }
 
 // Sort by ascending energy
-  std::sort(poseCandidates.begin(), poseCandidates.end(),
+  std::sort(poseCandidates, poseCandidates + m_nbPoseCandidates,
       [] (const PoseCandidate &a, const PoseCandidate &b)
       { return a.energy < b.energy;});
 }
@@ -560,12 +569,13 @@ void GPURansac::compute_pose_energy(PoseCandidate &candidate) const
   candidate.energy = totalEnergy / static_cast<float>(candidate.nbInliers);
 }
 
-void GPURansac::update_candidate_poses(
-    std::vector<PoseCandidate> &poseCandidates) const
+void GPURansac::update_candidate_poses()
 {
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+
 //  int nbUpdated = 0;
 #pragma omp parallel for
-  for (size_t i = 0; i < poseCandidates.size(); ++i)
+  for (size_t i = 0; i < m_nbPoseCandidates; ++i)
   {
     if (update_candidate_pose(poseCandidates[i]))
     {

@@ -33,6 +33,10 @@ struct PoseCandidate
   int cameraId;
 };
 
+typedef ORUtils::MemoryBlock<PoseCandidate> PoseCandidateMemoryBlock;
+typedef boost::shared_ptr<PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_Ptr;
+typedef boost::shared_ptr<const PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_CPtr;
+
 class GPURansac
 {
 public:
@@ -62,17 +66,18 @@ protected:
   RGBDPatchFeatureImage_CPtr m_featureImage;
   GPUForestPredictionsImage_CPtr m_predictionsImage;
 
-  void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
+  PoseCandidateMemoryBlock_Ptr m_poseCandidates;
+  size_t m_nbPoseCandidates;
+
+  void generate_pose_candidates();
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
       std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
   void update_inliers_for_optimization(
-      const std::vector<Vector2i> &sampledPixelIdx,
-      std::vector<PoseCandidate> &poseCandidates) const;
-  void compute_and_sort_energies(
-      std::vector<PoseCandidate> &poseCandidates) const;
+      const std::vector<Vector2i> &sampledPixelIdx);
+  void compute_and_sort_energies();
   void compute_pose_energy(PoseCandidate &candidate) const;
-  void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
+  void update_candidate_poses();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
 private:
