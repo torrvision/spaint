@@ -13,7 +13,6 @@
 #include <libalglib/optimization.h>
 #include <omp.h>
 #include "ORUtils/SE3Pose.h"
-#include <Helpers.hpp>
 
 #include "util/MemoryBlockFactory.h"
 
@@ -218,6 +217,80 @@ void GPURansac::generate_pose_candidates()
   }
 }
 
+namespace
+{
+void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::VectorXf &weights,
+    Eigen::MatrixXf &resRot, Eigen::VectorXf &resTrans)
+{
+  if (P.cols() != Q.cols() || P.rows() != Q.rows())
+    throw std::runtime_error("Kabsch: P and Q have different dimensions");
+  int D = P.rows();  // dimension of the space
+  int N = P.cols();  // number of points
+  Eigen::VectorXf normalizedWeights = Eigen::VectorXf(weights.size());
+
+  // normalize weights to sum to 1
+  {
+    float sumWeights = 0;
+    for (int i = 0; i < weights.size(); ++i)
+    {
+      sumWeights += weights(i);
+    }
+    normalizedWeights = weights * (1.0f / sumWeights);
+  }
+
+  // Centroids
+  Eigen::VectorXf p0 = P * normalizedWeights;
+  Eigen::VectorXf q0 = Q * normalizedWeights;
+  Eigen::VectorXf v1 = Eigen::VectorXf::Ones(N);
+
+  Eigen::MatrixXf P_centred = P - p0 * v1.transpose(); // translating P to center the origin
+  Eigen::MatrixXf Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
+
+      // Covariance between both matrices
+  Eigen::MatrixXf C = P_centred * normalizedWeights.asDiagonal()
+      * Q_centred.transpose();
+
+  // SVD
+  Eigen::JacobiSVD<Eigen::MatrixXf> svd(C,
+      Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+  Eigen::MatrixXf V = svd.matrixU();
+  Eigen::VectorXf S = svd.singularValues();
+  Eigen::MatrixXf W = svd.matrixV();
+  Eigen::MatrixXf I = Eigen::MatrixXf::Identity(D, D);
+
+  if ((V * W.transpose()).determinant() < 0)
+    I(D - 1, D - 1) = -1;
+
+  // Recover the rotation and translation
+  resRot = W * I * V.transpose();
+  resTrans = q0 - resRot * p0;
+
+  return;
+}
+
+void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::MatrixXf &resRot,
+    Eigen::VectorXf &resTrans)
+{
+  Eigen::VectorXf weights = Eigen::VectorXf::Ones(P.cols());
+  Kabsch(P, Q, weights, resRot, resTrans);
+}
+
+Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q)
+{
+  Eigen::MatrixXf resRot;
+  Eigen::VectorXf resTrans;
+
+  Kabsch(P, Q, resRot, resTrans);
+
+  // recompose R + t in Rt
+  Eigen::Matrix4f res;
+  res.block<3, 3>(0, 0) = resRot;
+  res.block<3, 1>(0, 3) = resTrans;
+  return res;
+}
+}
+
 bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
 {
   Eigen::MatrixXf worldPoints(3, m_nbPointsForKabschBoostrap);
@@ -406,8 +479,8 @@ bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
 //      boost::timer::auto_cpu_timer t(6,
 //          "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 //#endif
-      Eigen::Map<Eigen::Matrix4f>(res.cameraPose.m) = Helpers::Kabsch(
-          localPoints, worldPoints);
+      Eigen::Map<Eigen::Matrix4f>(res.cameraPose.m) = Kabsch(localPoints,
+          worldPoints);
     }
 
     foundIsometricMapping = true;
@@ -420,80 +493,6 @@ bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
     return true;
 
   return false;
-}
-
-namespace
-{
-void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::VectorXf &weights,
-    Eigen::MatrixXf &resRot, Eigen::VectorXf &resTrans)
-{
-  if (P.cols() != Q.cols() || P.rows() != Q.rows())
-    throw std::runtime_error("Kabsch: P and Q have different dimensions");
-  int D = P.rows();  // dimension of the space
-  int N = P.cols();  // number of points
-  Eigen::VectorXf normalizedWeights = Eigen::VectorXf(weights.size());
-
-  // normalize weights to sum to 1
-  {
-    float sumWeights = 0;
-    for (int i = 0; i < weights.size(); ++i)
-    {
-      sumWeights += weights(i);
-    }
-    normalizedWeights = weights * (1.0f / sumWeights);
-  }
-
-  // Centroids
-  Eigen::VectorXf p0 = P * normalizedWeights;
-  Eigen::VectorXf q0 = Q * normalizedWeights;
-  Eigen::VectorXf v1 = Eigen::VectorXf::Ones(N);
-
-  Eigen::MatrixXf P_centred = P - p0 * v1.transpose(); // translating P to center the origin
-  Eigen::MatrixXf Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
-
-      // Covariance between both matrices
-  Eigen::MatrixXf C = P_centred * normalizedWeights.asDiagonal()
-      * Q_centred.transpose();
-
-  // SVD
-  Eigen::JacobiSVD<Eigen::MatrixXf> svd(C,
-      Eigen::ComputeThinU | Eigen::ComputeThinV);
-
-  Eigen::MatrixXf V = svd.matrixU();
-  Eigen::VectorXf S = svd.singularValues();
-  Eigen::MatrixXf W = svd.matrixV();
-  Eigen::MatrixXf I = Eigen::MatrixXf::Identity(D, D);
-
-  if ((V * W.transpose()).determinant() < 0)
-    I(D - 1, D - 1) = -1;
-
-  // Recover the rotation and translation
-  resRot = W * I * V.transpose();
-  resTrans = q0 - resRot * p0;
-
-  return;
-}
-
-void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::MatrixXf &resRot,
-    Eigen::VectorXf &resTrans)
-{
-  Eigen::VectorXf weights = Eigen::VectorXf::Ones(P.cols());
-  Kabsch(P, Q, weights, resRot, resTrans);
-}
-
-Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q)
-{
-  Eigen::MatrixXf resRot;
-  Eigen::VectorXf resTrans;
-
-  Kabsch(P, Q, resRot, resTrans);
-
-  // recompose R + t in Rt
-  Eigen::Matrix4f res;
-  res.block<3, 3>(0, 0) = resRot;
-  res.block<3, 1>(0, 3) = resTrans;
-  return res;
-}
 }
 
 void GPURansac::compute_candidate_pose_kabsch()
