@@ -21,6 +21,9 @@ public:
 
   GPURansac_CUDA();
 
+protected:
+  virtual void generate_pose_candidates();
+
 private:
   RandomStateMemoryBlock_Ptr m_randomStates;
   uint32_t m_rngSeed;

@@ -33,9 +33,17 @@ struct PoseCandidate
   int cameraId;
 };
 
-typedef ORUtils::MemoryBlock<PoseCandidate> PoseCandidateMemoryBlock;
-typedef boost::shared_ptr<PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_Ptr;
-typedef boost::shared_ptr<const PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_CPtr;
+struct PoseCandidates
+{
+  static const int MAX_CANDIDATES = 1024;
+
+  PoseCandidate candidates[MAX_CANDIDATES];
+  int nbCandidates;
+};
+
+typedef ORUtils::MemoryBlock<PoseCandidates> PoseCandidatesMemoryBlock;
+typedef boost::shared_ptr<PoseCandidatesMemoryBlock> PoseCandidatesMemoryBlock_Ptr;
+typedef boost::shared_ptr<const PoseCandidatesMemoryBlock> PoseCandidatesMemoryBlock_CPtr;
 
 class GPURansac
 {
@@ -50,7 +58,6 @@ public:
 
 protected:
   // Member variables from scoreforests
-  size_t m_kInitRansac;
   size_t m_nbPointsForKabschBoostrap;
   bool m_useAllModesPerLeafInPoseHypothesisGeneration;
   bool m_checkMinDistanceBetweenSampledModes;
@@ -58,7 +65,7 @@ protected:
   bool m_checkRigidTransformationConstraint;
   float m_translationErrorMaxForCorrectPose;
   size_t m_batchSizeRansac;
-  size_t m_trimKinitAfterFirstEnergyComputation;
+  int m_trimKinitAfterFirstEnergyComputation;
   bool m_poseUpdate;
   bool m_usePredictionCovarianceForPoseOptimization;
   float m_poseOptimizationInlierThreshold;
@@ -66,11 +73,9 @@ protected:
   RGBDPatchFeatureImage_CPtr m_featureImage;
   GPUForestPredictionsImage_CPtr m_predictionsImage;
 
-  PoseCandidateMemoryBlock_Ptr m_poseCandidates;
-  size_t m_nbPoseCandidates;
+  PoseCandidatesMemoryBlock_Ptr m_poseCandidates;
 
-  void generate_pose_candidates();
-  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
+  virtual void generate_pose_candidates();
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
       std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
   void update_inliers_for_optimization(
@@ -81,6 +86,8 @@ protected:
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
 private:
+  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
+  void compute_candidate_pose_kabsch();
 };
 
 typedef boost::shared_ptr<GPURansac> GPURansac_Ptr;
