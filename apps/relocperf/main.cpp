@@ -150,10 +150,10 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
 }
 
 template<typename T>
-void printWidth(const T &item, int width)
+void printWidth(const T &item, int width, bool leftAlign = false)
 {
-  std::cout << std::left << std::setw(width) << std::fixed
-      << std::setprecision(2) << item;
+  std::cout << (leftAlign ? std::left : std::right) << std::setw(width)
+      << std::fixed << std::setprecision(2) << item;
 }
 
 int main(int argc, char *argv[])
@@ -179,13 +179,13 @@ int main(int argc, char *argv[])
     const fs::path gtPath = gtFolder / sequence / "Test" / "merged";
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
-    std::cerr << "Processing sequence: " << sequence << " in:\n\t" << gtPath
+    std::cerr << "Processing sequence " << sequence << " in:\n\t" << gtPath
         << "\n\t" << relocFolder << std::endl;
     results[sequence] = evaluate_sequence(gtPath, relocFolder);
   }
 
   // Print table
-  printWidth("Sequence", 15);
+  printWidth("Sequence", 15, true);
   printWidth("Poses", 8);
   printWidth("Reloc", 8);
   printWidth("ICP", 8);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
     float finalPct = static_cast<float>(seqResult.validFinalPoses)
         / static_cast<float>(seqResult.poseCount) * 100.f;
 
-    printWidth(sequence, 15);
+    printWidth(sequence, 15, true);
     printWidth(seqResult.poseCount, 8);
     printWidth(relocPct, 8);
     printWidth(icpPct, 8);
