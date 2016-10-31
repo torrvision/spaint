@@ -5,7 +5,9 @@
 
 #include <boost/filesystem.hpp>
 #include <Eigen/Geometry>
+#include <map>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -89,32 +91,33 @@ bool pose_matches(const Eigen::Matrix4f &gtPose,
   return translationError <= translationMaxError && angleError <= angleMaxError;
 }
 
-int main(int argc, char *argv[])
+struct SequenceResults
 {
-  if (argc < 3)
-  {
-    std::cerr << "Usage: " << argv[0]
-        << " \"GT folder\" \"reloc output folder\"" << std::endl;
-    return 1;
-  }
+  int poseCount
+  { 0 };
+  int validPosesAfterReloc
+  { 0 };
+  int validPosesAfterICP
+  { 0 };
+  int validFinalPoses
+  { 0 };
+};
 
-  fs::path gtFolder = argv[1];
-  fs::path relocFolder = argv[2];
-
-  int poseCount = 0;
-  int validPosesAfterReloc = 0;
-  int validPosesAfterICP = 0;
-  int validFinalPoses = 0;
+SequenceResults evaluate_sequence(const fs::path &gtFolder,
+    const fs::path &relocFolder)
+{
+  SequenceResults res;
 
   while (true)
   {
-    const fs::path gtPath = generate_path(gtFolder, "posem%06i.txt", poseCount);
+    const fs::path gtPath = generate_path(gtFolder, "posem%06i.txt",
+        res.poseCount);
     const fs::path relocPath = generate_path(relocFolder, "pose-%06i.reloc.txt",
-        poseCount);
+        res.poseCount);
     const fs::path icpPath = generate_path(relocFolder, "pose-%06i.icp.txt",
-        poseCount);
+        res.poseCount);
     const fs::path finalPath = generate_path(relocFolder, "pose-%06i.final.txt",
-        poseCount);
+        res.poseCount);
 
     if (!fs::is_regular(gtPath))
       break;
@@ -135,27 +138,78 @@ int main(int argc, char *argv[])
 //    std::cout << poseCount << "-> Reloc: " << std::boolalpha << validReloc
 //        << " - ICP: " << validICP << std::noboolalpha << '\n';
 
-    ++poseCount;
-    validPosesAfterReloc += validReloc;
-    validPosesAfterICP += validICP;
-    validFinalPoses += validFinal;
+    ++res.poseCount;
+    res.validPosesAfterReloc += validReloc;
+    res.validPosesAfterICP += validICP;
+    res.validFinalPoses += validFinal;
 
 //    break;
   }
 
-  std::cout << "Processed " << poseCount << " poses.\n";
-  std::cout << "Valid poses after reloc: " << validPosesAfterReloc << '\n';
-  std::cout << "Valid poses after ICP: " << validPosesAfterICP << '\n';
-  std::cout << "Valid final poses: " << validFinalPoses << '\n';
-  std::cout << "Reloc: "
-      << static_cast<float>(validPosesAfterReloc)
-          / static_cast<float>(poseCount) * 100.f << '\n';
-  std::cout << "ICP: "
-      << static_cast<float>(validPosesAfterICP) / static_cast<float>(poseCount)
-          * 100.f << '\n';
-  std::cout << "Final: "
-      << static_cast<float>(validFinalPoses) / static_cast<float>(poseCount)
-          * 100.f << '\n';
+  return res;
+}
+
+template<typename T>
+void printWidth(const T &item, int width)
+{
+  std::cout << std::left << std::setw(width) << std::fixed
+      << std::setprecision(2) << item;
+}
+
+int main(int argc, char *argv[])
+{
+  if (argc < 4)
+  {
+    std::cerr << "Usage: " << argv[0]
+        << " \"GT base folder\" \"reloc base output folder\" \"reloc tag\""
+        << std::endl;
+    return 1;
+  }
+
+  fs::path gtFolder = argv[1];
+  fs::path relocBaseFolder = argv[2];
+  std::string relocTag = argv[3];
+
+  std::vector<std::string> sequenceNames
+  { "chess", "fire", "heads", "office", "pumpkin", "redkitchen", "stairs" };
+  std::map<std::string, SequenceResults> results;
+
+  for (auto sequence : sequenceNames)
+  {
+    const fs::path gtPath = gtFolder / sequence / "Test" / "merged";
+    const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
+
+    std::cerr << "Processing sequence: " << sequence << " in:\n\t" << gtPath
+        << "\n\t" << relocFolder << std::endl;
+    results[sequence] = evaluate_sequence(gtPath, relocFolder);
+  }
+
+  // Print table
+  printWidth("Sequence", 15);
+  printWidth("Poses", 8);
+  printWidth("Reloc", 8);
+  printWidth("ICP", 8);
+  printWidth("Final", 8);
+  std::cout << '\n';
+
+  for (auto sequence : sequenceNames)
+  {
+    auto seqResult = results[sequence];
+
+    float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
+        / static_cast<float>(seqResult.poseCount) * 100.f;
+    float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
+        / static_cast<float>(seqResult.poseCount) * 100.f;
+    float finalPct = static_cast<float>(seqResult.validFinalPoses)
+        / static_cast<float>(seqResult.poseCount) * 100.f;
+
+    printWidth(sequence, 15);
+    printWidth(seqResult.poseCount, 8);
+    printWidth(relocPct, 8);
+    printWidth(icpPct, 8);
+    printWidth(finalPct, 8);
+    std::cout << '\n';
+  }
 
   return 0;
 }
