@@ -61,6 +61,12 @@ private:
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 
+  /** The mesh used by the meshing engine. */
+  Mesh_Ptr m_mesh;
+
+  /** The meshing engine. */
+  MeshingEngine_Ptr m_meshingEngine;
+
   /** Whether or not to pause between frames (for debugging purposes). */
   bool m_pauseBetweenFrames;
 
@@ -72,6 +78,9 @@ private:
 
   /** The current renderer. */
   Renderer_Ptr m_renderer;
+
+  /** Whether to save the reconstructed mesh on exit. */
+  bool m_saveMeshOnExit;
 
   /** The path generator for the current sequence recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
@@ -105,6 +114,13 @@ public:
    * \brief Runs the application.
    */
   void run();
+
+  /**
+   * \brief Set whether to save the reconstructed mesh on exit.
+   *
+   * \param saveMesh True if the reconstructed mesh should be saved on exit.
+   */
+  void set_save_mesh_on_exit(bool saveMesh);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -226,6 +242,11 @@ private:
   void process_voice_input();
 
   /**
+   * \brief Saves the reconstruction to disk as a mesh.
+   */
+  void save_mesh() const;
+
+  /**
    * \brief Saves a screenshot to disk.
    */
   void save_screenshot() const;
@@ -244,6 +265,11 @@ private:
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
+
+  /**
+   * \brief Sets up the meshing engine if required.
+   */
+  void setup_meshing();
 
 #ifdef WITH_OVR
   /**

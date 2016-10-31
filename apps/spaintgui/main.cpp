@@ -63,6 +63,7 @@ struct CommandLineArguments
   bool poseFromDisk;
   size_t prefetchBufferCapacity;
   std::vector<std::string> rgbImageMask;
+  bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifier;
   std::string sequenceType;
   bool trackSurfels;
@@ -83,6 +84,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save reconstructed mesh on exit")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
@@ -337,6 +339,7 @@ try
 
   // Run the application.
   Application app(pipeline, args.batch);
+  app.set_save_mesh_on_exit(args.saveMeshOnExit);
   app.run();
 
 #ifdef WITH_OVR

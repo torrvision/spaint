@@ -15,6 +15,7 @@ using namespace tvginput;
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
 
+#include <ITMLib/Engines/Meshing/ITMMeshingEngineFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 using namespace ITMLib;
 
@@ -51,6 +52,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool runInBatch
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
+  setup_meshing();
   switch_to_windowed_renderer(3);
 }
 
@@ -60,7 +62,10 @@ void Application::run()
 {
   for(;;)
   {
-    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE)) return;
+    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE))
+    {
+      break;
+    }
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -72,7 +77,10 @@ void Application::run()
       bool frameWasProcessed = m_pipeline->run_main_section();
 
       // Return if we processed the last frame and are running in batch mode.
-      if(m_runInBatch && !frameWasProcessed) return;
+      if(m_runInBatch && !frameWasProcessed)
+      {
+        break;
+      }
 
       // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
       if(frameWasProcessed && m_sequencePathGenerator)
@@ -93,6 +101,16 @@ void Application::run()
     // If desired, pause at the end of each frame for debugging purposes.
     if(m_pauseBetweenFrames) m_paused = true;
   }
+
+  if(m_saveMeshOnExit)
+  {
+    save_mesh();
+  }
+}
+
+void Application::set_save_mesh_on_exit(bool saveMesh)
+{
+  m_saveMeshOnExit = saveMesh;
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -645,6 +663,39 @@ void Application::process_voice_input()
   }
 }
 
+void Application::save_mesh() const
+{
+  if(m_meshingEngine)
+  {
+    const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
+    const std::string& sceneID = mainSubwindow.get_scene_id();
+    const Model_CPtr& model = m_pipeline->get_model();
+    const SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
+
+    m_meshingEngine->MeshScene(m_mesh.get(), scene.get());
+
+    boost::filesystem::path p = find_subdir_from_executable("meshes");
+
+    if(model->get_tag().empty())
+    {
+      p = p / ("spaint-" + TimeUtil::get_iso_timestamp() + ".stl");
+    }
+    else
+    {
+      p = p / (model->get_tag() + ".stl");
+    }
+
+    boost::filesystem::create_directories(p.parent_path());
+
+    std::cout << "Saving current reconstruction in: " << p << '\n';
+    m_mesh->WriteSTL(p.c_str());
+  }
+  else
+  {
+    std::cout << "Meshing engine disabled in the settings.\n";
+  }
+}
+
 void Application::save_screenshot() const
 {
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
@@ -717,6 +768,21 @@ void Application::setup_labels()
 
   // Set the initial semantic label to use for painting.
   m_pipeline->get_model()->set_semantic_label(1);
+}
+
+void Application::setup_meshing()
+{
+  Settings_CPtr settings = m_pipeline->get_model()->get_settings();
+
+  if(settings->createMeshingEngine)
+  {
+    m_mesh.reset(new ITMMesh(settings->GetMemoryType()));
+
+    m_meshingEngine.reset(
+        ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel, ITMVoxelBlockHash>(
+            settings->deviceType
+    ));
+  }
 }
 
 #ifdef WITH_OVR
