@@ -159,8 +159,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-# Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil)
+# Note: spaint needs to precede rafl on Linux, cudadevrt needed for thrust's dynamic parallelism
+TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil cudadevrt)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)

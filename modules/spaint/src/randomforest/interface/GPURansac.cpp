@@ -57,11 +57,11 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
 {
   std::mt19937 random_engine;
 
-  features->UpdateHostFromDevice(); // Need the features on the host for now
-  forestPredictions->UpdateHostFromDevice(); // Also the predictions
-
   m_featureImage = features;
   m_predictionsImage = forestPredictions;
+
+  m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
+  m_predictionsImage->UpdateHostFromDevice(); // Also the predictions
 
 //  std::vector<PoseCandidate> candidates;
   PoseCandidate *candidates =
@@ -497,12 +497,6 @@ bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
 
 void GPURansac::compute_candidate_pose_kabsch()
 {
-  m_poseCandidates->UpdateHostFromDevice();
-
-// No need, done in the base class
-//  m_featureImage->UpdateHostFromDevice();
-//  m_predictionsImage->UpdateHostFromDevice();
-
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
@@ -535,8 +529,6 @@ void GPURansac::compute_candidate_pose_kabsch()
     Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints,
         worldPoints);
   }
-
-  m_poseCandidates->UpdateDeviceFromHost();
 }
 
 void GPURansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,

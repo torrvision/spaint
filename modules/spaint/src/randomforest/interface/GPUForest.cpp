@@ -426,42 +426,4 @@ void GPUForest::add_features_to_forest(
 #endif
 }
 
-int GPUForestPrediction::get_best_mode(const Vector3f &v) const
-{
-  float energy;
-  return get_best_mode_and_energy(v, energy);
-}
-
-int GPUForestPrediction::get_best_mode_and_energy(const Vector3f &v,
-    float &maxScore) const
-{
-  static const float exponent = powf(2.0f * M_PI, 3);
-
-  int argmax = -1;
-  maxScore = std::numeric_limits<float>::lowest();
-
-  for (int m = 0; m < nbModes; ++m)
-  {
-    const float nbPts = static_cast<float>(modes[m].nbInliers);
-    const Vector3f diff = v - modes[m].position;
-
-    const float normalization = 1.0 / sqrtf(modes[m].determinant * exponent);
-    // This is the textbook implementation of Mahalanobis distance
-    // Helpers::MahalanobisSquared3x3 used in the original code seems wrong
-    const float mahalanobisSq = dot(diff,
-        modes[m].positionInvCovariance * diff);
-    const float descriptiveStatistics = expf(-0.5f * mahalanobisSq);
-    const float evalGaussian = normalization * descriptiveStatistics;
-    const float score = nbPts * evalGaussian;
-
-    if (score > maxScore)
-    {
-      maxScore = score;
-      argmax = m;
-    }
-  }
-
-  return argmax;
-}
-
 }

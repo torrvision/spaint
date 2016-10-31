@@ -17,7 +17,10 @@ namespace spaint
 
 struct PoseCandidate
 {
-  static const int MAX_INLIERS = 3003; // 3 for Kabsch and 500 * RANSAC iteration (6 iterations)
+  enum
+  {
+    MAX_INLIERS = 3003 // 3 for Kabsch and 500 * RANSAC iteration (6 iterations)
+  };
 
   struct Inlier
   {
@@ -31,11 +34,15 @@ struct PoseCandidate
   int nbInliers;
   float energy;
   int cameraId;
-};
+}
+;
 
 struct PoseCandidates
 {
-  static const int MAX_CANDIDATES = 1024;
+  enum
+  {
+    MAX_CANDIDATES = 1024
+  };
 
   PoseCandidate candidates[MAX_CANDIDATES];
   int nbCandidates;
@@ -80,14 +87,14 @@ protected:
       std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
   void update_inliers_for_optimization(
       const std::vector<Vector2i> &sampledPixelIdx);
-  void compute_and_sort_energies();
-  void compute_pose_energy(PoseCandidate &candidate) const;
+  virtual void compute_and_sort_energies();
   void update_candidate_poses();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
 private:
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
   void compute_candidate_pose_kabsch();
+  void compute_pose_energy(PoseCandidate &candidate) const;
 };
 
 typedef boost::shared_ptr<GPURansac> GPURansac_Ptr;
