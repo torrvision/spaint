@@ -39,6 +39,7 @@ using namespace tvgutil;
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
 #define SAVE_RELOC_POSES
+#define USE_FERN_RELOCALISER
 
 namespace spaint
 {
@@ -133,6 +134,8 @@ SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest()
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
+#ifndef USE_FERN_RELOCALISER
+
 SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(
     TrackingResult trackingResult)
 {
@@ -152,7 +155,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const View_Ptr& view = slamState->get_view();
 
   const Vector4f depthIntrinsics =
-      view->calib.intrinsics_d.projectionParamsSimple.all;
+  view->calib.intrinsics_d.projectionParamsSimple.all;
 
   if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
@@ -165,8 +168,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         < m_gpuRansac->get_min_nb_required_points())
     {
       std::cout
-          << "Number of valid depth pixels insufficient to perform relocalization."
-          << std::endl;
+      << "Number of valid depth pixels insufficient to perform relocalization."
+      << std::endl;
 
       if (m_sequentialPathGenerator)
       {
@@ -218,7 +221,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
       const VoxelRenderState_Ptr& liveVoxelRenderState =
-          slamState->get_live_voxel_render_state();
+      slamState->get_live_voxel_render_state();
       const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
@@ -245,8 +248,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
             m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
 
         const Matrix4f final_pose =
-            trackingResult == TrackingResult::TRACKING_GOOD ?
-                trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
+        trackingResult == TrackingResult::TRACKING_GOOD ?
+        trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
 
         PosePersister::save_pose_on_thread(final_pose,
             m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
@@ -296,6 +299,97 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   return trackingResult;
 }
+
+#else
+
+SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(
+    TrackingResult trackingResult)
+{
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const VoxelRenderState_Ptr& liveVoxelRenderState =
+      slamState->get_live_voxel_render_state();
+  const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
+  const View_Ptr& view = slamState->get_view();
+  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+
+  // Copy the current depth input across to the CPU for use by the relocaliser.
+  view->depth->UpdateHostFromDevice();
+
+  // Decide whether or not the relocaliser should consider using this frame as a keyframe.
+  bool considerKeyframe = false;
+  if (trackingResult == ITMTrackingState::TRACKING_GOOD)
+  {
+    if (m_keyframeDelay == 0)
+      considerKeyframe = true;
+    else
+      --m_keyframeDelay;
+  }
+
+  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
+  // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
+  // good for some time and the current frame differs sufficiently from the existing keyframes.
+  int nearestNeighbour;
+  int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1,
+      &nearestNeighbour, NULL, considerKeyframe);
+
+  if (keyframeID >= 0)
+  {
+    // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
+    // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
+    m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
+  }
+  else if (trackingResult == ITMTrackingState::TRACKING_FAILED
+      && nearestNeighbour != -1)
+  {
+    // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
+    // of the keyframe and rerun the tracker for this frame.
+    ORUtils::SE3Pose relocPose =
+        m_poseDatabase->retrievePose(nearestNeighbour).pose;
+
+    trackingState->pose_d->SetFrom(&relocPose);
+
+    const bool resetVisibleList = true;
+    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
+        voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+    prepare_for_tracking(TRACK_VOXELS);
+#ifdef SAVE_RELOC_POSES
+    m_refineTracker->TrackCamera(trackingState.get(), view.get());
+#else
+    m_trackingController->Track(trackingState.get(), view.get());
+#endif
+    trackingResult = trackingState->trackerResult;
+
+    if (m_sequentialPathGenerator)
+    {
+      // Save poses
+      PosePersister::save_pose_on_thread(relocPose.GetInvM(),
+          m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
+      PosePersister::save_pose_on_thread(trackingState->pose_d->GetInvM(),
+          m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
+
+      const Matrix4f final_pose =
+          trackingResult == TrackingResult::TRACKING_GOOD ?
+              trackingState->pose_d->GetInvM() : relocPose.GetInvM();
+
+      PosePersister::save_pose_on_thread(final_pose,
+          m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
+
+      m_sequentialPathGenerator->increment_index();
+    }
+
+#ifdef SAVE_RELOC_POSES
+    trackingResult = TrackingResult::TRACKING_POOR;
+#endif
+
+    // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
+    // adding a new keyframe.
+    m_keyframeDelay = 10;
+  }
+
+  return trackingResult;
+}
+
+#endif
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
