@@ -14,6 +14,7 @@
 #include <opencv2/viz.hpp>
 #include <opencv2/highgui.hpp>
 #include <sstream>
+#include "tvgutil/timing/TimeUtil.h"
 
 namespace fs = boost::filesystem;
 using namespace cv::viz;
@@ -246,6 +247,7 @@ struct Cookie
 {
   bool quit;
   bool refresh;
+  bool screenshot;
 };
 
 void key_cb(const KeyboardEvent& event, void* cookie_v)
@@ -257,6 +259,8 @@ void key_cb(const KeyboardEvent& event, void* cookie_v)
       cookie->quit = true;
     if (event.code == ' ')
       cookie->refresh = true;
+    if (event.code == 'm')
+      cookie->screenshot = true;
   }
 }
 
@@ -478,9 +482,10 @@ int main(int argc, char *argv[])
   Cookie cookie;
   cookie.quit = false;
   cookie.refresh = false;
+  cookie.screenshot = false;
 
   visualizer.registerKeyboardCallback(key_cb, &cookie);
-  visualizerTrajectory.registerKeyboardCallback(key_cb, &cookie);
+//  visualizerTrajectory.registerKeyboardCallback(key_cb, &cookie);
 
   while (!cookie.quit)
   {
@@ -492,6 +497,18 @@ int main(int argc, char *argv[])
       visualizerTrajectory.setViewerPose(camera);
       visualizerTrajectory.spinOnce();
       cookie.refresh = false;
+    }
+
+    if(cookie.screenshot)
+    {
+//      visualizerTrajectory.spinOnce();
+
+      std::string timestamp = tvgutil::TimeUtil::get_iso_timestamp();
+
+      visualizer.saveScreenshot(timestamp + "-novelPoses.png");
+      visualizerTrajectory.saveScreenshot(timestamp + "-trajectory.png");
+
+      cookie.screenshot = false;
     }
   }
 
