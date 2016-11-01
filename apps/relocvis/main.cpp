@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <opencv2/viz.hpp>
+#include <opencv2/highgui.hpp>
 #include <sstream>
 
 namespace fs = boost::filesystem;
@@ -241,6 +242,24 @@ void printWidth(const T &item, int width, bool leftAlign = false)
       << std::fixed << std::setprecision(2) << item;
 }
 
+struct Cookie
+{
+  bool quit;
+  bool refresh;
+};
+
+void key_cb(const KeyboardEvent& event, void* cookie_v)
+{
+  Cookie *cookie = (Cookie*) cookie_v;
+  if (event.action == KeyboardEvent::KEY_DOWN)
+  {
+    if (event.code == 27)
+      cookie->quit = true;
+    if (event.code == ' ')
+      cookie->refresh = true;
+  }
+}
+
 int main(int argc, char *argv[])
 {
   static const int TRAJ_SUB_FACTOR = 100;
@@ -320,6 +339,7 @@ int main(int argc, char *argv[])
 
 // Visualizer
   Viz3d visualizer("relocviz");
+  Viz3d visualizerTrajectory("relocviz-trajectory");
 
 // show training trajectory
   {
@@ -329,8 +349,8 @@ int main(int argc, char *argv[])
       std::string tName = "trainTrajectory_"
           + boost::lexical_cast<std::string>(i);
       WTrajectory traj(trainTrajectorySplit[i], WTrajectory::PATH, 0.1, col);
-      visualizer.showWidget(tName, traj);
-      visualizer.setRenderingProperty(tName, LINE_WIDTH, 2);
+      visualizerTrajectory.showWidget(tName, traj);
+      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 2);
 
 //      auto subsampledTraj = subsample_trajectory(trainTrajectorySplit[i], 60);
 //      WTrajectory trajF(subsampledTraj, WTrajectory::FRAMES, 0.15, col);
@@ -388,13 +408,16 @@ int main(int argc, char *argv[])
 
     // Draw the training camera frustums
     {
-      std::string tName = "trainTrajectory_"
+      std::string tName = "trainPose_"
           + boost::lexical_cast<std::string>(binIdx);
 //    auto subsampled = subsample_trajectory(posesCv, 50);
       WTrajectoryFrustums traj(trainPosesCv, intrinsics, 0.15,
           Color::bluberry());
       visualizer.showWidget(tName, traj);
       visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
+
+      visualizerTrajectory.showWidget(tName, traj);
+      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 3);
     }
 
     // Draw the lines connecting them
@@ -438,6 +461,7 @@ int main(int argc, char *argv[])
 //      Color::red());
 
   visualizer.showWidget("meshWidget", meshWidget);
+  visualizerTrajectory.showWidget("meshWidget", meshWidget);
 //  visualizer.setRenderingProperty("meshWidget", SHADING, SHADING_PHONG);
 
 //  visualizer.showWidget("trainTrajectoryW", trainTrajectoryW);
@@ -450,7 +474,26 @@ int main(int argc, char *argv[])
 //  visualizer.showWidget("icpTrajectoryF", icpTrajectoryF);
 
   visualizer.resetCamera();
-  visualizer.spin();
+
+  Cookie cookie;
+  cookie.quit = false;
+  cookie.refresh = false;
+
+  visualizer.registerKeyboardCallback(key_cb, &cookie);
+  visualizerTrajectory.registerKeyboardCallback(key_cb, &cookie);
+
+  while (!cookie.quit)
+  {
+    visualizer.spinOnce();
+
+    if (cookie.refresh)
+    {
+      auto camera = visualizer.getViewerPose();
+      visualizerTrajectory.setViewerPose(camera);
+      visualizerTrajectory.spinOnce();
+      cookie.refresh = false;
+    }
+  }
 
   return 0;
 }
