@@ -31,21 +31,6 @@ namespace spaint
  */
 class SLAMComponentWithScoreForest: public SLAMComponent
 {
-//  struct PoseCandidate
-//  {
-//    struct Inlier
-//    {
-//      int linearIdx;
-//      int modeIdx;
-//      float energy;
-//    };
-//
-//    Matrix4f cameraPose;
-//    std::vector<Inlier> inliers;
-//    float energy;
-//    int cameraId;
-//  };
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -113,23 +98,6 @@ private:
 
   Tracker_Ptr m_refineTracker;
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
-
-  // Member variables from scoreforests
-  size_t m_kInitRansac;
-  size_t m_nbPointsForKabschBoostrap;
-  bool m_useAllModesPerLeafInPoseHypothesisGeneration;
-  bool m_checkMinDistanceBetweenSampledModes;
-  float m_minDistanceBetweenSampledModes;
-  bool m_checkRigidTransformationConstraint;
-  float m_translationErrorMaxForCorrectPose;
-  size_t m_batchSizeRansac;
-  size_t m_trimKinitAfterFirstEnergyComputation;
-  bool m_poseUpdate;
-  bool m_usePredictionCovarianceForPoseOptimization;
-  float m_poseOptimizationInlierThreshold;
-
-  // Additional parameters for online evaluation
-  int m_maxNbModesPerLeaf;
 };
 
 //#################### TYPEDEFS ####################
