@@ -31,8 +31,8 @@ GPURansac::GPURansac()
   m_checkRigidTransformationConstraint = true;
   m_translationErrorMaxForCorrectPose = 0.05f;
   m_batchSizeRansac = 500;
-//  m_trimKinitAfterFirstEnergyComputation = 64;
-  m_trimKinitAfterFirstEnergyComputation = 1024;
+  m_trimKinitAfterFirstEnergyComputation = 64;
+//  m_trimKinitAfterFirstEnergyComputation = 1024;
   m_poseUpdate = true; // original
 //  m_poseUpdate = false; // faster, might be OK
   m_usePredictionCovarianceForPoseOptimization = true; // original implementation
