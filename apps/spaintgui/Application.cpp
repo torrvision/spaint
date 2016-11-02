@@ -171,6 +171,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
+  // If we are running in batch mode ignore other keypresses.
+  if(m_runInBatch) return;
+
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
   if(keysym.sym == KEYCODE_b)
   {
@@ -470,12 +473,18 @@ bool Application::process_events()
 
 void Application::process_input()
 {
+  // Camera and renderer actions are always available.
   process_camera_input();
-  process_command_input();
-  process_labelling_input();
-  process_mode_input();
   process_renderer_input();
-  process_voice_input();
+
+  // If we are not running in batch mode perform the appropriate actions.
+  if(!m_runInBatch)
+  {
+    process_command_input();
+    process_labelling_input();
+    process_mode_input();
+    process_voice_input();
+  }
 }
 
 void Application::process_labelling_input()
