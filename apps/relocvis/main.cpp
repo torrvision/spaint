@@ -223,7 +223,7 @@ std::vector<TestICPPair> prune_near_poses(const std::vector<TestICPPair> &poses)
       Eigen::Vector3f resultT = resultPose.icpPose.block<3, 1>(0, 3);
       Eigen::Vector3f diff = candidateT - resultT;
 
-      if (diff.norm() < 0.1f)
+      if (diff.norm() < 0.5f)
       {
         insert = false;
       }
@@ -272,18 +272,25 @@ int main(int argc, char *argv[])
 
   std::vector<ErrorThreshold> errorThresholds;
 
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.05f, 5.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.10f, 10.f * M_PI / 180.f, Color(0x00, 0xF4, 0x2A) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.20f, 20.f * M_PI / 180.f, Color(0x00, 0xAA, 0x55) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.30f, 30.f * M_PI / 180.f, Color(0x00, 0x7F, 0x7F) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.40f, 40.f * M_PI / 180.f, Color(0x00, 0x55, 0xAA) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.50f, 50.f * M_PI / 180.f, Color(0x00, 0x2A, 0xD4) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.7f, 70.f * M_PI / 180.f, Color(0x00, 0x00, 0xFF) });
+
   errorThresholds.push_back(ErrorThreshold
-  { 0.05f, 5.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
+  { 0.10f, 10.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
   errorThresholds.push_back(ErrorThreshold
-  { 0.10f, 10.f * M_PI / 180.f, Color(0x00, 0xF4, 0x2A) });
-  errorThresholds.push_back(ErrorThreshold
-  { 0.20f, 20.f * M_PI / 180.f, Color(0x00, 0xAA, 0x55) });
-  errorThresholds.push_back(ErrorThreshold
-  { 0.30f, 30.f * M_PI / 180.f, Color(0x00, 0x7F, 0x7F) });
-  errorThresholds.push_back(ErrorThreshold
-  { 0.40f, 40.f * M_PI / 180.f, Color(0x00, 0x55, 0xAA) });
-  errorThresholds.push_back(ErrorThreshold
-  { 0.50f, 50.f * M_PI / 180.f, Color(0x00, 0x2A, 0xD4) });
+  { 0.35f, 35.f * M_PI / 180.f, Color(0x00, 0xA5, 0xFF) });
   errorThresholds.push_back(ErrorThreshold
   { 0.7f, 70.f * M_PI / 180.f, Color(0x00, 0x00, 0xFF) });
 
@@ -392,7 +399,7 @@ int main(int argc, char *argv[])
 
     // Show at most N poses
     std::random_shuffle(posePairs.begin(), posePairs.end());
-    posePairs.resize(std::min<size_t>(posePairs.size(), 3));
+    posePairs.resize(std::min<size_t>(posePairs.size(), 4));
 //    posePairs.resize(std::min<size_t>(posePairs.size() / 10, 10));
 
 // Extract the poses from the pairs
