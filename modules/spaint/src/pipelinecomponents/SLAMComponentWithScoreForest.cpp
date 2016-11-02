@@ -75,7 +75,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
   m_gpuForest->reset_predictions();
 
-  m_gpuRansac.reset(new GPURansac_CUDA());
+//  m_gpuRansac.reset(new GPURansac_CUDA());
+  m_gpuRansac.reset(new GPURansac());
 
   // Refinement ICP tracker
   const Settings_CPtr& settings = m_context->get_settings();
