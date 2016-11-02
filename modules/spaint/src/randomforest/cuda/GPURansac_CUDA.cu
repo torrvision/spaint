@@ -423,10 +423,25 @@ void GPURansac_CUDA::compute_and_sort_energies()
   ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates);
 
   // Sort by ascending energy (start a single thread, the kernel will dispatch more threads as needed)
-  ck_sort_energies<<<1,1>>>(poseCandidates);
+  // Thrust has memory allocation issues TODO: investigate
+//  ck_sort_energies<<<1,1>>>(poseCandidates);
 
   // Need to make the data available to the host once again
   m_poseCandidates->UpdateHostFromDevice();
+
+  // host based sort, should be removed once the issue above is fixed
+  {
+    PoseCandidates *poseCandidatesCpu = m_poseCandidates->GetData(
+        MEMORYDEVICE_CPU);
+    const int nbCandidates = poseCandidatesCpu->nbCandidates;
+    PoseCandidate *candidates = poseCandidatesCpu->candidates;
+
+    std::sort(candidates, candidates + nbCandidates,
+        [] (const PoseCandidate &a, const PoseCandidate &b)
+        { return a.energy < b.energy;});
+
+  }
+
 }
 
 }
