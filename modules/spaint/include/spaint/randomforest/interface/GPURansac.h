@@ -19,7 +19,8 @@ struct PoseCandidate
 {
   enum
   {
-    MAX_INLIERS = 3003 // 3 for Kabsch and 500 * RANSAC iteration (6 iterations)
+//    MAX_INLIERS = 3003 // 3 for Kabsch and 500 * RANSAC iteration (6 iterations, when running with 64 candidates)
+    MAX_INLIERS = 5503 // 3 for Kabsch and 500 * RANSAC iteration (10 iterations, when running with 1024 candidates + 500 initial candidates)
   };
 
   struct Inlier
