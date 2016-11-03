@@ -16,10 +16,10 @@ inline void evaluate_forest_shared(const GPUForestNode* forestTexture,
   const int linear_feature_idx = y * imgSize.width + x;
   const RGBDPatchFeature &currentFeature = featureData[linear_feature_idx];
 
-  for (int treeIdx = 0; treeIdx < GPUForest::NTREES; ++treeIdx)
+  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     int currentNodeIdx = 0;
-    GPUForestNode node = forestTexture[currentNodeIdx * GPUForest::NTREES
+    GPUForestNode node = forestTexture[currentNodeIdx * GPUFOREST_NTREES
         + treeIdx];
     bool isLeaf = node.leafIdx >= 0;
 
@@ -30,7 +30,7 @@ inline void evaluate_forest_shared(const GPUForestNode* forestTexture,
           + (currentFeature.data[node.featureIdx] > node.featureThreshold);
 
       // Update node
-      node = forestTexture[currentNodeIdx * GPUForest::NTREES + treeIdx];
+      node = forestTexture[currentNodeIdx * GPUFOREST_NTREES + treeIdx];
       isLeaf = node.leafIdx >= 0; // a bit redundant but clearer
     }
 
@@ -48,15 +48,15 @@ inline void get_prediction_for_leaf_shared(
   const GPUForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
 
   // Setup the indices of the selected mode for each prediction
-  int treeModeIdx[GPUForest::NTREES];
-  for (int treeIdx = 0; treeIdx < GPUForest::NTREES; ++treeIdx)
+  int treeModeIdx[GPUFOREST_NTREES];
+  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     treeModeIdx[treeIdx] = 0;
   }
 
   // TODO: maybe copying them is faster...
-  const GPUForestPrediction *selectedPredictions[GPUForest::NTREES];
-  for (int treeIdx = 0; treeIdx < GPUForest::NTREES; ++treeIdx)
+  const GPUForestPrediction *selectedPredictions[GPUFOREST_NTREES];
+  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     selectedPredictions[treeIdx] = &leafPredictions[selectedLeaves[treeIdx]];
   }
@@ -71,7 +71,7 @@ inline void get_prediction_for_leaf_shared(
     int bestTreeNbInliers = 0;
 
     // Find the tree with most inliers
-    for (int treeIdx = 0; treeIdx < GPUForest::NTREES; ++treeIdx)
+    for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
     {
       if (selectedPredictions[treeIdx]->nbModes > treeModeIdx[treeIdx]
           && selectedPredictions[treeIdx]->modes[treeModeIdx[treeIdx]].nbInliers

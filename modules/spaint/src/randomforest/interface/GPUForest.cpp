@@ -40,7 +40,7 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest) :
   const int nTrees = pretrained_forest.GetNbTrees();
   const int maxNbNodes = pretrained_forest.GetMaxNbNodesInAnyLearner();
 
-  if (nTrees != NTREES)
+  if (nTrees != GPUFOREST_NTREES)
   {
     throw std::runtime_error(
         "Number of trees in the loaded forest different from the instantiation of GPUForest.");
@@ -467,10 +467,10 @@ void GPUForest::load_structure_from_file(const std::string &fileName)
   // Check number of trees
   int nbTrees;
   in >> nbTrees;
-  if (!in || nbTrees != NTREES)
+  if (!in || nbTrees != GPUFOREST_NTREES)
     throw std::runtime_error(
         "Number of trees of the loaded forest is incorrect. Should be "
-            + boost::lexical_cast<std::string>(NTREES) + " - Read: "
+            + boost::lexical_cast<std::string>(GPUFOREST_NTREES) + " - Read: "
             + boost::lexical_cast<std::string>(nbTrees));
 
   // Read number of nodes and leaves
@@ -537,21 +537,22 @@ void GPUForest::save_structure_to_file(const std::string &fileName) const
   std::ofstream out(fileName, std::ios::trunc);
 
   // Write the number of trees
-  out << NTREES << '\n';
+  out << GPUFOREST_NTREES << '\n';
 
   // For each tree write first the number of nodes then the number of leaves
-  for (size_t i = 0; i < NTREES; ++i)
+  for (size_t i = 0; i < GPUFOREST_NTREES; ++i)
   {
     out << m_nbNodesPerTree[i] << ' ' << m_nbLeavesPerTree[i] << '\n';
   }
 
   // Then, for each tree, dump its nodes
   const GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
-  for (size_t treeIdx = 0; treeIdx < NTREES; ++treeIdx)
+  for (size_t treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     for (size_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree.size(); ++nodeIdx)
     {
-      const GPUForestNode& node = forestData[nodeIdx * NTREES + treeIdx];
+      const GPUForestNode& node = forestData[nodeIdx * GPUFOREST_NTREES
+          + treeIdx];
       out << node.leftChildIdx << ' ' << node.leafIdx << ' ' << node.featureIdx
           << ' ' << std::setprecision(7) << node.featureThreshold << '\n';
     }
