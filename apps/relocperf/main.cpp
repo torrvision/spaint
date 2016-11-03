@@ -158,6 +158,9 @@ void printWidth(const T &item, int width, bool leftAlign = false)
 
 int main(int argc, char *argv[])
 {
+  const std::vector<std::string> sequenceNames
+  { "chess", "fire", "heads", "office", "pumpkin", "redkitchen", "stairs" };
+
   if (argc < 4)
   {
     std::cerr << "Usage: " << argv[0]
@@ -170,8 +173,6 @@ int main(int argc, char *argv[])
   fs::path relocBaseFolder = argv[2];
   std::string relocTag = argv[3];
 
-  std::vector<std::string> sequenceNames
-  { "chess", "fire", "heads", "office", "pumpkin", "redkitchen", "stairs" };
   std::map<std::string, SequenceResults> results;
 
   for (auto sequence : sequenceNames)
@@ -181,7 +182,13 @@ int main(int argc, char *argv[])
 
     std::cerr << "Processing sequence " << sequence << " in:\n\t" << gtPath
         << "\n\t" << relocFolder << std::endl;
-    results[sequence] = evaluate_sequence(gtPath, relocFolder);
+    try
+    {
+      results[sequence] = evaluate_sequence(gtPath, relocFolder);
+    } catch (std::runtime_error&)
+    {
+      std::cerr << "\tSequence has not been evaluated.\n";
+    }
   }
 
   // Print table
