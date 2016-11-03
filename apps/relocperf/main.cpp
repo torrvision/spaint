@@ -220,27 +220,37 @@ int main(int argc, char *argv[])
 
   std::cout << "\n\n";
 
+  float colorMin = 40;
+  float colorMax = 95;
+  std::string relocColor = "ForestGreen";
+  std::string icpColor = "CornflowerBlue";
+
   // Print Latex table row
-  std::cout << "\\cellcolor{white} & Reloc ";
+  std::cout << "\\cellcolor{white} & \\cellcolor{" << relocColor << "} Reloc ";
   for (auto sequence : sequenceNames)
   {
     auto seqResult = results[sequence];
 
     float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
         / static_cast<float>(seqResult.poseCount) * 100.f;
+    float relocColorPct = (relocPct / 100.f) * (colorMax - colorMin) + colorMin;
 
-    std::cout << "& " << std::setprecision(2) << relocPct << "\\% ";
+    std::cout << "& \\cellcolor{" << relocColor << "!" << relocColorPct << "} "
+        << std::setprecision(1) << relocPct << "\\% ";
   }
 
-  std::cout << "\\\\\n\\cellcolor{white}\\multirow{-2}{*}{" << relocTag << "} & + ICP ";
+  std::cout << "\\\\\n\\cellcolor{white}\\multirow{-2}{*}{" << relocTag
+      << "} & \\cellcolor{" << icpColor << "} + ICP ";
   for (auto sequence : sequenceNames)
   {
     auto seqResult = results[sequence];
 
     float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
         / static_cast<float>(seqResult.poseCount) * 100.f;
+    float icpColorPct = (icpPct / 100.f) * (colorMax - colorMin) + colorMin;
 
-    std::cout << "& " << std::setprecision(2) << icpPct << "\\% ";
+    std::cout << "& \\cellcolor{" << icpColor << "!" << icpColorPct << "} "
+        << std::setprecision(1) << icpPct << "\\% ";
   }
 
   std::cout << "\\\\\n";
