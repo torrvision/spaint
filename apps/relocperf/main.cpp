@@ -218,5 +218,32 @@ int main(int argc, char *argv[])
     std::cout << '\n';
   }
 
+  std::cout << "\n\n";
+
+  // Print Latex table row
+  std::cout << "\\cellcolor{white} & Reloc ";
+  for (auto sequence : sequenceNames)
+  {
+    auto seqResult = results[sequence];
+
+    float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
+        / static_cast<float>(seqResult.poseCount) * 100.f;
+
+    std::cout << "& " << std::setprecision(2) << relocPct << "\\% ";
+  }
+
+  std::cout << "\\\\\n\\cellcolor{white}\\multirow{-2}{*}{" << relocTag << "} & + ICP ";
+  for (auto sequence : sequenceNames)
+  {
+    auto seqResult = results[sequence];
+
+    float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
+        / static_cast<float>(seqResult.poseCount) * 100.f;
+
+    std::cout << "& " << std::setprecision(2) << icpPct << "\\% ";
+  }
+
+  std::cout << "\\\\\n";
+
   return 0;
 }
