@@ -24,8 +24,10 @@ class GPUForest
 {
   // Typedefs
 public:
-  static const int RESERVOIR_SIZE = 1000; // Max number samples in a leaf reservoir
-  static const int NTREES = GPUFOREST_NTREES; // Max number of trees
+  enum {
+    RESERVOIR_SIZE = 1000, // Max number samples in a leaf reservoir
+    NTREES = GPUFOREST_NTREES, // Max number of trees
+  };
 
   typedef spaint::LeafIndices LeafIndices; // TODO: remove
   typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
@@ -34,6 +36,7 @@ public:
 
 public:
   explicit GPUForest(const EnsembleLearner &pretrained_forest);
+  explicit GPUForest(const std::string &fileName);
   virtual ~GPUForest();
 
   void reset_predictions();
@@ -41,7 +44,13 @@ public:
       GPUForestPredictionsImage_Ptr &predictions);
   void add_features_to_forest(const RGBDPatchFeatureImage_CPtr &features);
 
+  void load_structure_from_file(const std::string &fileName);
+  void save_structure_to_file(const std::string &fileName) const;
+
 protected:
+  std::vector<int> m_nbNodesPerTree;
+  std::vector<int> m_nbLeavesPerTree;
+
   GPUForestImage_Ptr m_forestImage;
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   std::vector<PredictionGaussianMean> m_leafPredictions;
@@ -57,6 +66,8 @@ protected:
       GPUForestPredictionsImage_Ptr &predictions) const = 0;
 
 private:
+  GPUForest();
+
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
       int n_trees, int output_idx, int first_free_idx,
       GPUForestNode *gpu_nodes);

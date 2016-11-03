@@ -96,7 +96,10 @@ typedef ORUtils::Image<GPUForestPrediction> GPUForestPredictionsImage;
 typedef boost::shared_ptr<GPUForestPredictionsImage> GPUForestPredictionsImage_Ptr;
 typedef boost::shared_ptr<const GPUForestPredictionsImage> GPUForestPredictionsImage_CPtr;
 
-static const int GPUFOREST_NTREES = 5; // Max number of trees
+enum
+{
+  GPUFOREST_NTREES = 5 // Max number of trees
+};
 
 typedef ORUtils::VectorX<int, GPUFOREST_NTREES> LeafIndices;
 typedef ORUtils::Image<LeafIndices> LeafIndicesImage;

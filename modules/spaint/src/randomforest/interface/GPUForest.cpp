@@ -5,6 +5,11 @@
 
 #include "randomforest/interface/GPUForest.h"
 
+#include <fstream>
+#include <iomanip>
+#include <stdexcept>
+
+#include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/timer/timer.hpp>
 
@@ -15,7 +20,21 @@
 
 namespace spaint
 {
-GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
+GPUForest::GPUForest()
+{
+  // Tentative values
+  const float clustererSigma = 0.1f;
+  const float clustererTau = 0.05f;
+  const int minClusterSize = 20;
+  m_gpuClusterer.reset(
+      new GPUClusterer_CUDA(clustererSigma, clustererTau, minClusterSize));
+
+  m_maxReservoirsToUpdate = 1000;
+  m_reservoirUpdateStartIdx = 0;
+}
+
+GPUForest::GPUForest(const EnsembleLearner &pretrained_forest) :
+    GPUForest()
 {
   // Convert list of nodes into an appropriate image
   const int nTrees = pretrained_forest.GetNbTrees();
@@ -39,10 +58,13 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
   {
     const Learner* tree = pretrained_forest.GetTree(treeIdx);
     const int nbNodes = tree->GetNbNodes();
+    const int nbLeaves = tree->GetNbLeaves();
+
+    m_nbNodesPerTree.push_back(nbNodes);
+    m_nbLeavesPerTree.push_back(nbLeaves);
 
     // We set the first free entry to 1 since we reserve 0 for the root
-    int first_free_idx = convert_node(tree, 0, treeIdx, nTrees, 0, 1,
-        forestData);
+    convert_node(tree, 0, treeIdx, nTrees, 0, 1, forestData);
     std::cout << "Converted tree " << treeIdx << ", had " << nbNodes
         << " nodes." << std::endl;
     std::cout << "Total number of leaves: " << m_leafPredictions.size()
@@ -73,12 +95,12 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest)
     m_leafReservoirs.reset(
         new GPUReservoir_CUDA(RESERVOIR_SIZE, m_predictionsBlock->dataSize));
   }
+}
 
-  // Tentative values
-  m_gpuClusterer.reset(new GPUClusterer_CUDA(0.1f, 0.05f, 20));
-
-  m_maxReservoirsToUpdate = 1000;
-  m_reservoirUpdateStartIdx = 0;
+GPUForest::GPUForest(const std::string &fileName) :
+    GPUForest()
+{
+  load_structure_from_file(fileName);
 }
 
 GPUForest::~GPUForest()
@@ -424,6 +446,116 @@ void GPUForest::add_features_to_forest(
   // Copy new predictions on the GPU
   m_predictionsBlock->UpdateDeviceFromHost();
 #endif
+}
+
+void GPUForest::load_structure_from_file(const std::string &fileName)
+{
+  // clean current forest (TODO: put in a function)
+  m_forestImage.reset();
+  m_predictionsBlock.reset();
+  m_leafReservoirs.reset();
+
+  m_nbNodesPerTree.clear();
+  m_nbLeavesPerTree.clear();
+  m_reservoirUpdateStartIdx = 0;
+
+  std::ifstream in(fileName);
+
+  if (!in)
+    throw std::runtime_error("Couldn't load a forest from: " + fileName);
+
+  // Check number of trees
+  int nbTrees;
+  in >> nbTrees;
+  if (!in || nbTrees != NTREES)
+    throw std::runtime_error(
+        "Number of trees of the loaded forest is incorrect. Should be "
+            + boost::lexical_cast<std::string>(NTREES) + " - Read: "
+            + boost::lexical_cast<std::string>(nbTrees));
+
+  // Read number of nodes and leaves
+
+  int maxNbNodes = 0; // Used to allocate the texture
+  int totalNbLeaves = 0; // Used to allocate predictions and reservoirs
+
+  // For each tree write first the number of nodes then the number of leaves
+  for (int i = 0; i < nbTrees; ++i)
+  {
+    int nbNodes, nbLeaves;
+    in >> nbNodes >> nbLeaves;
+
+    if (!in)
+      throw std::runtime_error(
+          "Error reading the dimensions of tree: "
+              + boost::lexical_cast<std::string>(i));
+
+    m_nbNodesPerTree.push_back(nbNodes);
+    m_nbLeavesPerTree.push_back(nbLeaves);
+
+    maxNbNodes = std::max(nbNodes, maxNbNodes);
+    totalNbLeaves += nbLeaves;
+  }
+
+  std::cout << "Loading a forest with " << nbTrees << " trees.\n";
+  for (int i = 0; i < nbTrees; ++i)
+  {
+    std::cout << "\tTree " << i << ": " << m_nbNodesPerTree[i] << " nodes and "
+        << m_nbLeavesPerTree[i] << " leaves.\n";
+  }
+
+  // Allocate data
+  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nbTrees, maxNbNodes));
+  m_forestImage->Clear();
+  m_predictionsBlock = mbf.make_block<GPUForestPrediction>(totalNbLeaves);
+  m_predictionsBlock->Clear();
+  m_leafReservoirs.reset(new GPUReservoir_CUDA(RESERVOIR_SIZE, totalNbLeaves));
+
+  // Read all nodes.
+  GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
+  for (int treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
+  {
+    for (size_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree.size(); ++nodeIdx)
+    {
+      GPUForestNode& node = forestData[nodeIdx * nbTrees + treeIdx];
+      in >> node.leftChildIdx >> node.leafIdx >> node.featureIdx
+          >> node.featureThreshold;
+
+      if (!in)
+        throw std::runtime_error(
+            "Error reading node " + boost::lexical_cast<std::string>(nodeIdx)
+                + " of tree " + boost::lexical_cast<std::string>(treeIdx));
+    }
+  }
+
+  // Update device forest
+  m_forestImage->UpdateDeviceFromHost();
+}
+
+void GPUForest::save_structure_to_file(const std::string &fileName) const
+{
+  std::ofstream out(fileName, std::ios::trunc);
+
+  // Write the number of trees
+  out << NTREES << '\n';
+
+  // For each tree write first the number of nodes then the number of leaves
+  for (size_t i = 0; i < NTREES; ++i)
+  {
+    out << m_nbNodesPerTree[i] << ' ' << m_nbLeavesPerTree[i] << '\n';
+  }
+
+  // Then, for each tree, dump its nodes
+  const GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
+  for (size_t treeIdx = 0; treeIdx < NTREES; ++treeIdx)
+  {
+    for (size_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree.size(); ++nodeIdx)
+    {
+      const GPUForestNode& node = forestData[nodeIdx * NTREES + treeIdx];
+      out << node.leftChildIdx << ' ' << node.leafIdx << ' ' << node.featureIdx
+          << ' ' << std::setprecision(7) << node.featureThreshold << '\n';
+    }
+  }
 }
 
 }
