@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
 
 // show training trajectory
   {
-    Color col = Color::bluberry();
+    Color col = Color::yellow();
     for (size_t i = 0; i < trainTrajectorySplit.size(); ++i)
     {
       std::string tName = "trainTrajectory_"
@@ -362,6 +362,9 @@ int main(int argc, char *argv[])
       WTrajectory traj(trainTrajectorySplit[i], WTrajectory::PATH, 0.1, col);
       visualizerTrajectory.showWidget(tName, traj);
       visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 2);
+
+      visualizer.showWidget(tName, traj);
+      visualizer.setRenderingProperty(tName, LINE_WIDTH, 2);
 
 //      auto subsampledTraj = subsample_trajectory(trainTrajectorySplit[i], 60);
 //      WTrajectory trajF(subsampledTraj, WTrajectory::FRAMES, 0.15, col);
@@ -438,7 +441,7 @@ int main(int argc, char *argv[])
       const cv::Affine3f &icpPose = icpPosesCv[i];
 
       WLine wLine(cv::Point3f(trainPose.translation()),
-          cv::Point3f(icpPose.translation()), Color::yellow());
+          cv::Point3f(icpPose.translation()), Color::magenta());
       std::string wName = "trainTest_"
           + boost::lexical_cast<std::string>(binIdx) + '_'
           + boost::lexical_cast<std::string>(i);
