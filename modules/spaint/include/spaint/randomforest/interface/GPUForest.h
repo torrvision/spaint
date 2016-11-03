@@ -56,8 +56,8 @@ protected:
   PositionReservoir_Ptr m_leafReservoirs;
   GPUClusterer_Ptr m_gpuClusterer;
 
-  int m_maxReservoirsToUpdate;
-  int m_reservoirUpdateStartIdx;
+  size_t m_maxReservoirsToUpdate;
+  size_t m_reservoirUpdateStartIdx;
 
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
