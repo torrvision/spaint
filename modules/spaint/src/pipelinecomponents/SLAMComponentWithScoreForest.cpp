@@ -58,8 +58,10 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       new DatasetRGBDInfiniTAM(
 //          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
 //          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesChessOnline.yml",
-          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesFireOnline.yml",
+//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesFireOnline.yml",
+//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesHeadsOnline.yml",
 //          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesOfficeOnline.yml",
+            "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesPumpkinOnline.yml",
           "/media/data/", 5, 1.0, "DFBP", true, 0, false, 42));
 
   m_dataset->LoadForest();
