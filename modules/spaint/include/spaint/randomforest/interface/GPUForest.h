@@ -52,7 +52,6 @@ protected:
 
   GPUForestImage_Ptr m_forestImage;
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
-  std::vector<PredictionGaussianMean> m_leafPredictions;
   PositionReservoir_Ptr m_leafReservoirs;
   GPUClusterer_Ptr m_gpuClusterer;
 
@@ -74,6 +73,7 @@ private:
 
   LeafIndicesImage_Ptr m_leafImage;
 
+  std::vector<PredictionGaussianMean> m_leafPredictions;
   boost::shared_ptr<MeanShift3D> m_ms3D;
 };
 
