@@ -62,7 +62,7 @@ void Application::run()
 {
   for(;;)
   {
-    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE))
+    if(!process_events() || (m_inputState.key_down(KEYCODE_ESCAPE) && !m_runInBatch))
     {
       break;
     }
