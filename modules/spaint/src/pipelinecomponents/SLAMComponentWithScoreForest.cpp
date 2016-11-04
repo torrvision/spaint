@@ -61,7 +61,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 //          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesFireOnline.yml",
 //          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesHeadsOnline.yml",
 //          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesOfficeOnline.yml",
-            "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesPumpkinOnline.yml",
+//            "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesPumpkinOnline.yml",
+          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesRedkitchenOnline.yml",
           "/media/data/", 5, 1.0, "DFBP", true, 0, false, 42));
 
   m_dataset->LoadForest();
