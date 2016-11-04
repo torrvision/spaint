@@ -547,9 +547,9 @@ void GPUForest::save_structure_to_file(const std::string &fileName) const
 
   // Then, for each tree, dump its nodes
   const GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
-  for (size_t treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
+  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
-    for (size_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree.size(); ++nodeIdx)
+    for (int nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
       const GPUForestNode& node = forestData[nodeIdx * GPUFOREST_NTREES
           + treeIdx];
