@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
   boost::shared_ptr<DatasetRGBD7Scenes> m_dataset(
       new DatasetRGBDInfiniTAM(configFile, dataPath, nbTrees,
           proportionOfDataGivenToLearner, learnerType, loadSavedForest,
-          loadSavedForest, loadFeatures, randomSeed));
+          learnFromTree, loadFeatures, randomSeed));
   m_dataset->LoadForest();
 
   GPUForest_Ptr m_gpuForest(new GPUForest_CUDA(*m_dataset->GetForest()));

@@ -46,7 +46,6 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 ##########################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
-TARGET_COMPILE_DEFINITIONS(${targetname} PRIVATE WITH_SCOREFOREST)
 TARGET_LINK_LIBRARIES(${targetname} spaint tvgutil tvginput)
 
 #################################

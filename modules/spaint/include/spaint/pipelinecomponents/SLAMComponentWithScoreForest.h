@@ -14,9 +14,6 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <DatasetRGBD7Scenes.hpp>
-#include <DFBP.hpp>
-
 #include "../features/FeatureCalculatorFactory.h"
 #include "../randomforest/interface/GPUForest.h"
 #include "../randomforest/interface/GPURansac.h"
@@ -72,24 +69,8 @@ private:
       const Vector4f &depthIntrinsics);
   void evaluate_forest();
 
-//  void generate_pose_candidates(std::vector<PoseCandidate> &poseCandidates);
-//  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
-//  void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
-//      std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
-//  void update_inliers_for_optimization(
-//      const std::vector<Vector2i> &sampledPixelIdx,
-//      std::vector<PoseCandidate> &poseCandidates) const;
-//  void compute_and_sort_energies(
-//      std::vector<PoseCandidate> &poseCandidates) const;
-//  float compute_pose_energy(const Matrix4f &candidateCameraPose,
-//      std::vector<PoseCandidate::Inlier> &inliers) const;
-//  void update_candidate_poses(std::vector<PoseCandidate> &poseCandidates) const;
-//  bool update_candidate_pose(PoseCandidate &poseCandidate) const;
-
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  boost::shared_ptr<DatasetRGBD7Scenes> m_dataset;
-  boost::shared_ptr<DFBP> m_forest;
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
   GPUForestPredictionsImage_Ptr m_predictionsImage;

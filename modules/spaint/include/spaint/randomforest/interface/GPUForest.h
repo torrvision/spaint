@@ -8,14 +8,16 @@
 
 #include "../../util/ITMImagePtrTypes.h"
 
-#include <Learner.hpp>
-
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "GPUClusterer.h"
 #include "GPUReservoir.h"
 #include "GPUForestTypes.h"
 
 #include "ORUtils/Vector.h"
+
+#ifdef WITH_SCOREFORESTS
+#include <Learner.hpp>
+#endif
 
 namespace spaint
 {
@@ -34,7 +36,6 @@ public:
   typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;
 
 public:
-  explicit GPUForest(const EnsembleLearner &pretrained_forest);
   explicit GPUForest(const std::string &fileName);
   virtual ~GPUForest();
 
@@ -66,15 +67,22 @@ protected:
 private:
   GPUForest();
 
+  LeafIndicesImage_Ptr m_leafImage;
+
+  //#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+public:
+  explicit GPUForest(const EnsembleLearner &pretrained_forest);
+
+private:
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
       int n_trees, int output_idx, int first_free_idx,
       GPUForestNode *gpu_nodes);
   void convert_predictions();
 
-  LeafIndicesImage_Ptr m_leafImage;
-
   std::vector<PredictionGaussianMean> m_leafPredictions;
   boost::shared_ptr<MeanShift3D> m_ms3D;
+#endif
 };
 
 typedef boost::shared_ptr<GPUForest> GPUForest_Ptr;

@@ -5,41 +5,36 @@
 
 #include "pipelinecomponents/SLAMComponentWithScoreForest.h"
 
-#include <algorithm>
-#include <tuple>
-#include <random>
-
-#include <boost/timer/timer.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
-
-#include <omp.h>
-
-#include <DatasetRGBDInfiniTAM.hpp>
-
-#include <libalglib/optimization.h>
-
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 
-#include "ocv/OpenCVUtil.h"
 #include "randomforest/cuda/GPUForest_CUDA.h"
 #include "randomforest/cuda/GPURansac_CUDA.h"
-#include "util/PosePersister.h"
 
-#include "Helpers.hpp"
+//#define ENABLE_TIMERS
+//#define VISUALIZE_INLIERS
+#define SAVE_RELOC_POSES
+//#define USE_FERN_RELOCALISER
+
+#ifdef ENABLE_TIMERS
+#include <boost/timer/timer.hpp>
+#endif
+
+#ifdef VISUALIZE_INLIERS
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#endif
+
+#ifdef SAVE_RELOC_POSES
 #include "tvgutil/filesystem/PathFinder.h"
 #include "tvgutil/timing/TimeUtil.h"
+#include "util/PosePersister.h"
+#endif
 
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 using namespace RelocLib;
 using namespace tvgutil;
-
-//#define ENABLE_TIMERS
-//#define VISUALIZE_INLIERS
-#define SAVE_RELOC_POSES
-//#define USE_FERN_RELOCALISER
 
 namespace spaint
 {
@@ -54,20 +49,6 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
     SLAMComponent(context, sceneID, imageSourceEngine, trackerType,
         trackerParams, mappingMode, trackingMode)
 {
-  m_dataset.reset(
-      new DatasetRGBDInfiniTAM(
-//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBDInfiniTAMDesk.yml",
-//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesChessOnline.yml",
-//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesFireOnline.yml",
-//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesHeadsOnline.yml",
-//          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesOfficeOnline.yml",
-//            "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesPumpkinOnline.yml",
-          "/home/tcavallari/code/scoreforests/apps/TrainAndTest/SettingsDatasetRGBD7ScenesRedkitchenOnline.yml",
-          "/media/data/", 5, 1.0, "DFBP", true, 0, false, 42));
-
-  m_dataset->LoadForest();
-//  m_dataset->ResetNodeAndLeaves();
-
   m_featureExtractor =
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           ITMLib::ITMLibSettings::DEVICE_CUDA);
@@ -75,7 +56,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_predictionsImage.reset(
       new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
 
-  m_gpuForest.reset(new GPUForest_CUDA(*m_dataset->GetForest()));
+  const std::string convertedForestPath =
+      "/media/data/spaint_forests/TVG-desk.txt";
+  m_gpuForest.reset(new GPUForest_CUDA(convertedForestPath));
   m_gpuForest->reset_predictions();
 
 //  m_gpuRansac.reset(new GPURansac_CUDA());

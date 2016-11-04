@@ -13,7 +13,6 @@ namespace spaint
 class GPUForest_CUDA: public GPUForest
 {
 public:
-  explicit GPUForest_CUDA(const EnsembleLearner &pretrained_forest);
   explicit GPUForest_CUDA(const std::string &fileName);
 
 protected:
@@ -21,6 +20,14 @@ protected:
       LeafIndicesImage_Ptr &leaf_indices) const;
   void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
       GPUForestPredictionsImage_Ptr &predictions) const;
+
+  //#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+
+public:
+  explicit GPUForest_CUDA(const EnsembleLearner &pretrained_forest);
+
+#endif
 };
 
 }

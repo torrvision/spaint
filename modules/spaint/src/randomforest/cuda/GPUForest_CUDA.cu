@@ -36,11 +36,6 @@ __global__ void ck_get_predictions(const GPUForestPrediction* leafPredictions,
       imgSize, x, y);
 }
 
-GPUForest_CUDA::GPUForest_CUDA(const EnsembleLearner &pretrained_forest) :
-    GPUForest(pretrained_forest)
-{
-}
-
 GPUForest_CUDA::GPUForest_CUDA(const std::string &fileName) :
     GPUForest(fileName)
 {
@@ -89,4 +84,14 @@ void GPUForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
       imgSize);
   cudaDeviceSynchronize(); // TODO debug, to remove
 }
+
+//#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+
+GPUForest_CUDA::GPUForest_CUDA(const EnsembleLearner &pretrained_forest) :
+    GPUForest(pretrained_forest)
+{
+}
+
+#endif
 }
