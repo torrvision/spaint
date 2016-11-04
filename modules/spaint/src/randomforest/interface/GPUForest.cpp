@@ -58,17 +58,25 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest) :
   {
     const Learner* tree = pretrained_forest.GetTree(treeIdx);
     const int nbNodes = tree->GetNbNodes();
-    const int nbLeaves = tree->GetNbLeaves();
+    // Bug in scoreforest: Always returns 1 for loaded trees because
+    // the base learner class does not store the leaves and DTBP does not perform the loading.
+    // const int nbLeaves = tree->GetNbLeaves();
 
     m_nbNodesPerTree.push_back(nbNodes);
-    m_nbLeavesPerTree.push_back(nbLeaves);
+    // m_nbLeavesPerTree.push_back(nbLeaves);
 
+    const int nbLeavesBefore = m_leafPredictions.size();
     // We set the first free entry to 1 since we reserve 0 for the root
     convert_node(tree, 0, treeIdx, nTrees, 0, 1, forestData);
+    const int nbLeavesAfter = m_leafPredictions.size();
+
     std::cout << "Converted tree " << treeIdx << ", had " << nbNodes
-        << " nodes." << std::endl;
+        << " nodes and " << nbLeavesAfter - nbLeavesBefore << " leaves."
+        << std::endl;
     std::cout << "Total number of leaves: " << m_leafPredictions.size()
         << std::endl;
+
+    m_nbLeavesPerTree.push_back(nbLeavesAfter - nbLeavesBefore);
   }
 
   m_predictionsBlock = mbf.make_block<GPUForestPrediction>(
