@@ -10,6 +10,8 @@
 #include "randomforest/cuda/GPUForest_CUDA.h"
 #include "randomforest/cuda/GPURansac_CUDA.h"
 
+#include "tvgutil/filesystem/PathFinder.h"
+
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
 #define SAVE_RELOC_POSES
@@ -25,11 +27,11 @@
 #endif
 
 #ifdef SAVE_RELOC_POSES
-#include "tvgutil/filesystem/PathFinder.h"
 #include "tvgutil/timing/TimeUtil.h"
 #include "util/PosePersister.h"
 #endif
 
+namespace bf = boost::filesystem;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
@@ -56,10 +58,16 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_predictionsImage.reset(
       new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
 
-  const std::string convertedForestPath =
+//  const bf::path relocalizationForestPath = find_subdir_from_executable(
+//      "resources") / "DefaultRelocalizationForest.rf";
+
+  // TODO: replace with default forest path
+  const bf::path relocalizationForestPath =
       "/media/data/spaint_forests/TVG-desk.txt";
-  m_gpuForest.reset(new GPUForest_CUDA(convertedForestPath));
-  m_gpuForest->reset_predictions();
+
+  std::cout << "TODO: Loading relocalization forest from: "
+      << relocalizationForestPath << '\n';
+  m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
 
 //  m_gpuRansac.reset(new GPURansac_CUDA());
   m_gpuRansac.reset(new GPURansac());
