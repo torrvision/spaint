@@ -58,8 +58,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_predictionsImage.reset(
       new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
 
-//  const bf::path relocalizationForestPath = find_subdir_from_executable(
-//      "resources") / "DefaultRelocalizationForest.rf";
+//  const bf::path relocalizationForestPath = bf::path(
+//      m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
 
   // TODO: replace with default forest path
   const bf::path relocalizationForestPath =
