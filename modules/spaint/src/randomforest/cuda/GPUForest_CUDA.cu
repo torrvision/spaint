@@ -41,6 +41,11 @@ GPUForest_CUDA::GPUForest_CUDA(const EnsembleLearner &pretrained_forest) :
 {
 }
 
+GPUForest_CUDA::GPUForest_CUDA(const std::string &fileName) :
+    GPUForest(fileName)
+{
+}
+
 void GPUForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
     LeafIndicesImage_Ptr &leaf_indices) const
 {

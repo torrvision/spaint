@@ -29,6 +29,10 @@ GPUForest::GPUForest()
   m_gpuClusterer.reset(
       new GPUClusterer_CUDA(clustererSigma, clustererTau, minClusterSize));
 
+  // Allocate the image that will store the leaf indices (dummy size, will be resized as needed)
+  m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>(
+      Vector2i(0, 0));
+
   m_maxReservoirsToUpdate = 1000;
   m_reservoirUpdateStartIdx = 0;
 }
@@ -86,9 +90,6 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest) :
   // NOPs if we use the CPU only implementation
   m_forestImage->UpdateDeviceFromHost();
   m_predictionsBlock->UpdateDeviceFromHost();
-
-  // Allocate the image that will store the leaf indices (dummy size, will be resized as needed)
-  m_leafImage = mbf.make_image<LeafIndices>(Vector2i(0, 0));
 
   float meanShiftBandWidth = 0.1f;
   float cellLength = sqrt(meanShiftBandWidth * meanShiftBandWidth / 3) / 2.0f;
@@ -515,15 +516,17 @@ void GPUForest::load_structure_from_file(const std::string &fileName)
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nbTrees, maxNbNodes));
   m_forestImage->Clear();
+
   m_predictionsBlock = mbf.make_block<GPUForestPrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
+
   m_leafReservoirs.reset(new GPUReservoir_CUDA(RESERVOIR_SIZE, totalNbLeaves));
 
   // Read all nodes.
   GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
   for (int treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
   {
-    for (size_t nodeIdx = 0; nodeIdx < m_nbNodesPerTree.size(); ++nodeIdx)
+    for (int nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
       GPUForestNode& node = forestData[nodeIdx * nbTrees + treeIdx];
       in >> node.leftChildIdx >> node.leafIdx >> node.featureIdx

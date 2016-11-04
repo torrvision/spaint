@@ -14,6 +14,7 @@ class GPUForest_CUDA: public GPUForest
 {
 public:
   explicit GPUForest_CUDA(const EnsembleLearner &pretrained_forest);
+  explicit GPUForest_CUDA(const std::string &fileName);
 
 protected:
   void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
