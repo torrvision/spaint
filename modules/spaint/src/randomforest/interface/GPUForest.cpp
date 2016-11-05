@@ -18,6 +18,8 @@
 #include "randomforest/cuda/GPUClusterer_CUDA.h"
 #include "randomforest/cuda/GPUReservoir_CUDA.h"
 
+//#define ENABLE_TIMERS
+
 namespace spaint
 {
 GPUForest::GPUForest()
@@ -33,7 +35,7 @@ GPUForest::GPUForest()
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>(
       Vector2i(0, 0));
 
-  m_maxReservoirsToUpdate = 1000;
+  m_maxReservoirsToUpdate = 256;
   m_reservoirUpdateStartIdx = 0;
 }
 
@@ -82,6 +84,7 @@ void GPUForest::add_features_to_forest(
         "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     find_leaves(features, m_leafImage);
+//    cudaDeviceSynchronize();
   }
 
   {
@@ -90,6 +93,7 @@ void GPUForest::add_features_to_forest(
         "add examples to reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_leafReservoirs->add_examples(features, m_leafImage);
+//    cudaDeviceSynchronize();
   }
 
   const int updateCount = std::min<int>(m_maxReservoirsToUpdate,
@@ -102,6 +106,7 @@ void GPUForest::add_features_to_forest(
 #endif
     m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock,
         m_reservoirUpdateStartIdx, updateCount);
+//    cudaDeviceSynchronize();
   }
 
 //  std::cout << "Updated " << updateCount << " reservoirs, starting from "
