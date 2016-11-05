@@ -58,7 +58,7 @@ void GPUForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       (imgSize.y + blockSize.y - 1) / blockSize.y);
 
   ck_evaluate_forest<<<gridSize,blockSize>>>(forestTexture, featureData, imgSize, leafData);
-  cudaDeviceSynchronize(); // TODO debug, to remove
+  ORcudaKernelCheck;
 }
 
 void GPUForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
@@ -82,7 +82,7 @@ void GPUForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
 
   ck_get_predictions<<<gridSize,blockSize>>>(leafPredictionsData, leafIndices, outPredictionsData,
       imgSize);
-  cudaDeviceSynchronize(); // TODO debug, to remove
+  ORcudaKernelCheck;
 }
 
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################

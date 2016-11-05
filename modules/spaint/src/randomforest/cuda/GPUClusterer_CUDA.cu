@@ -398,40 +398,40 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   // 1 single block, 1 thread per reservoir
   ck_reset_temporaries<<<1, gridSize>>>(nbClustersPerReservoir, clusterSizes,
       clusterSizesHistogram, reservoirCapacity, startIdx);
-//  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity,
       startIdx, m_sigma);
-//  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   int *parents = m_parents->GetData(MEMORYDEVICE_CUDA);
   int *clusterIndices = m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
 
   ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
       nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
-//  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   ck_identify_clusters<<<gridSize, blockSize>>>(reservoirSizes, parents, clusterIndices, clusterSizes,
       reservoirCapacity, startIdx);
-//  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   ck_compute_cluster_histogram<<<gridSize, blockSize>>>(clusterSizes, nbClustersPerReservoir,
       clusterSizesHistogram, reservoirCapacity, startIdx);
-//  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   int *selectedClusters = m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
   // 1 single block, 1 thread per reservoir
   ck_select_clusters<<<1, gridSize>>>(clusterSizes, clusterSizesHistogram,
       nbClustersPerReservoir, selectedClusters, reservoirCapacity, startIdx,
       GPUForestPrediction::MAX_MODES, m_minClusterSize);
-//  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   GPUForestPrediction *predictionsData = predictions->GetData(
       MEMORYDEVICE_CUDA);
   ck_compute_modes<<<gridSize, GPUForestPrediction::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
       predictionsData, reservoirCapacity, startIdx,
       GPUForestPrediction::MAX_MODES);
-  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();
 //  m_clusterSizes->UpdateHostFromDevice();

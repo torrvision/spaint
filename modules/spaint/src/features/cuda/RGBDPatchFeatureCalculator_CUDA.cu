@@ -80,11 +80,11 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
   // and fills the colour in the feature struct. Intrinsics are only needed here
   ck_compute_colour_feature<<<gridSize, blockSize>>>(features, rgb, depth, offsets_rgb, channels_rgb,
       in_dims, out_dims, intrinsics, cameraPose, m_featureStep, m_normalizeRgb);
-  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 
   ck_compute_depth_feature<<<gridSize, blockSize>>>(features, depth, offsets_depth,
       in_dims, out_dims, m_featureStep, m_normalizeDepth);
-  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 }
 
 }

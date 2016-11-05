@@ -116,7 +116,7 @@ void GPUReservoir_CUDA::add_examples(const RGBDPatchFeatureImage_CPtr &features,
       (imgSize.height + blockSize.y - 1) / blockSize.y);
   ck_add_examples<<<gridSize, blockSize>>>(featureData, leafIndicesData, imgSize, randomStates,
       reservoirData, reservoirSize, reservoirAddCalls, m_reservoirCapacity);
-  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 }
 
 void GPUReservoir_CUDA::clear()
@@ -134,6 +134,6 @@ void GPUReservoir_CUDA::init_random()
   dim3 blockSize(256);
   dim3 gridSize((m_nbMaxExamples + blockSize.x - 1) / blockSize.x);
   ck_init_random_states<<<gridSize, blockSize>>>(randomStates, m_nbMaxExamples, m_rngSeed);
-  cudaDeviceSynchronize();
+  ORcudaKernelCheck;
 }
 }
