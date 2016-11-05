@@ -13,6 +13,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/timer/timer.hpp>
 
 #include "../features/FeatureCalculatorFactory.h"
 #include "../randomforest/interface/GPUForest.h"
@@ -79,6 +80,13 @@ private:
 
   Tracker_Ptr m_refineTracker;
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
+
+  // For profiling
+  bool m_timeRelocalizer;
+  size_t m_learningCalls;
+  boost::timer::cpu_times m_learningTimes;
+  size_t m_relocalizationCalls;
+  boost::timer::cpu_times m_relocalizationTimes;
 };
 
 //#################### TYPEDEFS ####################

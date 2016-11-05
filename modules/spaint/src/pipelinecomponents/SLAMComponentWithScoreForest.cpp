@@ -9,6 +9,7 @@
 
 #include "randomforest/cuda/GPUForest_CUDA.h"
 #include "randomforest/cuda/GPURansac_CUDA.h"
+#include "util/PosePersister.h"
 
 #include "tvgutil/filesystem/PathFinder.h"
 
@@ -28,7 +29,6 @@
 
 #ifdef SAVE_RELOC_POSES
 #include "tvgutil/timing/TimeUtil.h"
-#include "util/PosePersister.h"
 #endif
 
 namespace bf = boost::filesystem;
@@ -64,6 +64,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   // TODO: replace with default forest path
   const bf::path relocalizationForestPath =
       "/media/data/spaint_forests/TVG-desk.txt";
+//      "/media/data/spaint_forests/stairs.txt";
 
   std::cout << "TODO: Loading relocalization forest from: "
       << relocalizationForestPath << '\n';
@@ -79,7 +80,6 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
-#ifdef SAVE_RELOC_POSES
   const std::string refineParams =
       "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
@@ -88,16 +88,23 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
           refineParams.c_str(), rgbImageSize, depthImageSize, settings.get(),
           m_lowLevelEngine.get(), NULL, voxelScene.get()));
 
+  m_timeRelocalizer = true;
+  m_learningCalls = 0;
+  m_learningTimes.clear();
+  m_relocalizationCalls = 0;
+  m_relocalizationTimes.clear();
+
+#ifdef SAVE_RELOC_POSES
   const std::string poses_folder =
-      m_context->get_tag().empty() ?
-          TimeUtil::get_iso_timestamp() : m_context->get_tag();
+  m_context->get_tag().empty() ?
+  TimeUtil::get_iso_timestamp() : m_context->get_tag();
 
   m_sequentialPathGenerator.reset(
       SequentialPathGenerator(
           find_subdir_from_executable("reloc_poses") / poses_folder));
 
   std::cout << "Saving relocalization poses in: "
-      << m_sequentialPathGenerator->get_base_dir() << std::endl;
+  << m_sequentialPathGenerator->get_base_dir() << std::endl;
   boost::filesystem::create_directories(
       m_sequentialPathGenerator->get_base_dir());
 #endif
@@ -106,6 +113,34 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 //#################### DESTRUCTOR ####################
 SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest()
 {
+  if (m_timeRelocalizer)
+  {
+    std::cout << "Relocalizer called " << m_relocalizationCalls << "times.\n";
+
+    if (m_relocalizationCalls > 0)
+    {
+      std::cout << "\tTotal time: "
+          << boost::timer::format(m_relocalizationTimes, 6);
+      // Average times
+      m_relocalizationTimes.system /= m_relocalizationCalls;
+      m_relocalizationTimes.user /= m_relocalizationCalls;
+      m_relocalizationTimes.wall /= m_relocalizationCalls;
+      std::cout << "\tAverage time: "
+          << boost::timer::format(m_relocalizationTimes, 6);
+    }
+
+    std::cout << "Learner called " << m_learningCalls << "times.\n";
+    if (m_learningCalls > 0)
+    {
+      std::cout << "\tTotal time: " << boost::timer::format(m_learningTimes, 6);
+      // Average times
+      m_learningTimes.system /= m_learningCalls;
+      m_learningTimes.user /= m_learningCalls;
+      m_learningTimes.wall /= m_learningCalls;
+      std::cout << "\tAverage time: "
+          << boost::timer::format(m_learningTimes, 6);
+    }
+  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
@@ -135,10 +170,15 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   if (trackingResult == TrackingResult::TRACKING_FAILED)
   {
+    boost::optional<boost::timer::cpu_timer> relocalizationTimer;
+
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
+
+    if (m_timeRelocalizer)
+      relocalizationTimer = boost::timer::cpu_timer();
 
     if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
         < m_gpuRansac->get_min_nb_required_points())
@@ -203,11 +243,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
       prepare_for_tracking(TRACK_VOXELS);
-#ifdef SAVE_RELOC_POSES
+//#ifdef SAVE_RELOC_POSES
+//      m_refineTracker->TrackCamera(trackingState.get(), view.get());
+//#else
+//      m_trackingController->Track(trackingState.get(), view.get());
+//#endif
       m_refineTracker->TrackCamera(trackingState.get(), view.get());
-#else
-      m_trackingController->Track(trackingState.get(), view.get());
-#endif
       trackingResult = trackingState->trackerResult;
 
 //      std::cout << "Refinement: "
@@ -258,9 +299,25 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     {
       m_sequentialPathGenerator->increment_index();
     }
+
+    if (relocalizationTimer)
+    {
+      ORcudaSafeCall(cudaDeviceSynchronize());
+      relocalizationTimer->stop();
+
+      boost::timer::cpu_times elapsedTimes = relocalizationTimer->elapsed();
+      m_relocalizationTimes.system += elapsedTimes.system;
+      m_relocalizationTimes.wall += elapsedTimes.wall;
+      m_relocalizationTimes.user += elapsedTimes.user;
+      ++m_relocalizationCalls;
+    }
   }
   else if (trackingResult == TrackingResult::TRACKING_GOOD)
   {
+    boost::optional<boost::timer::cpu_timer> learningTimer;
+    if (m_timeRelocalizer)
+      learningTimer = boost::timer::cpu_timer();
+
     Matrix4f invCameraPose = trackingState->pose_d->GetInvM();
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics,
         invCameraPose);
@@ -271,6 +328,18 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #endif
 
     m_gpuForest->add_features_to_forest(m_featureImage);
+
+    if (learningTimer)
+    {
+      ORcudaSafeCall(cudaDeviceSynchronize());
+      learningTimer->stop();
+
+      boost::timer::cpu_times elapsedTimes = learningTimer->elapsed();
+      m_learningTimes.system += elapsedTimes.system;
+      m_learningTimes.wall += elapsedTimes.wall;
+      m_learningTimes.user += elapsedTimes.user;
+      ++m_learningCalls;
+    }
   }
 
   return trackingResult;
