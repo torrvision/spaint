@@ -27,7 +27,7 @@ class GPUForest
   // Typedefs
 public:
   enum {
-    RESERVOIR_SIZE = 1000, // Max number samples in a leaf reservoir
+    RESERVOIR_SIZE = 1024, // Max number samples in a leaf reservoir
   };
 
   typedef spaint::LeafIndices LeafIndices; // TODO: remove
