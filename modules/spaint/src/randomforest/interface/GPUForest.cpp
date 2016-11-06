@@ -35,6 +35,7 @@ GPUForest::GPUForest()
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>(
       Vector2i(0, 0));
 
+  m_lastFeaturesAddedStartIdx = 0;
   m_maxReservoirsToUpdate = 256;
   m_reservoirUpdateStartIdx = 0;
 }
@@ -95,6 +96,40 @@ void GPUForest::add_features_to_forest(
     m_leafReservoirs->add_examples(features, m_leafImage);
 //    cudaDeviceSynchronize();
   }
+
+  const int updateCount = std::min<int>(m_maxReservoirsToUpdate,
+      m_predictionsBlock->dataSize - m_reservoirUpdateStartIdx);
+
+  {
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "GPU clustering: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock,
+        m_reservoirUpdateStartIdx, updateCount);
+//    cudaDeviceSynchronize();
+  }
+
+//  std::cout << "Updated " << updateCount << " reservoirs, starting from "
+//      << m_reservoirUpdateStartIdx << std::endl;
+
+  // m_maxReservoirsToUpdate reservoirs starting from this index have been updated
+  m_lastFeaturesAddedStartIdx = m_reservoirUpdateStartIdx;
+
+  m_reservoirUpdateStartIdx += m_maxReservoirsToUpdate;
+  if (m_reservoirUpdateStartIdx >= m_predictionsBlock->dataSize)
+    m_reservoirUpdateStartIdx = 0;
+}
+
+void GPUForest::update_forest()
+{
+  // We are back to the first reservoir that was updated when
+  // the last batch of features were added to the forest.
+  // No need to update further, we would get the same modes.
+  // This check works only if the m_maxReservoirsToUpdate
+  // remains constant throughout the whole program.
+  if (m_reservoirUpdateStartIdx == m_lastFeaturesAddedStartIdx)
+    return;
 
   const int updateCount = std::min<int>(m_maxReservoirsToUpdate,
       m_predictionsBlock->dataSize - m_reservoirUpdateStartIdx);

@@ -43,6 +43,7 @@ public:
   void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
       GPUForestPredictionsImage_Ptr &predictions);
   void add_features_to_forest(const RGBDPatchFeatureImage_CPtr &features);
+  void update_forest();
 
   void load_structure_from_file(const std::string &fileName);
   void save_structure_to_file(const std::string &fileName) const;
@@ -57,6 +58,7 @@ protected:
   GPUClusterer_Ptr m_gpuClusterer;
 
   size_t m_maxReservoirsToUpdate;
+  size_t m_lastFeaturesAddedStartIdx;
   size_t m_reservoirUpdateStartIdx;
 
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
