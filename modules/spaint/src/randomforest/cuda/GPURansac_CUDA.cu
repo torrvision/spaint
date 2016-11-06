@@ -26,6 +26,11 @@ __global__ void ck_init_random_states(GPURansac_CUDA::RandomState *randomStates,
   curand_init(seed, idx, 0, &randomStates[idx]);
 }
 
+__global__ void ck_reset_pose_candidates(PoseCandidates *poseCandidates)
+{
+  poseCandidates->nbCandidates = 0;
+}
+
 __device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
     const GPUForestPrediction *predictionsData, const Vector2i &imgSize,
     GPURansac_CUDA::RandomState *randomState, PoseCandidate &poseCandidate,
@@ -234,12 +239,6 @@ __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  // Reset nuber of candidates. Might put in a different kernel for efficiency.
-  if (candidateIdx == 0)
-    poseCandidates->nbCandidates = 0;
-
-  __syncthreads();
-
   if (candidateIdx >= maxNbPoseCandidates)
     return;
 
@@ -362,7 +361,7 @@ __global__ void ck_sort_energies(PoseCandidates *poseCandidates)
 }
 }
 
-GPURansac_CUDA::GPURansac_CUDA()
+GPURansac_CUDA::GPURansac_CUDA() : GPURansac()
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomStates = mbf.make_block<RandomState>(PoseCandidates::MAX_CANDIDATES);
@@ -397,12 +396,17 @@ void GPURansac_CUDA::generate_pose_candidates()
   dim3 gridSize(
       (PoseCandidates::MAX_CANDIDATES + blockSize.x - 1) / blockSize.x);
 
+  // Single thread to reset the number of candidates
+  ck_reset_pose_candidates<<<1,1>>>(poseCandidates);
+  ORcudaKernelCheck;
+
   ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomStates,
       poseCandidates, PoseCandidates::MAX_CANDIDATES,
       m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minDistanceBetweenSampledModes,
       m_checkRigidTransformationConstraint,
       m_translationErrorMaxForCorrectPose);
+  ORcudaKernelCheck;
 
   // Need to make the data available to the host
   m_poseCandidates->UpdateHostFromDevice();
@@ -410,6 +414,9 @@ void GPURansac_CUDA::generate_pose_candidates()
 
 void GPURansac_CUDA::compute_and_sort_energies()
 {
+  GPURansac::compute_and_sort_energies();
+  return;
+
   // Need to make the data available to the device
   m_poseCandidates->UpdateDeviceFromHost();
 
