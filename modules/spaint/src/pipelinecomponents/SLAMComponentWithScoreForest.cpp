@@ -69,6 +69,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   std::cout << "TODO: Loading relocalization forest from: "
       << relocalizationForestPath << '\n';
   m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
+  m_updateForestModesEveryFrame = true;
 
 //  m_gpuRansac.reset(new GPURansac_CUDA());
   m_gpuRansac.reset(new GPURansac());
@@ -150,16 +151,21 @@ SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest()
 SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(
     TrackingResult trackingResult)
 {
-  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  const ITMFloatImage_Ptr inputDepthImage(
-      new ITMFloatImage(slamState->get_depth_image_size(), true, true));
-  inputDepthImage->SetFrom(slamState->get_view()->depth,
-      ORUtils::MemoryBlock<float>::CUDA_TO_CUDA);
+  boost::optional<boost::timer::cpu_timer> relocalizationTimer;
 
-  const ITMUChar4Image_Ptr inputRGBImage(
-      new ITMUChar4Image(slamState->get_rgb_image_size(), true, true));
-  inputRGBImage->SetFrom(slamState->get_view()->rgb,
-      ORUtils::MemoryBlock<Vector4u>::CUDA_TO_CUDA);
+  if (m_timeRelocalizer)
+  {
+    ORcudaSafeCall(cudaDeviceSynchronize());
+    relocalizationTimer = boost::timer::cpu_timer();
+  }
+
+  const bool performRelocalization = trackingResult
+      == TrackingResult::TRACKING_FAILED;
+  const bool performLearning = trackingResult == TrackingResult::TRACKING_GOOD;
+
+  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
+  const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
+  const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
 
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
 
@@ -168,19 +174,24 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const Vector4f depthIntrinsics =
       view->calib.intrinsics_d.projectionParamsSimple.all;
 
-  if (trackingResult == TrackingResult::TRACKING_FAILED)
+  if (m_updateForestModesEveryFrame && !performLearning)
   {
-    boost::optional<boost::timer::cpu_timer> relocalizationTimer;
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "update forest, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+    m_gpuForest->update_forest();
+//    cudaDeviceSynchronize();
+  }
 
+  if (performRelocalization)
+  {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    if (m_timeRelocalizer)
-      relocalizationTimer = boost::timer::cpu_timer();
-
-    if (m_lowLevelEngine->CountValidDepths(inputDepthImage.get())
+    if (m_lowLevelEngine->CountValidDepths(inputDepthImage)
         < m_gpuRansac->get_min_nb_required_points())
     {
       std::cout
@@ -312,12 +323,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       ++m_relocalizationCalls;
     }
   }
-  else if (trackingResult == TrackingResult::TRACKING_GOOD)
+  else if (performLearning)
   {
-    boost::optional<boost::timer::cpu_timer> learningTimer;
-    if (m_timeRelocalizer)
-      learningTimer = boost::timer::cpu_timer();
-
     Matrix4f invCameraPose = trackingState->pose_d->GetInvM();
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics,
         invCameraPose);
@@ -329,12 +336,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     m_gpuForest->add_features_to_forest(m_featureImage);
 
-    if (learningTimer)
+    if (relocalizationTimer)
     {
       ORcudaSafeCall(cudaDeviceSynchronize());
-      learningTimer->stop();
+      relocalizationTimer->stop();
 
-      boost::timer::cpu_times elapsedTimes = learningTimer->elapsed();
+      boost::timer::cpu_times elapsedTimes = relocalizationTimer->elapsed();
       m_learningTimes.system += elapsedTimes.system;
       m_learningTimes.wall += elapsedTimes.wall;
       m_learningTimes.user += elapsedTimes.user;
@@ -350,16 +357,16 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(
     TrackingResult trackingResult)
 {
+  boost::optional<boost::timer::cpu_timer> relocalizationTimer;
+  if (m_timeRelocalizer)
+  relocalizationTimer = boost::timer::cpu_timer();
+
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const VoxelRenderState_Ptr& liveVoxelRenderState =
   slamState->get_live_voxel_render_state();
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
-
-  boost::optional<boost::timer::cpu_timer> relocalizationTimer;
-  if (m_timeRelocalizer)
-  relocalizationTimer = boost::timer::cpu_timer();
 
   // Copy the current depth input across to the CPU for use by the relocaliser.
   view->depth->UpdateHostFromDevice();
@@ -470,8 +477,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 void SLAMComponentWithScoreForest::compute_features(
-    const ITMUChar4Image_CPtr &inputRgbImage,
-    const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics)
+    const ITMUChar4Image *inputRgbImage, const ITMFloatImage *inputDepthImage,
+    const Vector4f &depthIntrinsics)
 {
   Matrix4f identity;
   identity.setIdentity();
@@ -480,16 +487,15 @@ void SLAMComponentWithScoreForest::compute_features(
 }
 
 void SLAMComponentWithScoreForest::compute_features(
-    const ITMUChar4Image_CPtr &inputRgbImage,
-    const ITMFloatImage_CPtr &inputDepthImage, const Vector4f &depthIntrinsics,
-    const Matrix4f &invCameraPose)
+    const ITMUChar4Image *inputRgbImage, const ITMFloatImage *inputDepthImage,
+    const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose)
 {
 #ifdef ENABLE_TIMERS
   boost::timer::auto_cpu_timer t(6,
       "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
   m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
-      depthIntrinsics, m_featureImage, invCameraPose);
+      depthIntrinsics, m_featureImage.get(), invCameraPose);
 
 }
 

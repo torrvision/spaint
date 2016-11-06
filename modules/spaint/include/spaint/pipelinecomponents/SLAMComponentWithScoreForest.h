@@ -62,12 +62,11 @@ protected:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   boost::optional<PoseCandidate> estimate_pose();
-  void compute_features(const ITMUChar4Image_CPtr &inputRgbImage,
-      const ITMFloatImage_CPtr &inputDepthImage,
-      const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose);
-  void compute_features(const ITMUChar4Image_CPtr &inputRgbImage,
-      const ITMFloatImage_CPtr &inputDepthImage,
-      const Vector4f &depthIntrinsics);
+  void compute_features(const ITMUChar4Image *inputRgbImage,
+      const ITMFloatImage *inputDepthImage, const Vector4f &depthIntrinsics,
+      const Matrix4f &invCameraPose);
+  void compute_features(const ITMUChar4Image *inputRgbImage,
+      const ITMFloatImage *inputDepthImage, const Vector4f &depthIntrinsics);
   void evaluate_forest();
 
   //#################### PRIVATE MEMBER VARIABLES ####################
@@ -77,6 +76,7 @@ private:
   GPUForestPredictionsImage_Ptr m_predictionsImage;
   GPUForest_Ptr m_gpuForest;
   GPURansac_Ptr m_gpuRansac;
+  bool m_updateForestModesEveryFrame;
 
   Tracker_Ptr m_refineTracker;
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
