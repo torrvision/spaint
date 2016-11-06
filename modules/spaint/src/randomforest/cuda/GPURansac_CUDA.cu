@@ -268,7 +268,7 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
   const int tId = threadIdx.x;
   const int threadsPerBlock = blockDim.x;
   const int candidateIdx = blockIdx.x;
-  const int nbCandidates = poseCandidates[0].nbCandidates;
+  const int nbCandidates = poseCandidates->nbCandidates;
 
   if (candidateIdx >= nbCandidates)
   {
@@ -277,14 +277,7 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
     return;
   }
 
-  PoseCandidate &currentCandidate = poseCandidates[0].candidates[candidateIdx];
-
-  if (tId == 0)
-  {
-    currentCandidate.energy = 0.f;
-  }
-
-  __syncthreads();
+  PoseCandidate &currentCandidate = poseCandidates->candidates[candidateIdx];
 
   float localEnergy = 0.f;
 
@@ -334,7 +327,7 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
     localEnergy += __shfl_down(localEnergy, offset);
 
   // Thread 0 of each warp updates the final energy
-  if (threadIdx.x & (warpSize - 1) == 0)
+  if ((threadIdx.x & (warpSize - 1)) == 0)
     atomicAdd(&currentCandidate.energy, localEnergy);
 
   __syncthreads(); // Wait for all threads in the block
@@ -343,6 +336,18 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
   if (tId == 0)
     currentCandidate.energy = currentCandidate.energy
         / static_cast<float>(currentCandidate.nbInliers);
+}
+
+__global__ void ck_reset_candidate_energies(PoseCandidates *poseCandidates)
+{
+  const int candidateIdx = threadIdx.x;
+
+  if (candidateIdx >= poseCandidates->nbCandidates)
+  {
+    return;
+  }
+
+  poseCandidates->candidates[candidateIdx].energy = 0.f;
 }
 
 __global__ void ck_sort_energies(PoseCandidates *poseCandidates)
@@ -361,7 +366,8 @@ __global__ void ck_sort_energies(PoseCandidates *poseCandidates)
 }
 }
 
-GPURansac_CUDA::GPURansac_CUDA() : GPURansac()
+GPURansac_CUDA::GPURansac_CUDA() :
+    GPURansac()
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomStates = mbf.make_block<RandomState>(PoseCandidates::MAX_CANDIDATES);
@@ -414,9 +420,6 @@ void GPURansac_CUDA::generate_pose_candidates()
 
 void GPURansac_CUDA::compute_and_sort_energies()
 {
-  GPURansac::compute_and_sort_energies();
-  return;
-
   // Need to make the data available to the device
   m_poseCandidates->UpdateDeviceFromHost();
 
@@ -424,6 +427,9 @@ void GPURansac_CUDA::compute_and_sort_energies()
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
   PoseCandidates *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+
+  ck_reset_candidate_energies<<<1, PoseCandidates::MAX_CANDIDATES>>>(poseCandidates);
+  ORcudaKernelCheck;
 
   dim3 blockSize(128); // threads to compute the energy for each candidate
   dim3 gridSize(PoseCandidates::MAX_CANDIDATES); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
