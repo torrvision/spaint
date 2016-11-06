@@ -23,11 +23,11 @@ struct DualNumber
 {
   //#################### PUBLIC VARIABLES ####################
 
-  /** The dual component of the dual number. */
-  T d;
-
   /** The real component of the dual number. */
   T r;
+
+  /** The dual component of the dual number. */
+  T d;
 
   //#################### CONSTRUCTORS ####################
 
