@@ -194,9 +194,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     if (m_lowLevelEngine->CountValidDepths(inputDepthImage)
         < m_gpuRansac->get_min_nb_required_points())
     {
-      std::cout
-          << "Number of valid depth pixels insufficient to perform relocalization."
-          << std::endl;
+//      std::cout
+//          << "Number of valid depth pixels insufficient to perform relocalization."
+//          << std::endl;
 
       if (m_sequentialPathGenerator)
       {
