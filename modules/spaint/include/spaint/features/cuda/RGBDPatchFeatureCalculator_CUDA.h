@@ -15,9 +15,9 @@ class RGBDPatchFeatureCalculator_CUDA: public RGBDPatchFeatureCalculator
 public:
   RGBDPatchFeatureCalculator_CUDA();
 
-  virtual void ComputeFeature(const ITMUChar4Image_CPtr &rgb_image,
-      const ITMFloatImage_CPtr &depth, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage_Ptr &features, const Matrix4f &cameraPose) const;
+  virtual void ComputeFeature(const ITMUChar4Image *rgb_image,
+      const ITMFloatImage *depth_image, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage *features_image, const Matrix4f &cameraPose) const;
 };
 }
 

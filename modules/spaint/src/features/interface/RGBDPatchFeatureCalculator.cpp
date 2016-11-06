@@ -102,13 +102,13 @@ RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator()
 {
 }
 
-void RGBDPatchFeatureCalculator::ComputeFeature(
-    const ITMUChar4Image_CPtr &rgb_image, const ITMFloatImage_CPtr &depth,
-    const Vector4f &intrinsics, RGBDPatchFeatureImage_Ptr &features) const
+void RGBDPatchFeatureCalculator::ComputeFeature(const ITMUChar4Image *rgb_image,
+    const ITMFloatImage *depth_image, const Vector4f &intrinsics,
+    RGBDPatchFeatureImage *features_image) const
 {
   Matrix4f identity;
   identity.setIdentity();
 
-  ComputeFeature(rgb_image, depth, intrinsics, features, identity);
+  ComputeFeature(rgb_image, depth_image, intrinsics, features_image, identity);
 }
 }

@@ -49,8 +49,8 @@ RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
 }
 
 void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
-    const ITMUChar4Image_CPtr &rgb_image, const ITMFloatImage_CPtr &depth_image,
-    const Vector4f &intrinsics, RGBDPatchFeatureImage_Ptr &features_image,
+    const ITMUChar4Image *rgb_image, const ITMFloatImage *depth_image,
+    const Vector4f &intrinsics, RGBDPatchFeatureImage *features_image,
     const Matrix4f &cameraPose) const
 {
   const Vector4u *rgb = rgb_image->GetData(MEMORYDEVICE_CUDA);
