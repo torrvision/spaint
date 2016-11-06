@@ -96,15 +96,15 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
 #ifdef SAVE_RELOC_POSES
   const std::string poses_folder =
-  m_context->get_tag().empty() ?
-  TimeUtil::get_iso_timestamp() : m_context->get_tag();
+      m_context->get_tag().empty() ?
+          TimeUtil::get_iso_timestamp() : m_context->get_tag();
 
   m_sequentialPathGenerator.reset(
       SequentialPathGenerator(
           find_subdir_from_executable("reloc_poses") / poses_folder));
 
   std::cout << "Saving relocalization poses in: "
-  << m_sequentialPathGenerator->get_base_dir() << std::endl;
+      << m_sequentialPathGenerator->get_base_dir() << std::endl;
   boost::filesystem::create_directories(
       m_sequentialPathGenerator->get_base_dir());
 #endif
@@ -357,6 +357,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
+  boost::optional<boost::timer::cpu_timer> relocalizationTimer;
+  if (m_timeRelocalizer)
+  relocalizationTimer = boost::timer::cpu_timer();
+
   // Copy the current depth input across to the CPU for use by the relocaliser.
   view->depth->UpdateHostFromDevice();
 
@@ -377,14 +381,17 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1,
       &nearestNeighbour, NULL, considerKeyframe);
 
-  if (keyframeID >= 0)
+  const bool saveKeyframe = keyframeID >= 0;
+  const bool performRelocalization = trackingResult
+  == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1;
+
+  if (saveKeyframe)
   {
     // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
     // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
     m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
   }
-  else if (trackingResult == ITMTrackingState::TRACKING_FAILED
-      && nearestNeighbour != -1)
+  else if (performRelocalization)
   {
     // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
     // of the keyframe and rerun the tracker for this frame.
@@ -397,11 +404,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
         voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
     prepare_for_tracking(TRACK_VOXELS);
-#ifdef SAVE_RELOC_POSES
+//#ifdef SAVE_RELOC_POSES
+//    m_refineTracker->TrackCamera(trackingState.get(), view.get());
+//#else
+//    m_trackingController->Track(trackingState.get(), view.get());
+//#endif
     m_refineTracker->TrackCamera(trackingState.get(), view.get());
-#else
-    m_trackingController->Track(trackingState.get(), view.get());
-#endif
     trackingResult = trackingState->trackerResult;
 
     if (m_sequentialPathGenerator)
@@ -429,6 +437,29 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
     // adding a new keyframe.
     m_keyframeDelay = 10;
+  }
+
+  if (relocalizationTimer)
+  {
+    ORcudaSafeCall(cudaDeviceSynchronize());
+    relocalizationTimer->stop();
+
+    boost::timer::cpu_times elapsedTimes = relocalizationTimer->elapsed();
+
+    if (performRelocalization)
+    {
+      m_relocalizationTimes.system += elapsedTimes.system;
+      m_relocalizationTimes.wall += elapsedTimes.wall;
+      m_relocalizationTimes.user += elapsedTimes.user;
+      ++m_relocalizationCalls;
+    }
+    else
+    {
+      m_learningTimes.system += elapsedTimes.system;
+      m_learningTimes.wall += elapsedTimes.wall;
+      m_learningTimes.user += elapsedTimes.user;
+      ++m_learningCalls;
+    }
   }
 
   return trackingResult;
