@@ -254,11 +254,6 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
       prepare_for_tracking(TRACK_VOXELS);
-//#ifdef SAVE_RELOC_POSES
-//      m_refineTracker->TrackCamera(trackingState.get(), view.get());
-//#else
-//      m_trackingController->Track(trackingState.get(), view.get());
-//#endif
       m_refineTracker->TrackCamera(trackingState.get(), view.get());
       trackingResult = trackingState->trackerResult;
 
@@ -411,11 +406,6 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
         voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
     prepare_for_tracking(TRACK_VOXELS);
-//#ifdef SAVE_RELOC_POSES
-//    m_refineTracker->TrackCamera(trackingState.get(), view.get());
-//#else
-//    m_trackingController->Track(trackingState.get(), view.get());
-//#endif
     m_refineTracker->TrackCamera(trackingState.get(), view.get());
     trackingResult = trackingState->trackerResult;
 

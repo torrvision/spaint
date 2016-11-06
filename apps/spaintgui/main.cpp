@@ -57,6 +57,7 @@ struct CommandLineArguments
   int initialFrameNumber;
   bool mapSurfels;
   bool noRelocaliser;
+  bool noTracker;
   std::string openNIDeviceURI;
   std::string pipelineType;
   std::string poseFilesMask;
@@ -83,6 +84,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
+    ("noTracker", po::bool_switch(&args.noTracker), "don't use any tracker")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save reconstructed mesh on exit")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
@@ -272,9 +274,16 @@ try
 #endif
   }
 
-  // Setup default tracker (last one in the configuration vector).
-//  if(args.trackSurfels) trackerConfigs.push_back("type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0");
-//  else trackerConfigs.push_back("type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0");
+  if(args.noTracker)
+  {
+    std::cout << "[spaint] Online camera tracking disabled.\n";
+  }
+  else
+  {
+    // Setup default tracker (last one in the configuration vector).
+    if(args.trackSurfels) trackerConfigs.push_back("type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0");
+    else trackerConfigs.push_back("type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0");
+  }
 
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
