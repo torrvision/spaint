@@ -43,6 +43,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 ##########################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
+TARGET_LINK_LIBRARIES(${targetname} tvgutil)
 
 #################################
 # Specify the libraries to link #
@@ -50,6 +51,16 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
+
+#########################################
+# Copy resource files to the build tree #
+#########################################
+
+ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/${targetname}/resources" "$<TARGET_FILE_DIR:${targetname}>/resources")
+
+IF(MSVC_IDE)
+  ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/${targetname}/resources" "${PROJECT_BINARY_DIR}/apps/${targetname}/resources")
+ENDIF()
 
 #############################
 # Specify things to install #

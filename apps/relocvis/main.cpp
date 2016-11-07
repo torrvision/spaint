@@ -14,6 +14,7 @@
 #include <opencv2/viz.hpp>
 #include <opencv2/highgui.hpp>
 #include <sstream>
+#include "tvgutil/filesystem/PathFinder.h"
 #include "tvgutil/timing/TimeUtil.h"
 
 namespace fs = boost::filesystem;
@@ -332,6 +333,8 @@ int main(int argc, char *argv[])
   fs::path meshPath = argv[4];
 
   Mesh seqMesh = Mesh::load(meshPath.string(), Mesh::LOAD_OBJ);
+  Mesh cameraMesh = Mesh::load((tvgutil::find_subdir_from_executable("resources") / "frustum.ply").string(), Mesh::LOAD_PLY);
+
   WMesh meshWidget(seqMesh);
 
   std::cout << "Loaded mesh from: " << meshPath << "\n\tVertices: "
@@ -365,7 +368,7 @@ int main(int argc, char *argv[])
 
 // Visualizer
   Viz3d visualizer("relocviz");
-  Viz3d visualizerTrajectory("relocviz-trajectory");
+//  Viz3d visualizerTrajectory("relocviz-trajectory");
 
 // show training trajectory
   {
@@ -375,8 +378,8 @@ int main(int argc, char *argv[])
       std::string tName = "trainTrajectory_"
           + boost::lexical_cast<std::string>(i);
       WTrajectory traj(trainTrajectorySplit[i], WTrajectory::PATH, 0.1, col);
-      visualizerTrajectory.showWidget(tName, traj);
-      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 2);
+//      visualizerTrajectory.showWidget(tName, traj);
+//      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 2);
 
       visualizer.showWidget(tName, traj);
       visualizer.setRenderingProperty(tName, LINE_WIDTH, 2);
@@ -524,13 +527,24 @@ int main(int argc, char *argv[])
       std::string tName = "trainPose_"
           + boost::lexical_cast<std::string>(binIdx);
 //    auto subsampled = subsample_trajectory(posesCv, 50);
-      WTrajectoryFrustums traj(trainPosesCv, intrinsics, 0.15,
-          Color::bluberry());
-      visualizer.showWidget(tName, traj);
-      visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
+//      WTrajectoryFrustums traj(trainPosesCv, intrinsics, 0.15,
+//          Color::bluberry());
+//      visualizer.showWidget(tName, traj);
+//      visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
 
-      visualizerTrajectory.showWidget(tName, traj);
-      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 3);
+      for (size_t cameraIdx = 0; cameraIdx < trainPosesCv.size(); ++cameraIdx)
+      {
+        std::string wName = tName + "_"
+            + boost::lexical_cast<std::string>(cameraIdx);
+        WMesh cameraWidget(cameraMesh);
+        cameraWidget.setColor(Color::bluberry());
+
+        visualizer.showWidget(wName, cameraWidget, trainPosesCv[cameraIdx]);
+        visualizer.setRenderingProperty(wName, SHADING, SHADING_GOURAUD);
+      }
+
+//      visualizerTrajectory.showWidget(tName, traj);
+//      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 3);
     }
 
     // Draw the lines connecting them
@@ -542,19 +556,36 @@ int main(int argc, char *argv[])
       WLine wLine(cv::Point3f(trainPose.translation()),
           cv::Point3f(testPose.translation()), Color::magenta());
       std::string wName = "trainTest_"
-          + boost::lexical_cast<std::string>(binIdx) + '_'
+          + boost::lexical_cast<std::string>(binIdx) + "_"
           + boost::lexical_cast<std::string>(i);
       visualizer.showWidget(wName, wLine);
-      visualizer.setRenderingProperty(wName, LINE_WIDTH, 3);
+      visualizer.setRenderingProperty(wName, LINE_WIDTH, 2);
     }
 
     {
       std::string tName = "testTrajectory_"
           + boost::lexical_cast<std::string>(binIdx);
 //    auto subsampled = subsample_trajectory(posesCv, 50);
-      WTrajectoryFrustums traj(testPosesCv, intrinsics, 0.15, posesColor);
-      visualizer.showWidget(tName, traj);
-      visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
+//      WTrajectoryFrustums traj(testPosesCv, intrinsics, 0.15, posesColor);
+//      visualizer.showWidget(tName, traj);
+//      visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
+
+      for (size_t cameraIdx = 0; cameraIdx < testPosesCv.size(); ++cameraIdx)
+      {
+        std::string wName = tName + "_"
+            + boost::lexical_cast<std::string>(cameraIdx);
+        WMesh cameraWidget(cameraMesh);
+        cameraWidget.setColor(posesColor);
+
+        visualizer.showWidget(wName, cameraWidget, testPosesCv[cameraIdx]);
+        visualizer.setRenderingProperty(wName, SHADING, SHADING_GOURAUD);
+      }
+
+//      if (!testPosesCv.empty())
+//      {
+////        cameraWidget.setPose(testPosesCv[0]);
+//        visualizer.showWidget(tName + "_C", cameraWidget, testPosesCv[0]);
+//      }
     }
   }
 
@@ -574,7 +605,7 @@ int main(int argc, char *argv[])
 //      Color::red());
 
   visualizer.showWidget("meshWidget", meshWidget);
-  visualizerTrajectory.showWidget("meshWidget", meshWidget);
+//  visualizerTrajectory.showWidget("meshWidget", meshWidget);
 //  visualizer.setRenderingProperty("meshWidget", SHADING, SHADING_PHONG);
 
 //  visualizer.showWidget("trainTrajectoryW", trainTrajectoryW);
@@ -603,8 +634,8 @@ int main(int argc, char *argv[])
     if (cookie.refresh)
     {
       auto camera = visualizer.getViewerPose();
-      visualizerTrajectory.setViewerPose(camera);
-      visualizerTrajectory.spinOnce();
+//      visualizerTrajectory.setViewerPose(camera);
+//      visualizerTrajectory.spinOnce();
       cookie.refresh = false;
     }
 
@@ -615,7 +646,7 @@ int main(int argc, char *argv[])
       std::string timestamp = tvgutil::TimeUtil::get_iso_timestamp();
 
       visualizer.saveScreenshot(timestamp + "-novelPoses.png");
-      visualizerTrajectory.saveScreenshot(timestamp + "-trajectory.png");
+//      visualizerTrajectory.saveScreenshot(timestamp + "-trajectory.png");
 
       cookie.screenshot = false;
     }
