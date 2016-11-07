@@ -14,9 +14,9 @@
 #include "tvgutil/filesystem/PathFinder.h"
 
 //#define ENABLE_TIMERS
-#define VISUALIZE_INLIERS
-#define SAVE_RELOC_POSES
-#define SAVE_INLIERS
+//#define VISUALIZE_INLIERS
+//#define SAVE_RELOC_POSES
+//#define SAVE_INLIERS
 //#define USE_FERN_RELOCALISER
 
 #ifdef ENABLE_TIMERS
@@ -239,25 +239,37 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 //      std::cout << "Min energy: " << min << " - MAx energy: " << max
 //          << std::endl;
 
-      cv::normalize(inliers, inliers, 0.0, 1.0, cv::NORM_MINMAX);
-      inliers = 1.f - inliers;
+      cv::Mat inliersImg;
+      cv::normalize(inliers, inliersImg, 0.0, 1.0, cv::NORM_MINMAX);
+      inliersImg = 1.f - inliersImg;
 
       // Convert the image in cv_8uc1 (NaNs become 0)
-      inliers.convertTo(inliers, CV_8U, 255.0);
+//      inliers.convertTo(inliers, CV_8U, 255.0);
 //      cv::applyColorMap(inliers, inliers, cv::COLORMAP_JET);
-      cv::resize(inliers, inliers,
+      cv::resize(inliersImg, inliersImg,
           cv::Size(inputRGBImage->noDims.width, inputRGBImage->noDims.height),
           -1, -1, cv::INTER_NEAREST);
 
-      cv::imshow("Inliers mask", inliers);
+      cv::imshow("Inliers mask", inliersImg);
       cv::waitKey(1);
 
 #ifdef SAVE_INLIERS
       if (m_sequentialPathGenerator)
       {
         std::string inliersFilename = m_sequentialPathGenerator->make_path(
-            "ransac-%06i.inliers.png").string();
-        cv::imwrite(inliersFilename, inliers);
+            "ransac-%06i.inliers.dat").string();
+
+        std::ofstream out(inliersFilename);
+        for (int j = 0; j < inliers.rows; ++j)
+        {
+          float *rowPtr = inliers.ptr<float>(j);
+          for (int i = 0; i < inliers.cols; ++i)
+          {
+            out << rowPtr[i] << ' ';
+          }
+          out << '\n';
+        }
+//        cv::imwrite(inliersFilename, inliers);
       }
 #endif
 #endif
