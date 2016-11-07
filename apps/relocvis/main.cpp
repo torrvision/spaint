@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
 
   cv::namedWindow("Sample images", cv::WINDOW_KEEPRATIO);
   cv::imshow("Sample images", samplePoseImg);
-  cv::imwrite(tvgutil::TimeUtil::get_iso_timestamp() + "-poses.png", samplePoseImg);
+//  cv::imwrite(tvgutil::TimeUtil::get_iso_timestamp() + "-poses.png", samplePoseImg);
 
   int key = 0;
   while (key != 27)
@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
         cameraWidget.setColor(Color::bluberry());
 
         visualizer.showWidget(wName, cameraWidget, trainPosesCv[cameraIdx]);
-        visualizer.setRenderingProperty(wName, SHADING, SHADING_GOURAUD);
+        visualizer.setRenderingProperty(wName, SHADING, SHADING_FLAT);
       }
 
 //      visualizerTrajectory.showWidget(tName, traj);
@@ -579,7 +579,7 @@ int main(int argc, char *argv[])
         cameraWidget.setColor(posesColor);
 
         visualizer.showWidget(wName, cameraWidget, testPosesCv[cameraIdx]);
-        visualizer.setRenderingProperty(wName, SHADING, SHADING_GOURAUD);
+        visualizer.setRenderingProperty(wName, SHADING, SHADING_FLAT);
       }
 
 //      if (!testPosesCv.empty())
