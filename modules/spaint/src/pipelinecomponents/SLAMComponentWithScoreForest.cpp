@@ -14,8 +14,9 @@
 #include "tvgutil/filesystem/PathFinder.h"
 
 //#define ENABLE_TIMERS
-//#define VISUALIZE_INLIERS
+#define VISUALIZE_INLIERS
 #define SAVE_RELOC_POSES
+#define SAVE_INLIERS
 //#define USE_FERN_RELOCALISER
 
 #ifdef ENABLE_TIMERS
@@ -222,7 +223,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
           CV_32FC1);
       inliers.setTo(std::numeric_limits<float>::quiet_NaN());
 
-      for (size_t i = 0; i < pose_candidate->nbInliers; ++i)
+      for (int i = 0; i < pose_candidate->nbInliers; ++i)
       {
         int idx = pose_candidate->inliers[i].linearIdx;
         float energy = pose_candidate->inliers[i].energy;
@@ -233,16 +234,32 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         inliers.at<float>(cv::Point(x, y)) = energy;
       }
 
-      double min, max;
-      cv::minMaxIdx(inliers, &min, &max);
-      std::cout << "Min energy: " << min << " - MAx energy: " << max
-      << std::endl;
+//      double min, max;
+//      cv::minMaxIdx(inliers, &min, &max);
+//      std::cout << "Min energy: " << min << " - MAx energy: " << max
+//          << std::endl;
 
       cv::normalize(inliers, inliers, 0.0, 1.0, cv::NORM_MINMAX);
       inliers = 1.f - inliers;
 
+      // Convert the image in cv_8uc1 (NaNs become 0)
+      inliers.convertTo(inliers, CV_8U, 255.0);
+//      cv::applyColorMap(inliers, inliers, cv::COLORMAP_JET);
+      cv::resize(inliers, inliers,
+          cv::Size(inputRGBImage->noDims.width, inputRGBImage->noDims.height),
+          -1, -1, cv::INTER_NEAREST);
+
       cv::imshow("Inliers mask", inliers);
       cv::waitKey(1);
+
+#ifdef SAVE_INLIERS
+      if (m_sequentialPathGenerator)
+      {
+        std::string inliersFilename = m_sequentialPathGenerator->make_path(
+            "ransac-%06i.inliers.png").string();
+        cv::imwrite(inliersFilename, inliers);
+      }
+#endif
 #endif
 
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
