@@ -484,6 +484,7 @@ int main(int argc, char *argv[])
 
   cv::namedWindow("Sample images", cv::WINDOW_KEEPRATIO);
   cv::imshow("Sample images", samplePoseImg);
+  cv::imwrite(tvgutil::TimeUtil::get_iso_timestamp() + "-poses.png", samplePoseImg);
 
   int key = 0;
   while (key != 27)
