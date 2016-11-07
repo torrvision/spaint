@@ -78,13 +78,13 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     generate_pose_candidates();
   }
 
-  {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6,
-        "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-    compute_candidate_pose_kabsch();
-  }
+//  {
+//#ifdef ENABLE_TIMERS
+//    boost::timer::auto_cpu_timer t(6,
+//        "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+//    compute_candidate_pose_kabsch();
+//  }
 
 //  std::cout << "Generated " << m_nbPoseCandidates << " initial candidates."
 //      << std::endl;
