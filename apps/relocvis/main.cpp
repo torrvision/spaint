@@ -192,11 +192,11 @@ std::vector<std::vector<TestICPPair>> classify_poses(
             thresholds[binIndex].translationMaxError,
             thresholds[binIndex].angleMaxError))
         {
-//          if ((trainPose.block<3, 1>(0, 3) - testPose.block<3, 1>(0, 3)).norm()
-//              < closestTrainPoseDist)
+          const float dist = (trainPose.block<3, 1>(0, 3)
+              - testPose.block<3, 1>(0, 3)).norm();
+          if (dist < closestTrainPoseDist)
           {
-            closestTrainPoseDist = (trainPose.block<3, 1>(0, 3)
-                - testPose.block<3, 1>(0, 3)).norm();
+            closestTrainPoseDist = dist;
             closestTrainPose = trainPose;
             closestTrainingIdx = trainIndex;
             chosenBin = binIndex;
@@ -218,17 +218,20 @@ std::vector<TestICPPair> prune_near_poses(const std::vector<TestICPPair> &poses)
   std::vector<TestICPPair> result;
   for (const TestICPPair &pose : poses)
   {
-    Eigen::Vector3f candidateT = pose.icpPose.block<3, 1>(0, 3);
+    Eigen::Vector3f candidateTestT = pose.testPose.block<3, 1>(0, 3);
+    Eigen::Vector3f candidateTrainT = pose.trainPose.block<3, 1>(0, 3);
 
     // If there are no similar poses in the results vector insert the current candidate
     bool insert = true;
     for (size_t i = 0; i < result.size() && insert; ++i)
     {
       auto &resultPose = result[i];
-      Eigen::Vector3f resultT = resultPose.icpPose.block<3, 1>(0, 3);
-      Eigen::Vector3f diff = candidateT - resultT;
+      Eigen::Vector3f resultTestT = resultPose.testPose.block<3, 1>(0, 3);
+      Eigen::Vector3f resultTrainT = resultPose.trainPose.block<3, 1>(0, 3);
+      Eigen::Vector3f diffTest = candidateTestT - resultTestT;
+      Eigen::Vector3f diffTrain = candidateTrainT - resultTrainT;
 
-      if (diff.norm() < 0.5f)
+      if (diffTest.norm() < 0.5f || diffTrain.norm() < 0.5)
       {
         insert = false;
       }
@@ -425,6 +428,7 @@ int main(int argc, char *argv[])
 // Show some pose examples
   std::vector<std::string> trainExamplePaths;
   std::vector<std::string> testExamplePaths;
+  std::vector<std::string> inlierImagePaths;
 
   for (int binIdx = classifiedPoses.size() - 2;
       binIdx >= 0 && trainExamplePaths.size() < 8; --binIdx)
@@ -438,13 +442,15 @@ int main(int argc, char *argv[])
           generate_path(trainFolder, "rgbm%06i.ppm", pair.trainIdx).string());
       testExamplePaths.push_back(
           generate_path(testFolder, "rgbm%06i.ppm", pair.testIdx).string());
+      inlierImagePaths.push_back(
+          generate_path(relocFolder, "ransac-%06i.inliers.png", pair.testIdx).string());
     }
   }
 
   static const int IMG_WIDTH = 640;
   static const int IMG_HEIGHT = 480;
   static const int IMG_STEP = 5;
-  cv::Mat samplePoseImg = cv::Mat::zeros(IMG_HEIGHT * 2 + IMG_STEP,
+  cv::Mat samplePoseImg = cv::Mat::zeros(IMG_HEIGHT * 2 + IMG_STEP * 1,
       IMG_WIDTH * trainExamplePaths.size()
           + IMG_STEP * (trainExamplePaths.size() - 1),
       CV_8UC3);
@@ -453,19 +459,24 @@ int main(int argc, char *argv[])
   {
     std::string trainPath = trainExamplePaths[sampleIdx];
     std::string testPath = testExamplePaths[sampleIdx];
+    std::string inliersPath = inlierImagePaths[sampleIdx];
     std::cout << "Loading training image from: " << trainPath
         << "\nLoading test image from: " << testPath << '\n';
 
     cv::Mat trainImg = cv::imread(trainPath);
     cv::Mat testImg = cv::imread(testPath);
+//    cv::Mat inliersImg = cv::imread(inliersPath);
 
     cv::Rect trainRect(sampleIdx * (IMG_WIDTH + IMG_STEP), 0, IMG_WIDTH,
         IMG_HEIGHT);
     cv::Rect testRect(sampleIdx * (IMG_WIDTH + IMG_STEP), IMG_HEIGHT + IMG_STEP,
         IMG_WIDTH, IMG_HEIGHT);
+    cv::Rect inliersRect(sampleIdx * (IMG_WIDTH + IMG_STEP),
+        2 * (IMG_HEIGHT + IMG_STEP), IMG_WIDTH, IMG_HEIGHT);
 
     trainImg.copyTo(samplePoseImg(trainRect));
     testImg.copyTo(samplePoseImg(testRect));
+//    inliersImg.copyTo(samplePoseImg(inliersRect));
   }
 
   cv::namedWindow("Sample images", cv::WINDOW_KEEPRATIO);
@@ -494,15 +505,15 @@ int main(int argc, char *argv[])
 //    posePairs.resize(std::min<size_t>(posePairs.size() / 10, 10));
 
 // Extract the poses from the pairs
-    std::vector<Eigen::Matrix4f> trainPoses, icpPoses;
+    std::vector<Eigen::Matrix4f> trainPoses, testPoses;
     for (const auto &x : posePairs)
     {
       trainPoses.push_back(x.trainPose);
-      icpPoses.push_back(x.icpPose);
+      testPoses.push_back(x.testPose);
     }
 
     auto trainPosesCv = eigen_to_cv(trainPoses);
-    auto icpPosesCv = eigen_to_cv(icpPoses);
+    auto testPosesCv = eigen_to_cv(testPoses);
 
     Color posesColor =
         binIdx < errorThresholds.size() ?
@@ -526,10 +537,10 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < trainPosesCv.size(); ++i)
     {
       const cv::Affine3f &trainPose = trainPosesCv[i];
-      const cv::Affine3f &icpPose = icpPosesCv[i];
+      const cv::Affine3f &testPose = testPosesCv[i];
 
       WLine wLine(cv::Point3f(trainPose.translation()),
-          cv::Point3f(icpPose.translation()), Color::magenta());
+          cv::Point3f(testPose.translation()), Color::magenta());
       std::string wName = "trainTest_"
           + boost::lexical_cast<std::string>(binIdx) + '_'
           + boost::lexical_cast<std::string>(i);
@@ -538,10 +549,10 @@ int main(int argc, char *argv[])
     }
 
     {
-      std::string tName = "icpTrajectory_"
+      std::string tName = "testTrajectory_"
           + boost::lexical_cast<std::string>(binIdx);
 //    auto subsampled = subsample_trajectory(posesCv, 50);
-      WTrajectoryFrustums traj(icpPosesCv, intrinsics, 0.15, posesColor);
+      WTrajectoryFrustums traj(testPosesCv, intrinsics, 0.15, posesColor);
       visualizer.showWidget(tName, traj);
       visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
     }
