@@ -66,7 +66,7 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
       measurements = construct_measurements_from_depth(ids, corners, view, pose);
       break;
     case PEM_RAYCAST:
-      measurements = construct_measurements_from_raycast(ids, corners, renderState);
+      measurements = construct_measurements_from_raycast(ids, corners, renderState, pose);
       break;
     default:
       // This should never happen.
@@ -143,7 +143,7 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
 
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
-    boost::optional<ORUtils::SE3Pose> fiducialPoseEye = make_pose(
+    boost::optional<ORUtils::SE3Pose> fiducialPoseEye = make_pose_from_corners(
       pick_corner_from_depth(corners[i][3], view),
       pick_corner_from_depth(corners[i][2], view),
       pick_corner_from_depth(corners[i][0], view)
@@ -160,13 +160,13 @@ ArUcoFiducialDetector::construct_measurements_from_depth(const std::vector<int>&
 
 std::vector<boost::optional<FiducialMeasurement> >
 ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
-                                                           const VoxelRenderState_CPtr& renderState) const
+                                                           const VoxelRenderState_CPtr& renderState, const ORUtils::SE3Pose& pose) const
 {
   std::vector<boost::optional<FiducialMeasurement> > measurements;
 
   for(size_t i = 0, size = corners.size(); i < size; ++i)
   {
-    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld = make_pose(
+    boost::optional<ORUtils::SE3Pose> fiducialPoseWorld = make_pose_from_corners(
       pick_corner_from_raycast(corners[i][3], renderState),
       pick_corner_from_raycast(corners[i][2], renderState),
       pick_corner_from_raycast(corners[i][0], renderState)
@@ -227,7 +227,9 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const 
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-boost::optional<ORUtils::SE3Pose> ArUcoFiducialDetector::make_pose(const boost::optional<Vector3f>& v0, const boost::optional<Vector3f>& v1, const boost::optional<Vector3f>& v2)
+boost::optional<ORUtils::SE3Pose> ArUcoFiducialDetector::make_pose_from_corners(const boost::optional<Vector3f>& v0,
+                                                                                const boost::optional<Vector3f>& v1,
+                                                                                const boost::optional<Vector3f>& v2)
 {
   boost::optional<ORUtils::SE3Pose> pose;
 
