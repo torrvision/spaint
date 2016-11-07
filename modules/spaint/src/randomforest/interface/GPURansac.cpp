@@ -64,12 +64,6 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
   m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
   m_predictionsImage->UpdateHostFromDevice(); // Also the predictions
 
-//  std::vector<PoseCandidate> candidates;
-  PoseCandidate *candidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
-  int &nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
-
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -86,10 +80,10 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
 //    compute_candidate_pose_kabsch();
 //  }
 
-//  std::cout << "Generated " << m_nbPoseCandidates << " initial candidates."
-//      << std::endl;
+  PoseCandidates *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  PoseCandidate *candidates = poseCandidates->candidates;
 
-  if (m_trimKinitAfterFirstEnergyComputation < nbPoseCandidates)
+  if (m_trimKinitAfterFirstEnergyComputation < poseCandidates->nbCandidates)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -124,15 +118,14 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
       compute_and_sort_energies();
     }
 
-    nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
+    poseCandidates->nbCandidates = m_trimKinitAfterFirstEnergyComputation;
 
     if (m_trimKinitAfterFirstEnergyComputation > 1)
     {
-      for (int p = 0; p < nbPoseCandidates; ++p)
+      for (int p = 0; p < poseCandidates->nbCandidates; ++p)
       {
-        PoseCandidate &candidate = candidates[p];
-        if (candidate.nbInliers > nbSamplesPerCamera)
-          candidate.nbInliers = nbSamplesPerCamera;
+        if (candidates[p].nbInliers > nbSamplesPerCamera)
+          candidates[p].nbInliers = nbSamplesPerCamera;
       }
     }
   }
@@ -149,7 +142,7 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
 
   float iteration = 0.0f;
 
-  while (nbPoseCandidates > 1)
+  while (poseCandidates->nbCandidates > 1)
   {
     //    boost::timer::auto_cpu_timer t(
     //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -171,10 +164,12 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     compute_and_sort_energies();
 
     // Remove half of the candidates with the worse energies
-    nbPoseCandidates /= 2;
+    poseCandidates->nbCandidates /= 2;
   }
 
-  return nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
+  return
+      poseCandidates->nbCandidates > 0 ?
+          candidates[0] : boost::optional<PoseCandidate>();
 }
 
 void GPURansac::generate_pose_candidates()
