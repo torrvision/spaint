@@ -143,6 +143,9 @@ struct TestICPPair
   Eigen::Matrix4f trainPose;
   Eigen::Matrix4f testPose;
   Eigen::Matrix4f icpPose;
+
+  size_t trainIdx;
+  size_t testIdx;
 };
 
 struct ErrorThreshold
@@ -172,6 +175,7 @@ std::vector<std::vector<TestICPPair>> classify_poses(
     if (!pose_matches(testPose, icpPose, 0.05f, 5.f * M_PI / 180.f))
       continue;
 
+    size_t closestTrainingIdx = std::numeric_limits<size_t>::max();
     float closestTrainPoseDist = std::numeric_limits<float>::max();
     Eigen::Matrix4f closestTrainPose;
     closestTrainPose.setConstant(std::numeric_limits<float>::quiet_NaN());
@@ -194,6 +198,7 @@ std::vector<std::vector<TestICPPair>> classify_poses(
             closestTrainPoseDist = (trainPose.block<3, 1>(0, 3)
                 - testPose.block<3, 1>(0, 3)).norm();
             closestTrainPose = trainPose;
+            closestTrainingIdx = trainIndex;
             chosenBin = binIndex;
           }
         }
@@ -202,7 +207,7 @@ std::vector<std::vector<TestICPPair>> classify_poses(
 
     // Store the test/icp pair in the right bucket
     res[chosenBin].push_back(TestICPPair
-    { closestTrainPose, testPose, icpPose });
+    { closestTrainPose, testPose, icpPose, closestTrainingIdx, testIndex });
   }
 
   return res;
@@ -286,6 +291,13 @@ int main(int argc, char *argv[])
 //  { 0.50f, 50.f * M_PI / 180.f, Color(0x00, 0x2A, 0xD4) });
 //  errorThresholds.push_back(ErrorThreshold
 //  { 0.7f, 70.f * M_PI / 180.f, Color(0x00, 0x00, 0xFF) });
+
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.10f, 10.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.30f, 30.f * M_PI / 180.f, Color(0x00, 0xA5, 0xFF) });
+//  errorThresholds.push_back(ErrorThreshold
+//  { 0.60f, 60.f * M_PI / 180.f, Color(0x00, 0x00, 0xFF) });
 
   errorThresholds.push_back(ErrorThreshold
   { 0.10f, 10.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
@@ -387,21 +399,97 @@ int main(int argc, char *argv[])
 //    }
 //  }
 
-// Show classified poses
+// Classify poses
   auto classifiedPoses = classify_poses(trainTrajectory, testTrajectory,
       icpTrajectory, errorThresholds);
+
+  // Prune nearby poses
   for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
   {
-    auto posePairs = classifiedPoses[binIdx];
+    auto &posePairs = classifiedPoses[binIdx];
     std::cout << "The bin " << binIdx << " has " << posePairs.size()
         << " poses.\n";
 
     posePairs = prune_near_poses(posePairs);
     std::cout << "After pruning closest poses has " << posePairs.size()
         << " poses.\n";
+  }
 
-    // Show at most N poses
-    std::random_shuffle(posePairs.begin(), posePairs.end());
+//  // Shuffle them for visualization
+//  for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
+//  {
+//    std::random_shuffle(classifiedPoses[binIdx].begin(),
+//        classifiedPoses[binIdx].end());
+//  }
+
+// Show some pose examples
+  std::vector<std::string> trainExamplePaths;
+  std::vector<std::string> testExamplePaths;
+
+  for (int binIdx = classifiedPoses.size() - 2;
+      binIdx >= 0 && trainExamplePaths.size() < 8; --binIdx)
+  {
+    const auto &posePairs = classifiedPoses[binIdx];
+    for (size_t pairIdx = 0;
+        pairIdx < posePairs.size() && trainExamplePaths.size() < 8; ++pairIdx)
+    {
+      const auto &pair = posePairs[pairIdx];
+      trainExamplePaths.push_back(
+          generate_path(trainFolder, "rgbm%06i.ppm", pair.trainIdx).string());
+      testExamplePaths.push_back(
+          generate_path(testFolder, "rgbm%06i.ppm", pair.testIdx).string());
+    }
+  }
+
+  static const int IMG_WIDTH = 640;
+  static const int IMG_HEIGHT = 480;
+  static const int IMG_STEP = 5;
+  cv::Mat samplePoseImg = cv::Mat::zeros(IMG_HEIGHT * 2 + IMG_STEP,
+      IMG_WIDTH * trainExamplePaths.size()
+          + IMG_STEP * (trainExamplePaths.size() - 1),
+      CV_8UC3);
+
+  for (size_t sampleIdx = 0; sampleIdx < trainExamplePaths.size(); ++sampleIdx)
+  {
+    std::string trainPath = trainExamplePaths[sampleIdx];
+    std::string testPath = testExamplePaths[sampleIdx];
+    std::cout << "Loading training image from: " << trainPath
+        << "\nLoading test image from: " << testPath << '\n';
+
+    cv::Mat trainImg = cv::imread(trainPath);
+    cv::Mat testImg = cv::imread(testPath);
+
+    cv::Rect trainRect(sampleIdx * (IMG_WIDTH + IMG_STEP), 0, IMG_WIDTH,
+        IMG_HEIGHT);
+    cv::Rect testRect(sampleIdx * (IMG_WIDTH + IMG_STEP), IMG_HEIGHT + IMG_STEP,
+        IMG_WIDTH, IMG_HEIGHT);
+
+    trainImg.copyTo(samplePoseImg(trainRect));
+    testImg.copyTo(samplePoseImg(testRect));
+  }
+
+  cv::namedWindow("Sample images", cv::WINDOW_KEEPRATIO);
+  cv::imshow("Sample images", samplePoseImg);
+
+  int key = 0;
+  while (key != 27)
+  {
+    key = cv::waitKey();
+  }
+
+  cv::destroyAllWindows();
+
+//  cv::Mat trainImg = cv::imread(trainExamplePaths[0]);
+//  cv::Mat testImg = cv::imread(testExamplePaths[0]);
+//
+//  cv::imshow("Train", trainImg);
+//  cv::imshow("Test", testImg);
+//  cv::waitKey();
+
+  for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
+  {
+    auto &posePairs = classifiedPoses[binIdx];
+    // Show at most N poses for each bin
     posePairs.resize(std::min<size_t>(posePairs.size(), 4));
 //    posePairs.resize(std::min<size_t>(posePairs.size() / 10, 10));
 
@@ -509,7 +597,7 @@ int main(int argc, char *argv[])
       cookie.refresh = false;
     }
 
-    if(cookie.screenshot)
+    if (cookie.screenshot)
     {
 //      visualizerTrajectory.spinOnce();
 
