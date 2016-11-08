@@ -447,7 +447,7 @@ void GPURansac_CUDA::compute_and_sort_energies()
   thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
   thrust::device_ptr<PoseCandidate> candidatesEnd(
       poseCandidates + nbPoseCandidates);
-  thrust::sort(thrust::seq, candidatesStart, candidatesEnd);
+  thrust::sort(candidatesStart, candidatesEnd);
 
   // Need to make the data available to the host once again
   m_poseCandidates->UpdateHostFromDevice();
