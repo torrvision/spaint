@@ -8,9 +8,12 @@
 
 #include <boost/optional.hpp>
 
+#include "ORUtils/PlatformIndependence.h"
+
 #include "ITMLib/Utils/ITMMath.h"
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "GPUForestTypes.h"
+#include <Eigen/Dense>
 
 namespace spaint
 {
@@ -35,8 +38,17 @@ struct PoseCandidate
   int nbInliers;
   float energy;
   int cameraId;
+};
+
+_CPU_AND_GPU_CODE_ inline bool operator <(const PoseCandidate &a,
+    const PoseCandidate &b)
+{
+  return a.energy < b.energy;
 }
-;
+
+typedef ORUtils::MemoryBlock<PoseCandidate> PoseCandidateMemoryBlock;
+typedef boost::shared_ptr<PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_Ptr;
+typedef boost::shared_ptr<const PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_CPtr;
 
 struct PoseCandidates
 {
@@ -81,7 +93,8 @@ protected:
   RGBDPatchFeatureImage_CPtr m_featureImage;
   GPUForestPredictionsImage_CPtr m_predictionsImage;
 
-  PoseCandidatesMemoryBlock_Ptr m_poseCandidates;
+  PoseCandidateMemoryBlock_Ptr m_poseCandidates;
+  boost::shared_ptr<ORUtils::MemoryBlock<int> > m_nbPoseCandidates;
 
   virtual void generate_pose_candidates();
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
@@ -91,6 +104,7 @@ protected:
   virtual void compute_and_sort_energies();
   void update_candidate_poses();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
+  Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const;
 
 private:
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);

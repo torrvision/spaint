@@ -7,6 +7,9 @@
 
 #include "util/MemoryBlockFactory.h"
 
+#include <Eigen/Dense>
+
+#include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 
@@ -229,8 +232,8 @@ __device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
 
 __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
     const GPUForestPrediction *predictions, const Vector2i imgSize,
-    GPURansac_CUDA::RandomState *randomStates, PoseCandidates *poseCandidates,
-    int maxNbPoseCandidates,
+    GPURansac_CUDA::RandomState *randomStates, PoseCandidate *poseCandidates,
+    int *nbPoseCandidates, int maxNbPoseCandidates,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
     bool m_checkMinDistanceBetweenSampledModes,
     float m_minDistanceBetweenSampledModes,
@@ -255,20 +258,18 @@ __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
 
   if (valid)
   {
-    const int candidateIdx = atomicAdd(&poseCandidates->nbCandidates, 1);
-
-    PoseCandidate *candidates = poseCandidates->candidates;
-    candidates[candidateIdx] = candidate;
+    const int candidateIdx = atomicAdd(nbPoseCandidates, 1);
+    poseCandidates[candidateIdx] = candidate;
   }
 }
 
 __global__ void ck_compute_energies(const RGBDPatchFeature *features,
-    const GPUForestPrediction *predictions, PoseCandidates *poseCandidates)
+    const GPUForestPrediction *predictions, PoseCandidate *poseCandidates,
+    int nbCandidates)
 {
   const int tId = threadIdx.x;
   const int threadsPerBlock = blockDim.x;
   const int candidateIdx = blockIdx.x;
-  const int nbCandidates = poseCandidates->nbCandidates;
 
   if (candidateIdx >= nbCandidates)
   {
@@ -277,7 +278,7 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
     return;
   }
 
-  PoseCandidate &currentCandidate = poseCandidates->candidates[candidateIdx];
+  PoseCandidate &currentCandidate = poseCandidates[candidateIdx];
 
   float localEnergy = 0.f;
 
@@ -338,32 +339,24 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
         / static_cast<float>(currentCandidate.nbInliers);
 }
 
-__global__ void ck_reset_candidate_energies(PoseCandidates *poseCandidates)
+__global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
+    int nbPoseCandidates)
 {
   const int candidateIdx = threadIdx.x;
 
-  if (candidateIdx >= poseCandidates->nbCandidates)
+  if (candidateIdx >= nbPoseCandidates)
   {
     return;
   }
 
-  poseCandidates->candidates[candidateIdx].energy = 0.f;
+  poseCandidates[candidateIdx].energy = 0.f;
+}
 }
 
-__global__ void ck_sort_energies(PoseCandidates *poseCandidates)
+__device__ bool compare_poses_ascending_energy(const PoseCandidate &a,
+    const PoseCandidate &b)
 {
-  const int nbCandidates = poseCandidates->nbCandidates;
-  PoseCandidate *candidates = poseCandidates->candidates;
-
-  thrust::sort(candidates, candidates + nbCandidates,
-      [=](const PoseCandidate &a, const PoseCandidate &b)
-      { return a.energy < b.energy;});
-
-  // Uses dynamic parallelism to launch more kernels (Causes OOM error just by adding this code)
-//  thrust::sort(thrust::device, candidates, candidates + nbCandidates,
-//      [=](const PoseCandidate &a, const PoseCandidate &b)
-//      { return a.energy < b.energy;});
-}
+  return a.energy < b.energy;
 }
 
 GPURansac_CUDA::GPURansac_CUDA() :
@@ -395,19 +388,23 @@ void GPURansac_CUDA::generate_pose_candidates()
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
+  // Reset number of candidates
+  m_nbPoseCandidates->Clear();
+
   RandomState *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
-  PoseCandidates *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+  int *nbPoseCandidates = m_nbPoseCandidates->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(128);
   dim3 gridSize(
       (PoseCandidates::MAX_CANDIDATES + blockSize.x - 1) / blockSize.x);
 
-  // Single thread to reset the number of candidates
-  ck_reset_pose_candidates<<<1,1>>>(poseCandidates);
-  ORcudaKernelCheck;
+//  // Single thread to reset the number of candidates
+//  ck_reset_pose_candidates<<<1,1>>>(poseCandidates, nbPoseCandidates);
+//  ORcudaKernelCheck;
 
   ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomStates,
-      poseCandidates, PoseCandidates::MAX_CANDIDATES,
+      poseCandidates, nbPoseCandidates, PoseCandidates::MAX_CANDIDATES,
       m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minDistanceBetweenSampledModes,
       m_checkRigidTransformationConstraint,
@@ -416,6 +413,7 @@ void GPURansac_CUDA::generate_pose_candidates()
 
   // Need to make the data available to the host
   m_poseCandidates->UpdateHostFromDevice();
+  m_nbPoseCandidates->UpdateHostFromDevice();
 
   // Now perform kabsch on the candidates
   //#ifdef ENABLE_TIMERS
@@ -429,39 +427,40 @@ void GPURansac_CUDA::compute_and_sort_energies()
 {
   // Need to make the data available to the device
   m_poseCandidates->UpdateDeviceFromHost();
+  m_nbPoseCandidates->UpdateDeviceFromHost();
 
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
-  PoseCandidates *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+  const int nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
-  ck_reset_candidate_energies<<<1, PoseCandidates::MAX_CANDIDATES>>>(poseCandidates);
+  ck_reset_candidate_energies<<<1, nbPoseCandidates>>>(poseCandidates, nbPoseCandidates);
   ORcudaKernelCheck;
 
   dim3 blockSize(128); // threads to compute the energy for each candidate
-  dim3 gridSize(PoseCandidates::MAX_CANDIDATES); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
-  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates);
+  dim3 gridSize(nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
+  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates, nbPoseCandidates);
+  ORcudaKernelCheck;
 
-  // Sort by ascending energy (start a single thread, the kernel will dispatch more threads as needed)
-  // Thrust has memory allocation issues TODO: investigate
-//  ck_sort_energies<<<1,1>>>(poseCandidates);
+  // Sort by ascending energy
+  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
+  thrust::device_ptr<PoseCandidate> candidatesEnd(
+      poseCandidates + nbPoseCandidates);
+  thrust::sort(thrust::seq, candidatesStart, candidatesEnd);
 
   // Need to make the data available to the host once again
   m_poseCandidates->UpdateHostFromDevice();
 
-  // host based sort, should be removed once the issue above is fixed
-  {
-    PoseCandidates *poseCandidatesCpu = m_poseCandidates->GetData(
-        MEMORYDEVICE_CPU);
-    const int nbCandidates = poseCandidatesCpu->nbCandidates;
-    PoseCandidate *candidates = poseCandidatesCpu->candidates;
-
-    std::sort(candidates, candidates + nbCandidates,
-        [] (const PoseCandidate &a, const PoseCandidate &b)
-        { return a.energy < b.energy;});
-
-  }
-
+//  // host based sort, should be removed once the issue above is fixed
+//  {
+//    PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+//
+//    std::sort(candidates, candidates + nbPoseCandidates,
+//        [] (const PoseCandidate &a, const PoseCandidate &b)
+//        { return a.energy < b.energy;});
+//
+//  }
 }
 
 void GPURansac_CUDA::compute_candidate_pose_kabsch()
@@ -469,10 +468,8 @@ void GPURansac_CUDA::compute_candidate_pose_kabsch()
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
-  const int nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
-  PoseCandidate *poseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
+  const int nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
 //  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
 

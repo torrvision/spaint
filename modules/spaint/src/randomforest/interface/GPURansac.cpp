@@ -39,8 +39,10 @@ GPURansac::GPURansac()
 //  m_usePredictionCovarianceForPoseOptimization = false;
   m_poseOptimizationInlierThreshold = 0.2f;
 
-  m_poseCandidates = MemoryBlockFactory::instance().make_block<PoseCandidates>(
-      1);
+  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  m_poseCandidates = mbf.make_block<PoseCandidate>(
+      PoseCandidates::MAX_CANDIDATES);
+  m_nbPoseCandidates = mbf.make_block<int>(1);
 }
 
 GPURansac::~GPURansac()
@@ -72,10 +74,10 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     generate_pose_candidates();
   }
 
-  PoseCandidates *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  PoseCandidate *candidates = poseCandidates->candidates;
+  PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
-  if (m_trimKinitAfterFirstEnergyComputation < poseCandidates->nbCandidates)
+  if (m_trimKinitAfterFirstEnergyComputation < nbPoseCandidates)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -110,11 +112,11 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
       compute_and_sort_energies();
     }
 
-    poseCandidates->nbCandidates = m_trimKinitAfterFirstEnergyComputation;
+    nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
 
     if (m_trimKinitAfterFirstEnergyComputation > 1)
     {
-      for (int p = 0; p < poseCandidates->nbCandidates; ++p)
+      for (int p = 0; p < nbPoseCandidates; ++p)
       {
         if (candidates[p].nbInliers > nbSamplesPerCamera)
           candidates[p].nbInliers = nbSamplesPerCamera;
@@ -134,7 +136,7 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
 
   float iteration = 0.0f;
 
-  while (poseCandidates->nbCandidates > 1)
+  while (nbPoseCandidates > 1)
   {
     //    boost::timer::auto_cpu_timer t(
     //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -156,22 +158,18 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     compute_and_sort_energies();
 
     // Remove half of the candidates with the worse energies
-    poseCandidates->nbCandidates /= 2;
+    nbPoseCandidates /= 2;
   }
 
-  return
-      poseCandidates->nbCandidates > 0 ?
-          candidates[0] : boost::optional<PoseCandidate>();
+  return nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
 void GPURansac::generate_pose_candidates()
 {
   const int nbThreads = 12;
 
-  PoseCandidate *poseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
-  int &nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
   nbPoseCandidates = 0;
 
@@ -207,8 +205,9 @@ void GPURansac::generate_pose_candidates()
 
 namespace
 {
-void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::VectorXf &weights,
-    Eigen::MatrixXf &resRot, Eigen::VectorXf &resTrans)
+void Kabsch_impl(Eigen::MatrixXf &P, Eigen::MatrixXf &Q,
+    Eigen::VectorXf &weights, Eigen::MatrixXf &resRot,
+    Eigen::VectorXf &resTrans)
 {
   if (P.cols() != Q.cols() || P.rows() != Q.rows())
     throw std::runtime_error("Kabsch: P and Q have different dimensions");
@@ -257,26 +256,26 @@ void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::VectorXf &weights,
   return;
 }
 
-void Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q, Eigen::MatrixXf &resRot,
-    Eigen::VectorXf &resTrans)
+void Kabsch_impl(Eigen::MatrixXf &P, Eigen::MatrixXf &Q,
+    Eigen::MatrixXf &resRot, Eigen::VectorXf &resTrans)
 {
   Eigen::VectorXf weights = Eigen::VectorXf::Ones(P.cols());
-  Kabsch(P, Q, weights, resRot, resTrans);
+  Kabsch_impl(P, Q, weights, resRot, resTrans);
+}
 }
 
-Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q)
+Eigen::Matrix4f GPURansac::Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const
 {
   Eigen::MatrixXf resRot;
   Eigen::VectorXf resTrans;
 
-  Kabsch(P, Q, resRot, resTrans);
+  Kabsch_impl(P, Q, resRot, resTrans);
 
   // recompose R + t in Rt
   Eigen::Matrix4f res;
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
-}
 }
 
 bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
@@ -539,10 +538,8 @@ void GPURansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
 void GPURansac::update_inliers_for_optimization(
     const std::vector<Vector2i> &sampledPixelIdx)
 {
-  PoseCandidate *poseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
-  int &nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
   for (int p = 0; p < nbPoseCandidates; ++p)
@@ -563,11 +560,8 @@ void GPURansac::update_inliers_for_optimization(
 
 void GPURansac::compute_and_sort_energies()
 {
-//  int nbPoseProcessed = 0;
-  PoseCandidate *poseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
-  int &nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
   for (int p = 0; p < nbPoseCandidates; ++p)
@@ -650,10 +644,8 @@ void GPURansac::compute_pose_energy(PoseCandidate &candidate) const
 
 void GPURansac::update_candidate_poses()
 {
-  PoseCandidate *poseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
-  int &nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
 //  int nbUpdated = 0;
 #pragma omp parallel for
