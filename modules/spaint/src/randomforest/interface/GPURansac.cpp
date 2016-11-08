@@ -72,14 +72,6 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     generate_pose_candidates();
   }
 
-//  {
-//#ifdef ENABLE_TIMERS
-//    boost::timer::auto_cpu_timer t(6,
-//        "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-//    compute_candidate_pose_kabsch();
-//  }
-
   PoseCandidates *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
   PoseCandidate *candidates = poseCandidates->candidates;
 
@@ -489,42 +481,6 @@ bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
     return true;
 
   return false;
-}
-
-void GPURansac::compute_candidate_pose_kabsch()
-{
-  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
-  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
-      MEMORYDEVICE_CPU);
-  const int nbPoseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->nbCandidates;
-  PoseCandidate *poseCandidates =
-      m_poseCandidates->GetData(MEMORYDEVICE_CPU)->candidates;
-
-//  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
-
-#pragma omp parallel for
-  for (int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
-  {
-    PoseCandidate &candidate = poseCandidates[candidateIdx];
-
-    Eigen::MatrixXf localPoints(3, candidate.nbInliers);
-    Eigen::MatrixXf worldPoints(3, candidate.nbInliers);
-    for (int s = 0; s < candidate.nbInliers; ++s)
-    {
-      const int linearIdx = candidate.inliers[s].linearIdx;
-      const int modeIdx = candidate.inliers[s].modeIdx;
-      const GPUForestPrediction &pred = predictions[linearIdx];
-
-      localPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          features[linearIdx].position.v);
-      worldPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          pred.modes[modeIdx].position.v);
-    }
-
-    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints,
-        worldPoints);
-  }
 }
 
 void GPURansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,

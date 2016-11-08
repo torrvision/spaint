@@ -94,7 +94,6 @@ protected:
 
 private:
   bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
-  void compute_candidate_pose_kabsch();
   void compute_pose_energy(PoseCandidate &candidate) const;
 };
 

@@ -30,6 +30,7 @@ private:
   uint32_t m_rngSeed;
 
   void init_random();
+  void compute_candidate_pose_kabsch();
 };
 
 }
