@@ -46,7 +46,17 @@ public:
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Constructs a set of fiducial measurements by directly estimating poses for the fiducials from the live colour image.
+   *
+   * \note  The poses are estimated using the OpenCV ArUco library, and are much less accurate than the poses we can get using
+   *        either the live depth image or a raycast of the scene. The sole advantage of this approach is that it can produce
+   *        poses when neither of those two sources of information are available.
+   *
+   * \param ids     The IDs of the fiducials that have been detected in the live colour image.
+   * \param corners The corners of the fiducials that have been detected in the live colour image.
+   * \param view    The view of the scene containing the live images.
+   * \param pose    The current estimate of the camera pose (used to map between eye space and world space).
+   * \return        The constructed set of fiducial measurements.
    */
   std::vector<boost::optional<FiducialMeasurement> > construct_measurements_from_colour(const std::vector<int>& ids, const std::vector<std::vector<cv::Point2f> >& corners,
                                                                                         const View_CPtr& view, const ORUtils::SE3Pose& pose) const;
@@ -54,7 +64,7 @@ private:
   /**
    * \brief Constructs a set of fiducial measurements by back-projecting the detected fiducial corners in the live colour image
    *        into 3D using depth values from the live depth image, and then using the back-projected corners to determine poses
-   *        for the fiducial in both eye and world space.
+   *        for the fiducials in both eye and world space.
    *
    * \param ids     The IDs of the fiducials that have been detected in the live colour image.
    * \param corners The corners of the fiducials that have been detected in the live colour image.
@@ -68,7 +78,7 @@ private:
   /**
    * \brief Constructs a set of fiducial measurements by looking up in a raycast of the scene the 3D points in world space
    *        that correspond to the detected fiducial corners in the live colour image, and then using these 3D points to
-   *        determine poses for the fiducial in both world and eye space.
+   *        determine poses for the fiducials in both world and eye space.
    *
    * \param ids         The IDs of the fiducials that have been detected in the live colour image.
    * \param corners     The corners of the fiducials that have been detected in the live colour image.
