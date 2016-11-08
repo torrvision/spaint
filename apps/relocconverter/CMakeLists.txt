@@ -46,7 +46,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 ##########################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
-TARGET_LINK_LIBRARIES(${targetname} spaint tvgutil tvginput)
+TARGET_LINK_LIBRARIES(${targetname} spaint tvgutil tvginput cudadevrt)
 
 #################################
 # Specify the libraries to link #

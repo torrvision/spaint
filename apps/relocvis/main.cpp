@@ -66,20 +66,27 @@ std::vector<Eigen::Matrix4f> read_sequence_trajectory(const fs::path &basePath,
   return res;
 }
 
+cv::Affine3f eigen_to_cv(const Eigen::Matrix4f &eigM)
+{
+  cv::Affine3f res;
+
+  for (int i = 0; i < 16; ++i)
+    res.matrix.val[i] = eigM.data()[i];
+
+  // Col Major to row major
+  res.matrix = res.matrix.t();
+
+  return res;
+}
+
 std::vector<cv::Affine3f> eigen_to_cv(
     const std::vector<Eigen::Matrix4f> &trajectory)
 {
   std::vector<cv::Affine3f> res;
+
   for (auto eigM : trajectory)
   {
-    cv::Affine3f cvM;
-    for (int i = 0; i < 16; ++i)
-      cvM.matrix.val[i] = eigM.data()[i];
-
-    // Col Major to row major
-    cvM.matrix = cvM.matrix.t();
-
-    res.push_back(cvM);
+    res.push_back(eigen_to_cv(eigM));
   }
 
   return res;
@@ -214,6 +221,47 @@ std::vector<std::vector<TestICPPair>> classify_poses(
   return res;
 }
 
+std::vector<std::vector<TestICPPair> > prune_near_poses(
+    const std::vector<std::vector<TestICPPair> > &poses)
+{
+  std::vector<std::vector<TestICPPair> > result(poses.size());
+  for (size_t binIdx = poses.size() - 1; binIdx < poses.size(); --binIdx)
+  {
+    for (const TestICPPair &pose : poses[binIdx])
+    {
+      Eigen::Vector3f candidateTestT = pose.testPose.block<3, 1>(0, 3);
+      Eigen::Vector3f candidateTrainT = pose.trainPose.block<3, 1>(0, 3);
+
+      // If there are no similar poses in the results vector insert the current candidate
+      bool insert = true;
+      for (size_t checkBinIdx = result.size() - 1;
+          checkBinIdx < result.size() && insert; --checkBinIdx)
+      {
+        for (size_t i = 0; i < result[checkBinIdx].size() && insert; ++i)
+        {
+          auto &resultPose = result[checkBinIdx][i];
+          Eigen::Vector3f resultTestT = resultPose.testPose.block<3, 1>(0, 3);
+          Eigen::Vector3f resultTrainT = resultPose.trainPose.block<3, 1>(0, 3);
+          Eigen::Vector3f diffTest = candidateTestT - resultTestT;
+          Eigen::Vector3f diffTrain = candidateTrainT - resultTrainT;
+
+          if (diffTest.norm() < 0.5f)// || diffTrain.norm() < 0.5)
+          {
+            insert = false;
+          }
+        }
+      }
+
+      if (insert)
+      {
+        result[binIdx].push_back(pose);
+      }
+    }
+  }
+
+  return result;
+}
+
 std::vector<TestICPPair> prune_near_poses(const std::vector<TestICPPair> &poses)
 {
   std::vector<TestICPPair> result;
@@ -333,7 +381,10 @@ int main(int argc, char *argv[])
   fs::path meshPath = argv[4];
 
   Mesh seqMesh = Mesh::load(meshPath.string(), Mesh::LOAD_OBJ);
-  Mesh cameraMesh = Mesh::load((tvgutil::find_subdir_from_executable("resources") / "frustum.ply").string(), Mesh::LOAD_PLY);
+  Mesh cameraMesh =
+      Mesh::load(
+          (tvgutil::find_subdir_from_executable("resources") / "frustum.ply").string(),
+          Mesh::LOAD_PLY);
 
   WMesh meshWidget(seqMesh);
 
@@ -409,17 +460,34 @@ int main(int argc, char *argv[])
   auto classifiedPoses = classify_poses(trainTrajectory, testTrajectory,
       icpTrajectory, errorThresholds);
 
-  // Prune nearby poses
   for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
   {
     auto &posePairs = classifiedPoses[binIdx];
-    std::cout << "The bin " << binIdx << " has " << posePairs.size()
-        << " poses.\n";
-
-    posePairs = prune_near_poses(posePairs);
-    std::cout << "After pruning closest poses has " << posePairs.size()
+    std::cout << "The bin " << binIdx << " had " << posePairs.size()
         << " poses.\n";
   }
+
+  // prune near poses (global)
+  classifiedPoses = prune_near_poses(classifiedPoses);
+
+  for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
+  {
+    auto &posePairs = classifiedPoses[binIdx];
+    std::cout << "After pruning the bin " << binIdx << " had " << posePairs.size()
+        << " poses.\n";
+  }
+
+//  // Prune nearby poses (per bin)
+//  for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
+//  {
+//    auto &posePairs = classifiedPoses[binIdx];
+//    std::cout << "The bin " << binIdx << " has " << posePairs.size()
+//        << " poses.\n";
+//
+//    posePairs = prune_near_poses(posePairs);
+//    std::cout << "After pruning closest poses has " << posePairs.size()
+//        << " poses.\n";
+//  }
 
 //  // Shuffle them for visualization
 //  for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
@@ -429,16 +497,18 @@ int main(int argc, char *argv[])
 //  }
 
 // Show some pose examples
+  static const int MAX_SAMPLES = 8;
   std::vector<std::string> trainExamplePaths;
   std::vector<std::string> testExamplePaths;
   std::vector<std::string> inlierImagePaths;
 
   for (int binIdx = classifiedPoses.size() - 2;
-      binIdx >= 0 && trainExamplePaths.size() < 8; --binIdx)
+      binIdx >= 0 && trainExamplePaths.size() < MAX_SAMPLES; --binIdx)
   {
     const auto &posePairs = classifiedPoses[binIdx];
     for (size_t pairIdx = 0;
-        pairIdx < posePairs.size() && trainExamplePaths.size() < 8; ++pairIdx)
+        pairIdx < posePairs.size() && trainExamplePaths.size() < MAX_SAMPLES;
+        ++pairIdx)
     {
       const auto &pair = posePairs[pairIdx];
       trainExamplePaths.push_back(
@@ -501,7 +571,11 @@ int main(int argc, char *argv[])
 //  cv::imshow("Test", testImg);
 //  cv::waitKey();
 
-  for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
+// Show up to trainExamplePaths.size() cameras
+  size_t cameraCounter = 0;
+  for (size_t binIdx = classifiedPoses.size() - 1;
+      binIdx < classifiedPoses.size()
+          && cameraCounter < trainExamplePaths.size(); --binIdx)
   {
     auto &posePairs = classifiedPoses[binIdx];
     // Show at most N poses for each bin
@@ -580,6 +654,18 @@ int main(int argc, char *argv[])
 
         visualizer.showWidget(wName, cameraWidget, testPosesCv[cameraIdx]);
         visualizer.setRenderingProperty(wName, SHADING, SHADING_FLAT);
+
+//        if (cameraCounter < trainExamplePaths.size())
+        if (cameraCounter < 4)
+        {
+          wName += "_text";
+          WText3D wCameraText(
+              boost::lexical_cast<std::string>(cameraCounter + 1),
+              cv::Point3f(testPosesCv[cameraIdx].translation()), 0.085, true,
+              posesColor);
+          visualizer.showWidget(wName, wCameraText);
+          cameraCounter++;
+        }
       }
 
 //      if (!testPosesCv.empty())
