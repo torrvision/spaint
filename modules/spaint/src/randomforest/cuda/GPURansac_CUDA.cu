@@ -388,20 +388,16 @@ void GPURansac_CUDA::generate_pose_candidates()
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
-  // Reset number of candidates
-  m_nbPoseCandidates->Clear();
-
   RandomState *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
   int *nbPoseCandidates = m_nbPoseCandidates->GetData(MEMORYDEVICE_CUDA);
 
-  dim3 blockSize(128);
+  dim3 blockSize(32);
   dim3 gridSize(
       (PoseCandidates::MAX_CANDIDATES + blockSize.x - 1) / blockSize.x);
 
-//  // Single thread to reset the number of candidates
-//  ck_reset_pose_candidates<<<1,1>>>(poseCandidates, nbPoseCandidates);
-//  ORcudaKernelCheck;
+  // Reset number of candidates (only on device, the host number will be updated later)
+  ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates, 0, sizeof(int)));
 
   ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomStates,
       poseCandidates, nbPoseCandidates, PoseCandidates::MAX_CANDIDATES,
