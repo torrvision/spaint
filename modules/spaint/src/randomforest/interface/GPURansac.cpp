@@ -42,7 +42,7 @@ GPURansac::GPURansac()
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_poseCandidates = mbf.make_block<PoseCandidate>(
       PoseCandidates::MAX_CANDIDATES);
-  m_nbPoseCandidates = mbf.make_block<int>(1);
+  m_nbPoseCandidates = 0;
 }
 
 GPURansac::~GPURansac()
@@ -75,9 +75,8 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
   }
 
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
-  if (m_trimKinitAfterFirstEnergyComputation < nbPoseCandidates)
+  if (m_trimKinitAfterFirstEnergyComputation < m_nbPoseCandidates)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -112,11 +111,11 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
       compute_and_sort_energies();
     }
 
-    nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
+    m_nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
 
     if (m_trimKinitAfterFirstEnergyComputation > 1)
     {
-      for (int p = 0; p < nbPoseCandidates; ++p)
+      for (int p = 0; p < m_nbPoseCandidates; ++p)
       {
         if (candidates[p].nbInliers > nbSamplesPerCamera)
           candidates[p].nbInliers = nbSamplesPerCamera;
@@ -136,7 +135,7 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
 
   float iteration = 0.0f;
 
-  while (nbPoseCandidates > 1)
+  while (m_nbPoseCandidates > 1)
   {
     //    boost::timer::auto_cpu_timer t(
     //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -158,10 +157,10 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     compute_and_sort_energies();
 
     // Remove half of the candidates with the worse energies
-    nbPoseCandidates /= 2;
+    m_nbPoseCandidates /= 2;
   }
 
-  return nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
+  return m_nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
 void GPURansac::generate_pose_candidates()
@@ -169,9 +168,8 @@ void GPURansac::generate_pose_candidates()
   const int nbThreads = 12;
 
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
-  nbPoseCandidates = 0;
+  m_nbPoseCandidates = 0;
 
   std::vector<std::mt19937> engs(nbThreads);
   for (int i = 0; i < nbThreads; ++i)
@@ -196,7 +194,7 @@ void GPURansac::generate_pose_candidates()
 
 #pragma omp critical
         {
-          poseCandidates[nbPoseCandidates++] = candidate;
+          poseCandidates[m_nbPoseCandidates++] = candidate;
         }
       }
     }
@@ -539,10 +537,9 @@ void GPURansac::update_inliers_for_optimization(
     const std::vector<Vector2i> &sampledPixelIdx)
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
-  for (int p = 0; p < nbPoseCandidates; ++p)
+  for (int p = 0; p < m_nbPoseCandidates; ++p)
   {
     PoseCandidate &candidate = poseCandidates[p];
 
@@ -561,10 +558,9 @@ void GPURansac::update_inliers_for_optimization(
 void GPURansac::compute_and_sort_energies()
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
-  for (int p = 0; p < nbPoseCandidates; ++p)
+  for (int p = 0; p < m_nbPoseCandidates; ++p)
   {
     //#pragma omp critical
     //    {
@@ -576,9 +572,7 @@ void GPURansac::compute_and_sort_energies()
   }
 
 // Sort by ascending energy
-  std::sort(poseCandidates, poseCandidates + nbPoseCandidates,
-      [] (const PoseCandidate &a, const PoseCandidate &b)
-      { return a.energy < b.energy;});
+  std::sort(poseCandidates, poseCandidates + m_nbPoseCandidates);
 }
 
 void GPURansac::compute_pose_energy(PoseCandidate &candidate) const
@@ -645,11 +639,10 @@ void GPURansac::compute_pose_energy(PoseCandidate &candidate) const
 void GPURansac::update_candidate_poses()
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-  int &nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 
 //  int nbUpdated = 0;
 #pragma omp parallel for
-  for (int i = 0; i < nbPoseCandidates; ++i)
+  for (int i = 0; i < m_nbPoseCandidates; ++i)
   {
     if (update_candidate_pose(poseCandidates[i]))
     {

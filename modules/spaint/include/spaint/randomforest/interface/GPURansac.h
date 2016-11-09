@@ -94,7 +94,7 @@ protected:
   GPUForestPredictionsImage_CPtr m_predictionsImage;
 
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
-  boost::shared_ptr<ORUtils::MemoryBlock<int> > m_nbPoseCandidates;
+  int m_nbPoseCandidates;
 
   virtual void generate_pose_candidates();
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
