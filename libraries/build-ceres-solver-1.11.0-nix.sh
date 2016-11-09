@@ -56,7 +56,7 @@ else
   then
     cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/installed/include -DGLOG_LIBRARY=../../glog-0.3.4/installed/lib/libglog.dylib -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libstdc++"  .. > $LOG 2>&1
   else
-    cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/installed/include -DGLOG_LIBRARY=../../glog-0.3.4/installed/lib/libglog.dylib .. > $LOG 2>&1
+    cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" -DEIGEN_INCLUDE_DIR=../../Eigen-3.2.2 -DGLOG_INCLUDE_DIR=../../glog-0.3.4/installed/include -DGLOG_LIBRARY=../../glog-0.3.4/installed/lib/libglog.so .. > $LOG 2>&1
   fi
 
   echo "[spaint] ...Running build..."
