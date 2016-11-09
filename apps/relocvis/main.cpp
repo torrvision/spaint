@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <opencv2/viz.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <sstream>
 #include "tvgutil/filesystem/PathFinder.h"
@@ -245,7 +246,7 @@ std::vector<std::vector<TestICPPair> > prune_near_poses(
           Eigen::Vector3f diffTest = candidateTestT - resultTestT;
           Eigen::Vector3f diffTrain = candidateTrainT - resultTrainT;
 
-          if (diffTest.norm() < 0.5f)// || diffTrain.norm() < 0.5)
+          if (diffTest.norm() < 0.5f) // || diffTrain.norm() < 0.5)
           {
             insert = false;
           }
@@ -354,7 +355,7 @@ int main(int argc, char *argv[])
   errorThresholds.push_back(ErrorThreshold
   { 0.10f, 10.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
   errorThresholds.push_back(ErrorThreshold
-  { 0.35f, 35.f * M_PI / 180.f, Color(0x00, 0xA5, 0xFF) });
+  { 0.35f, 35.f * M_PI / 180.f, Color(0x00, 0xFF, 0x00) });
   errorThresholds.push_back(ErrorThreshold
   { 0.7f, 70.f * M_PI / 180.f, Color(0x00, 0x00, 0xFF) });
 
@@ -473,8 +474,8 @@ int main(int argc, char *argv[])
   for (size_t binIdx = 0; binIdx < classifiedPoses.size(); ++binIdx)
   {
     auto &posePairs = classifiedPoses[binIdx];
-    std::cout << "After pruning the bin " << binIdx << " had " << posePairs.size()
-        << " poses.\n";
+    std::cout << "After pruning the bin " << binIdx << " had "
+        << posePairs.size() << " poses.\n";
   }
 
 //  // Prune nearby poses (per bin)
@@ -497,6 +498,7 @@ int main(int argc, char *argv[])
 //  }
 
 // Show some pose examples
+  static const int MAX_CAMERAS = 4;
   static const int MAX_SAMPLES = 8;
   std::vector<std::string> trainExamplePaths;
   std::vector<std::string> testExamplePaths;
@@ -539,6 +541,29 @@ int main(int argc, char *argv[])
     cv::Mat trainImg = cv::imread(trainPath);
     cv::Mat testImg = cv::imread(testPath);
 //    cv::Mat inliersImg = cv::imread(inliersPath);
+
+    // Print camera numbers on the images
+    if (sampleIdx < MAX_CAMERAS)
+    {
+      const std::string cameraId = boost::lexical_cast<std::string>(
+          sampleIdx + 1);
+      const int thickness = 4;
+      const float size = 3.0f;
+
+      // Shadow
+      cv::Point shadowPosition(23, trainImg.rows - 17);
+      cv::putText(trainImg, cameraId, shadowPosition, CV_FONT_HERSHEY_SIMPLEX,
+          size, cv::Scalar::all(0), thickness, cv::LINE_AA);
+      cv::putText(testImg, cameraId, shadowPosition, CV_FONT_HERSHEY_SIMPLEX,
+          size, cv::Scalar::all(0), thickness, cv::LINE_AA);
+
+      // Actual number
+      cv::Point position(20, trainImg.rows - 20);
+      cv::putText(trainImg, cameraId, position, CV_FONT_HERSHEY_SIMPLEX, size,
+          cv::Scalar(247, 134,  79), thickness, cv::LINE_AA);
+      cv::putText(testImg, cameraId, position, CV_FONT_HERSHEY_SIMPLEX, size,
+          cv::Scalar(0, 0, 255), thickness, cv::LINE_AA);
+    }
 
     cv::Rect trainRect(sampleIdx * (IMG_WIDTH + IMG_STEP), 0, IMG_WIDTH,
         IMG_HEIGHT);
@@ -597,18 +622,19 @@ int main(int argc, char *argv[])
         binIdx < errorThresholds.size() ?
             errorThresholds[binIdx].color : Color::red();
 
-    // Draw the training camera frustums
+    for (size_t cameraIdx = 0; cameraIdx < trainPosesCv.size(); ++cameraIdx)
     {
-      std::string tName = "trainPose_"
-          + boost::lexical_cast<std::string>(binIdx);
+
+      // Draw the training camera frustums
+      {
+        std::string tName = "trainPose_"
+            + boost::lexical_cast<std::string>(binIdx);
 //    auto subsampled = subsample_trajectory(posesCv, 50);
 //      WTrajectoryFrustums traj(trainPosesCv, intrinsics, 0.15,
 //          Color::bluberry());
 //      visualizer.showWidget(tName, traj);
 //      visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
 
-      for (size_t cameraIdx = 0; cameraIdx < trainPosesCv.size(); ++cameraIdx)
-      {
         std::string wName = tName + "_"
             + boost::lexical_cast<std::string>(cameraIdx);
         WMesh cameraWidget(cameraMesh);
@@ -616,37 +642,31 @@ int main(int argc, char *argv[])
 
         visualizer.showWidget(wName, cameraWidget, trainPosesCv[cameraIdx]);
         visualizer.setRenderingProperty(wName, SHADING, SHADING_FLAT);
-      }
 
 //      visualizerTrajectory.showWidget(tName, traj);
 //      visualizerTrajectory.setRenderingProperty(tName, LINE_WIDTH, 3);
-    }
+      }
 
-    // Draw the lines connecting them
-    for (size_t i = 0; i < trainPosesCv.size(); ++i)
-    {
-      const cv::Affine3f &trainPose = trainPosesCv[i];
-      const cv::Affine3f &testPose = testPosesCv[i];
+      // Draw the lines connecting them
+      const cv::Affine3f &trainPose = trainPosesCv[cameraIdx];
+      const cv::Affine3f &testPose = testPosesCv[cameraIdx];
 
       WLine wLine(cv::Point3f(trainPose.translation()),
           cv::Point3f(testPose.translation()), Color::magenta());
       std::string wName = "trainTest_"
           + boost::lexical_cast<std::string>(binIdx) + "_"
-          + boost::lexical_cast<std::string>(i);
+          + boost::lexical_cast<std::string>(cameraIdx);
       visualizer.showWidget(wName, wLine);
       visualizer.setRenderingProperty(wName, LINE_WIDTH, 2);
-    }
 
-    {
-      std::string tName = "testTrajectory_"
-          + boost::lexical_cast<std::string>(binIdx);
+      {
+        std::string tName = "testTrajectory_"
+            + boost::lexical_cast<std::string>(binIdx);
 //    auto subsampled = subsample_trajectory(posesCv, 50);
 //      WTrajectoryFrustums traj(testPosesCv, intrinsics, 0.15, posesColor);
 //      visualizer.showWidget(tName, traj);
 //      visualizer.setRenderingProperty(tName, LINE_WIDTH, 3);
 
-      for (size_t cameraIdx = 0; cameraIdx < testPosesCv.size(); ++cameraIdx)
-      {
         std::string wName = tName + "_"
             + boost::lexical_cast<std::string>(cameraIdx);
         WMesh cameraWidget(cameraMesh);
@@ -656,14 +676,22 @@ int main(int argc, char *argv[])
         visualizer.setRenderingProperty(wName, SHADING, SHADING_FLAT);
 
 //        if (cameraCounter < trainExamplePaths.size())
-        if (cameraCounter < 4)
+        if (cameraCounter < MAX_CAMERAS)
         {
           wName += "_text";
-          WText3D wCameraText(
+          WText3D wTestCameraText(
               boost::lexical_cast<std::string>(cameraCounter + 1),
               cv::Point3f(testPosesCv[cameraIdx].translation()), 0.085, true,
               posesColor);
-          visualizer.showWidget(wName, wCameraText);
+          visualizer.showWidget(wName, wTestCameraText);
+
+          wName += "_train";
+          WText3D wTrainCameraText(
+              boost::lexical_cast<std::string>(cameraCounter + 1),
+              cv::Point3f(trainPosesCv[cameraIdx].translation()), 0.085, true,
+              Color::bluberry());
+          visualizer.showWidget(wName, wTrainCameraText);
+
           cameraCounter++;
         }
       }
