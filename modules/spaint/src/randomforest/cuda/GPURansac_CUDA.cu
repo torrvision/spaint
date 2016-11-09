@@ -451,16 +451,6 @@ void GPURansac_CUDA::compute_and_sort_energies()
 
   // Need to make the data available to the host once again
   m_poseCandidates->UpdateHostFromDevice();
-
-//  // host based sort, should be removed once the issue above is fixed
-//  {
-//    PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-//
-//    std::sort(candidates, candidates + nbPoseCandidates,
-//        [] (const PoseCandidate &a, const PoseCandidate &b)
-//        { return a.energy < b.energy;});
-//
-//  }
 }
 
 void GPURansac_CUDA::compute_candidate_pose_kabsch()
