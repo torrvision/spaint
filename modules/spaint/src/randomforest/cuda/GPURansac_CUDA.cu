@@ -425,6 +425,9 @@ void GPURansac_CUDA::generate_pose_candidates()
 
 void GPURansac_CUDA::compute_and_sort_energies()
 {
+  GPURansac::compute_and_sort_energies();
+  return
+
   // Need to make the data available to the device
   m_poseCandidates->UpdateDeviceFromHost();
   m_nbPoseCandidates->UpdateDeviceFromHost();
