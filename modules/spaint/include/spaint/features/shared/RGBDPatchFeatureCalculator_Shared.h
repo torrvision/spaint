@@ -7,6 +7,7 @@
 #define H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
 
 #include "helper_math.h"
+#include "ORUtils/PlatformIndependence.h"
 
 namespace spaint
 {
