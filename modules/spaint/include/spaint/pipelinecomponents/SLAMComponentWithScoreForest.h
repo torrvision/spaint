@@ -17,7 +17,7 @@
 
 #include "../features/FeatureCalculatorFactory.h"
 #include "../randomforest/interface/GPUForest.h"
-#include "../randomforest/interface/GPURansac.h"
+#include "../randomforest/interface/PreemptiveRansac.h"
 
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
 
@@ -75,7 +75,7 @@ private:
   RGBDPatchFeatureImage_Ptr m_featureImage;
   GPUForestPredictionsImage_Ptr m_predictionsImage;
   GPUForest_Ptr m_gpuForest;
-  GPURansac_Ptr m_gpuRansac;
+  PreemptiveRansac_Ptr m_preemptiveRansac;
   bool m_updateForestModesEveryFrame;
 
   Tracker_Ptr m_refineTracker;

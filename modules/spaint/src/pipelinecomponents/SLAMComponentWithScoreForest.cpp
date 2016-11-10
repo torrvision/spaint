@@ -8,7 +8,7 @@
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 
 #include "randomforest/cuda/GPUForest_CUDA.h"
-#include "randomforest/cuda/GPURansac_CUDA.h"
+#include "randomforest/cuda/PreemptiveRansac_CUDA.h"
 #include "util/MemoryBlockFactory.h"
 #include "util/PosePersister.h"
 
@@ -75,7 +75,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;
 
-  m_gpuRansac.reset(new GPURansac_CUDA());
+  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
 //  m_gpuRansac.reset(new GPURansac());
 
   // Refinement ICP tracker
@@ -195,7 +195,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #endif
 
     if (m_lowLevelEngine->CountValidDepths(inputDepthImage)
-        < m_gpuRansac->get_min_nb_required_points())
+        < m_preemptiveRansac->get_min_nb_required_points())
     {
 //      std::cout
 //          << "Number of valid depth pixels insufficient to perform relocalization."
@@ -210,7 +210,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
     evaluate_forest();
-    boost::optional<PoseCandidate> pose_candidate = m_gpuRansac->estimate_pose(
+    boost::optional<PoseCandidate> pose_candidate = m_preemptiveRansac->estimate_pose(
         m_featureImage, m_predictionsImage);
 
     if (pose_candidate)

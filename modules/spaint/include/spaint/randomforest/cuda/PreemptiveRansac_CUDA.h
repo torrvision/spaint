@@ -1,20 +1,20 @@
 /**
- * spaint: GPURansac_CUDA.h
+ * spaint: PreemptiveRansac_CUDA.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPURANSACCUDA
-#define H_SPAINT_GPURANSACCUDA
+#ifndef H_SPAINT_PREEMPTIVERANSACCUDA
+#define H_SPAINT_PREEMPTIVERANSACCUDA
 
-#include "randomforest/interface/GPURansac.h"
+#include "randomforest/interface/PreemptiveRansac.h"
 
 #include "tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h"
 
 namespace spaint {
-class GPURansac_CUDA : public GPURansac
+class PreemptiveRansac_CUDA : public PreemptiveRansac
 {
 public:
-  GPURansac_CUDA();
+  PreemptiveRansac_CUDA();
 
 protected:
   virtual void generate_pose_candidates();

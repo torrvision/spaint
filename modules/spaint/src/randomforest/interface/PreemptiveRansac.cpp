@@ -1,9 +1,9 @@
 /**
- * spaint: GPURansac.cpp
+ * spaint: PreemptiveRansac.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/interface/GPURansac.h"
+#include "randomforest/interface/PreemptiveRansac.h"
 
 #include <random>
 
@@ -23,7 +23,7 @@
 
 namespace spaint
 {
-GPURansac::GPURansac()
+PreemptiveRansac::PreemptiveRansac()
 {
   // Set params as in scoreforests
   m_nbPointsForKabschBoostrap = 3;
@@ -48,16 +48,16 @@ GPURansac::GPURansac()
   m_nbPoseCandidates = 0;
 }
 
-GPURansac::~GPURansac()
+PreemptiveRansac::~PreemptiveRansac()
 {
 }
 
-int GPURansac::get_min_nb_required_points() const
+int PreemptiveRansac::get_min_nb_required_points() const
 {
   return std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac);
 }
 
-boost::optional<PoseCandidate> GPURansac::estimate_pose(
+boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     const RGBDPatchFeatureImage_CPtr &features,
     const GPUForestPredictionsImage_CPtr &forestPredictions)
 {
@@ -167,7 +167,7 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
       m_nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
-void GPURansac::generate_pose_candidates()
+void PreemptiveRansac::generate_pose_candidates()
 {
   const int nbThreads = 12;
 
@@ -266,7 +266,7 @@ void Kabsch_impl(Eigen::MatrixXf &P, Eigen::MatrixXf &Q,
 }
 }
 
-Eigen::Matrix4f GPURansac::Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const
+Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const
 {
   Eigen::MatrixXf resRot;
   Eigen::VectorXf resTrans;
@@ -280,7 +280,7 @@ Eigen::Matrix4f GPURansac::Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const
   return res;
 }
 
-bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
+bool PreemptiveRansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
 {
   Eigen::MatrixXf worldPoints(3, m_nbPointsForKabschBoostrap);
   Eigen::MatrixXf localPoints(3, m_nbPointsForKabschBoostrap);
@@ -484,7 +484,7 @@ bool GPURansac::hypothesize_pose(PoseCandidate &res, std::mt19937 &eng)
   return false;
 }
 
-void GPURansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
+void PreemptiveRansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
     std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize)
 {
   std::uniform_int_distribution<int> col_index_generator(0,
@@ -537,7 +537,7 @@ void GPURansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
   }
 }
 
-void GPURansac::update_inliers_for_optimization(
+void PreemptiveRansac::update_inliers_for_optimization(
     const std::vector<Vector2i> &sampledPixelIdx)
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
@@ -559,7 +559,7 @@ void GPURansac::update_inliers_for_optimization(
   }
 }
 
-void GPURansac::compute_and_sort_energies()
+void PreemptiveRansac::compute_and_sort_energies()
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
@@ -579,7 +579,7 @@ void GPURansac::compute_and_sort_energies()
   std::sort(poseCandidates, poseCandidates + m_nbPoseCandidates);
 }
 
-void GPURansac::compute_pose_energy(PoseCandidate &candidate) const
+void PreemptiveRansac::compute_pose_energy(PoseCandidate &candidate) const
 {
   float totalEnergy = 0.0f;
 
@@ -640,7 +640,7 @@ void GPURansac::compute_pose_energy(PoseCandidate &candidate) const
   candidate.energy = totalEnergy / static_cast<float>(candidate.nbInliers);
 }
 
-void GPURansac::update_candidate_poses()
+void PreemptiveRansac::update_candidate_poses()
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
@@ -835,7 +835,7 @@ static void call_after_each_step(const alglib::real_1d_array &x, double func,
 }
 }
 
-bool GPURansac::update_candidate_pose(PoseCandidate &poseCandidate) const
+bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 {
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);

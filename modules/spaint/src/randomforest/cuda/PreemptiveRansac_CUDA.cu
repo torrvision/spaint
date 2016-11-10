@@ -1,9 +1,9 @@
 /**
- * spaint: GPURansac_CUDA.cu
+ * spaint: PreemptiveRansac_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/cuda/GPURansac_CUDA.h"
+#include "randomforest/cuda/PreemptiveRansac_CUDA.h"
 
 #include "util/MemoryBlockFactory.h"
 
@@ -357,8 +357,8 @@ __device__ bool compare_poses_ascending_energy(const PoseCandidate &a,
   return a.energy < b.energy;
 }
 
-GPURansac_CUDA::GPURansac_CUDA() :
-    GPURansac()
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() :
+    PreemptiveRansac()
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomGenerators = mbf.make_block<CUDARNG>(PoseCandidates::MAX_CANDIDATES);
@@ -368,7 +368,7 @@ GPURansac_CUDA::GPURansac_CUDA() :
   init_random();
 }
 
-void GPURansac_CUDA::init_random()
+void PreemptiveRansac_CUDA::init_random()
 {
   CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
 
@@ -380,7 +380,7 @@ void GPURansac_CUDA::init_random()
   ck_init_random_generators<<<gridSize, blockSize>>>(randomGenerators, PoseCandidates::MAX_CANDIDATES, m_rngSeed);
 }
 
-void GPURansac_CUDA::generate_pose_candidates()
+void PreemptiveRansac_CUDA::generate_pose_candidates()
 {
   const Vector2i imgSize = m_featureImage->noDims;
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
@@ -419,9 +419,9 @@ void GPURansac_CUDA::generate_pose_candidates()
   compute_candidate_pose_kabsch();
 }
 
-void GPURansac_CUDA::compute_and_sort_energies()
+void PreemptiveRansac_CUDA::compute_and_sort_energies()
 {
-  GPURansac::compute_and_sort_energies();
+  PreemptiveRansac::compute_and_sort_energies();
   return;
 
 //  // Need to make the data available to the device
@@ -452,7 +452,7 @@ void GPURansac_CUDA::compute_and_sort_energies()
 //  m_poseCandidates->UpdateHostFromDevice();
 }
 
-void GPURansac_CUDA::compute_candidate_pose_kabsch()
+void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
 {
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(

@@ -1,10 +1,10 @@
 /**
- * spaint: GPURansac.h
+ * spaint: PreemptiveRansac.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPURANSAC
-#define H_SPAINT_GPURANSAC
+#ifndef H_SPAINT_PREEMPTIVERANSAC
+#define H_SPAINT_PREEMPTIVERANSAC
 
 #include <boost/optional.hpp>
 
@@ -65,11 +65,11 @@ typedef ORUtils::MemoryBlock<PoseCandidates> PoseCandidatesMemoryBlock;
 typedef boost::shared_ptr<PoseCandidatesMemoryBlock> PoseCandidatesMemoryBlock_Ptr;
 typedef boost::shared_ptr<const PoseCandidatesMemoryBlock> PoseCandidatesMemoryBlock_CPtr;
 
-class GPURansac
+class PreemptiveRansac
 {
 public:
-  GPURansac();
-  virtual ~GPURansac();
+  PreemptiveRansac();
+  virtual ~PreemptiveRansac();
 
   int get_min_nb_required_points() const;
   boost::optional<PoseCandidate> estimate_pose(
@@ -111,7 +111,7 @@ private:
   void compute_pose_energy(PoseCandidate &candidate) const;
 };
 
-typedef boost::shared_ptr<GPURansac> GPURansac_Ptr;
-typedef boost::shared_ptr<const GPURansac> GPURansac_CPtr;
+typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;
+typedef boost::shared_ptr<const PreemptiveRansac> PreemptiveRansac_CPtr;
 }
 #endif
