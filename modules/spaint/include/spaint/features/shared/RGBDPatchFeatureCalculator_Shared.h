@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
 
+#include "helper_math.h"
+
 namespace spaint
 {
 
@@ -49,7 +51,8 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
     const int channel = channels_rgb[feat_idx];
     const Vector4i offset = offsets_rgb[feat_idx];
 
-    int x1, y1, x2, y2;
+    int x1, y1;
+//    int x2, y2;
 
     if (normalize)
     {
@@ -57,21 +60,21 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
           img_size.width - 1);
       y1 = min(max(xy_in.y + static_cast<int>(offset[1] / depth), 0),
           img_size.height - 1);
-      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
-          img_size.width - 1);
-      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
-          img_size.height - 1);
+//      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
+//          img_size.width - 1);
+//      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
+//          img_size.height - 1);
     }
     else
     {
       x1 = min(max(xy_in.x + offset[0], 0), img_size.width - 1);
       y1 = min(max(xy_in.y + offset[1], 0), img_size.height - 1);
-      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
-      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
+//      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
+//      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
     }
 
     const int linear_1 = y1 * img_size.x + x1;
-    const int linear_2 = y2 * img_size.x + x2;
+//    const int linear_2 = y2 * img_size.x + x2;
 
     // This would be the correct definition but scoreforests's code has the other one
 //    features[linear_idx].rgb[feat_idx] =
@@ -99,7 +102,8 @@ inline void compute_depth_patch_feature(RGBDPatchFeature *features,
   {
     const Vector4i offset = offsets_depth[feat_idx];
 
-    int x1, y1, x2, y2;
+    int x1, y1;
+//    int x2, y2;
 
     if (normalize)
     {
@@ -107,21 +111,21 @@ inline void compute_depth_patch_feature(RGBDPatchFeature *features,
           img_size.width - 1);
       y1 = min(max(xy_in.y + static_cast<int>(offset[1] / depth), 0),
           img_size.height - 1);
-      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
-          img_size.width - 1);
-      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
-          img_size.height - 1);
+//      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
+//          img_size.width - 1);
+//      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
+//          img_size.height - 1);
     }
     else
     {
       x1 = min(max(xy_in.x + offset[0], 0), img_size.width - 1);
       y1 = min(max(xy_in.y + offset[1], 0), img_size.height - 1);
-      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
-      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
+//      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
+//      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
     }
 
     const int linear_1 = y1 * img_size.x + x1;
-    const int linear_2 = y2 * img_size.x + x2;
+//    const int linear_2 = y2 * img_size.x + x2;
 
     const float depth_mm = depth * 1000.f;
     // because ITM sometimes has invalid depths stored as -1

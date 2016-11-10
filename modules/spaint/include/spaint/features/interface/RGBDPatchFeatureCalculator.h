@@ -6,7 +6,9 @@
 #ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR
 #define H_SPAINT_RGBDPATCHFEATURECALCULATOR
 
+#include <boost/shared_ptr.hpp>
 #include "RGBDPatchFeature.h"
+#include "ITMLib/Utils/ITMImageTypes.h"
 
 namespace spaint
 {

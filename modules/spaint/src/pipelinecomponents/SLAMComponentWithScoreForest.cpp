@@ -9,6 +9,7 @@
 
 #include "randomforest/cuda/GPUForest_CUDA.h"
 #include "randomforest/cuda/GPURansac_CUDA.h"
+#include "util/MemoryBlockFactory.h"
 #include "util/PosePersister.h"
 
 #include "tvgutil/filesystem/PathFinder.h"
@@ -52,12 +53,14 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
     SLAMComponent(context, sceneID, imageSourceEngine, trackerType,
         trackerParams, mappingMode, trackingMode)
 {
+  const Settings_CPtr& settings = m_context->get_settings();
+  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+
   m_featureExtractor =
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
-          ITMLib::ITMLibSettings::DEVICE_CUDA);
-  m_featureImage.reset(new RGBDPatchFeatureImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
-  m_predictionsImage.reset(
-      new GPUForestPredictionsImage(Vector2i(0, 0), true, true)); // Dummy size just to allocate the container
+          settings->deviceType);
+  m_featureImage = mbf.make_image<RGBDPatchFeature>(Vector2i(0, 0)); // Dummy size just to allocate the container
+  m_predictionsImage = mbf.make_image<GPUForestPrediction>(Vector2i(0, 0)); // Dummy size just to allocate the container
 
 //  const bf::path relocalizationForestPath = bf::path(
 //      m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
@@ -76,7 +79,6 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 //  m_gpuRansac.reset(new GPURansac());
 
   // Refinement ICP tracker
-  const Settings_CPtr& settings = m_context->get_settings();
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();

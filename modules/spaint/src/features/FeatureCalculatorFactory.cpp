@@ -6,11 +6,12 @@
 #include "features/FeatureCalculatorFactory.h"
 using namespace ITMLib;
 
+#include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 #include "features/cpu/VOPFeatureCalculator_CPU.h"
 
 #ifdef WITH_CUDA
-#include "features/cuda/VOPFeatureCalculator_CUDA.h"
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
+#include "features/cuda/VOPFeatureCalculator_CUDA.h"
 #endif
 
 namespace spaint {
@@ -52,7 +53,7 @@ RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_rgbd_patch_featur
   }
   else
   {
-    throw std::runtime_error("Error: CPU version not implemented yet.");
+    calculator.reset(new RGBDPatchFeatureCalculator_CPU);
   }
 
   return calculator;

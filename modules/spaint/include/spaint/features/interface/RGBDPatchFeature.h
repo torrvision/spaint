@@ -6,7 +6,9 @@
 #ifndef H_SPAINT_RGBDPATCHFEATURE
 #define H_SPAINT_RGBDPATCHFEATURE
 
-#include "../../util/ITMImagePtrTypes.h"
+#include "ITMLib/Utils/ITMMath.h"
+#include "ORUtils/Image.h"
+#include <boost/shared_ptr.hpp>
 
 namespace spaint
 {

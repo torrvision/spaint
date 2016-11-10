@@ -1,5 +1,5 @@
 /**
- * spaint: RGBDPatchFeatureCalculator.cpp
+ * spaint: RGBDPatchFeatureCalculator_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 

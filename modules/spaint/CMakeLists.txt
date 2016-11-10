@@ -52,9 +52,11 @@ include/spaint/features/FeatureCalculatorFactory.h
 ##
 SET(features_cpu_sources
 src/features/cpu/VOPFeatureCalculator_CPU.cpp
+src/features/cpu/RGBDPatchFeatureCalculator_CPU.cpp
 )
 
 SET(features_cpu_headers
+include/spaint/features/cpu/VOPFeatureCalculator_CPU.h
 include/spaint/features/cpu/VOPFeatureCalculator_CPU.h
 )
 
@@ -829,6 +831,7 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/spaint)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvginput/include)
