@@ -348,6 +348,7 @@ include/spaint/randomforest/interface/PreemptiveRansac.h
 
 SET(randomforest_shared_headers
 include/spaint/randomforest/shared/GPUForest_Shared.h
+include/spaint/randomforest/shared/PreemptiveRansac_Shared.h
 )
 
 ##
