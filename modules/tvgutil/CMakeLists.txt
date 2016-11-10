@@ -75,6 +75,8 @@ src/numbers/RandomNumberGenerator.cpp
 SET(numbers_headers
 include/tvgutil/numbers/NumberSequenceGenerator.h
 include/tvgutil/numbers/RandomNumberGenerator.h
+include/tvgutil/numbers/SimpleRandomNumberGenerator_CPU.h
+include/tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h
 )
 
 ##
