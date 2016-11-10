@@ -8,6 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <curand_kernel.h>
+#include <math_constants.h>
 
 #include "ORUtils/MemoryBlock.h"
 #include "ORUtils/PlatformIndependence.h"
@@ -36,9 +37,10 @@ public:
   {
   }
 
+#ifdef __CUDACC__ // Needed to hide CUDART_MIN_DENORM_F and __float2int_rz
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  _CPU_AND_GPU_CODE_
+  __device__
   inline void reset(unsigned int seed, unsigned int sequenceId)
   {
     curand_init(seed, sequenceId, 0, &m_state);
@@ -51,7 +53,7 @@ public:
    * \param sigma The standard deviation of the Gaussian distribution.
    * \return      The generated float.
    */
-  _CPU_AND_GPU_CODE_
+  __device__
   inline float generate_from_gaussian(float mean, float sigma)
   {
     return curand_normal(&m_state) * sigma + mean;
@@ -66,23 +68,12 @@ public:
    * \param upper The upper bound of the range.
    * \return      The generated integer.
    */
-  _CPU_AND_GPU_CODE_
+  __device__
   inline int generate_int_from_uniform(int lower, int upper)
   {
-    union FloatAsInt
-    {
-      float f;
-      int i;
-    };
-
-    FloatAsInt fi;
-    // curand_uniform generates a number in ]0,1]
-    fi.f = curand_uniform(&m_state);
-
-    // convert the interval in [0,1[
-    fi.i -= 0x00000001;
-
-    return static_cast<int>(truncf(fi.f * (upper - lower))) + lower;
+    // curand_uniform generates a number in ]0,1], we convert the interval in [0,1[
+    const float generated = curand_uniform(&m_state) - CUDART_MIN_DENORM_F;
+    return __float2int_rz(generated * (upper - lower)) + lower;
   }
 
   /**
@@ -92,14 +83,16 @@ public:
    * \param upper The upper bound of the range.
    * \return      The generated real number.
    */
-  _CPU_AND_GPU_CODE_
+  __device__
   inline float generate_real_from_uniform(float lower, float upper)
   {
     return curand_uniform(&m_state) * (upper - lower) + lower;
   }
+#endif
 };
 
-typedef ORUtils::MemoryBlock<SimpleRandomNumberGenerator_CUDA> CUDARNGMemoryBlock;
+typedef SimpleRandomNumberGenerator_CUDA CUDARNG;
+typedef ORUtils::MemoryBlock<CUDARNG> CUDARNGMemoryBlock;
 typedef boost::shared_ptr<CUDARNGMemoryBlock> CUDARNGMemoryBlock_Ptr;
 typedef boost::shared_ptr<const CUDARNGMemoryBlock> CUDARNGMemoryBlock_CPtr;
 

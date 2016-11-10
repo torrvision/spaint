@@ -8,17 +8,12 @@
 
 #include "randomforest/interface/GPURansac.h"
 
-#include <curand_kernel.h>
+#include "tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h"
 
 namespace spaint {
 class GPURansac_CUDA : public GPURansac
 {
 public:
-  typedef curandState_t RandomState;
-  typedef ORUtils::MemoryBlock<RandomState> RandomStateMemoryBlock;
-  typedef boost::shared_ptr<RandomStateMemoryBlock> RandomStateMemoryBlock_Ptr;
-  typedef boost::shared_ptr<const RandomStateMemoryBlock> RandomStateMemoryBlock_CPtr;
-
   GPURansac_CUDA();
 
 protected:
@@ -26,7 +21,7 @@ protected:
   virtual void compute_and_sort_energies();
 
 private:
-  RandomStateMemoryBlock_Ptr m_randomStates;
+  tvgutil::CUDARNGMemoryBlock_Ptr m_randomGenerators;
   uint32_t m_rngSeed;
 
   ITMIntImage_Ptr m_nbPoseCandidates_device;

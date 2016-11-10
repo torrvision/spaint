@@ -90,7 +90,8 @@ public:
   }
 };
 
-typedef ORUtils::MemoryBlock<SimpleRandomNumberGenerator_CPU> CPURNGMemoryBlock;
+typedef SimpleRandomNumberGenerator_CPU CPURNG;
+typedef ORUtils::MemoryBlock<CPURNG> CPURNGMemoryBlock;
 typedef boost::shared_ptr<CPURNGMemoryBlock> CPURNGMemoryBlock_Ptr;
 typedef boost::shared_ptr<const CPURNGMemoryBlock> CPURNGMemoryBlock_CPtr;
 }

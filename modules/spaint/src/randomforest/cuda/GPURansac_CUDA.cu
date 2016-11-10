@@ -13,12 +13,14 @@
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 
+using namespace tvgutil;
+
 namespace spaint
 {
 
 namespace
 {
-__global__ void ck_init_random_states(GPURansac_CUDA::RandomState *randomStates,
+__global__ void ck_init_random_generators(CUDARNG *randomGenerators,
     uint32_t nbStates, uint32_t seed)
 {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -26,7 +28,7 @@ __global__ void ck_init_random_states(GPURansac_CUDA::RandomState *randomStates,
   if (idx >= nbStates)
     return;
 
-  curand_init(seed, idx, 0, &randomStates[idx]);
+  randomGenerators[idx].reset(seed, idx);
 }
 
 __global__ void ck_reset_pose_candidates(PoseCandidates *poseCandidates)
@@ -34,9 +36,11 @@ __global__ void ck_reset_pose_candidates(PoseCandidates *poseCandidates)
   poseCandidates->nbCandidates = 0;
 }
 
-__device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
+template<typename RNG>
+__device__ inline bool generate_candidate(
+    const RGBDPatchFeature *patchFeaturesData,
     const GPUForestPrediction *predictionsData, const Vector2i &imgSize,
-    GPURansac_CUDA::RandomState *randomState, PoseCandidate &poseCandidate,
+    RNG &randomGenerator, PoseCandidate &poseCandidate,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
     bool m_checkMinDistanceBetweenSampledModes,
     float m_minDistanceBetweenSampledModes,
@@ -44,17 +48,6 @@ __device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
     float m_translationErrorMaxForCorrectPose)
 {
   static const int m_nbPointsForKabschBoostrap = 3;
-
-//
-//  std::uniform_int_distribution<int> col_index_generator(0,
-//      m_featureImage->noDims.width - 1);
-//  std::uniform_int_distribution<int> row_index_generator(0,
-//      m_featureImage->noDims.height - 1);
-//
-//  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
-//      MEMORYDEVICE_CPU);
-//  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
-//      MEMORYDEVICE_CPU);
 
   bool foundIsometricMapping = false;
   const int maxIterationsOuter = 20;
@@ -77,8 +70,11 @@ __device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
     {
       ++iterationsInner;
 
-      const int x = curand(randomState) % (imgSize.width - 1);
-      const int y = curand(randomState) % (imgSize.height - 1);
+      const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width);
+      const int y = randomGenerator.generate_int_from_uniform(0,
+          imgSize.height);
+//      const int x = curand(randomState) % (imgSize.width - 1);
+//      const int y = curand(randomState) % (imgSize.height - 1);
       // The implementation below sometimes generates OOB values (with 0.999999,
       // with 0.999 it works but seems a weird hack)
 //      const int x = __float2int_rz(
@@ -101,8 +97,10 @@ __device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
       int selectedModeIdx = 0;
       if (m_useAllModesPerLeafInPoseHypothesisGeneration)
       {
-        selectedModeIdx = curand(randomState)
-            % (selectedPrediction.nbModes - 1);
+        selectedModeIdx = randomGenerator.generate_int_from_uniform(0,
+            selectedPrediction.nbModes);
+//        selectedModeIdx = curand(randomState)
+//            % (selectedPrediction.nbModes - 1);
 //        selectedModeIdx = __float2int_rz(
 //            curand_uniform(randomState)
 //                * (selectedPrediction.nbModes - 1 + 0.999f));
@@ -230,10 +228,11 @@ __device__ bool generate_candidate(const RGBDPatchFeature *patchFeaturesData,
   return false;
 }
 
+template<typename RNG>
 __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
     const GPUForestPrediction *predictions, const Vector2i imgSize,
-    GPURansac_CUDA::RandomState *randomStates, PoseCandidate *poseCandidates,
-    int *nbPoseCandidates, int maxNbPoseCandidates,
+    RNG *randomGenerators, PoseCandidate *poseCandidates, int *nbPoseCandidates,
+    int maxNbPoseCandidates,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
     bool m_checkMinDistanceBetweenSampledModes,
     float m_minDistanceBetweenSampledModes,
@@ -245,13 +244,12 @@ __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
   if (candidateIdx >= maxNbPoseCandidates)
     return;
 
-  GPURansac_CUDA::RandomState *randomState = &randomStates[candidateIdx];
-
   PoseCandidate candidate;
   candidate.cameraId = candidateIdx;
 
-  bool valid = generate_candidate(features, predictions, imgSize, randomState,
-      candidate, m_useAllModesPerLeafInPoseHypothesisGeneration,
+  bool valid = generate_candidate(features, predictions, imgSize,
+      randomGenerators[candidateIdx], candidate,
+      m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minDistanceBetweenSampledModes,
       m_checkRigidTransformationConstraint,
       m_translationErrorMaxForCorrectPose);
@@ -363,23 +361,23 @@ GPURansac_CUDA::GPURansac_CUDA() :
     GPURansac()
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_randomStates = mbf.make_block<RandomState>(PoseCandidates::MAX_CANDIDATES);
+  m_randomGenerators = mbf.make_block<CUDARNG>(PoseCandidates::MAX_CANDIDATES);
   m_rngSeed = 42;
-  m_nbPoseCandidates_device = mbf.make_image<int>(Vector2i(1,1));
+  m_nbPoseCandidates_device = mbf.make_image<int>(Vector2i(1, 1));
 
   init_random();
 }
 
 void GPURansac_CUDA::init_random()
 {
-  RandomState *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
 
   // Initialize random states
   dim3 blockSize(256);
   dim3 gridSize(
       (PoseCandidates::MAX_CANDIDATES + blockSize.x - 1) / blockSize.x);
 
-  ck_init_random_states<<<gridSize, blockSize>>>(randomStates, PoseCandidates::MAX_CANDIDATES, m_rngSeed);
+  ck_init_random_generators<<<gridSize, blockSize>>>(randomGenerators, PoseCandidates::MAX_CANDIDATES, m_rngSeed);
 }
 
 void GPURansac_CUDA::generate_pose_candidates()
@@ -389,7 +387,7 @@ void GPURansac_CUDA::generate_pose_candidates()
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
-  RandomState *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
   int *nbPoseCandidates = m_nbPoseCandidates_device->GetData(MEMORYDEVICE_CUDA);
 
@@ -400,7 +398,7 @@ void GPURansac_CUDA::generate_pose_candidates()
   // Reset number of candidates (only on device, the host number will be updated later)
   ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates, 0, sizeof(int)));
 
-  ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomStates,
+  ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomGenerators,
       poseCandidates, nbPoseCandidates, PoseCandidates::MAX_CANDIDATES,
       m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minDistanceBetweenSampledModes,
@@ -410,7 +408,8 @@ void GPURansac_CUDA::generate_pose_candidates()
 
   // Need to make the data available to the host
   m_poseCandidates->UpdateHostFromDevice();
-  m_nbPoseCandidates = m_nbPoseCandidates_device->GetElement(0, MEMORYDEVICE_CUDA);
+  m_nbPoseCandidates = m_nbPoseCandidates_device->GetElement(0,
+      MEMORYDEVICE_CUDA);
 
   // Now perform kabsch on the candidates
   //#ifdef ENABLE_TIMERS
