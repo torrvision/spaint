@@ -9,6 +9,9 @@
 
 #include <boost/timer/timer.hpp>
 
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
+
 #include <Eigen/Dense>
 #include <libalglib/optimization.h>
 #include <omp.h>
@@ -160,7 +163,8 @@ boost::optional<PoseCandidate> GPURansac::estimate_pose(
     m_nbPoseCandidates /= 2;
   }
 
-  return m_nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
+  return
+      m_nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
 void GPURansac::generate_pose_candidates()
@@ -649,6 +653,8 @@ void GPURansac::update_candidate_poses()
       //#pragma omp atomic
       //      ++nbUpdated;
     }
+
+//    break;
   }
 //  std::cout << nbUpdated << "/" << poseCandidates.size() << " updated cameras" << std::endl;
 }
@@ -659,6 +665,68 @@ struct PointForLM
 {
   Vector3f point;
   GPUForestMode mode;
+
+  PointForLM()
+  {
+  }
+
+  PointForLM(const Vector3f &pt, const GPUForestMode &md) :
+      point(pt), mode(md)
+  {
+  }
+
+  template<typename T>
+  inline bool operator()(const T * const camera, T *residual) const
+  {
+    T pointT[3];
+    pointT[0] = T(point.x);
+    pointT[1] = T(point.y);
+    pointT[2] = T(point.z);
+
+    T transformedPt[3];
+
+    // rotation
+    ceres::AngleAxisRotatePoint(&camera[3], pointT, transformedPt);
+    // translation
+    transformedPt[0] += camera[0];
+    transformedPt[1] += camera[1];
+    transformedPt[2] += camera[2];
+
+    T modePosition[3];
+    modePosition[0] = T(mode.position.x);
+    modePosition[1] = T(mode.position.y);
+    modePosition[2] = T(mode.position.z);
+
+    T pointDiff[3];
+    pointDiff[0] = transformedPt[0] - modePosition[0];
+    pointDiff[1] = transformedPt[1] - modePosition[1];
+    pointDiff[2] = transformedPt[2] - modePosition[2];
+
+    T modeInverseCovariance[9];
+    // Col major to row major to perform dot product later
+    modeInverseCovariance[0] = T(mode.positionInvCovariance.m[0]);
+    modeInverseCovariance[1] = T(mode.positionInvCovariance.m[3]);
+    modeInverseCovariance[2] = T(mode.positionInvCovariance.m[6]);
+
+    modeInverseCovariance[3] = T(mode.positionInvCovariance.m[1]);
+    modeInverseCovariance[4] = T(mode.positionInvCovariance.m[4]);
+    modeInverseCovariance[5] = T(mode.positionInvCovariance.m[7]);
+
+    modeInverseCovariance[6] = T(mode.positionInvCovariance.m[2]);
+    modeInverseCovariance[7] = T(mode.positionInvCovariance.m[5]);
+    modeInverseCovariance[8] = T(mode.positionInvCovariance.m[8]);
+
+    // compute the mahalanobis square distance
+    T firstDot[3];
+    firstDot[0] = ceres::DotProduct(&modeInverseCovariance[0], pointDiff);
+    firstDot[1] = ceres::DotProduct(&modeInverseCovariance[3], pointDiff);
+    firstDot[2] = ceres::DotProduct(&modeInverseCovariance[6], pointDiff);
+
+    // Finish computing the distance
+    residual[0] = ceres::DotProduct(pointDiff, firstDot);
+//    residual[0] = ceres::DotProduct(pointDiff, pointDiff);
+    return true;
+  }
 };
 
 typedef std::vector<PointForLM> PointsForLM;
@@ -776,7 +844,17 @@ bool GPURansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
 
-  PointsForLM ptsForLM;
+#if 0
+  // Build the problem.
+  ceres::Problem problem;
+
+  double cameraState[6];
+
+  for (int i = 0; i < 6; ++i)
+  {
+    cameraState[i] = candidateCameraPose.GetParams()[i];
+  }
+
   for (int inlierIdx = 0; inlierIdx < poseCandidate.nbInliers; ++inlierIdx)
   {
     const PoseCandidate::Inlier &inlier = poseCandidate.inliers[inlierIdx];
@@ -784,6 +862,72 @@ bool GPURansac::update_candidate_pose(PoseCandidate &poseCandidate) const
         patchFeaturesData[inlier.linearIdx].position.toVector3();
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
         * inlierCameraPosition;
+    const GPUForestPrediction &prediction = predictionsData[inlier.linearIdx];
+    // The assumption is that the inlier is valid (checked before)
+
+    // Find the best mode
+    // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
+    int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
+    if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
+      throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
+
+    if (length(prediction.modes[bestModeIdx].position - inlierWorldPosition)
+        < m_poseOptimizationInlierThreshold)
+    {
+
+      ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<
+          PointForLM, 1, 6>(
+          new PointForLM(inlierCameraPosition, prediction.modes[bestModeIdx]));
+
+//      ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
+//          PointForLM, ceres::CENTRAL, 1, 6>(
+//          new PointForLM(inlierCameraPosition, prediction.modes[bestModeIdx]));
+      problem.AddResidualBlock(costFunction,
+          new ceres::CauchyLoss(
+              m_poseOptimizationInlierThreshold
+                  * m_poseOptimizationInlierThreshold), cameraState);
+    }
+  }
+
+  if (problem.NumResidualBlocks() > 3)
+  {
+    ceres::Solver::Options options;
+//    options.gradient_tolerance = 1e-6; // as in the alglib implementation
+//    options.linear_solver_type = ceres::DENSE_QR;
+//  options.minimizer_progress_to_stdout = true;
+//  options.update_state_every_iteration = true;
+
+    // Run the solver.
+    ceres::Solver::Summary summary;
+    Solve(options, &problem, &summary);
+
+//    std::cout << summary.FullReport() << '\n';
+
+    if (summary.termination_type == ceres::TerminationType::CONVERGENCE)
+    {
+      candidateCameraPose.SetFrom(cameraState[0], cameraState[1],
+          cameraState[2], cameraState[3], cameraState[4], cameraState[5]);
+      poseCandidate.cameraPose = candidateCameraPose.GetM();
+
+      // Output a report.
+//    std::cout << summary.BriefReport() << "\n";
+
+      return true;
+    }
+  }
+
+  return false;
+
+#else
+
+  PointsForLM ptsForLM;
+  for (int inlierIdx = 0; inlierIdx < poseCandidate.nbInliers; ++inlierIdx)
+  {
+    const PoseCandidate::Inlier &inlier = poseCandidate.inliers[inlierIdx];
+    const Vector3f inlierCameraPosition =
+    patchFeaturesData[inlier.linearIdx].position.toVector3();
+    const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
+    * inlierCameraPosition;
     const GPUForestPrediction &prediction = predictionsData[inlier.linearIdx];
 
     PointForLM ptLM;
@@ -794,12 +938,14 @@ bool GPURansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
     int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
     if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
-      throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
+    throw std::runtime_error("best mode idx invalid.");// should have not been selected as inlier
     ptLM.mode = prediction.modes[bestModeIdx];
 
     if (length(ptLM.mode.position - inlierWorldPosition)
         < m_poseOptimizationInlierThreshold)
+    {
       ptsForLM.push_back(ptLM);
+    }
   }
 
 // Continuous optimization
@@ -810,7 +956,7 @@ bool GPURansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 
     // Cast to double
     for (int i = 0; i < 6; ++i)
-      ksiD[i] = ksiF[i];
+    ksiD[i] = ksiF[i];
 
     alglib::real_1d_array ksi_;
     ksi_.setcontent(6, ksiD);
@@ -928,6 +1074,7 @@ bool GPURansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 //  }
 
   return false;
+#endif
 }
 
 }

@@ -165,6 +165,7 @@ TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil cudadev
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkCeres.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLUT.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkInfiniTAM.cmake)
