@@ -11,6 +11,14 @@
 namespace spaint
 {
 
+namespace
+{
+enum
+{
+  N_POINTS_FOR_KABSCH = 3, MAX_CANDIDATE_GENERATION_ITERATIONS = 6000
+};
+}
+
 template<typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline bool preemptive_ransac_generate_candidate(
@@ -23,57 +31,43 @@ inline bool preemptive_ransac_generate_candidate(
     bool m_checkRigidTransformationConstraint,
     float m_translationErrorMaxForCorrectPose)
 {
-  static const int m_nbPointsForKabschBoostrap = 3;
-
-  bool foundIsometricMapping = false;
-
   int selectedPixelCount = 0;
-  int selectedPixelX[m_nbPointsForKabschBoostrap];
-  int selectedPixelY[m_nbPointsForKabschBoostrap];
-  int selectedPixelMode[m_nbPointsForKabschBoostrap];
+  int selectedPixelLinearIdx[N_POINTS_FOR_KABSCH];
+  int selectedPixelMode[N_POINTS_FOR_KABSCH];
 
-  static const int maxIterationsInner = 6000;
-  int iterationsInner = 0;
-
-  while (selectedPixelCount != m_nbPointsForKabschBoostrap
-      && iterationsInner < maxIterationsInner)
+  for (int iterationIdx = 0;
+      selectedPixelCount != N_POINTS_FOR_KABSCH
+          && iterationIdx < MAX_CANDIDATE_GENERATION_ITERATIONS; ++iterationIdx)
   {
-    ++iterationsInner;
-
     const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width);
     const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height);
-//      const int x = curand(randomState) % (imgSize.width - 1);
-//      const int y = curand(randomState) % (imgSize.height - 1);
-    // The implementation below sometimes generates OOB values (with 0.999999,
-    // with 0.999 it works but seems a weird hack)
-//      const int x = __float2int_rz(
-//          curand_uniform(randomState) * (imgSize.width - 1 + 0.999999f));
-//      const int y = __float2int_rz(
-//          curand_uniform(randomState) * (imgSize.height - 1 + 0.999999f));
     const int linearFeatureIdx = y * imgSize.width + x;
     const RGBDPatchFeature &selectedFeature =
         patchFeaturesData[linearFeatureIdx];
 
-    if (selectedFeature.position.w < 0.f) // Invalid feature
+    // Invalid feature
+    if (selectedFeature.position.w < 0.f)
       continue;
 
     const GPUForestPrediction &selectedPrediction =
         predictionsData[linearFeatureIdx];
 
+    // Prediction has no modes
     if (selectedPrediction.nbModes == 0)
       continue;
 
-    int selectedModeIdx = 0;
-    if (m_useAllModesPerLeafInPoseHypothesisGeneration)
-    {
-      selectedModeIdx = randomGenerator.generate_int_from_uniform(0,
-          selectedPrediction.nbModes);
-//        selectedModeIdx = curand(randomState)
-//            % (selectedPrediction.nbModes - 1);
-//        selectedModeIdx = __float2int_rz(
-//            curand_uniform(randomState)
-//                * (selectedPrediction.nbModes - 1 + 0.999f));
-    }
+    // either use the first mode or select one randomly
+    const int selectedModeIdx =
+        m_useAllModesPerLeafInPoseHypothesisGeneration ?
+            randomGenerator.generate_int_from_uniform(0,
+                selectedPrediction.nbModes) :
+            0;
+
+    // Cache camera and world points, used for the following checks
+    const Vector3f selectedModeWorldPt =
+        selectedPrediction.modes[selectedModeIdx].position;
+    const Vector3f selectedFeatureCameraPt =
+        selectedFeature.position.toVector3();
 
     // This is the first pixel, check that the pixel colour corresponds with the selected mode
     if (selectedPixelCount == 0)
@@ -87,31 +81,24 @@ inline bool preemptive_ransac_generate_candidate(
         continue;
     }
 
-    // if (false)
     if (m_checkMinDistanceBetweenSampledModes)
     {
-      const Vector3f worldPt =
-          selectedPrediction.modes[selectedModeIdx].position;
-
       // Check that this mode is far enough from the other modes
       bool farEnough = true;
 
-      for (int idxOther = 0; idxOther < selectedPixelCount; ++idxOther)
+      for (int idxOther = 0; farEnough && idxOther < selectedPixelCount;
+          ++idxOther)
       {
-        const int xOther = selectedPixelX[idxOther];
-        const int yOther = selectedPixelY[idxOther];
-        const int modeIdxOther = selectedPixelMode[idxOther];
+        const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
+        const int otherModeIdx = selectedPixelMode[idxOther];
+        const GPUForestPrediction &otherPrediction = predictionsData[otherLinearIdx];
 
-        const int linearIdxOther = yOther * imgSize.width + xOther;
-        const GPUForestPrediction &predOther = predictionsData[linearIdxOther];
+        const Vector3f otherModeWorldPt = otherPrediction.modes[otherModeIdx].position;
 
-        Vector3f worldPtOther = predOther.modes[modeIdxOther].position;
-
-        float distOther = length(worldPtOther - worldPt);
+        const float distOther = length(otherModeWorldPt - selectedModeWorldPt);
         if (distOther < m_minDistanceBetweenSampledModes)
         {
           farEnough = false;
-          break;
         }
       }
 
@@ -119,37 +106,29 @@ inline bool preemptive_ransac_generate_candidate(
         continue;
     }
 
-    // isometry?
-    //       if (false)
-    // if (true)
     if (m_checkRigidTransformationConstraint)
     {
       bool violatesConditions = false;
 
       for (int m = 0; m < selectedPixelCount && !violatesConditions; ++m)
       {
-        const int xFirst = selectedPixelX[m];
-        const int yFirst = selectedPixelY[m];
-        const int modeIdxFirst = selectedPixelMode[m];
-        const int linearIdxOther = yFirst * imgSize.width + xFirst;
-        const GPUForestPrediction &predFirst = predictionsData[linearIdxOther];
+        const int otherModeIdx = selectedPixelMode[m];
+        const int otherLinearIdx = selectedPixelLinearIdx[m];
+        const GPUForestPrediction &otherPrediction = predictionsData[otherLinearIdx];
 
-        const Vector3f worldPtFirst = predFirst.modes[modeIdxFirst].position;
-        const Vector3f worldPtCur =
-            selectedPrediction.modes[selectedModeIdx].position;
+        const Vector3f otherModeWorldPt = otherPrediction.modes[otherModeIdx].position;
+        float distWorld = length(otherModeWorldPt - selectedModeWorldPt);
 
-        float distWorld = length(worldPtFirst - worldPtCur);
+        const Vector3f otherFeatureCameraPt =
+            patchFeaturesData[otherLinearIdx].position.toVector3();
 
-        const Vector3f localPred =
-            patchFeaturesData[linearIdxOther].position.toVector3();
-        const Vector3f localCur = selectedFeature.position.toVector3();
+        float distCamera = length(
+            otherFeatureCameraPt - selectedFeatureCameraPt);
 
-        float distLocal = length(localPred - localCur);
-
-        if (distLocal < m_minDistanceBetweenSampledModes)
+        if (distCamera < m_minDistanceBetweenSampledModes)
           violatesConditions = true;
 
-        if (std::abs(distLocal - distWorld)
+        if (fabsf(distCamera - distWorld)
             > 0.5f * m_translationErrorMaxForCorrectPose)
         {
           violatesConditions = true;
@@ -160,37 +139,31 @@ inline bool preemptive_ransac_generate_candidate(
         continue;
     }
 
-    selectedPixelX[selectedPixelCount] = x;
-    selectedPixelY[selectedPixelCount] = y;
+    selectedPixelLinearIdx[selectedPixelCount] = linearFeatureIdx;
     selectedPixelMode[selectedPixelCount] = selectedModeIdx;
     ++selectedPixelCount;
   }
 
-  //    std::cout << "Inner iterations: " << iterationsInner << std::endl;
-
   // Reached limit of iterations
-  if (selectedPixelCount != m_nbPointsForKabschBoostrap)
+  if (selectedPixelCount != N_POINTS_FOR_KABSCH)
     return false;
 
-  // Populate resulting pose (except the actual pose that is computed on the CPU due to Kabsch)
-  foundIsometricMapping = true;
+  // Populate resulting pose candidate (except the actual pose that is computed on the CPU due to Kabsch)
   poseCandidate.nbInliers = selectedPixelCount;
   poseCandidate.energy = 0.f;
   poseCandidate.cameraId = -1;
 
   for (int s = 0; s < selectedPixelCount; ++s)
   {
-    const int x = selectedPixelX[s];
-    const int y = selectedPixelY[s];
+    const int linearIdx = selectedPixelLinearIdx[s];
     const int modeIdx = selectedPixelMode[s];
-    const int linearIdx = y * imgSize.width + x;
 
     poseCandidate.inliers[s].linearIdx = linearIdx;
     poseCandidate.inliers[s].modeIdx = modeIdx;
     poseCandidate.inliers[s].energy = 0.f;
   }
 
-  return foundIsometricMapping;
+  return true;
 }
 
 }

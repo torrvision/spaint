@@ -160,12 +160,6 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
 }
 }
 
-__device__ bool compare_poses_ascending_energy(const PoseCandidate &a,
-    const PoseCandidate &b)
-{
-  return a.energy < b.energy;
-}
-
 PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() :
     PreemptiveRansac()
 {
