@@ -517,7 +517,6 @@ void SLAMComponentWithScoreForest::compute_features(
 #endif
   m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
       depthIntrinsics, m_featureImage.get(), invCameraPose);
-
 }
 
 void SLAMComponentWithScoreForest::evaluate_forest()
