@@ -26,7 +26,8 @@ class GPUForest
 {
   // Typedefs
 public:
-  enum {
+  enum
+  {
     RESERVOIR_SIZE = 1024, // Max number samples in a leaf reservoir
   };
 
@@ -47,6 +48,12 @@ public:
 
   void load_structure_from_file(const std::string &fileName);
   void save_structure_to_file(const std::string &fileName) const;
+
+  size_t get_nb_trees() const;
+  size_t get_nb_nodes_in_tree(size_t treeIdx) const;
+  size_t get_nb_leaves_in_tree(size_t treeIdx) const;
+  virtual GPUForestPrediction get_prediction(size_t treeIdx,
+      size_t leafIdx) const = 0;
 
 protected:
   std::vector<int> m_nbNodesPerTree;

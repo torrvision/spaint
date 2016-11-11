@@ -75,8 +75,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;
 
-  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
-//  m_gpuRansac.reset(new GPURansac());
+//  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
+  m_preemptiveRansac.reset(new PreemptiveRansac());
 
   // Refinement ICP tracker
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
@@ -194,6 +194,43 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
+#if 0
+
+    // Leaf indices selected randomly during the forest conversion step
+    std::vector<size_t> predictionIndices
+    { 5198, 447, 5438, 7355, 1649 };
+
+//    std::vector<size_t> predictionIndices
+//    { 5198, 447, 5438, 1664, 4753 };
+
+    // For each prediction print centroids, covariances, nbInliers
+    for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
+    {
+      const GPUForestPrediction p = m_gpuForest->get_prediction(treeIdx,
+          predictionIndices[treeIdx]);
+      std::cout << p.nbModes << ' ' << predictionIndices[treeIdx] << '\n';
+      for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
+      {
+        const GPUForestMode &m = p.modes[modeIdx];
+        std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y
+            << ' ' << m.position.z << ' ';
+
+        // Invet and transpose the covariance to print it in row-major
+        Matrix3f posCovariance;
+        m.positionInvCovariance.inv(posCovariance);
+        posCovariance = posCovariance.t();
+
+        for (int i = 0; i < 9; ++i)
+          std::cout << posCovariance.m[i] << ' ';
+        std::cout << '\n';
+      }
+      std::cout << '\n';
+    }
+
+    // Done for this test
+    exit(0);
+#endif
+
     if (m_lowLevelEngine->CountValidDepths(inputDepthImage)
         < m_preemptiveRansac->get_min_nb_required_points())
     {
@@ -210,8 +247,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
     evaluate_forest();
-    boost::optional<PoseCandidate> pose_candidate = m_preemptiveRansac->estimate_pose(
-        m_featureImage, m_predictionsImage);
+    boost::optional<PoseCandidate> pose_candidate =
+        m_preemptiveRansac->estimate_pose(m_featureImage, m_predictionsImage);
 
     if (pose_candidate)
     {

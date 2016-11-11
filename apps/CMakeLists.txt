@@ -23,6 +23,9 @@ IF(BUILD_AUXILIARY_APPS)
   
   IF(WITH_SCOREFORESTS)
     ADD_SUBDIRECTORY(relocconverter)
+    IF(WITH_OPENCV)
+      ADD_SUBDIRECTORY(forestmodevis)
+    ENDIF()
   ENDIF()
 ENDIF()
 

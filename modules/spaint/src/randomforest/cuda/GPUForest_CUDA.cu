@@ -85,6 +85,17 @@ void GPUForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
   ORcudaKernelCheck;
 }
 
+GPUForestPrediction GPUForest_CUDA::get_prediction(size_t treeIdx, size_t leafIdx) const
+{
+  if(treeIdx >= get_nb_trees()) throw std::runtime_error("invalid treeIdx");
+  if(leafIdx >= get_nb_leaves_in_tree(treeIdx)) throw std::runtime_error("invalid leafIdx");
+
+  size_t linearizedLeafIdx = leafIdx;
+  for(int i = 0; i < treeIdx; ++i) linearizedLeafIdx += get_nb_leaves_in_tree(i);
+
+  return m_predictionsBlock->GetElement(linearizedLeafIdx, MEMORYDEVICE_CUDA);
+}
+
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################
 #ifdef WITH_SCOREFORESTS
 

@@ -265,6 +265,27 @@ void GPUForest::save_structure_to_file(const std::string &fileName) const
   }
 }
 
+size_t GPUForest::get_nb_trees() const
+{
+  return GPUFOREST_NTREES;
+}
+
+size_t GPUForest::get_nb_nodes_in_tree(size_t treeIdx) const
+{
+  if (treeIdx >= get_nb_trees())
+    throw std::runtime_error("invalid treeIdx");
+
+  return m_nbNodesPerTree[treeIdx];
+}
+
+size_t GPUForest::get_nb_leaves_in_tree(size_t treeIdx) const
+{
+  if (treeIdx >= get_nb_trees())
+    throw std::runtime_error("invalid treeIdx");
+
+  return m_nbLeavesPerTree[treeIdx];
+}
+
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################
 #ifdef WITH_SCOREFORESTS
 

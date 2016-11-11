@@ -15,10 +15,13 @@ class GPUForest_CUDA: public GPUForest
 public:
   explicit GPUForest_CUDA(const std::string &fileName);
 
+  virtual GPUForestPrediction get_prediction(size_t treeIdx,
+      size_t leafIdx) const;
+
 protected:
-  void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
+  virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const;
-  void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
+  virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
       GPUForestPredictionsImage_Ptr &predictions) const;
 
   //#################### SCOREFOREST INTEROP FUNCTIONS ####################

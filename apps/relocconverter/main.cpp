@@ -9,6 +9,8 @@
 
 #include <DatasetRGBDInfiniTAM.hpp>
 
+#include <boost/random.hpp>
+
 using namespace spaint;
 
 int main(int argc, char *argv[])
@@ -34,7 +36,7 @@ int main(int argc, char *argv[])
   const std::string outputFile = argv[3];
 
   boost::shared_ptr<DatasetRGBD7Scenes> m_dataset(
-      new DatasetRGBDInfiniTAM(configFile, dataPath, nbTrees,
+      new DatasetRGBD7Scenes(configFile, dataPath, nbTrees,
           proportionOfDataGivenToLearner, learnerType, loadSavedForest,
           learnFromTree, loadFeatures, randomSeed));
   m_dataset->LoadForest();
@@ -43,6 +45,57 @@ int main(int argc, char *argv[])
 
   std::cout << "Saving forest in: " << outputFile << std::endl;
   m_gpuForest->save_structure_to_file(outputFile);
+
+#if 0
+  // Randomly select one prediction per tree
+  boost::mt19937 rng(42);
+
+  std::vector<GPUForestPrediction> predictions;
+  std::vector<size_t> predictionIndices;
+  for (size_t i = 0; i < m_gpuForest->get_nb_trees(); ++i)
+  {
+    boost::uniform_int<size_t> dist(0,
+        m_gpuForest->get_nb_leaves_in_tree(i) - 1);
+
+    size_t predictionIdx = 0;
+    GPUForestPrediction p;
+    p.nbModes = 0;
+    while (p.nbModes < 5)
+    {
+      predictionIdx = dist(rng);
+      std::cout << "Selecting prediction " << predictionIdx << " for tree " << i
+          << '\n';
+      p = m_gpuForest->get_prediction(i, predictionIdx);
+    }
+
+    predictions.push_back(p);
+    predictionIndices.push_back(predictionIdx);
+  }
+
+  // For each prediction print centroids, covariances, nbInliers
+  for (size_t predictionIdx = 0; predictionIdx < m_gpuForest->get_nb_trees();
+      ++predictionIdx)
+  {
+    const GPUForestPrediction &p = predictions[predictionIdx];
+    std::cout << p.nbModes << ' ' << predictionIndices[predictionIdx] << '\n';
+    for(int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
+    {
+      const GPUForestMode &m = p.modes[modeIdx];
+      std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
+
+      // Invet and transpose the covariance to print it in row-major
+      Matrix3f posCovariance;
+      m.positionInvCovariance.inv(posCovariance);
+      posCovariance = posCovariance.t();
+
+      for(int i = 0; i < 9; ++i)
+        std::cout << posCovariance.m[i] << ' ';
+      std::cout << '\n';
+    }
+    std::cout << '\n';
+  }
+
+#endif
 
   return 0;
 }
