@@ -62,15 +62,10 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_featureImage = mbf.make_image<RGBDPatchFeature>(Vector2i(0, 0)); // Dummy size just to allocate the container
   m_predictionsImage = mbf.make_image<GPUForestPrediction>(Vector2i(0, 0)); // Dummy size just to allocate the container
 
-//  const bf::path relocalizationForestPath = bf::path(
-//      m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
+  const bf::path relocalizationForestPath = bf::path(
+      m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
 
-  // TODO: replace with default forest path
-  const bf::path relocalizationForestPath =
-      "/media/data/spaint_forests/TVG-desk.txt";
-//      "/media/data/spaint_forests/stairs.txt";
-
-  std::cout << "TODO: Loading relocalization forest from: "
+  std::cout << "Loading relocalization forest from: "
       << relocalizationForestPath << '\n';
   m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;

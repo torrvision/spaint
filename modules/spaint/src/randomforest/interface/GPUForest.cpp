@@ -19,7 +19,7 @@
 #include "randomforest/cuda/GPUReservoir_CUDA.h"
 
 //#define ENABLE_TIMERS
-#define RANDOM_FEATURES
+//#define RANDOM_FEATURES
 
 #ifdef RANDOM_FEATURES
 #include "tvgutil/numbers/RandomNumberGenerator.h"
