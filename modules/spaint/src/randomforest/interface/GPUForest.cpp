@@ -19,6 +19,11 @@
 #include "randomforest/cuda/GPUReservoir_CUDA.h"
 
 //#define ENABLE_TIMERS
+#define RANDOM_FEATURES
+
+#ifdef RANDOM_FEATURES
+#include "tvgutil/numbers/RandomNumberGenerator.h"
+#endif
 
 namespace spaint
 {
@@ -217,6 +222,10 @@ void GPUForest::load_structure_from_file(const std::string &fileName)
 
   m_leafReservoirs.reset(new GPUReservoir_CUDA(RESERVOIR_SIZE, totalNbLeaves));
 
+#ifdef RANDOM_FEATURES
+  tvgutil::RandomNumberGenerator rng(42);
+#endif
+
   // Read all nodes.
   GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
   for (int treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
@@ -231,6 +240,43 @@ void GPUForest::load_structure_from_file(const std::string &fileName)
         throw std::runtime_error(
             "Error reading node " + boost::lexical_cast<std::string>(nodeIdx)
                 + " of tree " + boost::lexical_cast<std::string>(treeIdx));
+
+#ifdef RANDOM_FEATURES
+      // Mimic the distribution in the pretrained forest
+
+//      bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < 0.45f;
+//
+//      if(depthFeature)
+//      {
+//        node.featureIdx = rng.generate_int_from_uniform(0, 127);
+//
+//        float depthMu = -10.27f;
+//        float depthSigma = 593.18f;
+//        node.featureThreshold = rng.generate_from_gaussian(depthMu, depthSigma);
+//      }
+//      else
+//      {
+//        node.featureIdx = rng.generate_int_from_uniform(128, 255);
+//
+//        float rgbMu = -0.99f;
+//        float rgbSigma = 105.5f;
+//        node.featureThreshold = rng.generate_from_gaussian(rgbMu, rgbSigma);
+//      }
+
+      int minRGBFeature = -100;
+      int maxRGBFeature = 100;
+      int minDepthFeature = -600;
+      int maxDepthFeature = 600;
+      node.featureIdx = rng.generate_int_from_uniform(0, RGBDPatchFeature::FEATURE_SIZE - 1);
+      if(node.featureIdx < RGBDPatchFeature::RGB_OFFSET)
+      {
+        node.featureThreshold = rng.generate_int_from_uniform(minDepthFeature, maxDepthFeature);
+      }
+      else
+      {
+        node.featureThreshold = rng.generate_int_from_uniform(minRGBFeature, maxRGBFeature);
+      }
+#endif
     }
   }
 
