@@ -194,3 +194,4 @@ ENDIF()
 #############################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/spaintgui/resources" DESTINATION "bin/apps/spaintgui")
