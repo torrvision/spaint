@@ -71,9 +71,11 @@ public:
   __device__
   inline int generate_int_from_uniform(int lower, int upper)
   {
-    // curand_uniform generates a number in ]0,1], we convert the interval in [0,1[
-    const float generated = curand_uniform(&m_state) - CUDART_MIN_DENORM_F;
-    return __float2int_rz(generated * (upper - lower)) + lower;
+    // curand_uniform generates a number in ]0,1]
+    const float generated = curand_uniform(&m_state);
+    // __float2int_ru rounds the generated values in ]lower, upper], subtracting 1 gives the intended range
+    const int result = __float2int_ru(generated * (upper - lower)) + lower - 1;
+    return result;
   }
 
   /**
