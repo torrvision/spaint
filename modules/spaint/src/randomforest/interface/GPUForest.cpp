@@ -244,38 +244,38 @@ void GPUForest::load_structure_from_file(const std::string &fileName)
 #ifdef RANDOM_FEATURES
       // Mimic the distribution in the pretrained forest
 
-//      bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < 0.45f;
-//
-//      if(depthFeature)
-//      {
-//        node.featureIdx = rng.generate_int_from_uniform(0, 127);
-//
-//        float depthMu = -10.27f;
-//        float depthSigma = 593.18f;
-//        node.featureThreshold = rng.generate_from_gaussian(depthMu, depthSigma);
-//      }
-//      else
-//      {
-//        node.featureIdx = rng.generate_int_from_uniform(128, 255);
-//
-//        float rgbMu = -0.99f;
-//        float rgbSigma = 105.5f;
-//        node.featureThreshold = rng.generate_from_gaussian(rgbMu, rgbSigma);
-//      }
+      bool depthFeature = rng.generate_real_from_uniform(0.f, 1.f) < 0.3886f;
 
-      int minRGBFeature = -100;
-      int maxRGBFeature = 100;
-      int minDepthFeature = -600;
-      int maxDepthFeature = 600;
-      node.featureIdx = rng.generate_int_from_uniform(0, RGBDPatchFeature::FEATURE_SIZE - 1);
-      if(node.featureIdx < RGBDPatchFeature::RGB_OFFSET)
+      if(depthFeature)
       {
-        node.featureThreshold = rng.generate_int_from_uniform(minDepthFeature, maxDepthFeature);
+        node.featureIdx = rng.generate_int_from_uniform(0, 127);
+
+        float depthMu = 20.09f;
+        float depthSigma = 947.24f;
+        node.featureThreshold = rng.generate_from_gaussian(depthMu, depthSigma);
       }
       else
       {
-        node.featureThreshold = rng.generate_int_from_uniform(minRGBFeature, maxRGBFeature);
+        node.featureIdx = rng.generate_int_from_uniform(128, 255);
+
+        float rgbMu = -2.85f;
+        float rgbSigma = 72.98f;
+        node.featureThreshold = rng.generate_from_gaussian(rgbMu, rgbSigma);
       }
+
+//      int minRGBFeature = -100;
+//      int maxRGBFeature = 100;
+//      int minDepthFeature = -600;
+//      int maxDepthFeature = 600;
+//      node.featureIdx = rng.generate_int_from_uniform(0, RGBDPatchFeature::FEATURE_SIZE - 1);
+//      if(node.featureIdx < RGBDPatchFeature::RGB_OFFSET)
+//      {
+//        node.featureThreshold = rng.generate_int_from_uniform(minDepthFeature, maxDepthFeature);
+//      }
+//      else
+//      {
+//        node.featureThreshold = rng.generate_int_from_uniform(minRGBFeature, maxRGBFeature);
+//      }
 #endif
     }
   }
