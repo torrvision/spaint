@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
 
       // Print header
       out
-          << "FrameIdx; Reloc Success; Reloc Sum; Reloc Pct; ICP Success; ICP Sum; ICP Pct\n";
+          << "FrameIdx; FramePct; Reloc Success; Reloc Sum; Reloc Pct; ICP Success; ICP Sum; ICP Pct\n";
 
       int relocSum = 0;
       int icpSum = 0;
@@ -253,12 +253,14 @@ int main(int argc, char *argv[])
         relocSum += relocSuccess;
         icpSum += icpSuccess;
 
+        float framePct = static_cast<float>(poseIdx) / seqResult.poseCount
+            * 100.f;
         float relocPct = static_cast<float>(relocSum) / poseIdx;
         float icpPct = static_cast<float>(icpSum) / poseIdx;
 
-        out << poseIdx << "; " << relocSuccess << "; " << relocSum << "; "
-            << relocPct << "; " << icpSuccess << "; " << icpSum << "; "
-            << icpPct << '\n';
+        out << poseIdx << "; " << framePct << "; " << relocSuccess << "; "
+            << relocSum << "; " << relocPct << "; " << icpSuccess << "; "
+            << icpSum << "; " << icpPct << '\n';
       }
     }
   }
