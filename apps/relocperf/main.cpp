@@ -101,6 +101,10 @@ struct SequenceResults
   { 0 };
   int validFinalPoses
   { 0 };
+
+  std::vector<bool> relocalizationResults;
+  std::vector<bool> icpResults;
+  std::vector<bool> finalResults;
 };
 
 SequenceResults evaluate_sequence(const fs::path &gtFolder,
@@ -143,7 +147,9 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
     res.validPosesAfterICP += validICP;
     res.validFinalPoses += validFinal;
 
-//    break;
+    res.relocalizationResults.push_back(validReloc);
+    res.icpResults.push_back(validICP);
+    res.finalResults.push_back(validFinal);
   }
 
   return res;
@@ -164,7 +170,7 @@ int main(int argc, char *argv[])
   if (argc < 4)
   {
     std::cerr << "Usage: " << argv[0]
-        << " \"GT base folder\" \"reloc base output folder\" \"reloc tag\""
+        << " \"GT base folder\" \"reloc base output folder\" \"reloc tag\" [online results filename]"
         << std::endl;
     return 1;
   }
@@ -218,6 +224,46 @@ int main(int argc, char *argv[])
     std::cout << '\n';
   }
 
+  // Save results of online training-relocalization
+  if (argc > 4)
+  {
+    std::string onlineResultsFilenameStem = argv[4];
+
+    // Process every sequence
+    for (auto sequence : sequenceNames)
+    {
+      auto seqResult = results[sequence];
+
+      std::string outFilename = onlineResultsFilenameStem + '_' + sequence
+          + ".csv";
+      std::ofstream out(outFilename);
+
+      // Print header
+      out
+          << "FrameIdx; Reloc Success; Reloc Sum; Reloc Pct; ICP Success; ICP Sum; ICP Pct\n";
+
+      int relocSum = 0;
+      int icpSum = 0;
+
+      for (int poseIdx = 0; poseIdx < seqResult.poseCount; ++poseIdx)
+      {
+        bool relocSuccess = seqResult.relocalizationResults[poseIdx];
+        bool icpSuccess = seqResult.icpResults[poseIdx];
+
+        relocSum += relocSuccess;
+        icpSum += icpSuccess;
+
+        float relocPct = static_cast<float>(relocSum) / poseIdx;
+        float icpPct = static_cast<float>(icpSum) / poseIdx;
+
+        out << poseIdx << "; " << relocSuccess << "; " << relocSum << "; "
+            << relocPct << "; " << icpSuccess << "; " << icpSum << "; "
+            << icpPct << '\n';
+      }
+    }
+  }
+
+#if 0
   std::cout << "\n\n";
 
   float colorMin = 40;
@@ -232,28 +278,29 @@ int main(int argc, char *argv[])
     auto seqResult = results[sequence];
 
     float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
-        / static_cast<float>(seqResult.poseCount) * 100.f;
+    / static_cast<float>(seqResult.poseCount) * 100.f;
     float relocColorPct = (relocPct / 100.f) * (colorMax - colorMin) + colorMin;
 
     std::cout << "& \\cellcolor{" << relocColor << "!" << relocColorPct << "} "
-        << std::setprecision(1) << relocPct << "\\% ";
+    << std::setprecision(1) << relocPct << "\\% ";
   }
 
   std::cout << "\\\\\n\\cellcolor{white}\\multirow{-2}{*}{" << relocTag
-      << "} & \\cellcolor{" << icpColor << "} + ICP ";
+  << "} & \\cellcolor{" << icpColor << "} + ICP ";
   for (auto sequence : sequenceNames)
   {
     auto seqResult = results[sequence];
 
     float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
-        / static_cast<float>(seqResult.poseCount) * 100.f;
+    / static_cast<float>(seqResult.poseCount) * 100.f;
     float icpColorPct = (icpPct / 100.f) * (colorMax - colorMin) + colorMin;
 
     std::cout << "& \\cellcolor{" << icpColor << "!" << icpColorPct << "} "
-        << std::setprecision(1) << icpPct << "\\% ";
+    << std::setprecision(1) << icpPct << "\\% ";
   }
 
   std::cout << "\\\\\n";
+#endif
 
   return 0;
 }
