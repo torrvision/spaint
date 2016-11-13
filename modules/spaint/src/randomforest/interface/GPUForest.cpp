@@ -36,9 +36,8 @@ GPUForest::GPUForest()
   m_gpuClusterer.reset(
       new GPUClusterer_CUDA(clustererSigma, clustererTau, minClusterSize));
 
-  // Allocate the image that will store the leaf indices (dummy size, will be resized as needed)
-  m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>(
-      Vector2i(0, 0));
+  // Allocate the image that will store the leaf indices (will be resized as needed)
+  m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>();
 
   m_lastFeaturesAddedStartIdx = 0;
   m_maxReservoirsToUpdate = 256;

@@ -347,13 +347,13 @@ GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau, int minClusterSize)
     GPUClusterer(sigma, tau, minClusterSize)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_densities = mbf.make_image<float>(Vector2i(0, 0));
-  m_parents = mbf.make_image<int>(Vector2i(0, 0));
-  m_clusterIdx = mbf.make_image<int>(Vector2i(0, 0));
-  m_clusterSizes = mbf.make_image<int>(Vector2i(0, 0));
-  m_clusterSizesHistogram = mbf.make_image<int>(Vector2i(0, 0));
-  m_selectedClusters = mbf.make_image<int>(Vector2i(0, 0));
-  m_nbClustersPerReservoir = mbf.make_image<int>(Vector2i(0, 0));
+  m_densities = mbf.make_image<float>();
+  m_parents = mbf.make_image<int>();
+  m_clusterIdx = mbf.make_image<int>();
+  m_clusterSizes = mbf.make_image<int>();
+  m_clusterSizesHistogram = mbf.make_image<int>();
+  m_selectedClusters = mbf.make_image<int>();
+  m_nbClustersPerReservoir = mbf.make_image<int>();
 }
 
 void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
