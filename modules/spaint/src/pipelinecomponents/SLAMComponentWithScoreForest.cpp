@@ -16,7 +16,8 @@
 
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
-//#define SAVE_RELOC_POSES
+#define SAVE_RELOC_POSES
+//#define SAVE_LEAF_MODES
 //#define SAVE_INLIERS
 //#define USE_FERN_RELOCALISER
 
@@ -70,8 +71,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;
 
-//  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
-  m_preemptiveRansac.reset(new PreemptiveRansac());
+  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
+//  m_preemptiveRansac.reset(new PreemptiveRansac());
 
   // Refinement ICP tracker
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
@@ -189,11 +190,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-#if 0
+#ifdef SAVE_LEAF_MODES
 
     // Leaf indices selected randomly during the forest conversion step
     std::vector<size_t> predictionIndices
-    { 5198, 447, 5438, 7355, 1649 };
+    { 5198, 447, 5438, 7355, 1649};
 
 //    std::vector<size_t> predictionIndices
 //    { 5198, 447, 5438, 1664, 4753 };
@@ -208,7 +209,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       {
         const GPUForestMode &m = p.modes[modeIdx];
         std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y
-            << ' ' << m.position.z << ' ';
+        << ' ' << m.position.z << ' ';
 
         // Invet and transpose the covariance to print it in row-major
         Matrix3f posCovariance;
@@ -216,7 +217,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         posCovariance = posCovariance.t();
 
         for (int i = 0; i < 9; ++i)
-          std::cout << posCovariance.m[i] << ' ';
+        std::cout << posCovariance.m[i] << ' ';
         std::cout << '\n';
       }
       std::cout << '\n';
