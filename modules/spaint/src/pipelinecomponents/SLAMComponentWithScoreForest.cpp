@@ -20,6 +20,7 @@
 //#define SAVE_LEAF_MODES
 //#define SAVE_INLIERS
 //#define USE_FERN_RELOCALISER
+#define RELOCALISE_EVERY_TRAINING_FRAME
 
 #ifdef ENABLE_TIMERS
 #include <boost/timer/timer.hpp>
@@ -158,15 +159,21 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     relocalizationTimer = boost::timer::cpu_timer();
   }
 
+#ifdef RELOCALISE_EVERY_TRAINING_FRAME
+  const bool performRelocalization = true;
+  const bool performLearning = true;
+#else
   const bool performRelocalization = trackingResult
-      == TrackingResult::TRACKING_FAILED;
+  == TrackingResult::TRACKING_FAILED;
   const bool performLearning = trackingResult == TrackingResult::TRACKING_GOOD;
+#endif
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
   const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
 
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
+  const SE3Pose trackedPose(*trackingState->pose_d);
 
   const View_Ptr& view = slamState->get_view();
 
@@ -382,9 +389,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       ++m_relocalizationCalls;
     }
   }
-  else if (performLearning)
+
+  if (performLearning)
   {
-    Matrix4f invCameraPose = trackingState->pose_d->GetInvM();
+    Matrix4f invCameraPose = trackedPose.GetInvM();
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics,
         invCameraPose);
 
@@ -407,6 +415,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       ++m_learningCalls;
     }
   }
+
+#ifdef RELOCALISE_EVERY_TRAINING_FRAME
+  // Restore tracked pose
+  trackingState->pose_d->SetFrom(&trackedPose);
+  trackingResult = TrackingResult::TRACKING_GOOD;
+#endif
 
   return trackingResult;
 }
