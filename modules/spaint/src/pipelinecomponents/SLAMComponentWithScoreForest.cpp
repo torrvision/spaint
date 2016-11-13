@@ -16,11 +16,11 @@
 
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
-#define SAVE_RELOC_POSES
+//#define SAVE_RELOC_POSES
 //#define SAVE_LEAF_MODES
 //#define SAVE_INLIERS
 //#define USE_FERN_RELOCALISER
-#define RELOCALISE_EVERY_TRAINING_FRAME
+//#define RELOCALISE_EVERY_TRAINING_FRAME
 
 #ifdef ENABLE_TIMERS
 #include <boost/timer/timer.hpp>
@@ -97,15 +97,15 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
 #ifdef SAVE_RELOC_POSES
   const std::string poses_folder =
-      m_context->get_tag().empty() ?
-          TimeUtil::get_iso_timestamp() : m_context->get_tag();
+  m_context->get_tag().empty() ?
+  TimeUtil::get_iso_timestamp() : m_context->get_tag();
 
   m_sequentialPathGenerator.reset(
       SequentialPathGenerator(
           find_subdir_from_executable("reloc_poses") / poses_folder));
 
   std::cout << "Saving relocalization poses in: "
-      << m_sequentialPathGenerator->get_base_dir() << std::endl;
+  << m_sequentialPathGenerator->get_base_dir() << std::endl;
   boost::filesystem::create_directories(
       m_sequentialPathGenerator->get_base_dir());
 #endif
@@ -164,7 +164,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const bool performLearning = true;
 #else
   const bool performRelocalization = trackingResult
-  == TrackingResult::TRACKING_FAILED;
+      == TrackingResult::TRACKING_FAILED;
   const bool performLearning = trackingResult == TrackingResult::TRACKING_GOOD;
 #endif
 
