@@ -61,8 +61,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_featureExtractor =
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           settings->deviceType);
-  m_featureImage = mbf.make_image<RGBDPatchFeature>(Vector2i(0, 0)); // Dummy size just to allocate the container
-  m_predictionsImage = mbf.make_image<GPUForestPrediction>(Vector2i(0, 0)); // Dummy size just to allocate the container
+  m_featureImage = mbf.make_image<RGBDPatchFeature>();
+  m_predictionsImage = mbf.make_image<GPUForestPrediction>();
 
   const bf::path relocalizationForestPath = bf::path(
       m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
