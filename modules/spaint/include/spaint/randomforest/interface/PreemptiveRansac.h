@@ -96,7 +96,8 @@ protected:
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
   int m_nbPoseCandidates;
 
-  virtual void generate_pose_candidates();
+  virtual void generate_pose_candidates() = 0;
+
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
       std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
   void update_inliers_for_optimization(
@@ -107,7 +108,6 @@ protected:
   Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const;
 
 private:
-  bool hypothesize_pose(PoseCandidate &res, std::mt19937 &eng);
   void compute_pose_energy(PoseCandidate &candidate) const;
 };
 

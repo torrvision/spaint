@@ -8,6 +8,7 @@
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 
 #include "randomforest/cuda/GPUForest_CUDA.h"
+#include "randomforest/cpu/PreemptiveRansac_CPU.h"
 #include "randomforest/cuda/PreemptiveRansac_CUDA.h"
 #include "util/MemoryBlockFactory.h"
 #include "util/PosePersister.h"
@@ -72,8 +73,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;
 
-  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
-//  m_preemptiveRansac.reset(new PreemptiveRansac());
+//  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
+  m_preemptiveRansac.reset(new PreemptiveRansac_CPU());
 
   // Refinement ICP tracker
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
