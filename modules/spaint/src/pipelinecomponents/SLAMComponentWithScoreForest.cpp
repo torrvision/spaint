@@ -98,15 +98,15 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
 #ifdef SAVE_RELOC_POSES
   const std::string poses_folder =
-  m_context->get_tag().empty() ?
-  TimeUtil::get_iso_timestamp() : m_context->get_tag();
+      m_context->get_tag().empty() ?
+          TimeUtil::get_iso_timestamp() : m_context->get_tag();
 
   m_sequentialPathGenerator.reset(
       SequentialPathGenerator(
           find_subdir_from_executable("reloc_poses") / poses_folder));
 
   std::cout << "Saving relocalization poses in: "
-  << m_sequentialPathGenerator->get_base_dir() << std::endl;
+      << m_sequentialPathGenerator->get_base_dir() << std::endl;
   boost::filesystem::create_directories(
       m_sequentialPathGenerator->get_base_dir());
 #endif
@@ -165,7 +165,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const bool performLearning = true;
 #else
   const bool performRelocalization = trackingResult
-      == TrackingResult::TRACKING_FAILED;
+  == TrackingResult::TRACKING_FAILED;
   const bool performLearning = trackingResult == TrackingResult::TRACKING_GOOD;
 #endif
 
@@ -179,7 +179,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const View_Ptr& view = slamState->get_view();
 
   const Vector4f depthIntrinsics =
-      view->calib.intrinsics_d.projectionParamsSimple.all;
+  view->calib.intrinsics_d.projectionParamsSimple.all;
 
   if (m_updateForestModesEveryFrame && !performLearning)
   {
@@ -207,7 +207,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 //    std::vector<size_t> predictionIndices
 //    { 5198, 447, 5438, 1664, 4753 };
 
-    // For each prediction print centroids, covariances, nbInliers
+// For each prediction print centroids, covariances, nbInliers
     for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
       const GPUForestPrediction p = m_gpuForest->get_prediction(treeIdx,
@@ -252,7 +252,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
     evaluate_forest();
     boost::optional<PoseCandidate> pose_candidate =
-        m_preemptiveRansac->estimate_pose(m_featureImage, m_predictionsImage);
+    m_preemptiveRansac->estimate_pose(m_featureImage, m_predictionsImage);
 
     if (pose_candidate)
     {
@@ -286,7 +286,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       cv::normalize(inliers, inliersImg, 0.0, 1.0, cv::NORM_MINMAX);
       inliersImg = 1.f - inliersImg;
 
-      // Convert the image in cv_8uc1 (NaNs become 0)
+// Convert the image in cv_8uc1 (NaNs become 0)
 //      inliers.convertTo(inliers, CV_8U, 255.0);
 //      cv::applyColorMap(inliers, inliers, cv::COLORMAP_JET);
       cv::resize(inliersImg, inliersImg,
@@ -320,7 +320,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
       const VoxelRenderState_Ptr& liveVoxelRenderState =
-          slamState->get_live_voxel_render_state();
+      slamState->get_live_voxel_render_state();
       const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
@@ -343,8 +343,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
             m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
 
         const Matrix4f final_pose =
-            trackingResult == TrackingResult::TRACKING_GOOD ?
-                trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
+        trackingResult == TrackingResult::TRACKING_GOOD ?
+        trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
 
         PosePersister::save_pose_on_thread(final_pose,
             m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
@@ -433,14 +433,15 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 {
   boost::optional<boost::timer::cpu_timer> relocalizationTimer;
   if (m_timeRelocalizer)
-  relocalizationTimer = boost::timer::cpu_timer();
+    relocalizationTimer = boost::timer::cpu_timer();
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const VoxelRenderState_Ptr& liveVoxelRenderState =
-  slamState->get_live_voxel_render_state();
+      slamState->get_live_voxel_render_state();
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+  const SE3Pose trackedPose(*trackingState->pose_d);
 
   // Copy the current depth input across to the CPU for use by the relocaliser.
   view->depth->UpdateHostFromDevice();
@@ -450,9 +451,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   if (trackingResult == ITMTrackingState::TRACKING_GOOD)
   {
     if (m_keyframeDelay == 0)
-    considerKeyframe = true;
+      considerKeyframe = true;
     else
-    --m_keyframeDelay;
+      --m_keyframeDelay;
   }
 
   // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
@@ -463,42 +464,52 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       &nearestNeighbour, NULL, considerKeyframe);
 
   const bool saveKeyframe = keyframeID >= 0;
-  const bool performRelocalization = trackingResult
-  == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1;
 
-  if (saveKeyframe)
-  {
-    // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
-    // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
-    m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
-  }
-  else if (performRelocalization)
+#ifdef RELOCALISE_EVERY_TRAINING_FRAME
+  const bool performRelocalization = true;
+#else
+  const bool performRelocalization = trackingResult
+  == ITMTrackingState::TRACKING_FAILED;
+#endif
+
+  if (performRelocalization)
   {
     // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
     // of the keyframe and rerun the tracker for this frame.
-    ORUtils::SE3Pose relocPose =
-    m_poseDatabase->retrievePose(nearestNeighbour).pose;
+    ORUtils::SE3Pose relocPose(std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::quiet_NaN());
+    ORUtils::SE3Pose refinedPose = relocPose;
 
-    trackingState->pose_d->SetFrom(&relocPose);
+    if (nearestNeighbour != -1)
+    {
+      relocPose = m_poseDatabase->retrievePose(nearestNeighbour).pose;
 
-    const bool resetVisibleList = true;
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
-        voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-    prepare_for_tracking(TRACK_VOXELS);
-    m_refineTracker->TrackCamera(trackingState.get(), view.get());
-    trackingResult = trackingState->trackerResult;
+      trackingState->pose_d->SetFrom(&relocPose);
+
+      const bool resetVisibleList = true;
+      m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
+          voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+      prepare_for_tracking(TRACK_VOXELS);
+      m_refineTracker->TrackCamera(trackingState.get(), view.get());
+      trackingResult = trackingState->trackerResult;
+      refinedPose = *trackingState->pose_d;
+    }
 
     if (m_sequentialPathGenerator)
     {
       // Save poses
       PosePersister::save_pose_on_thread(relocPose.GetInvM(),
           m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
-      PosePersister::save_pose_on_thread(trackingState->pose_d->GetInvM(),
+      PosePersister::save_pose_on_thread(refinedPose.GetInvM(),
           m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
 
       const Matrix4f final_pose =
-      trackingResult == TrackingResult::TRACKING_GOOD ?
-      trackingState->pose_d->GetInvM() : relocPose.GetInvM();
+          trackingResult == TrackingResult::TRACKING_GOOD ?
+              refinedPose.GetInvM() : relocPose.GetInvM();
 
       PosePersister::save_pose_on_thread(final_pose,
           m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
@@ -510,9 +521,18 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     trackingResult = TrackingResult::TRACKING_POOR;
 #endif
 
+#ifndef RELOCALISE_EVERY_TRAINING_FRAME
     // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
     // adding a new keyframe.
     m_keyframeDelay = 10;
+#endif
+  }
+
+  if (saveKeyframe)
+  {
+    // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
+    // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
+    m_poseDatabase->storePose(keyframeID, trackedPose, 0);
   }
 
   if (relocalizationTimer)
@@ -537,6 +557,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       ++m_learningCalls;
     }
   }
+
+#ifdef RELOCALISE_EVERY_TRAINING_FRAME
+  // Restore tracked pose
+  trackingState->pose_d->SetFrom(&trackedPose);
+  trackingResult = TrackingResult::TRACKING_GOOD;
+#endif
 
   return trackingResult;
 }
