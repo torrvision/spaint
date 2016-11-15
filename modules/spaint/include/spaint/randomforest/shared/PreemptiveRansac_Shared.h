@@ -3,10 +3,10 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "ORUtils/PlatformIndependence.h"
-
 #ifndef H_SPAINT_PREEMPTIVERANSACSHARED
 #define H_SPAINT_PREEMPTIVERANSACSHARED
+
+#include "ORUtils/PlatformIndependence.h"
 
 namespace spaint
 {
@@ -27,7 +27,7 @@ inline bool preemptive_ransac_generate_candidate(
     RNG &randomGenerator, PoseCandidate &poseCandidate,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
     bool m_checkMinDistanceBetweenSampledModes,
-    float m_minDistanceBetweenSampledModes,
+    float m_minSqDistanceBetweenSampledModes,
     bool m_checkRigidTransformationConstraint,
     float m_translationErrorMaxForCorrectPose)
 {
@@ -91,12 +91,15 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
         const int otherModeIdx = selectedPixelMode[idxOther];
-        const GPUForestPrediction &otherPrediction = predictionsData[otherLinearIdx];
+        const GPUForestPrediction &otherPrediction =
+            predictionsData[otherLinearIdx];
 
-        const Vector3f otherModeWorldPt = otherPrediction.modes[otherModeIdx].position;
+        const Vector3f otherModeWorldPt =
+            otherPrediction.modes[otherModeIdx].position;
+        const Vector3f diff = otherModeWorldPt - selectedModeWorldPt;
+        const float distOtherSq = dot(diff, diff);
 
-        const float distOther = length(otherModeWorldPt - selectedModeWorldPt);
-        if (distOther < m_minDistanceBetweenSampledModes)
+        if (distOtherSq < m_minSqDistanceBetweenSampledModes)
         {
           farEnough = false;
         }
@@ -114,20 +117,27 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherModeIdx = selectedPixelMode[m];
         const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const GPUForestPrediction &otherPrediction = predictionsData[otherLinearIdx];
-
-        const Vector3f otherModeWorldPt = otherPrediction.modes[otherModeIdx].position;
-        float distWorld = length(otherModeWorldPt - selectedModeWorldPt);
+        const GPUForestPrediction &otherPrediction =
+            predictionsData[otherLinearIdx];
 
         const Vector3f otherFeatureCameraPt =
             patchFeaturesData[otherLinearIdx].position.toVector3();
+        const Vector3f diffCamera = otherFeatureCameraPt
+            - selectedFeatureCameraPt;
+        const float distCameraSq = dot(diffCamera, diffCamera);
 
-        float distCamera = length(
-            otherFeatureCameraPt - selectedFeatureCameraPt);
-
-        if (distCamera < m_minDistanceBetweenSampledModes)
+        if (distCameraSq < m_minSqDistanceBetweenSampledModes)
+        {
           violatesConditions = true;
+          break;
+        }
 
+        const Vector3f otherModeWorldPt =
+            otherPrediction.modes[otherModeIdx].position;
+        const Vector3f diffWorld = otherModeWorldPt - selectedModeWorldPt;
+
+        const float distWorld = length(diffWorld);
+        const float distCamera = sqrtf(distCameraSq);
         if (fabsf(distCamera - distWorld)
             > 0.5f * m_translationErrorMaxForCorrectPose)
         {

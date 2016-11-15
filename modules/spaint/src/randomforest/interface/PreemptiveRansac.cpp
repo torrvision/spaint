@@ -29,7 +29,7 @@ PreemptiveRansac::PreemptiveRansac()
   m_nbPointsForKabschBoostrap = 3;
   m_useAllModesPerLeafInPoseHypothesisGeneration = true;
   m_checkMinDistanceBetweenSampledModes = true;
-  m_minDistanceBetweenSampledModes = 0.3f;
+  m_minSquaredDistanceBetweenSampledModes = 0.3f * 0.3f;
 //  m_checkRigidTransformationConstraint = false; // Speeds up a lot, was true in scoreforests
   m_checkRigidTransformationConstraint = true;
   m_translationErrorMaxForCorrectPose = 0.05f;
@@ -694,7 +694,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 
     // Find the best mode
     // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
-    int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
+    const int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
     if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
     throw std::runtime_error("best mode idx invalid.");// should have not been selected as inlier
     ptLM.mode = prediction.modes[bestModeIdx];

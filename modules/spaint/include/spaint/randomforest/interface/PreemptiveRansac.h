@@ -81,7 +81,7 @@ protected:
   size_t m_nbPointsForKabschBoostrap;
   bool m_useAllModesPerLeafInPoseHypothesisGeneration;
   bool m_checkMinDistanceBetweenSampledModes;
-  float m_minDistanceBetweenSampledModes;
+  float m_minSquaredDistanceBetweenSampledModes;
   bool m_checkRigidTransformationConstraint;
   float m_translationErrorMaxForCorrectPose;
   size_t m_batchSizeRansac;

@@ -204,7 +204,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomGenerators,
       poseCandidates, nbPoseCandidates, PoseCandidates::MAX_CANDIDATES,
       m_useAllModesPerLeafInPoseHypothesisGeneration,
-      m_checkMinDistanceBetweenSampledModes, m_minDistanceBetweenSampledModes,
+      m_checkMinDistanceBetweenSampledModes, m_minSquaredDistanceBetweenSampledModes,
       m_checkRigidTransformationConstraint,
       m_translationErrorMaxForCorrectPose);
   ORcudaKernelCheck;
@@ -229,26 +229,24 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
 
 //  // Need to make the data available to the device
 //  m_poseCandidates->UpdateDeviceFromHost();
-//  m_nbPoseCandidates->UpdateDeviceFromHost();
 //
 //  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
 //  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
 //      MEMORYDEVICE_CUDA);
 //  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-//  const int nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
 //
-//  ck_reset_candidate_energies<<<1, nbPoseCandidates>>>(poseCandidates, nbPoseCandidates);
+//  ck_reset_candidate_energies<<<1, m_nbPoseCandidates>>>(poseCandidates, m_nbPoseCandidates);
 //  ORcudaKernelCheck;
 //
 //  dim3 blockSize(128); // threads to compute the energy for each candidate
-//  dim3 gridSize(nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
-//  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates, nbPoseCandidates);
+//  dim3 gridSize(m_nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
+//  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates, m_nbPoseCandidates);
 //  ORcudaKernelCheck;
 //
 //  // Sort by ascending energy
 //  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
 //  thrust::device_ptr<PoseCandidate> candidatesEnd(
-//      poseCandidates + nbPoseCandidates);
+//      poseCandidates + m_nbPoseCandidates);
 //  thrust::sort(candidatesStart, candidatesEnd);
 //
 //  // Need to make the data available to the host once again

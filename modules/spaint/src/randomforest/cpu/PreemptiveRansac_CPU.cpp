@@ -59,7 +59,8 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
     bool valid = preemptive_ransac_generate_candidate(features, predictions,
         imgSize, randomGenerators[candidateIdx], candidate,
         m_useAllModesPerLeafInPoseHypothesisGeneration,
-        m_checkMinDistanceBetweenSampledModes, m_minDistanceBetweenSampledModes,
+        m_checkMinDistanceBetweenSampledModes,
+        m_minSquaredDistanceBetweenSampledModes,
         m_checkRigidTransformationConstraint,
         m_translationErrorMaxForCorrectPose);
 
