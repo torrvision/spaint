@@ -104,10 +104,6 @@ protected:
   virtual void generate_pose_candidates() = 0;
   virtual void sample_inlier_candidates(bool useMask = false) = 0;
 
-  void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
-      std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);
-  void update_inliers_for_optimization(
-      const std::vector<Vector2i> &sampledPixelIdx);
   virtual void compute_and_sort_energies();
   void update_candidate_poses();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;

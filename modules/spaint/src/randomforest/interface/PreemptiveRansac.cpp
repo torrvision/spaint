@@ -91,33 +91,13 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     boost::timer::auto_cpu_timer t(6,
         "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    int nbSamplesPerCamera = candidates[0].nbInliers;
-    std::vector<Vector2i> sampledPixelIdx;
-    std::vector<bool> dummy_vector;
-
-//    {
-//#ifdef ENABLE_TIMERS
-//      boost::timer::auto_cpu_timer t(6,
-//          "sample pixels: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-//      sample_pixels_for_ransac(dummy_vector, sampledPixelIdx, random_engine,
-//          m_batchSizeRansac);
-//    }
-//
-//    {
-//#ifdef ENABLE_TIMERS
-//      boost::timer::auto_cpu_timer t(6,
-//          "update inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-//#endif
-//      update_inliers_for_optimization(sampledPixelIdx);
-//    }
 
     {
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6,
           "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      sample_inlier_candidates(); // no mask for the first pass
+      sample_inlier_candidates(false); // no mask for the first pass
     }
 
     {
@@ -129,16 +109,6 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     }
 
     m_nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
-
-    if (m_trimKinitAfterFirstEnergyComputation > 1)
-    {
-      m_nbInliers = 0;
-//      for (int p = 0; p < m_nbPoseCandidates; ++p)
-//      {
-//        if (candidates[p].nbInliers > nbSamplesPerCamera)
-//          candidates[p].nbInliers = nbSamplesPerCamera;
-//      }
-    }
   }
 
   //  std::cout << candidates.size() << " candidates remaining." << std::endl;
@@ -149,10 +119,10 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
       "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-  // Reset inlier mask
+  // Reset inlier mask (and inliers)
   m_inliersMaskImage->ChangeDims(m_featureImage->noDims); // Happens only once
   m_inliersMaskImage->Clear();
-//  std::vector<bool> maskSampledPixels(m_featureImage->dataSize, false);
+  m_nbInliers = 0;
 
   float iteration = 0.0f;
 
@@ -162,13 +132,6 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
     ++iteration;
     //    std::cout << candidates.size() << " camera remaining" << std::endl;
-
-//    std::vector<Vector2i> sampledPixelIdx;
-//    sample_pixels_for_ransac(maskSampledPixels, sampledPixelIdx, random_engine,
-//        m_batchSizeRansac);
-//
-//    //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
-//    update_inliers_for_optimization(sampledPixelIdx);
 
     sample_inlier_candidates(true);
 
@@ -261,91 +224,6 @@ Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P,
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
-}
-
-void PreemptiveRansac::sample_pixels_for_ransac(
-    std::vector<bool> &maskSampledPixels,
-    std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize)
-{
-  std::uniform_int_distribution<int> col_index_generator(0,
-      m_featureImage->noDims.width - 1);
-  std::uniform_int_distribution<int> row_index_generator(0,
-      m_featureImage->noDims.height - 1);
-
-  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
-      MEMORYDEVICE_CPU);
-  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
-      MEMORYDEVICE_CPU);
-
-  for (int i = 0; i < batchSize; ++i)
-  {
-    bool validIndex = false;
-    int innerIterations = 0;
-
-    while (!validIndex && innerIterations++ < 50)
-    {
-      const Vector2i s(col_index_generator(eng), row_index_generator(eng));
-      const int linearIdx = s.y * m_featureImage->noDims.width + s.x;
-
-      if (patchFeaturesData[linearIdx].position.w >= 0.f)
-      {
-        const GPUForestPrediction &selectedPrediction =
-            predictionsData[linearIdx];
-
-        if (selectedPrediction.nbModes > 0)
-        {
-          validIndex = maskSampledPixels.empty()
-              || !maskSampledPixels[linearIdx];
-
-          if (validIndex)
-          {
-            sampledPixelIdx.push_back(s);
-
-            if (!maskSampledPixels.empty())
-              maskSampledPixels[linearIdx] = true;
-          }
-        }
-      }
-    }
-
-    if (!validIndex)
-    {
-      std::cout << "Couldn't sample a valid pixel. Returning "
-          << sampledPixelIdx.size() << "/" << batchSize << std::endl;
-      break;
-    }
-  }
-}
-
-void PreemptiveRansac::update_inliers_for_optimization(
-    const std::vector<Vector2i> &sampledPixelIdx)
-{
-  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-
-  int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
-  for (size_t i = 0; i < sampledPixelIdx.size(); ++i)
-  {
-    const Vector2i &sample = sampledPixelIdx[i];
-    const int linearIdx = sample.y * m_featureImage->noDims.width + sample.x;
-
-    inliersData[m_nbInliers++] = linearIdx;
-  }
-
-//#pragma omp parallel for
-//  for (int p = 0; p < m_nbPoseCandidates; ++p)
-//  {
-//    PoseCandidate &candidate = poseCandidates[p];
-//
-//    // add all the samples as inliers
-//    for (size_t s = 0; s < sampledPixelIdx.size(); ++s)
-//    {
-//      const Vector2i &sample = sampledPixelIdx[s];
-//      const int linearIdx = sample.y * m_featureImage->noDims.width + sample.x;
-//
-//      candidate.inliers[candidate.nbInliers++] = PoseCandidate::Inlier
-//      { linearIdx, -1, 0.f };
-//    }
-//  }
 }
 
 void PreemptiveRansac::compute_and_sort_energies()
