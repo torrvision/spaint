@@ -22,7 +22,8 @@ struct PoseCandidate
 {
   enum
   {
-    MAX_INLIERS = 3003 // 3 for Kabsch and 500 * RANSAC iteration (6 iterations, when running with 64 candidates)
+//    MAX_INLIERS = 3003 // 3 for Kabsch and 500 * RANSAC iteration (6 iterations, when running with 64 candidates)
+    MAX_INLIERS = 3 // 3 for Kabsch
 //    MAX_INLIERS = 5503 // 3 for Kabsch and 500 * RANSAC iteration (10 iterations, when running with 1024 candidates + 500 initial candidates)
   };
 
@@ -96,7 +97,12 @@ protected:
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
   int m_nbPoseCandidates;
 
+  int m_nbInliers;
+  ITMIntImage_Ptr m_inliersMaskImage;
+  ITMIntImage_Ptr m_inliersIndicesImage;
+
   virtual void generate_pose_candidates() = 0;
+  virtual void sample_inlier_candidates(bool useMask = false) = 0;
 
   void sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
       std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize);

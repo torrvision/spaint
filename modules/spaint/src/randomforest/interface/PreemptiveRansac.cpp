@@ -46,6 +46,10 @@ PreemptiveRansac::PreemptiveRansac()
   m_poseCandidates = mbf.make_block<PoseCandidate>(
       PoseCandidates::MAX_CANDIDATES);
   m_nbPoseCandidates = 0;
+
+  m_nbInliers = 0;
+  m_inliersIndicesImage = mbf.make_image<int>(3000);
+  m_inliersMaskImage = mbf.make_image<int>();
 }
 
 PreemptiveRansac::~PreemptiveRansac()
@@ -79,6 +83,8 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
+  m_nbInliers = 0;
+
   if (m_trimKinitAfterFirstEnergyComputation < m_nbPoseCandidates)
   {
 #ifdef ENABLE_TIMERS
@@ -89,21 +95,29 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     std::vector<Vector2i> sampledPixelIdx;
     std::vector<bool> dummy_vector;
 
-    {
-#ifdef ENABLE_TIMERS
-      boost::timer::auto_cpu_timer t(6,
-          "sample pixels: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-#endif
-      sample_pixels_for_ransac(dummy_vector, sampledPixelIdx, random_engine,
-          m_batchSizeRansac);
-    }
+//    {
+//#ifdef ENABLE_TIMERS
+//      boost::timer::auto_cpu_timer t(6,
+//          "sample pixels: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+//      sample_pixels_for_ransac(dummy_vector, sampledPixelIdx, random_engine,
+//          m_batchSizeRansac);
+//    }
+//
+//    {
+//#ifdef ENABLE_TIMERS
+//      boost::timer::auto_cpu_timer t(6,
+//          "update inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+//#endif
+//      update_inliers_for_optimization(sampledPixelIdx);
+//    }
 
     {
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6,
-          "update inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+          "sample inliers: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-      update_inliers_for_optimization(sampledPixelIdx);
+      sample_inlier_candidates(); // no mask for the first pass
     }
 
     {
@@ -118,11 +132,12 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
     if (m_trimKinitAfterFirstEnergyComputation > 1)
     {
-      for (int p = 0; p < m_nbPoseCandidates; ++p)
-      {
-        if (candidates[p].nbInliers > nbSamplesPerCamera)
-          candidates[p].nbInliers = nbSamplesPerCamera;
-      }
+      m_nbInliers = 0;
+//      for (int p = 0; p < m_nbPoseCandidates; ++p)
+//      {
+//        if (candidates[p].nbInliers > nbSamplesPerCamera)
+//          candidates[p].nbInliers = nbSamplesPerCamera;
+//      }
     }
   }
 
@@ -134,7 +149,10 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
       "ransac: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-  std::vector<bool> maskSampledPixels(m_featureImage->dataSize, false);
+  // Reset inlier mask
+  m_inliersMaskImage->ChangeDims(m_featureImage->noDims); // Happens only once
+  m_inliersMaskImage->Clear();
+//  std::vector<bool> maskSampledPixels(m_featureImage->dataSize, false);
 
   float iteration = 0.0f;
 
@@ -145,12 +163,14 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     ++iteration;
     //    std::cout << candidates.size() << " camera remaining" << std::endl;
 
-    std::vector<Vector2i> sampledPixelIdx;
-    sample_pixels_for_ransac(maskSampledPixels, sampledPixelIdx, random_engine,
-        m_batchSizeRansac);
+//    std::vector<Vector2i> sampledPixelIdx;
+//    sample_pixels_for_ransac(maskSampledPixels, sampledPixelIdx, random_engine,
+//        m_batchSizeRansac);
+//
+//    //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
+//    update_inliers_for_optimization(sampledPixelIdx);
 
-    //    std::cout << "Updating inliers to each pose candidate..." << std::endl;
-    update_inliers_for_optimization(sampledPixelIdx);
+    sample_inlier_candidates(true);
 
     if (m_poseUpdate)
     {
@@ -228,7 +248,8 @@ void Kabsch_impl(Eigen::MatrixXf &P, Eigen::MatrixXf &Q,
 }
 }
 
-Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const
+Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P,
+    Eigen::MatrixXf &Q) const
 {
   Eigen::MatrixXf resRot;
   Eigen::VectorXf resTrans;
@@ -242,7 +263,8 @@ Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q)
   return res;
 }
 
-void PreemptiveRansac::sample_pixels_for_ransac(std::vector<bool> &maskSampledPixels,
+void PreemptiveRansac::sample_pixels_for_ransac(
+    std::vector<bool> &maskSampledPixels,
     std::vector<Vector2i> &sampledPixelIdx, std::mt19937 &eng, int batchSize)
 {
   std::uniform_int_distribution<int> col_index_generator(0,
@@ -300,21 +322,30 @@ void PreemptiveRansac::update_inliers_for_optimization(
 {
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-#pragma omp parallel for
-  for (int p = 0; p < m_nbPoseCandidates; ++p)
+  int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
+  for (size_t i = 0; i < sampledPixelIdx.size(); ++i)
   {
-    PoseCandidate &candidate = poseCandidates[p];
+    const Vector2i &sample = sampledPixelIdx[i];
+    const int linearIdx = sample.y * m_featureImage->noDims.width + sample.x;
 
-    // add all the samples as inliers
-    for (size_t s = 0; s < sampledPixelIdx.size(); ++s)
-    {
-      const Vector2i &sample = sampledPixelIdx[s];
-      const int linearIdx = sample.y * m_featureImage->noDims.width + sample.x;
-
-      candidate.inliers[candidate.nbInliers++] = PoseCandidate::Inlier
-      { linearIdx, -1, 0.f };
-    }
+    inliersData[m_nbInliers++] = linearIdx;
   }
+
+//#pragma omp parallel for
+//  for (int p = 0; p < m_nbPoseCandidates; ++p)
+//  {
+//    PoseCandidate &candidate = poseCandidates[p];
+//
+//    // add all the samples as inliers
+//    for (size_t s = 0; s < sampledPixelIdx.size(); ++s)
+//    {
+//      const Vector2i &sample = sampledPixelIdx[s];
+//      const int linearIdx = sample.y * m_featureImage->noDims.width + sample.x;
+//
+//      candidate.inliers[candidate.nbInliers++] = PoseCandidate::Inlier
+//      { linearIdx, -1, 0.f };
+//    }
+//  }
 }
 
 void PreemptiveRansac::compute_and_sort_energies()
@@ -345,10 +376,11 @@ void PreemptiveRansac::compute_pose_energy(PoseCandidate &candidate) const
       MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
+  const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
 
-  for (int s = 0; s < candidate.nbInliers; ++s)
+  for (int s = 0; s < m_nbInliers; ++s)
   {
-    const int linearIdx = candidate.inliers[s].linearIdx;
+    const int linearIdx = inliersData[s];
     const Vector3f localPixel =
         patchFeaturesData[linearIdx].position.toVector3();
     const Vector3f projectedPixel = candidate.cameraPose * localPixel;
@@ -390,12 +422,12 @@ void PreemptiveRansac::compute_pose_energy(PoseCandidate &candidate) const
       energy = 1e-6f;
     energy = -log10f(energy);
 
-    candidate.inliers[s].energy = energy;
-    candidate.inliers[s].modeIdx = argmax;
+//    candidate.inliers[s].energy = energy;
+//    candidate.inliers[s].modeIdx = argmax;
     totalEnergy += energy;
   }
 
-  candidate.energy = totalEnergy / static_cast<float>(candidate.nbInliers);
+  candidate.energy = totalEnergy / static_cast<float>(m_nbInliers);
 }
 
 void PreemptiveRansac::update_candidate_poses()
@@ -599,6 +631,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
       MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
+  const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
 
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
 
@@ -617,9 +650,9 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
   {
     const PoseCandidate::Inlier &inlier = poseCandidate.inliers[inlierIdx];
     const Vector3f inlierCameraPosition =
-        patchFeaturesData[inlier.linearIdx].position.toVector3();
+    patchFeaturesData[inlier.linearIdx].position.toVector3();
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
-        * inlierCameraPosition;
+    * inlierCameraPosition;
     const GPUForestPrediction &prediction = predictionsData[inlier.linearIdx];
     // The assumption is that the inlier is valid (checked before)
 
@@ -627,14 +660,14 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
     int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
     if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
-      throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
+    throw std::runtime_error("best mode idx invalid.");// should have not been selected as inlier
 
     if (length(prediction.modes[bestModeIdx].position - inlierWorldPosition)
         < m_poseOptimizationInlierThreshold)
     {
 
       ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<
-          PointForLM, 1, 6>(
+      PointForLM, 1, 6>(
           new PointForLM(inlierCameraPosition, prediction.modes[bestModeIdx]));
 
 //      ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
@@ -643,7 +676,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
       problem.AddResidualBlock(costFunction,
           new ceres::CauchyLoss(
               m_poseOptimizationInlierThreshold
-                  * m_poseOptimizationInlierThreshold), cameraState);
+              * m_poseOptimizationInlierThreshold), cameraState);
     }
   }
 
@@ -679,14 +712,14 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 #else
 
   PointsForLM ptsForLM;
-  for (int inlierIdx = 0; inlierIdx < poseCandidate.nbInliers; ++inlierIdx)
+  for (int inlierIdx = 0; inlierIdx < m_nbInliers; ++inlierIdx)
   {
-    const PoseCandidate::Inlier &inlier = poseCandidate.inliers[inlierIdx];
+    const int inlierLinearIdx = inliersData[inlierIdx];
     const Vector3f inlierCameraPosition =
-    patchFeaturesData[inlier.linearIdx].position.toVector3();
+        patchFeaturesData[inlierLinearIdx].position.toVector3();
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
-    * inlierCameraPosition;
-    const GPUForestPrediction &prediction = predictionsData[inlier.linearIdx];
+        * inlierCameraPosition;
+    const GPUForestPrediction &prediction = predictionsData[inlierLinearIdx];
 
     PointForLM ptLM;
     // The assumption is that the inlier is valid (checked before)
@@ -696,7 +729,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
     const int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
     if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
-    throw std::runtime_error("best mode idx invalid.");// should have not been selected as inlier
+      throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
     ptLM.mode = prediction.modes[bestModeIdx];
 
     if (length(ptLM.mode.position - inlierWorldPosition)
@@ -714,7 +747,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 
     // Cast to double
     for (int i = 0; i < 6; ++i)
-    ksiD[i] = ksiF[i];
+      ksiD[i] = ksiF[i];
 
     alglib::real_1d_array ksi_;
     ksi_.setcontent(6, ksiD);

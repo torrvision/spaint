@@ -7,6 +7,8 @@
 #define H_SPAINT_PREEMPTIVERANSACSHARED
 
 #include "ORUtils/PlatformIndependence.h"
+#include "features/interface/RGBDPatchFeature.h"
+#include "randomforest/interface/GPUForestTypes.h"
 
 namespace spaint
 {
@@ -15,7 +17,9 @@ namespace
 {
 enum
 {
-  N_POINTS_FOR_KABSCH = 3, MAX_CANDIDATE_GENERATION_ITERATIONS = 6000
+  N_POINTS_FOR_KABSCH = 3,
+  MAX_CANDIDATE_GENERATION_ITERATIONS = 6000,
+  SAMPLE_INLIER_ITERATIONS = 50
 };
 }
 
@@ -174,6 +178,57 @@ inline bool preemptive_ransac_generate_candidate(
   }
 
   return true;
+}
+
+template<bool useMask, typename RNG>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline int preemptive_ransac_sample_inlier(
+    const RGBDPatchFeature *patchFeaturesData,
+    const GPUForestPrediction *predictionsData, const Vector2i &imgSize,
+    RNG &randomGenerator, int *inlierMaskData = NULL)
+{
+  int inlierLinearIdx = -1;
+
+  for (int iterationIdx = 0;
+      inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS;
+      ++iterationIdx)
+  {
+    const int linearIdx = randomGenerator.generate_int_from_uniform(0,
+        imgSize.width * imgSize.height);
+
+    // Check that we have a valid feature for this sample
+    if (patchFeaturesData[linearIdx].position.w < 0.f)
+      continue;
+
+    // Check that we have a prediction with a non null number of modes
+    if (predictionsData[linearIdx].nbModes == 0)
+      continue;
+
+    bool validIndex = !useMask;
+
+    if(useMask)
+    {
+      int *maskPtr = &inlierMaskData[linearIdx];
+      int maskValue = -1;
+
+#ifdef __CUDACC__
+      maskValue = atomicAdd(maskPtr, 1);
+#else
+
+#ifdef WITH_OPENMP
+#pragma omp atomic capture
+#endif
+      maskValue = (*maskPtr)++;
+
+#endif
+
+      validIndex = maskValue == 0;
+    }
+
+    if(validIndex) inlierLinearIdx = linearIdx;
+  }
+
+  return inlierLinearIdx;
 }
 
 }

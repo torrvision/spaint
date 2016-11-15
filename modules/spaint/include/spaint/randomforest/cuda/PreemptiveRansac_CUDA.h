@@ -10,8 +10,9 @@
 
 #include "tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h"
 
-namespace spaint {
-class PreemptiveRansac_CUDA : public PreemptiveRansac
+namespace spaint
+{
+class PreemptiveRansac_CUDA: public PreemptiveRansac
 {
 public:
   PreemptiveRansac_CUDA();
@@ -19,6 +20,7 @@ public:
 protected:
   virtual void generate_pose_candidates();
   virtual void compute_and_sort_energies();
+  virtual void sample_inlier_candidates(bool useMask);
 
 private:
   tvgutil::CUDARNGMemoryBlock_Ptr m_randomGenerators;

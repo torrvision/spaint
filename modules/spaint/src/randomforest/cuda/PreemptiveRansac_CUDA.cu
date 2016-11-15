@@ -286,4 +286,9 @@ void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
   }
 }
 
+void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
+{
+  throw std::runtime_error("not implemented");
+}
+
 }

@@ -152,4 +152,50 @@ void PreemptiveRansac_CPU::compute_candidate_pose_kabsch()
   }
 }
 
+void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
+{
+  const Vector2i imgSize = m_featureImage->noDims;
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CPU);
+
+  int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
+  int *inlierIndicesData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
+  CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
+  for (int sampleIdx = 0; sampleIdx < m_batchSizeRansac; ++sampleIdx)
+  {
+    int sampledLinearIdx = -1;
+
+    if (useMask)
+    {
+      sampledLinearIdx = preemptive_ransac_sample_inlier<true>(
+          patchFeaturesData, predictionsData, imgSize,
+          randomGenerators[sampleIdx], inlierMaskData);
+    }
+    else
+    {
+      sampledLinearIdx = preemptive_ransac_sample_inlier<false>(
+          patchFeaturesData, predictionsData, imgSize,
+          randomGenerators[sampleIdx]);
+    }
+
+    if (sampledLinearIdx >= 0)
+    {
+      int inlierIdx = 0;
+
+#ifdef WITH_OPENMP
+#pragma omp atomic capture
+#endif
+      inlierIdx = m_nbInliers++;
+
+      inlierIndicesData[inlierIdx] = sampledLinearIdx;
+    }
+  }
+}
+
 }
