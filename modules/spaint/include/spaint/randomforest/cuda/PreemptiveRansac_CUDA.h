@@ -27,6 +27,7 @@ private:
   uint32_t m_rngSeed;
 
   ITMIntImage_Ptr m_nbPoseCandidates_device;
+  ITMIntImage_Ptr m_nbSampledInliers_device;
 
   void init_random();
   void compute_candidate_pose_kabsch();

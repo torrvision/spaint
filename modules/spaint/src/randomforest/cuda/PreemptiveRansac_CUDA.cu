@@ -158,6 +158,28 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
 
   poseCandidates[candidateIdx].energy = 0.f;
 }
+
+template<bool useMask, typename RNG>
+__global__ void ck_sample_inlier(const RGBDPatchFeature *patchFeaturesData,
+    const GPUForestPrediction *predictionsData, const Vector2i imgSize,
+    RNG *randomGenerators, int *inlierIndices, int *inlierCount,
+    int nbMaxSamples, int *inlierMaskData = NULL)
+{
+  const int sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (sampleIdx >= nbMaxSamples)
+    return;
+
+  const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(
+      patchFeaturesData, predictionsData, imgSize, randomGenerators[sampleIdx],
+      inlierMaskData);
+
+  if (sampledLinearIdx >= 0)
+  {
+    const int outIdx = atomicAdd(inlierCount, 1);
+    inlierIndices[outIdx] = sampledLinearIdx;
+  }
+}
 }
 
 PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() :
@@ -167,6 +189,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() :
   m_randomGenerators = mbf.make_block<CUDARNG>(PoseCandidates::MAX_CANDIDATES);
   m_rngSeed = 42;
   m_nbPoseCandidates_device = mbf.make_image<int>(Vector2i(1, 1));
+  m_nbSampledInliers_device = mbf.make_image<int>(Vector2i(1, 1));
 
   init_random();
 }
@@ -288,7 +311,46 @@ void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
 
 void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 {
-  throw std::runtime_error("not implemented");
+  const Vector2i imgSize = m_featureImage->noDims;
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CUDA);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CUDA);
+
+  int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);
+  int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
+  int *inlierIndicesData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
+  CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
+
+  // Only if the number of inliers (host side) is zero, we clear the device number.
+  // The assumption is that the number on device memory will remain in sync with the host
+  // since only this method is allowed to modify it.
+  if (m_nbInliers == 0)
+  {
+    ORcudaSafeCall(cudaMemsetAsync(nbInlier_device, 0, sizeof(int)));
+  }
+
+  dim3 blockSize(128);
+  dim3 gridSize((m_batchSizeRansac + blockSize.x - 1) / blockSize.x);
+
+  if (useMask)
+  {
+    ck_sample_inlier<true> <<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
+        randomGenerators, inlierIndicesData, nbInlier_device, m_batchSizeRansac,
+        inlierMaskData);
+  }
+  else
+  {
+    ck_sample_inlier<false><<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
+        randomGenerators, inlierIndicesData, nbInlier_device,
+        m_batchSizeRansac);
+  }
+
+  ORcudaKernelCheck;
+
+  // Make the selected inlier indices available to the cpu
+  m_inliersIndicesImage->UpdateHostFromDevice();
+  m_nbInliers = m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA); // Update the number of inliers
 }
 
 }
