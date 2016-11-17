@@ -5,6 +5,8 @@
 
 #include "Subwindow.h"
 using namespace rigging;
+
+#include <spaint/util/CameraFactory.h>
 using namespace spaint;
 
 #include <tvgutil/containers/MapUtil.h>
@@ -93,7 +95,7 @@ float Subwindow::height() const
 
 void Subwindow::reset_camera()
 {
-  m_camera.reset(new CompositeCamera(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f)));
+  m_camera = CameraFactory::make_default_camera<CompositeCamera>();
 }
 
 void Subwindow::set_camera_mode(CameraMode cameraMode)

@@ -41,21 +41,8 @@ struct CameraRenderer
    * \param bodyColour  The colour to use for the camera's body (if we want to render it).
    * \param bodyScale   The scale factor to apply to the camera's body (if we're rendering it).
    */
-  static void render_camera(const rigging::Camera& cam, AxesType axesType, float axisScale,
-                            const boost::optional<Vector3f>& bodyColour = boost::none,
-                            double bodyScale = 0.02);
-
-  /**
-   * \brief Renders the default camera in the scene.
-   *
-   * \param axesType    The type of axes to render for the camera.
-   * \param axisScale   The scale factor to apply to each axis.
-   * \param bodyColour  The colour to use for the camera's body (if we want to render it).
-   * \param bodyScale   The scale factor to apply to the camera's body (if we're rendering it).
-   */
-  static void render_default_camera(AxesType axesType = AXES_XYZ, float axisScale = 1.0f,
-                                    const boost::optional<Vector3f>& bodyColour = boost::none,
-                                    double bodyScale = 0.02);
+  static void render_camera(const rigging::Camera& cam, AxesType axesType = AXES_XYZ, float axisScale = 1.0f,
+                            const boost::optional<Vector3f>& bodyColour = boost::none, double bodyScale = 0.02);
 };
 
 }

@@ -522,6 +522,7 @@ src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
+include/spaint/util/CameraFactory.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
