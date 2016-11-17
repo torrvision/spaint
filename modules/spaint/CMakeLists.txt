@@ -188,11 +188,13 @@ include/spaint/ocv/OpenCVUtil.h
 
 ##
 SET(ogl_sources
+src/ogl/CameraRenderer.cpp
 src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/CameraRenderer.h
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
@@ -544,6 +546,7 @@ src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
+include/spaint/util/CameraFactory.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
