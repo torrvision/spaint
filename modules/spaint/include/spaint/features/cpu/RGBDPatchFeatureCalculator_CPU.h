@@ -15,9 +15,9 @@ class RGBDPatchFeatureCalculator_CPU: public RGBDPatchFeatureCalculator
 public:
   RGBDPatchFeatureCalculator_CPU();
 
-  virtual void ComputeFeature(const ITMUChar4Image *rgb_image,
-      const ITMFloatImage *depth_image, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage *features_image, const Matrix4f &cameraPose) const;
+  virtual void ComputeFeature(const ITMUChar4Image *rgbImage,
+      const ITMFloatImage *depthImage, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage *featuresImage, const Matrix4f &cameraPose) const;
 };
 }
 

@@ -14,45 +14,45 @@ RGBDPatchFeatureCalculator_CPU::RGBDPatchFeatureCalculator_CPU() :
 }
 
 void RGBDPatchFeatureCalculator_CPU::ComputeFeature(
-    const ITMUChar4Image *rgb_image, const ITMFloatImage *depth_image,
-    const Vector4f &intrinsics, RGBDPatchFeatureImage *features_image,
+    const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+    const Vector4f &intrinsics, RGBDPatchFeatureImage *featuresImage,
     const Matrix4f &cameraPose) const
 {
-  const Vector4u *rgb = rgb_image->GetData(MEMORYDEVICE_CPU);
-  const float *depth = depth_image->GetData(MEMORYDEVICE_CPU);
+  const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
+  const float *depth = depthImage->GetData(MEMORYDEVICE_CPU);
 
-  const Vector4i *offsets_rgb = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
-  const uchar *channels_rgb = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
-  const Vector4i *offsets_depth = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
+  const Vector4i *offsetsRgb = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
+  const uchar *channelsRgb = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
+  const Vector4i *offsetsDepth = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
-  Vector2i in_dims = rgb_image->noDims;
-  Vector2i out_dims(rgb_image->noDims.x / m_featureStep,
-      rgb_image->noDims.y / m_featureStep);
+  Vector2i inDims = rgbImage->noDims;
+  Vector2i outDims(rgbImage->noDims.x / m_featureStep,
+      rgbImage->noDims.y / m_featureStep);
 
-  if (features_image->noDims != out_dims) // Just for the call to Clear()
+  if (featuresImage->noDims != outDims) // Just for the call to Clear()
   {
-    features_image->ChangeDims(out_dims);
-    features_image->Clear();
+    featuresImage->ChangeDims(outDims);
+    featuresImage->Clear();
   }
 
-  RGBDPatchFeature *features = features_image->GetData(MEMORYDEVICE_CPU);
+  RGBDPatchFeature *features = featuresImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int yOut = 0; yOut < out_dims.height; ++yOut)
+  for (int yOut = 0; yOut < outDims.height; ++yOut)
   {
-    for (int xOut = 0; xOut < out_dims.width; ++xOut)
+    for (int xOut = 0; xOut < outDims.width; ++xOut)
     {
       const Vector2i xyOut(xOut, yOut);
       const Vector2i xyIn(xOut * m_featureStep, yOut * m_featureStep);
 
-      compute_colour_patch_feature(features, rgb, depth, offsets_rgb,
-          channels_rgb, in_dims, out_dims, intrinsics, cameraPose,
-          m_normalizeRgb, xyIn, xyOut);
+      compute_colour_patch_feature(features, rgb, depth, offsetsRgb,
+          channelsRgb, inDims, outDims, intrinsics, cameraPose, m_normalizeRgb,
+          xyIn, xyOut);
 
-      compute_depth_patch_feature(features, depth, offsets_depth, in_dims,
-          out_dims, m_normalizeDepth, xyIn, xyOut);
+      compute_depth_patch_feature(features, depth, offsetsDepth, inDims,
+          outDims, m_normalizeDepth, xyIn, xyOut);
     }
   }
 }

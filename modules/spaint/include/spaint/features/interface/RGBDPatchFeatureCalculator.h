@@ -19,17 +19,20 @@ public:
   RGBDPatchFeatureCalculator();
   virtual ~RGBDPatchFeatureCalculator();
 
-  virtual void ComputeFeature(const ITMUChar4Image *rgb_image,
-      const ITMFloatImage *depth_image, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage *features_image,
+  virtual void ComputeFeature(const ITMUChar4Image *rgbImage,
+      const ITMFloatImage *depthImage, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage *featuresImage,
       const Matrix4f &cameraPose) const = 0;
 
-  void ComputeFeature(const ITMUChar4Image *rgb_image,
-      const ITMFloatImage *depth_image, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage *features_image) const;
+  void ComputeFeature(const ITMUChar4Image *rgbImage,
+      const ITMFloatImage *depthImage, const Vector4f &intrinsics,
+      RGBDPatchFeatureImage *featuresImage) const;
+
+  void set_feature_step(uint32_t featureStep);
+  uint32_t get_feature_step() const;
 
 protected:
-  int m_featureStep;
+  uint32_t m_featureStep;
 
   boost::shared_ptr<ORUtils::MemoryBlock<Vector4i> > m_offsetsRgb;
   boost::shared_ptr<ORUtils::MemoryBlock<uchar> > m_channelsRgb;
