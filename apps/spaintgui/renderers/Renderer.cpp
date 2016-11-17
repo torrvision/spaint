@@ -467,7 +467,8 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data());
 
       // Render the default camera.
-      CameraRenderer::render_camera(*CameraFactory::make_default_camera());
+      static SimpleCamera defaultCam = *CameraFactory::make_default_camera();
+      CameraRenderer::render_camera(defaultCam);
 
       // Render the current selector to show how we're interacting with the scene.
       Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());
