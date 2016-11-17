@@ -18,7 +18,7 @@ PreemptiveRansac_CPU::PreemptiveRansac_CPU() :
     PreemptiveRansac()
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_randomGenerators = mbf.make_block<CPURNG>(PoseCandidates::MAX_CANDIDATES);
+  m_randomGenerators = mbf.make_block<CPURNG>(m_nbMaxPoseCandidates);
   m_rngSeed = 42;
 
   init_random();
@@ -29,7 +29,7 @@ void PreemptiveRansac_CPU::init_random()
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
 
   // Initialize random states
-  for (int i = 0; i < PoseCandidates::MAX_CANDIDATES; ++i)
+  for (int i = 0; i < m_nbMaxPoseCandidates; ++i)
   {
     randomGenerators[i].reset(m_rngSeed + i);
   }
@@ -45,12 +45,12 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-  m_nbPoseCandidates = 0;
+  m_poseCandidates->dataSize = 0;
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int candidateIdx = 0; candidateIdx < PoseCandidates::MAX_CANDIDATES;
+  for (int candidateIdx = 0; candidateIdx < m_nbMaxPoseCandidates;
       ++candidateIdx)
   {
     PoseCandidate candidate;
@@ -71,18 +71,11 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 #ifdef WITH_OPENMP
 #pragma omp atomic capture
 #endif
-      candidateIdx = m_nbPoseCandidates++;
+      candidateIdx = m_poseCandidates->dataSize++;
       poseCandidates[candidateIdx] = candidate;
     }
   }
 
-  // TODO: think about this
-
-  // Now perform kabsch on the candidates
-  //#ifdef ENABLE_TIMERS
-  //    boost::timer::auto_cpu_timer t(6,
-  //        "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-  //#endif
   compute_candidate_pose_kabsch();
 }
 
@@ -91,12 +84,11 @@ void PreemptiveRansac_CPU::compute_candidate_pose_kabsch()
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-//  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
-
 #pragma omp parallel for
-  for (int candidateIdx = 0; candidateIdx < m_nbPoseCandidates; ++candidateIdx)
+  for (int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
     PoseCandidate &candidate = poseCandidates[candidateIdx];
 
@@ -134,7 +126,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int sampleIdx = 0; sampleIdx < m_batchSizeRansac; ++sampleIdx)
+  for (size_t sampleIdx = 0; sampleIdx < m_batchSizeRansac; ++sampleIdx)
   {
     int sampledLinearIdx = -1;
 
@@ -167,18 +159,19 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 
 void PreemptiveRansac_CPU::compute_and_sort_energies()
 {
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int p = 0; p < m_nbPoseCandidates; ++p)
+  for (int p = 0; p < nbPoseCandidates; ++p)
   {
     compute_pose_energy(poseCandidates[p]);
   }
 
   // Sort by ascending energy
-  std::sort(poseCandidates, poseCandidates + m_nbPoseCandidates);
+  std::sort(poseCandidates, poseCandidates + nbPoseCandidates);
 }
 
 void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const

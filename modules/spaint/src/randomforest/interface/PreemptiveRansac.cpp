@@ -40,10 +40,10 @@ PreemptiveRansac::PreemptiveRansac()
 //  m_usePredictionCovarianceForPoseOptimization = false;
   m_poseOptimizationInlierThreshold = 0.2f;
 
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_poseCandidates = mbf.make_block<PoseCandidate>(
-      PoseCandidates::MAX_CANDIDATES);
-  m_nbPoseCandidates = 0;
+  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+
+  m_nbMaxPoseCandidates = 1024;
+  m_poseCandidates = mbf.make_block<PoseCandidate>(m_nbMaxPoseCandidates);
 
   m_nbInliers = 0;
   m_inliersIndicesImage = mbf.make_image<int>(3000);
@@ -79,9 +79,10 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
+  // Reset the number of inliers for the new pose estimation.
   m_nbInliers = 0;
 
-  if (m_trimKinitAfterFirstEnergyComputation < m_nbPoseCandidates)
+  if (m_trimKinitAfterFirstEnergyComputation < m_poseCandidates->dataSize)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
@@ -104,7 +105,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
       compute_and_sort_energies();
     }
 
-    m_nbPoseCandidates = m_trimKinitAfterFirstEnergyComputation;
+    m_poseCandidates->dataSize = m_trimKinitAfterFirstEnergyComputation;
   }
 
   //  std::cout << candidates.size() << " candidates remaining." << std::endl;
@@ -122,7 +123,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
   float iteration = 0.0f;
 
-  while (m_nbPoseCandidates > 1)
+  while (m_poseCandidates->dataSize > 1)
   {
     //    boost::timer::auto_cpu_timer t(
     //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -139,11 +140,12 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     compute_and_sort_energies();
 
     // Remove half of the candidates with the worse energies
-    m_nbPoseCandidates /= 2;
+    m_poseCandidates->dataSize /= 2;
   }
 
   return
-      m_nbPoseCandidates > 0 ? candidates[0] : boost::optional<PoseCandidate>();
+      m_poseCandidates->dataSize > 0 ?
+          candidates[0] : boost::optional<PoseCandidate>();
 }
 
 namespace
@@ -224,21 +226,14 @@ Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P,
 
 void PreemptiveRansac::update_candidate_poses()
 {
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-//  int nbUpdated = 0;
-#pragma omp parallel for
-  for (int i = 0; i < m_nbPoseCandidates; ++i)
+#pragma omp parallel for schedule(dynamic)
+  for (size_t i = 0; i < nbPoseCandidates; ++i)
   {
-    if (update_candidate_pose(poseCandidates[i]))
-    {
-      //#pragma omp atomic
-      //      ++nbUpdated;
-    }
-
-//    break;
+    update_candidate_pose(poseCandidates[i]);
   }
-//  std::cout << nbUpdated << "/" << poseCandidates.size() << " updated cameras" << std::endl;
 }
 
 namespace

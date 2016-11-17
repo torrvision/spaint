@@ -143,7 +143,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() :
     PreemptiveRansac()
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_randomGenerators = mbf.make_block<CUDARNG>(PoseCandidates::MAX_CANDIDATES);
+  m_randomGenerators = mbf.make_block<CUDARNG>(m_nbMaxPoseCandidates);
   m_rngSeed = 42;
   m_nbPoseCandidates_device = mbf.make_image<int>(Vector2i(1, 1));
   m_nbSampledInliers_device = mbf.make_image<int>(Vector2i(1, 1));
@@ -157,10 +157,9 @@ void PreemptiveRansac_CUDA::init_random()
 
   // Initialize random states
   dim3 blockSize(256);
-  dim3 gridSize(
-      (PoseCandidates::MAX_CANDIDATES + blockSize.x - 1) / blockSize.x);
+  dim3 gridSize((m_nbMaxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
-  ck_init_random_generators<<<gridSize, blockSize>>>(randomGenerators, PoseCandidates::MAX_CANDIDATES, m_rngSeed);
+  ck_init_random_generators<<<gridSize, blockSize>>>(randomGenerators, m_nbMaxPoseCandidates, m_rngSeed);
 }
 
 void PreemptiveRansac_CUDA::generate_pose_candidates()
@@ -175,14 +174,13 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   int *nbPoseCandidates = m_nbPoseCandidates_device->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32);
-  dim3 gridSize(
-      (PoseCandidates::MAX_CANDIDATES + blockSize.x - 1) / blockSize.x);
+  dim3 gridSize((m_nbMaxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
   // Reset number of candidates (only on device, the host number will be updated later)
   ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates, 0, sizeof(int)));
 
   ck_generate_pose_candidates<<<gridSize, blockSize>>>(features, predictions, imgSize, randomGenerators,
-      poseCandidates, nbPoseCandidates, PoseCandidates::MAX_CANDIDATES,
+      poseCandidates, nbPoseCandidates, m_nbMaxPoseCandidates,
       m_useAllModesPerLeafInPoseHypothesisGeneration,
       m_checkMinDistanceBetweenSampledModes, m_minSquaredDistanceBetweenSampledModes,
       m_checkRigidTransformationConstraint,
@@ -191,7 +189,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 
   // Need to make the data available to the host
   m_poseCandidates->UpdateHostFromDevice();
-  m_nbPoseCandidates = m_nbPoseCandidates_device->GetElement(0,
+  m_poseCandidates->dataSize = m_nbPoseCandidates_device->GetElement(0,
       MEMORYDEVICE_CUDA);
 
   // Now perform kabsch on the candidates
@@ -209,6 +207,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
 {
   // Pose Update might have changed the candidate poses, need to update on the device side
   m_poseCandidates->UpdateDeviceFromHost();
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
 
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
@@ -216,18 +215,18 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   const int *inliers = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
 
-  ck_reset_candidate_energies<<<1, m_nbPoseCandidates>>>(poseCandidates, m_nbPoseCandidates);
+  ck_reset_candidate_energies<<<1, nbPoseCandidates>>>(poseCandidates, nbPoseCandidates);
   ORcudaKernelCheck;
 
   dim3 blockSize(128); // threads to compute the energy for each candidate
-  dim3 gridSize(m_nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
-  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, inliers, m_nbInliers, poseCandidates, m_nbPoseCandidates);
+  dim3 gridSize(nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
+  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, inliers, m_nbInliers, poseCandidates, nbPoseCandidates);
   ORcudaKernelCheck;
 
   // Sort by ascending energy
   thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
   thrust::device_ptr<PoseCandidate> candidatesEnd(
-      poseCandidates + m_nbPoseCandidates);
+      poseCandidates + nbPoseCandidates);
   thrust::sort(candidatesStart, candidatesEnd);
 
   // Need to make the data available to the host once again (for pose update)
@@ -239,12 +238,13 @@ void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
 //  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
 
 #pragma omp parallel for
-  for (int candidateIdx = 0; candidateIdx < m_nbPoseCandidates; ++candidateIdx)
+  for (int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
     PoseCandidate &candidate = poseCandidates[candidateIdx];
 

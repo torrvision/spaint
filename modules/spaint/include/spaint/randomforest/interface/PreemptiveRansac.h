@@ -22,9 +22,7 @@ struct PoseCandidate
 {
   enum
   {
-//    MAX_INLIERS = 3003 // 3 for Kabsch and 500 * RANSAC iteration (6 iterations, when running with 64 candidates)
     MAX_INLIERS = 3 // 3 for Kabsch
-//    MAX_INLIERS = 5503 // 3 for Kabsch and 500 * RANSAC iteration (10 iterations, when running with 1024 candidates + 500 initial candidates)
   };
 
   struct Inlier
@@ -50,21 +48,6 @@ _CPU_AND_GPU_CODE_ inline bool operator <(const PoseCandidate &a,
 typedef ORUtils::MemoryBlock<PoseCandidate> PoseCandidateMemoryBlock;
 typedef boost::shared_ptr<PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_Ptr;
 typedef boost::shared_ptr<const PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_CPtr;
-
-struct PoseCandidates
-{
-  enum
-  {
-    MAX_CANDIDATES = 1024
-  };
-
-  PoseCandidate candidates[MAX_CANDIDATES];
-  int nbCandidates;
-};
-
-typedef ORUtils::MemoryBlock<PoseCandidates> PoseCandidatesMemoryBlock;
-typedef boost::shared_ptr<PoseCandidatesMemoryBlock> PoseCandidatesMemoryBlock_Ptr;
-typedef boost::shared_ptr<const PoseCandidatesMemoryBlock> PoseCandidatesMemoryBlock_CPtr;
 
 class PreemptiveRansac
 {
@@ -94,8 +77,8 @@ protected:
   RGBDPatchFeatureImage_CPtr m_featureImage;
   GPUForestPredictionsImage_CPtr m_predictionsImage;
 
+  size_t m_nbMaxPoseCandidates;
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
-  int m_nbPoseCandidates;
 
   int m_nbInliers;
   ITMIntImage_Ptr m_inliersMaskImage;
