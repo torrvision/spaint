@@ -9,7 +9,6 @@
 using namespace rigging;
 
 #include "ogl/QuadricRenderer.h"
-#include "util/CameraFactory.h"
 
 namespace spaint {
 
