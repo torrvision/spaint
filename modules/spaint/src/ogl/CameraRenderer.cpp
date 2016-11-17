@@ -49,11 +49,4 @@ void CameraRenderer::render_camera(const Camera& cam, AxesType axesType, float a
   glPopMatrix();
 }
 
-void CameraRenderer::render_default_camera(AxesType axesType, float axisScale, const boost::optional<Vector3f>& bodyColour, double bodyScale)
-{
-  // FIXME: The default axes are also specified in Subwindow::reset_camera - the commonality should be factored out.
-  SimpleCamera cam(Eigen::Vector3f(0.0f, 0.0f, 0.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f), Eigen::Vector3f(0.0f, -1.0f, 0.0f));
-  render_camera(cam, axesType, axisScale, bodyColour, bodyScale);
-}
-
 }
