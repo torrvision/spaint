@@ -188,9 +188,9 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   ORcudaKernelCheck;
 
   // Need to make the data available to the host
-  m_poseCandidates->UpdateHostFromDevice();
   m_poseCandidates->dataSize = m_nbPoseCandidates_device->GetElement(0,
       MEMORYDEVICE_CUDA);
+  m_poseCandidates->UpdateHostFromDevice();
 
   // Now perform kabsch on the candidates
   //#ifdef ENABLE_TIMERS
@@ -273,14 +273,13 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 
   int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
-  size_t &nbInliers_host = m_inliersIndicesImage->dataSize;
   int *inlierIndicesData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
 
   // Only if the number of inliers (host side) is zero, we clear the device number.
   // The assumption is that the number on device memory will remain in sync with the host
   // since only this method is allowed to modify it.
-  if (nbInliers_host == 0)
+  if (m_inliersIndicesImage->dataSize == 0)
   {
     ORcudaSafeCall(cudaMemsetAsync(nbInlier_device, 0, sizeof(int)));
   }
@@ -293,18 +292,18 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
     ck_sample_inliers<true> <<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
         randomGenerators, inlierIndicesData, nbInlier_device, m_batchSizeRansac,
         inlierMaskData);
+    ORcudaKernelCheck;
   }
   else
   {
     ck_sample_inliers<false><<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
         randomGenerators, inlierIndicesData, nbInlier_device,
         m_batchSizeRansac);
+    ORcudaKernelCheck;
   }
 
-  ORcudaKernelCheck;
-
   // Make the selected inlier indices available to the cpu
-  nbInliers_host = m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA); // Update the number of inliers
+  m_inliersIndicesImage->dataSize = m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA); // Update the number of inliers
 }
 
 void PreemptiveRansac_CUDA::update_candidate_poses()
