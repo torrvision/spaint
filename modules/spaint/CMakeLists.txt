@@ -356,6 +356,15 @@ include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
 )
 
 ##
+SET(segmentation_sources
+src/segmentation/SegmentationUtil.cpp
+)
+
+SET(segmentation_headers
+include/spaint/segmentation/SegmentationUtil.h
+)
+
+##
 SET(selectiontransformers_sources
 src/selectiontransformers/SelectionTransformerFactory.cpp
 )
@@ -610,6 +619,7 @@ ${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
+${segmentation_sources}
 ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
@@ -651,6 +661,7 @@ ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
 ${sampling_shared_headers}
+${segmentation_headers}
 ${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
@@ -756,6 +767,7 @@ SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers}
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
 SOURCE_GROUP(sampling\\interface FILES ${sampling_interface_sources} ${sampling_interface_headers})
 SOURCE_GROUP(sampling\\shared FILES ${sampling_shared_headers})
+SOURCE_GROUP(segmentation FILES ${segmentation_sources} ${segmentation_headers})
 SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
