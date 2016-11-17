@@ -205,8 +205,6 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 
 void PreemptiveRansac_CUDA::compute_and_sort_energies()
 {
-  // Pose Update might have changed the candidate poses, need to update on the device side
-  m_poseCandidates->UpdateDeviceFromHost();
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
 
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
@@ -228,9 +226,6 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   thrust::device_ptr<PoseCandidate> candidatesEnd(
       poseCandidates + nbPoseCandidates);
   thrust::sort(candidatesStart, candidatesEnd);
-
-  // Need to make the data available to the host once again (for pose update)
-  m_poseCandidates->UpdateHostFromDevice();
 }
 
 void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
@@ -307,8 +302,17 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   ORcudaKernelCheck;
 
   // Make the selected inlier indices available to the cpu
-  m_inliersIndicesImage->UpdateHostFromDevice();
   m_nbInliers = m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA); // Update the number of inliers
+}
+
+void PreemptiveRansac_CUDA::update_candidate_poses()
+{
+  m_poseCandidates->UpdateHostFromDevice();
+  m_inliersIndicesImage->UpdateHostFromDevice();
+
+  PreemptiveRansac::update_candidate_poses();
+
+  m_poseCandidates->UpdateDeviceFromHost();
 }
 
 }

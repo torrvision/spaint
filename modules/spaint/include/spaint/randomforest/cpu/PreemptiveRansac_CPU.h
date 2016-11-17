@@ -20,6 +20,7 @@ protected:
   virtual void generate_pose_candidates();
   virtual void compute_and_sort_energies();
   virtual void sample_inlier_candidates(bool useMask);
+  virtual void update_candidate_poses();
 
 private:
   tvgutil::CPURNGMemoryBlock_Ptr m_randomGenerators;

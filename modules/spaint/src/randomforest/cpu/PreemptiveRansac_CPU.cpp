@@ -189,4 +189,9 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
   candidate.energy = totalEnergy / static_cast<float>(m_nbInliers);
 }
 
+void PreemptiveRansac_CPU::update_candidate_poses()
+{
+  PreemptiveRansac::update_candidate_poses();
+}
+
 }
