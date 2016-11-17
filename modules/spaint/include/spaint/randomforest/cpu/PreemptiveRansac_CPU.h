@@ -27,6 +27,7 @@ private:
 
   void init_random();
   void compute_candidate_pose_kabsch();
+  void compute_pose_energy(PoseCandidate &candidate) const;
 };
 
 }

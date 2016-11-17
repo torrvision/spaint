@@ -232,6 +232,63 @@ inline int preemptive_ransac_sample_inlier(
   return inlierLinearIdx;
 }
 
+_CPU_AND_GPU_CODE_
+inline float preemptive_ransac_compute_candidate_energy(
+    const Matrix4f &candidatePose, const RGBDPatchFeature *features,
+    const GPUForestPrediction *predictions, const int *inlierIndices,
+    uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
+{
+  float localEnergy = 0.f;
+
+  for (uint32_t inlierIdx = inlierStartIdx; inlierIdx < nbInliers; inlierIdx +=
+      inlierStep)
+  {
+    const int linearIdx = inlierIndices[inlierIdx];
+    const Vector3f localPixel = features[linearIdx].position.toVector3();
+    const Vector3f projectedPixel = candidatePose * localPixel;
+
+    const GPUForestPrediction &pred = predictions[linearIdx];
+
+    // eval individual energy
+    float energy;
+    int argmax = pred.get_best_mode_and_energy(projectedPixel, energy);
+
+    // Has at least a valid mode
+    if (argmax < 0)
+    {
+#ifdef __CUDACC__
+      // should have not been inserted in the inlier set
+      printf("prediction has no valid modes\n");
+      asm("trap;");
+#else
+      throw std::runtime_error("prediction has no valid modes");
+#endif
+    }
+
+    if (pred.modes[argmax].nbInliers == 0)
+    {
+#ifdef __CUDACC__
+      // the original implementation had a simple continue
+      printf("mode has no inliers\n");
+      asm("trap;");
+#else
+      throw std::runtime_error("mode has no inliers");
+#endif
+    }
+
+    energy /= static_cast<float>(pred.nbModes);
+    energy /= static_cast<float>(pred.modes[argmax].nbInliers);
+
+    if (energy < 1e-6f)
+      energy = 1e-6f;
+    energy = -log10f(energy);
+
+    localEnergy += energy;
+  }
+
+  return localEnergy;
+}
+
 }
 
 #endif

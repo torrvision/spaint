@@ -86,39 +86,6 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
   compute_candidate_pose_kabsch();
 }
 
-void PreemptiveRansac_CPU::compute_and_sort_energies()
-{
-  PreemptiveRansac::compute_and_sort_energies();
-  return;
-
-//  // Need to make the data available to the device
-//  m_poseCandidates->UpdateDeviceFromHost();
-//  m_nbPoseCandidates->UpdateDeviceFromHost();
-//
-//  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
-//  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
-//      MEMORYDEVICE_CUDA);
-//  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-//  const int nbPoseCandidates = *m_nbPoseCandidates->GetData(MEMORYDEVICE_CPU);
-//
-//  ck_reset_candidate_energies<<<1, nbPoseCandidates>>>(poseCandidates, nbPoseCandidates);
-//  ORcudaKernelCheck;
-//
-//  dim3 blockSize(128); // threads to compute the energy for each candidate
-//  dim3 gridSize(nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
-//  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates, nbPoseCandidates);
-//  ORcudaKernelCheck;
-//
-//  // Sort by ascending energy
-//  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
-//  thrust::device_ptr<PoseCandidate> candidatesEnd(
-//      poseCandidates + nbPoseCandidates);
-//  thrust::sort(candidatesStart, candidatesEnd);
-//
-//  // Need to make the data available to the host once again
-//  m_poseCandidates->UpdateHostFromDevice();
-}
-
 void PreemptiveRansac_CPU::compute_candidate_pose_kabsch()
 {
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
@@ -196,6 +163,37 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
       inlierIndicesData[inlierIdx] = sampledLinearIdx;
     }
   }
+}
+
+void PreemptiveRansac_CPU::compute_and_sort_energies()
+{
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
+  for (int p = 0; p < m_nbPoseCandidates; ++p)
+  {
+    compute_pose_energy(poseCandidates[p]);
+  }
+
+  // Sort by ascending energy
+  std::sort(poseCandidates, poseCandidates + m_nbPoseCandidates);
+}
+
+void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
+{
+  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+      MEMORYDEVICE_CPU);
+  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+      MEMORYDEVICE_CPU);
+  const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
+
+  const float totalEnergy = preemptive_ransac_compute_candidate_energy(
+      candidate.cameraPose, patchFeaturesData, predictionsData, inliersData,
+      m_nbInliers);
+
+  candidate.energy = totalEnergy / static_cast<float>(m_nbInliers);
 }
 
 }

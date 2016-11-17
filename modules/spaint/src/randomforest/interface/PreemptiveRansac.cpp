@@ -5,8 +5,6 @@
 
 #include "randomforest/interface/PreemptiveRansac.h"
 
-#include <random>
-
 #include <boost/timer/timer.hpp>
 
 #include <ceres/ceres.h>
@@ -65,8 +63,6 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     const RGBDPatchFeatureImage_CPtr &features,
     const GPUForestPredictionsImage_CPtr &forestPredictions)
 {
-  std::mt19937 random_engine;
-
   m_featureImage = features;
   m_predictionsImage = forestPredictions;
 
@@ -224,88 +220,6 @@ Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P,
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
-}
-
-void PreemptiveRansac::compute_and_sort_energies()
-{
-  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-
-#pragma omp parallel for
-  for (int p = 0; p < m_nbPoseCandidates; ++p)
-  {
-    //#pragma omp critical
-    //    {
-    //      //#pragma omp flush(nbPoseProcessed)
-    //      //      Helpers::displayPercentage(nbPoseProcessed++, poseCandidates.size());
-    //    }
-
-    compute_pose_energy(poseCandidates[p]);
-  }
-
-// Sort by ascending energy
-  std::sort(poseCandidates, poseCandidates + m_nbPoseCandidates);
-}
-
-void PreemptiveRansac::compute_pose_energy(PoseCandidate &candidate) const
-{
-  float totalEnergy = 0.0f;
-
-  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
-      MEMORYDEVICE_CPU);
-  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
-      MEMORYDEVICE_CPU);
-  const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
-
-  for (int s = 0; s < m_nbInliers; ++s)
-  {
-    const int linearIdx = inliersData[s];
-    const Vector3f localPixel =
-        patchFeaturesData[linearIdx].position.toVector3();
-    const Vector3f projectedPixel = candidate.cameraPose * localPixel;
-
-    const GPUForestPrediction &pred = predictionsData[linearIdx];
-
-    // eval individual energy
-    float energy;
-    int argmax = pred.get_best_mode_and_energy(projectedPixel, energy);
-
-    // Has at least a valid mode
-    if (argmax < 0)
-    {
-      // should have not been inserted in the inlier set
-      std::cout << "prediction " << linearIdx
-          << " has negative argmax, nbModes: " << pred.nbModes << std::endl;
-      for (int i = 0; i < pred.nbModes; ++i)
-      {
-        auto &mode = pred.modes[i];
-        std::cout << "Mode " << i << ": inliers: " << mode.nbInliers
-            << "\npos: " << mode.position << "\ncol: " << mode.colour
-            << "\ndet: " << mode.determinant << "\ninvcov: "
-            << mode.positionInvCovariance << "\n" << std::endl;
-      }
-      throw std::runtime_error("prediction has no valid modes");
-    }
-
-    if (pred.modes[argmax].nbInliers == 0)
-    {
-      // the original implementation had a simple continue
-      std::cout << "mode has no inliers" << std::endl;
-      throw std::runtime_error("mode has no inliers");
-    }
-
-    energy /= static_cast<float>(pred.nbModes);
-    energy /= static_cast<float>(pred.modes[argmax].nbInliers);
-
-    if (energy < 1e-6f)
-      energy = 1e-6f;
-    energy = -log10f(energy);
-
-//    candidate.inliers[s].energy = energy;
-//    candidate.inliers[s].modeIdx = argmax;
-    totalEnergy += energy;
-  }
-
-  candidate.energy = totalEnergy / static_cast<float>(m_nbInliers);
 }
 
 void PreemptiveRansac::update_candidate_poses()

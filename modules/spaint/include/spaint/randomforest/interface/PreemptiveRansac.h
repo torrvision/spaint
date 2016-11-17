@@ -103,14 +103,11 @@ protected:
 
   virtual void generate_pose_candidates() = 0;
   virtual void sample_inlier_candidates(bool useMask = false) = 0;
+  virtual void compute_and_sort_energies() = 0;
 
-  virtual void compute_and_sort_energies();
   void update_candidate_poses();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
   Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const;
-
-private:
-  void compute_pose_energy(PoseCandidate &candidate) const;
 };
 
 typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;

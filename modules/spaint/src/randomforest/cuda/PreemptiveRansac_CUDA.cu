@@ -32,11 +32,6 @@ __global__ void ck_init_random_generators(CUDARNG *randomGenerators,
   randomGenerators[idx].reset(seed, idx);
 }
 
-__global__ void ck_reset_pose_candidates(PoseCandidates *poseCandidates)
-{
-  poseCandidates->nbCandidates = 0;
-}
-
 template<typename RNG>
 __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
     const GPUForestPrediction *predictions, const Vector2i imgSize,
@@ -71,8 +66,8 @@ __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
 }
 
 __global__ void ck_compute_energies(const RGBDPatchFeature *features,
-    const GPUForestPrediction *predictions, PoseCandidate *poseCandidates,
-    int nbCandidates)
+    const GPUForestPrediction *predictions, const int *inlierIndices,
+    uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
   const int tId = threadIdx.x;
   const int threadsPerBlock = blockDim.x;
@@ -87,47 +82,9 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
 
   PoseCandidate &currentCandidate = poseCandidates[candidateIdx];
 
-  float localEnergy = 0.f;
-
-  const int nbInliers = currentCandidate.nbInliers;
-  for (int inlierIdx = tId; inlierIdx < nbInliers; inlierIdx += threadsPerBlock)
-  {
-    const int linearIdx = currentCandidate.inliers[inlierIdx].linearIdx;
-    const Vector3f localPixel = features[linearIdx].position.toVector3();
-    const Vector3f projectedPixel = currentCandidate.cameraPose * localPixel;
-
-    const GPUForestPrediction &pred = predictions[linearIdx];
-
-    // eval individual energy
-    float energy;
-    int argmax = pred.get_best_mode_and_energy(projectedPixel, energy);
-
-    // Has at least a valid mode
-    if (argmax < 0)
-    {
-      // should have not been inserted in the inlier set
-      printf("prediction has no valid modes\n");
-      continue;
-    }
-
-    if (pred.modes[argmax].nbInliers == 0)
-    {
-      // the original implementation had a simple continue
-      printf("mode has no inliers\n");
-      continue;
-    }
-
-    energy /= static_cast<float>(pred.nbModes);
-    energy /= static_cast<float>(pred.modes[argmax].nbInliers);
-
-    if (energy < 1e-6f)
-      energy = 1e-6f;
-    energy = -log10f(energy);
-
-    currentCandidate.inliers[inlierIdx].energy = energy;
-    currentCandidate.inliers[inlierIdx].modeIdx = argmax;
-    localEnergy += energy;
-  }
+  float localEnergy = preemptive_ransac_compute_candidate_energy(
+      currentCandidate.cameraPose, features, predictions, inlierIndices,
+      nbInliers, tId, threadsPerBlock);
 
   // Now reduce by shuffling down the local energies
   //(localEnergy for thread 0 in the warp contains the sum for the warp)
@@ -143,7 +100,7 @@ __global__ void ck_compute_energies(const RGBDPatchFeature *features,
   // tId 0 computes the final energy
   if (tId == 0)
     currentCandidate.energy = currentCandidate.energy
-        / static_cast<float>(currentCandidate.nbInliers);
+        / static_cast<float>(nbInliers);
 }
 
 __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
@@ -243,37 +200,38 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   //        "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
   //#endif
   compute_candidate_pose_kabsch();
+
+  // Make the computed poses available to device
+  m_poseCandidates->UpdateDeviceFromHost();
 }
 
 void PreemptiveRansac_CUDA::compute_and_sort_energies()
 {
-  PreemptiveRansac::compute_and_sort_energies();
-  return;
+  // Pose Update might have changed the candidate poses, need to update on the device side
+  m_poseCandidates->UpdateDeviceFromHost();
 
-//  // Need to make the data available to the device
-//  m_poseCandidates->UpdateDeviceFromHost();
-//
-//  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
-//  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
-//      MEMORYDEVICE_CUDA);
-//  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
-//
-//  ck_reset_candidate_energies<<<1, m_nbPoseCandidates>>>(poseCandidates, m_nbPoseCandidates);
-//  ORcudaKernelCheck;
-//
-//  dim3 blockSize(128); // threads to compute the energy for each candidate
-//  dim3 gridSize(m_nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
-//  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, poseCandidates, m_nbPoseCandidates);
-//  ORcudaKernelCheck;
-//
-//  // Sort by ascending energy
-//  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
-//  thrust::device_ptr<PoseCandidate> candidatesEnd(
-//      poseCandidates + m_nbPoseCandidates);
-//  thrust::sort(candidatesStart, candidatesEnd);
-//
-//  // Need to make the data available to the host once again
-//  m_poseCandidates->UpdateHostFromDevice();
+  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
+  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
+      MEMORYDEVICE_CUDA);
+  const int *inliers = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
+  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+
+  ck_reset_candidate_energies<<<1, m_nbPoseCandidates>>>(poseCandidates, m_nbPoseCandidates);
+  ORcudaKernelCheck;
+
+  dim3 blockSize(128); // threads to compute the energy for each candidate
+  dim3 gridSize(m_nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
+  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, inliers, m_nbInliers, poseCandidates, m_nbPoseCandidates);
+  ORcudaKernelCheck;
+
+  // Sort by ascending energy
+  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
+  thrust::device_ptr<PoseCandidate> candidatesEnd(
+      poseCandidates + m_nbPoseCandidates);
+  thrust::sort(candidatesStart, candidatesEnd);
+
+  // Need to make the data available to the host once again (for pose update)
+  m_poseCandidates->UpdateHostFromDevice();
 }
 
 void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
