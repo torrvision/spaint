@@ -20,8 +20,7 @@ public:
   typedef boost::shared_ptr<RandomStateMemoryBlock> RandomStateMemoryBlock_Ptr;
   typedef boost::shared_ptr<const RandomStateMemoryBlock> RandomStateMemoryBlock_CPtr;
 
-  GPUReservoir_CUDA(size_t capacity, size_t nbLeaves,
-      uint32_t nbMaxExamples = 160 * 120, uint32_t rngSeed = 42);
+  GPUReservoir_CUDA(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
 
   virtual void add_examples(const RGBDPatchFeatureImage_CPtr &features,
       const LeafIndicesImage_CPtr &leafIndices);

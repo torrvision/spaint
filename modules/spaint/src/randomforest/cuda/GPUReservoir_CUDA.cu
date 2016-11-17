@@ -12,12 +12,12 @@ namespace spaint
 {
 
 __global__ void ck_init_random_states(
-    GPUReservoir_CUDA::RandomState *randomStates, uint32_t nbMaxExamples,
+    GPUReservoir_CUDA::RandomState *randomStates, uint32_t nbStates,
     uint32_t seed)
 {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
-  if (idx >= nbMaxExamples)
+  if (idx >= nbStates)
     return;
 
   curand_init(seed, idx, 0, &randomStates[idx]);
@@ -81,11 +81,11 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
 }
 
 GPUReservoir_CUDA::GPUReservoir_CUDA(size_t capacity, size_t nbLeaves,
-    uint32_t nbMaxExamples, uint32_t rngSeed) :
-    GPUReservoir(capacity, nbLeaves, nbMaxExamples, rngSeed)
+    uint32_t rngSeed) :
+    GPUReservoir(capacity, nbLeaves, rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_randomStates = mbf.make_block<RandomState>(nbMaxExamples);
+  m_randomStates = mbf.make_block<RandomState>();
 
   // Update device for the other variables (not m_data since its content are meaningless now)
   m_reservoirsAddCalls->UpdateDeviceFromHost();
@@ -98,10 +98,14 @@ void GPUReservoir_CUDA::add_examples(const RGBDPatchFeatureImage_CPtr &features,
     const LeafIndicesImage_CPtr &leafIndices)
 {
   const Vector2i imgSize = features->noDims;
+  const int nbExamples = imgSize.width * imgSize.height;
 
-  // Check that we have enough random states
-  if (imgSize.width * imgSize.height > m_nbMaxExamples)
-    throw std::runtime_error("Too many examples to add to the reservoirs.");
+  // Check that we have enough random states and if not reallocate them
+  if(nbExamples > m_randomStates->dataSize)
+  {
+    m_randomStates->ChangeDims(nbExamples);
+    init_random();
+  }
 
   const RGBDPatchFeature *featureData = features->GetData(MEMORYDEVICE_CUDA);
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
@@ -128,12 +132,13 @@ void GPUReservoir_CUDA::clear()
 
 void GPUReservoir_CUDA::init_random()
 {
+  const int nbStates = m_randomStates->dataSize;
   RandomState *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
 
   // Initialize random states
   dim3 blockSize(256);
-  dim3 gridSize((m_nbMaxExamples + blockSize.x - 1) / blockSize.x);
-  ck_init_random_states<<<gridSize, blockSize>>>(randomStates, m_nbMaxExamples, m_rngSeed);
+  dim3 gridSize((nbStates + blockSize.x - 1) / blockSize.x);
+  ck_init_random_states<<<gridSize, blockSize>>>(randomStates, nbStates, m_rngSeed);
   ORcudaKernelCheck;
 }
 }

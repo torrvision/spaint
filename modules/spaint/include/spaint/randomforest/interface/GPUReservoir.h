@@ -28,8 +28,7 @@ public:
   typedef boost::shared_ptr<ExampleReservoirs> ExampleReservoirs_Ptr;
   typedef boost::shared_ptr<const ExampleReservoirs> ExampleReservoirs_CPtr;
 
-  GPUReservoir(size_t capacity, size_t nbLeaves,
-      uint32_t nbMaxExamples = 160 * 120, uint32_t rngSeed = 42);
+  GPUReservoir(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
   virtual ~GPUReservoir();
 
   const ExampleReservoirs_CPtr get_reservoirs() const;
@@ -50,7 +49,6 @@ protected:
   ITMIntImage_Ptr m_reservoirsAddCalls;
 
   uint32_t m_reservoirCapacity;
-  uint32_t m_nbMaxExamples;
   uint32_t m_rngSeed;
 };
 

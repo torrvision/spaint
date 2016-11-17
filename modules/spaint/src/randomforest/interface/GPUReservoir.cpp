@@ -9,13 +9,11 @@
 namespace spaint
 {
 
-GPUReservoir::GPUReservoir(size_t capacity, size_t nbLeaves,
-    uint32_t nbMaxExamples, uint32_t rngSeed)
+GPUReservoir::GPUReservoir(size_t capacity, size_t nbLeaves, uint32_t rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
   m_reservoirCapacity = capacity;
-  m_nbMaxExamples = nbMaxExamples;
   m_rngSeed = rngSeed;
 
   // One row per leaf
