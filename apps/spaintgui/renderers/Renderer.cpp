@@ -8,9 +8,11 @@ using namespace ITMLib;
 using namespace ORUtils;
 using namespace rigging;
 
+#include <spaint/ogl/CameraRenderer.h>
 #include <spaint/ogl/QuadricRenderer.h>
 #include <spaint/selectiontransformers/interface/VoxelToCubeSelectionTransformer.h>
 #include <spaint/selectors/PickingSelector.h>
+#include <spaint/util/CameraFactory.h>
 #include <spaint/util/CameraPoseConverter.h>
 using namespace spaint;
 
@@ -464,12 +466,9 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       // Note: Conveniently, data() returns the elements in column-major order (the order required by OpenGL).
       glLoadMatrixf(CameraPoseConverter::pose_to_modelview(pose).data());
 
-      // Render the axes.
-      glBegin(GL_LINES);
-        glColor3f(1.0f, 0.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(1.0f, 0.0f, 0.0f);
-        glColor3f(0.0f, 1.0f, 0.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);  glVertex3f(0.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
-      glEnd();
+      // Render the default camera.
+      static SimpleCamera defaultCam = *CameraFactory::make_default_camera();
+      CameraRenderer::render_camera(defaultCam);
 
       // Render the current selector to show how we're interacting with the scene.
       Vector3u labelColour = m_model->get_label_manager()->get_label_colour(m_model->get_semantic_label());
