@@ -145,12 +145,12 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 
     if (sampledLinearIdx >= 0)
     {
-      int inlierIdx = 0;
+      size_t inlierIdx = 0;
 
 #ifdef WITH_OPENMP
 #pragma omp atomic capture
 #endif
-      inlierIdx = m_nbInliers++;
+      inlierIdx = m_inliersIndicesImage->dataSize++;
 
       inlierIndicesData[inlierIdx] = sampledLinearIdx;
     }
@@ -180,13 +180,14 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
       MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
+  const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
 
   const float totalEnergy = preemptive_ransac_compute_candidate_energy(
       candidate.cameraPose, patchFeaturesData, predictionsData, inliersData,
-      m_nbInliers);
+      nbInliers);
 
-  candidate.energy = totalEnergy / static_cast<float>(m_nbInliers);
+  candidate.energy = totalEnergy / static_cast<float>(nbInliers);
 }
 
 void PreemptiveRansac_CPU::update_candidate_poses()

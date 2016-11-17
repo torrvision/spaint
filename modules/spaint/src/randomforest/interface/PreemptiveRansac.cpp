@@ -45,8 +45,8 @@ PreemptiveRansac::PreemptiveRansac()
   m_nbMaxPoseCandidates = 1024;
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_nbMaxPoseCandidates);
 
-  m_nbInliers = 0;
-  m_inliersIndicesImage = mbf.make_image<int>(3000);
+  m_nbMaxInliers = 3000; // 500 per ransac iteration, starting from 64, not 1024.
+  m_inliersIndicesImage = mbf.make_image<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
 }
 
@@ -80,7 +80,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
   // Reset the number of inliers for the new pose estimation.
-  m_nbInliers = 0;
+  m_inliersIndicesImage->dataSize = 0;
 
   if (m_trimKinitAfterFirstEnergyComputation < m_poseCandidates->dataSize)
   {
@@ -119,7 +119,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
   // Reset inlier mask (and inliers)
   m_inliersMaskImage->ChangeDims(m_featureImage->noDims); // Happens only once
   m_inliersMaskImage->Clear();
-  m_nbInliers = 0;
+  m_inliersIndicesImage->dataSize = 0;
 
   float iteration = 0.0f;
 
@@ -418,6 +418,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
       MEMORYDEVICE_CPU);
   const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
+  const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
 
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
@@ -499,7 +500,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 #else
 
   PointsForLM ptsForLM;
-  for (int inlierIdx = 0; inlierIdx < m_nbInliers; ++inlierIdx)
+  for (size_t inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
   {
     const int inlierLinearIdx = inliersData[inlierIdx];
     const Vector3f inlierCameraPosition =

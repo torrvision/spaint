@@ -80,7 +80,7 @@ protected:
   size_t m_nbMaxPoseCandidates;
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
 
-  int m_nbInliers;
+  size_t m_nbMaxInliers;
   ITMIntImage_Ptr m_inliersMaskImage;
   ITMIntImage_Ptr m_inliersIndicesImage;
 

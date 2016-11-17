@@ -117,7 +117,7 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
 }
 
 template<bool useMask, typename RNG>
-__global__ void ck_sample_inlier(const RGBDPatchFeature *patchFeaturesData,
+__global__ void ck_sample_inliers(const RGBDPatchFeature *patchFeaturesData,
     const GPUForestPrediction *predictionsData, const Vector2i imgSize,
     RNG *randomGenerators, int *inlierIndices, int *inlierCount,
     int nbMaxSamples, int *inlierMaskData = NULL)
@@ -210,6 +210,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
   const GPUForestPrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
+  const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliers = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
 
@@ -218,7 +219,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
 
   dim3 blockSize(128); // threads to compute the energy for each candidate
   dim3 gridSize(nbPoseCandidates); // Launch one block per candidate (many blocks will exit immediately in the later stages of ransac)
-  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, inliers, m_nbInliers, poseCandidates, nbPoseCandidates);
+  ck_compute_energies<<<gridSize, blockSize>>>(features, predictions, inliers, nbInliers, poseCandidates, nbPoseCandidates);
   ORcudaKernelCheck;
 
   // Sort by ascending energy
@@ -272,13 +273,14 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 
   int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
+  size_t &nbInliers_host = m_inliersIndicesImage->dataSize;
   int *inlierIndicesData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
 
   // Only if the number of inliers (host side) is zero, we clear the device number.
   // The assumption is that the number on device memory will remain in sync with the host
   // since only this method is allowed to modify it.
-  if (m_nbInliers == 0)
+  if (nbInliers_host == 0)
   {
     ORcudaSafeCall(cudaMemsetAsync(nbInlier_device, 0, sizeof(int)));
   }
@@ -288,13 +290,13 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 
   if (useMask)
   {
-    ck_sample_inlier<true> <<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
+    ck_sample_inliers<true> <<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
         randomGenerators, inlierIndicesData, nbInlier_device, m_batchSizeRansac,
         inlierMaskData);
   }
   else
   {
-    ck_sample_inlier<false><<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
+    ck_sample_inliers<false><<<gridSize,blockSize>>>(patchFeaturesData, predictionsData, imgSize,
         randomGenerators, inlierIndicesData, nbInlier_device,
         m_batchSizeRansac);
   }
@@ -302,7 +304,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   ORcudaKernelCheck;
 
   // Make the selected inlier indices available to the cpu
-  m_nbInliers = m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA); // Update the number of inliers
+  nbInliers_host = m_nbSampledInliers_device->GetElement(0, MEMORYDEVICE_CUDA); // Update the number of inliers
 }
 
 void PreemptiveRansac_CUDA::update_candidate_poses()
