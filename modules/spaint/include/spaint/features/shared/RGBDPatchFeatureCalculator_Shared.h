@@ -29,7 +29,6 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
   {
     // Mark as invalid
     outFeature.position.w = -1.f;
-    outFeature.colour.w = -1.f;
     return;
   }
 
@@ -43,7 +42,7 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
   outFeature.position = cameraPose * position;
 
   // Copy the colour for future reference
-  outFeature.colour = rgb[linearIdxIn].toFloat();
+  outFeature.colour = rgb[linearIdxIn].toVector3();
 
   for (int featIdx = 0; featIdx < RGBDPatchFeature::RGB_FEATURE_COUNT;
       ++featIdx)

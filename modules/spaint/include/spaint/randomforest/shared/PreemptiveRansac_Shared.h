@@ -50,7 +50,7 @@ inline bool preemptive_ransac_generate_candidate(
         patchFeaturesData[linearFeatureIdx];
 
     // Invalid feature
-    if (selectedFeature.position.w < 0.f)
+    if (!selectedFeature.valid())
       continue;
 
     const GPUForestPrediction &selectedPrediction =
@@ -76,10 +76,10 @@ inline bool preemptive_ransac_generate_candidate(
     // This is the first pixel, check that the pixel colour corresponds with the selected mode
     if (selectedPixelCount == 0)
     {
-      const Vector3u colourDiff = selectedFeature.colour.toVector3().toUChar()
-          - selectedPrediction.modes[selectedModeIdx].colour;
-      const bool consistentColour = fabsf(colourDiff.x) <= 30.f
-          && fabsf(colourDiff.y) <= 30.f && fabsf(colourDiff.z) <= 30.f;
+      const Vector3i colourDiff = selectedFeature.colour.toInt()
+          - selectedPrediction.modes[selectedModeIdx].colour.toInt();
+      const bool consistentColour = abs(colourDiff.x) <= 30
+          && abs(colourDiff.y) <= 30 && abs(colourDiff.z) <= 30;
 
       if (!consistentColour)
         continue;
@@ -206,7 +206,7 @@ inline int preemptive_ransac_sample_inlier(
 
     bool validIndex = !useMask;
 
-    if(useMask)
+    if (useMask)
     {
       int *maskPtr = &inlierMaskData[linearIdx];
       int maskValue = -1;
@@ -225,7 +225,8 @@ inline int preemptive_ransac_sample_inlier(
       validIndex = maskValue == 0;
     }
 
-    if(validIndex) inlierLinearIdx = linearIdx;
+    if (validIndex)
+      inlierLinearIdx = linearIdx;
   }
 
   return inlierLinearIdx;

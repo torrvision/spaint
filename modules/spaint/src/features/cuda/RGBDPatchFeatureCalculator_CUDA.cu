@@ -65,12 +65,7 @@ void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
   Vector2i outDims(rgbImage->noDims.x / m_featureStep,
       rgbImage->noDims.y / m_featureStep);
 
-  if (featuresImage->noDims != outDims) // Just for the call to Clear()
-  {
-    featuresImage->ChangeDims(outDims);
-    featuresImage->Clear();
-  }
-
+  featuresImage->ChangeDims(outDims);
   RGBDPatchFeature *features = featuresImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);

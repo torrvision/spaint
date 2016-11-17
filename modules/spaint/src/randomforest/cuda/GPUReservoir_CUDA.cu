@@ -40,12 +40,12 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
   const RGBDPatchFeature &feature = features[linearIdx];
   const LeafIndices leaves = leafIndices[linearIdx];
 
-  if (feature.position.w < 0.f)
+  if (!feature.valid())
     return;
 
   GPUReservoir_CUDA::ExampleType example;
   example.position = feature.position.toVector3();
-  example.colour = feature.colour.toVector3().toUChar();
+  example.colour = feature.colour;
 
   for (int treeIdx = 0; treeIdx < LeafIndices::value_size; ++treeIdx)
   {
@@ -101,7 +101,7 @@ void GPUReservoir_CUDA::add_examples(const RGBDPatchFeatureImage_CPtr &features,
   const int nbExamples = imgSize.width * imgSize.height;
 
   // Check that we have enough random states and if not reallocate them
-  if(nbExamples > m_randomStates->dataSize)
+  if (nbExamples > m_randomStates->dataSize)
   {
     m_randomStates->ChangeDims(nbExamples);
     init_random();

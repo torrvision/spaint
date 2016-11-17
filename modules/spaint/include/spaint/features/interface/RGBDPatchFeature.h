@@ -8,6 +8,7 @@
 
 #include "ITMLib/Utils/ITMMath.h"
 #include "ORUtils/Image.h"
+#include "ORUtils/PlatformIndependence.h"
 #include <boost/shared_ptr.hpp>
 
 namespace spaint
@@ -32,7 +33,13 @@ struct RGBDPatchFeature
   };
 
   Vector4f position;
-  Vector4f colour; // TODO: maybe Vector3u or Vector4u
+  Vector3u colour;
+
+  _CPU_AND_GPU_CODE_
+  inline bool valid() const
+  {
+    return position.w >= 0.f;
+  }
 };
 
 typedef ORUtils::Image<RGBDPatchFeature> RGBDPatchFeatureImage;
