@@ -356,55 +356,33 @@ static void Continuous3DOptimizationUsingFullCovariance(
 /* Routines to optimize the sum of 3D L2 distances */
 /***************************************************/
 
-//static double EnergyForContinuous3DOptimizationUsingL2(
-//    std::vector<
-//        std::pair<std::vector<Eigen::VectorXd>,
-//            std::vector<PredictedGaussianMean *>>> &pts,
-//    Eigen::MatrixXd &candidateCameraPoseD)
-//{
-//  double res = 0.0;
-//  Eigen::VectorXd diff = Eigen::VectorXd::Zero(3);
-//  Eigen::VectorXd transformedPthomogeneous(4);
-//
-//  for (size_t i = 0; i < pts.size(); ++i)
-//  {
-//    Helpers::Rigid3DTransformation(candidateCameraPoseD, pts[i].first[0],
-//        transformedPthomogeneous);
-//
-//    for (int p = 0; p < 3; ++p)
-//    {
-//      diff(p) = transformedPthomogeneous(p) - pts[i].second[0]->_mean(p);
-//    }
-//
-//    double err = diff.norm();
-//    err *= err;
-//    res += err;
-//  }
-//  return res;
-//}
-//
-//static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &x,
-//    alglib::real_1d_array &fi, void *ptr)
-//{
-//  PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
-//
-//  std::vector<
-//      std::pair<std::vector<Eigen::VectorXd>,
-//          std::vector<PredictedGaussianMean *>>> &pts = ptsLM->pts;
-//  // integrate the size of the clusters?
-//  Eigen::VectorXd ksi(6);
-//  memcpy(ksi.data(), x.getcontent(), 6 * sizeof(double));
-//  /*for (int i = 0 ; i < 6 ; ++i)
-//   {
-//   ksi(i) = x[i];
-//   }*/
-//  Eigen::MatrixXd updatedCandidateCameraPoseD =
-//      Helpers::LieAlgebraToLieGroupSE3(ksi);
-//
-//  fi[0] = EnergyForContinuous3DOptimizationUsingL2(pts,
-//      updatedCandidateCameraPoseD);
-//  return;
-//}
+static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
+    const ORUtils::SE3Pose &candidateCameraPose)
+{
+  double res = 0.0;
+
+  for (size_t i = 0; i < pts.size(); ++i)
+  {
+    const PointForLM &pt = pts[i];
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pt.point;
+    const Vector3f diff = transformedPt - pt.mode.position;
+    const double err = length(diff); // sqr distance
+    res += err;
+  }
+
+  return res;
+}
+
+static void Continuous3DOptimizationUsingL2(const alglib::real_1d_array &ksi,
+    alglib::real_1d_array &fi, void *ptr)
+{
+  const PointsForLM *ptsLM = reinterpret_cast<PointsForLM *>(ptr);
+  const ORUtils::SE3Pose testPose(ksi[0], ksi[1], ksi[2], ksi[3], ksi[4],
+      ksi[5]);
+
+  fi[0] = EnergyForContinuous3DOptimizationUsingL2(*ptsLM, testPose);
+}
+
 static void call_after_each_step(const alglib::real_1d_array &x, double func,
     void *ptr)
 {
@@ -574,11 +552,10 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     }
     else
     {
-      throw std::runtime_error("Not updated yet");
-//      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
-//          candidateCameraPoseD);
-//      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
-//          call_after_each_step, &ptsForLM);
+      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM,
+          candidateCameraPose);
+      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2,
+          call_after_each_step, &ptsForLM);
     }
 
     alglib::minlmresults(state, ksi_, rep);
@@ -601,9 +578,8 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     }
     else
     {
-      throw std::runtime_error("Not updated yet");
-//      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM.pts,
-//          updatedCandidateCameraPoseD);
+      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM,
+          candidateCameraPose);
     }
 
     if (energyAfter < energyBefore)
