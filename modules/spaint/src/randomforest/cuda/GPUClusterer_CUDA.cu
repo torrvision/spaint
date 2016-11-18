@@ -255,7 +255,7 @@ __global__ void ck_select_clusters(const int *clusterSizes,
 
 __global__ void ck_compute_modes(const PositionColourExample *examples,
     const int *reservoirSizes, const int *clusterIndices,
-    const int *selectedClusters, GPUForestPrediction *predictions,
+    const int *selectedClusters, SCoRePrediction *predictions,
     int reservoirCapacity, int startReservoirIdx, int maxSelectedClusters)
 {
   // One thread per cluster, one block per reservoir
@@ -266,7 +266,7 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
   const int clusterIdx = threadIdx.x;
   const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
 
-  GPUForestPrediction &reservoirPrediction = predictions[reservoirIdx];
+  SCoRePrediction &reservoirPrediction = predictions[reservoirIdx];
   if (threadIdx.x == 0)
     reservoirPrediction.nbModes = 0;
 
@@ -357,7 +357,7 @@ GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau, int minClusterSize)
 }
 
 void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
-    GPUForestPredictionsBlock_Ptr &predictions, size_t startIdx, size_t count)
+    SCoRePredictionsBlock_Ptr &predictions, size_t startIdx, size_t count)
 {
   const int nbReservoirs = reservoirs->get_reservoirs_count();
   const int reservoirCapacity = reservoirs->get_capacity();
@@ -375,7 +375,7 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
     m_clusterSizesHistogram->ChangeDims(temporariesSize);
 
     m_selectedClusters->ChangeDims(
-        Vector2i(GPUForestPrediction::MAX_MODES, nbReservoirs));
+        Vector2i(SCoRePrediction::MAX_MODES, nbReservoirs));
 
     m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
   }
@@ -423,14 +423,13 @@ void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   // 1 single block, 1 thread per reservoir
   ck_select_clusters<<<1, gridSize>>>(clusterSizes, clusterSizesHistogram,
       nbClustersPerReservoir, selectedClusters, reservoirCapacity, startIdx,
-      GPUForestPrediction::MAX_MODES, m_minClusterSize);
+      SCoRePrediction::MAX_MODES, m_minClusterSize);
   ORcudaKernelCheck;
 
-  GPUForestPrediction *predictionsData = predictions->GetData(
-      MEMORYDEVICE_CUDA);
-  ck_compute_modes<<<gridSize, GPUForestPrediction::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
+  SCoRePrediction *predictionsData = predictions->GetData(MEMORYDEVICE_CUDA);
+  ck_compute_modes<<<gridSize, SCoRePrediction::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
       predictionsData, reservoirCapacity, startIdx,
-      GPUForestPrediction::MAX_MODES);
+      SCoRePrediction::MAX_MODES);
   ORcudaKernelCheck;
 
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();

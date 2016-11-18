@@ -49,7 +49,7 @@ public:
   int get_min_nb_required_points() const;
   boost::optional<PoseCandidate> estimate_pose(
       const RGBDPatchFeatureImage_CPtr &features,
-      const GPUForestPredictionsImage_CPtr &forestPredictions);
+      const SCoRePredictionsImage_CPtr &forestPredictions);
 
 protected:
   // Member variables from scoreforests
@@ -66,7 +66,7 @@ protected:
   float m_poseOptimizationInlierThreshold;
 
   RGBDPatchFeatureImage_CPtr m_featureImage;
-  GPUForestPredictionsImage_CPtr m_predictionsImage;
+  SCoRePredictionsImage_CPtr m_predictionsImage;
 
   size_t m_nbMaxPoseCandidates;
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;

@@ -73,7 +73,7 @@ private:
 private:
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
-  GPUForestPredictionsImage_Ptr m_predictionsImage;
+  SCoRePredictionsImage_Ptr m_predictionsImage;
   SCoReForest_Ptr m_scoreForest;
   PreemptiveRansac_Ptr m_preemptiveRansac;
   bool m_updateForestModesEveryFrame;

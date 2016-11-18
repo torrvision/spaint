@@ -22,9 +22,9 @@ __global__ void ck_evaluate_forest(const SCoReForest::NodeEntry* forestTexture,
   evaluate_forest_shared(forestTexture, featureData, imgSize, leafData, x, y);
 }
 
-__global__ void ck_get_predictions(const GPUForestPrediction* leafPredictions,
+__global__ void ck_get_predictions(const SCoRePrediction* leafPredictions,
     const SCoReForest::LeafIndices* leafIndices,
-    GPUForestPrediction* outPredictions, Vector2i imgSize)
+    SCoRePrediction* outPredictions, Vector2i imgSize)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -61,18 +61,18 @@ void SCoReForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
 }
 
 void SCoReForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
-    GPUForestPredictionsImage_Ptr &predictions) const
+    SCoRePredictionsImage_Ptr &predictions) const
 {
   const Vector2i imgSize = leaf_indices->noDims;
   const LeafIndices* leafIndices = leaf_indices->GetData(MEMORYDEVICE_CUDA);
 
 // Leaf predictions
-  const GPUForestPrediction *leafPredictionsData = m_predictionsBlock->GetData(
+  const SCoRePrediction *leafPredictionsData = m_predictionsBlock->GetData(
       MEMORYDEVICE_CUDA);
 
 // ~12MB for 160x120 image
   predictions->ChangeDims(imgSize);
-  GPUForestPrediction *outPredictionsData = predictions->GetData(
+  SCoRePrediction *outPredictionsData = predictions->GetData(
       MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
@@ -84,7 +84,7 @@ void SCoReForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
   ORcudaKernelCheck;
 }
 
-GPUForestPrediction SCoReForest_CUDA::get_prediction(size_t treeIdx,
+SCoRePrediction SCoReForest_CUDA::get_prediction(size_t treeIdx,
     size_t leafIdx) const
 {
   if (treeIdx >= get_nb_trees())

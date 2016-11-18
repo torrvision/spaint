@@ -55,7 +55,7 @@ SCoReForest::~SCoReForest()
 }
 
 void SCoReForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
-    GPUForestPredictionsImage_Ptr &predictions)
+    SCoRePredictionsImage_Ptr &predictions)
 {
   {
 #ifdef ENABLE_TIMERS
@@ -216,7 +216,7 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
   m_nodeImage->Clear();
 
-  m_predictionsBlock = mbf.make_block<GPUForestPrediction>(totalNbLeaves);
+  m_predictionsBlock = mbf.make_block<SCoRePrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
 
   m_leafReservoirs.reset(new GPUReservoir_CUDA(RESERVOIR_SIZE, totalNbLeaves));
@@ -379,7 +379,7 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
     m_nbLeavesPerTree.push_back(nbLeavesAfter - nbLeavesBefore);
   }
 
-  m_predictionsBlock = mbf.make_block<GPUForestPrediction>(
+  m_predictionsBlock = mbf.make_block<SCoRePrediction>(
       m_leafPredictions.size());
   convert_predictions();
 
@@ -459,7 +459,7 @@ int SCoReForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
 
 void SCoReForest::convert_predictions()
 {
-  GPUForestPrediction *gpuPredictions = m_predictionsBlock->GetData(
+  SCoRePrediction *gpuPredictions = m_predictionsBlock->GetData(
       MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
@@ -473,12 +473,12 @@ void SCoReForest::convert_predictions()
         [](const std::vector<PredictedGaussianMean> &a, const std::vector<PredictedGaussianMean> &b)
         { return a[0]._nbPoints > b[0]._nbPoints;});
 
-    GPUForestPrediction &currentTargetPred = gpuPredictions[leafIdx];
+    SCoRePrediction &currentTargetPred = gpuPredictions[leafIdx];
     currentTargetPred.nbModes = 0; // Reset modes
 
     for (size_t modeIdx = 0;
         modeIdx < modes.size()
-            && currentTargetPred.nbModes < GPUForestPrediction::MAX_MODES;
+            && currentTargetPred.nbModes < SCoRePrediction::MAX_MODES;
         ++modeIdx)
     {
       const auto &mode = modes[modeIdx];

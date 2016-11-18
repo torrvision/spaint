@@ -32,7 +32,7 @@ __global__ void ck_init_random_generators(CUDARNG *randomGenerators,
 
 template<typename RNG>
 __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
-    const GPUForestPrediction *predictions, const Vector2i imgSize,
+    const SCoRePrediction *predictions, const Vector2i imgSize,
     RNG *randomGenerators, PoseCandidate *poseCandidates, int *nbPoseCandidates,
     int maxNbPoseCandidates,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
@@ -63,7 +63,7 @@ __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
 }
 
 __global__ void ck_compute_energies(const RGBDPatchFeature *features,
-    const GPUForestPrediction *predictions, const int *inlierIndices,
+    const SCoRePrediction *predictions, const int *inlierIndices,
     uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
   const int tId = threadIdx.x;
@@ -115,7 +115,7 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
 
 template<bool useMask, typename RNG>
 __global__ void ck_sample_inliers(const RGBDPatchFeature *patchFeaturesData,
-    const GPUForestPrediction *predictionsData, const Vector2i imgSize,
+    const SCoRePrediction *predictionsData, const Vector2i imgSize,
     RNG *randomGenerators, int *inlierIndices, int *inlierCount,
     int nbMaxSamples, int *inlierMaskData = NULL)
 {
@@ -163,7 +163,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 {
   const Vector2i imgSize = m_featureImage->noDims;
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
-  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
+  const SCoRePrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
   CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
@@ -205,7 +205,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
 
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CUDA);
-  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
+  const SCoRePrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
   const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliers = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
@@ -231,7 +231,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   const Vector2i imgSize = m_featureImage->noDims;
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CUDA);
-  const GPUForestPrediction *predictionsData = m_predictionsImage->GetData(
+  const SCoRePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
   int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);

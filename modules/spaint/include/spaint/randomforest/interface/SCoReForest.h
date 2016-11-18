@@ -54,7 +54,7 @@ public:
 
   void reset_predictions();
   void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
-      GPUForestPredictionsImage_Ptr &predictions);
+      SCoRePredictionsImage_Ptr &predictions);
   void add_features_to_forest(const RGBDPatchFeatureImage_CPtr &features);
   void update_forest();
 
@@ -64,7 +64,7 @@ public:
   size_t get_nb_trees() const;
   size_t get_nb_nodes_in_tree(size_t treeIdx) const;
   size_t get_nb_leaves_in_tree(size_t treeIdx) const;
-  virtual GPUForestPrediction get_prediction(size_t treeIdx,
+  virtual SCoRePrediction get_prediction(size_t treeIdx,
       size_t leafIdx) const = 0;
 
 protected:
@@ -72,7 +72,7 @@ protected:
   std::vector<int> m_nbLeavesPerTree;
 
   NodeImage_Ptr m_nodeImage;
-  GPUForestPredictionsBlock_Ptr m_predictionsBlock;
+  SCoRePredictionsBlock_Ptr m_predictionsBlock;
   PositionReservoir_Ptr m_leafReservoirs;
   GPUClusterer_Ptr m_gpuClusterer;
 
@@ -83,7 +83,7 @@ protected:
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
   virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
-      GPUForestPredictionsImage_Ptr &predictions) const = 0;
+      SCoRePredictionsImage_Ptr &predictions) const = 0;
 
 private:
   SCoReForest();

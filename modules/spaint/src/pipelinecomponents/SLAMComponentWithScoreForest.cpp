@@ -63,7 +63,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           settings->deviceType);
   m_featureImage = mbf.make_image<RGBDPatchFeature>();
-  m_predictionsImage = mbf.make_image<GPUForestPrediction>();
+  m_predictionsImage = mbf.make_image<SCoRePrediction>();
 
   const bf::path relocalizationForestPath = bf::path(
       m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
@@ -210,7 +210,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 // For each prediction print centroids, covariances, nbInliers
     for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const GPUForestPrediction p = m_scoreForest->get_prediction(treeIdx,
+      const SCoRePrediction p = m_scoreForest->get_prediction(treeIdx,
           predictionIndices[treeIdx]);
       std::cout << p.nbModes << ' ' << predictionIndices[treeIdx] << '\n';
       for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)

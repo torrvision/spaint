@@ -16,7 +16,7 @@ public:
   GPUClusterer_CUDA(float sigma, float tau, int minClusterSize);
 
   virtual void find_modes(const PositionReservoir_CPtr &reservoirs,
-      GPUForestPredictionsBlock_Ptr &predictions, size_t startIdx,
+      SCoRePredictionsBlock_Ptr &predictions, size_t startIdx,
       size_t count);
 
 private:

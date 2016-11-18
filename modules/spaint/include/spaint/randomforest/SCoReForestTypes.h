@@ -23,7 +23,7 @@ struct SCoReMode
   int nbInliers;
 };
 
-struct GPUForestPrediction
+struct SCoRePrediction
 {
   enum
   {
@@ -75,13 +75,13 @@ struct GPUForestPrediction
   }
 };
 
-typedef ORUtils::MemoryBlock<GPUForestPrediction> GPUForestPredictionsBlock;
-typedef boost::shared_ptr<GPUForestPredictionsBlock> GPUForestPredictionsBlock_Ptr;
-typedef boost::shared_ptr<const GPUForestPredictionsBlock> GPUForestPredictionsBlock_CPtr;
+typedef ORUtils::MemoryBlock<SCoRePrediction> SCoRePredictionsBlock;
+typedef boost::shared_ptr<SCoRePredictionsBlock> SCoRePredictionsBlock_Ptr;
+typedef boost::shared_ptr<const SCoRePredictionsBlock> SCoRePredictionsBlock_CPtr;
 
-typedef ORUtils::Image<GPUForestPrediction> GPUForestPredictionsImage;
-typedef boost::shared_ptr<GPUForestPredictionsImage> GPUForestPredictionsImage_Ptr;
-typedef boost::shared_ptr<const GPUForestPredictionsImage> GPUForestPredictionsImage_CPtr;
+typedef ORUtils::Image<SCoRePrediction> SCoRePredictionsImage;
+typedef boost::shared_ptr<SCoRePredictionsImage> SCoRePredictionsImage_Ptr;
+typedef boost::shared_ptr<const SCoRePredictionsImage> SCoRePredictionsImage_CPtr;
 
 enum
 {
