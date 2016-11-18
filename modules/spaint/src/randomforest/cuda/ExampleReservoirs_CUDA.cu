@@ -31,7 +31,8 @@ inline ExampleType make_example_from_feature(const FeatureType &feature);
 
 template<>
 _CPU_AND_GPU_CODE_
-inline PositionColourExample make_example_from_feature<PositionColourExample, RGBDPatchFeature>(const RGBDPatchFeature &feature)
+inline PositionColourExample make_example_from_feature<PositionColourExample,
+    RGBDPatchFeature>(const RGBDPatchFeature &feature)
 {
   PositionColourExample res;
   res.position = feature.position.toVector3();
@@ -40,9 +41,9 @@ inline PositionColourExample make_example_from_feature<PositionColourExample, RG
   return res;
 }
 
-template<typename ExampleType, typename FeatureType>
+template<typename ExampleType, typename FeatureType, typename LeafType>
 __global__ void ck_add_examples(const FeatureType *features,
-    const LeafIndices *leafIndices, Vector2i imgSize, CUDARNG *randomStates,
+    const LeafType *leafIndices, Vector2i imgSize, CUDARNG *randomStates,
     ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls,
     uint32_t reservoirCapacity)
 {
@@ -55,7 +56,7 @@ __global__ void ck_add_examples(const FeatureType *features,
   const int linearIdx = y * imgSize.x + x;
 
   const FeatureType &feature = features[linearIdx];
-  const LeafIndices leaves = leafIndices[linearIdx];
+  const LeafType leaves = leafIndices[linearIdx];
 
   if (!feature.valid())
     return;
@@ -97,10 +98,11 @@ __global__ void ck_add_examples(const FeatureType *features,
   }
 }
 
-template<typename ExampleType, typename FeatureType>
-ExampleReservoirs_CUDA<ExampleType, FeatureType>::ExampleReservoirs_CUDA(
+template<typename ExampleType, typename FeatureType, typename LeafType>
+ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::ExampleReservoirs_CUDA(
     size_t capacity, size_t nbLeaves, uint32_t rngSeed) :
-    ExampleReservoirs<ExampleType, FeatureType>(capacity, nbLeaves, rngSeed)
+    ExampleReservoirs<ExampleType, FeatureType, LeafType>(capacity, nbLeaves,
+        rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomStates = mbf.make_block<CUDARNG>();
@@ -112,10 +114,9 @@ ExampleReservoirs_CUDA<ExampleType, FeatureType>::ExampleReservoirs_CUDA(
   init_random();
 }
 
-template<typename ExampleType, typename FeatureType>
-void ExampleReservoirs_CUDA<ExampleType, FeatureType>::add_examples(
-    const RGBDPatchFeatureImage_CPtr &features,
-    const LeafIndicesImage_CPtr &leafIndices)
+template<typename ExampleType, typename FeatureType, typename LeafType>
+void ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::add_examples(
+    const FeatureImage_CPtr &features, const LeafImage_CPtr &leafIndices)
 {
   const Vector2i imgSize = features->noDims;
   const int nbExamples = imgSize.width * imgSize.height;
@@ -143,16 +144,16 @@ void ExampleReservoirs_CUDA<ExampleType, FeatureType>::add_examples(
   ORcudaKernelCheck;
 }
 
-template<typename ExampleType, typename FeatureType>
-void ExampleReservoirs_CUDA<ExampleType, FeatureType>::clear()
+template<typename ExampleType, typename FeatureType, typename LeafType>
+void ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::clear()
 {
   m_reservoirsSize->Clear();
   m_reservoirsAddCalls->Clear();
   init_random();
 }
 
-template<typename ExampleType, typename FeatureType>
-void ExampleReservoirs_CUDA<ExampleType, FeatureType>::init_random()
+template<typename ExampleType, typename FeatureType, typename LeafType>
+void ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::init_random()
 {
   const size_t nbStates = m_randomStates->dataSize;
 
@@ -168,5 +169,6 @@ void ExampleReservoirs_CUDA<ExampleType, FeatureType>::init_random()
   ORcudaKernelCheck;
 }
 
-template class ExampleReservoirs_CUDA<PositionColourExample, RGBDPatchFeature> ;
+template class ExampleReservoirs_CUDA<PositionColourExample, RGBDPatchFeature,
+    LeafIndices> ;
 }

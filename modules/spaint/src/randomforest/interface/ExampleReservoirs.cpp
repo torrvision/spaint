@@ -9,9 +9,9 @@
 namespace spaint
 {
 
-template<typename ExampleType, typename FeatureType>
-ExampleReservoirs<ExampleType, FeatureType>::ExampleReservoirs(size_t capacity,
-    size_t nbLeaves, uint32_t rngSeed)
+template<typename ExampleType, typename FeatureType, typename LeafType>
+ExampleReservoirs<ExampleType, FeatureType, LeafType>::ExampleReservoirs(
+    size_t capacity, size_t nbLeaves, uint32_t rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -27,36 +27,37 @@ ExampleReservoirs<ExampleType, FeatureType>::ExampleReservoirs(size_t capacity,
   m_reservoirsAddCalls->Clear();
 }
 
-template<typename ExampleType, typename FeatureType>
-ExampleReservoirs<ExampleType, FeatureType>::~ExampleReservoirs()
+template<typename ExampleType, typename FeatureType, typename LeafType>
+ExampleReservoirs<ExampleType, FeatureType, LeafType>::~ExampleReservoirs()
 {
 }
 
-template<typename ExampleType, typename FeatureType>
-typename ExampleReservoirs<ExampleType, FeatureType>::ExampleReservoirsImage_CPtr ExampleReservoirs<
-    ExampleType, FeatureType>::get_reservoirs() const
+template<typename ExampleType, typename FeatureType, typename LeafType>
+typename ExampleReservoirs<ExampleType, FeatureType, LeafType>::ExampleReservoirsImage_CPtr ExampleReservoirs<
+    ExampleType, FeatureType, LeafType>::get_reservoirs() const
 {
   return m_data;
 }
 
-template<typename ExampleType, typename FeatureType>
-ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType, FeatureType>::get_reservoirs_size() const
+template<typename ExampleType, typename FeatureType, typename LeafType>
+ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType, FeatureType, LeafType>::get_reservoirs_size() const
 {
   return m_reservoirsSize;
 }
 
-template<typename ExampleType, typename FeatureType>
-int ExampleReservoirs<ExampleType, FeatureType>::get_reservoirs_count() const
+template<typename ExampleType, typename FeatureType, typename LeafType>
+int ExampleReservoirs<ExampleType, FeatureType, LeafType>::get_reservoirs_count() const
 {
   return m_data->noDims.height;
 }
 
-template<typename ExampleType, typename FeatureType>
-int ExampleReservoirs<ExampleType, FeatureType>::get_capacity() const
+template<typename ExampleType, typename FeatureType, typename LeafType>
+int ExampleReservoirs<ExampleType, FeatureType, LeafType>::get_capacity() const
 {
   return m_data->noDims.width;
 }
 
-template class ExampleReservoirs<PositionColourExample, RGBDPatchFeature> ;
+template class ExampleReservoirs<PositionColourExample, RGBDPatchFeature,
+    LeafIndices> ;
 
 }
