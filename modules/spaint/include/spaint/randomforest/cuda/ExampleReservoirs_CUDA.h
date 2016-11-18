@@ -1,18 +1,18 @@
 /**
- * spaint: GPUReservoir_CUDA.h
+ * spaint: ExampleReservoirs_CUDA.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPURESERVOIRCUDA
-#define H_SPAINT_GPURESERVOIRCUDA
+#ifndef H_SPAINT_EXAMPLERESERVOIRSCUDA
+#define H_SPAINT_EXAMPLERESERVOIRSCUDA
 
-#include "../interface/GPUReservoir.h"
+#include "../interface/ExampleReservoirs.h"
 
 #include <curand_kernel.h>
 
 namespace spaint
 {
-class GPUReservoir_CUDA: public GPUReservoir
+class ExampleReservoirs_CUDA: public ExampleReservoirs
 {
 public:
   typedef curandState_t RandomState;
@@ -20,7 +20,7 @@ public:
   typedef boost::shared_ptr<RandomStateMemoryBlock> RandomStateMemoryBlock_Ptr;
   typedef boost::shared_ptr<const RandomStateMemoryBlock> RandomStateMemoryBlock_CPtr;
 
-  GPUReservoir_CUDA(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
+  ExampleReservoirs_CUDA(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
 
   virtual void add_examples(const RGBDPatchFeatureImage_CPtr &features,
       const LeafIndicesImage_CPtr &leafIndices);

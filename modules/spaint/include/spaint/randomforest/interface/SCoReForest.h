@@ -10,7 +10,7 @@
 
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "GPUClusterer.h"
-#include "GPUReservoir.h"
+#include "ExampleReservoirs.h"
 #include "../SCoReForestTypes.h"
 
 #include "ORUtils/Vector.h"

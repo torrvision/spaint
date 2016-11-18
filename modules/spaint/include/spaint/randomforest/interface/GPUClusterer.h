@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_GPUCLUSTERER
 #define H_SPAINT_GPUCLUSTERER
 
-#include "GPUReservoir.h"
+#include "ExampleReservoirs.h"
 #include "../SCoReForestTypes.h"
 
 #include <boost/shared_ptr.hpp>

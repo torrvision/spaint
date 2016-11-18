@@ -1,13 +1,14 @@
 /**
- * spaint: GPUReservoir.h
+ * spaint: ExampleReservoirs.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPURESERVOIR
-#define H_SPAINT_GPURESERVOIR
+#ifndef H_SPAINT_EXAMPLERESERVOIRS
+#define H_SPAINT_EXAMPLERESERVOIRS
 
 #include "ITMLib/Utils/ITMMath.h"
 
+#include "../../util/ITMMemoryBlockPtrTypes.h"
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "../SCoReForestTypes.h"
 
@@ -20,20 +21,20 @@ struct PositionColourExample
   Vector3u colour;
 };
 
-class GPUReservoir
+class ExampleReservoirs
 {
 public:
   typedef PositionColourExample ExampleType;
-  typedef ORUtils::Image<ExampleType> ExampleReservoirs;
-  typedef boost::shared_ptr<ExampleReservoirs> ExampleReservoirs_Ptr;
-  typedef boost::shared_ptr<const ExampleReservoirs> ExampleReservoirs_CPtr;
+  typedef ORUtils::Image<ExampleType> ExampleReservoirsImage;
+  typedef boost::shared_ptr<ExampleReservoirsImage> ExampleReservoirsImage_Ptr;
+  typedef boost::shared_ptr<const ExampleReservoirsImage> ExampleReservoirsImage_CPtr;
 
-  GPUReservoir(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
-  virtual ~GPUReservoir();
+  ExampleReservoirs(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
+  virtual ~ExampleReservoirs();
 
-  const ExampleReservoirs_CPtr get_reservoirs() const;
+  ExampleReservoirsImage_CPtr get_reservoirs() const;
 
-  const ITMIntImage_CPtr get_reservoirs_size() const;
+  ITMIntImage_CPtr get_reservoirs_size() const;
 
   int get_reservoirs_count() const;
 
@@ -44,7 +45,7 @@ public:
   virtual void clear() = 0;
 
 protected:
-  ExampleReservoirs_Ptr m_data;
+  ExampleReservoirsImage_Ptr m_data;
   ITMIntImage_Ptr m_reservoirsSize;
   ITMIntImage_Ptr m_reservoirsAddCalls;
 
@@ -52,7 +53,7 @@ protected:
   uint32_t m_rngSeed;
 };
 
-typedef GPUReservoir PositionReservoir;
+typedef ExampleReservoirs PositionReservoir;
 typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
 typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 

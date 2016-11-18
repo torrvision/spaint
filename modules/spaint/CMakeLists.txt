@@ -312,15 +312,15 @@ src/randomforest/cpu/PreemptiveRansac_CPU.cpp
 )
 
 SET(randomforest_cuda_sources
+src/randomforest/cuda/ExampleReservoirs_CUDA.cu
 src/randomforest/cuda/GPUClusterer_CUDA.cu
-src/randomforest/cuda/GPUReservoir_CUDA.cu
 src/randomforest/cuda/PreemptiveRansac_CUDA.cu
 src/randomforest/cuda/SCoReForest_CUDA.cu
 )
 
 SET(randomforest_interface_sources
+src/randomforest/interface/ExampleReservoirs.cpp
 src/randomforest/interface/GPUClusterer.cpp
-src/randomforest/interface/GPUReservoir.cpp
 src/randomforest/interface/PreemptiveRansac.cpp
 src/randomforest/interface/SCoReForest.cpp
 )
@@ -341,15 +341,15 @@ include/spaint/randomforest/cpu/PreemptiveRansac_CPU.h
 )
 
 SET(randomforest_cuda_headers
+include/spaint/randomforest/cuda/ExampleReservoirs_CUDA.h
 include/spaint/randomforest/cuda/GPUClusterer_CUDA.h
-include/spaint/randomforest/cuda/GPUReservoir_CUDA.h
 include/spaint/randomforest/cuda/PreemptiveRansac_CUDA.h
 include/spaint/randomforest/cuda/SCoReForest_CUDA.h
 )
 
 SET(randomforest_interface_headers
+include/spaint/randomforest/interface/ExampleReservoirs.h
 include/spaint/randomforest/interface/GPUClusterer.h
-include/spaint/randomforest/interface/GPUReservoir.h
 include/spaint/randomforest/interface/PreemptiveRansac.h
 include/spaint/randomforest/interface/SCoReForest.h
 )

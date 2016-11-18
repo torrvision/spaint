@@ -1,15 +1,16 @@
 /**
- * spaint: GPUReservoir.cpp
+ * spaint: ExampleReservoirs.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/interface/GPUReservoir.h"
+#include "randomforest/interface/ExampleReservoirs.h"
 #include "util/MemoryBlockFactory.h"
 
 namespace spaint
 {
 
-GPUReservoir::GPUReservoir(size_t capacity, size_t nbLeaves, uint32_t rngSeed)
+ExampleReservoirs::ExampleReservoirs(size_t capacity, size_t nbLeaves,
+    uint32_t rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -25,26 +26,26 @@ GPUReservoir::GPUReservoir(size_t capacity, size_t nbLeaves, uint32_t rngSeed)
   m_reservoirsAddCalls->Clear();
 }
 
-GPUReservoir::~GPUReservoir()
+ExampleReservoirs::~ExampleReservoirs()
 {
 }
 
-const GPUReservoir::ExampleReservoirs_CPtr GPUReservoir::get_reservoirs() const
+ExampleReservoirs::ExampleReservoirsImage_CPtr ExampleReservoirs::get_reservoirs() const
 {
   return m_data;
 }
 
-const ITMIntImage_CPtr GPUReservoir::get_reservoirs_size() const
+ITMIntImage_CPtr ExampleReservoirs::get_reservoirs_size() const
 {
   return m_reservoirsSize;
 }
 
-int GPUReservoir::get_reservoirs_count() const
+int ExampleReservoirs::get_reservoirs_count() const
 {
   return m_data->noDims.height;
 }
 
-int GPUReservoir::get_capacity() const
+int ExampleReservoirs::get_capacity() const
 {
   return m_data->noDims.width;
 }

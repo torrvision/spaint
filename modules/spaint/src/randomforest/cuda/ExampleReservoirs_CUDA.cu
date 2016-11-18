@@ -1,9 +1,9 @@
 /**
- * spaint: GPUReservoir_CUDA.cpp
+ * spaint: ExampleReservoirs_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/cuda/GPUReservoir_CUDA.h"
+#include "randomforest/cuda/ExampleReservoirs_CUDA.h"
 #include "util/MemoryBlockFactory.h"
 
 #include <device_atomic_functions.h>
@@ -12,7 +12,7 @@ namespace spaint
 {
 
 __global__ void ck_init_random_states(
-    GPUReservoir_CUDA::RandomState *randomStates, uint32_t nbStates,
+    ExampleReservoirs_CUDA::RandomState *randomStates, uint32_t nbStates,
     uint32_t seed)
 {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -25,8 +25,8 @@ __global__ void ck_init_random_states(
 
 __global__ void ck_add_examples(const RGBDPatchFeature *features,
     const LeafIndices *leafIndices, Vector2i imgSize,
-    GPUReservoir_CUDA::RandomState *randomStates,
-    GPUReservoir_CUDA::ExampleType *reservoirs, int *reservoirSize,
+    ExampleReservoirs_CUDA::RandomState *randomStates,
+    ExampleReservoirs_CUDA::ExampleType *reservoirs, int *reservoirSize,
     int *reservoirAddCalls, uint32_t reservoirCapacity)
 {
   const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -43,7 +43,7 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
   if (!feature.valid())
     return;
 
-  GPUReservoir_CUDA::ExampleType example;
+  ExampleReservoirs_CUDA::ExampleType example;
   example.position = feature.position.toVector3();
   example.colour = feature.colour;
 
@@ -80,9 +80,9 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
   }
 }
 
-GPUReservoir_CUDA::GPUReservoir_CUDA(size_t capacity, size_t nbLeaves,
+ExampleReservoirs_CUDA::ExampleReservoirs_CUDA(size_t capacity, size_t nbLeaves,
     uint32_t rngSeed) :
-    GPUReservoir(capacity, nbLeaves, rngSeed)
+    ExampleReservoirs(capacity, nbLeaves, rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomStates = mbf.make_block<RandomState>();
@@ -94,7 +94,7 @@ GPUReservoir_CUDA::GPUReservoir_CUDA(size_t capacity, size_t nbLeaves,
   init_random();
 }
 
-void GPUReservoir_CUDA::add_examples(const RGBDPatchFeatureImage_CPtr &features,
+void ExampleReservoirs_CUDA::add_examples(const RGBDPatchFeatureImage_CPtr &features,
     const LeafIndicesImage_CPtr &leafIndices)
 {
   const Vector2i imgSize = features->noDims;
@@ -123,14 +123,14 @@ void GPUReservoir_CUDA::add_examples(const RGBDPatchFeatureImage_CPtr &features,
   ORcudaKernelCheck;
 }
 
-void GPUReservoir_CUDA::clear()
+void ExampleReservoirs_CUDA::clear()
 {
   m_reservoirsSize->Clear();
   m_reservoirsAddCalls->Clear();
   init_random();
 }
 
-void GPUReservoir_CUDA::init_random()
+void ExampleReservoirs_CUDA::init_random()
 {
   const int nbStates = m_randomStates->dataSize;
   RandomState *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
