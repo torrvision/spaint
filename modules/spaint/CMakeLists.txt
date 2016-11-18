@@ -342,6 +342,7 @@ include/spaint/randomforest/cpu/PreemptiveRansac_CPU.h
 
 SET(randomforest_cuda_headers
 include/spaint/randomforest/cuda/ExampleReservoirs_CUDA.h
+include/spaint/randomforest/cuda/ExampleReservoirs_CUDA.tcu
 include/spaint/randomforest/cuda/GPUClusterer_CUDA.h
 include/spaint/randomforest/cuda/PreemptiveRansac_CUDA.h
 include/spaint/randomforest/cuda/SCoReForest_CUDA.h
@@ -349,6 +350,7 @@ include/spaint/randomforest/cuda/SCoReForest_CUDA.h
 
 SET(randomforest_interface_headers
 include/spaint/randomforest/interface/ExampleReservoirs.h
+include/spaint/randomforest/interface/ExampleReservoirs.tpp
 include/spaint/randomforest/interface/GPUClusterer.h
 include/spaint/randomforest/interface/PreemptiveRansac.h
 include/spaint/randomforest/interface/SCoReForest.h
