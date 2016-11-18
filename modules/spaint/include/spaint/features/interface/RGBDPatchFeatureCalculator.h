@@ -8,7 +8,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include "RGBDPatchFeature.h"
-#include "ITMLib/Utils/ITMImageTypes.h"
+#include "../../util/ITMImagePtrTypes.h"
+#include "../../util/ITMMemoryBlockPtrTypes.h"
 
 namespace spaint
 {
@@ -34,11 +35,11 @@ public:
 protected:
   uint32_t m_featureStep;
 
-  boost::shared_ptr<ORUtils::MemoryBlock<Vector4i> > m_offsetsRgb;
-  boost::shared_ptr<ORUtils::MemoryBlock<uchar> > m_channelsRgb;
+  ITMInt4MemoryBlock_Ptr m_offsetsRgb;
+  ITMUCharMemoryBlock_Ptr m_channelsRgb;
   bool m_normalizeRgb;
 
-  boost::shared_ptr<ORUtils::MemoryBlock<Vector4i> > m_offsetsDepth;
+  ITMInt4MemoryBlock_Ptr m_offsetsDepth;
   bool m_normalizeDepth;
 };
 
