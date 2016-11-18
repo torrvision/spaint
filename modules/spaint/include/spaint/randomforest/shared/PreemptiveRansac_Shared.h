@@ -17,9 +17,7 @@ namespace
 {
 enum
 {
-  N_POINTS_FOR_KABSCH = 3,
-  MAX_CANDIDATE_GENERATION_ITERATIONS = 6000,
-  SAMPLE_INLIER_ITERATIONS = 50
+  MAX_CANDIDATE_GENERATION_ITERATIONS = 6000, SAMPLE_INLIER_ITERATIONS = 50
 };
 }
 
@@ -36,11 +34,11 @@ inline bool preemptive_ransac_generate_candidate(
     float m_translationErrorMaxForCorrectPose)
 {
   int selectedPixelCount = 0;
-  int selectedPixelLinearIdx[N_POINTS_FOR_KABSCH];
-  int selectedPixelMode[N_POINTS_FOR_KABSCH];
+  int selectedPixelLinearIdx[PoseCandidate::KABSCH_POINTS];
+  int selectedPixelMode[PoseCandidate::KABSCH_POINTS];
 
   for (int iterationIdx = 0;
-      selectedPixelCount != N_POINTS_FOR_KABSCH
+      selectedPixelCount != PoseCandidate::KABSCH_POINTS
           && iterationIdx < MAX_CANDIDATE_GENERATION_ITERATIONS; ++iterationIdx)
   {
     const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width);
@@ -159,22 +157,23 @@ inline bool preemptive_ransac_generate_candidate(
   }
 
   // Reached limit of iterations
-  if (selectedPixelCount != N_POINTS_FOR_KABSCH)
+  if (selectedPixelCount != PoseCandidate::KABSCH_POINTS)
     return false;
 
   // Populate resulting pose candidate (except the actual pose that is computed on the CPU due to Kabsch)
-  poseCandidate.nbInliers = selectedPixelCount;
   poseCandidate.energy = 0.f;
-  poseCandidate.cameraId = -1;
 
   for (int s = 0; s < selectedPixelCount; ++s)
   {
     const int linearIdx = selectedPixelLinearIdx[s];
     const int modeIdx = selectedPixelMode[s];
 
-    poseCandidate.inliers[s].linearIdx = linearIdx;
-    poseCandidate.inliers[s].modeIdx = modeIdx;
-    poseCandidate.inliers[s].energy = 0.f;
+    const RGBDPatchFeature &selectedFeature = patchFeaturesData[linearIdx];
+    const GPUForestPrediction &selectedPrediction = predictionsData[linearIdx];
+    const GPUForestMode &selectedMode = selectedPrediction.modes[modeIdx];
+
+    poseCandidate.cameraPoints[s] = selectedFeature.position.toVector3();
+    poseCandidate.worldPoints[s] = selectedMode.position;
   }
 
   return true;

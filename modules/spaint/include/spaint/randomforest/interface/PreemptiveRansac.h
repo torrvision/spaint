@@ -22,21 +22,13 @@ struct PoseCandidate
 {
   enum
   {
-    MAX_INLIERS = 3 // 3 for Kabsch
-  };
-
-  struct Inlier
-  {
-    int linearIdx;
-    int modeIdx;
-    float energy;
+    KABSCH_POINTS = 3
   };
 
   Matrix4f cameraPose;
-  Inlier inliers[MAX_INLIERS];
-  int nbInliers;
+  Vector3f cameraPoints[KABSCH_POINTS];
+  Vector3f worldPoints[KABSCH_POINTS];
   float energy;
-  int cameraId;
 };
 
 _CPU_AND_GPU_CODE_ inline bool operator <(const PoseCandidate &a,
@@ -91,9 +83,6 @@ protected:
 
   void compute_candidate_poses_kabsch();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
-
-private:
-  Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const;
 };
 
 typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;

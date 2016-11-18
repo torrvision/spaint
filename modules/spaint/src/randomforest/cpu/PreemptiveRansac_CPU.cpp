@@ -29,7 +29,7 @@ void PreemptiveRansac_CPU::init_random()
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
 
   // Initialize random states
-  for (int i = 0; i < m_nbMaxPoseCandidates; ++i)
+  for (size_t i = 0; i < m_nbMaxPoseCandidates; ++i)
   {
     randomGenerators[i].reset(m_rngSeed + i);
   }
@@ -50,11 +50,10 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 #ifdef WITH_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int candidateIdx = 0; candidateIdx < m_nbMaxPoseCandidates;
+  for (size_t candidateIdx = 0; candidateIdx < m_nbMaxPoseCandidates;
       ++candidateIdx)
   {
     PoseCandidate candidate;
-    candidate.cameraId = candidateIdx;
 
     bool valid = preemptive_ransac_generate_candidate(features, predictions,
         imgSize, randomGenerators[candidateIdx], candidate,
@@ -133,7 +132,7 @@ void PreemptiveRansac_CPU::compute_and_sort_energies()
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int p = 0; p < nbPoseCandidates; ++p)
+  for (size_t p = 0; p < nbPoseCandidates; ++p)
   {
     compute_pose_energy(poseCandidates[p]);
   }

@@ -49,7 +49,6 @@ __global__ void ck_generate_pose_candidates(const RGBDPatchFeature *features,
     return;
 
   PoseCandidate candidate;
-  candidate.cameraId = candidateIdx;
 
   bool valid = preemptive_ransac_generate_candidate(features, predictions,
       imgSize, randomGenerators[candidateIdx], candidate,

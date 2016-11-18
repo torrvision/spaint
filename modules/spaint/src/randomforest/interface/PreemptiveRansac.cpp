@@ -150,78 +150,66 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
 namespace
 {
-void Kabsch_impl(Eigen::MatrixXf &P, Eigen::MatrixXf &Q,
-    Eigen::VectorXf &weights, Eigen::MatrixXf &resRot,
-    Eigen::VectorXf &resTrans)
+void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
+    Eigen::Vector3f &weights, Eigen::Matrix3f &resRot,
+    Eigen::Vector3f &resTrans)
 {
-  if (P.cols() != Q.cols() || P.rows() != Q.rows())
-    throw std::runtime_error("Kabsch: P and Q have different dimensions");
-  int D = P.rows();  // dimension of the space
-  int N = P.cols();  // number of points
-  Eigen::VectorXf normalizedWeights = Eigen::VectorXf(weights.size());
-
-  // normalize weights to sum to 1
-  {
-    float sumWeights = 0;
-    for (int i = 0; i < weights.size(); ++i)
-    {
-      sumWeights += weights(i);
-    }
-    normalizedWeights = weights * (1.0f / sumWeights);
-  }
+  const int D = P.rows();  // dimension of the space
+  const int N = P.cols();  // number of points
+  const Eigen::Vector3f normalizedWeights = weights / weights.sum();
 
   // Centroids
-  Eigen::VectorXf p0 = P * normalizedWeights;
-  Eigen::VectorXf q0 = Q * normalizedWeights;
-  Eigen::VectorXf v1 = Eigen::VectorXf::Ones(N);
+  const Eigen::Vector3f p0 = P * normalizedWeights;
+  const Eigen::Vector3f q0 = Q * normalizedWeights;
+  const Eigen::Vector3f v1 = Eigen::Vector3f::Ones();
 
-  Eigen::MatrixXf P_centred = P - p0 * v1.transpose(); // translating P to center the origin
-  Eigen::MatrixXf Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
+  const Eigen::Matrix3f P_centred = P - p0 * v1.transpose(); // translating P to center the origin
+  const Eigen::Matrix3f Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
 
-      // Covariance between both matrices
-  Eigen::MatrixXf C = P_centred * normalizedWeights.asDiagonal()
+  // Covariance between both matrices
+  const Eigen::Matrix3f C = P_centred * normalizedWeights.asDiagonal()
       * Q_centred.transpose();
 
   // SVD
-  Eigen::JacobiSVD<Eigen::MatrixXf> svd(C,
+  Eigen::JacobiSVD<Eigen::Matrix3f> svd(C,
       Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-  Eigen::MatrixXf V = svd.matrixU();
-  Eigen::VectorXf S = svd.singularValues();
-  Eigen::MatrixXf W = svd.matrixV();
-  Eigen::MatrixXf I = Eigen::MatrixXf::Identity(D, D);
+  const Eigen::Matrix3f V = svd.matrixU();
+  const Eigen::Vector3f S = svd.singularValues();
+  const Eigen::Matrix3f W = svd.matrixV();
+  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
 
   if ((V * W.transpose()).determinant() < 0)
+  {
     I(D - 1, D - 1) = -1;
+  }
 
   // Recover the rotation and translation
   resRot = W * I * V.transpose();
   resTrans = q0 - resRot * p0;
-
-  return;
 }
 
-void Kabsch_impl(Eigen::MatrixXf &P, Eigen::MatrixXf &Q,
-    Eigen::MatrixXf &resRot, Eigen::VectorXf &resTrans)
+void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
+    Eigen::Matrix3f &resRot, Eigen::Vector3f &resTrans)
 {
-  Eigen::VectorXf weights = Eigen::VectorXf::Ones(P.cols());
-  Kabsch_impl(P, Q, weights, resRot, resTrans);
-}
+  Eigen::Vector3f weights = Eigen::Vector3f::Ones();
+  Kabsch(P, Q, weights, resRot, resTrans);
 }
 
-Eigen::Matrix4f PreemptiveRansac::Kabsch(Eigen::MatrixXf &P,
-    Eigen::MatrixXf &Q) const
+Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P,
+    Eigen::Matrix3f &Q)
 {
-  Eigen::MatrixXf resRot;
-  Eigen::VectorXf resTrans;
+  Eigen::Matrix3f resRot;
+  Eigen::Vector3f resTrans;
 
-  Kabsch_impl(P, Q, resRot, resTrans);
+  Kabsch(P, Q, resRot, resTrans);
 
   // recompose R + t in Rt
   Eigen::Matrix4f res;
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
+}
 }
 
 void PreemptiveRansac::update_candidate_poses()
@@ -246,23 +234,22 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 
 //  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
 
+#ifdef WITH_OPENMP
 #pragma omp parallel for
-  for (int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
+#endif
+  for (size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
     PoseCandidate &candidate = poseCandidates[candidateIdx];
 
-    Eigen::MatrixXf localPoints(3, candidate.nbInliers);
-    Eigen::MatrixXf worldPoints(3, candidate.nbInliers);
-    for (int s = 0; s < candidate.nbInliers; ++s)
-    {
-      const int linearIdx = candidate.inliers[s].linearIdx;
-      const int modeIdx = candidate.inliers[s].modeIdx;
-      const GPUForestPrediction &pred = predictions[linearIdx];
+    Eigen::Matrix3f localPoints;
+    Eigen::Matrix3f worldPoints;
 
+    for (int s = 0; s < PoseCandidate::KABSCH_POINTS; ++s)
+    {
       localPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          features[linearIdx].position.v);
+          candidate.cameraPoints[s].v);
       worldPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          pred.modes[modeIdx].position.v);
+          candidate.worldPoints[s].v);
     }
 
     Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints,
