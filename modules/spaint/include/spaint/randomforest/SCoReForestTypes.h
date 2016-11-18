@@ -15,7 +15,6 @@ namespace spaint
 struct GPUForestMode
 {
   Vector3f position;
-//  Matrix3f positionCovariance; // Seems not needed
   Matrix3f positionInvCovariance; // Needed to compute Mahalanobis distance
   float determinant;
 
