@@ -21,10 +21,10 @@ struct PositionColourExample
   Vector3u colour;
 };
 
+template<typename ExampleType>
 class ExampleReservoirs
 {
 public:
-  typedef PositionColourExample ExampleType;
   typedef ORUtils::Image<ExampleType> ExampleReservoirsImage;
   typedef boost::shared_ptr<ExampleReservoirsImage> ExampleReservoirsImage_Ptr;
   typedef boost::shared_ptr<const ExampleReservoirsImage> ExampleReservoirsImage_CPtr;
@@ -53,7 +53,7 @@ protected:
   uint32_t m_rngSeed;
 };
 
-typedef ExampleReservoirs PositionReservoir;
+typedef ExampleReservoirs<PositionColourExample> PositionReservoir;
 typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
 typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 

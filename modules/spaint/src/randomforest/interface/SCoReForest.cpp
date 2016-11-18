@@ -219,7 +219,9 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
   m_predictionsBlock = mbf.make_block<SCoRePrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
 
-  m_leafReservoirs.reset(new ExampleReservoirs_CUDA(RESERVOIR_SIZE, totalNbLeaves));
+  m_leafReservoirs.reset(
+      new ExampleReservoirs_CUDA<PositionColourExample>(RESERVOIR_SIZE,
+          totalNbLeaves));
 
 #ifdef RANDOM_FEATURES
   tvgutil::RandomNumberGenerator rng(42);
@@ -398,7 +400,8 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
     boost::timer::auto_cpu_timer t(6,
         "creating and clearing reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
     m_leafReservoirs.reset(
-        new ExampleReservoirs_CUDA(RESERVOIR_SIZE, m_predictionsBlock->dataSize));
+        new ExampleReservoirs_CUDA<PositionColourExample>(RESERVOIR_SIZE,
+            m_predictionsBlock->dataSize));
   }
 }
 

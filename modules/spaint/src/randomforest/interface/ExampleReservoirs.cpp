@@ -9,8 +9,9 @@
 namespace spaint
 {
 
-ExampleReservoirs::ExampleReservoirs(size_t capacity, size_t nbLeaves,
-    uint32_t rngSeed)
+template<typename ExampleType>
+ExampleReservoirs<ExampleType>::ExampleReservoirs(size_t capacity,
+    size_t nbLeaves, uint32_t rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -26,28 +27,36 @@ ExampleReservoirs::ExampleReservoirs(size_t capacity, size_t nbLeaves,
   m_reservoirsAddCalls->Clear();
 }
 
-ExampleReservoirs::~ExampleReservoirs()
+template<typename ExampleType>
+ExampleReservoirs<ExampleType>::~ExampleReservoirs()
 {
 }
 
-ExampleReservoirs::ExampleReservoirsImage_CPtr ExampleReservoirs::get_reservoirs() const
+template<typename ExampleType>
+typename ExampleReservoirs<ExampleType>::ExampleReservoirsImage_CPtr ExampleReservoirs<
+    ExampleType>::get_reservoirs() const
 {
   return m_data;
 }
 
-ITMIntMemoryBlock_CPtr ExampleReservoirs::get_reservoirs_size() const
+template<typename ExampleType>
+ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoirs_size() const
 {
   return m_reservoirsSize;
 }
 
-int ExampleReservoirs::get_reservoirs_count() const
+template<typename ExampleType>
+int ExampleReservoirs<ExampleType>::get_reservoirs_count() const
 {
   return m_data->noDims.height;
 }
 
-int ExampleReservoirs::get_capacity() const
+template<typename ExampleType>
+int ExampleReservoirs<ExampleType>::get_capacity() const
 {
   return m_data->noDims.width;
 }
+
+template class ExampleReservoirs<PositionColourExample> ;
 
 }

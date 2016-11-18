@@ -8,26 +8,30 @@
 
 #include "../interface/ExampleReservoirs.h"
 
-#include <curand_kernel.h>
+#include "tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h"
 
 namespace spaint
 {
-class ExampleReservoirs_CUDA: public ExampleReservoirs
+template<typename ExampleType>
+class ExampleReservoirs_CUDA: public ExampleReservoirs<ExampleType>
 {
 public:
-  typedef curandState_t RandomState;
-  typedef ORUtils::MemoryBlock<RandomState> RandomStateMemoryBlock;
-  typedef boost::shared_ptr<RandomStateMemoryBlock> RandomStateMemoryBlock_Ptr;
-  typedef boost::shared_ptr<const RandomStateMemoryBlock> RandomStateMemoryBlock_CPtr;
-
   ExampleReservoirs_CUDA(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
 
   virtual void add_examples(const RGBDPatchFeatureImage_CPtr &features,
       const LeafIndicesImage_CPtr &leafIndices);
   virtual void clear();
 
+protected:
+  using ExampleReservoirs<ExampleType>::m_data;
+  using ExampleReservoirs<ExampleType>::m_reservoirsSize;
+  using ExampleReservoirs<ExampleType>::m_reservoirsAddCalls;
+
+  using ExampleReservoirs<ExampleType>::m_reservoirCapacity;
+  using ExampleReservoirs<ExampleType>::m_rngSeed;
+
 private:
-  RandomStateMemoryBlock_Ptr m_randomStates; // Maybe in the cuda class
+  tvgutil::CUDARNGMemoryBlock_Ptr m_randomStates;
 
   void init_random();
 };
