@@ -21,13 +21,17 @@ struct PositionColourExample
   Vector3u colour;
 };
 
-template<typename ExampleType>
+template<typename ExampleType, typename FeatureType>
 class ExampleReservoirs
 {
 public:
   typedef ORUtils::Image<ExampleType> ExampleReservoirsImage;
   typedef boost::shared_ptr<ExampleReservoirsImage> ExampleReservoirsImage_Ptr;
   typedef boost::shared_ptr<const ExampleReservoirsImage> ExampleReservoirsImage_CPtr;
+
+  typedef ORUtils::Image<FeatureType> FeatureImage;
+  typedef boost::shared_ptr<FeatureImage> FeatureImage_Ptr;
+  typedef boost::shared_ptr<const FeatureImage> FeatureImage_CPtr;
 
   ExampleReservoirs(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
   virtual ~ExampleReservoirs();
@@ -40,7 +44,7 @@ public:
 
   int get_capacity() const;
 
-  virtual void add_examples(const RGBDPatchFeatureImage_CPtr &features,
+  virtual void add_examples(const FeatureImage_CPtr &features,
       const LeafIndicesImage_CPtr &leafIndices) = 0;
   virtual void clear() = 0;
 
@@ -53,7 +57,7 @@ protected:
   uint32_t m_rngSeed;
 };
 
-typedef ExampleReservoirs<PositionColourExample> PositionReservoir;
+typedef ExampleReservoirs<PositionColourExample, RGBDPatchFeature> PositionReservoir;
 typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
 typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 

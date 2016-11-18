@@ -9,8 +9,8 @@
 namespace spaint
 {
 
-template<typename ExampleType>
-ExampleReservoirs<ExampleType>::ExampleReservoirs(size_t capacity,
+template<typename ExampleType, typename FeatureType>
+ExampleReservoirs<ExampleType, FeatureType>::ExampleReservoirs(size_t capacity,
     size_t nbLeaves, uint32_t rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
@@ -27,36 +27,36 @@ ExampleReservoirs<ExampleType>::ExampleReservoirs(size_t capacity,
   m_reservoirsAddCalls->Clear();
 }
 
-template<typename ExampleType>
-ExampleReservoirs<ExampleType>::~ExampleReservoirs()
+template<typename ExampleType, typename FeatureType>
+ExampleReservoirs<ExampleType, FeatureType>::~ExampleReservoirs()
 {
 }
 
-template<typename ExampleType>
-typename ExampleReservoirs<ExampleType>::ExampleReservoirsImage_CPtr ExampleReservoirs<
-    ExampleType>::get_reservoirs() const
+template<typename ExampleType, typename FeatureType>
+typename ExampleReservoirs<ExampleType, FeatureType>::ExampleReservoirsImage_CPtr ExampleReservoirs<
+    ExampleType, FeatureType>::get_reservoirs() const
 {
   return m_data;
 }
 
-template<typename ExampleType>
-ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoirs_size() const
+template<typename ExampleType, typename FeatureType>
+ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType, FeatureType>::get_reservoirs_size() const
 {
   return m_reservoirsSize;
 }
 
-template<typename ExampleType>
-int ExampleReservoirs<ExampleType>::get_reservoirs_count() const
+template<typename ExampleType, typename FeatureType>
+int ExampleReservoirs<ExampleType, FeatureType>::get_reservoirs_count() const
 {
   return m_data->noDims.height;
 }
 
-template<typename ExampleType>
-int ExampleReservoirs<ExampleType>::get_capacity() const
+template<typename ExampleType, typename FeatureType>
+int ExampleReservoirs<ExampleType, FeatureType>::get_capacity() const
 {
   return m_data->noDims.width;
 }
 
-template class ExampleReservoirs<PositionColourExample> ;
+template class ExampleReservoirs<PositionColourExample, RGBDPatchFeature> ;
 
 }

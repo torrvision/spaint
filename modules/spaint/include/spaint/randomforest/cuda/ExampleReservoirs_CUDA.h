@@ -12,8 +12,8 @@
 
 namespace spaint
 {
-template<typename ExampleType>
-class ExampleReservoirs_CUDA: public ExampleReservoirs<ExampleType>
+template<typename ExampleType, typename FeatureType>
+class ExampleReservoirs_CUDA: public ExampleReservoirs<ExampleType, FeatureType>
 {
 public:
   ExampleReservoirs_CUDA(size_t capacity, size_t nbLeaves, uint32_t rngSeed = 42);
@@ -23,12 +23,12 @@ public:
   virtual void clear();
 
 protected:
-  using ExampleReservoirs<ExampleType>::m_data;
-  using ExampleReservoirs<ExampleType>::m_reservoirsSize;
-  using ExampleReservoirs<ExampleType>::m_reservoirsAddCalls;
+  using ExampleReservoirs<ExampleType, FeatureType>::m_data;
+  using ExampleReservoirs<ExampleType, FeatureType>::m_reservoirsSize;
+  using ExampleReservoirs<ExampleType, FeatureType>::m_reservoirsAddCalls;
 
-  using ExampleReservoirs<ExampleType>::m_reservoirCapacity;
-  using ExampleReservoirs<ExampleType>::m_rngSeed;
+  using ExampleReservoirs<ExampleType, FeatureType>::m_reservoirCapacity;
+  using ExampleReservoirs<ExampleType, FeatureType>::m_rngSeed;
 
 private:
   tvgutil::CUDARNGMemoryBlock_Ptr m_randomStates;

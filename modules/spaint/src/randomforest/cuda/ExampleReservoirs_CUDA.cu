@@ -3,6 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
+#include "ORUtils/PlatformIndependence.h"
 #include "randomforest/cuda/ExampleReservoirs_CUDA.h"
 #include "util/MemoryBlockFactory.h"
 
@@ -24,12 +25,26 @@ __global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
   randomStates[idx].reset(seed, idx);
 }
 
-template<typename ExampleType>
-__global__ void ck_add_examples(const RGBDPatchFeature *features,
-    const LeafIndices *leafIndices, Vector2i imgSize,
-    CUDARNG *randomStates,
-    ExampleType *reservoirs,
-    int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
+template<typename ExampleType, typename FeatureType>
+_CPU_AND_GPU_CODE_
+inline ExampleType make_example_from_feature(const FeatureType &feature);
+
+template<>
+_CPU_AND_GPU_CODE_
+inline PositionColourExample make_example_from_feature<PositionColourExample, RGBDPatchFeature>(const RGBDPatchFeature &feature)
+{
+  PositionColourExample res;
+  res.position = feature.position.toVector3();
+  res.colour = feature.colour;
+
+  return res;
+}
+
+template<typename ExampleType, typename FeatureType>
+__global__ void ck_add_examples(const FeatureType *features,
+    const LeafIndices *leafIndices, Vector2i imgSize, CUDARNG *randomStates,
+    ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls,
+    uint32_t reservoirCapacity)
 {
   const int x = threadIdx.x + blockIdx.x * blockDim.x;
   const int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -39,15 +54,13 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
 
   const int linearIdx = y * imgSize.x + x;
 
-  const RGBDPatchFeature &feature = features[linearIdx];
+  const FeatureType &feature = features[linearIdx];
   const LeafIndices leaves = leafIndices[linearIdx];
 
   if (!feature.valid())
     return;
 
-  ExampleType example;
-  example.position = feature.position.toVector3();
-  example.colour = feature.colour;
+  ExampleType example = make_example_from_feature<ExampleType>(feature);
 
   for (int treeIdx = 0; treeIdx < LeafIndices::value_size; ++treeIdx)
   {
@@ -70,7 +83,8 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
     {
       // Generate a random index and check if we have to evict an example
       // curand_uniform generates a number in ]0,1]
-      const int randomIdx = randomStates[linearIdx].generate_int_from_uniform(0, addCallsCount);
+      const int randomIdx = randomStates[linearIdx].generate_int_from_uniform(0,
+          addCallsCount);
 //      const int randomIdx = static_cast<int>(truncf(
 //          curand_uniform(&randomStates[linearIdx])
 //              * (reservoirCapacity + 0.999999f)));
@@ -83,10 +97,10 @@ __global__ void ck_add_examples(const RGBDPatchFeature *features,
   }
 }
 
-template<typename ExampleType>
-ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(size_t capacity,
-    size_t nbLeaves, uint32_t rngSeed) :
-    ExampleReservoirs<ExampleType>(capacity, nbLeaves, rngSeed)
+template<typename ExampleType, typename FeatureType>
+ExampleReservoirs_CUDA<ExampleType, FeatureType>::ExampleReservoirs_CUDA(
+    size_t capacity, size_t nbLeaves, uint32_t rngSeed) :
+    ExampleReservoirs<ExampleType, FeatureType>(capacity, nbLeaves, rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomStates = mbf.make_block<CUDARNG>();
@@ -98,8 +112,8 @@ ExampleReservoirs_CUDA<ExampleType>::ExampleReservoirs_CUDA(size_t capacity,
   init_random();
 }
 
-template<typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::add_examples(
+template<typename ExampleType, typename FeatureType>
+void ExampleReservoirs_CUDA<ExampleType, FeatureType>::add_examples(
     const RGBDPatchFeatureImage_CPtr &features,
     const LeafIndicesImage_CPtr &leafIndices)
 {
@@ -113,7 +127,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(
     init_random();
   }
 
-  const RGBDPatchFeature *featureData = features->GetData(MEMORYDEVICE_CUDA);
+  const FeatureType *featureData = features->GetData(MEMORYDEVICE_CUDA);
   const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
 
   CUDARNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
@@ -129,16 +143,16 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(
   ORcudaKernelCheck;
 }
 
-template<typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::clear()
+template<typename ExampleType, typename FeatureType>
+void ExampleReservoirs_CUDA<ExampleType, FeatureType>::clear()
 {
   m_reservoirsSize->Clear();
   m_reservoirsAddCalls->Clear();
   init_random();
 }
 
-template<typename ExampleType>
-void ExampleReservoirs_CUDA<ExampleType>::init_random()
+template<typename ExampleType, typename FeatureType>
+void ExampleReservoirs_CUDA<ExampleType, FeatureType>::init_random()
 {
   const size_t nbStates = m_randomStates->dataSize;
 
@@ -154,5 +168,5 @@ void ExampleReservoirs_CUDA<ExampleType>::init_random()
   ORcudaKernelCheck;
 }
 
-template class ExampleReservoirs_CUDA<PositionColourExample> ;
+template class ExampleReservoirs_CUDA<PositionColourExample, RGBDPatchFeature> ;
 }
