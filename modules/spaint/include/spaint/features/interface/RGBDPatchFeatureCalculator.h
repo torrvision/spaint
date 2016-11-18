@@ -19,12 +19,12 @@ public:
   RGBDPatchFeatureCalculator();
   virtual ~RGBDPatchFeatureCalculator();
 
-  virtual void ComputeFeature(const ITMUChar4Image *rgbImage,
+  virtual void compute_feature(const ITMUChar4Image *rgbImage,
       const ITMFloatImage *depthImage, const Vector4f &intrinsics,
       RGBDPatchFeatureImage *featuresImage,
       const Matrix4f &cameraPose) const = 0;
 
-  void ComputeFeature(const ITMUChar4Image *rgbImage,
+  void compute_feature(const ITMUChar4Image *rgbImage,
       const ITMFloatImage *depthImage, const Vector4f &intrinsics,
       RGBDPatchFeatureImage *featuresImage) const;
 

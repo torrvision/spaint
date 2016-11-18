@@ -49,7 +49,7 @@ RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
   m_offsetsDepth->UpdateDeviceFromHost();
 }
 
-void RGBDPatchFeatureCalculator_CUDA::ComputeFeature(
+void RGBDPatchFeatureCalculator_CUDA::compute_feature(
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
     const Vector4f &intrinsics, RGBDPatchFeatureImage *featuresImage,
     const Matrix4f &cameraPose) const

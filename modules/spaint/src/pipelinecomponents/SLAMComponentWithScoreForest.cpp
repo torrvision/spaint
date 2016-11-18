@@ -589,7 +589,7 @@ void SLAMComponentWithScoreForest::compute_features(
   boost::timer::auto_cpu_timer t(6,
       "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-  m_featureExtractor->ComputeFeature(inputRgbImage, inputDepthImage,
+  m_featureExtractor->compute_feature(inputRgbImage, inputDepthImage,
       depthIntrinsics, m_featureImage.get(), invCameraPose);
 }
 

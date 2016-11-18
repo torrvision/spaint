@@ -13,7 +13,7 @@ RGBDPatchFeatureCalculator_CPU::RGBDPatchFeatureCalculator_CPU() :
 {
 }
 
-void RGBDPatchFeatureCalculator_CPU::ComputeFeature(
+void RGBDPatchFeatureCalculator_CPU::compute_feature(
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
     const Vector4f &intrinsics, RGBDPatchFeatureImage *featuresImage,
     const Matrix4f &cameraPose) const
