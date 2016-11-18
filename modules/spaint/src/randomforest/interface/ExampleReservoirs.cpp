@@ -19,8 +19,8 @@ ExampleReservoirs::ExampleReservoirs(size_t capacity, size_t nbLeaves,
 
   // One row per leaf
   m_data = mbf.make_image<ExampleType>(Vector2i(capacity, nbLeaves));
-  m_reservoirsSize = mbf.make_image<int>(Vector2i(1, nbLeaves));
-  m_reservoirsAddCalls = mbf.make_image<int>(Vector2i(1, nbLeaves));
+  m_reservoirsSize = mbf.make_block<int>(nbLeaves);
+  m_reservoirsAddCalls = mbf.make_block<int>(nbLeaves);
 
   m_reservoirsSize->Clear();
   m_reservoirsAddCalls->Clear();
@@ -35,7 +35,7 @@ ExampleReservoirs::ExampleReservoirsImage_CPtr ExampleReservoirs::get_reservoirs
   return m_data;
 }
 
-ITMIntImage_CPtr ExampleReservoirs::get_reservoirs_size() const
+ITMIntMemoryBlock_CPtr ExampleReservoirs::get_reservoirs_size() const
 {
   return m_reservoirsSize;
 }

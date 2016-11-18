@@ -34,7 +34,7 @@ public:
 
   ExampleReservoirsImage_CPtr get_reservoirs() const;
 
-  ITMIntImage_CPtr get_reservoirs_size() const;
+  ITMIntMemoryBlock_CPtr get_reservoirs_size() const;
 
   int get_reservoirs_count() const;
 
@@ -46,8 +46,8 @@ public:
 
 protected:
   ExampleReservoirsImage_Ptr m_data;
-  ITMIntImage_Ptr m_reservoirsSize;
-  ITMIntImage_Ptr m_reservoirsAddCalls;
+  ITMIntMemoryBlock_Ptr m_reservoirsSize;
+  ITMIntMemoryBlock_Ptr m_reservoirsAddCalls;
 
   uint32_t m_reservoirCapacity;
   uint32_t m_rngSeed;
