@@ -1,17 +1,17 @@
 /**
- * spaint: GPUForest_Shared.h
+ * spaint: SCoReForest_Shared.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPUFORESTSHARED
-#define H_SPAINT_GPUFORESTSHARED
+#ifndef H_SPAINT_SCOREFORESTSHARED
+#define H_SPAINT_SCOREFORESTSHARED
 
 namespace spaint
 {
 _CPU_AND_GPU_CODE_
 inline void evaluate_forest_shared(const GPUForestNode* forestTexture,
     const RGBDPatchFeature* featureData, const Vector2i &imgSize,
-    GPUForest::LeafIndices* leafData, int x, int y)
+    SCoReForest::LeafIndices* leafData, int x, int y)
 {
   const int linear_feature_idx = y * imgSize.width + x;
   const RGBDPatchFeature &currentFeature = featureData[linear_feature_idx];
@@ -41,11 +41,11 @@ inline void evaluate_forest_shared(const GPUForestNode* forestTexture,
 _CPU_AND_GPU_CODE_
 inline void get_prediction_for_leaf_shared(
     const GPUForestPrediction* leafPredictions,
-    const GPUForest::LeafIndices* leafIndices,
+    const SCoReForest::LeafIndices* leafIndices,
     GPUForestPrediction* outPredictions, Vector2i imgSize, int x, int y)
 {
   const int linearIdx = y * imgSize.width + x;
-  const GPUForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
+  const SCoReForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
 
   // Setup the indices of the selected mode for each prediction
   int treeModeIdx[GPUFOREST_NTREES];

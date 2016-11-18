@@ -7,7 +7,7 @@
 
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 
-#include "randomforest/cuda/GPUForest_CUDA.h"
+#include "randomforest/cuda/SCoReForest_CUDA.h"
 #include "randomforest/cpu/PreemptiveRansac_CPU.h"
 #include "randomforest/cuda/PreemptiveRansac_CUDA.h"
 #include "util/MemoryBlockFactory.h"
@@ -70,7 +70,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
   std::cout << "Loading relocalization forest from: "
       << relocalizationForestPath << '\n';
-  m_gpuForest.reset(new GPUForest_CUDA(relocalizationForestPath.string()));
+  m_scoreForest.reset(new SCoReForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;
 
 //  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
@@ -187,7 +187,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     boost::timer::auto_cpu_timer t(6,
         "update forest, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_gpuForest->update_forest();
+    m_scoreForest->update_forest();
 //    cudaDeviceSynchronize();
   }
 
@@ -210,7 +210,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 // For each prediction print centroids, covariances, nbInliers
     for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const GPUForestPrediction p = m_gpuForest->get_prediction(treeIdx,
+      const GPUForestPrediction p = m_scoreForest->get_prediction(treeIdx,
           predictionIndices[treeIdx]);
       std::cout << p.nbModes << ' ' << predictionIndices[treeIdx] << '\n';
       for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
@@ -402,7 +402,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    m_gpuForest->add_features_to_forest(m_featureImage);
+    m_scoreForest->add_features_to_forest(m_featureImage);
 
     if (relocalizationTimer)
     {
@@ -599,7 +599,7 @@ void SLAMComponentWithScoreForest::evaluate_forest()
   boost::timer::auto_cpu_timer t(6,
       "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-  m_gpuForest->evaluate_forest(m_featureImage, m_predictionsImage);
+  m_scoreForest->evaluate_forest(m_featureImage, m_predictionsImage);
 }
 
 }

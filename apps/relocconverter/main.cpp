@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "spaint/randomforest/cuda/GPUForest_CUDA.h"
+#include "spaint/randomforest/cuda/SCoReForest_CUDA.h"
 
 #include <iostream>
 
@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
           learnFromTree, loadFeatures, randomSeed));
   m_dataset->LoadForest();
 
-  GPUForest_Ptr m_gpuForest(new GPUForest_CUDA(*m_dataset->GetForest()));
+  SCoReForest_Ptr m_scoreForest(new SCoReForest_CUDA(*m_dataset->GetForest()));
 
   std::cout << "Saving forest in: " << outputFile << std::endl;
-  m_gpuForest->save_structure_to_file(outputFile);
+  m_scoreForest->save_structure_to_file(outputFile);
 
 #if 0
   // Randomly select one prediction per tree
@@ -52,10 +52,10 @@ int main(int argc, char *argv[])
 
   std::vector<GPUForestPrediction> predictions;
   std::vector<size_t> predictionIndices;
-  for (size_t i = 0; i < m_gpuForest->get_nb_trees(); ++i)
+  for (size_t i = 0; i < m_scoreForest->get_nb_trees(); ++i)
   {
     boost::uniform_int<size_t> dist(0,
-        m_gpuForest->get_nb_leaves_in_tree(i) - 1);
+        m_scoreForest->get_nb_leaves_in_tree(i) - 1);
 
     size_t predictionIdx = 0;
     GPUForestPrediction p;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
       predictionIdx = dist(rng);
       std::cout << "Selecting prediction " << predictionIdx << " for tree " << i
           << '\n';
-      p = m_gpuForest->get_prediction(i, predictionIdx);
+      p = m_scoreForest->get_prediction(i, predictionIdx);
     }
 
     predictions.push_back(p);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
   }
 
   // For each prediction print centroids, covariances, nbInliers
-  for (size_t predictionIdx = 0; predictionIdx < m_gpuForest->get_nb_trees();
+  for (size_t predictionIdx = 0; predictionIdx < m_scoreForest->get_nb_trees();
       ++predictionIdx)
   {
     const GPUForestPrediction &p = predictions[predictionIdx];

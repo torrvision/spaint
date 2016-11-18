@@ -1,9 +1,9 @@
 /**
- * spaint: GPUForest.cpp
+ * spaint: SCoReForest.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/interface/GPUForest.h"
+#include "randomforest/interface/SCoReForest.h"
 
 #include <fstream>
 #include <iomanip>
@@ -27,7 +27,7 @@
 
 namespace spaint
 {
-GPUForest::GPUForest()
+SCoReForest::SCoReForest()
 {
   // Tentative values
   const float clustererSigma = 0.1f;
@@ -44,17 +44,17 @@ GPUForest::GPUForest()
   m_reservoirUpdateStartIdx = 0;
 }
 
-GPUForest::GPUForest(const std::string &fileName) :
-    GPUForest()
+SCoReForest::SCoReForest(const std::string &fileName) :
+    SCoReForest()
 {
   load_structure_from_file(fileName);
 }
 
-GPUForest::~GPUForest()
+SCoReForest::~SCoReForest()
 {
 }
 
-void GPUForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+void SCoReForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
     GPUForestPredictionsImage_Ptr &predictions)
 {
   {
@@ -74,13 +74,13 @@ void GPUForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
   }
 }
 
-void GPUForest::reset_predictions()
+void SCoReForest::reset_predictions()
 {
   m_predictionsBlock->Clear(); // Setting nbModes to 0 for each prediction would be enough.
   m_leafReservoirs->clear();
 }
 
-void GPUForest::add_features_to_forest(
+void SCoReForest::add_features_to_forest(
     const RGBDPatchFeatureImage_CPtr &features)
 {
   {
@@ -125,7 +125,7 @@ void GPUForest::add_features_to_forest(
     m_reservoirUpdateStartIdx = 0;
 }
 
-void GPUForest::update_forest()
+void SCoReForest::update_forest()
 {
   // We are back to the first reservoir that was updated when
   // the last batch of features were added to the forest.
@@ -156,7 +156,7 @@ void GPUForest::update_forest()
     m_reservoirUpdateStartIdx = 0;
 }
 
-void GPUForest::load_structure_from_file(const std::string &fileName)
+void SCoReForest::load_structure_from_file(const std::string &fileName)
 {
   // clean current forest (TODO: put in a function)
   m_forestImage.reset();
@@ -283,7 +283,7 @@ void GPUForest::load_structure_from_file(const std::string &fileName)
   m_forestImage->UpdateDeviceFromHost();
 }
 
-void GPUForest::save_structure_to_file(const std::string &fileName) const
+void SCoReForest::save_structure_to_file(const std::string &fileName) const
 {
   std::ofstream out(fileName, std::ios::trunc);
 
@@ -310,12 +310,12 @@ void GPUForest::save_structure_to_file(const std::string &fileName) const
   }
 }
 
-size_t GPUForest::get_nb_trees() const
+size_t SCoReForest::get_nb_trees() const
 {
   return GPUFOREST_NTREES;
 }
 
-size_t GPUForest::get_nb_nodes_in_tree(size_t treeIdx) const
+size_t SCoReForest::get_nb_nodes_in_tree(size_t treeIdx) const
 {
   if (treeIdx >= get_nb_trees())
     throw std::runtime_error("invalid treeIdx");
@@ -323,7 +323,7 @@ size_t GPUForest::get_nb_nodes_in_tree(size_t treeIdx) const
   return m_nbNodesPerTree[treeIdx];
 }
 
-size_t GPUForest::get_nb_leaves_in_tree(size_t treeIdx) const
+size_t SCoReForest::get_nb_leaves_in_tree(size_t treeIdx) const
 {
   if (treeIdx >= get_nb_trees())
     throw std::runtime_error("invalid treeIdx");
@@ -334,8 +334,8 @@ size_t GPUForest::get_nb_leaves_in_tree(size_t treeIdx) const
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################
 #ifdef WITH_SCOREFORESTS
 
-GPUForest::GPUForest(const EnsembleLearner &pretrained_forest) :
-    GPUForest()
+SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
+    SCoReForest()
 {
   // Convert list of nodes into an appropriate image
   const int nTrees = pretrained_forest.GetNbTrees();
@@ -403,7 +403,7 @@ GPUForest::GPUForest(const EnsembleLearner &pretrained_forest) :
   }
 }
 
-int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
+int SCoReForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
     int n_trees, int output_idx, int first_free_idx, GPUForestNode *gpu_nodes)
 {
   const Node* node = tree->GetNode(node_idx);
@@ -458,7 +458,7 @@ int GPUForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
   return first_free_idx;
 }
 
-void GPUForest::convert_predictions()
+void SCoReForest::convert_predictions()
 {
   GPUForestPrediction *gpuPredictions = m_predictionsBlock->GetData(
       MEMORYDEVICE_CPU);
