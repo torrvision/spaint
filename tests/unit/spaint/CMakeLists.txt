@@ -57,6 +57,7 @@ SOURCE_GROUP(sources FILES ${sources})
 ##########################################
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #

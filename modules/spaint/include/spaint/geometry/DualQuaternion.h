@@ -8,6 +8,8 @@
 
 #include <stdexcept>
 
+#include <boost/mpl/identity.hpp>
+
 #include <ORUtils/MathUtils.h>
 
 #include <tvgutil/misc/AttitudeUtil.h>
@@ -92,7 +94,7 @@ public:
    * \throws std::runtime_error If the rotation axis is invalid.
    */
   template <typename U>
-  static DualQuaternion<T> from_rotation(ORUtils::Vector3<U> axis, U angle)
+  static DualQuaternion<T> from_rotation(ORUtils::Vector3<U> axis, typename boost::mpl::identity<U>::type angle)
   {
     U axisLengthSquared = dot(axis, axis);
     if(fabs(axisLengthSquared - 1) > 1e-9)
@@ -380,6 +382,19 @@ private:
 };
 
 //#################### NON-MEMBER OPERATORS ####################
+
+/**
+ * \brief Checks whether two dual quaternions are equal.
+ *
+ * \param lhs The first dual quaternion.
+ * \param rhs The second dual quaternion.
+ * \return    true, if the two dual quaternions are equal, or false otherwise.
+ */
+template <typename T>
+bool operator==(const DualQuaternion<T>& lhs, const DualQuaternion<T>& rhs)
+{
+  return lhs.w == rhs.w && lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+}
 
 /**
  * \brief Scales a dual quaternion by the specified factor.

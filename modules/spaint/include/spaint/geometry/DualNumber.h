@@ -156,7 +156,7 @@ struct DualNumber
 template <typename T>
 bool operator==(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
 {
-  const T TOL = 1e-5f;
+  const T TOL = 1e-4f;
   return fabs(lhs.r - rhs.r) <= TOL && fabs(lhs.d - rhs.d) <= TOL;
 }
 
