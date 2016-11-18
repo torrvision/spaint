@@ -14,6 +14,8 @@ SET(suitename spaint)
 
 SET(testnames
 ColourConversion
+DualNumber
+DualQuaternion
 )
 
 IF(WITH_ARRAYFIRE)

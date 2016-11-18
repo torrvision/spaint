@@ -147,6 +147,20 @@ struct DualNumber
 //#################### NON-MEMBER OPERATORS ####################
 
 /**
+ * \brief Checks whether two dual numbers are equal.
+ *
+ * \param lhs The first dual number.
+ * \param rhs The second dual number.
+ * \return    true, if the two dual numbers are equal, or false otherwise.
+ */
+template <typename T>
+bool operator==(const DualNumber<T>& lhs, const DualNumber<T>& rhs)
+{
+  const T TOL = 1e-5f;
+  return fabs(lhs.r - rhs.r) <= TOL && fabs(lhs.d - rhs.d) <= TOL;
+}
+
+/**
  * \brief Adds two dual numbers together.
  *
  * \param lhs The first operand.
