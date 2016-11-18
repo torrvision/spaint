@@ -12,18 +12,6 @@
 
 namespace spaint
 {
-struct GPUForestNode
-{
-  int leftChildIdx; // No need to store the right child, it's left + 1
-  int leafIdx;    // Index of the associated leaf (-1 if the node is not a leaf)
-  int featureIdx;   // Index of the feature to evaluate;
-  float featureThreshold; // Feature threshold
-};
-
-typedef ORUtils::Image<GPUForestNode> GPUForestImage;
-typedef boost::shared_ptr<ORUtils::Image<GPUForestNode> > GPUForestImage_Ptr;
-typedef boost::shared_ptr<const ORUtils::Image<GPUForestNode> > GPUForestImage_CPtr;
-
 struct GPUForestMode
 {
   Vector3f position;

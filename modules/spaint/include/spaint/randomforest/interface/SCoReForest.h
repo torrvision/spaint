@@ -26,6 +26,18 @@ class SCoReForest
 {
   // Typedefs
 public:
+  struct NodeEntry
+  {
+    int leftChildIdx; // No need to store the right child, it's left + 1
+    int leafIdx;    // Index of the associated leaf (-1 if the node is not a leaf)
+    int featureIdx;   // Index of the feature to evaluate;
+    float featureThreshold; // Feature threshold
+  };
+
+  typedef ORUtils::Image<NodeEntry> NodeImage;
+  typedef boost::shared_ptr<ORUtils::Image<NodeEntry> > NodeImage_Ptr;
+  typedef boost::shared_ptr<const ORUtils::Image<NodeEntry> > NodeImage_CPtr;
+
   enum
   {
     RESERVOIR_SIZE = 1024, // Max number samples in a leaf reservoir
@@ -59,7 +71,7 @@ protected:
   std::vector<int> m_nbNodesPerTree;
   std::vector<int> m_nbLeavesPerTree;
 
-  GPUForestImage_Ptr m_forestImage;
+  NodeImage_Ptr m_nodeImage;
   GPUForestPredictionsBlock_Ptr m_predictionsBlock;
   PositionReservoir_Ptr m_leafReservoirs;
   GPUClusterer_Ptr m_gpuClusterer;
@@ -86,7 +98,7 @@ public:
 private:
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
       int n_trees, int output_idx, int first_free_idx,
-      GPUForestNode *gpu_nodes);
+      NodeEntry *gpu_nodes);
   void convert_predictions();
 
   std::vector<PredictionGaussianMean> m_leafPredictions;

@@ -9,7 +9,7 @@
 
 namespace spaint
 {
-__global__ void ck_evaluate_forest(const GPUForestNode* forestTexture,
+__global__ void ck_evaluate_forest(const SCoReForest::NodeEntry* forestTexture,
     const RGBDPatchFeature* featureData, Vector2i imgSize,
     SCoReForest::LeafIndices* leafData)
 {
@@ -44,8 +44,7 @@ SCoReForest_CUDA::SCoReForest_CUDA(const std::string &fileName) :
 void SCoReForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
     LeafIndicesImage_Ptr &leaf_indices) const
 {
-  const GPUForestNode* forestTexture = m_forestImage->GetData(
-      MEMORYDEVICE_CUDA);
+  const NodeEntry* forestTexture = m_nodeImage->GetData(MEMORYDEVICE_CUDA);
 
   const Vector2i imgSize = features->noDims;
   const RGBDPatchFeature* featureData = features->GetData(MEMORYDEVICE_CUDA);
@@ -85,13 +84,17 @@ void SCoReForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
   ORcudaKernelCheck;
 }
 
-GPUForestPrediction SCoReForest_CUDA::get_prediction(size_t treeIdx, size_t leafIdx) const
+GPUForestPrediction SCoReForest_CUDA::get_prediction(size_t treeIdx,
+    size_t leafIdx) const
 {
-  if(treeIdx >= get_nb_trees()) throw std::runtime_error("invalid treeIdx");
-  if(leafIdx >= get_nb_leaves_in_tree(treeIdx)) throw std::runtime_error("invalid leafIdx");
+  if (treeIdx >= get_nb_trees())
+    throw std::runtime_error("invalid treeIdx");
+  if (leafIdx >= get_nb_leaves_in_tree(treeIdx))
+    throw std::runtime_error("invalid leafIdx");
 
   size_t linearizedLeafIdx = leafIdx;
-  for(int i = 0; i < treeIdx; ++i) linearizedLeafIdx += get_nb_leaves_in_tree(i);
+  for (int i = 0; i < treeIdx; ++i)
+    linearizedLeafIdx += get_nb_leaves_in_tree(i);
 
   return m_predictionsBlock->GetElement(linearizedLeafIdx, MEMORYDEVICE_CUDA);
 }

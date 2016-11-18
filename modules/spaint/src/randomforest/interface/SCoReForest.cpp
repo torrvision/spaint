@@ -159,7 +159,7 @@ void SCoReForest::update_forest()
 void SCoReForest::load_structure_from_file(const std::string &fileName)
 {
   // clean current forest (TODO: put in a function)
-  m_forestImage.reset();
+  m_nodeImage.reset();
   m_predictionsBlock.reset();
   m_leafReservoirs.reset();
 
@@ -213,8 +213,8 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
 
   // Allocate data
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nbTrees, maxNbNodes));
-  m_forestImage->Clear();
+  m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
+  m_nodeImage->Clear();
 
   m_predictionsBlock = mbf.make_block<GPUForestPrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
@@ -226,12 +226,12 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
 #endif
 
   // Read all nodes.
-  GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
+  NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
   for (int treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
   {
     for (int nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
-      GPUForestNode& node = forestData[nodeIdx * nbTrees + treeIdx];
+      NodeEntry& node = forestData[nodeIdx * nbTrees + treeIdx];
       in >> node.leftChildIdx >> node.leafIdx >> node.featureIdx
           >> node.featureThreshold;
 
@@ -280,7 +280,7 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
   }
 
   // Update device forest
-  m_forestImage->UpdateDeviceFromHost();
+  m_nodeImage->UpdateDeviceFromHost();
 }
 
 void SCoReForest::save_structure_to_file(const std::string &fileName) const
@@ -297,13 +297,12 @@ void SCoReForest::save_structure_to_file(const std::string &fileName) const
   }
 
   // Then, for each tree, dump its nodes
-  const GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
+  const NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
   for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     for (int nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
-      const GPUForestNode& node = forestData[nodeIdx * GPUFOREST_NTREES
-          + treeIdx];
+      const NodeEntry& node = forestData[nodeIdx * GPUFOREST_NTREES + treeIdx];
       out << node.leftChildIdx << ' ' << node.leafIdx << ' ' << node.featureIdx
           << ' ' << std::setprecision(7) << node.featureThreshold << '\n';
     }
@@ -349,11 +348,11 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
 
   // Create texture storing the nodes
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_forestImage = mbf.make_image<GPUForestNode>(Vector2i(nTrees, maxNbNodes));
-  m_forestImage->Clear();
+  m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nTrees, maxNbNodes));
+  m_nodeImage->Clear();
 
   // Fill the nodes
-  GPUForestNode *forestData = m_forestImage->GetData(MEMORYDEVICE_CPU);
+  NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
 
   for (int treeIdx = 0; treeIdx < nTrees; ++treeIdx)
   {
@@ -385,7 +384,7 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
   convert_predictions();
 
   // NOPs if we use the CPU only implementation
-  m_forestImage->UpdateDeviceFromHost();
+  m_nodeImage->UpdateDeviceFromHost();
   m_predictionsBlock->UpdateDeviceFromHost();
 
   float meanShiftBandWidth = 0.1f;
@@ -404,10 +403,10 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
 }
 
 int SCoReForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
-    int n_trees, int output_idx, int first_free_idx, GPUForestNode *gpu_nodes)
+    int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes)
 {
   const Node* node = tree->GetNode(node_idx);
-  GPUForestNode &gpuNode = gpu_nodes[output_idx * n_trees + tree_idx];
+  NodeEntry &gpuNode = gpu_nodes[output_idx * n_trees + tree_idx];
 
   // The assumption is that output_idx is already reserved for the current node
   if (node->IsALeaf())

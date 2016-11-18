@@ -9,7 +9,7 @@
 namespace spaint
 {
 _CPU_AND_GPU_CODE_
-inline void evaluate_forest_shared(const GPUForestNode* forestTexture,
+inline void evaluate_forest_shared(const SCoReForest::NodeEntry* forestTexture,
     const RGBDPatchFeature* featureData, const Vector2i &imgSize,
     SCoReForest::LeafIndices* leafData, int x, int y)
 {
@@ -19,8 +19,8 @@ inline void evaluate_forest_shared(const GPUForestNode* forestTexture,
   for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     int currentNodeIdx = 0;
-    GPUForestNode node = forestTexture[currentNodeIdx * GPUFOREST_NTREES
-        + treeIdx];
+    SCoReForest::NodeEntry node = forestTexture[currentNodeIdx
+        * GPUFOREST_NTREES + treeIdx];
     bool isLeaf = node.leafIdx >= 0;
 
     while (!isLeaf)
