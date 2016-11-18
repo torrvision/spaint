@@ -197,7 +197,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   //    boost::timer::auto_cpu_timer t(6,
   //        "kabsch: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
   //#endif
-  compute_candidate_pose_kabsch();
+  compute_candidate_poses_kabsch();
 
   // Make the computed poses available to device
   m_poseCandidates->UpdateDeviceFromHost();
@@ -227,40 +227,6 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   thrust::device_ptr<PoseCandidate> candidatesEnd(
       poseCandidates + nbPoseCandidates);
   thrust::sort(candidatesStart, candidatesEnd);
-}
-
-void PreemptiveRansac_CUDA::compute_candidate_pose_kabsch()
-{
-  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
-  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
-      MEMORYDEVICE_CPU);
-  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
-  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-
-//  std::cout << "Generated " << nbPoseCandidates << " candidates." << std::endl;
-
-#pragma omp parallel for
-  for (int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
-  {
-    PoseCandidate &candidate = poseCandidates[candidateIdx];
-
-    Eigen::MatrixXf localPoints(3, candidate.nbInliers);
-    Eigen::MatrixXf worldPoints(3, candidate.nbInliers);
-    for (int s = 0; s < candidate.nbInliers; ++s)
-    {
-      const int linearIdx = candidate.inliers[s].linearIdx;
-      const int modeIdx = candidate.inliers[s].modeIdx;
-      const GPUForestPrediction &pred = predictions[linearIdx];
-
-      localPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          features[linearIdx].position.v);
-      worldPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          pred.modes[modeIdx].position.v);
-    }
-
-    Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints,
-        worldPoints);
-  }
 }
 
 void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)

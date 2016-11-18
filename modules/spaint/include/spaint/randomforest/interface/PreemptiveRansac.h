@@ -89,7 +89,10 @@ protected:
   virtual void compute_and_sort_energies() = 0;
   virtual void update_candidate_poses() = 0;
 
+  void compute_candidate_poses_kabsch();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
+
+private:
   Eigen::Matrix4f Kabsch(Eigen::MatrixXf &P, Eigen::MatrixXf &Q) const;
 };
 
