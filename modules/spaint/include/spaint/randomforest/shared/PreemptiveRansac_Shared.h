@@ -170,7 +170,7 @@ inline bool preemptive_ransac_generate_candidate(
 
     const RGBDPatchFeature &selectedFeature = patchFeaturesData[linearIdx];
     const GPUForestPrediction &selectedPrediction = predictionsData[linearIdx];
-    const GPUForestMode &selectedMode = selectedPrediction.modes[modeIdx];
+    const SCoReMode &selectedMode = selectedPrediction.modes[modeIdx];
 
     poseCandidate.cameraPoints[s] = selectedFeature.position.toVector3();
     poseCandidate.worldPoints[s] = selectedMode.position;

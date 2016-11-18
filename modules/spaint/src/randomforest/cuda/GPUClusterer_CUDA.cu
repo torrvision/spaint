@@ -334,7 +334,7 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
     const int modeIdx = atomicAdd(&reservoirPrediction.nbModes, 1);
 
     // Fill the mode
-    GPUForestMode &outMode = reservoirPrediction.modes[modeIdx];
+    SCoReMode &outMode = reservoirPrediction.modes[modeIdx];
     outMode.nbInliers = sampleCount;
     outMode.position = positionMean;
     outMode.determinant = positionDeterminant;

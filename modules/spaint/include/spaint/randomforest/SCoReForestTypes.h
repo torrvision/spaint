@@ -12,7 +12,7 @@
 
 namespace spaint
 {
-struct GPUForestMode
+struct SCoReMode
 {
   Vector3f position;
   Matrix3f positionInvCovariance; // Needed to compute Mahalanobis distance
@@ -30,7 +30,7 @@ struct GPUForestPrediction
     MAX_MODES = 10
   };
 
-  GPUForestMode modes[MAX_MODES];
+  SCoReMode modes[MAX_MODES];
   int nbModes;
 
   _CPU_AND_GPU_CODE_

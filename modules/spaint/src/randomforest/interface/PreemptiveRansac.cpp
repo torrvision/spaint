@@ -257,13 +257,13 @@ namespace
 struct PointForLM
 {
   Vector3f point;
-  GPUForestMode mode;
+  SCoReMode mode;
 
   PointForLM()
   {
   }
 
-  PointForLM(const Vector3f &pt, const GPUForestMode &md) :
+  PointForLM(const Vector3f &pt, const SCoReMode &md) :
       point(pt), mode(md)
   {
   }
