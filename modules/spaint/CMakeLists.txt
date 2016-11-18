@@ -332,6 +332,7 @@ src/randomforest/SpaintDecisionFunctionGenerator.cpp
 
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
+include/spaint/randomforest/SCoReForestTypes.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 )
 
@@ -349,7 +350,6 @@ include/spaint/randomforest/cuda/PreemptiveRansac_CUDA.h
 SET(randomforest_interface_headers
 include/spaint/randomforest/interface/GPUClusterer.h
 include/spaint/randomforest/interface/GPUForest.h
-include/spaint/randomforest/interface/GPUForestTypes.h
 include/spaint/randomforest/interface/GPUReservoir.h
 include/spaint/randomforest/interface/PreemptiveRansac.h
 )

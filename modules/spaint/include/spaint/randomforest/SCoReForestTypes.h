@@ -1,12 +1,12 @@
 /**
- * spaint: GPUForestTypes.h
+ * spaint: SCoReForestTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPUFORESTTYPES
-#define H_SPAINT_GPUFORESTTYPES
+#ifndef H_SPAINT_SCOREFORESTTYPES
+#define H_SPAINT_SCOREFORESTTYPES
 
-#include "../../util/ITMImagePtrTypes.h"
+#include "../util/ITMImagePtrTypes.h"
 #include "ORUtils/Vector.h"
 #include "ORUtils/PlatformIndependence.h"
 

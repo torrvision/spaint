@@ -9,7 +9,7 @@
 #include "ITMLib/Utils/ITMMath.h"
 
 #include "../../features/interface/RGBDPatchFeature.h"
-#include "GPUForestTypes.h"
+#include "../SCoReForestTypes.h"
 
 namespace spaint
 {

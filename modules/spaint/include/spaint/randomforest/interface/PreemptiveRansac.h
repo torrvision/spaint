@@ -12,8 +12,7 @@
 
 #include "ITMLib/Utils/ITMMath.h"
 #include "../../features/interface/RGBDPatchFeature.h"
-#include "GPUForestTypes.h"
-#include <Eigen/Dense>
+#include "../SCoReForestTypes.h"
 
 namespace spaint
 {
@@ -61,7 +60,7 @@ protected:
   bool m_checkRigidTransformationConstraint;
   float m_translationErrorMaxForCorrectPose;
   size_t m_batchSizeRansac;
-  int m_trimKinitAfterFirstEnergyComputation;
+  size_t m_trimKinitAfterFirstEnergyComputation;
   bool m_poseUpdate;
   bool m_usePredictionCovarianceForPoseOptimization;
   float m_poseOptimizationInlierThreshold;

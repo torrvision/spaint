@@ -7,7 +7,7 @@
 #define H_SPAINT_GPUCLUSTERER
 
 #include "GPUReservoir.h"
-#include "GPUForestTypes.h"
+#include "../SCoReForestTypes.h"
 
 #include <boost/shared_ptr.hpp>
 

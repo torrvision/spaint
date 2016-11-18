@@ -11,7 +11,7 @@
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "GPUClusterer.h"
 #include "GPUReservoir.h"
-#include "GPUForestTypes.h"
+#include "../SCoReForestTypes.h"
 
 #include "ORUtils/Vector.h"
 

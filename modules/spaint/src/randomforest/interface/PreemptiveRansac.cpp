@@ -155,7 +155,6 @@ void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
     Eigen::Vector3f &resTrans)
 {
   const int D = P.rows();  // dimension of the space
-  const int N = P.cols();  // number of points
   const Eigen::Vector3f normalizedWeights = weights / weights.sum();
 
   // Centroids
@@ -175,7 +174,6 @@ void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
       Eigen::ComputeThinU | Eigen::ComputeThinV);
 
   const Eigen::Matrix3f V = svd.matrixU();
-  const Eigen::Vector3f S = svd.singularValues();
   const Eigen::Matrix3f W = svd.matrixV();
   Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
 
@@ -226,9 +224,6 @@ void PreemptiveRansac::update_candidate_poses()
 
 void PreemptiveRansac::compute_candidate_poses_kabsch()
 {
-  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
-  const GPUForestPrediction *predictions = m_predictionsImage->GetData(
-      MEMORYDEVICE_CPU);
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 

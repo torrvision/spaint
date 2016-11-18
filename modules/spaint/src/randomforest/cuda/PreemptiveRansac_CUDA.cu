@@ -8,8 +8,6 @@
 
 #include "util/MemoryBlockFactory.h"
 
-#include <Eigen/Dense>
-
 #include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>

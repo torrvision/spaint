@@ -8,7 +8,7 @@
 
 #include "ORUtils/PlatformIndependence.h"
 #include "features/interface/RGBDPatchFeature.h"
-#include "randomforest/interface/GPUForestTypes.h"
+#include "randomforest/SCoReForestTypes.h"
 
 namespace spaint
 {
