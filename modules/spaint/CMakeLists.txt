@@ -579,6 +579,7 @@ include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
 include/spaint/util/ITMImagePtrTypes.h
+include/spaint/util/ITMMemoryBlockPtrTypes.h
 include/spaint/util/ITMObjectPtrTypes.h
 include/spaint/util/LabelManager.h
 include/spaint/util/MemoryBlockFactory.h
