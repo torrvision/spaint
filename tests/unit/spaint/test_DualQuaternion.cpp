@@ -22,9 +22,15 @@ void from_point_test()
 template <typename T>
 void from_rotation_test()
 {
-  Vector3<T> v(1,0,0);
+  Vector3<T> axis(0,1,0);
+  DualQuaternion<T> dq = DualQuaternion<T>::from_rotation(axis, T(M_PI_4));
 
-  Vector3<T> w1 = DualQuaternion<T>::from_rotation(Vector3<T>(0,1,0), T(M_PI_4)).apply(v);
+  BOOST_CHECK_SMALL(length(dq.get_rotation() - axis * T(M_PI_4)), T(1e-4));
+  BOOST_CHECK_EQUAL(dq.get_rotation_part(), dq);
+  BOOST_CHECK_SMALL(length(dq.get_translation()), T(1e-4));
+
+  Vector3<T> v(1,0,0);
+  Vector3<T> w1 = dq.apply(v);
 
   SE3Pose pose(0, 0, 0, 0, static_cast<float>(M_PI_4), 0);
   Vector3f t, r;
