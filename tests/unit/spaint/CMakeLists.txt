@@ -16,6 +16,7 @@ SET(testnames
 ColourConversion
 DualNumber
 DualQuaternion
+GeometryUtil
 )
 
 IF(WITH_ARRAYFIRE)
