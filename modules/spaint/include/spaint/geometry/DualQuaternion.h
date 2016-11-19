@@ -150,7 +150,7 @@ public:
       U length = sqrt(lengthSquared);
       return from_rotation(rot / length, length);
     }
-    else throw std::runtime_error("Error: Could not construct dual quaternion - bad rotation vector");
+    else return DualQuaternion<T>(1, 0, 0, 0);
   }
 
   /**
