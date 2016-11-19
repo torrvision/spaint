@@ -49,7 +49,7 @@ public:
    * \param z_  The z^ component.
    */
   DualQuaternion(const DualNumber<T>& w_, const DualNumber<T>& x_, const DualNumber<T>& y_, const DualNumber<T>& z_)
-  : w(w_), x(x_), y(y_), z(z_)
+  : x(x_), y(y_), z(z_), w(w_)
   {}
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
