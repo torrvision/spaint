@@ -22,7 +22,7 @@ bool GeometryUtil::poses_are_similar(const ORUtils::SE3Pose& pose1, const ORUtil
   double rot = DualQuatd::angle_between_rotations(DualQuatd::from_rotation(r1), DualQuatd::from_rotation(r2));
   float trans = length(t1 - t2);
 
-  return rot < rotThreshold && trans < transThreshold;
+  return rot <= rotThreshold && trans <= transThreshold;
 }
 
 }

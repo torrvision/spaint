@@ -57,6 +57,21 @@ struct DualNumber
   : r(r_), d(d_)
   {}
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+  /**
+   * \brief Checks whether two dual numbers are approximately equal, up to a tolerance.
+   *
+   * \param lhs       The first dual number.
+   * \param rhs       The second dual number.
+   * \param tolerance The tolerance value.
+   * \return          true, if the two dual numbers are approximately equal, or false otherwise.
+   */
+  static bool close(const DualNumber<T>& lhs, const DualNumber<T>& rhs, T tolerance = 1e-4f)
+  {
+    return fabs(lhs.r - rhs.r) <= tolerance && fabs(lhs.d - rhs.d) <= tolerance;
+  }
+
   //#################### PUBLIC OPERATORS ####################
 
   /**

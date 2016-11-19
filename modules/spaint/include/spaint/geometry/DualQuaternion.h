@@ -8,6 +8,8 @@
 
 #include <stdexcept>
 
+#include <boost/mpl/identity.hpp>
+
 #include <ORUtils/MathUtils.h>
 
 #include <tvgutil/misc/AttitudeUtil.h>
@@ -47,7 +49,7 @@ public:
    * \param z_  The z^ component.
    */
   DualQuaternion(const DualNumber<T>& w_, const DualNumber<T>& x_, const DualNumber<T>& y_, const DualNumber<T>& z_)
-  : w(w_), x(x_), y(y_), z(z_)
+  : x(x_), y(y_), z(z_), w(w_)
   {}
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -65,6 +67,22 @@ public:
   {
     DualQuaternion<T> q1toq2 = (q2 * q1.conjugate()).normalised();
     return length(q1toq2.get_rotation());
+  }
+
+  /**
+   * \brief Checks whether two dual quaternions are approximately equal, up to a tolerance.
+   *
+   * \param lhs       The first dual quaternion.
+   * \param rhs       The second dual quaternion.
+   * \param tolerance The tolerance value.
+   * \return          true, if the two dual quaternions are approximately equal, or false otherwise.
+   */
+  static bool close(const DualQuaternion<T>& lhs, const DualQuaternion<T>& rhs, T tolerance = 1e-4f)
+  {
+    return DualNumber<T>::close(lhs.w, rhs.w, tolerance) &&
+           DualNumber<T>::close(lhs.x, rhs.x, tolerance) &&
+           DualNumber<T>::close(lhs.y, rhs.y, tolerance) &&
+           DualNumber<T>::close(lhs.z, rhs.z, tolerance);
   }
 
   /**
@@ -92,7 +110,7 @@ public:
    * \throws std::runtime_error If the rotation axis is invalid.
    */
   template <typename U>
-  static DualQuaternion<T> from_rotation(ORUtils::Vector3<U> axis, U angle)
+  static DualQuaternion<T> from_rotation(ORUtils::Vector3<U> axis, typename boost::mpl::identity<U>::type angle)
   {
     U axisLengthSquared = dot(axis, axis);
     if(fabs(axisLengthSquared - 1) > 1e-9)
@@ -119,9 +137,8 @@ public:
    *
    * \note A Lie rotation vector v encodes a rotation of |v| about the axis v / |v|.
    *
-   * \param rot                 The Lie rotation vector.
-   * \return                    The dual quaternion.
-   * \throws std::runtime_error If the rotation vector is invalid.
+   * \param rot The Lie rotation vector.
+   * \return    The dual quaternion.
    */
   template <typename U>
   static DualQuaternion<T> from_rotation(const ORUtils::Vector3<U>& rot)
@@ -132,7 +149,7 @@ public:
       U length = sqrt(lengthSquared);
       return from_rotation(rot / length, length);
     }
-    else throw std::runtime_error("Error: Could not construct dual quaternion - bad rotation vector");
+    else return identity();
   }
 
   /**
@@ -167,6 +184,16 @@ public:
       DualNumber<T>(0, static_cast<T>(t.y / 2.0)),
       DualNumber<T>(0, static_cast<T>(t.z / 2.0))
     );
+  }
+
+  /**
+   * \brief Makes a dual quaternion that corresponds to the identity matrix.
+   *
+   * \return  A dual quaternion that corresponds to the identity matrix.
+   */
+  static DualQuaternion<T> identity()
+  {
+    return DualQuaternion<T>(1, 0, 0, 0);
   }
 
   /**
