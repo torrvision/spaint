@@ -1,19 +1,19 @@
 /**
- * spaint: GPUClusterer_CUDA.h
+ * spaint: ScoreClusterer_CUDA.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPUCLUSTERERCUDA
-#define H_SPAINT_GPUCLUSTERERCUDA
+#ifndef H_SPAINT_SCORECLUSTERERCUDA
+#define H_SPAINT_SCORECLUSTERERCUDA
 
-#include "../interface/GPUClusterer.h"
+#include "../interface/ScoreClusterer.h"
 
 namespace spaint
 {
-class GPUClusterer_CUDA: public GPUClusterer
+class ScoreClusterer_CUDA: public ScoreClusterer
 {
 public:
-  GPUClusterer_CUDA(float sigma, float tau, int minClusterSize);
+  ScoreClusterer_CUDA(float sigma, float tau, int minClusterSize);
 
   virtual void find_modes(const PositionReservoir_CPtr &reservoirs,
       ScorePredictionsBlock_Ptr &predictions, size_t startIdx,

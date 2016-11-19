@@ -15,7 +15,7 @@
 
 #include "util/MemoryBlockFactory.h"
 
-#include "randomforest/cuda/GPUClusterer_CUDA.h"
+#include "randomforest/cuda/ScoreClusterer_CUDA.h"
 #include "randomforest/ScoreForestReservoirsGenerator.h"
 
 //#define ENABLE_TIMERS
@@ -34,7 +34,7 @@ ScoreForest::ScoreForest()
   const float clustererTau = 0.05f;
   const int minClusterSize = 20;
   m_gpuClusterer.reset(
-      new GPUClusterer_CUDA(clustererSigma, clustererTau, minClusterSize));
+      new ScoreClusterer_CUDA(clustererSigma, clustererTau, minClusterSize));
 
   // Allocate the image that will store the leaf indices (will be resized as needed)
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>();

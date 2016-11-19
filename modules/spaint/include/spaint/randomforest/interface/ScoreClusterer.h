@@ -1,10 +1,10 @@
 /**
- * spaint: GPUClusterer.h
+ * spaint: ScoreClusterer.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_GPUCLUSTERER
-#define H_SPAINT_GPUCLUSTERER
+#ifndef H_SPAINT_SCORECLUSTERER
+#define H_SPAINT_SCORECLUSTERER
 
 #include "ExampleReservoirs.h"
 #include "../ScoreForestTypes.h"
@@ -13,11 +13,11 @@
 
 namespace spaint
 {
-class GPUClusterer
+class ScoreClusterer
 {
 public:
-  GPUClusterer(float sigma, float tau, int minClusterSize);
-  virtual ~GPUClusterer();
+  ScoreClusterer(float sigma, float tau, int minClusterSize);
+  virtual ~ScoreClusterer();
 
   virtual void find_modes(const PositionReservoir_CPtr &reservoirs,
       ScorePredictionsBlock_Ptr &predictions, size_t startIdx,
@@ -29,7 +29,7 @@ protected:
   int m_minClusterSize;
 };
 
-typedef boost::shared_ptr<GPUClusterer> GPUClusterer_Ptr;
-typedef boost::shared_ptr<const GPUClusterer> GPUClusterer_CPtr;
+typedef boost::shared_ptr<ScoreClusterer> ScoreClusterer_Ptr;
+typedef boost::shared_ptr<const ScoreClusterer> ScoreClusterer_CPtr;
 }
 #endif

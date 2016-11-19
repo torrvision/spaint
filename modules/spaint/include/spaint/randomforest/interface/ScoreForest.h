@@ -9,7 +9,7 @@
 #include "../../util/ITMImagePtrTypes.h"
 
 #include "../../features/interface/RGBDPatchFeature.h"
-#include "GPUClusterer.h"
+#include "ScoreClusterer.h"
 #include "ExampleReservoirs.h"
 #include "../ScoreForestTypes.h"
 
@@ -69,7 +69,7 @@ protected:
   NodeImage_Ptr m_nodeImage;
   ScorePredictionsBlock_Ptr m_predictionsBlock;
   PositionReservoir_Ptr m_leafReservoirs;
-  GPUClusterer_Ptr m_gpuClusterer;
+  ScoreClusterer_Ptr m_gpuClusterer;
 
   size_t m_reservoirCapacity;
   size_t m_maxReservoirsToUpdate;

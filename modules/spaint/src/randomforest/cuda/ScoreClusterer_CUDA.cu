@@ -1,9 +1,9 @@
 /**
- * spaint: GPUClusterer_CUDA.cu
+ * spaint: ScoreClusterer_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/cuda/GPUClusterer_CUDA.h"
+#include "randomforest/cuda/ScoreClusterer_CUDA.h"
 
 #include "util/MemoryBlockFactory.h"
 
@@ -343,8 +343,8 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
   }
 }
 
-GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau, int minClusterSize) :
-    GPUClusterer(sigma, tau, minClusterSize)
+ScoreClusterer_CUDA::ScoreClusterer_CUDA(float sigma, float tau, int minClusterSize) :
+    ScoreClusterer(sigma, tau, minClusterSize)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_densities = mbf.make_image<float>();
@@ -356,7 +356,7 @@ GPUClusterer_CUDA::GPUClusterer_CUDA(float sigma, float tau, int minClusterSize)
   m_nbClustersPerReservoir = mbf.make_image<int>();
 }
 
-void GPUClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
+void ScoreClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
     ScorePredictionsBlock_Ptr &predictions, size_t startIdx, size_t count)
 {
   const int nbReservoirs = reservoirs->get_reservoirs_count();
