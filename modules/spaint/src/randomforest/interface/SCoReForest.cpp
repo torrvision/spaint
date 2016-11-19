@@ -17,6 +17,7 @@
 
 #include "randomforest/cuda/GPUClusterer_CUDA.h"
 #include "randomforest/cuda/ExampleReservoirs_CUDA.h"
+#include "randomforest/cpu/ExampleReservoirs_CPU.h"
 
 //#define ENABLE_TIMERS
 //#define RANDOM_FEATURES

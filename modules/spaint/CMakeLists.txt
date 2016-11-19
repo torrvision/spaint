@@ -308,6 +308,7 @@ include/spaint/propagation/shared/LabelPropagator_Shared.h
 
 ##
 SET(randomforest_cpu_sources
+src/randomforest/cpu/ExampleReservoirs_CPU.cpp
 src/randomforest/cpu/PreemptiveRansac_CPU.cpp
 )
 
@@ -337,6 +338,8 @@ include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 )
 
 SET(randomforest_cpu_headers
+include/spaint/randomforest/cpu/ExampleReservoirs_CPU.h
+include/spaint/randomforest/cpu/ExampleReservoirs_CPU.tpp
 include/spaint/randomforest/cpu/PreemptiveRansac_CPU.h
 )
 

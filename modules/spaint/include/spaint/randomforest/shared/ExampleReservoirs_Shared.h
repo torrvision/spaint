@@ -34,7 +34,7 @@ inline void example_reservoirs_add_example(const FeatureType &feature,
     const int reservoirStartIdx = leafIdx * reservoirCapacity;
 
     // Get the number of total add calls
-    int addCallsCount = 0;
+    uint32_t addCallsCount = 0;
 
 #ifdef __CUDACC__
     addCallsCount = atomicAdd(&reservoirAddCalls[leafIdx], 1);
@@ -65,7 +65,7 @@ inline void example_reservoirs_add_example(const FeatureType &feature,
     else
     {
       // Generate a random index and check if we have to evict an example
-      const int randomIdx = randomGenerator.generate_int_from_uniform(0,
+      const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
           addCallsCount);
       //      const int randomIdx = static_cast<int>(truncf(
       //          curand_uniform(&randomStates[linearIdx])
