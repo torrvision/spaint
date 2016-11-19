@@ -59,6 +59,13 @@ int ExampleReservoirs<ExampleType, FeatureType, LeafType>::get_capacity() const
 {
   return m_data->noDims.width;
 }
+
+template<typename ExampleType, typename FeatureType, typename LeafType>
+void ExampleReservoirs<ExampleType, FeatureType, LeafType>::clear()
+{
+  m_reservoirsSize->Clear();
+  m_reservoirsAddCalls->Clear();
+}
 }
 
 #endif

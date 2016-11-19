@@ -82,8 +82,7 @@ void ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::add_examples(
 template<typename ExampleType, typename FeatureType, typename LeafType>
 void ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::clear()
 {
-  m_reservoirsSize->Clear();
-  m_reservoirsAddCalls->Clear();
+  ExampleReservoirs<ExampleType, FeatureType, LeafType>::clear();
   init_random();
 }
 

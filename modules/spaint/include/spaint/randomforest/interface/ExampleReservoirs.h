@@ -50,7 +50,7 @@ public:
 
   virtual void add_examples(const FeatureImage_CPtr &features,
       const LeafImage_CPtr &leafIndices) = 0;
-  virtual void clear() = 0;
+  virtual void clear();
 
 protected:
   ExampleReservoirsImage_Ptr m_data;
