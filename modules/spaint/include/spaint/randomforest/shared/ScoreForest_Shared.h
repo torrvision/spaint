@@ -1,5 +1,5 @@
 /**
- * spaint: SCoReForest_Shared.h
+ * spaint: ScoreForest_Shared.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -9,9 +9,9 @@
 namespace spaint
 {
 _CPU_AND_GPU_CODE_
-inline void evaluate_forest_shared(const SCoReForest::NodeEntry* forestTexture,
+inline void evaluate_forest_shared(const ScoreForest::NodeEntry* forestTexture,
     const RGBDPatchFeature* featureData, const Vector2i &imgSize,
-    SCoReForest::LeafIndices* leafData, int x, int y)
+    ScoreForest::LeafIndices* leafData, int x, int y)
 {
   const int linear_feature_idx = y * imgSize.width + x;
   const RGBDPatchFeature &currentFeature = featureData[linear_feature_idx];
@@ -19,7 +19,7 @@ inline void evaluate_forest_shared(const SCoReForest::NodeEntry* forestTexture,
   for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     int currentNodeIdx = 0;
-    SCoReForest::NodeEntry node = forestTexture[currentNodeIdx
+    ScoreForest::NodeEntry node = forestTexture[currentNodeIdx
         * GPUFOREST_NTREES + treeIdx];
     bool isLeaf = node.leafIdx >= 0;
 
@@ -40,12 +40,12 @@ inline void evaluate_forest_shared(const SCoReForest::NodeEntry* forestTexture,
 
 _CPU_AND_GPU_CODE_
 inline void get_prediction_for_leaf_shared(
-    const SCoRePrediction* leafPredictions,
-    const SCoReForest::LeafIndices* leafIndices,
-    SCoRePrediction* outPredictions, Vector2i imgSize, int x, int y)
+    const ScorePrediction* leafPredictions,
+    const ScoreForest::LeafIndices* leafIndices,
+    ScorePrediction* outPredictions, Vector2i imgSize, int x, int y)
 {
   const int linearIdx = y * imgSize.width + x;
-  const SCoReForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
+  const ScoreForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
 
   // Setup the indices of the selected mode for each prediction
   int treeModeIdx[GPUFOREST_NTREES];
@@ -55,17 +55,17 @@ inline void get_prediction_for_leaf_shared(
   }
 
   // TODO: maybe copying them is faster...
-  const SCoRePrediction *selectedPredictions[GPUFOREST_NTREES];
+  const ScorePrediction *selectedPredictions[GPUFOREST_NTREES];
   for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
   {
     selectedPredictions[treeIdx] = &leafPredictions[selectedLeaves[treeIdx]];
   }
 
-  SCoRePrediction &outPrediction = outPredictions[linearIdx];
+  ScorePrediction &outPrediction = outPredictions[linearIdx];
   outPrediction.nbModes = 0;
 
   // Merge first MAX_MODES from the sorted mode arrays
-  while (outPrediction.nbModes < SCoRePrediction::MAX_MODES)
+  while (outPrediction.nbModes < ScorePrediction::MAX_MODES)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;

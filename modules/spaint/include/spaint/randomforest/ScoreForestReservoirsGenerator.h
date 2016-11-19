@@ -1,5 +1,5 @@
 /**
- * spaint: SCoReForestReservoirsGenerator.h
+ * spaint: ScoreForestReservoirsGenerator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -11,7 +11,7 @@
 
 namespace spaint
 {
-class SCoReForestReservoirsGenerator
+class ScoreForestReservoirsGenerator
 {
 public:
   static PositionReservoir_Ptr make_position_reservoir(

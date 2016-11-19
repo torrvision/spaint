@@ -10,7 +10,7 @@
 
 #include "../../util/ITMMemoryBlockPtrTypes.h"
 #include "../../features/interface/RGBDPatchFeature.h"
-#include "../SCoReForestTypes.h"
+#include "../ScoreForestTypes.h"
 
 namespace spaint
 {

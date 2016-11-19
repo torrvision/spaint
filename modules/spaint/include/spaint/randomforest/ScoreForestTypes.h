@@ -1,5 +1,5 @@
 /**
- * spaint: SCoReForestTypes.h
+ * spaint: ScoreForestTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -18,7 +18,7 @@ struct PositionColourExample
   Vector3u colour;
 };
 
-struct SCoReMode
+struct ScoreMode
 {
   Vector3f position;
   Matrix3f positionInvCovariance; // Needed to compute Mahalanobis distance
@@ -29,14 +29,14 @@ struct SCoReMode
   int nbInliers;
 };
 
-struct SCoRePrediction
+struct ScorePrediction
 {
   enum
   {
     MAX_MODES = 10
   };
 
-  SCoReMode modes[MAX_MODES];
+  ScoreMode modes[MAX_MODES];
   int nbModes;
 
   _CPU_AND_GPU_CODE_
@@ -81,13 +81,13 @@ struct SCoRePrediction
   }
 };
 
-typedef ORUtils::MemoryBlock<SCoRePrediction> SCoRePredictionsBlock;
-typedef boost::shared_ptr<SCoRePredictionsBlock> SCoRePredictionsBlock_Ptr;
-typedef boost::shared_ptr<const SCoRePredictionsBlock> SCoRePredictionsBlock_CPtr;
+typedef ORUtils::MemoryBlock<ScorePrediction> ScorePredictionsBlock;
+typedef boost::shared_ptr<ScorePredictionsBlock> ScorePredictionsBlock_Ptr;
+typedef boost::shared_ptr<const ScorePredictionsBlock> ScorePredictionsBlock_CPtr;
 
-typedef ORUtils::Image<SCoRePrediction> SCoRePredictionsImage;
-typedef boost::shared_ptr<SCoRePredictionsImage> SCoRePredictionsImage_Ptr;
-typedef boost::shared_ptr<const SCoRePredictionsImage> SCoRePredictionsImage_CPtr;
+typedef ORUtils::Image<ScorePrediction> ScorePredictionsImage;
+typedef boost::shared_ptr<ScorePredictionsImage> ScorePredictionsImage_Ptr;
+typedef boost::shared_ptr<const ScorePredictionsImage> ScorePredictionsImage_CPtr;
 
 enum
 {

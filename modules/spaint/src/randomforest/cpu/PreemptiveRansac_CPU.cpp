@@ -39,7 +39,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 {
   const Vector2i imgSize = m_featureImage->noDims;
   const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
-  const SCoRePrediction *predictions = m_predictionsImage->GetData(
+  const ScorePrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
@@ -83,7 +83,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
   const Vector2i imgSize = m_featureImage->noDims;
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
-  const SCoRePrediction *predictionsData = m_predictionsImage->GetData(
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
@@ -145,7 +145,7 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
 {
   const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
       MEMORYDEVICE_CPU);
-  const SCoRePrediction *predictionsData = m_predictionsImage->GetData(
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
   const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);

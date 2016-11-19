@@ -8,7 +8,7 @@
 
 #include "ORUtils/PlatformIndependence.h"
 #include "features/interface/RGBDPatchFeature.h"
-#include "randomforest/SCoReForestTypes.h"
+#include "randomforest/ScoreForestTypes.h"
 
 namespace spaint
 {
@@ -25,7 +25,7 @@ template<typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline bool preemptive_ransac_generate_candidate(
     const RGBDPatchFeature *patchFeaturesData,
-    const SCoRePrediction *predictionsData, const Vector2i &imgSize,
+    const ScorePrediction *predictionsData, const Vector2i &imgSize,
     RNG &randomGenerator, PoseCandidate &poseCandidate,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
     bool m_checkMinDistanceBetweenSampledModes,
@@ -51,7 +51,7 @@ inline bool preemptive_ransac_generate_candidate(
     if (!selectedFeature.valid())
       continue;
 
-    const SCoRePrediction &selectedPrediction =
+    const ScorePrediction &selectedPrediction =
         predictionsData[linearFeatureIdx];
 
     // Prediction has no modes
@@ -93,7 +93,7 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
         const int otherModeIdx = selectedPixelMode[idxOther];
-        const SCoRePrediction &otherPrediction =
+        const ScorePrediction &otherPrediction =
             predictionsData[otherLinearIdx];
 
         const Vector3f otherModeWorldPt =
@@ -119,7 +119,7 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherModeIdx = selectedPixelMode[m];
         const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const SCoRePrediction &otherPrediction =
+        const ScorePrediction &otherPrediction =
             predictionsData[otherLinearIdx];
 
         const Vector3f otherFeatureCameraPt =
@@ -169,8 +169,8 @@ inline bool preemptive_ransac_generate_candidate(
     const int modeIdx = selectedPixelMode[s];
 
     const RGBDPatchFeature &selectedFeature = patchFeaturesData[linearIdx];
-    const SCoRePrediction &selectedPrediction = predictionsData[linearIdx];
-    const SCoReMode &selectedMode = selectedPrediction.modes[modeIdx];
+    const ScorePrediction &selectedPrediction = predictionsData[linearIdx];
+    const ScoreMode &selectedMode = selectedPrediction.modes[modeIdx];
 
     poseCandidate.cameraPoints[s] = selectedFeature.position.toVector3();
     poseCandidate.worldPoints[s] = selectedMode.position;
@@ -183,7 +183,7 @@ template<bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline int preemptive_ransac_sample_inlier(
     const RGBDPatchFeature *patchFeaturesData,
-    const SCoRePrediction *predictionsData, const Vector2i &imgSize,
+    const ScorePrediction *predictionsData, const Vector2i &imgSize,
     RNG &randomGenerator, int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
@@ -234,7 +234,7 @@ inline int preemptive_ransac_sample_inlier(
 _CPU_AND_GPU_CODE_
 inline float preemptive_ransac_compute_candidate_energy(
     const Matrix4f &candidatePose, const RGBDPatchFeature *features,
-    const SCoRePrediction *predictions, const int *inlierIndices,
+    const ScorePrediction *predictions, const int *inlierIndices,
     uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
 {
   float localEnergy = 0.f;
@@ -246,7 +246,7 @@ inline float preemptive_ransac_compute_candidate_energy(
     const Vector3f localPixel = features[linearIdx].position.toVector3();
     const Vector3f projectedPixel = candidatePose * localPixel;
 
-    const SCoRePrediction &pred = predictions[linearIdx];
+    const ScorePrediction &pred = predictions[linearIdx];
 
     // eval individual energy
     float energy;

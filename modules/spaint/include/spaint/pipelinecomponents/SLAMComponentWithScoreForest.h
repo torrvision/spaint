@@ -16,7 +16,7 @@
 #include <boost/timer/timer.hpp>
 
 #include "../features/FeatureCalculatorFactory.h"
-#include "../randomforest/interface/SCoReForest.h"
+#include "../randomforest/interface/ScoreForest.h"
 #include "../randomforest/interface/PreemptiveRansac.h"
 
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
@@ -73,8 +73,8 @@ private:
 private:
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   RGBDPatchFeatureImage_Ptr m_featureImage;
-  SCoRePredictionsImage_Ptr m_predictionsImage;
-  SCoReForest_Ptr m_scoreForest;
+  ScorePredictionsImage_Ptr m_predictionsImage;
+  ScoreForest_Ptr m_scoreForest;
   PreemptiveRansac_Ptr m_preemptiveRansac;
   bool m_updateForestModesEveryFrame;
 

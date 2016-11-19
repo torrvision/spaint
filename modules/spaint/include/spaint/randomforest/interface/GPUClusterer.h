@@ -7,7 +7,7 @@
 #define H_SPAINT_GPUCLUSTERER
 
 #include "ExampleReservoirs.h"
-#include "../SCoReForestTypes.h"
+#include "../ScoreForestTypes.h"
 
 #include <boost/shared_ptr.hpp>
 
@@ -20,7 +20,7 @@ public:
   virtual ~GPUClusterer();
 
   virtual void find_modes(const PositionReservoir_CPtr &reservoirs,
-      SCoRePredictionsBlock_Ptr &predictions, size_t startIdx,
+      ScorePredictionsBlock_Ptr &predictions, size_t startIdx,
       size_t count) = 0;
 
 protected:

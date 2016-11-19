@@ -1,17 +1,17 @@
 /**
- * spaint: SCoReForest_CUDA.cu
+ * spaint: ScoreForest_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/cuda/SCoReForest_CUDA.h"
+#include "randomforest/cuda/ScoreForest_CUDA.h"
 
-#include "randomforest/shared/SCoReForest_Shared.h"
+#include "randomforest/shared/ScoreForest_Shared.h"
 
 namespace spaint
 {
-__global__ void ck_evaluate_forest(const SCoReForest::NodeEntry* forestTexture,
+__global__ void ck_evaluate_forest(const ScoreForest::NodeEntry* forestTexture,
     const RGBDPatchFeature* featureData, Vector2i imgSize,
-    SCoReForest::LeafIndices* leafData)
+    ScoreForest::LeafIndices* leafData)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -22,9 +22,9 @@ __global__ void ck_evaluate_forest(const SCoReForest::NodeEntry* forestTexture,
   evaluate_forest_shared(forestTexture, featureData, imgSize, leafData, x, y);
 }
 
-__global__ void ck_get_predictions(const SCoRePrediction* leafPredictions,
-    const SCoReForest::LeafIndices* leafIndices,
-    SCoRePrediction* outPredictions, Vector2i imgSize)
+__global__ void ck_get_predictions(const ScorePrediction* leafPredictions,
+    const ScoreForest::LeafIndices* leafIndices,
+    ScorePrediction* outPredictions, Vector2i imgSize)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -36,12 +36,12 @@ __global__ void ck_get_predictions(const SCoRePrediction* leafPredictions,
       imgSize, x, y);
 }
 
-SCoReForest_CUDA::SCoReForest_CUDA(const std::string &fileName) :
-    SCoReForest(fileName)
+ScoreForest_CUDA::ScoreForest_CUDA(const std::string &fileName) :
+    ScoreForest(fileName)
 {
 }
 
-void SCoReForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
+void ScoreForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
     LeafIndicesImage_Ptr &leaf_indices) const
 {
   const NodeEntry* forestTexture = m_nodeImage->GetData(MEMORYDEVICE_CUDA);
@@ -60,19 +60,19 @@ void SCoReForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
   ORcudaKernelCheck;
 }
 
-void SCoReForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
-    SCoRePredictionsImage_Ptr &predictions) const
+void ScoreForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
+    ScorePredictionsImage_Ptr &predictions) const
 {
   const Vector2i imgSize = leaf_indices->noDims;
   const LeafIndices* leafIndices = leaf_indices->GetData(MEMORYDEVICE_CUDA);
 
 // Leaf predictions
-  const SCoRePrediction *leafPredictionsData = m_predictionsBlock->GetData(
+  const ScorePrediction *leafPredictionsData = m_predictionsBlock->GetData(
       MEMORYDEVICE_CUDA);
 
 // ~12MB for 160x120 image
   predictions->ChangeDims(imgSize);
-  SCoRePrediction *outPredictionsData = predictions->GetData(
+  ScorePrediction *outPredictionsData = predictions->GetData(
       MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
@@ -84,7 +84,7 @@ void SCoReForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
   ORcudaKernelCheck;
 }
 
-SCoRePrediction SCoReForest_CUDA::get_prediction(size_t treeIdx,
+ScorePrediction ScoreForest_CUDA::get_prediction(size_t treeIdx,
     size_t leafIdx) const
 {
   if (treeIdx >= get_nb_trees())
@@ -102,8 +102,8 @@ SCoRePrediction SCoReForest_CUDA::get_prediction(size_t treeIdx,
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################
 #ifdef WITH_SCOREFORESTS
 
-SCoReForest_CUDA::SCoReForest_CUDA(const EnsembleLearner &pretrained_forest) :
-    SCoReForest(pretrained_forest)
+ScoreForest_CUDA::ScoreForest_CUDA(const EnsembleLearner &pretrained_forest) :
+    ScoreForest(pretrained_forest)
 {
 }
 

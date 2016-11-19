@@ -7,7 +7,7 @@
 
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 
-#include "randomforest/cuda/SCoReForest_CUDA.h"
+#include "randomforest/cuda/ScoreForest_CUDA.h"
 #include "randomforest/cpu/PreemptiveRansac_CPU.h"
 #include "randomforest/cuda/PreemptiveRansac_CUDA.h"
 #include "util/MemoryBlockFactory.h"
@@ -63,14 +63,14 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           settings->deviceType);
   m_featureImage = mbf.make_image<RGBDPatchFeature>();
-  m_predictionsImage = mbf.make_image<SCoRePrediction>();
+  m_predictionsImage = mbf.make_image<ScorePrediction>();
 
   const bf::path relocalizationForestPath = bf::path(
       m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
 
   std::cout << "Loading relocalization forest from: "
       << relocalizationForestPath << '\n';
-  m_scoreForest.reset(new SCoReForest_CUDA(relocalizationForestPath.string()));
+  m_scoreForest.reset(new ScoreForest_CUDA(relocalizationForestPath.string()));
   m_updateForestModesEveryFrame = true;
 
 //  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
@@ -210,7 +210,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 // For each prediction print centroids, covariances, nbInliers
     for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const SCoRePrediction p = m_scoreForest->get_prediction(treeIdx,
+      const ScorePrediction p = m_scoreForest->get_prediction(treeIdx,
           predictionIndices[treeIdx]);
       std::cout << p.nbModes << ' ' << predictionIndices[treeIdx] << '\n';
       for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)

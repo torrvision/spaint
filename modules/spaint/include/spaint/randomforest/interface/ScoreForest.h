@@ -1,5 +1,5 @@
 /**
- * spaint: SCoReForest.h
+ * spaint: ScoreForest.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -11,7 +11,7 @@
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "GPUClusterer.h"
 #include "ExampleReservoirs.h"
-#include "../SCoReForestTypes.h"
+#include "../ScoreForestTypes.h"
 
 #include "ORUtils/Vector.h"
 
@@ -22,7 +22,7 @@
 namespace spaint
 {
 
-class SCoReForest
+class ScoreForest
 {
   // Typedefs
 public:
@@ -44,12 +44,12 @@ public:
   typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;
 
 public:
-  explicit SCoReForest(const std::string &fileName);
-  virtual ~SCoReForest();
+  explicit ScoreForest(const std::string &fileName);
+  virtual ~ScoreForest();
 
   void reset_predictions();
   void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
-      SCoRePredictionsImage_Ptr &predictions);
+      ScorePredictionsImage_Ptr &predictions);
   void add_features_to_forest(const RGBDPatchFeatureImage_CPtr &features);
   void update_forest();
 
@@ -59,7 +59,7 @@ public:
   size_t get_nb_trees() const;
   size_t get_nb_nodes_in_tree(size_t treeIdx) const;
   size_t get_nb_leaves_in_tree(size_t treeIdx) const;
-  virtual SCoRePrediction get_prediction(size_t treeIdx,
+  virtual ScorePrediction get_prediction(size_t treeIdx,
       size_t leafIdx) const = 0;
 
 protected:
@@ -67,7 +67,7 @@ protected:
   std::vector<int> m_nbLeavesPerTree;
 
   NodeImage_Ptr m_nodeImage;
-  SCoRePredictionsBlock_Ptr m_predictionsBlock;
+  ScorePredictionsBlock_Ptr m_predictionsBlock;
   PositionReservoir_Ptr m_leafReservoirs;
   GPUClusterer_Ptr m_gpuClusterer;
 
@@ -79,17 +79,17 @@ protected:
   virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
   virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
-      SCoRePredictionsImage_Ptr &predictions) const = 0;
+      ScorePredictionsImage_Ptr &predictions) const = 0;
 
 private:
-  SCoReForest();
+  ScoreForest();
 
   LeafIndicesImage_Ptr m_leafImage;
 
   //#################### SCOREFOREST INTEROP FUNCTIONS ####################
 #ifdef WITH_SCOREFORESTS
 public:
-  explicit SCoReForest(const EnsembleLearner &pretrained_forest);
+  explicit ScoreForest(const EnsembleLearner &pretrained_forest);
 
 private:
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
@@ -101,8 +101,8 @@ private:
 #endif
 };
 
-typedef boost::shared_ptr<SCoReForest> SCoReForest_Ptr;
-typedef boost::shared_ptr<const SCoReForest> SCoReForest_CPtr;
+typedef boost::shared_ptr<ScoreForest> ScoreForest_Ptr;
+typedef boost::shared_ptr<const ScoreForest> ScoreForest_CPtr;
 
 }
 

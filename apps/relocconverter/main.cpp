@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "spaint/randomforest/cuda/SCoReForest_CUDA.h"
+#include "spaint/randomforest/cuda/ScoreForest_CUDA.h"
 
 #include <iostream>
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
           learnFromTree, loadFeatures, randomSeed));
   m_dataset->LoadForest();
 
-  SCoReForest_Ptr m_scoreForest(new SCoReForest_CUDA(*m_dataset->GetForest()));
+  ScoreForest_Ptr m_scoreForest(new ScoreForest_CUDA(*m_dataset->GetForest()));
 
   std::cout << "Saving forest in: " << outputFile << std::endl;
   m_scoreForest->save_structure_to_file(outputFile);

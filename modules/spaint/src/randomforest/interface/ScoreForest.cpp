@@ -1,9 +1,9 @@
 /**
- * spaint: SCoReForest.cpp
+ * spaint: ScoreForest.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/interface/SCoReForest.h"
+#include "randomforest/interface/ScoreForest.h"
 
 #include <fstream>
 #include <iomanip>
@@ -16,7 +16,7 @@
 #include "util/MemoryBlockFactory.h"
 
 #include "randomforest/cuda/GPUClusterer_CUDA.h"
-#include "randomforest/SCoReForestReservoirsGenerator.h"
+#include "randomforest/ScoreForestReservoirsGenerator.h"
 
 //#define ENABLE_TIMERS
 //#define RANDOM_FEATURES
@@ -27,7 +27,7 @@
 
 namespace spaint
 {
-SCoReForest::SCoReForest()
+ScoreForest::ScoreForest()
 {
   // Tentative values
   const float clustererSigma = 0.1f;
@@ -45,18 +45,18 @@ SCoReForest::SCoReForest()
   m_reservoirUpdateStartIdx = 0;
 }
 
-SCoReForest::SCoReForest(const std::string &fileName) :
-    SCoReForest()
+ScoreForest::ScoreForest(const std::string &fileName) :
+    ScoreForest()
 {
   load_structure_from_file(fileName);
 }
 
-SCoReForest::~SCoReForest()
+ScoreForest::~ScoreForest()
 {
 }
 
-void SCoReForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
-    SCoRePredictionsImage_Ptr &predictions)
+void ScoreForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+    ScorePredictionsImage_Ptr &predictions)
 {
   {
 #ifdef ENABLE_TIMERS
@@ -75,13 +75,13 @@ void SCoReForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
   }
 }
 
-void SCoReForest::reset_predictions()
+void ScoreForest::reset_predictions()
 {
   m_predictionsBlock->Clear(); // Setting nbModes to 0 for each prediction would be enough.
   m_leafReservoirs->clear();
 }
 
-void SCoReForest::add_features_to_forest(
+void ScoreForest::add_features_to_forest(
     const RGBDPatchFeatureImage_CPtr &features)
 {
   {
@@ -126,7 +126,7 @@ void SCoReForest::add_features_to_forest(
     m_reservoirUpdateStartIdx = 0;
 }
 
-void SCoReForest::update_forest()
+void ScoreForest::update_forest()
 {
   // We are back to the first reservoir that was updated when
   // the last batch of features were added to the forest.
@@ -157,7 +157,7 @@ void SCoReForest::update_forest()
     m_reservoirUpdateStartIdx = 0;
 }
 
-void SCoReForest::load_structure_from_file(const std::string &fileName)
+void ScoreForest::load_structure_from_file(const std::string &fileName)
 {
   // clean current forest (TODO: put in a function)
   m_nodeImage.reset();
@@ -217,10 +217,10 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
   m_nodeImage->Clear();
 
-  m_predictionsBlock = mbf.make_block<SCoRePrediction>(totalNbLeaves);
+  m_predictionsBlock = mbf.make_block<ScorePrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
 
-  m_leafReservoirs = SCoReForestReservoirsGenerator::make_position_reservoir(
+  m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(
       ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, totalNbLeaves);
 
 #ifdef RANDOM_FEATURES
@@ -285,7 +285,7 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
   m_nodeImage->UpdateDeviceFromHost();
 }
 
-void SCoReForest::save_structure_to_file(const std::string &fileName) const
+void ScoreForest::save_structure_to_file(const std::string &fileName) const
 {
   std::ofstream out(fileName, std::ios::trunc);
 
@@ -311,12 +311,12 @@ void SCoReForest::save_structure_to_file(const std::string &fileName) const
   }
 }
 
-size_t SCoReForest::get_nb_trees() const
+size_t ScoreForest::get_nb_trees() const
 {
   return GPUFOREST_NTREES;
 }
 
-size_t SCoReForest::get_nb_nodes_in_tree(size_t treeIdx) const
+size_t ScoreForest::get_nb_nodes_in_tree(size_t treeIdx) const
 {
   if (treeIdx >= get_nb_trees())
     throw std::runtime_error("invalid treeIdx");
@@ -324,7 +324,7 @@ size_t SCoReForest::get_nb_nodes_in_tree(size_t treeIdx) const
   return m_nbNodesPerTree[treeIdx];
 }
 
-size_t SCoReForest::get_nb_leaves_in_tree(size_t treeIdx) const
+size_t ScoreForest::get_nb_leaves_in_tree(size_t treeIdx) const
 {
   if (treeIdx >= get_nb_trees())
     throw std::runtime_error("invalid treeIdx");
@@ -335,8 +335,8 @@ size_t SCoReForest::get_nb_leaves_in_tree(size_t treeIdx) const
 //#################### SCOREFOREST INTEROP FUNCTIONS ####################
 #ifdef WITH_SCOREFORESTS
 
-SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
-    SCoReForest()
+ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
+    ScoreForest()
 {
   // Convert list of nodes into an appropriate image
   const int nTrees = pretrained_forest.GetNbTrees();
@@ -381,7 +381,7 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
     m_nbLeavesPerTree.push_back(nbLeavesAfter - nbLeavesBefore);
   }
 
-  m_predictionsBlock = mbf.make_block<SCoRePrediction>(
+  m_predictionsBlock = mbf.make_block<ScorePrediction>(
       m_leafPredictions.size());
   convert_predictions();
 
@@ -399,13 +399,13 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
   {
     boost::timer::auto_cpu_timer t(6,
         "creating and clearing reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-    m_leafReservoirs = SCoReForestReservoirsGenerator::make_position_reservoir(
+    m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(
         ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity,
         m_predictionsBlock->dataSize);
   }
 }
 
-int SCoReForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
+int ScoreForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
     int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes)
 {
   const Node* node = tree->GetNode(node_idx);
@@ -460,9 +460,9 @@ int SCoReForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
   return first_free_idx;
 }
 
-void SCoReForest::convert_predictions()
+void ScoreForest::convert_predictions()
 {
-  SCoRePrediction *gpuPredictions = m_predictionsBlock->GetData(
+  ScorePrediction *gpuPredictions = m_predictionsBlock->GetData(
       MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
@@ -476,12 +476,12 @@ void SCoReForest::convert_predictions()
         [](const std::vector<PredictedGaussianMean> &a, const std::vector<PredictedGaussianMean> &b)
         { return a[0]._nbPoints > b[0]._nbPoints;});
 
-    SCoRePrediction &currentTargetPred = gpuPredictions[leafIdx];
+    ScorePrediction &currentTargetPred = gpuPredictions[leafIdx];
     currentTargetPred.nbModes = 0; // Reset modes
 
     for (size_t modeIdx = 0;
         modeIdx < modes.size()
-            && currentTargetPred.nbModes < SCoRePrediction::MAX_MODES;
+            && currentTargetPred.nbModes < ScorePrediction::MAX_MODES;
         ++modeIdx)
     {
       const auto &mode = modes[modeIdx];

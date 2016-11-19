@@ -1,9 +1,9 @@
 /**
- * spaint: SCoReForestReservoirsGenerator.cpp
+ * spaint: ScoreForestReservoirsGenerator.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/SCoReForestReservoirsGenerator.h"
+#include "randomforest/ScoreForestReservoirsGenerator.h"
 #include "randomforest/cpu/ExampleReservoirs_CPU.h"
 
 #ifdef WITH_CUDA
@@ -12,7 +12,7 @@
 
 namespace spaint
 {
-PositionReservoir_Ptr SCoReForestReservoirsGenerator::make_position_reservoir(
+PositionReservoir_Ptr ScoreForestReservoirsGenerator::make_position_reservoir(
     ITMLib::ITMLibSettings::DeviceType deviceType, size_t reservoirCapacity,
     size_t nbReservoirs, uint32_t rngSeed)
 {

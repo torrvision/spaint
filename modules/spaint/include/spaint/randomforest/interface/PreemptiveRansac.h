@@ -12,7 +12,7 @@
 
 #include "ITMLib/Utils/ITMMath.h"
 #include "../../features/interface/RGBDPatchFeature.h"
-#include "../SCoReForestTypes.h"
+#include "../ScoreForestTypes.h"
 
 namespace spaint
 {
@@ -49,7 +49,7 @@ public:
   int get_min_nb_required_points() const;
   boost::optional<PoseCandidate> estimate_pose(
       const RGBDPatchFeatureImage_CPtr &features,
-      const SCoRePredictionsImage_CPtr &forestPredictions);
+      const ScorePredictionsImage_CPtr &forestPredictions);
 
 protected:
   // Member variables from scoreforests
@@ -66,7 +66,7 @@ protected:
   float m_poseOptimizationInlierThreshold;
 
   RGBDPatchFeatureImage_CPtr m_featureImage;
-  SCoRePredictionsImage_CPtr m_predictionsImage;
+  ScorePredictionsImage_CPtr m_predictionsImage;
 
   size_t m_nbMaxPoseCandidates;
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
