@@ -41,11 +41,6 @@ ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::ExampleReservoirs_CU
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomStates = mbf.make_block<CUDARNG>();
-
-  // Update device for the other variables (not m_data since its content are meaningless now)
-  m_reservoirsAddCalls->UpdateDeviceFromHost();
-  m_reservoirsSize->UpdateDeviceFromHost();
-
   init_random();
 }
 
