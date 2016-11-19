@@ -12,6 +12,12 @@
 
 namespace spaint
 {
+struct PositionColourExample
+{
+  Vector3f position;
+  Vector3u colour;
+};
+
 struct SCoReMode
 {
   Vector3f position;

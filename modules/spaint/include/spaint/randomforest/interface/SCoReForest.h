@@ -29,7 +29,7 @@ public:
   struct NodeEntry
   {
     int leftChildIdx; // No need to store the right child, it's left + 1
-    int leafIdx;    // Index of the associated leaf (-1 if the node is not a leaf)
+    int leafIdx;  // Index of the associated leaf (-1 if the node is not a leaf)
     int featureIdx;   // Index of the feature to evaluate;
     float featureThreshold; // Feature threshold
   };
@@ -37,11 +37,6 @@ public:
   typedef ORUtils::Image<NodeEntry> NodeImage;
   typedef boost::shared_ptr<ORUtils::Image<NodeEntry> > NodeImage_Ptr;
   typedef boost::shared_ptr<const ORUtils::Image<NodeEntry> > NodeImage_CPtr;
-
-  enum
-  {
-    RESERVOIR_SIZE = 1024, // Max number samples in a leaf reservoir
-  };
 
   typedef spaint::LeafIndices LeafIndices; // TODO: remove
   typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
@@ -76,6 +71,7 @@ protected:
   PositionReservoir_Ptr m_leafReservoirs;
   GPUClusterer_Ptr m_gpuClusterer;
 
+  size_t m_reservoirCapacity;
   size_t m_maxReservoirsToUpdate;
   size_t m_lastFeaturesAddedStartIdx;
   size_t m_reservoirUpdateStartIdx;
@@ -97,8 +93,7 @@ public:
 
 private:
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
-      int n_trees, int output_idx, int first_free_idx,
-      NodeEntry *gpu_nodes);
+      int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes);
   void convert_predictions();
 
   std::vector<PredictionGaussianMean> m_leafPredictions;

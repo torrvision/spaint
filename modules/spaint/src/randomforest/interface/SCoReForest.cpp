@@ -16,8 +16,7 @@
 #include "util/MemoryBlockFactory.h"
 
 #include "randomforest/cuda/GPUClusterer_CUDA.h"
-#include "randomforest/cuda/ExampleReservoirs_CUDA.h"
-#include "randomforest/cpu/ExampleReservoirs_CPU.h"
+#include "randomforest/SCoReForestReservoirsGenerator.h"
 
 //#define ENABLE_TIMERS
 //#define RANDOM_FEATURES
@@ -40,6 +39,7 @@ SCoReForest::SCoReForest()
   // Allocate the image that will store the leaf indices (will be resized as needed)
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>();
 
+  m_reservoirCapacity = 1024;
   m_lastFeaturesAddedStartIdx = 0;
   m_maxReservoirsToUpdate = 256;
   m_reservoirUpdateStartIdx = 0;
@@ -220,9 +220,8 @@ void SCoReForest::load_structure_from_file(const std::string &fileName)
   m_predictionsBlock = mbf.make_block<SCoRePrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
 
-  m_leafReservoirs.reset(
-      new ExampleReservoirs_CUDA<PositionColourExample, RGBDPatchFeature,
-          LeafIndices>(RESERVOIR_SIZE, totalNbLeaves));
+  m_leafReservoirs = SCoReForestReservoirsGenerator::make_position_reservoir(
+      ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, totalNbLeaves);
 
 #ifdef RANDOM_FEATURES
   tvgutil::RandomNumberGenerator rng(42);
@@ -400,9 +399,9 @@ SCoReForest::SCoReForest(const EnsembleLearner &pretrained_forest) :
   {
     boost::timer::auto_cpu_timer t(6,
         "creating and clearing reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-    m_leafReservoirs.reset(
-        new ExampleReservoirs_CUDA<PositionColourExample, RGBDPatchFeature,
-            LeafIndices>(RESERVOIR_SIZE, m_predictionsBlock->dataSize));
+    m_leafReservoirs = SCoReForestReservoirsGenerator::make_position_reservoir(
+        ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity,
+        m_predictionsBlock->dataSize);
   }
 }
 

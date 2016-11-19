@@ -14,12 +14,6 @@
 
 namespace spaint
 {
-// Ugly, need to put it somewhere better
-struct PositionColourExample
-{
-  Vector3f position;
-  Vector3u colour;
-};
 
 template<typename ExampleType, typename FeatureType, typename LeafType>
 class ExampleReservoirs

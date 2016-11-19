@@ -328,11 +328,13 @@ src/randomforest/interface/SCoReForest.cpp
 
 SET(randomforest_sources
 src/randomforest/ForestUtil.cpp
+src/randomforest/SCoReForestReservoirsGenerator.cpp
 src/randomforest/SpaintDecisionFunctionGenerator.cpp
 )
 
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
+include/spaint/randomforest/SCoReForestReservoirsGenerator.h
 include/spaint/randomforest/SCoReForestTypes.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 )
