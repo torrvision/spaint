@@ -6,20 +6,14 @@
 #ifndef H_SPAINT_EXAMPLERESERVOIRSCUDATCU
 #define H_SPAINT_EXAMPLERESERVOIRSCUDATCU
 
-#include "ORUtils/PlatformIndependence.h"
 #include "randomforest/cuda/ExampleReservoirs_CUDA.h"
+#include "randomforest/shared/ExampleReservoirs_Shared.h"
 #include "util/MemoryBlockFactory.h"
-
-#include <device_atomic_functions.h>
 
 using namespace tvgutil;
 
 namespace spaint
 {
-template<typename ExampleType, typename FeatureType>
-_CPU_AND_GPU_CODE_
-inline ExampleType make_example_from_feature(const FeatureType &feature);
-
 template<typename ExampleType, typename FeatureType, typename LeafType>
 __global__ void ck_add_examples(const FeatureType *features,
     const LeafType *leafIndices, Vector2i imgSize, CUDARNG *randomStates,
@@ -34,47 +28,9 @@ __global__ void ck_add_examples(const FeatureType *features,
 
   const int linearIdx = y * imgSize.x + x;
 
-  const FeatureType &feature = features[linearIdx];
-  const LeafType leaves = leafIndices[linearIdx];
-
-  if (!feature.valid())
-    return;
-
-  ExampleType example = make_example_from_feature<ExampleType>(feature);
-
-  for (int treeIdx = 0; treeIdx < LeafIndices::value_size; ++treeIdx)
-  {
-    const int leafIdx = leaves[treeIdx]; // The row in the reservoirs array
-    const int reservoirStartIdx = leafIdx * reservoirCapacity;
-
-    // Get the number of total add calls
-    const int addCallsCount = atomicAdd(&reservoirAddCalls[leafIdx], 1);
-
-    // if addCallsCount is less than capacity we can add the example straightaway
-    if (addCallsCount < reservoirCapacity)
-    {
-      reservoirs[reservoirStartIdx + addCallsCount] = example;
-      // Also increment the size of the current reservoir
-      // might not be needed, reservoirAddCalls also has the same info but care needs
-      // to be taken when reading values since they will be greater than the reservoir capacity
-      atomicAdd(&reservoirSize[leafIdx], 1);
-    }
-    else
-    {
-      // Generate a random index and check if we have to evict an example
-      // curand_uniform generates a number in ]0,1]
-      const int randomIdx = randomStates[linearIdx].generate_int_from_uniform(0,
-          addCallsCount);
-//      const int randomIdx = static_cast<int>(truncf(
-//          curand_uniform(&randomStates[linearIdx])
-//              * (reservoirCapacity + 0.999999f)));
-
-      if (randomIdx < reservoirCapacity)
-      {
-        reservoirs[reservoirStartIdx + randomIdx] = example;
-      }
-    }
-  }
+  example_reservoirs_add_example(features[linearIdx], leafIndices[linearIdx],
+      randomStates[linearIdx], reservoirs, reservoirSize, reservoirAddCalls,
+      reservoirCapacity);
 }
 
 template<typename ExampleType, typename FeatureType, typename LeafType>
@@ -108,7 +64,7 @@ void ExampleReservoirs_CUDA<ExampleType, FeatureType, LeafType>::add_examples(
   }
 
   const FeatureType *featureData = features->GetData(MEMORYDEVICE_CUDA);
-  const LeafIndices *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
+  const LeafType *leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
 
   CUDARNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
   ExampleType *reservoirData = m_data->GetData(MEMORYDEVICE_CUDA);
