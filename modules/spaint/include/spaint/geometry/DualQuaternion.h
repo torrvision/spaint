@@ -150,7 +150,7 @@ public:
       U length = sqrt(lengthSquared);
       return from_rotation(rot / length, length);
     }
-    else return DualQuaternion<T>(1, 0, 0, 0);
+    else return identity();
   }
 
   /**
@@ -185,6 +185,16 @@ public:
       DualNumber<T>(0, static_cast<T>(t.y / 2.0)),
       DualNumber<T>(0, static_cast<T>(t.z / 2.0))
     );
+  }
+
+  /**
+   * \brief Makes a dual quaternion that corresponds to the identity matrix.
+   *
+   * \return  A dual quaternion that corresponds to the identity matrix.
+   */
+  static DualQuaternion<T> identity()
+  {
+    return DualQuaternion<T>(1, 0, 0, 0);
   }
 
   /**
