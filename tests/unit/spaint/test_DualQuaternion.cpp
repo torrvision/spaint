@@ -63,10 +63,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_from_translation, T, TS)
 {
   Vector3<T> v(1,2,3), t(3,4,5);
   DualQuaternion<T> dq = DualQuaternion<T>::from_translation(t);
-  BOOST_CHECK_EQUAL(dq.apply(v), v + t);
-  BOOST_CHECK_EQUAL(dq.get_rotation(), Vector3<T>(0,0,0));
+  BOOST_CHECK_SMALL(length(dq.apply(v) - (v + t)), T(1e-4));
+  BOOST_CHECK_SMALL(length(dq.get_rotation()), T(1e-4));
   BOOST_CHECK(DualQuaternion<T>::close(dq.get_rotation_part(), DualQuaternion<T>::from_rotation(Vector3<T>(1,0,0), T(0))));
-  BOOST_CHECK_EQUAL(dq.get_translation(), t);
+  BOOST_CHECK_SMALL(length(dq.get_translation() - t), T(1e-4));
   BOOST_CHECK(DualQuaternion<T>::close(dq.get_translation_part(), dq));
 }
 
