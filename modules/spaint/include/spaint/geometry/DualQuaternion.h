@@ -70,6 +70,22 @@ public:
   }
 
   /**
+   * \brief Checks whether two dual quaternions are approximately equal, up to a tolerance.
+   *
+   * \param lhs       The first dual quaternion.
+   * \param rhs       The second dual quaternion.
+   * \param tolerance The tolerance value.
+   * \return          true, if the two dual quaternions are approximately equal, or false otherwise.
+   */
+  static bool close(const DualQuaternion<T>& lhs, const DualQuaternion<T>& rhs, T tolerance = 1e-4f)
+  {
+    return DualNumber<T>::close(lhs.w, rhs.w, tolerance) &&
+           DualNumber<T>::close(lhs.x, rhs.x, tolerance) &&
+           DualNumber<T>::close(lhs.y, rhs.y, tolerance) &&
+           DualNumber<T>::close(lhs.z, rhs.z, tolerance);
+  }
+
+  /**
    * \brief Constructs a dual quaternion that represents a 3D point.
    *
    * \param p The point.
@@ -382,19 +398,6 @@ private:
 };
 
 //#################### NON-MEMBER OPERATORS ####################
-
-/**
- * \brief Checks whether two dual quaternions are equal.
- *
- * \param lhs The first dual quaternion.
- * \param rhs The second dual quaternion.
- * \return    true, if the two dual quaternions are equal, or false otherwise.
- */
-template <typename T>
-bool operator==(const DualQuaternion<T>& lhs, const DualQuaternion<T>& rhs)
-{
-  return lhs.w == rhs.w && lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
-}
 
 /**
  * \brief Scales a dual quaternion by the specified factor.
