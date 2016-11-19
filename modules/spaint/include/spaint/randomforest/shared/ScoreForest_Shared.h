@@ -11,16 +11,16 @@ namespace spaint
 _CPU_AND_GPU_CODE_
 inline void evaluate_forest_shared(const ScoreForest::NodeEntry* forestTexture,
     const RGBDPatchFeature* featureData, const Vector2i &imgSize,
-    ScoreForest::LeafIndices* leafData, int x, int y)
+    LeafIndices* leafData, int x, int y)
 {
   const int linear_feature_idx = y * imgSize.width + x;
   const RGBDPatchFeature &currentFeature = featureData[linear_feature_idx];
 
-  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
+  for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
   {
     int currentNodeIdx = 0;
     ScoreForest::NodeEntry node = forestTexture[currentNodeIdx
-        * GPUFOREST_NTREES + treeIdx];
+        * SCOREFOREST_NTREES + treeIdx];
     bool isLeaf = node.leafIdx >= 0;
 
     while (!isLeaf)
@@ -30,7 +30,7 @@ inline void evaluate_forest_shared(const ScoreForest::NodeEntry* forestTexture,
           + (currentFeature.data[node.featureIdx] > node.featureThreshold);
 
       // Update node
-      node = forestTexture[currentNodeIdx * GPUFOREST_NTREES + treeIdx];
+      node = forestTexture[currentNodeIdx * SCOREFOREST_NTREES + treeIdx];
       isLeaf = node.leafIdx >= 0; // a bit redundant but clearer
     }
 
@@ -48,15 +48,15 @@ inline void get_prediction_for_leaf_shared(
   const ScoreForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
 
   // Setup the indices of the selected mode for each prediction
-  int treeModeIdx[GPUFOREST_NTREES];
-  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
+  int treeModeIdx[SCOREFOREST_NTREES];
+  for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
   {
     treeModeIdx[treeIdx] = 0;
   }
 
   // TODO: maybe copying them is faster...
-  const ScorePrediction *selectedPredictions[GPUFOREST_NTREES];
-  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
+  const ScorePrediction *selectedPredictions[SCOREFOREST_NTREES];
+  for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
   {
     selectedPredictions[treeIdx] = &leafPredictions[selectedLeaves[treeIdx]];
   }
@@ -71,7 +71,7 @@ inline void get_prediction_for_leaf_shared(
     int bestTreeNbInliers = 0;
 
     // Find the tree with most inliers
-    for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
+    for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
     {
       if (selectedPredictions[treeIdx]->nbModes > treeModeIdx[treeIdx]
           && selectedPredictions[treeIdx]->modes[treeModeIdx[treeIdx]].nbInliers

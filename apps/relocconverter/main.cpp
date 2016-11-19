@@ -15,7 +15,7 @@ using namespace spaint;
 
 int main(int argc, char *argv[])
 {
-  const int nbTrees = GPUFOREST_NTREES;
+  const int nbTrees = SCOREFOREST_NTREES;
   const float proportionOfDataGivenToLearner = 1.0f;
   const std::string learnerType = "DFBP";
   const bool loadSavedForest = true;
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     {
       predictionIdx = dist(rng);
       std::cout << "Selecting prediction " << predictionIdx << " for tree " << i
-          << '\n';
+      << '\n';
       p = m_scoreForest->get_prediction(i, predictionIdx);
     }
 
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
       posCovariance = posCovariance.t();
 
       for(int i = 0; i < 9; ++i)
-        std::cout << posCovariance.m[i] << ' ';
+      std::cout << posCovariance.m[i] << ' ';
       std::cout << '\n';
     }
     std::cout << '\n';

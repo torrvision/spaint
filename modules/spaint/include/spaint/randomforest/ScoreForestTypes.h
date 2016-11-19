@@ -91,10 +91,10 @@ typedef boost::shared_ptr<const ScorePredictionsImage> ScorePredictionsImage_CPt
 
 enum
 {
-  GPUFOREST_NTREES = 5 // Max number of trees
+  SCOREFOREST_NTREES = 5 // Max number of trees
 };
 
-typedef ORUtils::VectorX<int, GPUFOREST_NTREES> LeafIndices;
+typedef ORUtils::VectorX<int, SCOREFOREST_NTREES> LeafIndices;
 typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
 typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
 typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;

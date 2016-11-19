@@ -176,10 +176,10 @@ void ScoreForest::load_structure_from_file(const std::string &fileName)
   // Check number of trees
   int nbTrees;
   in >> nbTrees;
-  if (!in || nbTrees != GPUFOREST_NTREES)
+  if (!in || nbTrees != SCOREFOREST_NTREES)
     throw std::runtime_error(
         "Number of trees of the loaded forest is incorrect. Should be "
-            + boost::lexical_cast<std::string>(GPUFOREST_NTREES) + " - Read: "
+            + boost::lexical_cast<std::string>(SCOREFOREST_NTREES) + " - Read: "
             + boost::lexical_cast<std::string>(nbTrees));
 
   // Read number of nodes and leaves
@@ -290,21 +290,21 @@ void ScoreForest::save_structure_to_file(const std::string &fileName) const
   std::ofstream out(fileName, std::ios::trunc);
 
   // Write the number of trees
-  out << GPUFOREST_NTREES << '\n';
+  out << SCOREFOREST_NTREES << '\n';
 
   // For each tree write first the number of nodes then the number of leaves
-  for (size_t i = 0; i < GPUFOREST_NTREES; ++i)
+  for (size_t i = 0; i < SCOREFOREST_NTREES; ++i)
   {
     out << m_nbNodesPerTree[i] << ' ' << m_nbLeavesPerTree[i] << '\n';
   }
 
   // Then, for each tree, dump its nodes
   const NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
-  for (int treeIdx = 0; treeIdx < GPUFOREST_NTREES; ++treeIdx)
+  for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
   {
     for (int nodeIdx = 0; nodeIdx < m_nbNodesPerTree[treeIdx]; ++nodeIdx)
     {
-      const NodeEntry& node = forestData[nodeIdx * GPUFOREST_NTREES + treeIdx];
+      const NodeEntry& node = forestData[nodeIdx * SCOREFOREST_NTREES + treeIdx];
       out << node.leftChildIdx << ' ' << node.leafIdx << ' ' << node.featureIdx
           << ' ' << std::setprecision(7) << node.featureThreshold << '\n';
     }
@@ -313,7 +313,7 @@ void ScoreForest::save_structure_to_file(const std::string &fileName) const
 
 size_t ScoreForest::get_nb_trees() const
 {
-  return GPUFOREST_NTREES;
+  return SCOREFOREST_NTREES;
 }
 
 size_t ScoreForest::get_nb_nodes_in_tree(size_t treeIdx) const
@@ -342,7 +342,7 @@ ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
   const int nTrees = pretrained_forest.GetNbTrees();
   const int maxNbNodes = pretrained_forest.GetMaxNbNodesInAnyLearner();
 
-  if (nTrees != GPUFOREST_NTREES)
+  if (nTrees != SCOREFOREST_NTREES)
   {
     throw std::runtime_error(
         "Number of trees in the loaded forest different from the instantiation of GPUForest.");
