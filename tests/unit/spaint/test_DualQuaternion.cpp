@@ -6,9 +6,9 @@
 #include <ITMLib/Utils/ITMMath.h>
 
 #include <ORUtils/SE3Pose.h>
+using namespace ORUtils;
 
 #include <spaint/geometry/DualQuaternion.h>
-using namespace ORUtils;
 using namespace spaint;
 
 //#################### TESTS ####################
