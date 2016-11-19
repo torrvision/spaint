@@ -137,9 +137,8 @@ public:
    *
    * \note A Lie rotation vector v encodes a rotation of |v| about the axis v / |v|.
    *
-   * \param rot                 The Lie rotation vector.
-   * \return                    The dual quaternion.
-   * \throws std::runtime_error If the rotation vector is invalid.
+   * \param rot The Lie rotation vector.
+   * \return    The dual quaternion.
    */
   template <typename U>
   static DualQuaternion<T> from_rotation(const ORUtils::Vector3<U>& rot)
