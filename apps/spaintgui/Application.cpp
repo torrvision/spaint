@@ -171,6 +171,15 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
+  // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
+  // If right shift + / is pressed, toggle video recording.
+  if(keysym.sym == SDLK_SLASH)
+  {
+    if(m_inputState.key_down(KEYCODE_LSHIFT)) toggle_recording("sequence", m_sequencePathGenerator);
+    else if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
+    else save_screenshot();
+  }
+
   // If we are running in batch mode ignore other keypresses.
   if(m_runInBatch) return;
 
@@ -240,15 +249,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   if(keysym.sym == KEYCODE_SEMICOLON)
   {
     m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
-  }
-
-  // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
-  // If right shift + / is pressed, toggle video recording.
-  if(keysym.sym == SDLK_SLASH)
-  {
-    if(m_inputState.key_down(KEYCODE_LSHIFT)) toggle_recording("sequence", m_sequencePathGenerator);
-    else if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
-    else save_screenshot();
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
