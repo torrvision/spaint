@@ -143,7 +143,7 @@ struct DualNumber
    */
   bool is_pure() const
   {
-    return fabs(r) <= 1e-5;
+    return r == 0;
   }
 
   /**
