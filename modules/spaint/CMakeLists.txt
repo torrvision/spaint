@@ -186,11 +186,13 @@ include/spaint/ocv/OpenCVUtil.h
 
 ##
 SET(ogl_sources
+src/ogl/CameraRenderer.cpp
 src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/CameraRenderer.h
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
@@ -351,6 +353,15 @@ include/spaint/sampling/interface/UniformVoxelSampler.h
 SET(sampling_shared_headers
 include/spaint/sampling/shared/PerLabelVoxelSampler_Shared.h
 include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
+)
+
+##
+SET(segmentation_sources
+src/segmentation/SegmentationUtil.cpp
+)
+
+SET(segmentation_headers
+include/spaint/segmentation/SegmentationUtil.h
 )
 
 ##
@@ -520,6 +531,7 @@ src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
+include/spaint/util/CameraFactory.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
@@ -607,6 +619,7 @@ ${randomforest_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
+${segmentation_sources}
 ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
@@ -648,6 +661,7 @@ ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
 ${sampling_shared_headers}
+${segmentation_headers}
 ${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
@@ -753,6 +767,7 @@ SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers}
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
 SOURCE_GROUP(sampling\\interface FILES ${sampling_interface_sources} ${sampling_interface_headers})
 SOURCE_GROUP(sampling\\shared FILES ${sampling_shared_headers})
+SOURCE_GROUP(segmentation FILES ${segmentation_sources} ${segmentation_headers})
 SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
