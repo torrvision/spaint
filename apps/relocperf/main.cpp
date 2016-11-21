@@ -205,9 +205,9 @@ int main(int argc, char *argv[])
   printWidth("Final", 8);
   std::cout << '\n';
 
-  for (auto sequence : sequenceNames)
+  for (const auto &sequence : sequenceNames)
   {
-    auto seqResult = results[sequence];
+    const auto &seqResult = results[sequence];
 
     float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
         / static_cast<float>(seqResult.poseCount) * 100.f;
@@ -223,6 +223,61 @@ int main(int argc, char *argv[])
     printWidth(finalPct, 8);
     std::cout << '\n';
   }
+
+  // Compute average performance
+  float relocSum = 0.f;
+  float icpSum = 0.f;
+  float finalSum = 0.f;
+
+  float relocRawSum = 0.f;
+  float icpRawSum = 0.f;
+  float finalRawSum = 0.f;
+  int poseCount = 0;
+
+  for (const auto &sequence : sequenceNames)
+  {
+    const auto &seqResult = results[sequence];
+
+    // Non-weighted average, we need percentages
+    const float relocPct = static_cast<float>(seqResult.validPosesAfterReloc)
+        / static_cast<float>(seqResult.poseCount);
+    const float icpPct = static_cast<float>(seqResult.validPosesAfterICP)
+        / static_cast<float>(seqResult.poseCount);
+    const float finalPct = static_cast<float>(seqResult.validFinalPoses)
+        / static_cast<float>(seqResult.poseCount);
+
+    relocSum += relocPct;
+    icpSum += icpPct;
+    finalSum += finalPct;
+
+    relocRawSum += static_cast<float>(seqResult.validPosesAfterReloc);
+    icpRawSum += static_cast<float>(seqResult.validPosesAfterICP);
+    finalRawSum += static_cast<float>(seqResult.validFinalPoses);
+    poseCount += seqResult.poseCount;
+  }
+
+  const float relocAvg = relocSum / sequenceNames.size() * 100.f;
+  const float icpAvg = icpSum / sequenceNames.size() * 100.f;
+  const float finalAvg = finalSum / sequenceNames.size() * 100.f;
+
+  const float relocWeightedAvg = relocRawSum / poseCount * 100.f;
+  const float icpWeightedAvg = icpRawSum / poseCount * 100.f;
+  const float finalWeightedAvg = finalRawSum / poseCount * 100.f;
+
+  // Print averages
+  std::cout << '\n';
+  printWidth("Average", 15, true);
+  printWidth(sequenceNames.size(), 8);
+  printWidth(relocAvg, 8);
+  printWidth(icpAvg, 8);
+  printWidth(finalAvg, 8);
+  std::cout << '\n';
+  printWidth("Average (W)", 15, true);
+  printWidth(poseCount, 8);
+  printWidth(relocWeightedAvg, 8);
+  printWidth(icpWeightedAvg, 8);
+  printWidth(finalWeightedAvg, 8);
+  std::cout << '\n';
 
   // Save results of online training-relocalization
   if (argc > 4)
@@ -253,8 +308,7 @@ int main(int argc, char *argv[])
         relocSum += relocSuccess;
         icpSum += icpSuccess;
 
-        float framePct = static_cast<float>(poseIdx) / seqResult.poseCount
-            * 100.f;
+        float framePct = static_cast<float>(poseIdx) / seqResult.poseCount;
         float relocPct = static_cast<float>(relocSum) / poseIdx;
         float icpPct = static_cast<float>(icpSum) / poseIdx;
 
