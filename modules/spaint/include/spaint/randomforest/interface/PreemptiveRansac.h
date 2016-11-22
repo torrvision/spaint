@@ -50,6 +50,7 @@ public:
   boost::optional<PoseCandidate> estimate_pose(
       const RGBDPatchFeatureImage_CPtr &features,
       const ScorePredictionsImage_CPtr &forestPredictions);
+  void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
 
 protected:
   // Member variables from scoreforests

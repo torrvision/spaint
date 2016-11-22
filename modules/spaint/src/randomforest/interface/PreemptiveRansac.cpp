@@ -148,6 +148,17 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
           candidates[0] : boost::optional<PoseCandidate>();
 }
 
+void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates) const
+{
+  // Don't check dataSize since it will be likely 1
+  const PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+
+  for(size_t poseIdx = 0; poseIdx < m_trimKinitAfterFirstEnergyComputation; ++poseIdx)
+  {
+    poseCandidates.push_back(candidates[poseIdx]);
+  }
+}
+
 namespace
 {
 void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
