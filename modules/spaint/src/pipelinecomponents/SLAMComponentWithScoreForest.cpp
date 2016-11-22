@@ -6,6 +6,7 @@
 #include "pipelinecomponents/SLAMComponentWithScoreForest.h"
 
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
+#include "ITMLib/Utils/ITMProjectionUtils.h"
 
 #include "randomforest/cuda/ScoreForest_CUDA.h"
 #include "randomforest/cpu/PreemptiveRansac_CPU.h"
@@ -15,6 +16,8 @@
 
 #include "tvgutil/filesystem/PathFinder.h"
 
+#include <boost/lexical_cast.hpp>
+
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
 //#define SAVE_RELOC_POSES
@@ -22,6 +25,7 @@
 //#define SAVE_INLIERS
 //#define USE_FERN_RELOCALISER
 //#define RELOCALISE_EVERY_TRAINING_FRAME
+//#define SHOW_RANSAC_CORRESPONDENCES
 
 #ifdef ENABLE_TIMERS
 #include <boost/timer/timer.hpp>
@@ -98,15 +102,15 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
 
 #ifdef SAVE_RELOC_POSES
   const std::string poses_folder =
-      m_context->get_tag().empty() ?
-          TimeUtil::get_iso_timestamp() : m_context->get_tag();
+  m_context->get_tag().empty() ?
+  TimeUtil::get_iso_timestamp() : m_context->get_tag();
 
   m_sequentialPathGenerator.reset(
       SequentialPathGenerator(
           find_subdir_from_executable("reloc_poses") / poses_folder));
 
   std::cout << "Saving relocalization poses in: "
-      << m_sequentialPathGenerator->get_base_dir() << std::endl;
+  << m_sequentialPathGenerator->get_base_dir() << std::endl;
   boost::filesystem::create_directories(
       m_sequentialPathGenerator->get_base_dir());
 #endif
@@ -165,7 +169,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const bool performLearning = true;
 #else
   const bool performRelocalization = trackingResult
-  == TrackingResult::TRACKING_FAILED;
+      == TrackingResult::TRACKING_FAILED;
   const bool performLearning = trackingResult == TrackingResult::TRACKING_GOOD;
 #endif
 
@@ -179,7 +183,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const View_Ptr& view = slamState->get_view();
 
   const Vector4f depthIntrinsics =
-  view->calib.intrinsics_d.projectionParamsSimple.all;
+      view->calib.intrinsics_d.projectionParamsSimple.all;
 
   if (m_updateForestModesEveryFrame && !performLearning)
   {
@@ -252,7 +256,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
     evaluate_forest();
     boost::optional<PoseCandidate> pose_candidate =
-    m_preemptiveRansac->estimate_pose(m_featureImage, m_predictionsImage);
+        m_preemptiveRansac->estimate_pose(m_featureImage, m_predictionsImage);
 
     if (pose_candidate)
     {
@@ -319,9 +323,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
-      const VoxelRenderState_Ptr& liveVoxelRenderState =
-      slamState->get_live_voxel_render_state();
-      const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+      VoxelRenderState_Ptr liveVoxelRenderState =
+          slamState->get_live_voxel_render_state();
+      SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
@@ -343,12 +347,182 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
             m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
 
         const Matrix4f final_pose =
-        trackingResult == TrackingResult::TRACKING_GOOD ?
-        trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
+            trackingResult == TrackingResult::TRACKING_GOOD ?
+                trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
 
         PosePersister::save_pose_on_thread(final_pose,
             m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
       }
+
+#ifdef SHOW_RANSAC_CORRESPONDENCES
+      static int relocalisationCount = 0;
+      if (relocalisationCount++ == 451)
+      {
+        // Render RGB
+        ITMUChar4Image_Ptr renderedRGB =
+            MemoryBlockFactory::instance().make_image<Vector4u>(
+                Vector2i(640, 480));
+
+        m_context->get_visualisation_generator()->get_rgb_input(renderedRGB,
+            view);
+
+        cv::Mat outRGB = cv::Mat(480, 640, CV_8UC4,
+            renderedRGB->GetData(MEMORYDEVICE_CPU)).clone();
+        cv::cvtColor(outRGB, outRGB, CV_RGBA2BGR);
+
+        // Get last pose candidates
+        std::vector<PoseCandidate> candidates;
+        m_preemptiveRansac->get_best_poses(candidates);
+
+        ITMUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<
+            Vector4u>(Vector2i(640, 480));
+
+        std::vector<cv::Mat> rgbWithPoints;
+        std::vector<cv::Mat> raycastedPoses;
+
+        std::vector<cv::Scalar> colours
+        { CV_RGB(255, 0, 0), CV_RGB(0, 255, 0), CV_RGB(0, 0, 255) };
+
+        for (size_t candidateIdx = 0; candidateIdx < candidates.size();
+            ++candidateIdx)
+        {
+          PoseCandidate &candidate = candidates[candidateIdx];
+
+          ORUtils::SE3Pose pose;
+          pose.SetInvM(candidate.cameraPose);
+
+          m_context->get_visualisation_generator()->generate_voxel_visualisation(
+              rendered, voxelScene, pose, view, liveVoxelRenderState,
+              VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN);
+
+          cv::Mat raycastedPose = cv::Mat(480, 640, CV_8UC4,
+              rendered->GetData(MEMORYDEVICE_CPU)).clone();
+          cv::cvtColor(raycastedPose, raycastedPose, CV_RGBA2BGR);
+
+          // Draw kabsch points in the images
+          cv::Mat rgbKabsch = outRGB.clone();
+          for (size_t i = 0; i < 3; ++i)
+          {
+
+            // Draw camera point
+            Vector2f ptCamera = project(candidate.cameraPoints[i],
+                depthIntrinsics);
+            cv::circle(rgbKabsch, cv::Point(ptCamera.x, ptCamera.y), 12,
+                cv::Scalar::all(255), CV_FILLED);
+            cv::circle(rgbKabsch, cv::Point(ptCamera.x, ptCamera.y), 9,
+                colours[i],
+                CV_FILLED);
+
+            // Draw world point
+            Vector2f ptRaycast = project(pose.GetM() * candidate.worldPoints[i],
+                depthIntrinsics);
+            cv::circle(raycastedPose, cv::Point(ptRaycast.x, ptRaycast.y), 12,
+                cv::Scalar::all(255), CV_FILLED);
+            cv::circle(raycastedPose, cv::Point(ptRaycast.x, ptRaycast.y), 9,
+                colours[i],
+                CV_FILLED);
+          }
+
+          rgbWithPoints.push_back(rgbKabsch);
+          raycastedPoses.push_back(raycastedPose);
+        }
+
+        const int textHeight = 10;
+        const int gap = 10;
+        const int blockWidth = 640 + gap;
+        const int blockHeight = 480 * 2 + textHeight;
+
+        cv::Mat outCanvas(blockHeight * 4 - textHeight, blockWidth * 4 - gap,
+        CV_8UC3, cv::Scalar::all(255));
+
+//        for (size_t i = 0; i < rgbWithPoints.size(); ++i)
+        for (size_t i = 0; i < 16; ++i)
+        {
+          cv::Rect rgbRect(blockWidth * (i % 4), blockHeight * (i / 4), 640,
+              480);
+          cv::Rect raycastRect(blockWidth * (i % 4),
+              blockHeight * (i / 4) + 480, 640, 480);
+
+//          std::string text = boost::lexical_cast<std::string>(
+//              candidates[i].energy);
+//          int baseline;
+//          cv::Size textSize = cv::getTextSize(text, CV_FONT_HERSHEY_SIMPLEX,
+//              1.1, 4, &baseline);
+//
+//          cv::Mat textMat(textHeight, 640, CV_8UC3, cv::Scalar::all(255));
+//
+//          cv::Point textOrg((textMat.cols - textSize.width) / 2,
+//              (textMat.rows + textSize.height) / 2);
+//
+//          cv::putText(textMat, text, textOrg,
+//          CV_FONT_HERSHEY_SIMPLEX, 1.1, cv::Scalar::all(0), 4, cv::LINE_AA);
+//
+//          cv::Rect textRect(blockWidth * (i % 8), blockHeight * (i / 8) + 960,
+//              640, textHeight);
+
+          rgbWithPoints[i].copyTo(outCanvas(rgbRect));
+          raycastedPoses[i].copyTo(outCanvas(raycastRect));
+//          textMat.copyTo(outCanvas(textRect));
+        }
+
+#if 0
+        cv::namedWindow("Canvas", CV_WINDOW_KEEPRATIO);
+        cv::imshow("Canvas", outCanvas);
+        cv::waitKey();
+#endif
+
+        if (m_sequentialPathGenerator)
+        {
+          std::string outPath = m_sequentialPathGenerator->make_path(
+              "candidates-%06i.png").string();
+          cv::imwrite(outPath, outCanvas);
+        }
+
+#if 0
+        // Print candidate 0 modes
+        PoseCandidate candidate = candidates[0];
+
+        Vector2f ptCamera[3];
+        Vector2i ptCameraInt[3];
+        int linearIdxDownsampled[3];
+        ScorePrediction predictions[3];
+        for (int i = 0; i < 3; ++i)
+        {
+          ptCamera[i] = project(candidate.cameraPoints[i], depthIntrinsics);
+          ptCameraInt[i] = ptCamera[i].toInt();
+          linearIdxDownsampled[i] = (inputDepthImage->noDims.width / 4)
+          * (ptCameraInt[i].y / 4) + ptCameraInt[i].x / 4;
+          predictions[i] =
+          m_predictionsImage->GetData(MEMORYDEVICE_CPU)[linearIdxDownsampled[i]];
+        }
+
+        for (int i = 0; i < 3; ++i)
+        {
+          const ScorePrediction p = predictions[i];
+          std::cout << p.nbModes << ' ' << linearIdxDownsampled[i] << '\n';
+          for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
+          {
+            const ScoreMode &m = p.modes[modeIdx];
+            std::cout << 1 << ' ' << m.position.x << ' ' << m.position.y << ' '
+            << m.position.z << ' ';
+
+            // Invet and transpose the covariance to print it in row-major
+            Matrix3f posCovariance;
+            m.positionInvCovariance.inv(posCovariance);
+            posCovariance = posCovariance.t();
+
+            for (int i = 0; i < 9; ++i)
+            std::cout << posCovariance.m[i] << ' ';
+            std::cout << '\n';
+          }
+          std::cout << '\n';
+        }
+
+        exit(0);
+#endif
+      }
+
+#endif
 
 #ifdef SAVE_RELOC_POSES
       trackingResult = TrackingResult::TRACKING_POOR;
@@ -418,7 +592,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   }
 
 #ifdef RELOCALISE_EVERY_TRAINING_FRAME
-  // Restore tracked pose
+// Restore tracked pose
   trackingState->pose_d->SetFrom(&trackedPose);
   trackingResult = TrackingResult::TRACKING_GOOD;
 #endif
@@ -433,32 +607,32 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 {
   boost::optional<boost::timer::cpu_timer> relocalizationTimer;
   if (m_timeRelocalizer)
-    relocalizationTimer = boost::timer::cpu_timer();
+  relocalizationTimer = boost::timer::cpu_timer();
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const VoxelRenderState_Ptr& liveVoxelRenderState =
-      slamState->get_live_voxel_render_state();
+  slamState->get_live_voxel_render_state();
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
   const SE3Pose trackedPose(*trackingState->pose_d);
 
-  // Copy the current depth input across to the CPU for use by the relocaliser.
+// Copy the current depth input across to the CPU for use by the relocaliser.
   view->depth->UpdateHostFromDevice();
 
-  // Decide whether or not the relocaliser should consider using this frame as a keyframe.
+// Decide whether or not the relocaliser should consider using this frame as a keyframe.
   bool considerKeyframe = false;
   if (trackingResult == ITMTrackingState::TRACKING_GOOD)
   {
     if (m_keyframeDelay == 0)
-      considerKeyframe = true;
+    considerKeyframe = true;
     else
-      --m_keyframeDelay;
+    --m_keyframeDelay;
   }
 
-  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-  // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
-  // good for some time and the current frame differs sufficiently from the existing keyframes.
+// Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
+// that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
+// good for some time and the current frame differs sufficiently from the existing keyframes.
   int nearestNeighbour;
   int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1,
       &nearestNeighbour, NULL, considerKeyframe);
@@ -508,8 +682,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
           m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
 
       const Matrix4f final_pose =
-          trackingResult == TrackingResult::TRACKING_GOOD ?
-              refinedPose.GetInvM() : relocPose.GetInvM();
+      trackingResult == TrackingResult::TRACKING_GOOD ?
+      refinedPose.GetInvM() : relocPose.GetInvM();
 
       PosePersister::save_pose_on_thread(final_pose,
           m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
@@ -559,7 +733,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   }
 
 #ifdef RELOCALISE_EVERY_TRAINING_FRAME
-  // Restore tracked pose
+// Restore tracked pose
   trackingState->pose_d->SetFrom(&trackedPose);
   trackingResult = TrackingResult::TRACKING_GOOD;
 #endif
