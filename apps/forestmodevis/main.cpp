@@ -112,6 +112,8 @@ int main(int argc, char *argv[])
 
   // Load modes
   static const int NTREES = 5;
+  // To visualize Kabsch modes
+  // static const int NTREES = 3;
   std::vector<std::vector<Mode>> modesByTree(NTREES);
 
   std::ifstream inModes(modesFile);
