@@ -67,9 +67,9 @@ inline void example_reservoirs_add_example(const FeatureType &feature,
       // Generate a random index and check if we have to evict an example
       const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
           addCallsCount);
-      //      const int randomIdx = static_cast<int>(truncf(
-      //          curand_uniform(&randomStates[linearIdx])
-      //              * (reservoirCapacity + 0.999999f)));
+      // The code below always evicts a sample.
+//      const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
+//          reservoirCapacity);
 
       if (randomIdx < reservoirCapacity)
       {
