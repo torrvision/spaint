@@ -7,6 +7,8 @@
 #define H_SPAINT_GEOMETRYUTIL
 
 #include <cmath>
+#include <map>
+#include <vector>
 
 #include <ORUtils/SE3Pose.h>
 
@@ -22,6 +24,14 @@ struct GeometryUtil
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
+   * \brief Blends a set of (similar) poses together to construct a refined pose.
+   *
+   * \param poses The poses to blend.
+   * \return      The refined pose.
+   */
+  static ORUtils::SE3Pose blend_poses(const std::vector<ORUtils::SE3Pose>& poses);
+
+  /**
    * \brief Converts a dual quaternion to an SE(3) pose.
    *
    * \param dq  The dual quaternion.
@@ -34,6 +44,26 @@ struct GeometryUtil
     pose.SetFrom(dq.get_translation().toFloat(), dq.get_rotation().toFloat());
     return pose;
   }
+
+  /**
+   * \brief Finds a pose hypothesis with the greatest number of inliers.
+   *
+   * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
+   * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
+   * \return                          The best hypothesis.
+   */
+  static ORUtils::SE3Pose find_best_hypothesis(const std::vector<ORUtils::SE3Pose>& poseHypotheses,
+                                               std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis);
+
+  /**
+   * \brief Finds a pose hypothesis with the greatest number of inliers.
+   *
+   * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
+   * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
+   * \return                          The ID of the best hypothesis.
+   */
+  static std::string find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& poseHypotheses,
+                                          std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis);
 
   /**
    * \brief Converts an SE(3) pose to a dual quaternion.

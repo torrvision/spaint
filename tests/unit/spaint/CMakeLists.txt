@@ -16,7 +16,6 @@ SET(testnames
 ColourConversion
 DualNumber
 DualQuaternion
-ExhaustivePoseRefiner
 GeometryUtil
 )
 

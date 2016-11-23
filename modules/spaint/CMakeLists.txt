@@ -82,14 +82,12 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 
 ##
 SET(geometry_sources
-src/geometry/ExhaustivePoseRefiner.cpp
 src/geometry/GeometryUtil.cpp
 )
 
 SET(geometry_headers
 include/spaint/geometry/DualNumber.h
 include/spaint/geometry/DualQuaternion.h
-include/spaint/geometry/ExhaustivePoseRefiner.h
 include/spaint/geometry/GeometryUtil.h
 include/spaint/geometry/Screw.h
 )
