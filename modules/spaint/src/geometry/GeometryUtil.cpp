@@ -34,7 +34,8 @@ ORUtils::SE3Pose GeometryUtil::blend_poses(const std::vector<ORUtils::SE3Pose>& 
 }
 
 ORUtils::SE3Pose GeometryUtil::find_best_hypothesis(const std::vector<ORUtils::SE3Pose>& poseHypotheses,
-                                                    std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis)
+                                                    std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis,
+                                                    double rotThreshold, float transThreshold)
 {
   std::map<std::string,ORUtils::SE3Pose> poseHypothesesMap;
   for(size_t i = 0, size = poseHypotheses.size(); i < size; ++i)
@@ -42,12 +43,13 @@ ORUtils::SE3Pose GeometryUtil::find_best_hypothesis(const std::vector<ORUtils::S
     poseHypothesesMap.insert(std::make_pair(boost::lexical_cast<std::string>(i), poseHypotheses[i]));
   }
 
-  std::string bestHypothesis = find_best_hypothesis(poseHypothesesMap, inliersForBestHypothesis);
+  std::string bestHypothesis = find_best_hypothesis(poseHypothesesMap, inliersForBestHypothesis, rotThreshold, transThreshold);
   return MapUtil::lookup(poseHypothesesMap, bestHypothesis);
 }
 
 std::string GeometryUtil::find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& poseHypotheses,
-                                               std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis)
+                                               std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis,
+                                               double rotThreshold, float transThreshold)
 {
   std::string bestHypothesis;
 
@@ -58,7 +60,7 @@ std::string GeometryUtil::find_best_hypothesis(const std::map<std::string,ORUtil
     std::vector<ORUtils::SE3Pose> inliers;
     for(std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = poseHypotheses.begin(), jend = poseHypotheses.end(); jt != jend; ++jt)
     {
-      if(poses_are_similar(it->second, jt->second))
+      if(poses_are_similar(it->second, jt->second, rotThreshold, transThreshold))
       {
         inliers.push_back(jt->second);
       }

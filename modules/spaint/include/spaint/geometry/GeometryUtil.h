@@ -50,20 +50,26 @@ struct GeometryUtil
    *
    * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
    * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
+   * \param rotThreshold              The angular threshold to use when comparing rotations.
+   * \param transThreshold            The distance threshold to use when comparing translations.
    * \return                          The best hypothesis.
    */
   static ORUtils::SE3Pose find_best_hypothesis(const std::vector<ORUtils::SE3Pose>& poseHypotheses,
-                                               std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis);
+                                               std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis,
+                                               double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
 
   /**
    * \brief Finds a pose hypothesis with the greatest number of inliers.
    *
    * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
    * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
+   * \param rotThreshold              The angular threshold to use when comparing rotations.
+   * \param transThreshold            The distance threshold to use when comparing translations.
    * \return                          The ID of the best hypothesis.
    */
   static std::string find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& poseHypotheses,
-                                          std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis);
+                                          std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis,
+                                          double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
 
   /**
    * \brief Converts an SE(3) pose to a dual quaternion.

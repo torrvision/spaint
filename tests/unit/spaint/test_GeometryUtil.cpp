@@ -48,6 +48,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
 {
+  const double rotThreshold = 20 * M_PI / 180;
+  const float transThreshold = 0.05f;
   const Vector3<T> up(0,0,1);
 
   std::map<std::string,SE3Pose> inputPoses;
@@ -65,7 +67,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
   }
 
   std::vector<SE3Pose> inliersForBestHypothesis;
-  int bestHypothesis = boost::lexical_cast<int>(GeometryUtil::find_best_hypothesis(inputPoses, inliersForBestHypothesis));
+  int bestHypothesis = boost::lexical_cast<int>(GeometryUtil::find_best_hypothesis(inputPoses, inliersForBestHypothesis, rotThreshold, transThreshold));
 
   // Check that one of the poses around 3*PI/2 was picked.
   BOOST_CHECK_GT(bestHypothesis, 1 + 3 + 5);
