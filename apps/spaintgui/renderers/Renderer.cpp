@@ -25,11 +25,6 @@ using namespace spaint;
 #include <spaint/selectors/LeapSelector.h>
 #endif
 
-#ifdef WITH_OPENCV
-#include <opencv2/aruco.hpp>
-#include <spaint/ocv/OpenCVUtil.h>
-#endif
-
 //#################### LOCAL TYPES ####################
 
 /**
