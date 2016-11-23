@@ -85,7 +85,7 @@ SET(fiducials_sources
 src/fiducials/AveragingFiducial.cpp
 src/fiducials/Fiducial.cpp
 src/fiducials/FiducialMeasurement.cpp
-src/fiducials/FiducialRelocaliser.cpp
+src/fiducials/FiducialPoseEstimator.cpp
 src/fiducials/SimpleFiducial.cpp
 )
 
@@ -94,7 +94,7 @@ include/spaint/fiducials/AveragingFiducial.h
 include/spaint/fiducials/Fiducial.h
 include/spaint/fiducials/FiducialDetector.h
 include/spaint/fiducials/FiducialMeasurement.h
-include/spaint/fiducials/FiducialRelocaliser.h
+include/spaint/fiducials/FiducialPoseEstimator.h
 include/spaint/fiducials/SimpleFiducial.h
 )
 

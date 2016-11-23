@@ -1,9 +1,9 @@
 /**
- * spaint: FiducialRelocaliser.cpp
+ * spaint: FiducialPoseEstimator.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "fiducials/FiducialRelocaliser.h"
+#include "fiducials/FiducialPoseEstimator.h"
 
 #include "geometry/GeometryUtil.h"
 
@@ -11,8 +11,8 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-boost::optional<ORUtils::SE3Pose> FiducialRelocaliser::estimate_pose(const std::map<std::string,Fiducial_Ptr>& fiducials,
-                                                                     const std::map<std::string,FiducialMeasurement>& measurements)
+boost::optional<ORUtils::SE3Pose> FiducialPoseEstimator::estimate_pose(const std::map<std::string,Fiducial_Ptr>& fiducials,
+                                                                       const std::map<std::string,FiducialMeasurement>& measurements)
 {
   // Compute a set of camera pose hypotheses based on the correspondences between the live measurements and the known fiducials.
   std::map<std::string,ORUtils::SE3Pose> cameraPoseHypotheses = compute_hypotheses(fiducials, measurements);
@@ -28,8 +28,8 @@ boost::optional<ORUtils::SE3Pose> FiducialRelocaliser::estimate_pose(const std::
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-std::map<std::string,ORUtils::SE3Pose> FiducialRelocaliser::compute_hypotheses(const std::map<std::string,Fiducial_Ptr>& fiducials,
-                                                                               const std::map<std::string,FiducialMeasurement>& measurements)
+std::map<std::string,ORUtils::SE3Pose> FiducialPoseEstimator::compute_hypotheses(const std::map<std::string,Fiducial_Ptr>& fiducials,
+                                                                                 const std::map<std::string,FiducialMeasurement>& measurements)
 {
   std::map<std::string,ORUtils::SE3Pose> cameraPoseHypotheses;
 

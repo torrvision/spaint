@@ -1,10 +1,10 @@
 /**
- * spaint: FiducialRelocaliser.h
+ * spaint: FiducialPoseEstimator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_FIDUCIALRELOCALISER
-#define H_SPAINT_FIDUCIALRELOCALISER
+#ifndef H_SPAINT_FIDUCIALPOSEESTIMATOR
+#define H_SPAINT_FIDUCIALPOSEESTIMATOR
 
 #include <map>
 
@@ -13,9 +13,9 @@
 namespace spaint {
 
 /**
- * \brief This class can be used to relocalise a camera in a scene using fiducial markers.
+ * \brief This class can be used to estimate the current camera pose using fiducial markers.
  */
-class FiducialRelocaliser
+class FiducialPoseEstimator
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
