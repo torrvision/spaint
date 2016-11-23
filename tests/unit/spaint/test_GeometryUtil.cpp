@@ -1,6 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/list.hpp>
 
 #include <ITMLib/Utils/ITMMath.h>
@@ -17,12 +18,14 @@ BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
 {
+  const Vector3<T> up(0,0,1);
+
   std::vector<SE3Pose> inputPoses;
   for(float i = -2.0f; i <= 2.0f; ++i)
   {
     inputPoses.push_back(GeometryUtil::dual_quat_to_pose(
       DualQuaternion<T>::from_translation(Vector3<T>(i,0,0)) *
-      DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(i * M_PI / 180))
+      DualQuaternion<T>::from_rotation(up, T(i * M_PI / 180))
     ));
   }
 
@@ -41,6 +44,35 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
   BOOST_CHECK_SMALL(length(t), 1e-4f);
   BOOST_CHECK_SMALL(length(r - Vector3f(0,0,(float)M_PI_2)), 1e-4f);
   BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(pose), dq));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
+{
+  const Vector3<T> up(0,0,1);
+
+  std::map<std::string,SE3Pose> inputPoses;
+  size_t id = 0;
+  for(float i = 0.0f; i < 4.0f; ++i)
+  {
+    for(float j = -i; j <= i; ++j)
+    {
+      float angle = static_cast<float>(i * M_PI_2 + j * M_PI / 180);
+      inputPoses.insert(std::make_pair(
+        boost::lexical_cast<std::string>(id++),
+        GeometryUtil::dual_quat_to_pose(DualQuaternion<T>::from_rotation(up, angle))
+      ));
+    }
+  }
+
+  std::vector<SE3Pose> inliersForBestHypothesis;
+  int bestHypothesis = boost::lexical_cast<int>(GeometryUtil::find_best_hypothesis(inputPoses, inliersForBestHypothesis));
+
+  // Check that one of the poses around 3*PI/2 was picked.
+  BOOST_CHECK_GT(bestHypothesis, 1 + 3 + 5);
+
+  // Check that blending the inliers together gives the 3*PI/2 pose.
+  SE3Pose refinedPose = GeometryUtil::blend_poses(inliersForBestHypothesis);
+  BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(refinedPose), DualQuaternion<T>::from_rotation(up, T(3 * M_PI_2))));
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)

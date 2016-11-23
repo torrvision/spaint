@@ -43,7 +43,6 @@ ORUtils::SE3Pose GeometryUtil::find_best_hypothesis(const std::vector<ORUtils::S
   }
 
   std::string bestHypothesis = find_best_hypothesis(poseHypothesesMap, inliersForBestHypothesis);
-
   return MapUtil::lookup(poseHypothesesMap, bestHypothesis);
 }
 
