@@ -91,6 +91,18 @@ include/spaint/features/shared/RGBDPatchFeatureCalculator_Shared.h
 )
 
 ##
+SET(geometry_sources
+src/geometry/GeometryUtil.cpp
+)
+
+SET(geometry_headers
+include/spaint/geometry/DualNumber.h
+include/spaint/geometry/DualQuaternion.h
+include/spaint/geometry/GeometryUtil.h
+include/spaint/geometry/Screw.h
+)
+
+##
 SET(imageprocessing_sources)
 SET(imageprocessing_headers)
 
@@ -196,11 +208,13 @@ include/spaint/ocv/OpenCVUtil.h
 
 ##
 SET(ogl_sources
+src/ogl/CameraRenderer.cpp
 src/ogl/FrameBuffer.cpp
 src/ogl/QuadricRenderer.cpp
 )
 
 SET(ogl_headers
+include/spaint/ogl/CameraRenderer.h
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
@@ -416,6 +430,15 @@ include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
 )
 
 ##
+SET(segmentation_sources
+src/segmentation/SegmentationUtil.cpp
+)
+
+SET(segmentation_headers
+include/spaint/segmentation/SegmentationUtil.h
+)
+
+##
 SET(selectiontransformers_sources
 src/selectiontransformers/SelectionTransformerFactory.cpp
 )
@@ -583,6 +606,7 @@ src/util/RGBDUtil.cpp
 )
 
 SET(util_headers
+include/spaint/util/CameraFactory.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
@@ -657,6 +681,7 @@ SET(sources
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
+${geometry_sources}
 ${imageprocessing_sources}
 ${imagesources_sources}
 ${markers_sources}
@@ -674,6 +699,7 @@ ${randomforest_interface_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
+${segmentation_sources}
 ${selectiontransformers_sources}
 ${selectiontransformers_cpu_sources}
 ${selectiontransformers_interface_sources}
@@ -694,6 +720,7 @@ ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${geometry_headers}
 ${imageprocessing_headers}
 ${imagesources_headers}
 ${markers_headers}
@@ -718,6 +745,7 @@ ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
 ${sampling_shared_headers}
+${segmentation_headers}
 ${selectiontransformers_headers}
 ${selectiontransformers_cpu_headers}
 ${selectiontransformers_interface_headers}
@@ -795,6 +823,7 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers}
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imageprocessing FILES ${imageprocessing_sources} ${imageprocessing_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})
@@ -829,6 +858,7 @@ SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers}
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
 SOURCE_GROUP(sampling\\interface FILES ${sampling_interface_sources} ${sampling_interface_headers})
 SOURCE_GROUP(sampling\\shared FILES ${sampling_shared_headers})
+SOURCE_GROUP(segmentation FILES ${segmentation_sources} ${segmentation_headers})
 SOURCE_GROUP(selectiontransformers FILES ${selectiontransformers_sources} ${selectiontransformers_headers})
 SOURCE_GROUP(selectiontransformers\\cpu FILES ${selectiontransformers_cpu_sources} ${selectiontransformers_cpu_headers})
 SOURCE_GROUP(selectiontransformers\\cuda FILES ${selectiontransformers_cuda_sources} ${selectiontransformers_cuda_headers})
