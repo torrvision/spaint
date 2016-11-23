@@ -1,6 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/list.hpp>
 
 #include <ITMLib/Utils/ITMMath.h>
@@ -15,6 +16,25 @@ typedef boost::mpl::list<double,float> TS;
 
 BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
 
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
+{
+  // Generate five poses around the identity pose by jittering the rotation angle and translation.
+  std::vector<SE3Pose> inputPoses;
+  const Vector3<T> up(0,0,1);
+
+  for(float i = -2.0f; i <= 2.0f; ++i)
+  {
+    inputPoses.push_back(GeometryUtil::dual_quat_to_pose(
+      DualQuaternion<T>::from_translation(Vector3<T>(i,0,0)) *
+      DualQuaternion<T>::from_rotation(up, T(i * M_PI / 180))
+    ));
+  }
+
+  // Check that the result of blending the poses is the identity pose.
+  SE3Pose outputPose = GeometryUtil::blend_poses(inputPoses);
+  BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(outputPose), DualQuaternion<T>::identity()));
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
 {
   DualQuaternion<T> dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
@@ -26,6 +46,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
   BOOST_CHECK_SMALL(length(t), 1e-4f);
   BOOST_CHECK_SMALL(length(r - Vector3f(0,0,(float)M_PI_2)), 1e-4f);
   BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(pose), dq));
+}
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
+{
+  // Generate increasingly-large clusters of rotated poses around the z axis at 0, PI/2, PI and 3*PI/2 radians.
+  const double rotThreshold = 20 * M_PI / 180;
+  const float transThreshold = 0.05f;
+  const Vector3<T> up(0,0,1);
+
+  std::map<std::string,SE3Pose> inputPoses;
+  size_t id = 0;
+  for(float i = 0.0f; i < 4.0f; ++i)
+  {
+    for(float j = -i; j <= i; ++j)
+    {
+      float angle = static_cast<float>(i * M_PI_2 + j * M_PI / 180);
+      inputPoses.insert(std::make_pair(
+        boost::lexical_cast<std::string>(id++),
+        GeometryUtil::dual_quat_to_pose(DualQuaternion<T>::from_rotation(up, angle))
+      ));
+    }
+  }
+
+  // Find the best hypothesis from these poses, and check that it is one of the poses around 3*PI/2.
+  std::vector<SE3Pose> inliersForBestHypothesis;
+  int bestHypothesisID = boost::lexical_cast<int>(GeometryUtil::find_best_hypothesis(inputPoses, inliersForBestHypothesis, rotThreshold, transThreshold));
+  BOOST_CHECK_GT(bestHypothesisID, 1 + 3 + 5);
+
+  // Check that blending the inliers for the best hypothesis together gives the 3*PI/2 pose.
+  SE3Pose refinedPose = GeometryUtil::blend_poses(inliersForBestHypothesis);
+  BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(refinedPose), DualQuaternion<T>::from_rotation(up, T(3 * M_PI_2))));
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_pose_to_dual_quat, T, TS)

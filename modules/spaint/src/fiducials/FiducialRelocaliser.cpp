@@ -5,7 +5,7 @@
 
 #include "fiducials/FiducialRelocaliser.h"
 
-#include "geometry/ExhaustivePoseRefiner.h"
+#include "geometry/GeometryUtil.h"
 
 namespace spaint {
 
@@ -18,11 +18,11 @@ boost::optional<ORUtils::SE3Pose> FiducialRelocaliser::estimate_pose(const std::
   std::map<std::string,ORUtils::SE3Pose> cameraPoseHypotheses = compute_hypotheses(fiducials, measurements);
 
   // Try to find a best camera pose hypothesis using exhaustive search.
-  std::map<std::string,ORUtils::SE3Pose> inliersForBestHypothesis;
-  std::string bestHypothesis = ExhaustivePoseRefiner::find_best_hypothesis(cameraPoseHypotheses, inliersForBestHypothesis);
+  std::vector<ORUtils::SE3Pose> inliersForBestHypothesis;
+  std::string bestHypothesisID = GeometryUtil::find_best_hypothesis(cameraPoseHypotheses, inliersForBestHypothesis);
 
   // If a best hypothesis was found, return the result of blending its inliers together; if not, return none.
-  if(bestHypothesis != "") return ExhaustivePoseRefiner::blend_poses(inliersForBestHypothesis);
+  if(bestHypothesisID != "") return GeometryUtil::blend_poses(inliersForBestHypothesis);
   else return boost::none;
 }
 
