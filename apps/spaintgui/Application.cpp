@@ -45,6 +45,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline)
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
+  m_renderFiducials(false),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
@@ -77,7 +78,7 @@ void Application::run()
     }
 
     // Render the scene.
-    m_renderer->render(m_fracWindowPos);
+    m_renderer->render(m_fracWindowPos, m_renderFiducials);
 
     // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
@@ -262,6 +263,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 5 = To Correction Mode\n"
               << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
+              << "Q + 1 = Disable Fiducials\n"
+              << "Q + 2 = Enable Fiducials with Rendering\n"
+              << "Q + 3 = Enable Fiducials without Rendering\n"
               << "R + # = To Windowed Renderer (Specified Subwindow Configuration)\n"
               << "RShift + R + 1 = To Rift Renderer (Windowed)\n"
               << "RShift + R + 2 = To Rift Renderer (Fullscreen)\n"
@@ -445,10 +449,28 @@ bool Application::process_events()
   return true;
 }
 
+void Application::process_fiducial_input()
+{
+  if(m_inputState.key_down(KEYCODE_q))
+  {
+    if(m_inputState.key_down(KEYCODE_1))
+    {
+      // TODO: Disable the use of fiducials.
+      m_renderFiducials = false;
+    }
+    else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
+    {
+      // TODO: Enable the use of fiducials.
+      m_renderFiducials = m_inputState.key_down(KEYCODE_2);
+    }
+  }
+}
+
 void Application::process_input()
 {
   process_camera_input();
   process_command_input();
+  process_fiducial_input();
   process_labelling_input();
   process_mode_input();
   process_renderer_input();

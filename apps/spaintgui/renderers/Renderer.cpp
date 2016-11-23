@@ -279,7 +279,7 @@ void Renderer::initialise_common()
   glGenTextures(1, &m_textureID);
 }
 
-void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const std::string& secondaryCameraName) const
+void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials, int viewIndex, const std::string& secondaryCameraName) const
 {
   // Set the viewport for the window.
   const Vector2i& windowViewportSize = get_window_viewport_size();
@@ -318,7 +318,7 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, int viewIndex, const 
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
     render_reconstructed_scene(sceneID, pose, subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex), subwindow);
-    render_synthetic_scene(sceneID, pose);
+    render_synthetic_scene(sceneID, pose, renderFiducials);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
     // Render the value of the pixel to which the user is pointing (for debugging purposes).
@@ -448,7 +448,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, bool renderFiducials) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -478,19 +478,20 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
       if(transformer) transformer->accept(selectorRenderer);
       m_model->get_selector()->accept(selectorRenderer);
 
-#if 1
-      // TEMPORARY: Render any fiducials that have been detected.
-      const std::map<std::string,Fiducial_Ptr>& fiducials = slamState->get_fiducials();
-      for(std::map<std::string,Fiducial_Ptr>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
+      // If we're rendering fiducials, render any that have been detected.
+      if(renderFiducials)
       {
-        float confidence = it->second->confidence();
-        if(confidence < Fiducial::stable_confidence()) continue;
+        const std::map<std::string,Fiducial_Ptr>& fiducials = slamState->get_fiducials();
+        for(std::map<std::string,Fiducial_Ptr>::const_iterator it = fiducials.begin(), iend = fiducials.end(); it != iend; ++it)
+        {
+          float confidence = it->second->confidence();
+          if(confidence < Fiducial::stable_confidence()) continue;
 
-        SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second->pose());
-        float c = CLAMP(confidence / Fiducial::stable_confidence(), 0.0f, 1.0f);
-        CameraRenderer::render_camera(cam, CameraRenderer::AXES_XYZ, 0.1f, Vector3f(c, c, 0.0f));
+          SimpleCamera cam = CameraPoseConverter::pose_to_camera(it->second->pose());
+          float c = CLAMP(confidence / Fiducial::stable_confidence(), 0.0f, 1.0f);
+          CameraRenderer::render_camera(cam, CameraRenderer::AXES_XYZ, 0.1f, Vector3f(c, c, 0.0f));
+        }
       }
-#endif
     }
     glPopMatrix();
   }
