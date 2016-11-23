@@ -24,7 +24,7 @@ struct GeometryUtil
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief Blends a set of (similar) poses together to construct a refined pose.
+   * \brief Linearly blends a set of poses together to construct a refined pose.
    *
    * \param poses The poses to blend.
    * \return      The refined pose.
@@ -46,7 +46,7 @@ struct GeometryUtil
   }
 
   /**
-   * \brief Finds a pose hypothesis with the greatest number of inliers.
+   * \brief Finds a pose hypothesis with the greatest number of inliers from a set of such hypotheses.
    *
    * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
    * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
@@ -59,7 +59,7 @@ struct GeometryUtil
                                                double rotThreshold = 20 * M_PI / 180, float transThreshold = 0.05f);
 
   /**
-   * \brief Finds a pose hypothesis with the greatest number of inliers.
+   * \brief Finds a pose hypothesis with the greatest number of inliers from a set of such hypotheses.
    *
    * \param poseHypotheses            The set of pose hypotheses from which to choose the best hypothesis.
    * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
