@@ -7,6 +7,7 @@
 #define H_SPAINT_EXHAUSTIVEPOSEREFINER
 
 #include <map>
+#include <vector>
 
 #include <ORUtils/SE3Pose.h>
 
@@ -20,12 +21,12 @@ struct ExhaustivePoseRefiner
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
-   * \brief Blends a set of poses together to construct a refined pose.
+   * \brief Blends a set of (similar) poses together to construct a refined pose.
    *
    * \param poses The poses to blend.
    * \return      The refined pose.
    */
-  static ORUtils::SE3Pose blend_poses(const std::map<std::string,ORUtils::SE3Pose>& poses);
+  static ORUtils::SE3Pose blend_poses(const std::vector<ORUtils::SE3Pose>& poses);
 
   /**
    * \brief Finds a pose hypothesis with the greatest number of inliers.
@@ -35,7 +36,7 @@ struct ExhaustivePoseRefiner
    * \return                          The ID of the best hypothesis.
    */
   static std::string find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& poseHypotheses,
-                                          std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis);
+                                          std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis);
 };
 
 }

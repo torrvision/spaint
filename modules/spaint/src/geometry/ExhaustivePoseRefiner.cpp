@@ -5,13 +5,11 @@
 
 #include "geometry/ExhaustivePoseRefiner.h"
 
-#include <vector>
-
 #include "geometry/GeometryUtil.h"
 
 namespace spaint {
 
-ORUtils::SE3Pose ExhaustivePoseRefiner::blend_poses(const std::map<std::string,ORUtils::SE3Pose>& poses)
+ORUtils::SE3Pose ExhaustivePoseRefiner::blend_poses(const std::vector<ORUtils::SE3Pose>& poses)
 {
   std::vector<DualQuatd> dqs;
   std::vector<double> weights;
@@ -19,9 +17,9 @@ ORUtils::SE3Pose ExhaustivePoseRefiner::blend_poses(const std::map<std::string,O
 
   // Compute a uniformly-weighted linear blend of all of the poses and return it.
   const double weight = 1.0 / count;
-  for(std::map<std::string,ORUtils::SE3Pose>::const_iterator it = poses.begin(), iend = poses.end(); it != iend; ++it)
+  for(size_t i = 0; i < count; ++i)
   {
-    dqs.push_back(GeometryUtil::pose_to_dual_quat<double>(it->second));
+    dqs.push_back(GeometryUtil::pose_to_dual_quat<double>(poses[i]));
     weights.push_back(weight);
   }
 
@@ -29,7 +27,7 @@ ORUtils::SE3Pose ExhaustivePoseRefiner::blend_poses(const std::map<std::string,O
 }
 
 std::string ExhaustivePoseRefiner::find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& poseHypotheses,
-                                                        std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis)
+                                                        std::vector<ORUtils::SE3Pose>& inliersForBestHypothesis)
 {
   std::string bestHypothesis;
 
@@ -37,12 +35,12 @@ std::string ExhaustivePoseRefiner::find_best_hypothesis(const std::map<std::stri
   for(std::map<std::string,ORUtils::SE3Pose>::const_iterator it = poseHypotheses.begin(), iend = poseHypotheses.end(); it != iend; ++it)
   {
     // Calculate the inliers for the hypothesis.
-    std::map<std::string,ORUtils::SE3Pose> inliers;
+    std::vector<ORUtils::SE3Pose> inliers;
     for(std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = poseHypotheses.begin(), jend = poseHypotheses.end(); jt != jend; ++jt)
     {
       if(GeometryUtil::poses_are_similar(it->second, jt->second))
       {
-        inliers.insert(*jt);
+        inliers.push_back(jt->second);
       }
     }
 
