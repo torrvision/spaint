@@ -5,11 +5,7 @@
 
 #include "fiducials/FiducialRelocaliser.h"
 
-#include <vector>
-
-#include <ITMLib/Utils/ITMMath.h>
-
-#include "geometry/GeometryUtil.h"
+#include "geometry/ExhaustivePoseRefiner.h"
 
 namespace spaint {
 
@@ -23,10 +19,10 @@ boost::optional<ORUtils::SE3Pose> FiducialRelocaliser::estimate_pose(const std::
 
   // Try to find a best camera pose hypothesis using exhaustive search.
   std::map<std::string,ORUtils::SE3Pose> inliersForBestHypothesis;
-  std::string bestHypothesis = find_best_hypothesis(cameraPoseHypotheses, inliersForBestHypothesis);
+  std::string bestHypothesis = ExhaustivePoseRefiner::find_best_hypothesis(cameraPoseHypotheses, inliersForBestHypothesis);
 
-  // If a best hypothesis was found, refine it using its inliers and return it; if not, return none.
-  if(bestHypothesis != "") return refine_best_hypothesis(inliersForBestHypothesis);
+  // If a best hypothesis was found, return the result of blending its inliers together; if not, return none.
+  if(bestHypothesis != "") return ExhaustivePoseRefiner::blend_poses(inliersForBestHypothesis);
   else return boost::none;
 }
 
@@ -57,52 +53,6 @@ std::map<std::string,ORUtils::SE3Pose> FiducialRelocaliser::compute_hypotheses(c
   }
 
   return cameraPoseHypotheses;
-}
-
-std::string FiducialRelocaliser::find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& cameraPoseHypotheses,
-                                                      std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis)
-{
-  std::string bestHypothesis;
-
-  // For each camera pose hypothesis:
-  for(std::map<std::string,ORUtils::SE3Pose>::const_iterator it = cameraPoseHypotheses.begin(), iend = cameraPoseHypotheses.end(); it != iend; ++it)
-  {
-    // Calculate the inliers for the hypothesis.
-    std::map<std::string,ORUtils::SE3Pose> inliers;
-    for(std::map<std::string,ORUtils::SE3Pose>::const_iterator jt = cameraPoseHypotheses.begin(), jend = cameraPoseHypotheses.end(); jt != jend; ++jt)
-    {
-      if(GeometryUtil::poses_are_similar(it->second, jt->second))
-      {
-        inliers.insert(*jt);
-      }
-    }
-
-    // Update the current best hypothesis as necessary.
-    if(inliers.size() > inliersForBestHypothesis.size())
-    {
-      bestHypothesis = it->first;
-      inliersForBestHypothesis = inliers;
-    }
-  }
-
-  return bestHypothesis;
-}
-
-ORUtils::SE3Pose FiducialRelocaliser::refine_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis)
-{
-  std::vector<DualQuatd> dqs;
-  std::vector<double> weights;
-  const int count = static_cast<int>(inliersForBestHypothesis.size());
-
-  // Compute a uniformly-weighted linear blend of all of the inlier poses and return it.
-  const double weight = 1.0 / count;
-  for(std::map<std::string,ORUtils::SE3Pose>::const_iterator it = inliersForBestHypothesis.begin(), iend = inliersForBestHypothesis.end(); it != iend; ++it)
-  {
-    dqs.push_back(GeometryUtil::pose_to_dual_quat<double>(it->second));
-    weights.push_back(weight);
-  }
-
-  return GeometryUtil::dual_quat_to_pose(DualQuatd::linear_blend(&dqs[0], &weights[0], count));
 }
 
 }

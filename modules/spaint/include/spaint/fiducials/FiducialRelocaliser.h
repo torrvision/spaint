@@ -42,24 +42,6 @@ private:
    */
   static std::map<std::string,ORUtils::SE3Pose> compute_hypotheses(const std::map<std::string,Fiducial_Ptr>& fiducials,
                                                                    const std::map<std::string,FiducialMeasurement>& measurements);
-
-  /**
-   * \brief Finds the camera pose hypothesis with the greatest number of inliers.
-   *
-   * \param cameraPoseHypotheses      The set of camera pose hypotheses from which to choose the best hypothesis.
-   * \param inliersForBestHypothesis  A place in which to store the inliers for the best hypothesis.
-   * \return                          The ID of the fiducial corresponding to the best hypothesis.
-   */
-  static std::string find_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& cameraPoseHypotheses,
-                                          std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis);
-
-  /**
-   * \brief Refines the best camera pose hypothesis by blending together all of its inliers.
-   *
-   * \param inliersForBestHypothesis  The inliers for the best hypothesis.
-   * \return                          The refined best hypothesis.
-   */
-  static ORUtils::SE3Pose refine_best_hypothesis(const std::map<std::string,ORUtils::SE3Pose>& inliersForBestHypothesis);
 };
 
 }
