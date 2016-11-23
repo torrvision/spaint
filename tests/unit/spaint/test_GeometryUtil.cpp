@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
 {
-  // Generate increasingly-large clusters of z rotations at 0, PI/2, PI and 3*PI/2 radians.
+  // Generate increasingly-large clusters of rotated poses around the z axis at 0, PI/2, PI and 3*PI/2 radians.
   const double rotThreshold = 20 * M_PI / 180;
   const float transThreshold = 0.05f;
   const Vector3<T> up(0,0,1);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_find_best_hypothesis, T, TS)
     }
   }
 
-  // Find the best hypothesis from these rotations, and check that it is one of the poses around 3*PI/2.
+  // Find the best hypothesis from these poses, and check that it is one of the poses around 3*PI/2.
   std::vector<SE3Pose> inliersForBestHypothesis;
   int bestHypothesisID = boost::lexical_cast<int>(GeometryUtil::find_best_hypothesis(inputPoses, inliersForBestHypothesis, rotThreshold, transThreshold));
   BOOST_CHECK_GT(bestHypothesisID, 1 + 3 + 5);
