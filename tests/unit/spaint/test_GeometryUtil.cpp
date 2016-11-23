@@ -15,6 +15,21 @@ typedef boost::mpl::list<double,float> TS;
 
 BOOST_AUTO_TEST_SUITE(test_GeometryUtil)
 
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_blend_poses, T, TS)
+{
+  std::vector<SE3Pose> inputPoses;
+  for(float i = -2.0f; i <= 2.0f; ++i)
+  {
+    inputPoses.push_back(GeometryUtil::dual_quat_to_pose(
+      DualQuaternion<T>::from_translation(Vector3<T>(i,0,0)) *
+      DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(i * M_PI / 180))
+    ));
+  }
+
+  SE3Pose outputPose = GeometryUtil::blend_poses(inputPoses);
+  BOOST_CHECK(DualQuaternion<T>::close(GeometryUtil::pose_to_dual_quat<T>(outputPose), DualQuaternion<T>::identity()));
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dual_quat_to_pose, T, TS)
 {
   DualQuaternion<T> dq = DualQuaternion<T>::from_rotation(Vector3<T>(0,0,1), T(M_PI_2));
