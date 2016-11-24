@@ -14,6 +14,7 @@
 #include <opencv2/calib3d.hpp>
 
 #include <ITMLib/Objects/Camera/ITMIntrinsics.h>
+#include <ITMLib/Utils/ITMProjectionUtils.h>
 using namespace ITMLib;
 
 #include "ocv/OpenCVUtil.h"
@@ -186,23 +187,16 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
 
 boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_depth(const cv::Point2f& corner, const View_CPtr& view) const
 {
-  const ITMIntrinsics& intrinsics = view->calib.intrinsics_d;
-
   // FIXME: I'm currently assuming that there is an identity mapping between the depth and colour cameras - in general, this won't be the case.
   const int width = view->depth->noDims.x, height = view->depth->noDims.y;
   const int ux = (int)CLAMP(ROUND(corner.x), 0, width - 1), uy = (int)CLAMP(ROUND(corner.y), 0, height - 1);
   const int locId = uy * width + ux;
-
-  // FIXME: This is very similar to calculate_vertex_position in ITMSurfelSceneReconstructionEngine.
   const float depth = view->depth->GetData(MEMORYDEVICE_CPU)[locId];
+
   const float EPSILON = 1e-3f;
   if(fabs(depth + 1) > EPSILON) // i.e. if(depth != -1)
   {
-    return Vector3f(
-      depth * (ux - intrinsics.projectionParamsSimple.px) / intrinsics.projectionParamsSimple.fx,
-      depth * (uy - intrinsics.projectionParamsSimple.py) / intrinsics.projectionParamsSimple.fy,
-      depth
-    );
+    return reproject(ux, uy, depth, view->calib.intrinsics_d.projectionParamsSimple.all);
   }
   else return boost::none;
 }
