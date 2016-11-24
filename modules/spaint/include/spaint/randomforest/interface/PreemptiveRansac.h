@@ -6,11 +6,13 @@
 #ifndef H_SPAINT_PREEMPTIVERANSAC
 #define H_SPAINT_PREEMPTIVERANSAC
 
+#include <vector>
+
 #include <boost/optional.hpp>
 
-#include "ORUtils/PlatformIndependence.h"
+#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/PlatformIndependence.h>
 
-#include "ITMLib/Utils/ITMMath.h"
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "../ScoreForestTypes.h"
 
