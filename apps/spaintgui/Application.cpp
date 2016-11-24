@@ -264,9 +264,9 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
               << "K + 1 = Disable Fiducials\n"
-              << "K + 2 = Detect and Render Fiducials\n"
-              << "K + 3 = Only Detect Fiducials\n"
-              << "K + 4 = Only Render Fiducials\n"
+              << "K + 2 = Only Detect Fiducials\n"
+              << "K + 3 = Only Render Fiducials\n"
+              << "K + 4 = Detect and Render Fiducials\n"
               << "R + # = To Windowed Renderer (Specified Subwindow Configuration)\n"
               << "RShift + R + 1 = To Rift Renderer (Windowed)\n"
               << "RShift + R + 2 = To Rift Renderer (Fullscreen)\n"
@@ -462,8 +462,8 @@ void Application::process_fiducial_input()
     if(k1 || k2 || k3 || k4)
     {
       const std::string& sceneID = get_active_scene_id();
-      m_pipeline->set_detect_fiducials(sceneID, k2 || k3);
-      m_renderFiducials = k2 || k4;
+      m_pipeline->set_detect_fiducials(sceneID, k2 || k4);
+      m_renderFiducials = k3 || k4;
     }
   }
 }
