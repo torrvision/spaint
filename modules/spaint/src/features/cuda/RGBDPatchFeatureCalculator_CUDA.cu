@@ -50,8 +50,10 @@ __global__ void ck_compute_depth_feature(Keypoint3DColour *keypoints,
 }
 
 //#################### CONSTRUCTORS ####################
-RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
+RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA() :
+    RGBDPatchFeatureCalculator()
 {
+  // Update the offset for use on the GPU.
   m_offsetsRgb->UpdateDeviceFromHost();
   m_channelsRgb->UpdateDeviceFromHost();
   m_offsetsDepth->UpdateDeviceFromHost();

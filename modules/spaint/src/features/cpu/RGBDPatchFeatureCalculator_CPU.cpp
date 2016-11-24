@@ -8,11 +8,13 @@
 
 namespace spaint
 {
+//#################### CONSTRUCTORS ####################
 RGBDPatchFeatureCalculator_CPU::RGBDPatchFeatureCalculator_CPU() :
     RGBDPatchFeatureCalculator()
 {
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 void RGBDPatchFeatureCalculator_CPU::compute_feature(
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
     const Vector4f &intrinsics, Keypoint3DColourImage *keypointsImage,
@@ -26,11 +28,15 @@ void RGBDPatchFeatureCalculator_CPU::compute_feature(
   const Vector4i *offsetsDepth = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
   Vector2i inDims = rgbImage->noDims;
+  // The output images have one pixel per each element of the sampling grid.
   Vector2i outDims(rgbImage->noDims.x / m_featureStep,
       rgbImage->noDims.y / m_featureStep);
 
+  // Resize the output images as needed
+  // (typically this happens only once per run of the program if the images are properly cached).
   keypointsImage->ChangeDims(outDims);
   featuresImage->ChangeDims(outDims);
+
   Keypoint3DColour *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
   RGBDPatchDescriptor *features = featuresImage->GetData(MEMORYDEVICE_CPU);
 

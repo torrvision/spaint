@@ -12,7 +12,7 @@ namespace spaint
 {
 /**
  * \brief An instance of this class allows to compute features based on
- *        depth and colour differences in RGBD images using CUDA
+ *        depth and colour differences in RGBD images using CUDA.
  *
  *        The features are computed as described in:
  *        "Exploiting uncertainty in regression forests for accurate camera relocalization"
