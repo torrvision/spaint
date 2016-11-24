@@ -21,6 +21,10 @@
 //#define ENABLE_TIMERS
 //#define RANDOM_FEATURES
 
+#ifdef WITH_SCOREFORESTS
+#include <Learner.hpp>
+#endif
+
 #ifdef RANDOM_FEATURES
 #include "tvgutil/numbers/RandomNumberGenerator.h"
 #endif
@@ -355,6 +359,9 @@ ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nTrees, maxNbNodes));
   m_nodeImage->Clear();
 
+  // Storage for the original predictions.
+  std::vector<PredictionGaussianMean> leafPredictions;
+
   // Fill the nodes
   NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
 
@@ -369,34 +376,33 @@ ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
     m_nbNodesPerTree.push_back(nbNodes);
     // m_nbLeavesPerTree.push_back(nbLeaves);
 
-    const int nbLeavesBefore = m_leafPredictions.size();
+    const int nbLeavesBefore = leafPredictions.size();
     // We set the first free entry to 1 since we reserve 0 for the root
-    convert_node(tree, 0, treeIdx, nTrees, 0, 1, forestData);
-    const int nbLeavesAfter = m_leafPredictions.size();
+    convert_node(tree, 0, treeIdx, nTrees, 0, 1, forestData, leafPredictions);
+    const int nbLeavesAfter = leafPredictions.size();
 
     std::cout << "Converted tree " << treeIdx << ", had " << nbNodes
         << " nodes and " << nbLeavesAfter - nbLeavesBefore << " leaves."
         << std::endl;
-    std::cout << "Total number of leaves: " << m_leafPredictions.size()
+    std::cout << "Total number of leaves: " << leafPredictions.size()
         << std::endl;
 
     m_nbLeavesPerTree.push_back(nbLeavesAfter - nbLeavesBefore);
   }
 
-  m_predictionsBlock = mbf.make_block<ScorePrediction>(
-      m_leafPredictions.size());
-  convert_predictions();
+  m_predictionsBlock = mbf.make_block<ScorePrediction>(leafPredictions.size());
+  convert_predictions(leafPredictions);
 
   // NOPs if we use the CPU only implementation
   m_nodeImage->UpdateDeviceFromHost();
   m_predictionsBlock->UpdateDeviceFromHost();
 
-  float meanShiftBandWidth = 0.1f;
-  float cellLength = sqrt(meanShiftBandWidth * meanShiftBandWidth / 3) / 2.0f;
-  float minStep = meanShiftBandWidth / 10.0f;
-
-  m_ms3D = boost::make_shared<MeanShift3D>(meanShiftBandWidth, cellLength,
-      minStep);
+//  float meanShiftBandWidth = 0.1f;
+//  float cellLength = sqrt(meanShiftBandWidth * meanShiftBandWidth / 3) / 2.0f;
+//  float minStep = meanShiftBandWidth / 10.0f;
+//
+//  m_ms3D = boost::make_shared<MeanShift3D>(meanShiftBandWidth, cellLength,
+//      minStep);
 
   {
     boost::timer::auto_cpu_timer t(6,
@@ -408,7 +414,8 @@ ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
 }
 
 int ScoreForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
-    int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes)
+    int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes,
+    std::vector<PredictionGaussianMean> &leafPredictions)
 {
   const Node* node = tree->GetNode(node_idx);
   NodeEntry &gpuNode = gpu_nodes[output_idx * n_trees + tree_idx];
@@ -422,7 +429,7 @@ int ScoreForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
     gpuNode.featureThreshold = 0.f;
     // first_free_idx does not change
 
-    gpuNode.leafIdx = m_leafPredictions.size();
+    gpuNode.leafIdx = leafPredictions.size();
 
     // Copy the prediction
     // TODO: possibly drop some modes
@@ -431,12 +438,12 @@ int ScoreForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
     {
       const PredictionGaussianMean *pred = ToPredictionGaussianMean(
           leafPtr->GetPrediction());
-      m_leafPredictions.push_back(*pred);
+      leafPredictions.push_back(*pred);
     }
     else
     {
       // empty prediction
-      m_leafPredictions.push_back(PredictionGaussianMean());
+      leafPredictions.push_back(PredictionGaussianMean());
     }
   }
   else
@@ -454,23 +461,24 @@ int ScoreForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
     gpuNode.featureThreshold = params[2];
 
     first_free_idx = convert_node(tree, node->GetLeftChildIndex(), tree_idx,
-        n_trees, gpuNode.leftChildIdx, first_free_idx, gpu_nodes);
+        n_trees, gpuNode.leftChildIdx, first_free_idx, gpu_nodes, leafPredictions);
     first_free_idx = convert_node(tree, node->GetRightChildIndex(), tree_idx,
-        n_trees, rightChildIdx, first_free_idx, gpu_nodes);
+        n_trees, rightChildIdx, first_free_idx, gpu_nodes, leafPredictions);
   }
 
   return first_free_idx;
 }
 
-void ScoreForest::convert_predictions()
+void ScoreForest::convert_predictions(
+    const std::vector<PredictionGaussianMean> &leafPredictions)
 {
   ScorePrediction *gpuPredictions = m_predictionsBlock->GetData(
       MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
-  for (size_t leafIdx = 0; leafIdx < m_leafPredictions.size(); ++leafIdx)
+  for (size_t leafIdx = 0; leafIdx < leafPredictions.size(); ++leafIdx)
   {
-    const PredictionGaussianMean &currentPred = m_leafPredictions[leafIdx];
+    const PredictionGaussianMean &currentPred = leafPredictions[leafIdx];
 
     // copy to sort modes by descending number of inliers so to keep only the best ones
     auto modes = currentPred._modes;

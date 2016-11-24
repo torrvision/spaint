@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_SCOREFOREST
 #define H_SPAINT_SCOREFOREST
 
+#include <vector>
+
 #include "../../util/ITMImagePtrTypes.h"
 
 #include "../../features/interface/RGBDPatchFeature.h"
@@ -16,7 +18,10 @@
 #include "ORUtils/Vector.h"
 
 #ifdef WITH_SCOREFORESTS
-#include <Learner.hpp>
+// Forward declare stuff to avoid cluttering the global namespace with the entirety of ScoreForests classes.
+class EnsembleLearner;
+class Learner;
+class PredictionGaussianMean;
 #endif
 
 namespace spaint
@@ -94,11 +99,9 @@ public:
 
 private:
   int convert_node(const Learner *learner, int node_idx, int tree_idx,
-      int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes);
-  void convert_predictions();
-
-  std::vector<PredictionGaussianMean> m_leafPredictions;
-  boost::shared_ptr<MeanShift3D> m_ms3D;
+      int n_trees, int output_idx, int first_free_idx, NodeEntry *gpu_nodes,
+      std::vector<PredictionGaussianMean> &leafPredictions);
+  void convert_predictions(const std::vector<PredictionGaussianMean> &leafPredictions);
 #endif
 };
 
