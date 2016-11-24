@@ -80,6 +80,9 @@ private:
   /** The dense voxel mapper. */
   DenseMapper_Ptr m_denseVoxelMapper;
 
+  /** Whether or not the user wants fiducials to be detected. */
+  bool m_detectFiducials;
+
   /** A pointer to a tracker that can detect tracking failures (if available). */
   FallibleTracker *m_fallibleTracker;
 
@@ -185,6 +188,13 @@ public:
    * \brief Resets the reconstructed scene.
    */
   void reset_scene();
+
+  /**
+   * \brief Sets whether or not the user wants fiducials to be detected.
+   *
+   * \param detectFiducials Whether or not the user wants fiducials to be detected.
+   */
+  void set_detect_fiducials(bool detectFiducials);
 
   /**
    * \brief Sets whether or not the user wants fusion to be run.

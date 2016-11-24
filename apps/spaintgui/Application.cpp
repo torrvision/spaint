@@ -263,9 +263,10 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 5 = To Correction Mode\n"
               << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
-              << "Q + 1 = Disable Fiducials\n"
-              << "Q + 2 = Enable Fiducials with Rendering\n"
-              << "Q + 3 = Enable Fiducials without Rendering\n"
+              << "K + 1 = Disable Fiducials\n"
+              << "K + 2 = Detect and Render Fiducials\n"
+              << "K + 3 = Only Detect Fiducials\n"
+              << "K + 4 = Only Render Fiducials\n"
               << "R + # = To Windowed Renderer (Specified Subwindow Configuration)\n"
               << "RShift + R + 1 = To Rift Renderer (Windowed)\n"
               << "RShift + R + 2 = To Rift Renderer (Fullscreen)\n"
@@ -451,17 +452,18 @@ bool Application::process_events()
 
 void Application::process_fiducial_input()
 {
-  if(m_inputState.key_down(KEYCODE_q))
+  if(m_inputState.key_down(KEYCODE_k))
   {
-    if(m_inputState.key_down(KEYCODE_1))
+    bool k1 = m_inputState.key_down(KEYCODE_1),
+         k2 = m_inputState.key_down(KEYCODE_2),
+         k3 = m_inputState.key_down(KEYCODE_3),
+         k4 = m_inputState.key_down(KEYCODE_4);
+
+    if(k1 || k2 || k3 || k4)
     {
-      // TODO: Disable the use of fiducials.
-      m_renderFiducials = false;
-    }
-    else if(m_inputState.key_down(KEYCODE_2) || m_inputState.key_down(KEYCODE_3))
-    {
-      // TODO: Enable the use of fiducials.
-      m_renderFiducials = m_inputState.key_down(KEYCODE_2);
+      const std::string& sceneID = get_active_scene_id();
+      m_pipeline->set_detect_fiducials(sceneID, k2 || k3);
+      m_renderFiducials = k2 || k4;
     }
   }
 }
