@@ -15,8 +15,8 @@ RGBDPatchFeatureCalculator_CPU::RGBDPatchFeatureCalculator_CPU() :
 
 void RGBDPatchFeatureCalculator_CPU::compute_feature(
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
-    const Vector4f &intrinsics, RGBDPatchFeatureImage *featuresImage,
-    const Matrix4f &cameraPose) const
+    const Vector4f &intrinsics, Keypoint3DColourImage *keypointsImage,
+    RGBDPatchDescriptorImage *featuresImage, const Matrix4f &cameraPose) const
 {
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
   const float *depth = depthImage->GetData(MEMORYDEVICE_CPU);
@@ -29,8 +29,10 @@ void RGBDPatchFeatureCalculator_CPU::compute_feature(
   Vector2i outDims(rgbImage->noDims.x / m_featureStep,
       rgbImage->noDims.y / m_featureStep);
 
+  keypointsImage->ChangeDims(outDims);
   featuresImage->ChangeDims(outDims);
-  RGBDPatchFeature *features = featuresImage->GetData(MEMORYDEVICE_CPU);
+  Keypoint3DColour *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
+  RGBDPatchDescriptor *features = featuresImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -42,12 +44,12 @@ void RGBDPatchFeatureCalculator_CPU::compute_feature(
       const Vector2i xyOut(xOut, yOut);
       const Vector2i xyIn(xOut * m_featureStep, yOut * m_featureStep);
 
-      compute_colour_patch_feature(features, rgb, depth, offsetsRgb,
+      compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
           channelsRgb, inDims, outDims, intrinsics, cameraPose, m_normalizeRgb,
           xyIn, xyOut);
 
-      compute_depth_patch_feature(features, depth, offsetsDepth, inDims,
-          outDims, m_normalizeDepth, xyIn, xyOut);
+      compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
+          inDims, outDims, m_normalizeDepth, xyIn, xyOut);
     }
   }
 }

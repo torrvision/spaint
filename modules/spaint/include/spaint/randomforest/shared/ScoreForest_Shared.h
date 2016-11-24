@@ -10,11 +10,12 @@ namespace spaint
 {
 _CPU_AND_GPU_CODE_
 inline void evaluate_forest_shared(const ScoreForest::NodeEntry* forestTexture,
-    const RGBDPatchFeature* featureData, const Vector2i &imgSize,
+    const RGBDPatchDescriptor* descriptorsData, const Vector2i &imgSize,
     LeafIndices* leafData, int x, int y)
 {
   const int linear_feature_idx = y * imgSize.width + x;
-  const RGBDPatchFeature &currentFeature = featureData[linear_feature_idx];
+  const RGBDPatchDescriptor &currentFeature =
+      descriptorsData[linear_feature_idx];
 
   for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
   {

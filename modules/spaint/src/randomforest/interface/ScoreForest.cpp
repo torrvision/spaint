@@ -55,7 +55,8 @@ ScoreForest::~ScoreForest()
 {
 }
 
-void ScoreForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+void ScoreForest::evaluate_forest(
+    const RGBDPatchDescriptorImage_CPtr &descriptors,
     ScorePredictionsImage_Ptr &predictions)
 {
   {
@@ -63,7 +64,7 @@ void ScoreForest::evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
     boost::timer::auto_cpu_timer t(6,
         "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    find_leaves(features, m_leafImage);
+    find_leaves(descriptors, m_leafImage);
   }
 
   {
@@ -82,14 +83,15 @@ void ScoreForest::reset_predictions()
 }
 
 void ScoreForest::add_features_to_forest(
-    const RGBDPatchFeatureImage_CPtr &features)
+    const Keypoint3DColourImage_CPtr &keypoints,
+    const RGBDPatchDescriptorImage_CPtr &descriptors)
 {
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    find_leaves(features, m_leafImage);
+    find_leaves(descriptors, m_leafImage);
 //    cudaDeviceSynchronize();
   }
 
@@ -98,7 +100,7 @@ void ScoreForest::add_features_to_forest(
     boost::timer::auto_cpu_timer t(6,
         "add examples to reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_leafReservoirs->add_examples(features, m_leafImage);
+    m_leafReservoirs->add_examples(keypoints, m_leafImage);
 //    cudaDeviceSynchronize();
   }
 

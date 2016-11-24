@@ -9,7 +9,6 @@
 namespace spaint
 {
 
-template class ExampleReservoirs<PositionColourExample, RGBDPatchFeature,
-    LeafIndices> ;
+template class ExampleReservoirs<Keypoint3DColour, Keypoint3DColour, LeafIndices> ;
 
 }

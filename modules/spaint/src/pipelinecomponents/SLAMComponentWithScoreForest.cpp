@@ -66,7 +66,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_featureExtractor =
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
           settings->deviceType);
-  m_featureImage = mbf.make_image<RGBDPatchFeature>();
+  m_rgbdPatchKeypointsImage = mbf.make_image<Keypoint3DColour>();
+  m_rgbdPatchDescriptorImage = mbf.make_image<RGBDPatchDescriptor>();
   m_predictionsImage = mbf.make_image<ScorePrediction>();
 
   const bf::path relocalizationForestPath = bf::path(
@@ -256,7 +257,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
     evaluate_forest();
     boost::optional<PoseCandidate> pose_candidate =
-        m_preemptiveRansac->estimate_pose(m_featureImage, m_predictionsImage);
+        m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage,
+            m_predictionsImage);
 
     if (pose_candidate)
     {
@@ -266,7 +268,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
 #ifdef VISUALIZE_INLIERS
       cv::Mat inliers = cv::Mat::zeros(
-          cv::Size(m_featureImage->noDims.width, m_featureImage->noDims.height),
+          cv::Size(m_rgbdPatchDescriptorImage->noDims.width, m_rgbdPatchDescriptorImage->noDims.height),
           CV_32FC1);
       inliers.setTo(std::numeric_limits<float>::quiet_NaN());
 
@@ -275,8 +277,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         int idx = pose_candidate->inliers[i].linearIdx;
         float energy = pose_candidate->inliers[i].energy;
 
-        int x = idx % m_featureImage->noDims.width;
-        int y = idx / m_featureImage->noDims.width;
+        int x = idx % m_rgbdPatchDescriptorImage->noDims.width;
+        int y = idx / m_rgbdPatchDescriptorImage->noDims.width;
 
         inliers.at<float>(cv::Point(x, y)) = energy;
       }
@@ -360,8 +362,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       {
         // Render RGB
         ITMUChar4Image_Ptr renderedRGB =
-            MemoryBlockFactory::instance().make_image<Vector4u>(
-                Vector2i(640, 480));
+        MemoryBlockFactory::instance().make_image<Vector4u>(
+            Vector2i(640, 480));
 
         m_context->get_visualisation_generator()->get_rgb_input(renderedRGB,
             view);
@@ -375,13 +377,13 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         m_preemptiveRansac->get_best_poses(candidates);
 
         ITMUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<
-            Vector4u>(Vector2i(640, 480));
+        Vector4u>(Vector2i(640, 480));
 
         std::vector<cv::Mat> rgbWithPoints;
         std::vector<cv::Mat> raycastedPoses;
 
         std::vector<cv::Scalar> colours
-        { CV_RGB(255, 0, 0), CV_RGB(0, 255, 0), CV_RGB(0, 0, 255) };
+        { CV_RGB(255, 0, 0), CV_RGB(0, 255, 0), CV_RGB(0, 0, 255)};
 
         for (size_t candidateIdx = 0; candidateIdx < candidates.size();
             ++candidateIdx)
@@ -433,7 +435,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         const int blockHeight = 480 * 2 + textHeight;
 
         cv::Mat outCanvas(blockHeight * 4 - textHeight, blockWidth * 4 - gap,
-        CV_8UC3, cv::Scalar::all(255));
+            CV_8UC3, cv::Scalar::all(255));
 
 //        for (size_t i = 0; i < rgbWithPoints.size(); ++i)
         for (size_t i = 0; i < 16; ++i)
@@ -576,7 +578,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    m_scoreForest->add_features_to_forest(m_featureImage);
+    m_scoreForest->add_features_to_forest(m_rgbdPatchKeypointsImage,
+        m_rgbdPatchDescriptorImage);
 
     if (relocalizationTimer)
     {
@@ -764,7 +767,8 @@ void SLAMComponentWithScoreForest::compute_features(
       "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
   m_featureExtractor->compute_feature(inputRgbImage, inputDepthImage,
-      depthIntrinsics, m_featureImage.get(), invCameraPose);
+      depthIntrinsics, m_rgbdPatchKeypointsImage.get(),
+      m_rgbdPatchDescriptorImage.get(), invCameraPose);
 }
 
 void SLAMComponentWithScoreForest::evaluate_forest()
@@ -773,7 +777,8 @@ void SLAMComponentWithScoreForest::evaluate_forest()
   boost::timer::auto_cpu_timer t(6,
       "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-  m_scoreForest->evaluate_forest(m_featureImage, m_predictionsImage);
+  m_scoreForest->evaluate_forest(m_rgbdPatchDescriptorImage,
+      m_predictionsImage);
 }
 
 }

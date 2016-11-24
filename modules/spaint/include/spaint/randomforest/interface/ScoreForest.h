@@ -48,9 +48,10 @@ public:
   virtual ~ScoreForest();
 
   void reset_predictions();
-  void evaluate_forest(const RGBDPatchFeatureImage_CPtr &features,
+  void evaluate_forest(const RGBDPatchDescriptorImage_CPtr &descriptors,
       ScorePredictionsImage_Ptr &predictions);
-  void add_features_to_forest(const RGBDPatchFeatureImage_CPtr &features);
+  void add_features_to_forest(const Keypoint3DColourImage_CPtr &keypoints,
+      const RGBDPatchDescriptorImage_CPtr &descriptors);
   void update_forest();
 
   void load_structure_from_file(const std::string &fileName);
@@ -76,7 +77,7 @@ protected:
   size_t m_lastFeaturesAddedStartIdx;
   size_t m_reservoirUpdateStartIdx;
 
-  virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
+  virtual void find_leaves(const RGBDPatchDescriptorImage_CPtr &descriptors,
       LeafIndicesImage_Ptr &leaf_indices) const = 0;
   virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
       ScorePredictionsImage_Ptr &predictions) const = 0;

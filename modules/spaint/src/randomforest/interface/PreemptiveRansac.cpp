@@ -60,13 +60,13 @@ int PreemptiveRansac::get_min_nb_required_points() const
 }
 
 boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
-    const RGBDPatchFeatureImage_CPtr &features,
+    const Keypoint3DColourImage_CPtr &keypoints,
     const ScorePredictionsImage_CPtr &forestPredictions)
 {
-  m_featureImage = features;
+  m_keypointsImage = keypoints;
   m_predictionsImage = forestPredictions;
 
-  m_featureImage->UpdateHostFromDevice(); // Need the features on the host for now
+  m_keypointsImage->UpdateHostFromDevice(); // Need the keypoints on the host for now
   m_predictionsImage->UpdateHostFromDevice(); // Also the predictions
 
   {
@@ -117,7 +117,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 #endif
 
   // Reset inlier mask (and inliers)
-  m_inliersMaskImage->ChangeDims(m_featureImage->noDims); // Happens only once
+  m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once
   m_inliersMaskImage->Clear();
   m_inliersIndicesImage->dataSize = 0;
 
@@ -148,12 +148,14 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
           candidates[0] : boost::optional<PoseCandidate>();
 }
 
-void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates) const
+void PreemptiveRansac::get_best_poses(
+    std::vector<PoseCandidate> &poseCandidates) const
 {
   // Don't check dataSize since it will be likely 1
   const PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
-  for(size_t poseIdx = 0; poseIdx < m_trimKinitAfterFirstEnergyComputation; ++poseIdx)
+  for (size_t poseIdx = 0; poseIdx < m_trimKinitAfterFirstEnergyComputation;
+      ++poseIdx)
   {
     poseCandidates.push_back(candidates[poseIdx]);
   }
@@ -161,9 +163,8 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates
 
 namespace
 {
-void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
-    Eigen::Vector3f &weights, Eigen::Matrix3f &resRot,
-    Eigen::Vector3f &resTrans)
+void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q, Eigen::Vector3f &weights,
+    Eigen::Matrix3f &resRot, Eigen::Vector3f &resTrans)
 {
   const int D = P.rows();  // dimension of the space
   const Eigen::Vector3f normalizedWeights = weights / weights.sum();
@@ -176,7 +177,7 @@ void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
   const Eigen::Matrix3f P_centred = P - p0 * v1.transpose(); // translating P to center the origin
   const Eigen::Matrix3f Q_centred = Q - q0 * v1.transpose(); // translating Q to center the origin
 
-  // Covariance between both matrices
+      // Covariance between both matrices
   const Eigen::Matrix3f C = P_centred * normalizedWeights.asDiagonal()
       * Q_centred.transpose();
 
@@ -198,15 +199,14 @@ void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
   resTrans = q0 - resRot * p0;
 }
 
-void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q,
-    Eigen::Matrix3f &resRot, Eigen::Vector3f &resTrans)
+void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q, Eigen::Matrix3f &resRot,
+    Eigen::Vector3f &resTrans)
 {
   Eigen::Vector3f weights = Eigen::Vector3f::Ones();
   Kabsch(P, Q, weights, resRot, resTrans);
 }
 
-Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P,
-    Eigen::Matrix3f &Q)
+Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q)
 {
   Eigen::Matrix3f resRot;
   Eigen::Vector3f resTrans;
@@ -419,7 +419,7 @@ static void call_after_each_step(const alglib::real_1d_array &x, double func,
 
 bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 {
-  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
@@ -443,7 +443,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
   {
     const PoseCandidate::Inlier &inlier = poseCandidate.inliers[inlierIdx];
     const Vector3f inlierCameraPosition =
-    patchFeaturesData[inlier.linearIdx].position.toVector3();
+    keypointsData[inlier.linearIdx].position.toVector3();
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
     * inlierCameraPosition;
     const ScorePrediction &prediction = predictionsData[inlier.linearIdx];
@@ -509,7 +509,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
   {
     const int inlierLinearIdx = inliersData[inlierIdx];
     const Vector3f inlierCameraPosition =
-        patchFeaturesData[inlierLinearIdx].position.toVector3();
+        keypointsData[inlierLinearIdx].position;
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
         * inlierCameraPosition;
     const ScorePrediction &prediction = predictionsData[inlierLinearIdx];

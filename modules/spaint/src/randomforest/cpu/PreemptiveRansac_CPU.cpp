@@ -37,8 +37,9 @@ void PreemptiveRansac_CPU::init_random()
 
 void PreemptiveRansac_CPU::generate_pose_candidates()
 {
-  const Vector2i imgSize = m_featureImage->noDims;
-  const RGBDPatchFeature *features = m_featureImage->GetData(MEMORYDEVICE_CPU);
+  const Vector2i imgSize = m_keypointsImage->noDims;
+  const Keypoint3DColour *keypoints = m_keypointsImage->GetData(
+      MEMORYDEVICE_CPU);
   const ScorePrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
@@ -55,7 +56,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
   {
     PoseCandidate candidate;
 
-    bool valid = preemptive_ransac_generate_candidate(features, predictions,
+    bool valid = preemptive_ransac_generate_candidate(keypoints, predictions,
         imgSize, randomGenerators[candidateIdx], candidate,
         m_useAllModesPerLeafInPoseHypothesisGeneration,
         m_checkMinDistanceBetweenSampledModes,
@@ -80,8 +81,8 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 
 void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 {
-  const Vector2i imgSize = m_featureImage->noDims;
-  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+  const Vector2i imgSize = m_keypointsImage->noDims;
+  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
@@ -99,15 +100,14 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 
     if (useMask)
     {
-      sampledLinearIdx = preemptive_ransac_sample_inlier<true>(
-          patchFeaturesData, predictionsData, imgSize,
-          randomGenerators[sampleIdx], inlierMaskData);
+      sampledLinearIdx = preemptive_ransac_sample_inlier<true>(keypointsData,
+          predictionsData, imgSize, randomGenerators[sampleIdx],
+          inlierMaskData);
     }
     else
     {
-      sampledLinearIdx = preemptive_ransac_sample_inlier<false>(
-          patchFeaturesData, predictionsData, imgSize,
-          randomGenerators[sampleIdx]);
+      sampledLinearIdx = preemptive_ransac_sample_inlier<false>(keypointsData,
+          predictionsData, imgSize, randomGenerators[sampleIdx]);
     }
 
     if (sampledLinearIdx >= 0)
@@ -143,7 +143,7 @@ void PreemptiveRansac_CPU::compute_and_sort_energies()
 
 void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
 {
-  const RGBDPatchFeature *patchFeaturesData = m_featureImage->GetData(
+  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
   const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
@@ -151,7 +151,7 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
   const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
 
   const float totalEnergy = preemptive_ransac_compute_candidate_energy(
-      candidate.cameraPose, patchFeaturesData, predictionsData, inliersData,
+      candidate.cameraPose, keypointsData, predictionsData, inliersData,
       nbInliers);
 
   candidate.energy = totalEnergy / static_cast<float>(nbInliers);

@@ -24,7 +24,7 @@ enum
 template<typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline bool preemptive_ransac_generate_candidate(
-    const RGBDPatchFeature *patchFeaturesData,
+    const Keypoint3DColour *keypointsData,
     const ScorePrediction *predictionsData, const Vector2i &imgSize,
     RNG &randomGenerator, PoseCandidate &poseCandidate,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
@@ -44,11 +44,10 @@ inline bool preemptive_ransac_generate_candidate(
     const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width);
     const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height);
     const int linearFeatureIdx = y * imgSize.width + x;
-    const RGBDPatchFeature &selectedFeature =
-        patchFeaturesData[linearFeatureIdx];
+    const Keypoint3DColour &selectedKeypoint = keypointsData[linearFeatureIdx];
 
     // Invalid feature
-    if (!selectedFeature.valid())
+    if (!selectedKeypoint.valid)
       continue;
 
     const ScorePrediction &selectedPrediction =
@@ -68,13 +67,12 @@ inline bool preemptive_ransac_generate_candidate(
     // Cache camera and world points, used for the following checks
     const Vector3f selectedModeWorldPt =
         selectedPrediction.modes[selectedModeIdx].position;
-    const Vector3f selectedFeatureCameraPt =
-        selectedFeature.position.toVector3();
+    const Vector3f selectedFeatureCameraPt = selectedKeypoint.position;
 
     // This is the first pixel, check that the pixel colour corresponds with the selected mode
     if (selectedPixelCount == 0)
     {
-      const Vector3i colourDiff = selectedFeature.colour.toInt()
+      const Vector3i colourDiff = selectedKeypoint.colour.toInt()
           - selectedPrediction.modes[selectedModeIdx].colour.toInt();
       const bool consistentColour = abs(colourDiff.x) <= 30
           && abs(colourDiff.y) <= 30 && abs(colourDiff.z) <= 30;
@@ -93,8 +91,7 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
         const int otherModeIdx = selectedPixelMode[idxOther];
-        const ScorePrediction &otherPrediction =
-            predictionsData[otherLinearIdx];
+        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
 
         const Vector3f otherModeWorldPt =
             otherPrediction.modes[otherModeIdx].position;
@@ -119,11 +116,10 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherModeIdx = selectedPixelMode[m];
         const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const ScorePrediction &otherPrediction =
-            predictionsData[otherLinearIdx];
+        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
 
         const Vector3f otherFeatureCameraPt =
-            patchFeaturesData[otherLinearIdx].position.toVector3();
+            keypointsData[otherLinearIdx].position;
         const Vector3f diffCamera = otherFeatureCameraPt
             - selectedFeatureCameraPt;
         const float distCameraSq = dot(diffCamera, diffCamera);
@@ -168,11 +164,11 @@ inline bool preemptive_ransac_generate_candidate(
     const int linearIdx = selectedPixelLinearIdx[s];
     const int modeIdx = selectedPixelMode[s];
 
-    const RGBDPatchFeature &selectedFeature = patchFeaturesData[linearIdx];
+    const Keypoint3DColour &selectedKeypoint = keypointsData[linearIdx];
     const ScorePrediction &selectedPrediction = predictionsData[linearIdx];
     const ScoreMode &selectedMode = selectedPrediction.modes[modeIdx];
 
-    poseCandidate.cameraPoints[s] = selectedFeature.position.toVector3();
+    poseCandidate.cameraPoints[s] = selectedKeypoint.position;
     poseCandidate.worldPoints[s] = selectedMode.position;
   }
 
@@ -182,7 +178,7 @@ inline bool preemptive_ransac_generate_candidate(
 template<bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline int preemptive_ransac_sample_inlier(
-    const RGBDPatchFeature *patchFeaturesData,
+    const Keypoint3DColour *keypointsData,
     const ScorePrediction *predictionsData, const Vector2i &imgSize,
     RNG &randomGenerator, int *inlierMaskData = NULL)
 {
@@ -195,8 +191,8 @@ inline int preemptive_ransac_sample_inlier(
     const int linearIdx = randomGenerator.generate_int_from_uniform(0,
         imgSize.width * imgSize.height);
 
-    // Check that we have a valid feature for this sample
-    if (patchFeaturesData[linearIdx].position.w < 0.f)
+    // Check that we have a valid keypoint for this sample
+    if (!keypointsData[linearIdx].valid)
       continue;
 
     // Check that we have a prediction with a non null number of modes
@@ -233,7 +229,7 @@ inline int preemptive_ransac_sample_inlier(
 
 _CPU_AND_GPU_CODE_
 inline float preemptive_ransac_compute_candidate_energy(
-    const Matrix4f &candidatePose, const RGBDPatchFeature *features,
+    const Matrix4f &candidatePose, const Keypoint3DColour *keypoints,
     const ScorePrediction *predictions, const int *inlierIndices,
     uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
 {
@@ -243,7 +239,7 @@ inline float preemptive_ransac_compute_candidate_energy(
       inlierStep)
   {
     const int linearIdx = inlierIndices[inlierIdx];
-    const Vector3f localPixel = features[linearIdx].position.toVector3();
+    const Vector3f localPixel = keypoints[linearIdx].position;
     const Vector3f projectedPixel = candidatePose * localPixel;
 
     const ScorePrediction &pred = predictions[linearIdx];

@@ -11,16 +11,12 @@ namespace spaint
 // TODO: Duplicated with the cuda file, move somewhere else
 template<>
 _CPU_AND_GPU_CODE_
-inline PositionColourExample make_example_from_feature<PositionColourExample,
-    RGBDPatchFeature>(const RGBDPatchFeature &feature)
+inline Keypoint3DColour make_example_from_feature<Keypoint3DColour,
+Keypoint3DColour>(const Keypoint3DColour &feature)
 {
-  PositionColourExample res;
-  res.position = feature.position.toVector3();
-  res.colour = feature.colour;
-
-  return res;
+  return feature;
 }
 
-template class ExampleReservoirs_CPU<PositionColourExample, RGBDPatchFeature,
+template class ExampleReservoirs_CPU<Keypoint3DColour, Keypoint3DColour,
     LeafIndices> ;
 }

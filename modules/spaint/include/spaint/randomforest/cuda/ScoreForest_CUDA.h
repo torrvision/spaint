@@ -15,11 +15,10 @@ class ScoreForest_CUDA: public ScoreForest
 public:
   explicit ScoreForest_CUDA(const std::string &fileName);
 
-  virtual ScorePrediction get_prediction(size_t treeIdx,
-      size_t leafIdx) const;
+  virtual ScorePrediction get_prediction(size_t treeIdx, size_t leafIdx) const;
 
 protected:
-  virtual void find_leaves(const RGBDPatchFeatureImage_CPtr &features,
+  virtual void find_leaves(const RGBDPatchDescriptorImage_CPtr &descriptors,
       LeafIndicesImage_Ptr &leaf_indices) const;
   virtual void get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
       ScorePredictionsImage_Ptr &predictions) const;

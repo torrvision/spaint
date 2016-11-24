@@ -17,7 +17,9 @@ public:
 
   virtual void compute_feature(const ITMUChar4Image *rgbImage,
       const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage *featuresImage, const Matrix4f &cameraPose) const;
+      Keypoint3DColourImage *keypointsImage,
+      RGBDPatchDescriptorImage *featuresImage,
+      const Matrix4f &cameraPose) const;
 };
 }
 

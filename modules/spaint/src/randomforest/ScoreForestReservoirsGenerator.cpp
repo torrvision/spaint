@@ -22,7 +22,7 @@ PositionReservoir_Ptr ScoreForestReservoirsGenerator::make_position_reservoir(
   {
 #ifdef WITH_CUDA
     reservoir.reset(
-        new ExampleReservoirs_CUDA<PositionColourExample, RGBDPatchFeature,
+        new ExampleReservoirs_CUDA<Keypoint3DColour, Keypoint3DColour,
             LeafIndices>(reservoirCapacity, nbReservoirs, rngSeed));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -31,7 +31,7 @@ PositionReservoir_Ptr ScoreForestReservoirsGenerator::make_position_reservoir(
   else
   {
     reservoir.reset(
-        new ExampleReservoirs_CPU<PositionColourExample, RGBDPatchFeature,
+        new ExampleReservoirs_CPU<Keypoint3DColour, Keypoint3DColour,
             LeafIndices>(reservoirCapacity, nbReservoirs, rngSeed));
   }
 

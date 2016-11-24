@@ -10,7 +10,7 @@
 namespace spaint
 {
 __global__ void ck_evaluate_forest(const ScoreForest::NodeEntry* forestTexture,
-    const RGBDPatchFeature* featureData, Vector2i imgSize,
+    const RGBDPatchDescriptor* descriptorsData, Vector2i imgSize,
     ScoreForest::LeafIndices* leafData)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -19,7 +19,8 @@ __global__ void ck_evaluate_forest(const ScoreForest::NodeEntry* forestTexture,
   if (x >= imgSize.x || y >= imgSize.y)
     return;
 
-  evaluate_forest_shared(forestTexture, featureData, imgSize, leafData, x, y);
+  evaluate_forest_shared(forestTexture, descriptorsData, imgSize, leafData, x,
+      y);
 }
 
 __global__ void ck_get_predictions(const ScorePrediction* leafPredictions,
@@ -41,13 +42,15 @@ ScoreForest_CUDA::ScoreForest_CUDA(const std::string &fileName) :
 {
 }
 
-void ScoreForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
+void ScoreForest_CUDA::find_leaves(
+    const RGBDPatchDescriptorImage_CPtr &descriptors,
     LeafIndicesImage_Ptr &leaf_indices) const
 {
   const NodeEntry* forestTexture = m_nodeImage->GetData(MEMORYDEVICE_CUDA);
 
-  const Vector2i imgSize = features->noDims;
-  const RGBDPatchFeature* featureData = features->GetData(MEMORYDEVICE_CUDA);
+  const Vector2i imgSize = descriptors->noDims;
+  const RGBDPatchDescriptor* descriptorsData = descriptors->GetData(
+      MEMORYDEVICE_CUDA);
 
   leaf_indices->ChangeDims(imgSize);
   LeafIndices* leafData = leaf_indices->GetData(MEMORYDEVICE_CUDA);
@@ -56,7 +59,7 @@ void ScoreForest_CUDA::find_leaves(const RGBDPatchFeatureImage_CPtr &features,
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x,
       (imgSize.y + blockSize.y - 1) / blockSize.y);
 
-  ck_evaluate_forest<<<gridSize,blockSize>>>(forestTexture, featureData, imgSize, leafData);
+  ck_evaluate_forest<<<gridSize,blockSize>>>(forestTexture, descriptorsData, imgSize, leafData);
   ORcudaKernelCheck;
 }
 
@@ -72,8 +75,7 @@ void ScoreForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
 
 // ~12MB for 160x120 image
   predictions->ChangeDims(imgSize);
-  ScorePrediction *outPredictionsData = predictions->GetData(
-      MEMORYDEVICE_CUDA);
+  ScorePrediction *outPredictionsData = predictions->GetData(MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x,

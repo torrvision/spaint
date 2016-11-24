@@ -22,12 +22,14 @@ public:
 
   virtual void compute_feature(const ITMUChar4Image *rgbImage,
       const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage *featuresImage,
+      Keypoint3DColourImage *keypointsImage,
+      RGBDPatchDescriptorImage *featuresImage,
       const Matrix4f &cameraPose) const = 0;
 
   void compute_feature(const ITMUChar4Image *rgbImage,
       const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      RGBDPatchFeatureImage *featuresImage) const;
+      Keypoint3DColourImage *keypointsImage,
+      RGBDPatchDescriptorImage *featuresImage) const;
 
   void set_feature_step(uint32_t featureStep);
   uint32_t get_feature_step() const;

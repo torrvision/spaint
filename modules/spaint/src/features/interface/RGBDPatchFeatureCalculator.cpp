@@ -19,12 +19,13 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   m_featureStep = 4;
 
   m_normalizeRgb = true;
-  m_offsetsRgb = mbf.make_block<Vector4i>(RGBDPatchFeature::RGB_FEATURE_COUNT);
-  m_channelsRgb = mbf.make_block<uchar>(RGBDPatchFeature::RGB_FEATURE_COUNT);
+  m_offsetsRgb = mbf.make_block<Vector4i>(
+      RGBDPatchDescriptor::RGB_FEATURE_COUNT);
+  m_channelsRgb = mbf.make_block<uchar>(RGBDPatchDescriptor::RGB_FEATURE_COUNT);
 
   m_normalizeDepth = true;
   m_offsetsDepth = mbf.make_block<Vector4i>(
-      RGBDPatchFeature::DEPTH_FEATURE_COUNT);
+      RGBDPatchDescriptor::DEPTH_FEATURE_COUNT);
 
   // Setup colour features
   {
@@ -44,7 +45,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
     Vector4i *offsets = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
     uchar *channels = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
 
-    for (int i = 0; i < RGBDPatchFeature::RGB_FEATURE_COUNT; ++i)
+    for (int i = 0; i < RGBDPatchDescriptor::RGB_FEATURE_COUNT; ++i)
     {
       // Might be different from the order used in scoreforests (there the random calls are inside a constructor)
       // TODO check that
@@ -79,7 +80,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 
     Vector4i *offsets = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
-    for (int i = 0; i < RGBDPatchFeature::DEPTH_FEATURE_COUNT; ++i)
+    for (int i = 0; i < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT; ++i)
     {
       offsets[i][0] = offset_generator(eng)
           * (static_cast<float>(sign_generator(eng)) * 2 - 1);
@@ -104,12 +105,14 @@ RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator()
 
 void RGBDPatchFeatureCalculator::compute_feature(const ITMUChar4Image *rgbImage,
     const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-    RGBDPatchFeatureImage *featuresImage) const
+    Keypoint3DColourImage *keypointsImage,
+    RGBDPatchDescriptorImage *featuresImage) const
 {
   Matrix4f identity;
   identity.setIdentity();
 
-  compute_feature(rgbImage, depthImage, intrinsics, featuresImage, identity);
+  compute_feature(rgbImage, depthImage, intrinsics, keypointsImage,
+      featuresImage, identity);
 }
 
 void RGBDPatchFeatureCalculator::set_feature_step(uint32_t featureStep)

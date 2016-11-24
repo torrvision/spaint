@@ -29,7 +29,7 @@ __global__ void ck_reset_temporaries(int *clustersPerReservoir,
   }
 }
 
-__global__ void ck_compute_density(const PositionColourExample *examples,
+__global__ void ck_compute_density(const Keypoint3DColour *examples,
     const int *reservoirSizes, float *densities, int reservoirCapacity,
     int startReservoirIdx, float sigma)
 {
@@ -65,7 +65,7 @@ __global__ void ck_compute_density(const PositionColourExample *examples,
   densities[elementOffset] = density;
 }
 
-__global__ void ck_link_neighbors(const PositionColourExample *examples,
+__global__ void ck_link_neighbors(const Keypoint3DColour *examples,
     const int *reservoirSizes, const float *densities, int *parents,
     int *clusterIndices, int *nbClustersPerReservoir, int reservoirCapacity,
     int startReservoirIdx, float tauSq)
@@ -253,7 +253,7 @@ __global__ void ck_select_clusters(const int *clusterSizes,
   }
 }
 
-__global__ void ck_compute_modes(const PositionColourExample *examples,
+__global__ void ck_compute_modes(const Keypoint3DColour *examples,
     const int *reservoirSizes, const int *clusterIndices,
     const int *selectedClusters, ScorePrediction *predictions,
     int reservoirCapacity, int startReservoirIdx, int maxSelectedClusters)
@@ -287,7 +287,7 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
       const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
       if (sampleCluster == selectedClusterId)
       {
-        const PositionColourExample &sample = examples[reservoirOffset
+        const Keypoint3DColour &sample = examples[reservoirOffset
             + sampleIdx];
 
         ++sampleCount;
@@ -312,7 +312,7 @@ __global__ void ck_compute_modes(const PositionColourExample *examples,
       const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
       if (sampleCluster == selectedClusterId)
       {
-        const PositionColourExample &sample = examples[reservoirOffset
+        const Keypoint3DColour &sample = examples[reservoirOffset
             + sampleIdx];
 
         for (int i = 0; i < 3; ++i)
@@ -380,7 +380,7 @@ void ScoreClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
     m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
   }
 
-  const PositionColourExample *examples = reservoirs->get_reservoirs()->GetData(
+  const Keypoint3DColour *examples = reservoirs->get_reservoirs()->GetData(
       MEMORYDEVICE_CUDA);
   const int *reservoirSizes = reservoirs->get_reservoirs_size()->GetData(
       MEMORYDEVICE_CUDA);

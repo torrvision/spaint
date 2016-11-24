@@ -23,7 +23,7 @@ inline void example_reservoirs_add_example(const FeatureType &feature,
     const LeafType &leaves, RNGType &randomGenerator, ExampleType *reservoirs,
     int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
 {
-  if (!feature.valid())
+  if (!feature.valid)
     return;
 
   ExampleType example = make_example_from_feature<ExampleType>(feature);

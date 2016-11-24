@@ -55,7 +55,7 @@ protected:
   uint32_t m_rngSeed;
 };
 
-typedef ExampleReservoirs<PositionColourExample, RGBDPatchFeature, LeafIndices> PositionReservoir;
+typedef ExampleReservoirs<Keypoint3DColour, Keypoint3DColour, LeafIndices> PositionReservoir;
 typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
 typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 

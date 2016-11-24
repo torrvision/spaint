@@ -48,7 +48,7 @@ public:
 
   int get_min_nb_required_points() const;
   boost::optional<PoseCandidate> estimate_pose(
-      const RGBDPatchFeatureImage_CPtr &features,
+      const Keypoint3DColourImage_CPtr &keypoints,
       const ScorePredictionsImage_CPtr &forestPredictions);
   void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
 
@@ -66,7 +66,7 @@ protected:
   bool m_usePredictionCovarianceForPoseOptimization;
   float m_poseOptimizationInlierThreshold;
 
-  RGBDPatchFeatureImage_CPtr m_featureImage;
+  Keypoint3DColourImage_CPtr m_keypointsImage;
   ScorePredictionsImage_CPtr m_predictionsImage;
 
   size_t m_nbMaxPoseCandidates;

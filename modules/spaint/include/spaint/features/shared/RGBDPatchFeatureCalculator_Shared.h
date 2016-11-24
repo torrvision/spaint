@@ -6,16 +6,19 @@
 #ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
 
+#include <ITMLib/Utils/ITMProjectionUtils.h>
+#include <ORUtils/PlatformIndependence.h>
+
 #include "helper_math.h"
-#include "ORUtils/PlatformIndependence.h"
 
 namespace spaint
 {
 
 _CPU_AND_GPU_CODE_
-inline void compute_colour_patch_feature(RGBDPatchFeature *features,
-    const Vector4u *rgb, const float *depths, const Vector4i *offsetsRgb,
-    const uchar *channelsRgb, const Vector2i &imgSize, const Vector2i &outSize,
+inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
+    RGBDPatchDescriptor *features, const Vector4u *rgb, const float *depths,
+    const Vector4i *offsetsRgb, const uchar *channelsRgb,
+    const Vector2i &imgSize, const Vector2i &outSize,
     const Vector4f &intrinsics, const Matrix4f &cameraPose, bool normalize,
     const Vector2i &xyIn, const Vector2i &xyOut)
 {
@@ -23,28 +26,29 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
   const float depth = depths[linearIdxIn];
 
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
-  RGBDPatchFeature &outFeature = features[linearIdxOut];
+  Keypoint3DColour &outKeypoint = keypoints[linearIdxOut];
+  RGBDPatchDescriptor &outFeature = features[linearIdxOut];
 
   if (depth <= 0.f)
   {
     // Mark as invalid
-    outFeature.position.w = -1.f;
+    outKeypoint.valid = false;
     return;
   }
 
   // Compute position in camera frame
-  const Vector4f position(
-      depth * ((static_cast<float>(xyIn.x) - intrinsics.z) / intrinsics.x),
-      depth * ((static_cast<float>(xyIn.y) - intrinsics.w) / intrinsics.y),
-      depth, 1.0f);
+  const Vector3f position = reproject(xyIn, depth, intrinsics);
 
   // Bring position in "world frame"
-  outFeature.position = cameraPose * position;
+  outKeypoint.position = cameraPose * position;
 
   // Copy the colour for future reference
-  outFeature.colour = rgb[linearIdxIn].toVector3();
+  outKeypoint.colour = rgb[linearIdxIn].toVector3();
 
-  for (int featIdx = 0; featIdx < RGBDPatchFeature::RGB_FEATURE_COUNT;
+  // Mark the keypoint as valid
+  outKeypoint.valid = true;
+
+  for (int featIdx = 0; featIdx < RGBDPatchDescriptor::RGB_FEATURE_COUNT;
       ++featIdx)
   {
     const int channel = channelsRgb[featIdx];
@@ -85,18 +89,29 @@ inline void compute_colour_patch_feature(RGBDPatchFeature *features,
 }
 
 _CPU_AND_GPU_CODE_
-inline void compute_depth_patch_feature(RGBDPatchFeature *features,
-    const float *depths, const Vector4i *offsetsDepth, const Vector2i &imgSize,
+inline void compute_depth_patch_feature(Keypoint3DColour *keypoints,
+    RGBDPatchDescriptor *features, const float *depths,
+    const Vector4i *offsetsDepth, const Vector2i &imgSize,
     const Vector2i &outSize, bool normalize, const Vector2i &xyIn,
     const Vector2i &xyOut)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
+  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
   const float depth = depths[linearIdxIn];
 
   if (depth <= 0.f)
+  {
+    // Mark the keypoint as invalid.
+    // (compute_colour_patch_feature also does that but in the future
+    // we might want to compute only depth features).
+    keypoints[linearIdxOut].valid = false;
     return;
+  }
 
-  for (int featIdx = 0; featIdx < RGBDPatchFeature::DEPTH_FEATURE_COUNT;
+  // Mark the keypoint as valid.
+  keypoints[linearIdxOut].valid = true;
+
+  for (int featIdx = 0; featIdx < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT;
       ++featIdx)
   {
     const Vector4i offset = offsetsDepth[featIdx];
@@ -135,8 +150,7 @@ inline void compute_depth_patch_feature(RGBDPatchFeature *features,
 //        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
 
 // As for colour, the implementation differs from the paper
-    const int linear_idx_out = xyOut.y * outSize.x + xyOut.x;
-    features[linear_idx_out].depth[featIdx] = depth_1_mm - depth_mm;
+    features[linearIdxOut].depth[featIdx] = depth_1_mm - depth_mm;
   }
 }
 }

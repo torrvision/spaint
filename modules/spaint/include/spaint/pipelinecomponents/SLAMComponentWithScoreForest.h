@@ -72,7 +72,8 @@ private:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
-  RGBDPatchFeatureImage_Ptr m_featureImage;
+  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
+  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
   ScorePredictionsImage_Ptr m_predictionsImage;
   ScoreForest_Ptr m_scoreForest;
   PreemptiveRansac_Ptr m_preemptiveRansac;
