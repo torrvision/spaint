@@ -28,6 +28,7 @@ int generate_offset(tvgutil::RandomNumberGenerator &rng, int min, int max)
 }
 }
 
+//#################### CONSTRUCTORS ####################
 RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 {
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
@@ -51,8 +52,8 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 
     const int channelMin = 0;
     const int channelMax = 2;
-    const int radiusMin = 2;
-    const int radiusMax = 130;
+    const int radiusMin = 2;   // From Julien's code.
+    const int radiusMax = 130; // From Julien's code.
 
     Vector4i *offsets = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
     uchar *channels = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
@@ -64,7 +65,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
       offsets[i][2] = generate_offset(rng, radiusMin, radiusMax);
       offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
 
-      // RGB2BGR
+      // The "2 - rng..." is to perform the RGB2BGR conversion.
       channels[i] = 2 - rng.generate_int_from_uniform(channelMin, channelMax);
     }
 
@@ -80,8 +81,8 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
     // Force the default seed found in both the std and boost headers.
     tvgutil::RandomNumberGenerator rng(5489u);
 
-    const int radiusMin = 2 / 2;
-    const int radiusMax = 130 / 2;
+    const int radiusMin = 1;       // From Julien's code (was 2 / 2).
+    const int radiusMax = 130 / 2; // From Julien's code.
 
     Vector4i *offsets = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
@@ -100,15 +101,19 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   }
 }
 
+//#################### DESTRUCTOR ####################
 RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator()
 {
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 void RGBDPatchFeatureCalculator::compute_feature(const ITMUChar4Image *rgbImage,
     const ITMFloatImage *depthImage, const Vector4f &intrinsics,
     Keypoint3DColourImage *keypointsImage,
     RGBDPatchDescriptorImage *featuresImage) const
 {
+  // Use the identity transform to call the virtual function.
+  // Keypoints will have 3D coordinates in camera reference frame.
   Matrix4f identity;
   identity.setIdentity();
 
@@ -116,14 +121,14 @@ void RGBDPatchFeatureCalculator::compute_feature(const ITMUChar4Image *rgbImage,
       featuresImage, identity);
 }
 
-void RGBDPatchFeatureCalculator::set_feature_step(uint32_t featureStep)
-{
-  m_featureStep = featureStep;
-}
-
 uint32_t RGBDPatchFeatureCalculator::get_feature_step() const
 {
   return m_featureStep;
+}
+
+void RGBDPatchFeatureCalculator::set_feature_step(uint32_t featureStep)
+{
+  m_featureStep = featureStep;
 }
 
 }

@@ -32,6 +32,11 @@ struct FeatureCalculatorFactory
   static FeatureCalculator_CPtr make_vop_feature_calculator(size_t maxVoxelLocationCount, size_t patchSize, float patchSpacing, size_t binCount,
                                                             ITMLib::ITMLibSettings::DeviceType deviceType);
 
+  /**
+   * \brief Makes an RGBD Patch feature calculator.
+   *
+   * \param deviceType            The device on which the feature calculator should operate.
+   */
   static RGBDPatchFeatureCalculator_CPtr make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 };
 
