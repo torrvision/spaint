@@ -7,9 +7,8 @@
 
 #include <iostream>
 
-#include "util/MemoryBlockFactory.h"
-
 #include "tvgutil/numbers/RandomNumberGenerator.h"
+#include "util/MemoryBlockFactory.h"
 
 namespace spaint
 {
