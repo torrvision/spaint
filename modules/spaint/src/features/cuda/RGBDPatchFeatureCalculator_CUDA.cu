@@ -8,18 +8,21 @@
 
 namespace spaint
 {
+//#################### CUDA KERNELS ####################
 __global__ void ck_compute_colour_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *features, const Vector4u *rgb, const float *depth,
     const Vector4i *offsetsRgb, const uchar *channelsRgb, Vector2i imgSize,
     Vector2i outSize, Vector4f intrinsics, Matrix4f cameraPose,
     uint32_t featureStep, bool normalize)
 {
+  // Coordinates of the output keypoint/descriptor pair.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x,
       threadIdx.y + blockIdx.y * blockDim.y);
 
   if (xyOut.x >= outSize.x || xyOut.y >= outSize.y)
     return;
 
+  // Coordinates of the pixel used as center of the feature.
   const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
   compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
@@ -32,18 +35,21 @@ __global__ void ck_compute_depth_feature(Keypoint3DColour *keypoints,
     const Vector4i *offsetsDepth, Vector2i imgSize, Vector2i outSize,
     uint32_t featureStep, bool normalize)
 {
+  // Coordinates of the output keypoint/descriptor pair.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x,
       threadIdx.y + blockIdx.y * blockDim.y);
 
   if (xyOut.x >= outSize.x || xyOut.y >= outSize.y)
     return;
 
+  // Coordinates of the pixel used as center of the feature.
   const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
   compute_depth_patch_feature(keypoints, features, depth, offsetsDepth, imgSize,
       outSize, normalize, xyIn, xyOut);
 }
 
+//#################### CONSTRUCTORS ####################
 RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
 {
   m_offsetsRgb->UpdateDeviceFromHost();
@@ -51,6 +57,7 @@ RGBDPatchFeatureCalculator_CUDA::RGBDPatchFeatureCalculator_CUDA()
   m_offsetsDepth->UpdateDeviceFromHost();
 }
 
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 void RGBDPatchFeatureCalculator_CUDA::compute_feature(
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
     const Vector4f &intrinsics, Keypoint3DColourImage *keypointsImage,
@@ -64,11 +71,14 @@ void RGBDPatchFeatureCalculator_CUDA::compute_feature(
   const Vector4i *offsetsDepth = m_offsetsDepth->GetData(MEMORYDEVICE_CUDA);
 
   Vector2i inDims = rgbImage->noDims;
+  // The output images have one pixel per each element of the sampling grid.
   Vector2i outDims(rgbImage->noDims.x / m_featureStep,
       rgbImage->noDims.y / m_featureStep);
 
+  // Resize images appropriately. Will always be a NOP except the first time.
   keypointsImage->ChangeDims(outDims);
   featuresImage->ChangeDims(outDims);
+
   Keypoint3DColour *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
   RGBDPatchDescriptor *features = featuresImage->GetData(MEMORYDEVICE_CUDA);
 
@@ -76,8 +86,8 @@ void RGBDPatchFeatureCalculator_CUDA::compute_feature(
   dim3 gridSize((outDims.x + blockSize.x - 1) / blockSize.x,
       (outDims.y + blockSize.y - 1) / blockSize.y);
 
-  // The colour feature calculator also computed the 3D pose of the point
-  // and fills the colour in the feature struct. Intrinsics are only needed here
+  // The colour feature calculator also computes the 3D pose and colour of the keypoint
+  // Camera intrinsics are only needed here
   ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
       inDims, outDims, intrinsics, cameraPose, m_featureStep, m_normalizeRgb);
   ORcudaKernelCheck;
