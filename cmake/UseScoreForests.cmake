@@ -4,7 +4,8 @@
 
 OPTION(WITH_SCOREFORESTS "Build with ScoreForests support?" OFF)
 
-IF(WITH_SCOREFORESTS)
+# Scoreforests needs C++11 support.
+IF(WITH_SCOREFORESTS AND WITH_C++11)
   SET(ScoreForests_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/" CACHE PATH "The ScoreForests main directory")
   SET(ScoreForests_BUILD_DIR "${PROJECT_SOURCE_DIR}/../scoreforests/build" CACHE PATH "The ScoreForests build directory")
 
@@ -40,5 +41,7 @@ IF(WITH_SCOREFORESTS)
 
   ADD_DEFINITIONS(-DUSING_CMAKE)
   ADD_DEFINITIONS(-DWITH_SCOREFORESTS)
+ELSEIF(WITH_SCOREFORESTS)
+  MESSAGE(FATAL_ERROR "Scoreforests needs C++11 support to be enabled.")
 ENDIF()
 
