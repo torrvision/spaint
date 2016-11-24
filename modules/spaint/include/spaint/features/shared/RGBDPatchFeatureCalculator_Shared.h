@@ -9,7 +9,7 @@
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 #include <ORUtils/PlatformIndependence.h>
 
-#include "helper_math.h"
+#include <helper_math.h>
 
 namespace spaint
 {
