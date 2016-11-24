@@ -5,17 +5,34 @@
 
 #include "features/interface/RGBDPatchFeatureCalculator.h"
 
-#include <random>
+#include <iostream>
+
 #include "util/MemoryBlockFactory.h"
 
-#include <iostream>
+#include "tvgutil/numbers/RandomNumberGenerator.h"
 
 namespace spaint
 {
+
+namespace
+{
+/**
+ * \brief Generates a random integer offset in the intervals [-max, -min] and [min, max] using rng.
+ */
+int generate_offset(tvgutil::RandomNumberGenerator &rng, int min, int max)
+{
+  static const int signMin = 0;
+  static const int signMax = 1;
+  return rng.generate_int_from_uniform(min, max)
+      * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
+}
+}
+
 RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 {
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-// Setup the features in the same way as Julian's code
+
+  // Setup the features in the same way as Julien's code
   m_featureStep = 4;
 
   m_normalizeRgb = true;
@@ -29,72 +46,56 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 
   // Setup colour features
   {
-    std::mt19937 eng;
+    // Force the default seed found in both the std and boost headers.
+    tvgutil::RandomNumberGenerator rng(5489u);
 
     const int channelMin = 0;
     const int channelMax = 2;
     const int radiusMin = 2;
     const int radiusMax = 130;
 
-    std::uniform_int_distribution<size_t> channel_generator(channelMin,
-        channelMax);
-    std::uniform_int_distribution<size_t> offset_generator(radiusMin,
-        radiusMax);
-    std::uniform_int_distribution<size_t> sign_generator(0, 1);
-
     Vector4i *offsets = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
     uchar *channels = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
 
     for (int i = 0; i < RGBDPatchDescriptor::RGB_FEATURE_COUNT; ++i)
     {
-      // Might be different from the order used in scoreforests (there the random calls are inside a constructor)
-      // TODO check that
-      offsets[i][0] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][1] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][2] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][3] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][2] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
 
-      channels[i] = 2 - channel_generator(eng); // RGB2BGR
+      // RGB2BGR
+      channels[i] = 2 - rng.generate_int_from_uniform(channelMin, channelMax);
     }
 
-//    for(int i = 0; i < RGBDPatchFeature::RGB_FEATURE_COUNT; ++i)
+//    for (int i = 0; i < RGBDPatchDescriptor::RGB_FEATURE_COUNT; ++i)
 //    {
-//      std::cout << i << "Offset " << offsets[i] << " - Channel: " << channels[i] << std::endl;
+//      std::cout << i << " RGB Offset " << offsets[i] << " - Channel: "
+//          << channels[i] << std::endl;
 //    }
   }
 
   // Setup depth features
   {
-    std::mt19937 eng;
+    // Force the default seed found in both the std and boost headers.
+    tvgutil::RandomNumberGenerator rng(5489u);
 
     const int radiusMin = 2 / 2;
     const int radiusMax = 130 / 2;
-
-    std::uniform_int_distribution<size_t> offset_generator(radiusMin,
-        radiusMax);
-    std::uniform_int_distribution<size_t> sign_generator(0, 1);
 
     Vector4i *offsets = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
     for (int i = 0; i < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT; ++i)
     {
-      offsets[i][0] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][1] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][2] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
-      offsets[i][3] = offset_generator(eng)
-          * (static_cast<float>(sign_generator(eng)) * 2 - 1);
+      offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][2] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
     }
 
-//    for(int i = 0; i < RGBDPatchFeature::DEPTH_FEATURE_COUNT; ++i)
+//    for (int i = 0; i < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT; ++i)
 //    {
-//      std::cout << i << "Offset " << offsets[i] << std::endl;
+//      std::cout << i << " Depth Offset " << offsets[i] << std::endl;
 //    }
   }
 }
