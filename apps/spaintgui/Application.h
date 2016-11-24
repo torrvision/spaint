@@ -93,9 +93,10 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline  The multi-scene pipeline that the application should use.
+   * \param pipeline        The multi-scene pipeline that the application should use.
+   * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  explicit Application(const MultiScenePipeline_Ptr& pipeline);
+  Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

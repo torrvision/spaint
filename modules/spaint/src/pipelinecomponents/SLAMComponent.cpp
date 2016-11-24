@@ -29,9 +29,9 @@ namespace spaint {
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                              TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode,
-                             const FiducialDetector_CPtr& fiducialDetector)
+                             const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
 : m_context(context),
-  m_detectFiducials(false),
+  m_detectFiducials(detectFiducials),
   m_fiducialDetector(fiducialDetector),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.

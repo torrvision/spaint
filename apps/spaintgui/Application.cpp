@@ -39,13 +39,13 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const MultiScenePipeline_Ptr& pipeline)
+Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials)
 : m_activeSubwindowIndex(0),
   m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
-  m_renderFiducials(false),
+  m_renderFiducials(renderFiducials),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {

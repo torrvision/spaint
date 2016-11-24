@@ -163,10 +163,12 @@ public:
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    * \param fiducialDetector  The fiducial detector to use (if any).
+   * \param detectFiducials   Whether or not to initially detect fiducials in the scene.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                 TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
-                TrackingMode trackingMode = TRACK_VOXELS, const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr());
+                TrackingMode trackingMode = TRACK_VOXELS, const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(),
+                bool detectFiducials = false);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -55,17 +55,18 @@ struct CommandLineArguments
   std::string calibrationFilename;
   bool cameraAfterDisk;
   std::string depthImageMask;
+  bool detectFiducials;
   int initialFrameNumber;
   bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
   size_t prefetchBufferCapacity;
+  bool renderFiducials;
   std::string rgbImageMask;
   std::string sequenceSpecifier;
   std::string sequenceType;
   bool trackSurfels;
-  bool useFiducials;
 };
 
 //#################### FUNCTIONS ####################
@@ -78,11 +79,12 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("help", "produce help message")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
-    ("useFiducials", po::bool_switch(&args.useFiducials), "enable fiducial support")
   ;
 
   po::options_description cameraOptions("Camera options");
@@ -141,6 +143,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
+
+  // If the user wants to enable fiducial rendering, make sure that fiducial detection is also enabled.
+  if(args.renderFiducials) args.detectFiducials = true;
 
   return true;
 }
@@ -265,7 +270,7 @@ try
   // Construct the fiducial detector (if any).
   FiducialDetector_CPtr fiducialDetector;
 #ifdef WITH_OPENCV
-  if(args.useFiducials) fiducialDetector.reset(new ArUcoFiducialDetector(settings));
+  fiducialDetector.reset(new ArUcoFiducialDetector(settings));
 #endif
 
   // Construct the pipeline.
@@ -277,12 +282,14 @@ try
   if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector));
+    pipeline.reset(new SemanticPipeline(
+      settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector, args.detectFiducials
+    ));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
   // Run the application.
-  Application app(pipeline);
+  Application app(pipeline, args.renderFiducials);
   app.run();
 
 #ifdef WITH_OVR
