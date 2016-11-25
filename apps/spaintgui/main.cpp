@@ -299,7 +299,18 @@ try
   }
   else if(args.pipelineType == "objective")
   {
-    pipeline.reset(new ObjectivePipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+    pipeline.reset(new ObjectivePipeline(
+      settings,
+      Application::resources_dir().string(),
+      maxLabelCount,
+      imageSourceEngine,
+      trackerType,
+      trackerParams,
+      mappingMode,
+      trackingMode,
+      fiducialDetector,
+      args.detectFiducials
+    ));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
