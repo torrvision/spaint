@@ -174,10 +174,7 @@ ArUcoFiducialDetector::construct_measurements_from_raycast(const std::vector<int
     );
 
     boost::optional<ORUtils::SE3Pose> fiducialPoseEye;
-    if(fiducialPoseWorld)
-    {
-      // TODO
-    }
+    if(fiducialPoseWorld) fiducialPoseEye.reset(fiducialPoseWorld->GetM() * pose.GetInvM());
 
     measurements.push_back(FiducialMeasurement(boost::lexical_cast<std::string>(ids[i]), fiducialPoseEye, fiducialPoseWorld));
   }
