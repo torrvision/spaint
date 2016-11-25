@@ -6,6 +6,8 @@
 #ifndef H_SPAINT_PICKER
 #define H_SPAINT_PICKER
 
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
@@ -46,6 +48,34 @@ public:
    * \param pickPointsShortMB A memory block into which to write the pick points in Vector3s format.
    */
   virtual void to_short(const ORUtils::MemoryBlock<Vector3f>& pickPointsFloatMB, ORUtils::MemoryBlock<Vector3s>& pickPointsShortMB) const = 0;
+
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Converts one or more pick points in voxel coordinates into scene coordinates.
+   *
+   * \param pickPointsMB  The voxel coordinates of the picked points.
+   * \param voxelSize     The size of an InfiniTAM voxel (in metres).
+   */
+  template <typename Vec>
+  static std::vector<Vec> get_positions(const ORUtils::MemoryBlock<Vector3f>& pickPointsMB, float voxelSize)
+  {
+    // If the pick points are on the GPU, copy them across to the CPU.
+    pickPointsMB.UpdateHostFromDevice();
+
+    // Convert the pick points from voxel coordinates into scene coordinates and return them.
+    const Vector3f *pickPoints = pickPointsMB.GetData(MEMORYDEVICE_CPU);
+    size_t pickPointCount = pickPointsMB.dataSize;
+    std::vector<Vec> positions(pickPointCount);
+
+    for(size_t i = 0; i < pickPointCount; ++i)
+    {
+      const Vector3f& pickPoint = pickPoints[i];
+      positions[i] = Vec(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
+    }
+
+    return positions;
+  }
 };
 
 //#################### TYPEDEFS ####################

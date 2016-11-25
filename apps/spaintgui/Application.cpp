@@ -39,12 +39,13 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-Application::Application(const MultiScenePipeline_Ptr& pipeline)
+Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials)
 : m_activeSubwindowIndex(0),
   m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
+  m_renderFiducials(renderFiducials),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
@@ -77,7 +78,7 @@ void Application::run()
     }
 
     // Render the scene.
-    m_renderer->render(m_fracWindowPos);
+    m_renderer->render(m_fracWindowPos, m_renderFiducials);
 
     // If the application is unpaused, run the mode-specific section of the pipeline for the active scene.
     if(!m_paused) m_pipeline->run_mode_specific_section(get_active_scene_id(), get_monocular_render_state());
@@ -268,6 +269,10 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "M + 5 = To Correction Mode\n"
               << "M + 6 = To Smoothing Mode\n"
               << "M + 7 = To Feature Inspection Mode\n"
+              << "K + 1 = Disable Fiducials\n"
+              << "K + 2 = Only Detect Fiducials\n"
+              << "K + 3 = Only Render Fiducials\n"
+              << "K + 4 = Detect and Render Fiducials\n"
               << "R + # = To Windowed Renderer (Specified Subwindow Configuration)\n"
               << "RShift + R + 1 = To Rift Renderer (Windowed)\n"
               << "RShift + R + 2 = To Rift Renderer (Fullscreen)\n"
@@ -451,10 +456,29 @@ bool Application::process_events()
   return true;
 }
 
+void Application::process_fiducial_input()
+{
+  if(m_inputState.key_down(KEYCODE_k))
+  {
+    bool k1 = m_inputState.key_down(KEYCODE_1),
+         k2 = m_inputState.key_down(KEYCODE_2),
+         k3 = m_inputState.key_down(KEYCODE_3),
+         k4 = m_inputState.key_down(KEYCODE_4);
+
+    if(k1 || k2 || k3 || k4)
+    {
+      const std::string& sceneID = get_active_scene_id();
+      m_pipeline->set_detect_fiducials(sceneID, k2 || k4);
+      m_renderFiducials = k3 || k4;
+    }
+  }
+}
+
 void Application::process_input()
 {
   process_camera_input();
   process_command_input();
+  process_fiducial_input();
   process_labelling_input();
   process_mode_input();
   process_renderer_input();

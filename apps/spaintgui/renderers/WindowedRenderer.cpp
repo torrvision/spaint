@@ -60,7 +60,7 @@ bool WindowedRenderer::is_mono() const
   return true;
 }
 
-void WindowedRenderer::render(const Vector2f& fracWindowPos) const
+void WindowedRenderer::render(const Vector2f& fracWindowPos, bool renderFiducials) const
 {
 #if USE_FOCUS_REACQUISITION
   // Reacquire the focus for this window if it has been lost to debugging windows.
@@ -68,7 +68,7 @@ void WindowedRenderer::render(const Vector2f& fracWindowPos) const
 #endif
 
   // Render the scene.
-  render_scene(fracWindowPos);
+  render_scene(fracWindowPos, renderFiducials);
 
   // Swap the front and back buffers.
   SDL_GL_SwapWindow(get_window());

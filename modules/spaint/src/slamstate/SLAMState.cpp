@@ -4,6 +4,8 @@
  */
 
 #include "slamstate/SLAMState.h"
+
+#include "fiducials/AveragingFiducial.h"
 using namespace ITMLib;
 using namespace ORUtils;
 
@@ -14,6 +16,11 @@ namespace spaint {
 const Vector2i& SLAMState::get_depth_image_size() const
 {
   return m_inputRawDepthImage->noDims;
+}
+
+const std::map<std::string,Fiducial_Ptr>& SLAMState::get_fiducials() const
+{
+  return m_fiducials;
 }
 
 ITMUCharImage_CPtr SLAMState::get_input_mask() const
@@ -158,6 +165,24 @@ void SLAMState::set_view(ITMLib::ITMView *view)
 void SLAMState::set_voxel_scene(const SpaintVoxelScene_Ptr& voxelScene)
 {
   m_voxelScene = voxelScene;
+}
+
+void SLAMState::update_fiducials(const std::map<std::string,FiducialMeasurement>& measurements)
+{
+  // For each fiducial measurement:
+  for(std::map<std::string,FiducialMeasurement>::const_iterator it = measurements.begin(), iend = measurements.end(); it != iend; ++it)
+  {
+    // If the measurement doesn't have a valid world pose, ignore it.
+    if(!it->second.pose_world()) continue;
+
+    // Try to find a corresponding fiducial among the fiducials we've seen.
+    std::map<std::string,Fiducial_Ptr>::iterator jt = m_fiducials.find(it->first);
+
+    // If there is one, update it with the information from the measurement.
+    // If not, create a new fiducial based on the measurement.
+    if(jt != m_fiducials.end()) jt->second->integrate(it->second);
+    else m_fiducials[it->first].reset(new AveragingFiducial(it->first, *it->second.pose_world()));
+  }
 }
 
 }

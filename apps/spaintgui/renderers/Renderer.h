@@ -96,9 +96,10 @@ public:
   /**
    * \brief Renders both the reconstructed scene and the synthetic scene from one or more camera poses.
    *
-   * \param fracWindowPos The fractional position of the mouse within the window's viewport.
+   * \param fracWindowPos   The fractional position of the mouse within the window's viewport.
+   * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  virtual void render(const Vector2f& fracWindowPos) const = 0;
+  virtual void render(const Vector2f& fracWindowPos, bool renderFiducials) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -193,10 +194,11 @@ protected:
    * \brief Renders both the reconstructed scene and the synthetic scene.
    *
    * \param fracWindowPos       The fractional position of the mouse within the window's viewport.
+   * \param renderFiducials     Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    * \param viewIndex           The index of the free camera view for the sub-window.
    * \param secondaryCameraName The name of the secondary camera from which to get the pose (if any).
    */
-  void render_scene(const Vector2f& fracWindowPos, int viewIndex = 0, const std::string& secondaryCameraName = "") const;
+  void render_scene(const Vector2f& fracWindowPos, bool renderFiducials, int viewIndex = 0, const std::string& secondaryCameraName = "") const;
 
   /**
    * \brief Sets the window into which to render.
@@ -258,11 +260,12 @@ private:
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
-   * \param sceneID     The ID of the reconstructed scene to augment.
-   * \param pose        The camera pose.
-   * \param cameraMode  The camera mode.
+   * \param sceneID         The ID of the reconstructed scene to augment.
+   * \param pose            The camera pose.
+   * \param cameraMode      The camera mode.
+   * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow::CameraMode cameraMode) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const;
 
 #ifdef WITH_GLUT
   /**
