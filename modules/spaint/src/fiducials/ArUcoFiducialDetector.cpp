@@ -223,7 +223,6 @@ boost::optional<ORUtils::SE3Pose> ArUcoFiducialDetector::make_pose_from_corners(
 
   if(v0 && v1 && v2)
   {
-    // FIXME: Need to check for collinear points.
     Vector3f xp = (*v1 - *v0).normalised();
     Vector3f yp = (*v2 - *v0).normalised();
     Vector3f zp = ORUtils::cross(xp, yp);

@@ -117,7 +117,7 @@ private:
    * \param v0  The first corner point.
    * \param v1  The second corner point.
    * \param v2  The third corner point.
-   * \return    The pose matrix, if all three corner points exist and are not collinear, or boost::none otherwise.
+   * \return    The pose matrix, if all three corner points exist, or boost::none otherwise.
    */
   static boost::optional<ORUtils::SE3Pose> make_pose_from_corners(const boost::optional<Vector3f>& v0,
                                                                   const boost::optional<Vector3f>& v1,
