@@ -213,10 +213,7 @@ boost::optional<Vector3f> ArUcoFiducialDetector::pick_corner_from_raycast(const 
   bool pickPointFound = m_picker->pick(p.x, p.y, renderState.get(), *pickPointFloatMB);
   if(!pickPointFound) return boost::none;
 
-  // FIXME: This is pretty much the same as PickingSelector::get_position().
-  pickPointFloatMB->UpdateHostFromDevice();
-  const Vector3f& pickPoint = *pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
-  return pickPoint * m_settings->sceneParams.voxelSize;
+  return Picker::get_positions<Vector3f>(*pickPointFloatMB, m_settings->sceneParams.voxelSize)[0];
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
