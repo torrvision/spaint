@@ -114,6 +114,11 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
   }
 }
 
+void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool detectFiducials)
+{
+  MapUtil::lookup(m_slamComponents, sceneID)->set_detect_fiducials(detectFiducials);
+}
+
 void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fusionEnabled)
 {
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);

@@ -157,6 +157,14 @@ public:
   void run_mode_specific_section(const std::string& sceneID, const VoxelRenderState_CPtr& renderState);
 
   /**
+   * \brief Sets whether or not the user wants fiducials to be detected in the specified scene.
+   *
+   * \param sceneID         The scene ID.
+   * \param detectFiducials Whether or not the user wants fiducials to be detected in the specified scene.
+   */
+  void set_detect_fiducials(const std::string& sceneID, bool detectFiducials);
+
+  /**
    * \brief Sets whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    *
    * Note: Just because the user wants fusion to be run doesn't mean that it necessarily will be on every frame.

@@ -42,7 +42,7 @@ else
 fi
 
 echo "[spaint] ...Running build..."
-cmd //c "b2 -j2 --libdir=..\boost_1_56_0\lib --includedir=..\boost_1_56_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --build-type=complete --layout=tagged toolset=$1 architecture=x86 address-model=64 install >> $LOG"
+cmd //c "b2 -j2 --libdir=..\boost_1_56_0\lib --includedir=..\boost_1_56_0\include --abbreviate-paths --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-test --with-thread --with-timer --build-type=complete --layout=tagged toolset=$1 architecture=x86 address-model=64 install >> $LOG"
 
 echo "[spaint] ...Fixing headers..."
 perl -ibak -pe 's/SPT<void>/SPT<const void>/g' ../boost_1_56_0/include/boost/serialization/shared_ptr_helper.hpp

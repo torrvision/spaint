@@ -74,7 +74,7 @@ public:
   virtual bool is_mono() const;
 
   /** Override */
-  virtual void render(const Vector2f& fracWindowPos) const;
+  virtual void render(const Vector2f& fracWindowPos, bool renderFiducials) const;
 };
 
 #endif

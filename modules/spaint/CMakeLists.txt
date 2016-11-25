@@ -81,6 +81,41 @@ include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 
 ##
+SET(fiducials_sources
+src/fiducials/AveragingFiducial.cpp
+src/fiducials/Fiducial.cpp
+src/fiducials/FiducialMeasurement.cpp
+src/fiducials/FiducialPoseEstimator.cpp
+src/fiducials/SimpleFiducial.cpp
+)
+
+SET(fiducials_headers
+include/spaint/fiducials/AveragingFiducial.h
+include/spaint/fiducials/Fiducial.h
+include/spaint/fiducials/FiducialDetector.h
+include/spaint/fiducials/FiducialMeasurement.h
+include/spaint/fiducials/FiducialPoseEstimator.h
+include/spaint/fiducials/SimpleFiducial.h
+)
+
+IF(WITH_OPENCV)
+  SET(fiducials_sources ${fiducials_sources} src/fiducials/ArUcoFiducialDetector.cpp)
+  SET(fiducials_headers ${fiducials_headers} include/spaint/fiducials/ArUcoFiducialDetector.h)
+ENDIF()
+
+##
+SET(geometry_sources
+src/geometry/GeometryUtil.cpp
+)
+
+SET(geometry_headers
+include/spaint/geometry/DualNumber.h
+include/spaint/geometry/DualQuaternion.h
+include/spaint/geometry/GeometryUtil.h
+include/spaint/geometry/Screw.h
+)
+
+##
 SET(imageprocessing_sources)
 SET(imageprocessing_headers)
 
@@ -604,6 +639,8 @@ SET(sources
 ${features_sources}
 ${features_cpu_sources}
 ${features_interface_sources}
+${fiducials_sources}
+${geometry_sources}
 ${imageprocessing_sources}
 ${imagesources_sources}
 ${markers_sources}
@@ -640,6 +677,8 @@ ${features_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${fiducials_headers}
+${geometry_headers}
 ${imageprocessing_headers}
 ${imagesources_headers}
 ${markers_headers}
@@ -737,6 +776,8 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers}
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(fiducials FILES ${fiducials_sources} ${fiducials_headers})
+SOURCE_GROUP(geometry FILES ${geometry_sources} ${geometry_headers})
 SOURCE_GROUP(imageprocessing FILES ${imageprocessing_sources} ${imageprocessing_headers})
 SOURCE_GROUP(imageprocessing\\cpu FILES ${imageprocessing_cpu_sources} ${imageprocessing_cpu_headers})
 SOURCE_GROUP(imageprocessing\\cuda FILES ${imageprocessing_cuda_sources} ${imageprocessing_cuda_headers})

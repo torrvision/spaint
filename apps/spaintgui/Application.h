@@ -70,6 +70,9 @@ private:
   /** The current renderer. */
   Renderer_Ptr m_renderer;
 
+  /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
+  bool m_renderFiducials;
+
   /** The path generator for the current sequence recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
 
@@ -90,9 +93,10 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline  The multi-scene pipeline that the application should use.
+   * \param pipeline        The multi-scene pipeline that the application should use.
+   * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  explicit Application(const MultiScenePipeline_Ptr& pipeline);
+  Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials = false);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -194,6 +198,11 @@ private:
    * \return true, if the application should continue running, or false otherwise.
    */
   bool process_events();
+
+  /**
+   * \brief Processes user input that deals with fiducials.
+   */
+  void process_fiducial_input();
 
   /**
    * \brief Takes action as relevant based on the current input state.

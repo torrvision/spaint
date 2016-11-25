@@ -6,6 +6,9 @@
 #ifndef H_SPAINT_SLAMSTATE
 #define H_SPAINT_SLAMSTATE
 
+#include <map>
+
+#include "../fiducials/Fiducial.h"
 #include "../util/ITMImagePtrTypes.h"
 #include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintSurfelScene.h"
@@ -20,6 +23,9 @@ class SLAMState
 {
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The fiducials (if any) that have been detected in the 3D scene. */
+  std::map<std::string,Fiducial_Ptr> m_fiducials;
+
   /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 
@@ -52,6 +58,13 @@ public:
    * \return  The dimensions of the depth images from which the scene is being reconstructed.
    */
   const Vector2i& get_depth_image_size() const;
+
+  /**
+   * \brief Gets the fiducials (if any) that have been detected in the 3D scene.
+   *
+   * \return  The fiducials (if any) that have been detected in the 3D scene.
+   */
+  const std::map<std::string,Fiducial_Ptr>& get_fiducials() const;
 
   /**
    * \brief Gets the image into which depth input is read each frame.
@@ -234,6 +247,14 @@ public:
    * \param voxelScene  The voxel scene.
    */
   void set_voxel_scene(const SpaintVoxelScene_Ptr& voxelScene);
+
+  /**
+   * \brief Updates the current set of fiducials that we're maintaining with information from
+   *        a set of fiducial measurements (e.g. from running a detector on the current frame).
+   *
+   * \param measurements  The set of measurements with which to update the fiducials.
+   */
+  void update_fiducials(const std::map<std::string,FiducialMeasurement>& measurements);
 };
 
 //#################### TYPEDEFS ####################
