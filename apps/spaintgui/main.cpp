@@ -283,7 +283,17 @@ try
   {
     const unsigned int seed = 12345;
     pipeline.reset(new SemanticPipeline(
-      settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector, args.detectFiducials
+      settings,
+      Application::resources_dir().string(),
+      maxLabelCount,
+      imageSourceEngine,
+      seed,
+      trackerType,
+      trackerParams,
+      mappingMode,
+      trackingMode,
+      fiducialDetector,
+      args.detectFiducials
     ));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
