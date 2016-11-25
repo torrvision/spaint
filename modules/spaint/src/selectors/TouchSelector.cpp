@@ -71,20 +71,8 @@ std::vector<Eigen::Vector3f> TouchSelector::get_positions() const
   // If the last update did not yield any valid touch points, early out.
   if(m_keptTouchPointCount == 0) return std::vector<Eigen::Vector3f>();
 
-  // If the touch points are on the GPU, copy them across to the CPU.
-  m_keptTouchPointsFloatMB->UpdateHostFromDevice();
-
   // Convert the touch points from voxel coordinates into scene coordinates and return them.
-  float voxelSize = m_settings->sceneParams.voxelSize;
-  const Vector3f *keptTouchPointsFloat = m_keptTouchPointsFloatMB->GetData(MEMORYDEVICE_CPU);
-  std::vector<Eigen::Vector3f> touchPoints(m_keptTouchPointCount);
-  for(size_t i = 0; i < m_keptTouchPointCount; ++i)
-  {
-    const Vector3f& keptTouchPoint = keptTouchPointsFloat[i];
-    touchPoints[i] = Eigen::Vector3f(keptTouchPoint.x, keptTouchPoint.y, keptTouchPoint.z) * voxelSize;
-  }
-
-  return touchPoints;
+  return Picker::get_positions<Eigen::Vector3f>(*m_keptTouchPointsFloatMB, m_settings->sceneParams.voxelSize);
 }
 
 Selector::Selection_CPtr TouchSelector::get_selection() const
