@@ -64,20 +64,28 @@ public:
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Converts a free vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
+   *
+   * \param leapDir The free vector in the Leap coordinate system.
+   * \return        The free vector in the InfiniTAM coordinate system.
+   */
+  static Eigen::Vector3f from_leap_direction(const Leap::Vector& leapDir);
+
+  /**
+   * \brief Converts a position vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
+   *
+   * \param leapPos The position vector in the Leap coordinate system.
+   * \return        The position vector in the InfiniTAM coordinate system.
+   */
+  static Eigen::Vector3f from_leap_position(const Leap::Vector& leapPos);
+
+  /**
    * \brief Converts a size in the Leap coordinate system into one in the InfiniTAM coordinate system.
    *
    * \param leapSize  The size in the Leap coordinate system.
    * \return          The size in the InfiniTAM coordinate system.
    */
   static float from_leap_size(float leapSize);
-
-  /**
-   * \brief Converts a vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
-   *
-   * \param leapVec The vector in the Leap coordinate system.
-   * \return        The vector in the InfiniTAM coordinate system.
-   */
-  static Eigen::Vector3f from_leap_vector(const Leap::Vector& leapVec);
 };
 
 }
