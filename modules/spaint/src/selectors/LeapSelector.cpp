@@ -9,8 +9,12 @@
 using namespace ITMLib;
 using namespace ORUtils;
 
+#include <tvgutil/containers/MapUtil.h>
+using namespace tvgutil;
+
 #include "picking/PickerFactory.h"
 #include "selectiontransformers/SelectionTransformerFactory.h"
+#include "util/CameraFactory.h"
 #include "util/CameraPoseConverter.h"
 #include "util/MemoryBlockFactory.h"
 using namespace rigging;
@@ -22,6 +26,7 @@ namespace spaint {
 
 LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode)
 : Selector(settings),
+  m_camera(CameraFactory::make_default_camera()),
   m_mode(mode),
   m_picker(PickerFactory::make_picker(settings->deviceType)),
   m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
@@ -34,6 +39,11 @@ LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisati
 void LeapSelector::accept(const SelectorVisitor& visitor) const
 {
   visitor.visit(*this);
+}
+
+const Camera& LeapSelector::get_camera() const
+{
+  return *m_camera;
 }
 
 const Leap::Frame& LeapSelector::get_frame() const
@@ -62,6 +72,12 @@ Selector::Selection_CPtr LeapSelector::get_selection() const
 
 void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
+  Fiducial_Ptr leapFiducial = MapUtil::lookup(slamState->get_fiducials(), "997", Fiducial_Ptr());
+  if(leapFiducial)
+  {
+    m_camera->set_from(CameraPoseConverter::pose_to_camera(leapFiducial->pose()));
+  }
+
   // Get the current frame of data from the Leap Motion.
   m_frame = m_leap.frame();
 
@@ -85,8 +101,8 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
 
       // Generate a raycast of the scene from a camera that points along the index finger.
       VoxelRenderState_Ptr fingerRenderState(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(renderState->raycastResult->noDims, &m_settings->sceneParams, m_settings->GetMemoryType()));
-      SimpleCamera indexFingerCam(fingerPosWorld, fingerDirWorld, Eigen::Vector3f(0.0f, -1.0f, 0.0f));
-      SE3Pose indexFingerPose = CameraPoseConverter::camera_to_pose(indexFingerCam);
+      SimpleCamera indexFingerCamera(fingerPosWorld, fingerDirWorld, Eigen::Vector3f(0.0f, -1.0f, 0.0f));
+      SE3Pose indexFingerPose = CameraPoseConverter::camera_to_pose(indexFingerCamera);
       m_visualisationEngine->FindSurface(slamState->get_voxel_scene().get(), &indexFingerPose, &slamState->get_intrinsics(), fingerRenderState.get());
 
       // Use the picker to determine the voxel that was hit (if any).
@@ -119,14 +135,13 @@ Eigen::Vector3f LeapSelector::from_leap_direction(const Leap::Vector& leapDir)
   return Eigen::Vector3f(leapDir.x, -leapDir.y, -leapDir.z);
 }
 
-Eigen::Vector3f LeapSelector::from_leap_position(const Leap::Vector& leapPos)
+Eigen::Vector3f LeapSelector::from_leap_position(const Leap::Vector& leapPos) const
 {
-  // FIXME: This is currently a quick hack - I'm specifying that the camera origin is 30cm above the Leap
-  //        (i.e. the camera should initially be positioned just above the Leap).
-  Eigen::Vector3f offset(0.0f, 300.0f, 0.0f);
+  // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the Leap position by 1000.
+  Eigen::Vector3f offset = from_leap_direction(leapPos) / 1000.0f;
 
-  // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the result by 1000.
-  return (from_leap_direction(leapPos) + offset) / 1000.0f;
+  const Eigen::Vector3f p = m_camera->p(), x = -m_camera->u(), y = -m_camera->v(), z = m_camera->n();
+  return p + offset.x() * x + offset.y() * y + offset.z() * z;
 }
 
 float LeapSelector::from_leap_size(float leapSize)

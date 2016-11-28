@@ -54,6 +54,8 @@ public:
   /** Override */
   virtual void visit(const LeapSelector& selector) const
   {
+    CameraRenderer::render_camera(selector.get_camera(), CameraRenderer::AXES_XYZ, 0.1f);
+
     const Leap::Frame& frame = selector.get_frame();
     if(!frame.isValid() || frame.hands().count() != 1) return;
 
@@ -69,15 +71,15 @@ public:
 
         glColor3f(0.8f, 0.8f, 0.8f);
         QuadricRenderer::render_cylinder(
-          LeapSelector::from_leap_position(bone.prevJoint()),
-          LeapSelector::from_leap_position(bone.nextJoint()),
+          selector.from_leap_position(bone.prevJoint()),
+          selector.from_leap_position(bone.nextJoint()),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           10
         );
 
         glColor3f(1.0f, 0.0f, 0.0f);
-        QuadricRenderer::render_sphere(LeapSelector::from_leap_position(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
+        QuadricRenderer::render_sphere(selector.from_leap_position(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
       }
     }
 
@@ -86,7 +88,7 @@ public:
     if(selector.get_mode() == LeapSelector::MODE_POINT && selector.get_position())
     {
       const Leap::Finger& indexFinger = hand.fingers()[1];
-      Eigen::Vector3f start = LeapSelector::from_leap_position(indexFinger.tipPosition());
+      Eigen::Vector3f start = selector.from_leap_position(indexFinger.tipPosition());
       Eigen::Vector3f end = *selector.get_position();
 
       glColor3f(0.0f, 1.0f, 1.0f);

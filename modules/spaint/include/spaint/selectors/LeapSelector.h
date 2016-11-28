@@ -16,6 +16,8 @@
 
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
+#include <rigging/MoveableCamera.h>
+
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
 
@@ -46,6 +48,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The camera representing the Leap Motion controller's coordinate frame. */
+  rigging::MoveableCamera_Ptr m_camera;
+
   /** The most recent frame of data from the Leap Motion. */
   Leap::Frame m_frame;
 
@@ -85,6 +90,13 @@ public:
 public:
   /** Override */
   virtual void accept(const SelectorVisitor& visitor) const;
+
+  /**
+   * \brief Gets the camera representing the Leap Motion controller's coordinate frame.
+   *
+   * \return  The camera representing the Leap Motion controller's coordinate frame.
+   */
+  const rigging::Camera& get_camera() const;
 
   /**
    * \brief Gets the most recent frame of data from the Leap Motion.
@@ -129,7 +141,7 @@ public:
    * \param leapPos The position vector in the Leap coordinate system.
    * \return        The position vector in the InfiniTAM coordinate system.
    */
-  static Eigen::Vector3f from_leap_position(const Leap::Vector& leapPos);
+  Eigen::Vector3f from_leap_position(const Leap::Vector& leapPos) const;
 
   /**
    * \brief Converts a size in the Leap coordinate system into one in the InfiniTAM coordinate system.
