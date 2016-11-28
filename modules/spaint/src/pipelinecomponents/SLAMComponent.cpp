@@ -299,9 +299,9 @@ ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
 
   compositeTracker->SetTracker(primaryTracker, 0);
   compositeTracker->SetTracker(
-    ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().MakeICPTracker(
+    ITMTrackerFactory::Instance().MakeICPTracker(
       rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
-      m_lowLevelEngine.get(), m_imuCalibrator.get(), slamState->get_voxel_scene().get()
+      m_lowLevelEngine.get(), m_imuCalibrator.get(), slamState->get_voxel_scene()->sceneParams
     ), 1
   );
 
@@ -380,8 +380,8 @@ void SLAMComponent::setup_tracker()
     default: // TRACKER_INFINITAM
     {
       m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-      m_tracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene.get()
+      m_tracker.reset(ITMTrackerFactory::Instance().Make(
+        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene->sceneParams
       ));
     }
   }
