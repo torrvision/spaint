@@ -18,7 +18,6 @@
 
 #include "Selector.h"
 #include "../picking/interface/Picker.h"
-#include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {
 

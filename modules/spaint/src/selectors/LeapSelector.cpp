@@ -76,35 +76,37 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
   const Leap::Finger& indexFinger = m_frame.hands()[0].fingers()[1];
   Eigen::Vector3f fingerPosWorld = from_leap_position(indexFinger.tipPosition());
 
-#if 1
-    // Find the direction of the index finger in world coordinates.
-  Eigen::Vector3f fingerDirWorld = from_leap_direction(indexFinger.direction());
+  switch(m_mode)
+  {
+    case MODE_POINT:
+    {
+      // Find the direction of the index finger in world coordinates.
+      Eigen::Vector3f fingerDirWorld = from_leap_direction(indexFinger.direction());
 
-  // Generate a raycast of the scene from a camera that points along the index finger.
-  VoxelRenderState_Ptr fingerRenderState(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(renderState->raycastResult->noDims, &m_settings->sceneParams, m_settings->GetMemoryType()));
-  SimpleCamera indexFingerCamera(fingerPosWorld, fingerDirWorld, Eigen::Vector3f(0.0f, -1.0f, 0.0f));
-  SE3Pose indexFingerPose = CameraPoseConverter::camera_to_pose(indexFingerCamera);
-  m_visualisationEngine->FindSurface(slamState->get_voxel_scene().get(), &indexFingerPose, &slamState->get_intrinsics(), fingerRenderState.get());
+      // Generate a raycast of the scene from a camera that points along the index finger.
+      VoxelRenderState_Ptr fingerRenderState(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(renderState->raycastResult->noDims, &m_settings->sceneParams, m_settings->GetMemoryType()));
+      SimpleCamera indexFingerCam(fingerPosWorld, fingerDirWorld, Eigen::Vector3f(0.0f, -1.0f, 0.0f));
+      SE3Pose indexFingerPose = CameraPoseConverter::camera_to_pose(indexFingerCam);
+      m_visualisationEngine->FindSurface(slamState->get_voxel_scene().get(), &indexFingerPose, &slamState->get_intrinsics(), fingerRenderState.get());
 
-  // Use the picker to determine the voxel that was hit (if any).
-  // FIXME: Note that this code is similar to that in PickingSelector - factor out the commonality before merging.
+      // Use the picker to determine the voxel that was hit (if any).
+      m_pickPointValid = m_picker->pick(renderState->raycastResult->noDims.x / 2, renderState->raycastResult->noDims.y / 2, fingerRenderState.get(), *m_pickPointFloatMB);
+      if(m_pickPointValid) m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
 
-  // Try to pick an individual voxel.
-  m_pickPointValid = false;
+      break;
+    }
+    case MODE_TOUCH:
+    {
+      // Convert the position of the tip of the index finger from world coordinates to voxel coordinates.
+      Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_settings->sceneParams.voxelSize;
 
-  int x = 320;
-  int y = 240;
+      // Record the selected voxel.
+      *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
+      if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
 
-  m_pickPointValid = m_picker->pick(x, y, fingerRenderState.get(), *m_pickPointFloatMB);
-  if(m_pickPointValid) m_picker->to_short(*m_pickPointFloatMB, *m_pickPointShortMB);
-#else
-  // Convert this world coordinate position into voxel coordinates.
-  Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_settings->sceneParams.voxelSize;
-
-  // Record the selected voxel.
-  *m_pickPointShortMB->GetData(MEMORYDEVICE_CPU) = Vector3f(fingerPosVoxels.x(), fingerPosVoxels.y(), fingerPosVoxels.z()).toShortRound();
-  if(m_settings->deviceType == ITMLibSettings::DEVICE_CUDA) m_pickPointShortMB->UpdateDeviceFromHost();
-#endif
+      break;
+    }
+  }
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
