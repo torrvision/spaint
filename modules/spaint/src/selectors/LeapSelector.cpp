@@ -12,25 +12,20 @@ using namespace ORUtils;
 #include "picking/PickerFactory.h"
 #include "selectiontransformers/SelectionTransformerFactory.h"
 #include "util/CameraPoseConverter.h"
-#include "util/ImagePersister.h"
 #include "util/MemoryBlockFactory.h"
 using namespace rigging;
 using namespace tvginput;
-
-#include <tvgutil/filesystem/SequentialPathGenerator.h>
-using namespace tvgutil;
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, const VisualisationGenerator_CPtr& visualisationGenerator)
+LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine)
 : Selector(settings),
   m_picker(PickerFactory::make_picker(settings->deviceType)),
   m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
   m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
-  m_visualisationEngine(visualisationEngine),
-  m_visualisationGenerator(visualisationGenerator)
+  m_visualisationEngine(visualisationEngine)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -84,15 +79,6 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
   SimpleCamera indexFingerCamera(fingerPosWorld, fingerDirWorld, Eigen::Vector3f(0.0f, -1.0f, 0.0f));
   SE3Pose indexFingerPose = CameraPoseConverter::camera_to_pose(indexFingerCamera);
   m_visualisationEngine->FindSurface(slamState->get_voxel_scene().get(), &indexFingerPose, &slamState->get_intrinsics(), fingerRenderState.get());
-
-#if 0
-  ITMUChar4Image_Ptr temp(new ITMUChar4Image(renderState->raycastResult->noDims, true, true));
-  m_visualisationGenerator->generate_voxel_visualisation(temp, slamState->get_voxel_scene(), indexFingerPose, slamState->get_view(), fingerRenderState, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN);
-  static SequentialPathGenerator gen("C:/wibble/");
-  ImagePersister::save_image_on_thread(temp, gen.make_path("%06i.png"));
-  gen.increment_index();
-#endif
-  //*slamState->get_tracking_state()->pose_d = indexFingerPose;
 
   // Use the picker to determine the voxel that was hit (if any).
   // FIXME: Note that this code is similar to that in PickingSelector - factor out the commonality before merging.

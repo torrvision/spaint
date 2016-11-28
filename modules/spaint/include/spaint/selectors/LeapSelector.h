@@ -54,8 +54,6 @@ private:
   /** The InfiniTAM engine used for rendering a voxel scene. */
   VoxelVisualisationEngine_CPtr m_visualisationEngine;
 
-  VisualisationGenerator_CPtr m_visualisationGenerator;
-
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -64,7 +62,7 @@ public:
    * \param settings            The settings to use for InfiniTAM.
    * \param visualisationEngine The InfiniTAM engine used for rendering a voxel scene.
    */
-  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, const VisualisationGenerator_CPtr& visualisationGenerator);
+  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
