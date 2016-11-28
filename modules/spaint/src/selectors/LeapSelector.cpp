@@ -20,8 +20,9 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine)
+LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode)
 : Selector(settings),
+  m_mode(mode),
   m_picker(PickerFactory::make_picker(settings->deviceType)),
   m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
   m_pickPointShortMB(MemoryBlockFactory::instance().make_block<Vector3s>(1)),
@@ -38,6 +39,11 @@ void LeapSelector::accept(const SelectorVisitor& visitor) const
 const Leap::Frame& LeapSelector::get_frame() const
 {
   return m_frame;
+}
+
+LeapSelector::Mode LeapSelector::get_mode() const
+{
+  return m_mode;
 }
 
 boost::optional<Eigen::Vector3f> LeapSelector::get_position() const

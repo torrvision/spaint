@@ -27,6 +27,20 @@ namespace spaint {
  */
 class LeapSelector : public Selector
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration denote the different modes in which a Leap selector can operate.
+   */
+  enum Mode
+  {
+    /** In point mode, the user selects voxels in the scene by pointing at them. */
+    MODE_POINT,
+
+    /** In touch mode, the user selects voxels in the scene by touching them. */
+    MODE_TOUCH
+  };
+
   //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<const ITMLib::ITMVisualisationEngine<SpaintVoxel,ITMVoxelIndex> > VoxelVisualisationEngine_CPtr;
@@ -38,6 +52,9 @@ private:
 
   /** The Leap Motion controller. */
   Leap::Controller m_leap;
+
+  /** The mode in which the selector is operating. */
+  Mode m_mode;
 
   /** The picker. */
   Picker_CPtr m_picker;
@@ -61,8 +78,9 @@ public:
    *
    * \param settings            The settings to use for InfiniTAM.
    * \param visualisationEngine The InfiniTAM engine used for rendering a voxel scene.
+   * \param mode                The mode in which the selector should operate.
    */
-  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine);
+  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -75,6 +93,13 @@ public:
    * \return  The most recent frame of data from the Leap Motion.
    */
   const Leap::Frame& get_frame() const;
+
+  /**
+   * \brief Gets the mode in which the selector is operating.
+   *
+   * \return  The mode in which the selector is operating.
+   */
+  Mode get_mode() const;
 
   /**
    * \brief Gets the position of the selector (if known).

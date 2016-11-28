@@ -81,11 +81,14 @@ public:
       }
     }
 
-    if(selector.get_position())
+    // If the selector is in point mode and the user is pointing at a valid voxel in the world,
+    // draw a line between the tip of the virtual index finger and the voxel in question.
+    if(selector.get_mode() == LeapSelector::MODE_POINT && selector.get_position())
     {
       const Leap::Finger& indexFinger = hand.fingers()[1];
       Eigen::Vector3f start = LeapSelector::from_leap_position(indexFinger.tipPosition());
       Eigen::Vector3f end = *selector.get_position();
+
       glColor3f(0.0f, 1.0f, 1.0f);
       glBegin(GL_LINES);
         glVertex3f(start.x(), start.y(), start.z());
