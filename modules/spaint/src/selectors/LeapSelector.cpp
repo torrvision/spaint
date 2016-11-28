@@ -50,13 +50,8 @@ boost::optional<Eigen::Vector3f> LeapSelector::get_position() const
   // If the last update did not yield a valid pick point, early out.
   if(!m_pickPointValid) return boost::none;
 
-  // If the pick point is on the GPU, copy it across to the CPU.
-  m_pickPointFloatMB->UpdateHostFromDevice();
-
   // Convert the pick point from voxel coordinates into scene coordinates and return it.
-  float voxelSize = m_settings->sceneParams.voxelSize;
-  const Vector3f& pickPoint = *m_pickPointFloatMB->GetData(MEMORYDEVICE_CPU);
-  return Eigen::Vector3f(pickPoint.x * voxelSize, pickPoint.y * voxelSize, pickPoint.z * voxelSize);
+  return Picker::get_positions<Eigen::Vector3f>(*m_pickPointFloatMB, m_settings->sceneParams.voxelSize)[0];
 }
 
 Selector::Selection_CPtr LeapSelector::get_selection() const
