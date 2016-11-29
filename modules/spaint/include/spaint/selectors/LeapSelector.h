@@ -133,7 +133,7 @@ public:
    * \param leapDir The free vector in the Leap coordinate system.
    * \return        The free vector in the InfiniTAM coordinate system.
    */
-  static Eigen::Vector3f from_leap_direction(const Leap::Vector& leapDir);
+  Eigen::Vector3f from_leap_direction(const Leap::Vector& leapDir) const;
 
   /**
    * \brief Converts a position vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
