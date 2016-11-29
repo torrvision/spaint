@@ -51,6 +51,9 @@ private:
   /** The camera representing the Leap Motion controller's coordinate frame. */
   rigging::MoveableCamera_Ptr m_camera;
 
+  /** The ID of the fiducial (if any) from which to obtain the Leap Motion controller's coordinate frame. */
+  std::string m_fiducialID;
+
   /** The most recent frame of data from the Leap Motion. */
   Leap::Frame m_frame;
 
@@ -83,8 +86,9 @@ public:
    * \param settings            The settings to use for InfiniTAM.
    * \param visualisationEngine The InfiniTAM engine used for rendering a voxel scene.
    * \param mode                The mode in which the selector should operate.
+   * \param fiducialID          The ID of the fiducial (if any) from which to obtain the Leap Motion controller's coordinate frame.
    */
-  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode);
+  LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode, const std::string& fiducialID = "");
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -133,7 +133,11 @@ void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& 
     if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(m_settings));
     else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(m_settings));
 #ifdef WITH_LEAP
-    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings, m_voxelVisualisationEngine, LeapSelector::MODE_POINT));
+    else if(inputState.key_down(KEYCODE_3))
+    {
+      const std::string fiducialID = "997";
+      m_selector.reset(new LeapSelector(m_settings, m_voxelVisualisationEngine, LeapSelector::MODE_POINT, fiducialID));
+    }
 #endif
 #ifdef WITH_ARRAYFIRE
     else if(inputState.key_down(KEYCODE_4))

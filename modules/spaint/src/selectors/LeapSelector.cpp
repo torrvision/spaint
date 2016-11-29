@@ -24,9 +24,10 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode)
+LeapSelector::LeapSelector(const Settings_CPtr& settings, const VoxelVisualisationEngine_CPtr& visualisationEngine, Mode mode, const std::string& fiducialID)
 : Selector(settings),
   m_camera(CameraFactory::make_default_camera()),
+  m_fiducialID(fiducialID),
   m_mode(mode),
   m_picker(PickerFactory::make_picker(settings->deviceType)),
   m_pickPointFloatMB(MemoryBlockFactory::instance().make_block<Vector3f>(1)),
@@ -73,7 +74,7 @@ Selector::Selection_CPtr LeapSelector::get_selection() const
 void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
   // Update the camera representing the Leap Motion controller's coordinate frame.
-  Fiducial_Ptr fiducial = MapUtil::lookup(slamState->get_fiducials(), "997", Fiducial_Ptr());
+  Fiducial_Ptr fiducial = MapUtil::lookup(slamState->get_fiducials(), m_fiducialID, Fiducial_Ptr());
   if(fiducial)
   {
     SimpleCamera c = CameraPoseConverter::pose_to_camera(fiducial->pose());
