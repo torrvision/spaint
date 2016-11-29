@@ -54,11 +54,14 @@ public:
   /** Override */
   virtual void visit(const LeapSelector& selector) const
   {
+    // Render the camera representing the Leap Motion controller's coordinate frame.
     CameraRenderer::render_camera(selector.get_camera(), CameraRenderer::AXES_XYZ, 0.1f);
 
+    // Get the most recent frame of data from the Leap Motion. If it's invalid or does not contain precisely one hand, early out.
     const Leap::Frame& frame = selector.get_frame();
     if(!frame.isValid() || frame.hands().count() != 1) return;
 
+    // Render the virtual hand.
     const Leap::Hand& hand = frame.hands()[0];
     for(int fingerIndex = 0, fingerCount = hand.fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
     {

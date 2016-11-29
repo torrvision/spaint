@@ -117,9 +117,9 @@ public:
   Mode get_mode() const;
 
   /**
-   * \brief Gets the position of the selector (if known).
+   * \brief Gets the selected position (if known).
    *
-   * \return  The position of the selector (if known), or boost::none otherwise.
+   * \return  The selected position (if known), or boost::none otherwise.
    */
   boost::optional<Eigen::Vector3f> get_position() const;
 
