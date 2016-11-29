@@ -12,8 +12,7 @@ namespace spaint
 __global__ void ck_compute_colour_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *features, const Vector4u *rgb, const float *depth,
     const Vector4i *offsetsRgb, const uchar *channelsRgb, Vector2i imgSize,
-    Vector2i outSize, Vector4f intrinsics, Matrix4f cameraPose,
-    uint32_t featureStep, bool normalize)
+    Vector2i outSize, uint32_t featureStep, bool normalize)
 {
   // Coordinates of the output keypoint/descriptor pair.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x,
@@ -26,14 +25,14 @@ __global__ void ck_compute_colour_feature(Keypoint3DColour *keypoints,
   const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
   compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
-      channelsRgb, imgSize, outSize, intrinsics, cameraPose, normalize, xyIn,
-      xyOut);
+      channelsRgb, imgSize, outSize, normalize, xyIn, xyOut);
 }
 
 __global__ void ck_compute_depth_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *features, const float *depth,
     const Vector4i *offsetsDepth, Vector2i imgSize, Vector2i outSize,
-    uint32_t featureStep, bool normalize)
+    Vector4f intrinsics, Matrix4f cameraPose, uint32_t featureStep,
+    bool normalize)
 {
   // Coordinates of the output keypoint/descriptor pair.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x,
@@ -46,7 +45,7 @@ __global__ void ck_compute_depth_feature(Keypoint3DColour *keypoints,
   const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
   compute_depth_patch_feature(keypoints, features, depth, offsetsDepth, imgSize,
-      outSize, normalize, xyIn, xyOut);
+      outSize, intrinsics, cameraPose, normalize, xyIn, xyOut);
 }
 
 //#################### CONSTRUCTORS ####################
@@ -65,17 +64,17 @@ void RGBDPatchFeatureCalculator_CUDA::compute_feature(
     const Vector4f &intrinsics, Keypoint3DColourImage *keypointsImage,
     RGBDPatchDescriptorImage *featuresImage, const Matrix4f &cameraPose) const
 {
-  const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CUDA);
   const float *depth = depthImage->GetData(MEMORYDEVICE_CUDA);
-
-  const Vector4i *offsetsRgb = m_offsetsRgb->GetData(MEMORYDEVICE_CUDA);
-  const uchar *channelsRgb = m_channelsRgb->GetData(MEMORYDEVICE_CUDA);
   const Vector4i *offsetsDepth = m_offsetsDepth->GetData(MEMORYDEVICE_CUDA);
 
-  Vector2i inDims = rgbImage->noDims;
+  const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CUDA);
+  const Vector4i *offsetsRgb = m_offsetsRgb->GetData(MEMORYDEVICE_CUDA);
+  const uchar *channelsRgb = m_channelsRgb->GetData(MEMORYDEVICE_CUDA);
+
+  Vector2i inDims = depthImage->noDims;
   // The output images have one pixel per each element of the sampling grid.
-  Vector2i outDims(rgbImage->noDims.x / m_featureStep,
-      rgbImage->noDims.y / m_featureStep);
+  Vector2i outDims(depthImage->noDims.x / m_featureStep,
+      depthImage->noDims.y / m_featureStep);
 
   // Resize images appropriately. Will always be a NOP except the first time.
   keypointsImage->ChangeDims(outDims);
@@ -88,15 +87,18 @@ void RGBDPatchFeatureCalculator_CUDA::compute_feature(
   dim3 gridSize((outDims.x + blockSize.x - 1) / blockSize.x,
       (outDims.y + blockSize.y - 1) / blockSize.y);
 
-  // The colour feature calculator also computes the 3D pose and colour of the keypoint
+  // The depth feature calculator also computes the 3D pose and colour of the keypoint
   // Camera intrinsics are only needed here
-  ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
-      inDims, outDims, intrinsics, cameraPose, m_featureStep, m_normalizeRgb);
+  ck_compute_depth_feature<<<gridSize, blockSize>>>(keypoints, features, depth, offsetsDepth,
+      inDims, outDims, intrinsics, cameraPose, m_featureStep, m_normalizeDepth);
   ORcudaKernelCheck;
 
-  ck_compute_depth_feature<<<gridSize, blockSize>>>(keypoints, features, depth, offsetsDepth,
-      inDims, outDims, m_featureStep, m_normalizeDepth);
-  ORcudaKernelCheck;
+  if(rgb)
+  {
+    ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
+        inDims, outDims, m_featureStep, m_normalizeRgb);
+    ORcudaKernelCheck;
+  }
 }
 
 }

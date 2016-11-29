@@ -25,10 +25,6 @@ namespace spaint
  * \param channelsRgb   A pointer to the vector storing the colour channels used to compute the descriptor.
  * \param imgSize       The size of the input RGBD image.
  * \param outSize       The size of the output keypoint/descriptor images.
- * \param intrinsics    The depth camera intrinsics.
- * \param cameraPose    The transform bringing points in camera coordinates to the "descriptor" reference frame.
- *                      Note: set to identity when relocalising the frame and to
- *                      the inverse camera pose when adapting the relocalisation forest.
  * \param normalize     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
  * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
  * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
@@ -37,8 +33,7 @@ _CPU_AND_GPU_CODE_
 inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *descriptors, const Vector4u *rgb, const float *depths,
     const Vector4i *offsetsRgb, const uchar *channelsRgb,
-    const Vector2i &imgSize, const Vector2i &outSize,
-    const Vector4f &intrinsics, const Matrix4f &cameraPose, bool normalize,
+    const Vector2i &imgSize, const Vector2i &outSize, bool normalize,
     const Vector2i &xyIn, const Vector2i &xyOut)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
@@ -51,22 +46,12 @@ inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
 
   if (depth <= 0.f)
   {
-    // Mark as invalid and return.
-    outKeypoint.valid = false;
+    // No need to mark the keypoint as invalid, compute_depth_patch_feature already does that.
     return;
   }
 
-  // Compute keypoint position in camera frame.
-  const Vector3f position = reproject(xyIn, depth, intrinsics);
-
-  // Bring position to "descriptor frame".
-  outKeypoint.position = cameraPose * position;
-
   // Copy the colour for future reference.
   outKeypoint.colour = rgb[linearIdxIn].toVector3();
-
-  // Mark the keypoint as valid
-  outKeypoint.valid = true;
 
   // Compute the differences and fill the descriptor.
   for (int featIdx = 0; featIdx < RGBDPatchDescriptor::RGB_FEATURE_COUNT;
@@ -123,6 +108,10 @@ inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
  * \param offsetsDepth  A pointer to the vector of depth offsets used to compute the descriptor.
  * \param imgSize       The size of the input RGBD image.
  * \param outSize       The size of the output keypoint/descriptor images.
+ * \param intrinsics    The depth camera intrinsics.
+ * \param cameraPose    The transform bringing points in camera coordinates to the "descriptor" reference frame.
+ *                      Note: set to identity when relocalising the frame and to
+ *                      the inverse camera pose when adapting the relocalisation forest.
  * \param normalize     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
  * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
  * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
@@ -131,18 +120,36 @@ _CPU_AND_GPU_CODE_
 inline void compute_depth_patch_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *features, const float *depths,
     const Vector4i *offsetsDepth, const Vector2i &imgSize,
-    const Vector2i &outSize, bool normalize, const Vector2i &xyIn,
+    const Vector2i &outSize, const Vector4f &intrinsics,
+    const Matrix4f &cameraPose, bool normalize, const Vector2i &xyIn,
     const Vector2i &xyOut)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
   const float depth = depths[linearIdxIn];
 
+  // References to the output storage.
+  Keypoint3DColour &outKeypoint = keypoints[linearIdxOut];
+  RGBDPatchDescriptor &outFeature = features[linearIdxOut];
+
   if (depth <= 0.f)
   {
-    // No need to mark the keypoint as invalid, compute_colour_patch_feature already does that.
+    // Mark as invalid and return.
+    outKeypoint.valid = false;
     return;
   }
+
+  // Compute keypoint position in camera frame.
+  const Vector3f position = reproject(xyIn, depth, intrinsics);
+
+  // Bring position to "descriptor frame".
+  outKeypoint.position = cameraPose * position;
+
+  // Reset the colour in the keypoint (useful if the rgb image is missing).
+  outKeypoint.colour = Vector3u(0, 0, 0);
+
+  // Mark the keypoint as valid
+  outKeypoint.valid = true;
 
   // Compute the differences and fill the descriptor.
   for (int featIdx = 0; featIdx < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT;
@@ -185,11 +192,11 @@ inline void compute_depth_patch_feature(Keypoint3DColour *keypoints,
     const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
 
     // Again, this would be the correct definition but scoreforests's code has the other one.
-    //    features[linear_idx].depth[feat_idx] =
+    //    outFeature.depth[feat_idx] =
     //        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
 
     // As for colour, the implementation differs from the paper
-    features[linearIdxOut].depth[featIdx] = depth_1_mm - depth_mm;
+    outFeature.depth[featIdx] = depth_1_mm - depth_mm;
   }
 }
 }
