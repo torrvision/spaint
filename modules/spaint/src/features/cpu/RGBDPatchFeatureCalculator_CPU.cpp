@@ -27,10 +27,10 @@ void RGBDPatchFeatureCalculator_CPU::compute_feature(
   const uchar *channelsRgb = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
   const Vector4i *offsetsDepth = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
-  Vector2i inDims = rgbImage->noDims;
+  Vector2i inDims = depthImage->noDims;
   // The output images have one pixel per each element of the sampling grid.
-  Vector2i outDims(rgbImage->noDims.x / m_featureStep,
-      rgbImage->noDims.y / m_featureStep);
+  Vector2i outDims(depthImage->noDims.x / m_featureStep,
+      depthImage->noDims.y / m_featureStep);
 
   // Resize the output images as needed
   // (typically this happens only once per run of the program if the images are properly cached).
@@ -50,12 +50,15 @@ void RGBDPatchFeatureCalculator_CPU::compute_feature(
       const Vector2i xyOut(xOut, yOut);
       const Vector2i xyIn(xOut * m_featureStep, yOut * m_featureStep);
 
-      compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
-          channelsRgb, inDims, outDims, intrinsics, cameraPose, m_normalizeRgb,
-          xyIn, xyOut);
-
       compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
-          inDims, outDims, m_normalizeDepth, xyIn, xyOut);
+          inDims, outDims, intrinsics, cameraPose, m_normalizeDepth, xyIn, xyOut);
+
+      if(rgb)
+      {
+        compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
+            channelsRgb, inDims, outDims, m_normalizeRgb,
+            xyIn, xyOut);
+      }
     }
   }
 }
