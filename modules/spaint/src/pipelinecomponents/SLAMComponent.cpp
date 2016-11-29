@@ -28,8 +28,11 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                             TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode, TrackingMode trackingMode)
+                             TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode, TrackingMode trackingMode,
+                             const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
 : m_context(context),
+  m_detectFiducials(detectFiducials),
+  m_fiducialDetector(fiducialDetector),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
@@ -195,6 +198,13 @@ bool SLAMComponent::process_frame()
   CompositeImageSourceEngine_CPtr compositeImageSourceEngine = boost::dynamic_pointer_cast<const CompositeImageSourceEngine>(m_imageSourceEngine);
   if(compositeImageSourceEngine && !compositeImageSourceEngine->getCurrentSubengine()->hasMoreImages()) m_fusionEnabled = false;
 
+  // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
+  // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
+  if(m_fiducialDetector && m_detectFiducials && trackerResult == ITMTrackingState::TRACKING_GOOD)
+  {
+    slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
+  }
+
   return true;
 }
 
@@ -229,6 +239,11 @@ void SLAMComponent::reset_scene()
   m_fusedFramesCount = 0;
   m_fusionEnabled = true;
   m_keyframeDelay = 0;
+}
+
+void SLAMComponent::set_detect_fiducials(bool detectFiducials)
+{
+  m_detectFiducials = detectFiducials;
 }
 
 void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
@@ -379,8 +394,8 @@ void SLAMComponent::setup_tracker()
 
   for(size_t i = infinitamFirstTrackerIdx; i < m_trackerParams.size(); ++i)
   {
-    compositeTracker->SetTracker(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-      m_trackerParams[i].c_str(), rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene.get()
+    compositeTracker->SetTracker(ITMTrackerFactory::Instance().Make(
+      m_trackerParams[i].c_str(), rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene->sceneParams
     ), i);
   }
 

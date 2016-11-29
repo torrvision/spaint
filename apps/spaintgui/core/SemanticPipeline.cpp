@@ -15,11 +15,12 @@ using namespace spaint;
 SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
                                    const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
                                    TrackerType trackerType, const std::vector<std::string>& trackerParams,
-                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode)
+                                   SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
+                                   const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
 : MultiScenePipeline(settings, resourcesDir, maxLabelCount)
 {
   const std::string sceneID = Model::get_world_scene_id();
-  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode));
+  m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector, detectFiducials));
   m_propagationComponents[sceneID].reset(new PropagationComponent(m_model, sceneID));
   m_semanticSegmentationComponents[sceneID].reset(new SemanticSegmentationComponent(m_model, sceneID, seed));
   m_smoothingComponents[sceneID].reset(new SmoothingComponent(m_model, sceneID));

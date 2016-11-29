@@ -50,7 +50,7 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
 
   // Find the position of the tip of the index finger in world coordinates.
   Leap::Vector fingerPosLM = m_frame.hands()[0].fingers()[1].tipPosition();
-  Eigen::Vector3f fingerPosWorld = from_leap_vector(fingerPosLM);
+  Eigen::Vector3f fingerPosWorld = from_leap_position(fingerPosLM);
 
   // Convert this world coordinate position into voxel coordinates.
   Eigen::Vector3f fingerPosVoxels = fingerPosWorld / m_settings->sceneParams.voxelSize;
@@ -62,22 +62,28 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
+Eigen::Vector3f LeapSelector::from_leap_direction(const Leap::Vector& leapDir)
+{
+  // The Leap coordinate system has x pointing right, y pointing up and z pointing out of the screen, whereas
+  // the InfiniTAM coordinate system has x pointing right, y pointing down and z pointing into the screen. As
+  // such, we need to flip y and z when converting from the Leap coordinate system to our one.
+  return Eigen::Vector3f(leapDir.x, -leapDir.y, -leapDir.z);
+}
+
+Eigen::Vector3f LeapSelector::from_leap_position(const Leap::Vector& leapPos)
+{
+  // FIXME: This is currently a quick hack - I'm specifying that the camera origin is 30cm above the Leap
+  //        (i.e. the camera should initially be positioned just above the Leap).
+  Eigen::Vector3f offset(0.0f, 300.0f, 0.0f);
+
+  // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the result by 1000.
+  return (from_leap_direction(leapPos) + offset) / 1000.0f;
+}
+
 float LeapSelector::from_leap_size(float leapSize)
 {
   // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the size by 1000.
   return leapSize / 1000.0f;
-}
-
-Eigen::Vector3f LeapSelector::from_leap_vector(const Leap::Vector& leapVec)
-{
-  // FIXME: This is currently a quick hack - I'm specifying that the camera origin is 30cm above the Leap (i.e. the camera should initially be positioned just above the Leap).
-  Eigen::Vector3f offset(0.0f, 300.0f, 0.0f);
-
-  // The Leap coordinate system has x pointing right, y pointing up and z pointing out of the screen, whereas
-  // the InfiniTAM coordinate system has x pointing right, y pointing down and z pointing into the screen. As
-  // such, we need to flip y and z when converting from the Leap coordinate system to our one. Moreover, the
-  // Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the result by 1000.
-  return (Eigen::Vector3f(leapVec.x, -leapVec.y, -leapVec.z) + offset) / 1000.0f;
 }
 
 }

@@ -49,9 +49,6 @@ private:
   /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
 
-  /** Whether or not to terminate the application as soon as the last frame has been processeed. */
-  bool m_runInBatch;
-
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
@@ -79,6 +76,12 @@ private:
   /** The current renderer. */
   Renderer_Ptr m_renderer;
 
+  /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
+  bool m_renderFiducials;
+
+  /** Whether or not to terminate the application as soon as the last frame has been processeed. */
+  bool m_runInBatch;
+
   /** Whether to save the reconstructed mesh on exit. */
   bool m_saveMeshOnExit;
 
@@ -102,11 +105,10 @@ public:
   /**
    * \brief Constructs the application.
    *
-   * \param pipeline    The multi-scene pipeline that the application should use.
-   * \param runInBatch  Whether the application should start running immediately
-   *                    and terminate as soon as the last frame is processed.
+   * \param pipeline        The multi-scene pipeline that the application should use.
+   * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  explicit Application(const MultiScenePipeline_Ptr& pipeline, bool runInBatch);
+  Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials = false);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -114,6 +116,13 @@ public:
    * \brief Runs the application.
    */
   void run();
+
+  /**
+   * \brief Sets whether to run in batch mode or not.
+   *
+   * \param enabled Whether to run in batch mode or not.
+   */
+  void set_batch_mode(bool enabled);
 
   /**
    * \brief Set whether to save the reconstructed mesh on exit.
@@ -215,6 +224,11 @@ private:
    * \return true, if the application should continue running, or false otherwise.
    */
   bool process_events();
+
+  /**
+   * \brief Processes user input that deals with fiducials.
+   */
+  void process_fiducial_input();
 
   /**
    * \brief Takes action as relevant based on the current input state.

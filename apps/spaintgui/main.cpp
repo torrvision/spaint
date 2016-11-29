@@ -30,6 +30,10 @@ using namespace ITMLib;
   #include <OVR_CAPI.h>
 #endif
 
+#ifdef WITH_OPENCV
+  #include <spaint/fiducials/ArUcoFiducialDetector.h>
+#endif
+
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
@@ -53,6 +57,7 @@ struct CommandLineArguments
   std::string calibrationFilename;
   bool cameraAfterDisk;
   std::vector<std::string> depthImageMask;
+  bool detectFiducials;
   std::string experimentTag;
   int initialFrameNumber;
   bool mapSurfels;
@@ -63,6 +68,7 @@ struct CommandLineArguments
   std::string poseFilesMask;
   bool poseFromDisk;
   size_t prefetchBufferCapacity;
+  bool renderFiducials;
   std::vector<std::string> rgbImageMask;
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifier;
@@ -81,11 +87,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("batch", po::bool_switch(&args.batch), "don't wait for user input before starting the reconstruction and terminate immediately")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("noTracker", po::bool_switch(&args.noTracker), "don't use any tracker")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
+    ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save reconstructed mesh on exit")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
@@ -167,6 +175,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
+
+  // If the user wants to enable fiducial rendering, make sure that fiducial detection is also enabled.
+  if(args.renderFiducials) args.detectFiducials = true;
 
   return true;
 }
@@ -322,6 +333,12 @@ try
 #endif
   }
 
+  // Construct the fiducial detector (if any).
+  FiducialDetector_CPtr fiducialDetector;
+#ifdef WITH_OPENCV
+  fiducialDetector.reset(new ArUcoFiducialDetector(settings));
+#endif
+
   // Construct the pipeline.
   const size_t maxLabelCount = 10;
   SLAMComponent::MappingMode mappingMode = args.mapSurfels ? SLAMComponent::MAP_BOTH : SLAMComponent::MAP_VOXELS_ONLY;
@@ -331,7 +348,19 @@ try
   if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
-    pipeline.reset(new SemanticPipeline(settings, Application::resources_dir().string(), maxLabelCount, imageSourceEngine, seed, trackerType, trackerConfigs, mappingMode, trackingMode));
+    pipeline.reset(new SemanticPipeline(
+      settings,
+      Application::resources_dir().string(),
+      maxLabelCount,
+      imageSourceEngine,
+      seed,
+      trackerType,
+      trackerConfigs,
+      mappingMode,
+      trackingMode,
+      fiducialDetector,
+      args.detectFiducials
+    ));
   }
   else if(args.pipelineType == "slam")
   {
@@ -346,9 +375,12 @@ try
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
-  // Run the application.
-  Application app(pipeline, args.batch);
+  // Configure the application.
+  Application app(pipeline, args.renderFiducials);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
+  app.set_batch_mode(args.batch);
+
+  // Run the application.
   app.run();
 
 #ifdef WITH_OVR

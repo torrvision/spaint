@@ -91,9 +91,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
 
   m_refineTracker.reset(
-      ITMTrackerFactory<SpaintVoxel, ITMVoxelIndex>::Instance().Make(
+      ITMTrackerFactory::Instance().Make(
           refineParams.c_str(), rgbImageSize, depthImageSize, settings.get(),
-          m_lowLevelEngine.get(), NULL, voxelScene.get()));
+          m_lowLevelEngine.get(), NULL, voxelScene->sceneParams));
 
   m_timeRelocalizer = true;
   m_learningCalls = 0;

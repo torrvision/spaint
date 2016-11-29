@@ -19,6 +19,7 @@
 #include <RelocLib/Relocaliser.h>
 
 #include "SLAMContext.h"
+#include "../fiducials/FiducialDetector.h"
 #include "../trackers/FallibleTracker.h"
 #include "../trackers/TrackerType.h"
 
@@ -100,8 +101,14 @@ private:
   /** The dense surfel mapper. */
   DenseSurfelMapper_Ptr m_denseSurfelMapper;
 
+  /** Whether or not the user wants fiducials to be detected. */
+  bool m_detectFiducials;
+
   /** A pointer to a tracker that can detect tracking failures (if available). */
   FallibleTracker *m_fallibleTracker;
+
+  /** The fiducial detector to use (if any). */
+  FiducialDetector_CPtr m_fiducialDetector;
 
   /** The number of frames for which fusion has been run. */
   size_t m_fusedFramesCount;
@@ -159,10 +166,13 @@ public:
    * \param trackerParams     The parameters for the tracker (if any).
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
+   * \param fiducialDetector  The fiducial detector to use (if any).
+   * \param detectFiducials   Whether or not to initially detect fiducials in the scene.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                 TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
-                TrackingMode trackingMode = TRACK_VOXELS);
+                TrackingMode trackingMode = TRACK_VOXELS, const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(),
+                bool detectFiducials = false);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -191,6 +201,13 @@ public:
    * \brief Resets the reconstructed scene.
    */
   void reset_scene();
+
+  /**
+   * \brief Sets whether or not the user wants fiducials to be detected.
+   *
+   * \param detectFiducials Whether or not the user wants fiducials to be detected.
+   */
+  void set_detect_fiducials(bool detectFiducials);
 
   /**
    * \brief Sets whether or not the user wants fusion to be run.
