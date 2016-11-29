@@ -231,6 +231,7 @@ include/spaint/ogl/CameraRenderer.h
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
+include/spaint/ogl/WrappedGLUT.h
 )
 
 ##

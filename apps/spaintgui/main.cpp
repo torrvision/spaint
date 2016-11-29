@@ -21,9 +21,7 @@ using namespace InputSource;
 using namespace ITMLib;
 
 #ifdef WITH_GLUT
-  #include <spaint/ogl/WrappedGL.h>
-  #include <GL/glut.h>
-  #undef WIN32_LEAN_AND_MEAN
+#include <spaint/ogl/WrappedGLUT.h>
 #endif
 
 #ifdef WITH_OVR

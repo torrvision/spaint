@@ -14,8 +14,7 @@
 #include <spaint/ogl/WrappedGL.h>
 
 #ifdef WITH_GLUT
-  #include <GL/glut.h>
-  #undef WIN32_LEAN_AND_MEAN
+#include <spaint/ogl/WrappedGLUT.h>
 #endif
 
 #include <rigging/MoveableCamera.h>
