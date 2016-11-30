@@ -77,6 +77,13 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
   Fiducial_Ptr fiducial = MapUtil::lookup(slamState->get_fiducials(), m_fiducialID, Fiducial_Ptr());
   if(fiducial)
   {
+    // Note: A fiducial's pose has z pointing along the surface normal at the fiducial's position.
+    //       We use the Leap in up-facing mode, for which it makes sense to use a fiducial that
+    //       also has z pointing upwards (i.e. is flat on the table). For the Leap coordinate frame,
+    //       we want the look direction (the direction in which the user points) to be horizontal,
+    //       so we use the y direction of the fiducial's pose as the look vector and the z direction
+    //       of the fiducial's pose as the up vector. In practice, we are working with cameras, rather
+    //       than poses: in that context, y = -v and z = n.
     SimpleCamera c = CameraPoseConverter::pose_to_camera(fiducial->pose());
     m_camera.reset(new SimpleCamera(c.p(), -c.v(), c.n()));
   }
