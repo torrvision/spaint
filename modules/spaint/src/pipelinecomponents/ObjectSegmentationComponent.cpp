@@ -6,6 +6,8 @@
 #include "pipelinecomponents/ObjectSegmentationComponent.h"
 using namespace tvgutil;
 
+#include <boost/serialization/extended_type_info.hpp>
+#include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
 #include "segmentation/SegmentationUtil.h"
