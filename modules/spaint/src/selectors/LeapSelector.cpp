@@ -42,6 +42,24 @@ void LeapSelector::accept(const SelectorVisitor& visitor) const
   visitor.visit(*this);
 }
 
+Eigen::Vector3f LeapSelector::from_leap_direction(const Leap::Vector& leapDir) const
+{
+  const Eigen::Vector3f x = -m_camera->u(), y = -m_camera->v(), z = m_camera->n();
+
+  // The Leap coordinate system has x pointing right, y pointing up and z pointing out of the screen, whereas
+  // the InfiniTAM coordinate system has x pointing right, y pointing down and z pointing into the screen. As
+  // such, we need to flip y and z when converting from the Leap coordinate system to our one.
+  return leapDir.x * x - leapDir.y * y - leapDir.z * z;
+}
+
+Eigen::Vector3f LeapSelector::from_leap_position(const Leap::Vector& leapPos) const
+{
+  // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the Leap position by 1000.
+  Eigen::Vector3f offset = from_leap_direction(leapPos) / 1000.0f;
+
+  return m_camera->p() + offset;
+}
+
 const Camera& LeapSelector::get_camera() const
 {
   return *m_camera;
@@ -136,24 +154,6 @@ void LeapSelector::update(const InputState& inputState, const SLAMState_CPtr& sl
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-Eigen::Vector3f LeapSelector::from_leap_direction(const Leap::Vector& leapDir) const
-{
-  const Eigen::Vector3f x = -m_camera->u(), y = -m_camera->v(), z = m_camera->n();
-
-  // The Leap coordinate system has x pointing right, y pointing up and z pointing out of the screen, whereas
-  // the InfiniTAM coordinate system has x pointing right, y pointing down and z pointing into the screen. As
-  // such, we need to flip y and z when converting from the Leap coordinate system to our one.
-  return leapDir.x * x - leapDir.y * y - leapDir.z * z;
-}
-
-Eigen::Vector3f LeapSelector::from_leap_position(const Leap::Vector& leapPos) const
-{
-  // The Leap measures in millimetres, whereas InfiniTAM measures in metres, so we need to divide the Leap position by 1000.
-  Eigen::Vector3f offset = from_leap_direction(leapPos) / 1000.0f;
-
-  return m_camera->p() + offset;
-}
 
 float LeapSelector::from_leap_size(float leapSize)
 {

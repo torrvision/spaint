@@ -96,6 +96,22 @@ public:
   virtual void accept(const SelectorVisitor& visitor) const;
 
   /**
+   * \brief Converts a free vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
+   *
+   * \param leapDir The free vector in the Leap coordinate system.
+   * \return        The free vector in the InfiniTAM coordinate system.
+   */
+  Eigen::Vector3f from_leap_direction(const Leap::Vector& leapDir) const;
+
+  /**
+   * \brief Converts a position vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
+   *
+   * \param leapPos The position vector in the Leap coordinate system.
+   * \return        The position vector in the InfiniTAM coordinate system.
+   */
+  Eigen::Vector3f from_leap_position(const Leap::Vector& leapPos) const;
+
+  /**
    * \brief Gets the camera representing the Leap Motion controller's coordinate frame.
    *
    * \return  The camera representing the Leap Motion controller's coordinate frame.
@@ -131,22 +147,6 @@ public:
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Converts a free vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
-   *
-   * \param leapDir The free vector in the Leap coordinate system.
-   * \return        The free vector in the InfiniTAM coordinate system.
-   */
-  Eigen::Vector3f from_leap_direction(const Leap::Vector& leapDir) const;
-
-  /**
-   * \brief Converts a position vector in the Leap coordinate system into one in the InfiniTAM coordinate system.
-   *
-   * \param leapPos The position vector in the Leap coordinate system.
-   * \return        The position vector in the InfiniTAM coordinate system.
-   */
-  Eigen::Vector3f from_leap_position(const Leap::Vector& leapPos) const;
-
   /**
    * \brief Converts a size in the Leap coordinate system into one in the InfiniTAM coordinate system.
    *
