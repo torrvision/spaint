@@ -146,7 +146,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
 
-  // If the user wants to enable fiducial rendering or specifies a fiducial ID to use for the Leap Motion,
+  // If the user wants to enable fiducial rendering or specifies a fiducial to use for the Leap Motion,
   // make sure that fiducial detection is enabled.
   if(args.renderFiducials || args.leapFiducialID != "")
   {
