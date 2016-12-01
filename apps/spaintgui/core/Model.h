@@ -44,6 +44,9 @@ private:
   /** The label manager. */
   spaint::LabelManager_Ptr m_labelManager;
 
+  /** The ID of the fiducial (if any) from which to obtain the Leap Motion controller's coordinate frame. */
+  std::string m_leapFiducialID;
+
   /** The path to the resources directory. */
   std::string m_resourcesDir;
 
@@ -190,6 +193,13 @@ public:
    * \param mode      The marking mode.
    */
   virtual void mark_voxels(const std::string& sceneID, const Selection_CPtr& selection, const PackedLabels_CPtr& labels, spaint::MarkingMode mode);
+
+  /**
+   * \brief Sets the ID of the fiducial (if any) from which to obtain the Leap Motion controller's coordinate frame.
+   *
+   * \param leapFiducialID  The ID of the fiducial (if any) from which to obtain the Leap Motion controller's coordinate frame.
+   */
+  void set_leap_fiducial_id(const std::string& leapFiducialID);
 
   /**
    * \brief Sets the semantic label to use for manually labelling the scene.

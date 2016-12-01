@@ -55,6 +55,7 @@ struct CommandLineArguments
   std::string depthImageMask;
   bool detectFiducials;
   int initialFrameNumber;
+  std::string leapFiducialID;
   bool mapSurfels;
   bool noRelocaliser;
   std::string openNIDeviceURI;
@@ -78,6 +79,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
+    ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
@@ -142,8 +144,12 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
 
-  // If the user wants to enable fiducial rendering, make sure that fiducial detection is also enabled.
-  if(args.renderFiducials) args.detectFiducials = true;
+  // If the user wants to enable fiducial rendering or specifies a fiducial to use for the Leap Motion,
+  // make sure that fiducial detection is enabled.
+  if(args.renderFiducials || args.leapFiducialID != "")
+  {
+    args.detectFiducials = true;
+  }
 
   return true;
 }
@@ -295,6 +301,11 @@ try
     ));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
+
+#ifdef WITH_LEAP
+  // Set the ID of the fiducial to use for the Leap Motion (if any).
+  pipeline->get_model()->set_leap_fiducial_id(args.leapFiducialID);
+#endif
 
   // Run the application.
   Application app(pipeline, args.renderFiducials);
