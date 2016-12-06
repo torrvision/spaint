@@ -6,6 +6,10 @@
 #ifndef H_SPAINT_BACKGROUNDSUBTRACTINGOBJECTSEGMENTER
 #define H_SPAINT_BACKGROUNDSUBTRACTINGOBJECTSEGMENTER
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "ColourAppearanceModel.h"
 #include "Segmenter.h"
 #include "../touch/TouchDetector.h"
@@ -71,6 +75,13 @@ private:
    * \param renderState The render state corresponding to the camera.
    */
   ITMUCharImage_CPtr make_hand_mask(const ITMFloatImage_CPtr& depthInput, const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief TODO
+   */
+  static void remove_small_components(cv::Mat1b& mask, int componentSizeThreshold);
 };
 
 }

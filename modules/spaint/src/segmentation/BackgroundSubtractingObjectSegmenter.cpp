@@ -9,10 +9,6 @@
 
 #include <boost/serialization/shared_ptr.hpp>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
 #include "ocv/OpenCVUtil.h"
 #include "util/CameraPoseConverter.h"
 
@@ -36,8 +32,8 @@ void BackgroundSubtractingObjectSegmenter::reset()
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
   // Set up the parameters for the object mask.
-  static int componentSizeThreshold = 1000;
-  static int handComponentSizeThreshold = 20;
+  static int handComponentSizeThreshold = 100;
+  static int objectComponentSizeThreshold = 1000;
   static int objectProbThreshold = 80;
 
 #if DEBUGGING
@@ -47,8 +43,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   if(!initialised)
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
     cv::createTrackbar("handComponentSizeThreshold", debugWindowName, &handComponentSizeThreshold, 200);
+    cv::createTrackbar("objectComponentSizeThreshold", debugWindowName, &objectComponentSizeThreshold, 2000);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
     initialised = true;
   }
@@ -94,27 +90,8 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     handMask.data[i] = value;
   }
 
-  {
-    // Find the connected components of the hand mask.
-    cv::Mat1i ccsImage, stats;
-    cv::Mat1d centroids;
-    cv::connectedComponentsWithStats(handMask, ccsImage, stats, centroids);
-
-    // Update the hand mask to only contain components over a certain size.
-    const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-
-  #if WITH_OPENMP
-    #pragma omp parallel for
-  #endif
-    for(int i = 0; i < pixelCount; ++i)
-    {
-      int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
-      if(componentSize < handComponentSizeThreshold)
-      {
-        handMask.data[i] = 0;
-      }
-    }
-  }
+  // Update the hand mask to only contain components over a certain size.
+  remove_small_components(handMask, handComponentSizeThreshold);
 
   // Make the object mask.
   static cv::Mat1b objectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
@@ -128,32 +105,12 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     objectMask.data[i] = changeMaskPtr[i] && !handMask.data[i] ? 255 : 0;
   }
 
-  {
-    // Find the connected components of the object mask.
-    cv::Mat1i ccsImage, stats;
-    cv::Mat1d centroids;
-    cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
-
-    // Update the object mask to only contain components over a certain size.
-    const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-
-  #if WITH_OPENMP
-    #pragma omp parallel for
-  #endif
-    for(int i = 0; i < pixelCount; ++i)
-    {
-      int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
-      if(componentSize < componentSizeThreshold)
-      {
-        objectMask.data[i] = 0;
-      }
-    }
-  }
+  // Update the object mask to only contain components over a certain size.
+  remove_small_components(objectMask, objectComponentSizeThreshold);
 
 #if DEBUGGING
   // Show the debugging window for the object mask.
   cv::imshow(debugWindowName, objectMask);
-  cv::imshow("Hand Mask", handMask);
   cv::waitKey(10);
 #endif
 
@@ -495,6 +452,33 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
   rigging::MoveableCamera_CPtr camera(new rigging::SimpleCamera(CameraPoseConverter::pose_to_camera(pose)));
   m_touchDetector->determine_touch_points(camera, depthInput, renderState);
   return m_touchDetector->get_touch_mask();
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+void BackgroundSubtractingObjectSegmenter::remove_small_components(cv::Mat1b& mask, int componentSizeThreshold)
+{
+  // Find the connected components of the mask.
+  cv::Mat1i ccsImage, stats;
+  cv::Mat1d centroids;
+  cv::connectedComponentsWithStats(mask, ccsImage, stats, centroids);
+
+  // Update the mask to only contain components over a certain size.
+  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+
+  const int pixelCount = mask.rows * mask.cols;
+
+#if WITH_OPENMP
+  #pragma omp parallel for
+#endif
+  for(int i = 0; i < pixelCount; ++i)
+  {
+    int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
+    if(componentSize < componentSizeThreshold)
+    {
+      mask.data[i] = 0;
+    }
+  }
 }
 
 }
