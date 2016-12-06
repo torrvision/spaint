@@ -37,6 +37,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 {
   // Set up the parameters for the object mask.
   static int componentSizeThreshold = 1000;
+  static int handComponentSizeThreshold = 20;
   static int objectProbThreshold = 80;
 
 #if DEBUGGING
@@ -47,6 +48,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   {
     cv::namedWindow(debugWindowName, cv::WINDOW_AUTOSIZE);
     cv::createTrackbar("componentSizeThreshold", debugWindowName, &componentSizeThreshold, 2000);
+    cv::createTrackbar("handComponentSizeThreshold", debugWindowName, &handComponentSizeThreshold, 200);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
     initialised = true;
   }
@@ -64,6 +66,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 
   // Make the object mask.
   static cv::Mat1b objectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
+  static cv::Mat1b handMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
   const uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
   const int pixelCount = static_cast<int>(rgbInput->dataSize);
@@ -89,31 +92,66 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     }
 
     objectMask.data[i] = value;
+    handMask.data[i] = changeMaskPtr[i] ? 255 - value : 0;
   }
 
-  // Find the connected components of the object mask.
-  cv::Mat1i ccsImage, stats;
-  cv::Mat1d centroids;
-  cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
+  {
+    // Find the connected components of the hand mask.
+    cv::Mat1i ccsImage, stats;
+    cv::Mat1d centroids;
+    cv::connectedComponentsWithStats(handMask, ccsImage, stats, centroids);
 
-  // Update the object mask to only contain components over a certain size.
-  const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+    // Update the hand mask to only contain components over a certain size.
+    const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
 
+  #if WITH_OPENMP
+    #pragma omp parallel for
+  #endif
+    for(int i = 0; i < pixelCount; ++i)
+    {
+      int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
+      if(componentSize < handComponentSizeThreshold)
+      {
+        handMask.data[i] = 0;
+      }
+    }
+  }
+
+  // Set the object to the change mask minus the hand mask.
 #if WITH_OPENMP
   #pragma omp parallel for
 #endif
   for(int i = 0; i < pixelCount; ++i)
   {
-    int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
-    if(componentSize < componentSizeThreshold)
+    objectMask.data[i] = changeMaskPtr[i] && !handMask.data[i] ? 255 : 0;
+  }
+
+  {
+    // Find the connected components of the object mask.
+    cv::Mat1i ccsImage, stats;
+    cv::Mat1d centroids;
+    cv::connectedComponentsWithStats(objectMask, ccsImage, stats, centroids);
+
+    // Update the object mask to only contain components over a certain size.
+    const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
+
+  #if WITH_OPENMP
+    #pragma omp parallel for
+  #endif
+    for(int i = 0; i < pixelCount; ++i)
     {
-      objectMask.data[i] = 0;
+      int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
+      if(componentSize < componentSizeThreshold)
+      {
+        objectMask.data[i] = 0;
+      }
     }
- }
+  }
 
 #if DEBUGGING
   // Show the debugging window for the object mask.
   cv::imshow(debugWindowName, objectMask);
+  cv::imshow("Hand Mask", handMask);
   cv::waitKey(10);
 #endif
 
