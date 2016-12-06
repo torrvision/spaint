@@ -64,8 +64,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   // Make the change mask.
   ITMUCharImage_CPtr changeMask = make_change_mask(depthInput, pose, renderState);
 
-  // Make the object mask.
-  static cv::Mat1b objectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
+  // Make the hand mask.
   static cv::Mat1b handMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
   const Vector4u *rgbPtr = rgbInput->GetData(MEMORYDEVICE_CPU);
   const uchar *changeMaskPtr = changeMask->GetData(MEMORYDEVICE_CPU);
@@ -77,22 +76,22 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
 #endif
   for(int i = 0; i < pixelCount; ++i)
   {
-    // Update the object mask based on whether the pixel is part of the object.
+    // Update the hand mask based on whether the pixel is part of the hand.
     unsigned char value = 0;
     if(changeMaskPtr[i])
     {
-      float objectProb = m_handAppearanceModel ? 1.0f - m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3()) : 1.0f;
+      float handProb = m_handAppearanceModel ? m_handAppearanceModel->compute_posterior_probability(rgbPtr[i].toVector3()) : 0.0f;
+      int handProbThreshold = 100 - objectProbThreshold;
 
 #if 1
-      if(objectProb >= objectProbThreshold / 100.0f) value = 255;
+      if(handProb >= handProbThreshold / 100.0f) value = 255;
 #else
       // For debugging purposes
-      if(objectProb >= objectProbThreshold / 100.0f) value = (uchar)(objectProb * 255);
+      if(handProb >= handProbThreshold / 100.0f) value = (uchar)(handProb * 255);
 #endif
     }
 
-    objectMask.data[i] = value;
-    handMask.data[i] = changeMaskPtr[i] ? 255 - value : 0;
+    handMask.data[i] = value;
   }
 
   {
@@ -117,7 +116,10 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     }
   }
 
-  // Set the object to the change mask minus the hand mask.
+  // Make the object mask.
+  static cv::Mat1b objectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
+
+  // Set the object mask to the difference between the change mask and the hand mask.
 #if WITH_OPENMP
   #pragma omp parallel for
 #endif
