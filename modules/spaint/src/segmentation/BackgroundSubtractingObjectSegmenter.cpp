@@ -31,7 +31,7 @@ void BackgroundSubtractingObjectSegmenter::reset()
 
 ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const
 {
-  // Set up the parameters for the object mask.
+  // Set up the segmentation parameters.
   static int handComponentSizeThreshold = 100;
   static int objectComponentSizeThreshold = 1000;
   static int objectProbThreshold = 80;
