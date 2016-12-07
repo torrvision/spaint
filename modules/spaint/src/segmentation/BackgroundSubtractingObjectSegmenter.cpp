@@ -465,7 +465,6 @@ void BackgroundSubtractingObjectSegmenter::remove_small_components(cv::Mat1b& ma
 
   // Update the mask to only contain components over a certain size.
   const int *ccsData = reinterpret_cast<int*>(ccsImage.data);
-
   const int pixelCount = mask.rows * mask.cols;
 
 #if WITH_OPENMP
