@@ -79,9 +79,12 @@ private:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Updates a mask to retain only connected components over a certain size.
+   *
+   * \param mask                  The mask to update.
+   * \param minimumComponentSize  The minimum size of component to retain.
    */
-  static void remove_small_components(cv::Mat1b& mask, int componentSizeThreshold);
+  static void remove_small_components(cv::Mat1b& mask, int minimumComponentSize);
 };
 
 }

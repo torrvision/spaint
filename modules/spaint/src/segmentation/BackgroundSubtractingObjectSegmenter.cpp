@@ -456,7 +456,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_hand_mask(const IT
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 
-void BackgroundSubtractingObjectSegmenter::remove_small_components(cv::Mat1b& mask, int componentSizeThreshold)
+void BackgroundSubtractingObjectSegmenter::remove_small_components(cv::Mat1b& mask, int minimumComponentSize)
 {
   // Find the connected components of the mask.
   cv::Mat1i ccsImage, stats;
@@ -474,7 +474,7 @@ void BackgroundSubtractingObjectSegmenter::remove_small_components(cv::Mat1b& ma
   for(int i = 0; i < pixelCount; ++i)
   {
     int componentSize = stats(ccsData[i], cv::CC_STAT_AREA);
-    if(componentSize < componentSizeThreshold)
+    if(componentSize < minimumComponentSize)
     {
       mask.data[i] = 0;
     }
