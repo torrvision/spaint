@@ -35,6 +35,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   static int handComponentSizeThreshold = 100;
   static int objectComponentSizeThreshold = 1000;
   static int objectProbThreshold = 80;
+  static int removeSmallHandComponents = 1;
 
 #if DEBUGGING
   // Set up the debugging window for the object mask.
@@ -46,6 +47,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     cv::createTrackbar("handComponentSizeThreshold", debugWindowName, &handComponentSizeThreshold, 200);
     cv::createTrackbar("objectComponentSizeThreshold", debugWindowName, &objectComponentSizeThreshold, 2000);
     cv::createTrackbar("objectProbThreshold", debugWindowName, &objectProbThreshold, 100);
+    cv::createTrackbar("removeSmallHandComponents", debugWindowName, &removeSmallHandComponents, 1);
     initialised = true;
   }
 #endif
@@ -90,8 +92,11 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
     handMask.data[i] = value;
   }
 
-  // Update the hand mask to only contain components over a certain size.
-  remove_small_components(handMask, handComponentSizeThreshold);
+  // If desired, update the hand mask to only contain components over a certain size.
+  if(removeSmallHandComponents)
+  {
+    remove_small_components(handMask, handComponentSizeThreshold);
+  }
 
   // Make the object mask.
   static cv::Mat1b objectMask = cv::Mat1b::zeros(m_view->rgb->noDims.y, m_view->rgb->noDims.x);
