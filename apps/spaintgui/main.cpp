@@ -66,6 +66,7 @@ struct CommandLineArguments
   std::string rgbImageMask;
   std::string sequenceSpecifier;
   std::string sequenceType;
+  bool trackObject;
   bool trackSurfels;
 };
 
@@ -103,10 +104,16 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
 
+  po::options_description objectivePipelineOptions("Objective pipeline options");
+  objectivePipelineOptions.add_options()
+    ("trackObject", po::bool_switch(&args.trackObject), "track the object")
+  ;
+
   po::options_description options;
   options.add(genericOptions);
   options.add(cameraOptions);
   options.add(diskSequenceOptions);
+  options.add(objectivePipelineOptions);
 
   // Actually parse the command line.
   po::variables_map vm;
@@ -313,7 +320,8 @@ try
       mappingMode,
       trackingMode,
       fiducialDetector,
-      args.detectFiducials
+      args.detectFiducials,
+      !args.trackObject
     ));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);

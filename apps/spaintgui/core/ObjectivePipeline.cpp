@@ -17,7 +17,7 @@ using namespace tvgutil;
 
 ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
                                      TrackerType trackerType, const std::string& trackerParams, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
-                                     const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
+                                     const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, bool mirrorWorldPose)
 : MultiScenePipeline(settings, resourcesDir, maxLabelCount)
 {
   const std::string worldSceneID = Model::get_world_scene_id();
@@ -27,7 +27,7 @@ ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::st
 
   const std::string objectSceneID = "Object";
   SLAMComponent_Ptr objectSLAMComponent(new SLAMComponent(m_model, objectSceneID, pipe, trackerType, trackerParams, mappingMode, trackingMode));
-  objectSLAMComponent->mirror_pose_of(worldSceneID);
+  if(mirrorWorldPose) objectSLAMComponent->mirror_pose_of(worldSceneID);
   m_slamComponents[objectSceneID] = objectSLAMComponent;
 }
 
