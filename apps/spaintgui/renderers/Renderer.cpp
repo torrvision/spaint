@@ -271,7 +271,7 @@ void Renderer::end_2d()
 {
   glDepthMask(true);
 
-  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
+  glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
   glMatrixMode(GL_PROJECTION);
@@ -513,6 +513,7 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
         }
       }
     }
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
   }
   glMatrixMode(GL_PROJECTION);
