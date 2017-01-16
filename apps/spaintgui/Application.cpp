@@ -112,6 +112,8 @@ void Application::run()
 void Application::set_batch_mode(bool enabled)
 {
 	m_runInBatch = enabled;
+	m_paused = !enabled;
+	m_pauseBetweenFrames = m_paused;
 }
 
 void Application::set_save_mesh_on_exit(bool saveMesh)
