@@ -15,8 +15,8 @@
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 
-#include <RelocLib/PoseDatabase.h>
-#include <RelocLib/Relocaliser.h>
+#include <FernRelocLib/PoseDatabase.h>
+#include <FernRelocLib/Relocaliser.h>
 
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
@@ -37,8 +37,8 @@ private:
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
-  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
+  typedef boost::shared_ptr<FernRelocLib::PoseDatabase> PoseDatabase_Ptr;
+  typedef boost::shared_ptr<FernRelocLib::Relocaliser<float> > Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
