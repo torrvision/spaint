@@ -6,6 +6,9 @@
 #ifndef H_SPAINT_SLAMCOMPONENT
 #define H_SPAINT_SLAMCOMPONENT
 
+#include <FernRelocLib/PoseDatabase.h>
+#include <FernRelocLib/Relocaliser.h>
+
 #include <InputSource/CompositeImageSourceEngine.h>
 
 #include <ITMLib/Core/ITMDenseMapper.h>
@@ -14,9 +17,6 @@
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
-
-#include <FernRelocLib/PoseDatabase.h>
-#include <FernRelocLib/Relocaliser.h>
 
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
