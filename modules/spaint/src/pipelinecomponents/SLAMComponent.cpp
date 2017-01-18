@@ -13,10 +13,10 @@
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
+using namespace FernRelocLib;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
-using namespace RelocLib;
 
 #include "segmentation/SegmentationUtil.h"
 
@@ -181,19 +181,13 @@ bool SLAMComponent::process_frame()
       // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
       // good for some time and the current frame differs sufficiently from the existing keyframes.
       int nearestNeighbour;
-      int keyframeID = m_relocaliser->ProcessFrame(view->depth, 1, &nearestNeighbour, NULL, considerKeyframe);
+      bool keyframeAdded = m_relocaliser->ProcessFrame(view->depth, trackingState->pose_d, 0, 1, &nearestNeighbour, NULL, considerKeyframe);
 
-      if(keyframeID >= 0)
+      // If no keyframe was added and the tracking failed, but a nearest keyframe was found by the relocaliser, reset
+      // the pose to that of the keyframe and rerun the tracker for this frame.
+      if(!keyframeAdded && trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
       {
-        // If the relocaliser added the current frame as a new keyframe, store its pose in the pose database.
-        // Note that a new keyframe will only have been added if the tracking quality for this frame was good.
-        m_poseDatabase->storePose(keyframeID, *trackingState->pose_d, 0);
-      }
-      else if(trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
-      {
-        // If the tracking failed but a nearest keyframe was found by the relocaliser, reset the pose to that
-        // of the keyframe and rerun the tracker for this frame.
-        trackingState->pose_d->SetFrom(&m_poseDatabase->retrievePose(nearestNeighbour).pose);
+        trackingState->pose_d->SetFrom(&m_relocaliser->RetrievePose(nearestNeighbour).pose);
 
         const bool resetVisibleList = true;
         m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
@@ -300,7 +294,7 @@ void SLAMComponent::reset_scene()
   const int numFerns = 500;
   const int numDecisionsPerFern = 4;
   const Settings_CPtr& settings = m_context->get_settings();
-  m_relocaliser.reset(new Relocaliser(
+  m_relocaliser.reset(new Relocaliser<float>(
     depthImageSize,
     Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max),
     harvestingThreshold, numFerns, numDecisionsPerFern
