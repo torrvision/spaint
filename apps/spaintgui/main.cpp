@@ -381,7 +381,7 @@ try
   app.set_batch_mode(args.batch);
 
   // Run the application.
-  app.run();
+  bool runSucceeded = app.run();
 
 #ifdef WITH_OVR
   // If we built with Rift support, shut down the Rift SDK.
@@ -391,7 +391,7 @@ try
   // Shut down SDL.
   SDL_Quit();
 
-  return 0;
+  return runSucceeded ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch(std::exception& e)
 {

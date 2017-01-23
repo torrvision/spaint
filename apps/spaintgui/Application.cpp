@@ -59,11 +59,15 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Application::run()
+bool Application::run()
 {
   for(;;)
   {
-    if(!process_events() || (m_inputState.key_down(KEYCODE_ESCAPE) && !m_runInBatch))
+    // Returns false iff the user pressed Ctrl-C or closed the window.
+    if(!process_events())
+      return false;
+
+    if(m_inputState.key_down(KEYCODE_ESCAPE) && !m_runInBatch)
     {
       break;
     }
@@ -107,6 +111,8 @@ void Application::run()
   {
     save_mesh();
   }
+
+  return true;
 }
 
 void Application::set_batch_mode(bool enabled)

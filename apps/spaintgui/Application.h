@@ -114,8 +114,10 @@ public:
 public:
   /**
    * \brief Runs the application.
+   *
+   * \return True whether the main loop terminated successfully.
    */
-  void run();
+  bool run();
 
   /**
    * \brief Sets whether to run in batch mode or not.
