@@ -81,6 +81,7 @@ private:
 
   Tracker_Ptr m_refineTracker;
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
+  TrackingController_Ptr m_refinementTrackingController;
 
   // For profiling
   bool m_timeRelocalizer;

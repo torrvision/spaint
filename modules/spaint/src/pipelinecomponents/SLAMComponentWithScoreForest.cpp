@@ -94,6 +94,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       ITMTrackerFactory::Instance().Make(
           refineParams.c_str(), rgbImageSize, depthImageSize, settings.get(),
           m_lowLevelEngine.get(), NULL, voxelScene->sceneParams));
+  m_refinementTrackingController.reset(new ITMTrackingController(m_refineTracker.get(), settings.get()));
 
   m_timeRelocalizer = true;
   m_learningCalls = 0;
@@ -331,8 +332,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-      prepare_for_tracking(TRACK_VOXELS);
-      m_refineTracker->TrackCamera(trackingState.get(), view.get());
+      m_refinementTrackingController->Prepare(trackingState.get(),
+          voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
+      m_refinementTrackingController->Track(trackingState.get(), view.get());
       trackingResult = trackingState->trackerResult;
 
 //      std::cout << "Refinement: "
@@ -670,8 +672,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
           voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-      prepare_for_tracking(TRACK_VOXELS);
-      m_refineTracker->TrackCamera(trackingState.get(), view.get());
+      m_refinementTrackingController->Prepare(trackingState.get(),
+          voxelScene.get(), view.get(), m_context->get_voxel_visualisation_engine().get(), liveVoxelRenderState.get());
+      m_refinementTrackingController->Track(trackingState.get(), view.get());
       trackingResult = trackingState->trackerResult;
       refinedPose = *trackingState->pose_d;
     }
