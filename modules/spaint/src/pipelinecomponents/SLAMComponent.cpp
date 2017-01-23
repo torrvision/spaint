@@ -125,7 +125,7 @@ bool SLAMComponent::process_frame()
 
   // Track the camera (we can only do this once we've started reconstruction because we need something to track against).
   SE3Pose oldPose(*trackingState->pose_d);
-  if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
+  m_trackingController->Track(trackingState.get(), view.get());
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
