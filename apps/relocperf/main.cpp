@@ -15,6 +15,28 @@ namespace fs = boost::filesystem;
 
 //#################### FUNCTIONS ####################
 
+std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
+{
+  std::vector<std::string> sequences;
+
+  for(fs::directory_iterator it(dataset_path), end; it != end; ++it)
+  {
+    fs::path p = it->path();
+    fs::path train_path = p / "Train";
+    fs::path test_path = p / "Test";
+
+    if(fs::is_directory(train_path) && fs::is_directory(test_path))
+    {
+      sequences.push_back(p.filename().string());
+    }
+  }
+
+  // Sort sequence names because the directory iterator does not ensure ordering
+  std::sort(sequences.begin(), sequences.end());
+
+  return sequences;
+}
+
 fs::path generate_path(const fs::path basePath, const std::string &mask,
     int index)
 {
@@ -139,7 +161,7 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
     bool validICP = pose_matches(gtPose, icpPose);
     bool validFinal = pose_matches(gtPose, finalPose);
 
-//    std::cout << poseCount << "-> Reloc: " << std::boolalpha << validReloc
+//    std::cout << res.poseCount << "-> Reloc: " << std::boolalpha << validReloc
 //        << " - ICP: " << validICP << std::noboolalpha << '\n';
 
     ++res.poseCount;
@@ -164,9 +186,6 @@ void printWidth(const T &item, int width, bool leftAlign = false)
 
 int main(int argc, char *argv[])
 {
-  const std::vector<std::string> sequenceNames
-  { "chess", "fire", "heads", "office", "pumpkin", "redkitchen", "stairs" };
-
   if (argc < 4)
   {
     std::cerr << "Usage: " << argv[0]
@@ -175,15 +194,16 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  fs::path gtFolder = argv[1];
-  fs::path relocBaseFolder = argv[2];
-  std::string relocTag = argv[3];
+  const fs::path gtFolder = argv[1];
+  const fs::path relocBaseFolder = argv[2];
+  const std::string relocTag = argv[3];
+  const std::vector<std::string> sequenceNames = find_sequence_names(gtFolder);
 
   std::map<std::string, SequenceResults> results;
 
   for (auto sequence : sequenceNames)
   {
-    const fs::path gtPath = gtFolder / sequence / "Test" / "merged";
+    const fs::path gtPath = gtFolder / sequence / "Test";
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
     std::cerr << "Processing sequence " << sequence << " in:\n\t" << gtPath
