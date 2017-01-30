@@ -13,6 +13,8 @@
 #include <ITMLib/Utils/ITMMath.h>
 #include <ORUtils/PlatformIndependence.h>
 
+#include <tvgutil/timing/AverageTimer.h>
+
 #include "../../features/interface/RGBDPatchFeature.h"
 #include "../ScoreForestTypes.h"
 
@@ -45,6 +47,8 @@ typedef boost::shared_ptr<const PoseCandidateMemoryBlock> PoseCandidateMemoryBlo
 class PreemptiveRansac
 {
 public:
+  typedef tvgutil::AverageTimer<boost::chrono::nanoseconds> AverageTimer;
+
   PreemptiveRansac();
   virtual ~PreemptiveRansac();
 
@@ -85,6 +89,16 @@ protected:
 
   void compute_candidate_poses_kabsch();
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
+
+private:
+  bool m_printTimers;
+  AverageTimer m_timerCandidateGeneration;
+  std::vector<AverageTimer> m_timerComputeEnergy;
+  AverageTimer m_timerFirstComputeEnergy;
+  AverageTimer m_timerFirstTrim;
+  std::vector<AverageTimer> m_timerInlierSampling;
+  std::vector<AverageTimer> m_timerOptimisation;
+  AverageTimer m_timerTotal;
 };
 
 typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;

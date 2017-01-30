@@ -5,6 +5,7 @@
 
 #include "randomforest/interface/PreemptiveRansac.h"
 
+#include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
 #include <ceres/ceres.h>
@@ -21,7 +22,10 @@
 
 namespace spaint
 {
-PreemptiveRansac::PreemptiveRansac()
+PreemptiveRansac::PreemptiveRansac() :
+    m_timerCandidateGeneration("Candidate Generation"), m_timerFirstComputeEnergy(
+        "First Energy Computation"), m_timerFirstTrim("First Trim"), m_timerTotal(
+        "P-RANSAC Total")
 {
   // Set params as in scoreforests
   m_nbPointsForKabschBoostrap = 3;
@@ -48,10 +52,52 @@ PreemptiveRansac::PreemptiveRansac()
   m_nbMaxInliers = 3000; // 500 per ransac iteration, starting from 64, not 1024.
   m_inliersIndicesImage = mbf.make_image<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
+
+#ifdef ENABLE_TIMERS
+  m_printTimers = true;
+#else
+  m_printTimers = false;
+#endif
+
+  m_printTimers = true;
+
+  for (int i = 1; i <= 6; ++i)
+  {
+    m_timerInlierSampling.push_back(
+        AverageTimer("Inlier Sampling " + boost::lexical_cast<std::string>(i)));
+    m_timerOptimisation.push_back(
+        AverageTimer("Optimisation " + boost::lexical_cast<std::string>(i)));
+    m_timerComputeEnergy.push_back(
+        AverageTimer(
+            "Energy Computation " + boost::lexical_cast<std::string>(i)));
+  }
+}
+
+void printTimer(const PreemptiveRansac::AverageTimer &timer)
+{
+  std::cout << timer.name() << ": " << timer.count() << " times, avg: "
+      << (timer.count() > 0 ?
+          boost::chrono::duration_cast<boost::chrono::milliseconds>(
+              timer.average_duration()) :
+          boost::chrono::milliseconds()) << ".\n";
 }
 
 PreemptiveRansac::~PreemptiveRansac()
 {
+  if (m_printTimers)
+  {
+    printTimer(m_timerTotal);
+    printTimer(m_timerCandidateGeneration);
+    printTimer(m_timerFirstTrim);
+    printTimer(m_timerFirstComputeEnergy);
+
+    for (size_t i = 0; i < m_timerInlierSampling.size(); ++i)
+    {
+      printTimer(m_timerInlierSampling[i]);
+      printTimer(m_timerComputeEnergy[i]);
+      printTimer(m_timerOptimisation[i]);
+    }
+  }
 }
 
 int PreemptiveRansac::get_min_nb_required_points() const
@@ -63,6 +109,8 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     const Keypoint3DColourImage_CPtr &keypoints,
     const ScorePredictionsImage_CPtr &forestPredictions)
 {
+  m_timerTotal.start();
+
   m_keypointsImage = keypoints;
   m_predictionsImage = forestPredictions;
 
@@ -74,7 +122,9 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     boost::timer::auto_cpu_timer t(6,
         "generating initial candidates: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
+    m_timerCandidateGeneration.start();
     generate_pose_candidates();
+    m_timerCandidateGeneration.stop();
   }
 
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
@@ -84,6 +134,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
   if (m_trimKinitAfterFirstEnergyComputation < m_poseCandidates->dataSize)
   {
+    m_timerFirstTrim.start();
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6,
         "first trim: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -102,10 +153,13 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
       boost::timer::auto_cpu_timer t(6,
           "compute and sort energies: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
+      m_timerFirstComputeEnergy.start();
       compute_and_sort_energies();
+      m_timerFirstComputeEnergy.stop();
     }
 
     m_poseCandidates->dataSize = m_trimKinitAfterFirstEnergyComputation;
+    m_timerFirstTrim.stop();
   }
 
   //  std::cout << candidates.size() << " candidates remaining." << std::endl;
@@ -121,27 +175,42 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
   m_inliersMaskImage->Clear();
   m_inliersIndicesImage->dataSize = 0;
 
-  float iteration = 0.0f;
+  int iteration = 0;
 
   while (m_poseCandidates->dataSize > 1)
   {
-    //    boost::timer::auto_cpu_timer t(
-    //        6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-    ++iteration;
+#ifdef ENABLE_TIMERS
+    boost::timer::auto_cpu_timer t(6,
+        "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
     //    std::cout << candidates.size() << " camera remaining" << std::endl;
 
+    m_timerInlierSampling[iteration].start();
     sample_inlier_candidates(true);
+    m_timerInlierSampling[iteration].stop();
 
     if (m_poseUpdate)
     {
+#ifdef ENABLE_TIMERS
+      boost::timer::auto_cpu_timer t(6,
+          "continuous optimization: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
+      m_timerOptimisation[iteration].start();
       update_candidate_poses();
+      m_timerOptimisation[iteration].stop();
     }
 
+    m_timerComputeEnergy[iteration].start();
     compute_and_sort_energies();
+    m_timerComputeEnergy[iteration].stop();
 
     // Remove half of the candidates with the worse energies
     m_poseCandidates->dataSize /= 2;
+
+    ++iteration;
   }
+
+  m_timerTotal.stop();
 
   return
       m_poseCandidates->dataSize > 0 ?
