@@ -38,6 +38,7 @@ using namespace ITMLib;
 #include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
+#include <tvgutil/containers/ParametersContainer.h>
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
@@ -87,6 +88,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("batch", po::bool_switch(&args.batch), "don't wait for user input before starting the reconstruction and terminate immediately")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
+    ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
@@ -123,6 +125,32 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   // Actually parse the command line.
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, options), vm);
+
+  // Parse options from configuration file, if necessary.
+  if(vm.count("configFile"))
+  {
+    // Allow unregistered options: those are added to the global ParametersContainer instance, to be used by other classes.
+    po::parsed_options parsedOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
+
+    // Store registered options in the variable map
+    po::store(parsedOptions, vm);
+
+    // Check for unregistered options
+    ParametersContainer &parametersContainer = ParametersContainer::instance();
+    for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
+    {
+      const po::basic_option<char> &option = parsedOptions.options[optionIdx];
+      if (option.unregistered)
+      {
+        // Add all values in order
+        for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
+        {
+          parametersContainer.add_value(option.string_key, option.value[valueIdx]);
+        }
+      }
+    }
+  }
+
   po::notify(vm);
 
   // If the user specifies the --help flag, print a help message.
