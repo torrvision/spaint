@@ -83,6 +83,10 @@ private:
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
   TrackingController_Ptr m_refinementTrackingController;
 
+  // For evaluation
+  bool m_relocaliseAfterEveryFrame;
+  bool m_saveRelocalisationPoses;
+
   // For profiling
   bool m_timeRelocalizer;
   size_t m_learningCalls;
