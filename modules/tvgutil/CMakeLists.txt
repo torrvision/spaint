@@ -35,9 +35,14 @@ include/tvgutil/commands/SeqCommand.h
 )
 
 ##
+SET(containers_sources
+src/containers/ParametersContainer.cpp
+)
+
 SET(containers_headers
 include/tvgutil/containers/LimitedContainer.h
 include/tvgutil/containers/MapUtil.h
+include/tvgutil/containers/ParametersContainer.h
 include/tvgutil/containers/PriorityQueue.h
 )
 
@@ -110,6 +115,7 @@ include/tvgutil/timing/TimeUtil.h
 
 SET(sources
 ${commands_sources}
+${containers_sources}
 ${filesystem_sources}
 ${misc_sources}
 ${numbers_sources}
@@ -132,7 +138,7 @@ ${timing_headers}
 #############################
 
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
-SOURCE_GROUP(containers FILES ${containers_headers})
+SOURCE_GROUP(containers FILES ${containers_sources} ${containers_headers})
 SOURCE_GROUP(filesystem FILES ${filesystem_sources} ${filesystem_headers})
 SOURCE_GROUP(misc FILES ${misc_sources} ${misc_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
