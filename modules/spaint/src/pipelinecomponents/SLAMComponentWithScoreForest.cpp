@@ -57,7 +57,11 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
         trackerParams, mappingMode, trackingMode)
 {
   const Settings_CPtr& settings = m_context->get_settings();
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+
+  const static std::string parametersNamespace = "SLAMComponentWithScoreForest.";
+  const ParametersContainer &parametersContainer =
+      ParametersContainer::instance();
 
   m_featureExtractor =
       FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
@@ -66,12 +70,15 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_rgbdPatchDescriptorImage = mbf.make_image<RGBDPatchDescriptor>();
   m_predictionsImage = mbf.make_image<ScorePrediction>();
 
-  const bf::path relocalizationForestPath = bf::path(
-      m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf";
+  m_relocalisationForestPath = parametersContainer.get_string(
+      parametersNamespace + "m_relocalisationForestPath",
+      (bf::path(m_context->get_resources_dir())
+          / "DefaultRelocalizationForest.rf").string());
 
   std::cout << "Loading relocalization forest from: "
-      << relocalizationForestPath << '\n';
-  m_scoreForest.reset(new ScoreForest_CUDA(relocalizationForestPath.string()));
+      << m_relocalisationForestPath << '\n';
+  m_relocalisationForest.reset(
+      new ScoreForest_CUDA(m_relocalisationForestPath));
   m_updateForestModesEveryFrame = true;
 
 //  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
@@ -83,25 +90,27 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
-  const std::string refineParams =
-      "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
+  m_refinementTrackerParams =
+      parametersContainer.get_string(
+          parametersNamespace + "m_refinementTrackerParams",
+          "type=extended,levels=rrbb,minstep=1e-4,"
+          "outlierSpaceC=0.1,outlierSpaceF=0.004,"
+          "numiterC=20,numiterF=20,tukeyCutOff=8,"
+          "framesToSkip=20,framesToWeight=50,failureDec=20.0"
+      );
 
-  m_refineTracker.reset(
-      ITMTrackerFactory::Instance().Make(refineParams.c_str(), rgbImageSize,
+  m_refinementTracker.reset(
+      ITMTrackerFactory::Instance().Make(m_refinementTrackerParams.c_str(), rgbImageSize,
           depthImageSize, settings.get(), m_lowLevelEngine.get(), NULL,
           voxelScene->sceneParams));
   m_refinementTrackingController.reset(
-      new ITMTrackingController(m_refineTracker.get(), settings.get()));
+      new ITMTrackingController(m_refinementTracker.get(), settings.get()));
 
   m_timeRelocalizer = true;
   m_learningCalls = 0;
   m_learningTimes.clear();
   m_relocalizationCalls = 0;
   m_relocalizationTimes.clear();
-
-  const static std::string parametersNamespace = "SLAMComponentWithScoreForest.";
-  const ParametersContainer &parametersContainer =
-      ParametersContainer::instance();
 
   m_relocaliseAfterEveryFrame = parametersContainer.get_bool(
       parametersNamespace + "m_relocaliseAfterEveryFrame", false);
@@ -196,7 +205,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     boost::timer::auto_cpu_timer t(6,
         "update forest, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_scoreForest->update_forest();
+    m_relocalisationForest->update_forest();
 //    cudaDeviceSynchronize();
   }
 
@@ -219,7 +228,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 // For each prediction print centroids, covariances, nbInliers
     for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const ScorePrediction p = m_scoreForest->get_prediction(treeIdx,
+      const ScorePrediction p = m_relocalisationForest->get_prediction(treeIdx,
           predictionIndices[treeIdx]);
       std::cout << p.nbModes << ' ' << predictionIndices[treeIdx] << '\n';
       for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
@@ -586,7 +595,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    m_scoreForest->add_features_to_forest(m_rgbdPatchKeypointsImage,
+    m_relocalisationForest->add_features_to_forest(m_rgbdPatchKeypointsImage,
         m_rgbdPatchDescriptorImage);
 
     if (relocalizationTimer)
@@ -787,7 +796,7 @@ void SLAMComponentWithScoreForest::evaluate_forest()
   boost::timer::auto_cpu_timer t(6,
       "evaluating forest on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-  m_scoreForest->evaluate_forest(m_rgbdPatchDescriptorImage,
+  m_relocalisationForest->evaluate_forest(m_rgbdPatchDescriptorImage,
       m_predictionsImage);
 }
 

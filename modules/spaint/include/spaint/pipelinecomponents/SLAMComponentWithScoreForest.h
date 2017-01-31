@@ -75,12 +75,14 @@ private:
   Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
   ScorePredictionsImage_Ptr m_predictionsImage;
-  ScoreForest_Ptr m_scoreForest;
+  ScoreForest_Ptr m_relocalisationForest;
+  std::string m_relocalisationForestPath;
   PreemptiveRansac_Ptr m_preemptiveRansac;
   bool m_updateForestModesEveryFrame;
 
-  Tracker_Ptr m_refineTracker;
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
+  Tracker_Ptr m_refinementTracker;
+  std::string m_refinementTrackerParams;
   TrackingController_Ptr m_refinementTrackingController;
 
   // For evaluation
