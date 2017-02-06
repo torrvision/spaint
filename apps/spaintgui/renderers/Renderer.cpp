@@ -337,8 +337,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex), subwindow);
-    render_synthetic_scene(sceneID, pose, renderFiducials);
+    render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
     // Render the value of the pixel to which the user is pointing (for debugging purposes).
@@ -429,8 +429,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
-                                          Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -452,8 +451,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    voxelRenderState, surfelRenderState, pose, slamState->get_view(),
-    subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
   // Copy the raycasted scene to a texture.
@@ -468,7 +467,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, bool renderFiducials) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
