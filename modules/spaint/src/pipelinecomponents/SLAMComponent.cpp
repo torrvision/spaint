@@ -131,10 +131,10 @@ bool SLAMComponent::process_frame()
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   slamState->set_view(newView);
 
-  // If there's an active input mask, apply it to the depth image.
+  // If there's an active input mask of the right size, apply it to the depth image.
   ITMFloatImage_Ptr maskedDepthImage;
   ITMUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
-  if(inputMask)
+  if(inputMask && inputMask->noDims == view->depth->noDims)
   {
     view->depth->UpdateHostFromDevice();
     maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
