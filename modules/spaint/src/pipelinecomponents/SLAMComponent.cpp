@@ -5,6 +5,10 @@
 
 #include "pipelinecomponents/SLAMComponent.h"
 
+#include <boost/serialization/extended_type_info.hpp>
+#include <boost/serialization/singleton.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
@@ -13,6 +17,8 @@ using namespace FernRelocLib;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
+
+#include "segmentation/SegmentationUtil.h"
 
 #ifdef WITH_OVR
 #include "trackers/RiftTracker.h"
@@ -99,6 +105,11 @@ bool SLAMComponent::get_fusion_enabled() const
   return m_fusionEnabled;
 }
 
+void SLAMComponent::mirror_pose_of(const std::string& mirrorSceneID)
+{
+  m_mirrorSceneID = mirrorSceneID;
+}
+
 bool SLAMComponent::process_frame()
 {
   if(!m_imageSourceEngine->hasMoreImages()) return false;
@@ -120,9 +131,34 @@ bool SLAMComponent::process_frame()
   m_viewBuilder->UpdateView(&newView, inputRGBImage.get(), inputRawDepthImage.get(), useBilateralFilter);
   slamState->set_view(newView);
 
-  // Track the camera (we can only do this once we've started reconstruction because we need something to track against).
+  // If there's an active input mask of the right size, apply it to the depth image.
+  ITMFloatImage_Ptr maskedDepthImage;
+  ITMUCharImage_CPtr inputMask = m_context->get_slam_state(m_sceneID)->get_input_mask();
+  if(inputMask && inputMask->noDims == view->depth->noDims)
+  {
+    view->depth->UpdateHostFromDevice();
+    maskedDepthImage = SegmentationUtil::apply_mask(inputMask, ITMFloatImage_CPtr(view->depth, boost::serialization::null_deleter()), -1.0f);
+    maskedDepthImage->UpdateDeviceFromHost();
+    view->depth->Swap(*maskedDepthImage);
+  }
+
+  // Make a note of the current pose in case tracking fails.
   SE3Pose oldPose(*trackingState->pose_d);
-  if(m_fusedFramesCount > 0) m_trackingController->Track(trackingState.get(), view.get());
+
+  // If we're mirroring the pose of another scene, copy the pose from that scene's tracking state. If not, use our own tracker
+  // to estimate the pose (we can only do this once we've started reconstruction because we need something to track against).
+  if(m_mirrorSceneID != "")
+  {
+    *trackingState->pose_d = m_context->get_slam_state(m_mirrorSceneID)->get_pose();
+    trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
+  }
+  else if(m_fusedFramesCount > 0)
+  {
+    m_trackingController->Track(trackingState.get(), view.get());
+  }
+
+  // If there was an active input mask, restore the original depth image after tracking.
+  if(maskedDepthImage) view->depth->Swap(*maskedDepthImage);
 
   // Determine the tracking quality, taking into account the failure mode being used.
   ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
