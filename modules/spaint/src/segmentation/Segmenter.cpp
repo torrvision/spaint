@@ -17,11 +17,4 @@ Segmenter::Segmenter(const View_CPtr& view)
 
 Segmenter::~Segmenter() {}
 
-//#################### PUBLIC MEMBER FUNCTIONS ####################
-
-ITMUCharImage_CPtr Segmenter::get_target_mask() const
-{
-  return m_targetMask;
-}
-
 }

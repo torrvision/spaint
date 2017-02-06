@@ -73,15 +73,6 @@ public:
    * \return            A visualisation of the training process to enable the user to see what's going on.
    */
   virtual ITMUChar4Image_Ptr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
-
-  //#################### PUBLIC MEMBER FUNCTIONS ####################
-public:
-  /**
-   * \brief Gets the most recent target mask produced by the segmentation process.
-   *
-   * \return  The most recent target mask produced by the segmentation process.
-   */
-  ITMUCharImage_CPtr get_target_mask() const;
 };
 
 //#################### TYPEDEFS ####################
