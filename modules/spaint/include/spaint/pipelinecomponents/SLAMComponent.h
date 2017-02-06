@@ -120,6 +120,9 @@ private:
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
 
+  /** The ID of the scene (if any) whose pose is to be mirrored. */
+  std::string m_mirrorSceneID;
+
   /** The database of previous poses for relocalisation. */
   PoseDatabase_Ptr m_poseDatabase;
 
@@ -178,6 +181,13 @@ public:
    * \return  true, if the user wants fusion to be run, or false otherwise.
    */
   bool get_fusion_enabled() const;
+
+  /**
+   * \brief Makes the SLAM component mirror the pose of the specified scene, rather than using its own tracker.
+   *
+   * \param mirrorSceneID The ID of the scene whose pose is to be mirrored.
+   */
+  void mirror_pose_of(const std::string& mirrorSceneID);
 
   /**
    * \brief Attempts to run the SLAM component for a single frame.
