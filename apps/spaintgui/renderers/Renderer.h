@@ -247,12 +247,10 @@ private:
   /**
    * \brief Renders the specified reconstructed scene into a sub-window.
    *
-   * \param sceneID           The scene ID.
-   * \param pose              The camera pose.
-   * \param voxelRenderState  The voxel render state corresponding to the camera pose.
-   * \param surfelRenderState The surfel render state corresponding to the camera pose.
-   * \param subwindow         The sub-window into which to render.
-   * \param viewIndex         The index of the free camera view for the sub-window.
+   * \param sceneID   The scene ID.
+   * \param pose      The camera pose.
+   * \param subwindow The sub-window into which to render.
+   * \param viewIndex The index of the free camera view for the sub-window.
    */
   void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const;
 
