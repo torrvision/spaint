@@ -23,6 +23,11 @@ const std::map<std::string,Fiducial_Ptr>& SLAMState::get_fiducials() const
   return m_fiducials;
 }
 
+ITMUCharImage_CPtr SLAMState::get_input_mask() const
+{
+  return m_inputMask;
+}
+
 const ITMShortImage_Ptr& SLAMState::get_input_raw_depth_image()
 {
   return m_inputRawDepthImage;
@@ -110,6 +115,11 @@ const SpaintVoxelScene_Ptr& SLAMState::get_voxel_scene()
 SpaintVoxelScene_CPtr SLAMState::get_voxel_scene() const
 {
   return m_voxelScene;
+}
+
+void SLAMState::set_input_mask(const ITMUCharImage_Ptr& inputMask)
+{
+  m_inputMask = inputMask;
 }
 
 void SLAMState::set_input_raw_depth_image(const ITMShortImage_Ptr& inputRawDepthImage)

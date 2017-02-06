@@ -26,6 +26,9 @@ private:
   /** The fiducials (if any) that have been detected in the 3D scene. */
   std::map<std::string,Fiducial_Ptr> m_fiducials;
 
+  /** The mask to apply to the input images during tracking. */
+  ITMUCharImage_Ptr m_inputMask;
+
   /** The image into which depth input is read each frame. */
   ITMShortImage_Ptr m_inputRawDepthImage;
 
@@ -65,6 +68,13 @@ public:
    * \return  The fiducials (if any) that have been detected in the 3D scene.
    */
   const std::map<std::string,Fiducial_Ptr>& get_fiducials() const;
+
+  /**
+   * \brief Gets the mask to apply to the input images during tracking.
+   *
+   * \return  The mask to apply to the input images during tracking (may be NULL).
+   */
+  ITMUCharImage_CPtr get_input_mask() const;
 
   /**
    * \brief Gets the image into which depth input is read each frame.
@@ -184,6 +194,13 @@ public:
    * \return  The voxel scene.
    */
   SpaintVoxelScene_CPtr get_voxel_scene() const;
+
+  /**
+   * \brief Sets the mask to apply to the input images during tracking.
+   *
+   * \param inputMask The mask to apply to the input images during tracking (may be NULL).
+   */
+  void set_input_mask(const ITMUCharImage_Ptr& inputMask);
 
   /**
    * \brief Sets the image into which depth input is read each frame.
