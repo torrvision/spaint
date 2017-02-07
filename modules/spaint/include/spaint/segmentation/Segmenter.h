@@ -72,7 +72,7 @@ public:
    * \param renderState The render state corresponding to the camera.
    * \return            A visualisation of the training process to enable the user to see what's going on.
    */
-  virtual ITMUChar4Image_Ptr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
+  virtual ITMUChar4Image_CPtr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) = 0;
 };
 
 //#################### TYPEDEFS ####################
