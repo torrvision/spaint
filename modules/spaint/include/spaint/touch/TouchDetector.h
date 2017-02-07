@@ -117,14 +117,7 @@ public:
    * \param view  The current view.
    * \return      A colour image containing the current touch interaction (if any).
    */
-  ITMUChar4Image_Ptr generate_touch_image(const View_CPtr& view) const;
-
-  /**
-   * \brief Gets a mask of the changes that have been detected in the scene with respect to the reconstructed model.
-   *
-   * \return  A mask of the changes that have been detected in the scene with respect to the reconstructed model.
-   */
-  ITMUCharImage_Ptr get_change_mask() const;
+  ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
 
   /**
    * \brief Gets the depth of the reconstructed model as viewed from the current camera pose.
@@ -138,7 +131,7 @@ public:
    *
    * \return  An image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast.
    */
-  ITMFloatImage_Ptr get_diff_raw_raycast() const;
+  ITMFloatImage_CPtr get_diff_raw_raycast() const;
 
   /**
    * \brief Gets a mask denoting the detected touch region.

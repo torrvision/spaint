@@ -54,7 +54,7 @@ public:
   virtual ITMUCharImage_CPtr segment(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState) const;
 
   /** Override */
-  virtual ITMUChar4Image_Ptr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
+  virtual ITMUChar4Image_CPtr train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

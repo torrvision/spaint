@@ -148,7 +148,7 @@ catch(af::exception&)
   return std::vector<Eigen::Vector2i>();
 }
 
-ITMUChar4Image_Ptr TouchDetector::generate_touch_image(const View_CPtr& view) const
+ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) const
 {
   static Vector2i imgSize = ImageProcessor::image_size(m_touchMask);
   static ITMUCharImage_Ptr touchMask(new ITMUCharImage(imgSize, true, true));
@@ -214,18 +214,12 @@ ITMUChar4Image_Ptr TouchDetector::generate_touch_image(const View_CPtr& view) co
   return touchImage;
 }
 
-ITMUCharImage_Ptr TouchDetector::get_change_mask() const
-{
-  static ITMUCharImage_Ptr changeMask;
-  return m_imageProcessor->convert_af_to_itm(m_changeMask, changeMask);
-}
-
 ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
 {
   return m_depthRaycast;
 }
 
-ITMFloatImage_Ptr TouchDetector::get_diff_raw_raycast() const
+ITMFloatImage_CPtr TouchDetector::get_diff_raw_raycast() const
 {
   static ITMFloatImage_Ptr diffRawRaycast;
   return m_imageProcessor->convert_af_to_itm(m_diffRawRaycast, diffRawRaycast);

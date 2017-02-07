@@ -90,7 +90,7 @@ void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderSta
   const Segmenter_Ptr& segmenter = get_segmenter();
   if(!segmenter) return;
 
-  ITMUChar4Image_Ptr touchImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
+  ITMUChar4Image_CPtr touchImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
   m_context->set_segmentation_image(m_sceneID, touchImage);
 }
 

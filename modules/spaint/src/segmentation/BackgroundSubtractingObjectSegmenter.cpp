@@ -124,7 +124,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::segment(const ORUtils::
   return m_targetMask;
 }
 
-ITMUChar4Image_Ptr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
+ITMUChar4Image_CPtr BackgroundSubtractingObjectSegmenter::train(const ORUtils::SE3Pose& pose, const RenderState_CPtr& renderState)
 {
   // Copy the current colour and depth input images across to the CPU.
   ITMUChar4Image_CPtr rgbInput(m_view->rgb, boost::serialization::null_deleter());
@@ -209,7 +209,7 @@ ITMUCharImage_CPtr BackgroundSubtractingObjectSegmenter::make_change_mask(const 
   cv::dilate(depthEdges, dilatedDepthEdges, kernel);
 
   // Get the difference between the live depth image and the depth raycast of the scene.
-  ITMFloatImage_Ptr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
+  ITMFloatImage_CPtr diffRawRaycast = m_touchDetector->get_diff_raw_raycast();
   const float *diffRawRaycastPtr = diffRawRaycast->GetData(MEMORYDEVICE_CPU);
 
   // Make an initial change mask, starting from the whole image and filtering out pixels based on some simple criteria.
