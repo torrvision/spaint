@@ -22,10 +22,10 @@ private:
   /** The shared context needed for object segmentation. */
   ObjectSegmentationContext_Ptr m_context;
 
-  /** TODO */
+  /** A flag controlling whether or not to write the masked RGB and depth images to the output pipe. */
   bool m_outputEnabled;
 
-  /** TODO */
+  /** The pipe to which to write the masked RGB and depth images resulting from the segmentation process. */
   SingleRGBDImagePipe_Ptr m_outputPipe;
 
   /** The ID of the scene on which the component should operate. */
@@ -38,7 +38,7 @@ public:
    *
    * \param context     The shared context needed for object segmentation.
    * \param sceneID     The ID of the scene on which the component should operate.
-   * \param outputPipe  TODO
+   * \param outputPipe  The pipe to which to write the masked RGB and depth images resulting from the segmentation process.
    */
   ObjectSegmentationComponent(const ObjectSegmentationContext_Ptr& context, const std::string& sceneID, const SingleRGBDImagePipe_Ptr& outputPipe = SingleRGBDImagePipe_Ptr());
 
@@ -64,7 +64,7 @@ public:
   void run_segmentation_training(const VoxelRenderState_CPtr& renderState);
 
   /**
-   * \brief TODO
+   * \brief Toggles whether or not to write the masked RGB and depth images to the output pipe.
    */
   void toggle_output();
 
