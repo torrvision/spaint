@@ -6,8 +6,6 @@
 #ifndef H_SPAINT_SINGLERGBDIMAGEPIPE
 #define H_SPAINT_SINGLERGBDIMAGEPIPE
 
-#include <boost/optional.hpp>
-
 #include "../util/ITMImagePtrTypes.h"
 #include "../util/ITMObjectPtrTypes.h"
 
