@@ -166,10 +166,12 @@ include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
 ##
 SET(imagesources_sources
 src/imagesources/AsyncImageSourceEngine.cpp
+src/imagesources/SingleRGBDImagePipe.cpp
 )
 
 SET(imagesources_headers
 include/spaint/imagesources/AsyncImageSourceEngine.h
+include/spaint/imagesources/SingleRGBDImagePipe.h
 )
 
 ##
