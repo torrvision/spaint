@@ -7,6 +7,7 @@
 #define H_SPAINTGUI_MODEL
 
 #include <spaint/markers/interface/VoxelMarker.h>
+#include <spaint/pipelinecomponents/ObjectSegmentationContext.h>
 #include <spaint/pipelinecomponents/PropagationContext.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationContext.h>
 #include <spaint/pipelinecomponents/SLAMContext.h>
@@ -23,7 +24,8 @@
  * and labelling it interactively using various user input modalities.
  */
 class Model
-: public spaint::PropagationContext,
+: public spaint::ObjectSegmentationContext,
+  public spaint::PropagationContext,
   public spaint::SemanticSegmentationContext,
   public spaint::SLAMContext,
   public spaint::SmoothingContext
