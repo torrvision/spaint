@@ -93,6 +93,12 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
     case MODE_PROPAGATION:
       MapUtil::call_if_found(m_propagationComponents, sceneID, boost::bind(&PropagationComponent::run, _1, renderState));
       break;
+    case MODE_SEGMENTATION:
+      MapUtil::call_if_found(m_objectSegmentationComponents, sceneID, boost::bind(&ObjectSegmentationComponent::run_segmentation, _1, renderState));
+      break;
+    case MODE_SEGMENTATION_TRAINING:
+      MapUtil::call_if_found(m_objectSegmentationComponents, sceneID, boost::bind(&ObjectSegmentationComponent::run_segmentation_training, _1, renderState));
+      break;
     case MODE_SMOOTHING:
       MapUtil::call_if_found(m_smoothingComponents, sceneID, boost::bind(&SmoothingComponent::run, _1, renderState));
       break;
@@ -122,4 +128,9 @@ void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool d
 void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fusionEnabled)
 {
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
+}
+
+void MultiScenePipeline::toggle_segmentation_output()
+{
+  MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::toggle_output, _1));
 }

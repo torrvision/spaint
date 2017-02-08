@@ -176,6 +176,12 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     m_paused = false;
   }
 
+  // If the O key is pressed, toggle segmentation output.
+  if(keysym.sym == KEYCODE_o)
+  {
+    m_pipeline->toggle_segmentation_output();
+  }
+
   // If left control + R is pressed, reset the active scene.
   if(keysym.sym == KEYCODE_r && m_inputState.key_down(KEYCODE_LCTRL))
   {
@@ -256,6 +262,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "I + 2 = To Picking Selector\n"
               << "I + 3 = To Leap Selector\n"
               << "I + 4 = To Touch Selector\n"
+              << "L = Label With Leap Selector (Whilst Held)\n"
               << "M + 1 = To Normal Mode\n"
               << "M + 2 = To Propagation Mode\n"
               << "M + 3 = To Training Mode\n"
@@ -554,6 +561,8 @@ void Application::process_mode_input()
     else if(m_inputState.key_down(KEYCODE_5)) mode = MultiScenePipeline::MODE_TRAIN_AND_PREDICT;
     else if(m_inputState.key_down(KEYCODE_6)) mode = MultiScenePipeline::MODE_SMOOTHING;
     else if(m_inputState.key_down(KEYCODE_7)) mode = MultiScenePipeline::MODE_FEATURE_INSPECTION;
+    else if(m_inputState.key_down(KEYCODE_8)) mode = MultiScenePipeline::MODE_SEGMENTATION_TRAINING;
+    else if(m_inputState.key_down(KEYCODE_9)) mode = MultiScenePipeline::MODE_SEGMENTATION;
   }
   m_pipeline->set_mode(mode);
 }

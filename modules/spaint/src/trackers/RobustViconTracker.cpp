@@ -19,8 +19,8 @@ RobustViconTracker::RobustViconTracker(const std::string& host, const std::strin
                                        const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const SpaintVoxelScene_Ptr& scene)
 {
   m_viconTracker.reset(new ViconTracker(host, subjectName));
-  m_icpTracker.reset(ITMTrackerFactory<SpaintVoxel,ITMVoxelIndex>::Instance().Make(
-    rgbImageSize, depthImageSize, settings.get(), lowLevelEngine.get(), NULL, scene.get()
+  m_icpTracker.reset(ITMTrackerFactory::Instance().Make(
+    rgbImageSize, depthImageSize, settings.get(), lowLevelEngine.get(), NULL, scene->sceneParams
   ));
 }
 

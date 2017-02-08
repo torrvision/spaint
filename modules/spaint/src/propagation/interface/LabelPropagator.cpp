@@ -18,6 +18,10 @@ LabelPropagator::LabelPropagator(size_t raycastResultSize, float maxAngleBetween
   m_surfaceNormalsMB(MemoryBlockFactory::instance().make_block<Vector3f>(raycastResultSize))
 {}
 
+//#################### DESTRUCTOR ####################
+
+LabelPropagator::~LabelPropagator() {}
+
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void LabelPropagator::propagate_label(SpaintVoxel::Label label, const ITMFloat4Image *raycastResult, SpaintVoxelScene *scene) const

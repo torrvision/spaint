@@ -8,6 +8,7 @@ using namespace ITMLib;
 using namespace rafl;
 
 #include <boost/format.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include <tvgutil/misc/ArgUtil.h>
 using namespace tvgutil;
@@ -44,7 +45,7 @@ TouchDetector::TouchDetector(const Vector2i& imgSize, const Settings_CPtr& itmSe
   m_touchDebuggingOutputWindowName("TouchDebuggingOutputWindow"),
 
   // Normal variables.
-  m_changeMask(imgSize.y, imgSize.x),
+  m_changeMask(new af::array(imgSize.y, imgSize.x)),
   m_connectedComponentImage(imgSize.y, imgSize.x, u32),
   m_depthRaycast(new ITMFloatImage(imgSize, true, true)),
   m_depthVisualiser(VisualiserFactory::make_depth_visualiser(itmSettings->deviceType)),
@@ -88,7 +89,7 @@ try
   detect_changes();
 
   // Make a connected-component image from the change mask.
-  m_connectedComponentImage = af::regions(m_changeMask);
+  m_connectedComponentImage = af::regions(*m_changeMask);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_CONNECTED_COMPONENTS)
   // Display the connected components.
@@ -213,6 +214,33 @@ ITMUChar4Image_CPtr TouchDetector::generate_touch_image(const View_CPtr& view) c
   return touchImage;
 }
 
+ITMFloatImage_CPtr TouchDetector::get_depth_raycast() const
+{
+  return m_depthRaycast;
+}
+
+ITMFloatImage_CPtr TouchDetector::get_diff_raw_raycast() const
+{
+  static ITMFloatImage_Ptr diffRawRaycast;
+  return m_imageProcessor->convert_af_to_itm(m_diffRawRaycast, diffRawRaycast);
+}
+
+ITMUCharImage_CPtr TouchDetector::get_touch_mask() const
+{
+  static ITMUCharImage_Ptr touchMask;
+  return m_imageProcessor->convert_af_to_itm(m_touchMask, touchMask);
+}
+
+ITMFloatImage_CPtr TouchDetector::get_thresholded_raw_depth() const
+{
+  return m_thresholdedRawDepth;
+}
+
+float TouchDetector::invalid_depth_value() const
+{
+  return 100.0f;
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void TouchDetector::detect_changes()
@@ -236,7 +264,7 @@ void TouchDetector::detect_changes()
   // Threshold the difference image to find significant differences between the raw depth image
   // and the depth raycast. Such differences indicate locations in which the scene has changed
   // since it was originally reconstructed, e.g. the locations of moving objects such as hands.
-  m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
+  *m_changeMask = *m_diffRawRaycast > (m_touchSettings->lowerDepthThresholdMm / 1000.0f);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY)
   // Display the change mask.
@@ -248,8 +276,8 @@ void TouchDetector::detect_changes()
   if(morphKernelSize < 3) morphKernelSize = 3;
   if(morphKernelSize % 2 == 0) ++morphKernelSize;
   af::array morphKernel = af::constant(1, morphKernelSize, morphKernelSize);
-  m_changeMask = af::erode(m_changeMask, morphKernel);
-  m_changeMask = af::dilate(m_changeMask, morphKernel);
+  *m_changeMask = af::erode(*m_changeMask, morphKernel);
+  *m_changeMask = af::dilate(*m_changeMask, morphKernel);
 
 #if defined(WITH_OPENCV) && defined(DEBUG_TOUCH_DISPLAY_DENOISED_CHANGE_MASK)
   // Display the change mask after applying morphological operations.
@@ -391,14 +419,13 @@ void TouchDetector::prepare_inputs(const rigging::MoveableCamera_CPtr& camera, c
   // As with the raw depth image, the pixel values of this raycast denote depth values in metres.
   // We assume that parts of the scene for which we have no information are far away (at an
   // arbitrarily large depth of 100m).
-  const float invalidDepthValue = 100.0f;
   m_depthVisualiser->render_depth(
     DepthVisualiser::DT_ORTHOGRAPHIC,
     to_itm(camera->p()),
     to_itm(camera->n()),
     renderState.get(),
     m_itmSettings->sceneParams.voxelSize,
-    invalidDepthValue,
+    invalid_depth_value(),
     m_depthRaycast
   );
 }
@@ -454,7 +481,7 @@ af::array TouchDetector::select_candidate_components()
   m_connectedComponentImage += 1;
 
   // Set all regions in the connected component image which are in the static scene to zero.
-  m_connectedComponentImage *= m_changeMask;
+  m_connectedComponentImage *= *m_changeMask;
 
   // Calculate the areas of the connected components.
   const int componentCount = af::max<int>(m_connectedComponentImage) + 1;

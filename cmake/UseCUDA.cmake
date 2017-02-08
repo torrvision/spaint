@@ -2,11 +2,11 @@
 # UseCUDA.cmake #
 #################
 
-OPTION(WITH_CUDA "Build with CUDA support?" ON)
+FIND_PACKAGE(CUDA QUIET)
+
+OPTION(WITH_CUDA "Build with CUDA support?" ${CUDA_FOUND})
 
 IF(WITH_CUDA)
-  FIND_PACKAGE(CUDA)
-
   SET(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" FORCE)
 
   # Auto-detect the CUDA compute capability.

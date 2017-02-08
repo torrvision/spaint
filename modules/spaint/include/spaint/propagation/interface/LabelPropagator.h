@@ -43,6 +43,13 @@ protected:
    */
   LabelPropagator(size_t raycastResultSize, float maxAngleBetweenNormals, float maxSquaredDistanceBetweenColours, float maxSquaredDistanceBetweenVoxels);
 
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys the label propagator.
+   */
+  virtual ~LabelPropagator();
+
   //#################### PRIVATE ABSTRACT MEMBER FUNCTIONS ####################
 private:
   /**
