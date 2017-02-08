@@ -186,7 +186,7 @@ public:
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
 
   /**
-   * \brief TODO
+   * \brief Toggles whether or not the world scene's object segmentation component (if any) should write to its output pipe.
    */
   void toggle_segmentation_output();
 };
