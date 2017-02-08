@@ -55,12 +55,14 @@ commands/MarkVoxelsCommand.h
 SET(core_sources
 core/Model.cpp
 core/MultiScenePipeline.cpp
+core/ObjectivePipeline.cpp
 core/SemanticPipeline.cpp
 )
 
 SET(core_headers
 core/Model.h
 core/MultiScenePipeline.h
+core/ObjectivePipeline.h
 core/SemanticPipeline.h
 )
 

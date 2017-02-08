@@ -243,6 +243,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
               << "Q = Move Up\n"
               << "E = Move Down\n"
               << "F = Toggle Fusion\n"
+              << "O = Toggle Segmentation Output\n"
               << "P = Toggle Pose Mirroring\n"
               << "Up = Look Down\n"
               << "Down = Look Up\n"
