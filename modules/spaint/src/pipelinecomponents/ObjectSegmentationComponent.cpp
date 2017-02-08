@@ -55,23 +55,24 @@ void ObjectSegmentationComponent::run_segmentation(const VoxelRenderState_CPtr& 
     return;
   }
 
-  // Make masked versions of the depth and colour inputs.
+  // Make masked versions of the depth and RGB inputs.
   View_CPtr view = slamState->get_view();
   ITMUChar4Image_Ptr colouredDepthInput(new ITMUChar4Image(view->depth->dataSize, true, false));
   m_context->get_visualisation_generator()->get_depth_input(colouredDepthInput, view);
-  ITMShortImage_Ptr depthInput = slamState->get_input_raw_depth_image_copy();
+  ITMShortImage_CPtr depthInput = slamState->get_input_raw_depth_image_copy();
   ITMUChar4Image_CPtr rgbInput(slamState->get_view()->rgb, boost::serialization::null_deleter());
 
   ITMUChar4Image_CPtr colouredDepthMasked = SegmentationUtil::apply_mask(targetMask, colouredDepthInput, Vector4u((uchar)0));
-  ITMShortImage_Ptr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput, 0);
+  ITMShortImage_CPtr depthMasked = SegmentationUtil::apply_mask(targetMask, depthInput, 0);
   ITMUChar4Image_CPtr rgbMasked = SegmentationUtil::apply_mask(targetMask, rgbInput, Vector4u((uchar)0));
 
+  // If output is enabled, write the masked images to the output pipe.
   if(m_outputEnabled && m_outputPipe) m_outputPipe->set_images(rgbMasked, depthMasked);
 
+  // If we're currently saving a segmentation video, save the original and masked versions of the depth and colour inputs to disk.
   boost::optional<SequentialPathGenerator>& segmentationPathGenerator = m_context->get_segmentation_path_generator();
   if(segmentationPathGenerator)
   {
-    // Save the original and masked versions of the depth and colour inputs to disk so that they can be used later for training.
     segmentationPathGenerator->increment_index();
     ImagePersister::save_image_on_thread(colouredDepthInput, segmentationPathGenerator->make_path("cdepth%06i.png"));
     ImagePersister::save_image_on_thread(colouredDepthMasked, segmentationPathGenerator->make_path("cdepthm%06i.png"));
@@ -90,8 +91,8 @@ void ObjectSegmentationComponent::run_segmentation_training(const VoxelRenderSta
   const Segmenter_Ptr& segmenter = get_segmenter();
   if(!segmenter) return;
 
-  ITMUChar4Image_CPtr touchImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
-  m_context->set_segmentation_image(m_sceneID, touchImage);
+  ITMUChar4Image_CPtr segmentationImage = segmenter->train(m_context->get_slam_state(m_sceneID)->get_pose(), renderState);
+  m_context->set_segmentation_image(m_sceneID, segmentationImage);
 }
 
 void ObjectSegmentationComponent::toggle_output()
