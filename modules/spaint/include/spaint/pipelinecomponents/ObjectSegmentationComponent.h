@@ -8,7 +8,6 @@
 
 #include "ObjectSegmentationContext.h"
 #include "../imagesources/SingleRGBDImagePipe.h"
-#include "../segmentation/Segmenter.h"
 
 namespace spaint {
 

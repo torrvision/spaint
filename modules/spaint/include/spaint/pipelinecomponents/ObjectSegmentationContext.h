@@ -73,8 +73,8 @@ public:
   /**
    * \brief Sets the overlay image (if any) to render whilst performing segmentation in the specified scene.
    *
-   * \param segmentationImage The overlay image (if any) to render whilst performing segmentation in the specified scene.
    * \param sceneID           The ID of the scene in which segmentation is being performed.
+   * \param segmentationImage The overlay image (if any) to render whilst performing segmentation in the specified scene.
    */
   virtual void set_segmentation_image(const std::string& sceneID, const ITMUChar4Image_CPtr& segmentationImage);
 
