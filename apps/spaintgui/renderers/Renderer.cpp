@@ -511,6 +511,13 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
           CameraRenderer::render_camera(cam, CameraRenderer::AXES_XYZ, 0.1f, Vector3f(c, c, 0.0f));
         }
       }
+
+      // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
+      if(cameraMode == Subwindow::CM_FOLLOW)
+      {
+        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
+        if(segmentationImage) render_overlay(segmentationImage);
+      }
     }
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();

@@ -6,6 +6,7 @@
 #ifndef H_SPAINTGUI_MULTISCENEPIPELINE
 #define H_SPAINTGUI_MULTISCENEPIPELINE
 
+#include <spaint/pipelinecomponents/ObjectSegmentationComponent.h>
 #include <spaint/pipelinecomponents/PropagationComponent.h>
 #include <spaint/pipelinecomponents/SemanticSegmentationComponent.h>
 #include <spaint/pipelinecomponents/SLAMComponent.h>
@@ -37,6 +38,12 @@ public:
     /** In propagation mode, labels supplied by the user are propagated across surfaces in the scene. */
     MODE_PROPAGATION,
 
+    /** In segmentation mode, the segmenter is used to separate its target from the rest of the scene. */
+    MODE_SEGMENTATION,
+
+    /** In segmentation training mode, the segmenter is trained to separate its target from the rest of the scene. */
+    MODE_SEGMENTATION_TRAINING,
+
     /** In smoothing mode, voxel labels are filled in based on the labels of neighbouring voxels. */
     MODE_SMOOTHING,
 
@@ -54,6 +61,9 @@ protected:
 
   /** The spaint model. */
   Model_Ptr m_model;
+
+  /** The object segmentation components for the scenes. */
+  std::map<std::string,spaint::ObjectSegmentationComponent_Ptr> m_objectSegmentationComponents;
 
   /** The propagation components for the scenes. */
   std::map<std::string,spaint::PropagationComponent_Ptr> m_propagationComponents;
@@ -174,6 +184,11 @@ public:
    * \param fusionEnabled Whether or not the user wants fusion to be run as part of the pipeline for the specified scene.
    */
   void set_fusion_enabled(const std::string& sceneID, bool fusionEnabled);
+
+  /**
+   * \brief Toggles whether or not the world scene's object segmentation component (if any) should write to its output pipe.
+   */
+  void toggle_segmentation_output();
 };
 
 //#################### TYPEDEFS ####################
