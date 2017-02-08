@@ -18,7 +18,7 @@ using namespace tvgutil;
 ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
                                      TrackerType trackerType, const std::string& trackerParams, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
                                      const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, bool mirrorWorldPose)
-: MultiScenePipeline(settings, resourcesDir, maxLabelCount)
+: MultiScenePipeline("objective", settings, resourcesDir, maxLabelCount)
 {
   const std::string worldSceneID = Model::get_world_scene_id();
   SingleRGBDImagePipe_Ptr pipe(new SingleRGBDImagePipe(imageSourceEngine));

@@ -6,14 +6,40 @@
 #include "SubwindowConfiguration.h"
 using namespace spaint;
 
+//#################### HELPER TYPES ####################
+
+namespace {
+
+/**
+ * \brief An instance of this struct can be used to specify what should be rendered in a subwindow.
+ */
+struct SubwindowSpecifier
+{
+  //#################### PUBLIC VARIABLES ####################
+
+  /** The ID of the scene to render in the sub-window. */
+  std::string m_sceneID;
+
+  /** The type of scene visualisation to render in the sub-window. */
+  VisualisationGenerator::VisualisationType m_visualisationType;
+
+  //#################### CONSTRUCTORS ####################
+
+  SubwindowSpecifier(const std::string& sceneID, const VisualisationGenerator::VisualisationType& visualisationType)
+  : m_sceneID(sceneID), m_visualisationType(visualisationType)
+  {}
+};
+
+}
+
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindowCount, const Vector2i& imgSize)
+SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindowCount, const Vector2i& imgSize, const std::string& pipelineType)
 {
   SubwindowConfiguration_Ptr config;
   if(subwindowCount > 0) config.reset(new SubwindowConfiguration);
 
-  const std::string worldSceneID = "World";
+  const std::string worldSceneID = "World", objectSceneID = "Object";
 
   switch(subwindowCount)
   {
@@ -25,8 +51,16 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
     case 2:
     {
       const float x = 0.5f;
-      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), "Object", VisualisationGenerator::VT_SCENE_COLOUR, imgSize));
+
+      std::vector<SubwindowSpecifier> specifiers;
+      specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN));
+
+      if(pipelineType == "semantic")       specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR));
+      else if(pipelineType == "objective") specifiers.push_back(SubwindowSpecifier(objectSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
+
+      config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), specifiers[0].m_sceneID, specifiers[0].m_visualisationType, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), specifiers[1].m_sceneID, specifiers[1].m_visualisationType, imgSize));
+
       break;
     }
     case 3:

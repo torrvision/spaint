@@ -139,7 +139,9 @@ SubwindowConfiguration_Ptr Application::get_subwindow_configuration(size_t i) co
 
   if(!m_subwindowConfigurations[i])
   {
-    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(i, m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size());
+    m_subwindowConfigurations[i] = SubwindowConfiguration::make_default(
+      i, m_pipeline->get_model()->get_slam_state(Model::get_world_scene_id())->get_depth_image_size(), m_pipeline->get_type()
+    );
   }
 
   return m_subwindowConfigurations[i];
