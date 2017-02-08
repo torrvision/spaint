@@ -275,6 +275,8 @@ include/spaint/picking/shared/Picker_Shared.h
 
 ##
 SET(pipelinecomponents_sources
+src/pipelinecomponents/ObjectSegmentationComponent.cpp
+src/pipelinecomponents/ObjectSegmentationContext.cpp
 src/pipelinecomponents/PropagationComponent.cpp
 src/pipelinecomponents/SemanticSegmentationComponent.cpp
 src/pipelinecomponents/SLAMComponent.cpp
@@ -283,6 +285,8 @@ src/pipelinecomponents/SmoothingComponent.cpp
 )
 
 SET(pipelinecomponents_headers
+include/spaint/pipelinecomponents/ObjectSegmentationComponent.h
+include/spaint/pipelinecomponents/ObjectSegmentationContext.h
 include/spaint/pipelinecomponents/PropagationComponent.h
 include/spaint/pipelinecomponents/PropagationContext.h
 include/spaint/pipelinecomponents/SemanticSegmentationComponent.h
