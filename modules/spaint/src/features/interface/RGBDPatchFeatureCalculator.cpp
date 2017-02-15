@@ -7,30 +7,41 @@
 
 #include <iostream>
 
-#include "tvgutil/numbers/RandomNumberGenerator.h"
+#include <tvgutil/numbers/RandomNumberGenerator.h>
+using namespace tvgutil;
+
 #include "util/MemoryBlockFactory.h"
 
-namespace spaint
-{
+//#################### HELPER FUNCTIONS ####################
 
 namespace
 {
+
 /**
- * \brief Generates a random integer offset in the intervals [-max, -min] and [min, max] using rng.
+ * \brief Generates a random integer offset in the intervals [-max, -min] and [min, max]
+ *        using the specified random number generator.
+ *
+ * \param rng The random number generator to use.
+ * \param min TODO
+ * \param max TODO
+ * \return    TODO
  */
-int generate_offset(tvgutil::RandomNumberGenerator &rng, int min, int max)
+int generate_offset(RandomNumberGenerator& rng, int min, int max)
 {
   static const int signMin = 0;
   static const int signMax = 1;
-  return rng.generate_int_from_uniform(min, max)
-      * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
-}
+  return rng.generate_int_from_uniform(min, max) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
 }
 
+}
+
+namespace spaint {
+
 //#################### CONSTRUCTORS ####################
+
 RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 {
-  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Setup the features in the same way as Julien's code
   m_featureStep = 4;
@@ -47,7 +58,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   // Setup colour features
   {
     // Force the default seed found in both the std and boost headers.
-    tvgutil::RandomNumberGenerator rng(5489u);
+    RandomNumberGenerator rng(5489u);
 
     const int channelMin = 0;
     const int channelMax = 2;
@@ -78,7 +89,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   // Setup depth features
   {
     // Force the default seed found in both the std and boost headers.
-    tvgutil::RandomNumberGenerator rng(5489u);
+    RandomNumberGenerator rng(5489u);
 
     const int radiusMin = 1;       // From Julien's code (was 2 / 2).
     const int radiusMax = 130 / 2; // From Julien's code.
@@ -101,15 +112,13 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 }
 
 //#################### DESTRUCTOR ####################
-RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator()
-{
-}
+
+RGBDPatchFeatureCalculator::~RGBDPatchFeatureCalculator() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
-void RGBDPatchFeatureCalculator::compute_feature(const ITMUChar4Image *rgbImage,
-    const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-    Keypoint3DColourImage *keypointsImage,
-    RGBDPatchDescriptorImage *featuresImage) const
+
+void RGBDPatchFeatureCalculator::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
+                                                 Keypoint3DColourImage *keypointsImage, RGBDPatchDescriptorImage *featuresImage) const
 {
   // Use the identity transform to call the virtual function.
   // Keypoints will have 3D coordinates in camera reference frame.
