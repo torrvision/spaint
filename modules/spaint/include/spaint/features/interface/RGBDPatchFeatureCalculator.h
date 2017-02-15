@@ -7,6 +7,7 @@
 #define H_SPAINT_RGBDPATCHFEATURECALCULATOR
 
 #include <boost/shared_ptr.hpp>
+
 #include "RGBDPatchFeature.h"
 #include "../../util/ITMImagePtrTypes.h"
 #include "../../util/ITMMemoryBlockPtrTypes.h"
@@ -25,7 +26,7 @@ class RGBDPatchFeatureCalculator
 {
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
-  /** A MemoryBlock storing the colour channels associated to the RGB part of the descriptor. */
+  /** A memory block storing the colour channels associated to the RGB part of the descriptor. */
   ITMUCharMemoryBlock_Ptr m_channelsRgb;
 
   /** The step used to sample keypoints from the image. */
@@ -37,11 +38,11 @@ protected:
   /** Whether or not to normalize RGB offsets by the depth associated to the corresponding keypoint. */
   bool m_normalizeRgb;
 
-  /** A MemoryBlock storing the offsets used to sample the colour pixels used in the descriptor. */
-  ITMInt4MemoryBlock_Ptr m_offsetsRgb;
-
-  /** A MemoryBlock storing the offsets used to sample the depth values used in the descriptor. */
+  /** A memory block storing the offsets used to sample the depth values used in the descriptor. */
   ITMInt4MemoryBlock_Ptr m_offsetsDepth;
+
+  /** A memory block storing the offsets used to sample the colour pixels used in the descriptor. */
+  ITMInt4MemoryBlock_Ptr m_offsetsRgb;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -52,6 +53,9 @@ public:
 
   //#################### DESTRUCTOR ####################
 public:
+  /**
+   * \brief Destroys the RGBD patch feature calculator.
+   */
   virtual ~RGBDPatchFeatureCalculator();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
@@ -78,11 +82,8 @@ public:
    *                        world reference frame that will be applied to the 3D
    *                        keypoint positions.
    */
-  virtual void compute_feature(const ITMUChar4Image *rgbImage,
-      const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      Keypoint3DColourImage *keypointsImage,
-      RGBDPatchDescriptorImage *featuresImage,
-      const Matrix4f &cameraPose) const = 0;
+  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
+                               Keypoint3DColourImage *keypointsImage, RGBDPatchDescriptorImage *featuresImage, const Matrix4f &cameraPose) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -104,15 +105,13 @@ public:
    *                        of the extracted features. Will be resized as necessary.
    * \param featuresImage   The output image that will contain the descriptors.
    */
-  void compute_feature(const ITMUChar4Image *rgbImage,
-      const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      Keypoint3DColourImage *keypointsImage,
-      RGBDPatchDescriptorImage *featuresImage) const;
+  void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
+                       Keypoint3DColourImage *keypointsImage, RGBDPatchDescriptorImage *featuresImage) const;
 
   /**
-   * \brief Returns the step used when selecting keypoints and computing the features.
+   * \brief Gets the step used when selecting keypoints and computing the features.
    *
-   * \return Returns the step used when selecting keypoints and computing the features.
+   * \return  The step used when selecting keypoints and computing the features.
    */
   uint32_t get_feature_step() const;
 
