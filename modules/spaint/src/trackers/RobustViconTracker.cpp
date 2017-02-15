@@ -36,6 +36,11 @@ bool RobustViconTracker::requiresDepthReliability() const
   return false;
 }
 
+bool RobustViconTracker::requiresPointCloudRendering() const
+{
+  return true;
+}
+
 void RobustViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   // Record the initial pose.
