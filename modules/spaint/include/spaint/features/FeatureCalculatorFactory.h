@@ -33,7 +33,7 @@ struct FeatureCalculatorFactory
                                                             ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
-   * \brief Makes an RGBD Patch feature calculator.
+   * \brief Makes an RGBD patch feature calculator.
    *
    * \param deviceType The device on which the feature calculator should operate.
    */
