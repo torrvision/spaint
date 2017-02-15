@@ -13,29 +13,49 @@
 
 namespace spaint
 {
+
 /**
- * \brief An instance of this class allows to compute features based on
- *        depth and colour differences in RGBD images.
+ * \brief An instance of a class deriving from this one can be used to compute
+ *        features based on depth and colour differences in RGBD images.
  *
- *        The features are computed as described in:
- *        "Exploiting uncertainty in regression forests for accurate camera relocalization"
- *        by Valentin et al.
+ * The features are computed as described by Valentin et al. in "Exploiting
+ * Uncertainty in Regression Forests for Accurate Camera Relocalization".
  */
 class RGBDPatchFeatureCalculator
 {
+  //#################### PROTECTED MEMBER VARIABLES ####################
+protected:
+  /** A MemoryBlock storing the colour channels associated to the RGB part of the descriptor. */
+  ITMUCharMemoryBlock_Ptr m_channelsRgb;
+
+  /** The step used to sample keypoints from the image. */
+  uint32_t m_featureStep;
+
+  /** Whether or not to normalize depth offsets by the depth associated to the corresponding keypoint. */
+  bool m_normalizeDepth;
+
+  /** Whether or not to normalize RGB offsets by the depth associated to the corresponding keypoint. */
+  bool m_normalizeRgb;
+
+  /** A MemoryBlock storing the offsets used to sample the colour pixels used in the descriptor. */
+  ITMInt4MemoryBlock_Ptr m_offsetsRgb;
+
+  /** A MemoryBlock storing the offsets used to sample the depth values used in the descriptor. */
+  ITMInt4MemoryBlock_Ptr m_offsetsDepth;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an instance of the feature calculator.
+   * \brief Constructs an RGBD patch feature calculator.
    */
   RGBDPatchFeatureCalculator();
 
-public:
   //#################### DESTRUCTOR ####################
+public:
   virtual ~RGBDPatchFeatureCalculator();
 
-public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Extract keypoints and compute the feature for an RGBD image.
    *        Each keypoint position is in world coordinates, obtained chaining
@@ -64,8 +84,8 @@ public:
       RGBDPatchDescriptorImage *featuresImage,
       const Matrix4f &cameraPose) const = 0;
 
-public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Extract keypoints and compute the feature for an RGBD image.
    *        Each keypoint position is in camera coordinates, according to
@@ -102,31 +122,13 @@ public:
    * \param featureStep The step used when selecting keypoints and computing the features.
    */
   void set_feature_step(uint32_t featureStep);
-
-protected:
-  //#################### PROTECTED MEMBER VARIABLES ####################
-  /** A MemoryBlock storing the colour channels associated to the RGB part of the descriptor. */
-  ITMUCharMemoryBlock_Ptr m_channelsRgb;
-
-  /** The step used to sample keypoints from the image. */
-  uint32_t m_featureStep;
-
-  /** Whether or not to normalize depth offsets by the depth associated to the corresponding keypoint. */
-  bool m_normalizeDepth;
-
-  /** Whether or not to normalize RGB offsets by the depth associated to the corresponding keypoint. */
-  bool m_normalizeRgb;
-
-  /** A MemoryBlock storing the offsets used to sample the colour pixels used in the descriptor. */
-  ITMInt4MemoryBlock_Ptr m_offsetsRgb;
-
-  /** A MemoryBlock storing the offsets used to sample the depth values used in the descriptor. */
-  ITMInt4MemoryBlock_Ptr m_offsetsDepth;
 };
 
-/** Typedefs. */
+//#################### TYPEDEFS ####################
+
 typedef boost::shared_ptr<RGBDPatchFeatureCalculator> RGBDPatchFeatureCalculator_Ptr;
 typedef boost::shared_ptr<const RGBDPatchFeatureCalculator> RGBDPatchFeatureCalculator_CPtr;
+
 }
 
 #endif

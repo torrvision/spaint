@@ -12,11 +12,11 @@ namespace spaint
 {
 
 /**
- * \brief An instance of this class can be used to compute features based on depth and colour
- *        differences in RGBD images using CUDA.
+ * \brief An instance of this class can be used to compute features based on
+ *        depth and colour differences in RGBD images using CUDA.
  *
- * The features are computed as described by Valentin et al. in "Exploiting Uncertainty in
- * Regression Forests for Accurate Camera Relocalization".
+ * The features are computed as described by Valentin et al. in "Exploiting
+ * Uncertainty in Regression Forests for Accurate Camera Relocalization".
  */
 class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator
 {
