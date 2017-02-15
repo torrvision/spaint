@@ -8,13 +8,9 @@
 
 namespace spaint
 {
-//#################### CONSTRUCTORS ####################
-RGBDPatchFeatureCalculator_CPU::RGBDPatchFeatureCalculator_CPU() :
-    RGBDPatchFeatureCalculator()
-{
-}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
+
 void RGBDPatchFeatureCalculator_CPU::compute_feature(
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
     const Vector4f &intrinsics, Keypoint3DColourImage *keypointsImage,

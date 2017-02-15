@@ -20,13 +20,6 @@ namespace spaint
  */
 class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator
 {
-  //#################### CONSTRUCTORS ####################
-public:
-  /**
-   * \brief Constructs a CPU-based RGBD patch feature calculator.
-   */
-  RGBDPatchFeatureCalculator_CPU();
-
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
