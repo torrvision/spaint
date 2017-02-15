@@ -59,6 +59,11 @@ bool ViconTracker::requiresDepthReliability() const
   return false;
 }
 
+bool ViconTracker::requiresPointCloudRendering() const
+{
+  return false;
+}
+
 void ViconTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   // If there's no frame currently available, early out.

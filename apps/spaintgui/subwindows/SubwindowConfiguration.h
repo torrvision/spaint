@@ -26,9 +26,10 @@ public:
    *
    * \param subwindowCount  The number of sub-windows the configuration should have (must be in the set {1,2,3}).
    * \param imgSize         The size of image needed to store the scene visualisation for each sub-window.
+   * \param pipelineType    The type of pipeline being used.
    * \return                The sub-window configuration, if the sub-window count was valid, or null otherwise.
    */
-  static boost::shared_ptr<SubwindowConfiguration> make_default(size_t subwindowCount, const Vector2i& imgSize);
+  static boost::shared_ptr<SubwindowConfiguration> make_default(size_t subwindowCount, const Vector2i& imgSize, const std::string& pipelineType);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

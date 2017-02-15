@@ -17,7 +17,7 @@ SemanticPipeline::SemanticPipeline(const Settings_Ptr& settings, const std::stri
                                    TrackerType trackerType, const std::string& trackerParams,
                                    SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
                                    const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
-: MultiScenePipeline(settings, resourcesDir, maxLabelCount)
+: MultiScenePipeline("semantic", settings, resourcesDir, maxLabelCount)
 {
   const std::string sceneID = Model::get_world_scene_id();
   m_slamComponents[sceneID].reset(new SLAMComponent(m_model, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector, detectFiducials));

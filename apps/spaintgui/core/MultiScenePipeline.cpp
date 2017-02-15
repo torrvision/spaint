@@ -15,8 +15,8 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount)
-: m_mode(MODE_NORMAL)
+MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount)
+: m_mode(MODE_NORMAL), m_type(type)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -55,6 +55,11 @@ const Model_Ptr& MultiScenePipeline::get_model()
 Model_CPtr MultiScenePipeline::get_model() const
 {
   return m_model;
+}
+
+const std::string& MultiScenePipeline::get_type() const
+{
+  return m_type;
 }
 
 void MultiScenePipeline::reset_forest(const std::string& sceneID)

@@ -37,6 +37,11 @@ bool RiftTracker::requiresDepthReliability() const
   return false;
 }
 
+bool RiftTracker::requiresPointCloudRendering() const
+{
+  return false;
+}
+
 void RiftTracker::TrackCamera(ITMTrackingState *trackingState, const ITMView *view)
 {
   try_update_tracking_state(trackingState);

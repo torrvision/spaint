@@ -77,16 +77,20 @@ protected:
   /** The smoothing components for the scenes. */
   std::map<std::string,spaint::SmoothingComponent_Ptr> m_smoothingComponents;
 
+  /** The pipeline type. */
+  std::string m_type;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
    * \brief Constructs a multi-scene pipeline.
    *
+   * \param type          The pipeline type.
    * \param settings      The settings to use for InfiniTAM.
    * \param resourcesDir  The path to the resources directory.
    * \param maxLabelCount The maximum number of labels that can be in use.
    */
-  MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
+  MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -134,6 +138,13 @@ public:
    * \return  The spaint model.
    */
   Model_CPtr get_model() const;
+
+  /**
+   * \brief Gets the pipeline type.
+   *
+   * \return  The pipeline type.
+   */
+  const std::string& get_type() const;
 
   /**
    * \brief Resets the random forest for the specified scene.

@@ -67,6 +67,9 @@ public:
   virtual bool requiresDepthReliability() const;
 
   /** Override */
+  virtual bool requiresPointCloudRendering() const;
+
+  /** Override */
   virtual void TrackCamera(ITMLib::ITMTrackingState *trackingState, const ITMLib::ITMView *view);
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
