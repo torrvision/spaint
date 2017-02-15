@@ -44,7 +44,7 @@ std::map<std::string,FiducialMeasurement> ArUcoFiducialDetector::detect_fiducial
   cv::Mat3b rgbImage = OpenCVUtil::make_rgb_image(rgb->GetData(MEMORYDEVICE_CPU), rgb->noDims.x, rgb->noDims.y);
 
   // Detect any ArUco fiducials that are visible.
-  cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+  cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
   std::vector<std::vector<cv::Point2f> > corners;
   std::vector<int> ids;
   cv::aruco::detectMarkers(rgbImage, dictionary, corners, ids);
