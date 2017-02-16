@@ -12,7 +12,8 @@ namespace spaint
 __global__ void ck_compute_colour_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *features, const Vector4u *rgb, const float *depth,
     const Vector4i *offsetsRgb, const uchar *channelsRgb, Vector2i imgSize,
-    Vector2i outSize, uint32_t featureStep, bool normalize)
+    Vector2i outSize, uint32_t featureStep, bool normalize, uint32_t featuresCount,
+    uint32_t outputFeaturesOffset)
 {
   // Coordinates of the output keypoint/descriptor pair.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x,
@@ -25,14 +26,14 @@ __global__ void ck_compute_colour_feature(Keypoint3DColour *keypoints,
   const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
   compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
-      channelsRgb, imgSize, outSize, normalize, xyIn, xyOut);
+      channelsRgb, imgSize, outSize, normalize, xyIn, xyOut, featuresCount, outputFeaturesOffset);
 }
 
 __global__ void ck_compute_depth_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *features, const float *depth,
     const Vector4i *offsetsDepth, Vector2i imgSize, Vector2i outSize,
     Vector4f intrinsics, Matrix4f cameraPose, uint32_t featureStep,
-    bool normalize)
+    bool normalize, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
   // Coordinates of the output keypoint/descriptor pair.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x,
@@ -45,7 +46,7 @@ __global__ void ck_compute_depth_feature(Keypoint3DColour *keypoints,
   const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
   compute_depth_patch_feature(keypoints, features, depth, offsetsDepth, imgSize,
-      outSize, intrinsics, cameraPose, normalize, xyIn, xyOut);
+      outSize, intrinsics, cameraPose, normalize, xyIn, xyOut, featuresCount, outputFeaturesOffset);
 }
 
 //#################### CONSTRUCTORS ####################
@@ -91,13 +92,14 @@ void RGBDPatchFeatureCalculator_CUDA::compute_feature(
   // The depth feature calculator also computes the 3D pose and colour of the keypoint
   // Camera intrinsics are only needed here
   ck_compute_depth_feature<<<gridSize, blockSize>>>(keypoints, features, depth, offsetsDepth,
-      inDims, outDims, intrinsics, cameraPose, m_featureStep, m_normalizeDepth);
+      inDims, outDims, intrinsics, cameraPose, m_featureStep, m_normalizeDepth, m_countDepthFeatures,
+      m_offsetDepthFeatures);
   ORcudaKernelCheck;
 
   if(rgb)
   {
     ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
-        inDims, outDims, m_featureStep, m_normalizeRgb);
+        inDims, outDims, m_featureStep, m_normalizeRgb, m_countRgbFeatures, m_offsetRgbFeatures);
     ORcudaKernelCheck;
   }
 }

@@ -8,7 +8,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "RGBDPatchFeature.h"
+#include "Keypoint3DColour.h"
+#include "Descriptor.h"
 #include "../../util/ITMImagePtrTypes.h"
 #include "../../util/ITMMemoryBlockPtrTypes.h"
 
@@ -29,6 +30,12 @@ protected:
   /** A memory block storing the colour channels associated to the RGB part of the descriptor. */
   ITMUCharMemoryBlock_Ptr m_channelsRgb;
 
+  /** The number of depth features to compute. */
+  uint32_t m_countDepthFeatures;
+
+  /** The number of colour features to compute. */
+  uint32_t m_countRgbFeatures;
+
   /** The step used to sample keypoints from the image. */
   uint32_t m_featureStep;
 
@@ -37,6 +44,12 @@ protected:
 
   /** Whether or not to normalize RGB offsets by the depth associated to the corresponding keypoint. */
   bool m_normalizeRgb;
+
+  /** The offset in the descriptor array after which we store the depth features. */
+  uint32_t m_offsetDepthFeatures;
+
+  /** The offset in the descriptor array after which we store the rgb features. */
+  uint32_t m_offsetRgbFeatures;
 
   /** A memory block storing the offsets used to sample the depth values used in the descriptor. */
   ITMInt4MemoryBlock_Ptr m_offsetsDepth;

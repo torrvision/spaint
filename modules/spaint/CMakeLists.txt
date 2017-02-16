@@ -76,8 +76,10 @@ src/features/interface/VOPFeatureCalculator.cpp
 )
 
 SET(features_interface_headers
+include/spaint/features/interface/Descriptor.h
 include/spaint/features/interface/FeatureCalculator.h
-include/spaint/features/interface/RGBDPatchFeature.h
+include/spaint/features/interface/Keypoint3DColour.h
+include/spaint/features/interface/RGBDPatchDescriptor.h
 include/spaint/features/interface/RGBDPatchFeatureCalculator.h
 include/spaint/features/interface/VOPFeatureCalculator.h
 )

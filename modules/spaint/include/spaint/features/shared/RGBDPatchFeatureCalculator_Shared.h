@@ -34,7 +34,8 @@ inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
     RGBDPatchDescriptor *descriptors, const Vector4u *rgb, const float *depths,
     const Vector4i *offsetsRgb, const uchar *channelsRgb,
     const Vector2i &imgSize, const Vector2i &outSize, bool normalize,
-    const Vector2i &xyIn, const Vector2i &xyOut)
+    const Vector2i &xyIn, const Vector2i &xyOut, uint32_t featuresCount,
+    uint32_t outputFeaturesOffset)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
@@ -54,7 +55,7 @@ inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
   outKeypoint.colour = rgb[linearIdxIn].toVector3();
 
   // Compute the differences and fill the descriptor.
-  for (int featIdx = 0; featIdx < RGBDPatchDescriptor::RGB_FEATURE_COUNT;
+  for (uint32_t featIdx = 0; featIdx < featuresCount;
       ++featIdx)
   {
     const int channel = channelsRgb[featIdx];
@@ -91,10 +92,10 @@ inline void compute_colour_patch_feature(Keypoint3DColour *keypoints,
     //    const int linear_2 = y2 * img_size.x + x2;
 
     // This would be the correct definition but scoreforests's code has the other one
-    //    descriptors[linear_idx].rgb[feat_idx] =
+    //    outFeature.data[outputFeaturesOffset + featIdx] =
     //        rgb[linear_1][channel] - rgb[linear_2][channel];
 
-    outFeature.rgb[featIdx] = rgb[linear_1][channel]
+    outFeature.data[outputFeaturesOffset + featIdx] = rgb[linear_1][channel]
         - rgb[linearIdxIn][channel];
   }
 }
@@ -122,7 +123,8 @@ inline void compute_depth_patch_feature(Keypoint3DColour *keypoints,
     const Vector4i *offsetsDepth, const Vector2i &imgSize,
     const Vector2i &outSize, const Vector4f &intrinsics,
     const Matrix4f &cameraPose, bool normalize, const Vector2i &xyIn,
-    const Vector2i &xyOut)
+    const Vector2i &xyOut, uint32_t featuresCount,
+    uint32_t outputFeaturesOffset)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
@@ -152,7 +154,7 @@ inline void compute_depth_patch_feature(Keypoint3DColour *keypoints,
   outKeypoint.valid = true;
 
   // Compute the differences and fill the descriptor.
-  for (int featIdx = 0; featIdx < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT;
+  for (uint32_t featIdx = 0; featIdx < featuresCount;
       ++featIdx)
   {
     const Vector4i offset = offsetsDepth[featIdx];
@@ -192,11 +194,11 @@ inline void compute_depth_patch_feature(Keypoint3DColour *keypoints,
     const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
 
     // Again, this would be the correct definition but scoreforests's code has the other one.
-    //    outFeature.depth[feat_idx] =
+    //    outFeature.data[outputFeaturesOffset + featIdx] =
     //        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
 
     // As for colour, the implementation differs from the paper
-    outFeature.depth[featIdx] = depth_1_mm - depth_mm;
+    outFeature.data[outputFeaturesOffset + featIdx] = depth_1_mm - depth_mm;
   }
 }
 }

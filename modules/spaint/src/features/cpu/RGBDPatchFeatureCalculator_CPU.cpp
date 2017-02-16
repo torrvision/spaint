@@ -47,13 +47,14 @@ void RGBDPatchFeatureCalculator_CPU::compute_feature(
       const Vector2i xyIn(xOut * m_featureStep, yOut * m_featureStep);
 
       compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
-          inDims, outDims, intrinsics, cameraPose, m_normalizeDepth, xyIn, xyOut);
+          inDims, outDims, intrinsics, cameraPose, m_normalizeDepth, xyIn, xyOut,
+          m_countDepthFeatures, m_offsetDepthFeatures);
 
       if(rgb)
       {
         compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
-            channelsRgb, inDims, outDims, m_normalizeRgb,
-            xyIn, xyOut);
+            channelsRgb, inDims, outDims, m_normalizeRgb, xyIn, xyOut,
+            m_countRgbFeatures, m_offsetRgbFeatures);
       }
     }
   }

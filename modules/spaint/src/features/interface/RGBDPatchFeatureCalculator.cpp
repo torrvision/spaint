@@ -44,16 +44,18 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Setup the features in the same way as Julien's code
+  m_countDepthFeatures = 128;
+  m_countRgbFeatures = 128;
   m_featureStep = 4;
+  m_offsetDepthFeatures = 0;
+  m_offsetRgbFeatures = m_countDepthFeatures;
 
   m_normalizeRgb = true;
-  m_offsetsRgb = mbf.make_block<Vector4i>(
-      RGBDPatchDescriptor::RGB_FEATURE_COUNT);
-  m_channelsRgb = mbf.make_block<uchar>(RGBDPatchDescriptor::RGB_FEATURE_COUNT);
+  m_offsetsRgb = mbf.make_block<Vector4i>(m_countRgbFeatures);
+  m_channelsRgb = mbf.make_block<uchar>(m_countRgbFeatures);
 
   m_normalizeDepth = true;
-  m_offsetsDepth = mbf.make_block<Vector4i>(
-      RGBDPatchDescriptor::DEPTH_FEATURE_COUNT);
+  m_offsetsDepth = mbf.make_block<Vector4i>(m_countDepthFeatures);
 
   // Setup colour features
   {
@@ -68,7 +70,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
     Vector4i *offsets = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
     uchar *channels = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
 
-    for (int i = 0; i < RGBDPatchDescriptor::RGB_FEATURE_COUNT; ++i)
+    for (uint32_t i = 0; i < m_countRgbFeatures; ++i)
     {
       offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
       offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
@@ -79,7 +81,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
       channels[i] = 2 - rng.generate_int_from_uniform(channelMin, channelMax);
     }
 
-//    for (int i = 0; i < RGBDPatchDescriptor::RGB_FEATURE_COUNT; ++i)
+//    for (uint32_t i = 0; i < m_countRgbFeatures; ++i)
 //    {
 //      std::cout << i << " RGB Offset " << offsets[i] << " - Channel: "
 //          << channels[i] << std::endl;
@@ -96,7 +98,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
 
     Vector4i *offsets = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
 
-    for (int i = 0; i < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT; ++i)
+    for (uint32_t i = 0; i < m_countDepthFeatures; ++i)
     {
       offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
       offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
@@ -104,7 +106,7 @@ RGBDPatchFeatureCalculator::RGBDPatchFeatureCalculator()
       offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
     }
 
-//    for (int i = 0; i < RGBDPatchDescriptor::DEPTH_FEATURE_COUNT; ++i)
+//    for (uint32_t i = 0; i < m_countDepthFeatures; ++i)
 //    {
 //      std::cout << i << " Depth Offset " << offsets[i] << std::endl;
 //    }
