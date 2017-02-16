@@ -32,7 +32,7 @@ if [ -d build ]
 then
   echo "[spaint] ...Skipping build (already built)"
 else
-  mkdir -p install	 
+  mkdir -p install
   cd install
   INSTALL_PREFIX=`pwd`
   cd ..
@@ -57,4 +57,3 @@ else
 
   echo "[spaint] ...Finished building OpenCV 3.1.0."
 fi
-
