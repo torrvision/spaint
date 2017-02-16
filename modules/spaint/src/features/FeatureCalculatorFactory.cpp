@@ -18,21 +18,21 @@ namespace spaint {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
+DA_RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
-  RGBDPatchFeatureCalculator_CPtr calculator;
+  DA_RGBDPatchFeatureCalculator_CPtr calculator;
 
   if(deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    calculator.reset(new RGBDPatchFeatureCalculator_CUDA);
+    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour, RGBDPatchDescriptor>);
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    calculator.reset(new RGBDPatchFeatureCalculator_CPU);
+    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint3DColour, RGBDPatchDescriptor>);
   }
 
   return calculator;

@@ -18,7 +18,7 @@ namespace spaint
 /**
  * \brief An instance of this type represents a fixed-length floating point Descriptor.
  *
- * \param FEATURE_COUNT Length of the descriptor.
+ * \param LENGTH Length of the descriptor.
  */
 template<uint32_t LENGTH>
 struct Descriptor

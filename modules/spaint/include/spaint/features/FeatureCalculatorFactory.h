@@ -25,7 +25,7 @@ struct FeatureCalculatorFactory
    *
    * \param deviceType The device on which the feature calculator should operate.
    */
-  static RGBDPatchFeatureCalculator_CPtr make_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static DA_RGBDPatchFeatureCalculator_CPtr make_da_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
    * \brief Makes a VOP feature calculator.

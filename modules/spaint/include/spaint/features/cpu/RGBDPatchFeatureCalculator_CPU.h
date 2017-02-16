@@ -17,14 +17,23 @@ namespace spaint
  *
  * The features are computed as described by Valentin et al. in "Exploiting
  * Uncertainty in Regression Forests for Accurate Camera Relocalization".
+ *
+ * \param KeypointType    The type of keypoints computed by this class.
+ * \param DescriptorType  he type of descriptors computed by this class.
  */
-class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator
+template<typename KeypointType, typename DescriptorType>
+class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
 {
+  //#################### TYPEDEFS ####################
+public:
+  using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::KeypointImage;
+  using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::DescriptorImage;
+
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
   virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-                               Keypoint3DColourImage *keypointsImage, RGBDPatchDescriptorImage *featuresImage, const Matrix4f &cameraPose) const;
+                               KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f &cameraPose) const;
 };
 
 }

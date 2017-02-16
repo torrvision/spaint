@@ -22,9 +22,18 @@ namespace spaint
  *
  * The features are computed as described by Valentin et al. in "Exploiting
  * Uncertainty in Regression Forests for Accurate Camera Relocalization".
+ *
+ * \param KeypointType    The type of keypoints computed by this class.
+ * \param DescriptorType  he type of descriptors computed by this class.
  */
+template<typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator
 {
+  //#################### TYPEDEFS ####################
+public:
+  typedef ORUtils::Image<KeypointType> KeypointImage;
+  typedef ORUtils::Image<DescriptorType> DescriptorImage;
+
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
   /** A memory block storing the colour channels associated to the RGB part of the descriptor. */
@@ -96,7 +105,7 @@ public:
    *                        keypoint positions.
    */
   virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-                               Keypoint3DColourImage *keypointsImage, RGBDPatchDescriptorImage *featuresImage, const Matrix4f &cameraPose) const = 0;
+      KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f &cameraPose) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -119,7 +128,7 @@ public:
    * \param featuresImage   The output image that will contain the descriptors.
    */
   void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-                       Keypoint3DColourImage *keypointsImage, RGBDPatchDescriptorImage *featuresImage) const;
+      KeypointImage *keypointsImage, DescriptorImage *featuresImage) const;
 
   /**
    * \brief Gets the step used when selecting keypoints and computing the features.
@@ -138,8 +147,9 @@ public:
 
 //#################### TYPEDEFS ####################
 
-typedef boost::shared_ptr<RGBDPatchFeatureCalculator> RGBDPatchFeatureCalculator_Ptr;
-typedef boost::shared_ptr<const RGBDPatchFeatureCalculator> RGBDPatchFeatureCalculator_CPtr;
+typedef RGBDPatchFeatureCalculator<Keypoint3DColour, RGBDPatchDescriptor> DA_RGBDPatchFeatureCalculator;
+typedef boost::shared_ptr<DA_RGBDPatchFeatureCalculator> DA_RGBDPatchFeatureCalculator_Ptr;
+typedef boost::shared_ptr<const DA_RGBDPatchFeatureCalculator> DA_RGBDPatchFeatureCalculator_CPtr;
 
 }
 
