@@ -269,7 +269,7 @@ try
   {
     std::cout << "[spaint] Reading poses from disk: " << args.poseFilesMask << '\n';
     trackerType = TRACKER_INFINITAM_NO_REFINE;
-    trackerConfigs.push_back("type=filebased,mask=" + args.poseFilesMask);
+    trackerConfigs.push_back("type=file,mask=" + args.poseFilesMask);
   }
 
   // If we're trying to use the Rift tracker:
