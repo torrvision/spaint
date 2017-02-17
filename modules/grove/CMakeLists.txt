@@ -22,11 +22,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
-SET(toplevel_sources
-src/CPUInstantiations.cpp
-)
-
-##
 SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 
@@ -40,7 +35,6 @@ SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_C
 SET(features_cpu_templates include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp)
 
 ##
-SET(features_cuda_sources src/features/cuda/RGBDPatchFeatureCalculator_CUDA.cu)
 SET(features_cuda_headers include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.h)
 SET(features_cuda_templates include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu)
 
@@ -57,13 +51,20 @@ include/grove/keypoints/Keypoint2D.h
 include/grove/keypoints/Keypoint3DColour.h
 )
 
+##
+SET(toplevel_sources src/CPUInstantiations.cpp)
+
+IF(WITH_CUDA)
+  SET(toplevel_sources ${toplevel_sources} src/CUDAInstantiations.cu)
+ENDIF()
+
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
 
 SET(sources
-${toplevel_sources}
 ${features_sources}
+${toplevel_sources}
 )
 
 SET(headers
@@ -81,7 +82,6 @@ ${features_interface_templates}
 )
 
 IF(WITH_CUDA)
-  SET(sources ${sources} ${features_cuda_sources})
   SET(headers ${headers} ${features_cuda_headers})
   SET(templates ${templates} ${features_cuda_templates})
 ENDIF()
@@ -94,7 +94,7 @@ SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})
-SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers} ${features_cuda_templates})
+SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
