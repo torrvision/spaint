@@ -71,19 +71,19 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
   m_normalizeDepth = depthAdaptive;
   m_normalizeRgb = depthAdaptive;
 
-  m_countDepthFeatures = depthFeatureCount;
-  m_offsetDepthFeatures = depthFeatureOffset;
+  m_depthFeatureCount = depthFeatureCount;
+  m_depthFeatureOffset = depthFeatureOffset;
 
-  m_countRgbFeatures = rgbFeatureCount;
-  m_offsetRgbFeatures = rgbFeatureOffset;
+  m_rgbFeatureCount = rgbFeatureCount;
+  m_rgbFeatureOffset = rgbFeatureOffset;
 
   // Setup the feature step in the same way as Julien's code (can be overridden with the setter each invocation)
   m_featureStep = 4;
 
-  m_offsetsDepth = mbf.make_block<Vector4i>(m_countDepthFeatures);
+  m_depthOffsets = mbf.make_block<Vector4i>(m_depthFeatureCount);
 
-  m_offsetsRgb = mbf.make_block<Vector4i>(m_countRgbFeatures);
-  m_channelsRgb = mbf.make_block<uchar>(m_countRgbFeatures);
+  m_rgbOffsets = mbf.make_block<Vector4i>(m_rgbFeatureCount);
+  m_rgbChannels = mbf.make_block<uchar>(m_rgbFeatureCount);
 
   // Setup colour features
   {
@@ -95,10 +95,10 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
     const int radiusMin = 2;   // From Julien's code.
     const int radiusMax = 130; // From Julien's code.
 
-    Vector4i *offsets = m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
-    uchar *channels = m_channelsRgb->GetData(MEMORYDEVICE_CPU);
+    Vector4i *offsets = m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
+    uchar *channels = m_rgbChannels->GetData(MEMORYDEVICE_CPU);
 
-    for (uint32_t i = 0; i < m_countRgbFeatures; ++i)
+    for (uint32_t i = 0; i < m_rgbFeatureCount; ++i)
     {
       offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
       offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
@@ -109,7 +109,7 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
       channels[i] = 2 - rng.generate_int_from_uniform(channelMin, channelMax);
     }
 
-//    for (uint32_t i = 0; i < m_countRgbFeatures; ++i)
+//    for (uint32_t i = 0; i < m_rgbFeatureCount; ++i)
 //    {
 //      std::cout << i << " RGB Offset " << offsets[i] << " - Channel: "
 //          << channels[i] << std::endl;
@@ -124,9 +124,9 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
     const int radiusMin = 1;       // From Julien's code (was 2 / 2).
     const int radiusMax = 130 / 2; // From Julien's code.
 
-    Vector4i *offsets = m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
+    Vector4i *offsets = m_depthOffsets->GetData(MEMORYDEVICE_CPU);
 
-    for (uint32_t i = 0; i < m_countDepthFeatures; ++i)
+    for (uint32_t i = 0; i < m_depthFeatureCount; ++i)
     {
       offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
       offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
@@ -134,7 +134,7 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
       offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
     }
 
-//    for (uint32_t i = 0; i < m_countDepthFeatures; ++i)
+//    for (uint32_t i = 0; i < m_depthFeatureCount; ++i)
 //    {
 //      std::cout << i << " Depth Offset " << offsets[i] << std::endl;
 //    }
@@ -179,13 +179,13 @@ void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::validate_input_im
     const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
 {
   // Check inputs
-  if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normalizeDepth || m_normalizeRgb || m_countDepthFeatures > 0))
+  if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normalizeDepth || m_normalizeRgb || m_depthFeatureCount > 0))
   {
     throw std::invalid_argument("A valid depth image is required to compute the features.");
   }
 
   // The Structure sensor does not provide colour informations, we do not throw if the rgb image is null.
-  //  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_countRgbFeatures > 0)
+  //  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_rgbFeatureCount > 0)
   //  {
   //    throw std::invalid_argument("A valid colour image is required to compute the features.");
   //  }

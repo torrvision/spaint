@@ -89,9 +89,9 @@ RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::RGBDPatchFeatureC
         depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
 {
   // Update the offset for use on the GPU.
-  this->m_offsetsRgb->UpdateDeviceFromHost();
-  this->m_channelsRgb->UpdateDeviceFromHost();
-  this->m_offsetsDepth->UpdateDeviceFromHost();
+  this->m_rgbOffsets->UpdateDeviceFromHost();
+  this->m_rgbChannels->UpdateDeviceFromHost();
+  this->m_depthOffsets->UpdateDeviceFromHost();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -106,11 +106,11 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
   this->validate_input_images(rgbImage, depthImage);
 
   const float *depth = depthImage->GetData(MEMORYDEVICE_CUDA);
-  const Vector4i *offsetsDepth = this->m_offsetsDepth->GetData(MEMORYDEVICE_CUDA);
+  const Vector4i *offsetsDepth = this->m_depthOffsets->GetData(MEMORYDEVICE_CUDA);
 
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CUDA);
-  const Vector4i *offsetsRgb = this->m_offsetsRgb->GetData(MEMORYDEVICE_CUDA);
-  const uchar *channelsRgb = this->m_channelsRgb->GetData(MEMORYDEVICE_CUDA);
+  const Vector4i *offsetsRgb = this->m_rgbOffsets->GetData(MEMORYDEVICE_CUDA);
+  const uchar *channelsRgb = this->m_rgbChannels->GetData(MEMORYDEVICE_CUDA);
 
   Vector2i inDims = depthImage->noDims;
   // The output images have one pixel per each element of the sampling grid.
@@ -133,19 +133,19 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
   ORcudaKernelCheck;
 
   // Compute depth features
-  if(depth && this->m_countDepthFeatures > 0)
+  if(depth && this->m_depthFeatureCount > 0)
   {
     ck_compute_depth_feature<<<gridSize, blockSize>>>(keypoints, features, depth, offsetsDepth,
-        inDims, outDims, intrinsics, cameraPose, this->m_featureStep, this->m_normalizeDepth, this->m_countDepthFeatures,
-        this->m_offsetDepthFeatures);
+        inDims, outDims, intrinsics, cameraPose, this->m_featureStep, this->m_normalizeDepth, this->m_depthFeatureCount,
+        this->m_depthFeatureOffset);
     ORcudaKernelCheck;
   }
 
   // Compute colour features
-  if(rgb && this->m_countRgbFeatures > 0)
+  if(rgb && this->m_rgbFeatureCount > 0)
   {
     ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
-        inDims, outDims, this->m_featureStep, this->m_normalizeRgb, this->m_countRgbFeatures, this->m_offsetRgbFeatures);
+        inDims, outDims, this->m_featureStep, this->m_normalizeRgb, this->m_rgbFeatureCount, this->m_rgbFeatureOffset);
     ORcudaKernelCheck;
   }
 }

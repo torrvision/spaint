@@ -21,7 +21,7 @@ namespace grove {
  * The features are computed as described by Valentin et al. in "Exploiting Uncertainty in Regression Forests for Accurate Camera Relocalization".
  *
  * \param KeypointType    The type of keypoints computed by this class.
- * \param DescriptorType  he type of descriptors computed by this class.
+ * \param DescriptorType  The type of descriptors computed by this class.
  */
 template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator
@@ -33,14 +33,14 @@ public:
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
-  /** A memory block storing the colour channels associated to the RGB part of the descriptor. */
-  ITMUCharMemoryBlock_Ptr m_channelsRgb;
+  /** The number of depth features to compute from the depth image. */
+  uint32_t m_depthFeatureCount;
 
-  /** The number of depth features to compute. */
-  uint32_t m_countDepthFeatures;
+  /** The offset in the descriptor after which we store the depth features. */
+  uint32_t m_depthFeatureOffset;
 
-  /** The number of colour features to compute. */
-  uint32_t m_countRgbFeatures;
+  /** A memory block storing the offsets used to sample the depth values used in the descriptor. */
+  ITMInt4MemoryBlock_Ptr m_depthOffsets;
 
   /** The step used to sample keypoints from the image. */
   uint32_t m_featureStep;
@@ -51,38 +51,34 @@ protected:
   /** Whether or not to normalize RGB offsets by the depth associated to the corresponding keypoint. */
   bool m_normalizeRgb;
 
-  /** The offset in the descriptor array after which we store the depth features. */
-  uint32_t m_offsetDepthFeatures;
+  /** A memory block storing the colour channels associated to the RGB part of the descriptor. */
+  ITMUCharMemoryBlock_Ptr m_rgbChannels;
 
-  /** The offset in the descriptor array after which we store the rgb features. */
-  uint32_t m_offsetRgbFeatures;
+  /** The number of colour features to compute from the RGB image. */
+  uint32_t m_rgbFeatureCount;
 
-  /** A memory block storing the offsets used to sample the depth values used in the descriptor. */
-  ITMInt4MemoryBlock_Ptr m_offsetsDepth;
+  /** The offset in the descriptor after which we store the RGB features. */
+  uint32_t m_rgbFeatureOffset;
 
   /** A memory block storing the offsets used to sample the colour pixels used in the descriptor. */
-  ITMInt4MemoryBlock_Ptr m_offsetsRgb;
+  ITMInt4MemoryBlock_Ptr m_rgbOffsets;
 
   //#################### CONSTRUCTORS ####################
-public:
+protected:
   /**
    * \brief Constructs an RGBD patch feature calculator.
    *
-   * Note: meant to be instantiated with FeatureCalculatorFactory, to get correct default parameters.
+   * This is protected to force clients to make use of FeatureCalculatorFactory, which knows the correct values to use for the arguments.
    *
-   * \param depthAdaptive      Whether to compute the depth-normalised version of the features.
-   * \param depthFeatureCount  The number of features computed from the depth image.
-   * \param depthFeatureOffset The offset in the output descriptor after which we store the depthFeatureCount depth features.
-   * \param rgbFeatureCount    The number of features computed from the RGB image.
-   * \param rgbFeatureOffset   The offset in the output descriptor after which we store the rgbFeatureCount colour features.
+   * \param depthAdaptive      Whether or not to compute the depth-normalised version of the features.
+   * \param depthFeatureCount  The number of features to compute from the depth image.
+   * \param depthFeatureOffset The offset in the descriptor after which we store the depth features.
+   * \param rgbFeatureCount    The number of features to compute from the RGB image.
+   * \param rgbFeatureOffset   The offset in the descriptor after which we store the colour features.
    *
-   * \throws std::invalid_argument if depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT or if the offsets cause out of bounds access.
+   * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets cause out-of-bounds access.
    */
-  RGBDPatchFeatureCalculator(bool depthAdaptive,
-                             uint32_t depthFeatureCount,
-                             uint32_t depthFeatureOffset,
-                             uint32_t rgbFeatureCount,
-                             uint32_t rgbFeatureOffset);
+  RGBDPatchFeatureCalculator(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -167,6 +163,10 @@ protected:
    * \throws std::invalid_argument if the features cannot be computed.
    */
   void validate_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
+
+  //#################### FRIENDS ####################
+
+  friend struct FeatureCalculatorFactory;
 };
 
 //#################### TYPEDEFS ####################

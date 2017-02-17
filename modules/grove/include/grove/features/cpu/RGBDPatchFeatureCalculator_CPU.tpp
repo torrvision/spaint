@@ -37,9 +37,9 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
   const float *depth = depthImage->GetData(MEMORYDEVICE_CPU);
 
-  const Vector4i *offsetsRgb = this->m_offsetsRgb->GetData(MEMORYDEVICE_CPU);
-  const uchar *channelsRgb = this->m_channelsRgb->GetData(MEMORYDEVICE_CPU);
-  const Vector4i *offsetsDepth = this->m_offsetsDepth->GetData(MEMORYDEVICE_CPU);
+  const Vector4i *offsetsRgb = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
+  const uchar *channelsRgb = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
+  const Vector4i *offsetsDepth = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
 
   Vector2i inDims = depthImage->noDims;
   // The output images have one pixel per each element of the sampling grid.
@@ -68,19 +68,19 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
       compute_keypoint(keypoints, rgb, depth, intrinsics, inDims, outDims, xyIn, xyOut, cameraPose);
 
       // Compute depth features if needed.
-      if(depth && this->m_countDepthFeatures > 0)
+      if(depth && this->m_depthFeatureCount > 0)
       {
         compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
             inDims, outDims, intrinsics, cameraPose, this->m_normalizeDepth, xyIn, xyOut,
-            this->m_countDepthFeatures, this->m_offsetDepthFeatures);
+            this->m_depthFeatureCount, this->m_depthFeatureOffset);
       }
 
       // Compute colour features.
-      if(rgb && this->m_countRgbFeatures > 0)
+      if(rgb && this->m_rgbFeatureCount > 0)
       {
         compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
             channelsRgb, inDims, outDims, this->m_normalizeRgb, xyIn, xyOut,
-            this->m_countRgbFeatures, this->m_offsetRgbFeatures);
+            this->m_rgbFeatureCount, this->m_rgbFeatureOffset);
       }
     }
   }
