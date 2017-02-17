@@ -22,6 +22,11 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
+SET(toplevel_sources
+src/CPUInstantiations.cpp
+)
+
+##
 SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 
@@ -41,7 +46,6 @@ SET(features_cuda_headers include/grove/features/cuda/RGBDPatchFeatureCalculator
 SET(features_cuda_templates include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu)
 
 ##
-SET(features_interface_sources src/features/interface/RGBDPatchFeatureCalculator.cpp)
 SET(features_interface_headers include/grove/features/interface/RGBDPatchFeatureCalculator.h)
 SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatureCalculator.tpp)
 
@@ -59,9 +63,9 @@ include/grove/keypoints/Keypoint3DColour.h
 #################################################################
 
 SET(sources
+${toplevel_sources}
 ${features_sources}
 ${features_cpu_sources}
-${features_interface_sources}
 )
 
 SET(headers
@@ -88,11 +92,12 @@ ENDIF()
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers} ${features_cpu_templates})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers} ${features_cuda_templates})
-SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers} ${features_interface_templates})
+SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 

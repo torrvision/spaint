@@ -8,8 +8,7 @@
 
 #include "../interface/RGBDPatchFeatureCalculator.h"
 
-namespace grove
-{
+namespace grove {
 
 /**
  * \brief An instance of this class can be used to compute features based on depth and colour differences in RGBD images using the CPU.
