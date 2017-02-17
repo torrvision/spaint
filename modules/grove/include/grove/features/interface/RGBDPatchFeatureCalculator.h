@@ -15,8 +15,8 @@
 #include <spaint/util/ITMMemoryBlockPtrTypes.h>
 
 #include "../base/Descriptor.h"
-#include "../base/Keypoint2D.h"
-#include "../base/Keypoint3DColour.h"
+#include "../../keypoints/Keypoint2D.h"
+#include "../../keypoints/Keypoint3DColour.h"
 
 namespace grove
 {

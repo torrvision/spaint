@@ -28,8 +28,6 @@ SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 ##
 SET(features_base_headers
 include/grove/features/base/Descriptor.h
-include/grove/features/base/Keypoint2D.h
-include/grove/features/base/Keypoint3DColour.h
 )
 
 ##
@@ -50,6 +48,12 @@ SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatu
 ##
 SET(features_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
+##
+SET(keypoints_headers
+include/grove/keypoints/Keypoint2D.h
+include/grove/keypoints/Keypoint3DColour.h
+)
+
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -66,6 +70,7 @@ ${features_base_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${keypoints_headers}
 )
 
 SET(templates
@@ -89,6 +94,7 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers}
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 
 ##########################################
 # Specify additional include directories #

@@ -6,25 +6,24 @@
 #ifndef H_GROVE_DESCRIPTOR
 #define H_GROVE_DESCRIPTOR
 
-namespace grove
-{
+namespace grove {
 
 /**
- * \brief An instance of this type represents a fixed-length floating point Descriptor.
+ * \brief An instance of an instantiation of this struct template represents a fixed-length, floating point feature descriptor.
  *
- * \param LENGTH Length of the descriptor.
+ * \param N The length of the descriptor.
  */
-template<uint32_t LENGTH>
+template <int N>
 struct Descriptor
 {
   //#################### CONSTANTS ####################
 
-  /** Length of the descriptor. */
-  static const int FEATURE_COUNT = LENGTH;
+  /** The length of the descriptor. */
+  static const int FEATURE_COUNT = N;
 
   //#################### PUBLIC VARIABLES ####################
 
-  /** Features are stored in this array. */
+  /** The descriptor's features are stored in this array. */
   float data[FEATURE_COUNT];
 };
 

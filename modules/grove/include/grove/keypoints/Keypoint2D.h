@@ -12,8 +12,7 @@
 
 #include <ORUtils/Image.h>
 
-namespace grove
-{
+namespace grove {
 
 /**
  * \brief An instance of this struct represents a 2D keypoint.
@@ -25,7 +24,7 @@ struct Keypoint2D
   /** The keypoint's position in the image. */
   Vector2f position;
 
-  /** A flag representing the validity of the keypoint. */
+  /** A flag indicating whether or not the keypoint is valid. */
   bool valid;
 };
 
