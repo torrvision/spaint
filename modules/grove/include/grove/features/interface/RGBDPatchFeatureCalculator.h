@@ -68,7 +68,7 @@ protected:
   /**
    * \brief Constructs an RGBD patch feature calculator.
    *
-   * This is protected to force clients to make use of FeatureCalculatorFactory, which knows the correct values to use for the arguments.
+   * Note: This is protected to force clients to make use of FeatureCalculatorFactory, which knows the correct values to use for the arguments.
    *
    * \param depthAdaptive      Whether or not to compute the depth-normalised version of the features.
    * \param depthFeatureCount  The number of features to compute from the depth image.
@@ -111,8 +111,8 @@ public:
    *                        world reference frame that will be applied to the 3D
    *                        keypoint positions.
    */
-  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f &cameraPose) const = 0;
+  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+                               KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f& cameraPose) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -134,8 +134,8 @@ public:
    *                        of the extracted features. Will be resized as necessary.
    * \param featuresImage   The output image that will contain the descriptors.
    */
-  void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-      KeypointImage *keypointsImage, DescriptorImage *featuresImage) const;
+  void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+                       KeypointImage *keypointsImage, DescriptorImage *featuresImage) const;
 
   /**
    * \brief Gets the step used when selecting keypoints and computing the features.
@@ -163,10 +163,6 @@ protected:
    * \throws std::invalid_argument if the features cannot be computed.
    */
   void validate_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
-
-  //#################### FRIENDS ####################
-
-  friend struct FeatureCalculatorFactory;
 };
 
 //#################### TYPEDEFS ####################

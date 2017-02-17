@@ -21,7 +21,7 @@ namespace grove
  * \param KeypointType    The type of keypoints computed by this class.
  * \param DescriptorType  he type of descriptors computed by this class.
  */
-template<typename KeypointType, typename DescriptorType>
+template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
 {
   //#################### TYPEDEFS ####################
@@ -30,32 +30,31 @@ public:
   using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::DescriptorImage;
 
   //#################### CONSTRUCTORS ####################
-public:
+private:
   /**
    * \brief Constructs a CPU-based RGBD patch feature calculator.
    *
+   * Note: This is private to force clients to make use of FeatureCalculatorFactory, which knows the correct values to use for the arguments.
    *
-   * Note: meant to be instantiated with FeatureCalculatorFactory, to get correct default parameters.
+   * \param depthAdaptive      Whether or not to compute the depth-normalised version of the features.
+   * \param depthFeatureCount  The number of features to compute from the depth image.
+   * \param depthFeatureOffset The offset in the descriptor after which we store the depth features.
+   * \param rgbFeatureCount    The number of features to compute from the RGB image.
+   * \param rgbFeatureOffset   The offset in the descriptor after which we store the colour features.
    *
-   * \param depthAdaptive      Whether to compute the depth-normalised version of the features.
-   * \param depthFeatureCount  The number of features computed from the depth image.
-   * \param depthFeatureOffset The offset in the output descriptor after which we store the depthFeatureCount depth features.
-   * \param rgbFeatureCount    The number of features computed from the RGB image.
-   * \param rgbFeatureOffset   The offset in the output descriptor after which we store the rgbFeatureCount colour features.
-   *
-   * \throws std::invalid_argument if depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT or if the offsets cause out of bounds access.
+   * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets cause out-of-bounds access.
    */
-  RGBDPatchFeatureCalculator_CPU(bool depthAdaptive,
-                                 uint32_t depthFeatureCount,
-                                 uint32_t depthFeatureOffset,
-                                 uint32_t rgbFeatureCount,
-                                 uint32_t rgbFeatureOffset);
+  RGBDPatchFeatureCalculator_CPU(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f &intrinsics,
-                               KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f &cameraPose) const;
+  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+                               KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f& cameraPose) const;
+
+  //#################### FRIENDS ####################
+
+  friend struct FeatureCalculatorFactory;
 };
 
 }
