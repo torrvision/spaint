@@ -6,7 +6,7 @@
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 #include "features/shared/RGBDPatchFeatureCalculator_Shared.h"
 
-namespace spaint
+namespace grove
 {
 
 //#################### CONSTRUCTORS ####################

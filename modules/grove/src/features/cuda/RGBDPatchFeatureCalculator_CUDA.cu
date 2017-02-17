@@ -1,12 +1,12 @@
 /**
- * spaint: RGBDPatchFeatureCalculator_CUDA.cu
+ * grove: RGBDPatchFeatureCalculator_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu"
 
-namespace spaint
+namespace grove
 {
 
 //#################### EXPLICIT INSTANTIATIONS ####################

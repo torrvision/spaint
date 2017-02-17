@@ -1,10 +1,10 @@
 /**
- * spaint: Keypoint2D.h
+ * grove: Keypoint2D.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_KEYPOINT2D
-#define H_SPAINT_KEYPOINT2D
+#ifndef H_GROVE_KEYPOINT2D
+#define H_GROVE_KEYPOINT2D
 
 #include <boost/shared_ptr.hpp>
 
@@ -12,7 +12,7 @@
 
 #include <ORUtils/Image.h>
 
-namespace spaint
+namespace grove
 {
 
 /**

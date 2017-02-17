@@ -1,17 +1,17 @@
 /**
- * spaint: RGBDPatchFeatureCalculator_Shared.h
+ * grove: RGBDPatchFeatureCalculator_Shared.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
-#define H_SPAINT_RGBDPATCHFEATURECALCULATOR_SHARED
+#ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
+#define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 #include <ORUtils/PlatformIndependence.h>
 
 #include <helper_math.h>
 
-namespace spaint
+namespace grove
 {
 
 /**

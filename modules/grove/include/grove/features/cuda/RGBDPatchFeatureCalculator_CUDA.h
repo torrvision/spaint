@@ -1,19 +1,19 @@
 /**
- * spaint: RGBDPatchFeatureCalculator_CPU.h
+ * grove: RGBDPatchFeatureCalculator_CUDA.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR_CPU
-#define H_SPAINT_RGBDPATCHFEATURECALCULATOR_CPU
+#ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_CUDA
+#define H_GROVE_RGBDPATCHFEATURECALCULATOR_CUDA
 
 #include "../interface/RGBDPatchFeatureCalculator.h"
 
-namespace spaint
+namespace grove
 {
 
 /**
  * \brief An instance of this class can be used to compute features based on
- *        depth and colour differences in RGBD images using the CPU.
+ *        depth and colour differences in RGBD images using CUDA.
  *
  * The features are computed as described by Valentin et al. in "Exploiting
  * Uncertainty in Regression Forests for Accurate Camera Relocalization".
@@ -22,7 +22,7 @@ namespace spaint
  * \param DescriptorType  he type of descriptors computed by this class.
  */
 template<typename KeypointType, typename DescriptorType>
-class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
+class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
 {
   //#################### TYPEDEFS ####################
 public:
@@ -32,7 +32,7 @@ public:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs a CPU-based RGBD patch feature calculator.
+   * \brief Constructs a CUDA-based RGBD patch feature calculator.
    *
    *
    * Note: meant to be instantiated with FeatureCalculatorFactory, to get correct default parameters.
@@ -45,11 +45,11 @@ public:
    *
    * \throws std::invalid_argument if depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT or if the offsets cause out of bounds access.
    */
-  RGBDPatchFeatureCalculator_CPU(bool depthAdaptive,
-                                 uint32_t depthFeatureCount,
-                                 uint32_t depthFeatureOffset,
-                                 uint32_t rgbFeatureCount,
-                                 uint32_t rgbFeatureOffset);
+  RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive,
+                                  uint32_t depthFeatureCount,
+                                  uint32_t depthFeatureOffset,
+                                  uint32_t rgbFeatureCount,
+                                  uint32_t rgbFeatureOffset);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

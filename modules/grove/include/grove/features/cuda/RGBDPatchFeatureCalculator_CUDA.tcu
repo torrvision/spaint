@@ -1,13 +1,17 @@
 /**
- * spaint: RGBDPatchFeatureCalculator_CUDA.tcu
+ * grove: RGBDPatchFeatureCalculator_CUDA.tcu
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
 #include "features/shared/RGBDPatchFeatureCalculator_Shared.h"
 
-namespace spaint
+namespace grove
 {
+
+namespace
+{
+
 //#################### CUDA KERNELS ####################
 template<typename KeypointType>
 __global__ void ck_compute_keypoints(KeypointType *keypoints,
@@ -68,6 +72,8 @@ __global__ void ck_compute_depth_feature(const KeypointType *keypoints,
 
   compute_depth_patch_feature(keypoints, features, depth, offsetsDepth, imgSize,
       outSize, intrinsics, cameraPose, normalize, xyIn, xyOut, featuresCount, outputFeaturesOffset);
+}
+
 }
 
 //#################### CONSTRUCTORS ####################

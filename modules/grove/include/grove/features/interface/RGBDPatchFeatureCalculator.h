@@ -1,20 +1,21 @@
 /**
- * spaint: RGBDPatchFeatureCalculator.h
+ * grove: RGBDPatchFeatureCalculator.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR
-#define H_SPAINT_RGBDPATCHFEATURECALCULATOR
+#ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR
+#define H_GROVE_RGBDPATCHFEATURECALCULATOR
 
 #include <boost/shared_ptr.hpp>
 
-#include "Keypoint2D.h"
-#include "Keypoint3DColour.h"
-#include "Descriptor.h"
-#include "../../util/ITMImagePtrTypes.h"
-#include "../../util/ITMMemoryBlockPtrTypes.h"
+#include "spaint/util/ITMImagePtrTypes.h"
+#include "spaint/util/ITMMemoryBlockPtrTypes.h"
 
-namespace spaint
+#include "../base/Descriptor.h"
+#include "../base/Keypoint2D.h"
+#include "../base/Keypoint3DColour.h"
+
+namespace grove
 {
 
 /**

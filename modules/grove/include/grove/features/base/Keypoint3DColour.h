@@ -1,10 +1,10 @@
 /**
- * spaint: Keypoint3DColour.h
+ * grove: Keypoint3DColour.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_KEYPOINT3DCOLOUR
-#define H_SPAINT_KEYPOINT3DCOLOUR
+#ifndef H_GROVE_KEYPOINT3DCOLOUR
+#define H_GROVE_KEYPOINT3DCOLOUR
 
 #include <boost/shared_ptr.hpp>
 
@@ -12,7 +12,7 @@
 
 #include <ORUtils/Image.h>
 
-namespace spaint
+namespace grove
 {
 
 /**

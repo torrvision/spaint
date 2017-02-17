@@ -49,47 +49,34 @@ include/spaint/features/FeatureCalculatorFactory.h
 
 ##
 SET(features_cpu_sources
-src/features/cpu/RGBDPatchFeatureCalculator_CPU.cpp
 src/features/cpu/VOPFeatureCalculator_CPU.cpp
 )
 
 SET(features_cpu_headers
-include/spaint/features/cpu/RGBDPatchFeatureCalculator_CPU.h
-include/spaint/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp
 include/spaint/features/cpu/VOPFeatureCalculator_CPU.h
 )
 
 ##
 SET(features_cuda_sources
-src/features/cuda/RGBDPatchFeatureCalculator_CUDA.cu
 src/features/cuda/VOPFeatureCalculator_CUDA.cu
 )
 
 SET(features_cuda_headers
-include/spaint/features/cuda/RGBDPatchFeatureCalculator_CUDA.h
-include/spaint/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu
 include/spaint/features/cuda/VOPFeatureCalculator_CUDA.h
 )
 
 ##
 SET(features_interface_sources
-src/features/interface/RGBDPatchFeatureCalculator.cpp
 src/features/interface/VOPFeatureCalculator.cpp
 )
 
 SET(features_interface_headers
-include/spaint/features/interface/Descriptor.h
 include/spaint/features/interface/FeatureCalculator.h
-include/spaint/features/interface/Keypoint2D.h
-include/spaint/features/interface/Keypoint3DColour.h
-include/spaint/features/interface/RGBDPatchFeatureCalculator.h
-include/spaint/features/interface/RGBDPatchFeatureCalculator.tpp
 include/spaint/features/interface/VOPFeatureCalculator.h
 )
 
 ##
 SET(features_shared_headers
-include/spaint/features/shared/RGBDPatchFeatureCalculator_Shared.h
 include/spaint/features/shared/VOPFeatureCalculator_Shared.h
 )
 

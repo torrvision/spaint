@@ -1,10 +1,10 @@
 /**
- * spaint: Descriptor.h
+ * grove: Descriptor.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_DESCRIPTOR
-#define H_SPAINT_DESCRIPTOR
+#ifndef H_GROVE_DESCRIPTOR
+#define H_GROVE_DESCRIPTOR
 
 #include <boost/shared_ptr.hpp>
 
@@ -12,7 +12,7 @@
 
 #include <ORUtils/Image.h>
 
-namespace spaint
+namespace grove
 {
 
 /**

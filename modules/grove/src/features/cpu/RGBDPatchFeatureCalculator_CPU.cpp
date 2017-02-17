@@ -1,12 +1,12 @@
 /**
- * spaint: RGBDPatchFeatureCalculator_CPU.cpp
+ * grove: RGBDPatchFeatureCalculator_CPU.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.tpp"
 
-namespace spaint
+namespace grove
 {
 
 //#################### EXPLICIT INSTANTIATIONS ####################

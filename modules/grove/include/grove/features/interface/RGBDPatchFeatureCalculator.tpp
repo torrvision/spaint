@@ -1,5 +1,5 @@
 /**
- * spaint: RGBDPatchFeatureCalculator.tpp
+ * grove: RGBDPatchFeatureCalculator.tpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
@@ -7,10 +7,12 @@
 
 #include <iostream>
 
+#include <spaint/util/MemoryBlockFactory.h>
+using namespace spaint;
+
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 using namespace tvgutil;
 
-#include "util/MemoryBlockFactory.h"
 
 //#################### HELPER FUNCTIONS ####################
 
@@ -22,20 +24,20 @@ namespace
  *        using the specified random number generator.
  *
  * \param rng The random number generator to use.
- * \param min TODO
- * \param max TODO
- * \return    TODO
+ * \param min The minimum value of the positive interval.
+ * \param max The maximum value of the positive interval.
+ * \return    A random integer in [-max, -min] U [min, max]
  */
 int generate_offset(RandomNumberGenerator& rng, int min, int max)
 {
   static const int signMin = 0;
   static const int signMax = 1;
-  return rng.generate_int_from_uniform(min, max) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
+  return rng.generate_int_from_uniform(std::abs(min), std::abs(max)) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
 }
 
 }
 
-namespace spaint {
+namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
@@ -78,19 +80,10 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
   // Setup the feature step in the same way as Julien's code (can be overridden with the setter each invocation)
   m_featureStep = 4;
 
+  m_offsetsDepth = mbf.make_block<Vector4i>(m_countDepthFeatures);
 
-//  m_countDepthFeatures = 128;
-//  m_countRgbFeatures = 128;
-//
-//  m_offsetDepthFeatures = 0;
-//  m_offsetRgbFeatures = m_countDepthFeatures;
-
-//  m_normalizeRgb = true;
   m_offsetsRgb = mbf.make_block<Vector4i>(m_countRgbFeatures);
   m_channelsRgb = mbf.make_block<uchar>(m_countRgbFeatures);
-
-//  m_normalizeDepth = true;
-  m_offsetsDepth = mbf.make_block<Vector4i>(m_countDepthFeatures);
 
   // Setup colour features
   {
@@ -191,7 +184,7 @@ void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::validate_input_im
     throw std::invalid_argument("A valid depth image is required to compute the features.");
   }
 
-  // TODO: Structure does not provide colour informations, validation needs to change.
+  // Structure sensor does not provide colour informations, we do not throw if the rgb image is null.
 //  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_countRgbFeatures > 0)
 //  {
 //    throw std::invalid_argument("A valid colour image is required to compute the features.");
