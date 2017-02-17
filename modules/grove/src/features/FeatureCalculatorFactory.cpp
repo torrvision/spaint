@@ -4,13 +4,14 @@
  */
 
 #include "features/FeatureCalculatorFactory.h"
-using namespace ITMLib;
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
 
 #ifdef WITH_CUDA
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
 #endif
+
+using namespace ITMLib;
 
 namespace grove {
 

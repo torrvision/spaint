@@ -184,11 +184,11 @@ void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::validate_input_im
     throw std::invalid_argument("A valid depth image is required to compute the features.");
   }
 
-  // Structure sensor does not provide colour informations, we do not throw if the rgb image is null.
-//  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_countRgbFeatures > 0)
-//  {
-//    throw std::invalid_argument("A valid colour image is required to compute the features.");
-//  }
+  // The Structure sensor does not provide colour informations, we do not throw if the rgb image is null.
+  //  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_countRgbFeatures > 0)
+  //  {
+  //    throw std::invalid_argument("A valid colour image is required to compute the features.");
+  //  }
 }
 
 }

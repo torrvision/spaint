@@ -141,6 +141,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
     ORcudaKernelCheck;
   }
 
+  // Compute colour features
   if(rgb && this->m_countRgbFeatures > 0)
   {
     ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
