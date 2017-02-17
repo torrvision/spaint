@@ -1,5 +1,5 @@
 /**
- * spaint: RGBDPatchFeatureCalculator_CPU.tpp
+ * grove: RGBDPatchFeatureCalculator_CPU.tpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 

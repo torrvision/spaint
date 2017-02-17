@@ -8,8 +8,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "spaint/util/ITMImagePtrTypes.h"
-#include "spaint/util/ITMMemoryBlockPtrTypes.h"
+#include <ITMLib/Utils/ITMMath.h>
+#include <ORUtils/Image.h>
+
+#include <spaint/util/ITMImagePtrTypes.h>
+#include <spaint/util/ITMMemoryBlockPtrTypes.h>
 
 #include "../base/Descriptor.h"
 #include "../base/Keypoint2D.h"
@@ -175,6 +178,12 @@ protected:
 };
 
 //#################### TYPEDEFS ####################
+
+typedef Descriptor<256> RGBDPatchDescriptor;
+
+typedef ORUtils::Image<RGBDPatchDescriptor> RGBDPatchDescriptorImage;
+typedef boost::shared_ptr<RGBDPatchDescriptorImage> RGBDPatchDescriptorImage_Ptr;
+typedef boost::shared_ptr<const RGBDPatchDescriptorImage> RGBDPatchDescriptorImage_CPtr;
 
 typedef RGBDPatchFeatureCalculator<Keypoint2D, RGBDPatchDescriptor> RGBPatchFeatureCalculator;
 typedef boost::shared_ptr<RGBPatchFeatureCalculator> RGBPatchFeatureCalculator_Ptr;

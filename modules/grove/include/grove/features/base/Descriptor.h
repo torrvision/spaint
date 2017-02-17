@@ -6,12 +6,6 @@
 #ifndef H_GROVE_DESCRIPTOR
 #define H_GROVE_DESCRIPTOR
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Utils/ITMMath.h>
-
-#include <ORUtils/Image.h>
-
 namespace grove
 {
 
@@ -30,17 +24,9 @@ struct Descriptor
 
   //#################### PUBLIC VARIABLES ####################
 
-  /** All the features are stored in this array. */
+  /** Features are stored in this array. */
   float data[FEATURE_COUNT];
 };
-
-//#################### TYPEDEFS ####################
-
-typedef Descriptor<256> RGBDPatchDescriptor;
-
-typedef ORUtils::Image<RGBDPatchDescriptor> RGBDPatchDescriptorImage;
-typedef boost::shared_ptr<RGBDPatchDescriptorImage> RGBDPatchDescriptorImage_Ptr;
-typedef boost::shared_ptr<const RGBDPatchDescriptorImage> RGBDPatchDescriptorImage_CPtr;
 
 }
 
