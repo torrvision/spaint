@@ -105,7 +105,7 @@ public:
    *                        keypoint positions in camera coordinates).
    * \param intrinsics      The intrinsic parameters of the depth camera.
    * \param keypointsImage  The output image that will contain the 3D coordinates
-   *                        (in world reference frame, see cameraPose) and colour
+   *                        (in the world reference frame, see cameraPose) and colour
    *                        of the extracted keypoints. Will be resized as necessary.
    * \param featuresImage   The output image that will contain the feature descriptors.
    */
@@ -116,22 +116,20 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Extract keypoints and compute the feature for an RGBD image.
-   *        Each keypoint position is in camera coordinates, according to
-   *        the depth camera intrinsics.
+   * \brief Extract keypoints from an RGBD image and compute feature descriptors for them.
+   *        Each keypoint position is in camera coordinates, based on the depth camera's intrinsics.
    *
-   * \note  The implicit assumption is that pixels in the colour image and in
-   *        the depth image are registered.
-   * \note  Keypoint/Descriptors are computed on a grid in the input image pair,
-   *        according to the step set by set_feature_step.
+   * \note  We implicitly assume that pixels in the colour and depth images are registered.
+   * \note  Keypoints/descriptors are computed on a grid in the input image pair, with the step
+   *        set by set_feature_step.
    *
    * \param rgbImage        The colour image.
    * \param depthImage      The depth image.
    * \param intrinsics      The intrinsic parameters of the depth camera.
    * \param keypointsImage  The output image that will contain the 3D coordinates
-   *                        (in camera reference frame) and colour
-   *                        of the extracted features. Will be resized as necessary.
-   * \param featuresImage   The output image that will contain the descriptors.
+   *                        (in the camera's reference frame) and colour of the
+   *                        extracted features. Will be resized as necessary.
+   * \param featuresImage   The output image that will contain the feature descriptors.
    */
   void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
                        KeypointImage *keypointsImage, DescriptorImage *featuresImage) const;
@@ -153,15 +151,15 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Function used to validate whether the input images passed to compute_feature allow
+   * \brief Checks whether or not the input images passed to compute_feature allow for
    *        computation of the required features.
    *
-   * \param rgbImage        The colour image.
-   * \param depthImage      The depth image.
+   * \param rgbImage    The colour image.
+   * \param depthImage  The depth image.
    *
-   * \throws std::invalid_argument if the features cannot be computed.
+   * \throws std::invalid_argument If the features cannot be computed.
    */
-  void validate_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
+  void check_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
 };
 
 //#################### TYPEDEFS ####################

@@ -102,7 +102,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
                                                                                     KeypointImage *keypointsImage, DescriptorImage *featuresImage) const
 {
   // Validate inputs
-  this->validate_input_images(rgbImage, depthImage);
+  this->check_input_images(rgbImage, depthImage);
 
   const float *depth = depthImage->GetData(MEMORYDEVICE_CUDA);
   const Vector4i *offsetsDepth = this->m_depthOffsets->GetData(MEMORYDEVICE_CUDA);

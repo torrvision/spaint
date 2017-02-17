@@ -172,9 +172,10 @@ void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::set_feature_step(
   m_featureStep = featureStep;
 }
 
+//#################### PROTECTED MEMBER FUNCTIONS ####################
+
 template<typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::validate_input_images(
-    const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
+void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::check_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
 {
   // Check inputs
   if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normalizeDepth || m_normalizeRgb || m_depthFeatureCount > 0))

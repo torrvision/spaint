@@ -31,7 +31,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
                                                                                    KeypointImage *keypointsImage, DescriptorImage *featuresImage) const
 {
   // Validate inputs
-  this->validate_input_images(rgbImage, depthImage);
+  this->check_input_images(rgbImage, depthImage);
 
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
   const float *depth = depthImage->GetData(MEMORYDEVICE_CPU);
