@@ -1,6 +1,6 @@
 /**
  * grove: FeatureCalculatorFactory.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #ifndef H_GROVE_FEATURECALCULATORFACTORY
@@ -30,7 +30,7 @@ struct FeatureCalculatorFactory
   static DA_RGBDPatchFeatureCalculator_CPtr make_da_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
-   * \brief Makes a RGB patch feature calculator.
+   * \brief Makes an RGB patch feature calculator.
    *
    * \param deviceType The device on which the feature calculator should operate.
    */
