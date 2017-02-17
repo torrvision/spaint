@@ -36,7 +36,6 @@ include/grove/features/base/Descriptor.h
 )
 
 ##
-SET(features_cpu_sources src/features/cpu/RGBDPatchFeatureCalculator_CPU.cpp)
 SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)
 SET(features_cpu_templates include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp)
 
@@ -65,7 +64,6 @@ include/grove/keypoints/Keypoint3DColour.h
 SET(sources
 ${toplevel_sources}
 ${features_sources}
-${features_cpu_sources}
 )
 
 SET(headers
@@ -95,7 +93,7 @@ ENDIF()
 SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
-SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers} ${features_cpu_templates})
+SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
