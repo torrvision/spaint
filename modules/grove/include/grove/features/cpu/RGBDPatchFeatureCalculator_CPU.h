@@ -12,22 +12,20 @@ namespace grove
 {
 
 /**
- * \brief An instance of this class can be used to compute features based on
- *        depth and colour differences in RGBD images using the CPU.
+ * \brief An instance of this class can be used to compute features based on depth and colour differences in RGBD images using the CPU.
  *
- * The features are computed as described by Valentin et al. in "Exploiting
- * Uncertainty in Regression Forests for Accurate Camera Relocalization".
+ * The features are computed as described by Valentin et al. in "Exploiting Uncertainty in Regression Forests for Accurate Camera Relocalization".
  *
  * \param KeypointType    The type of keypoints computed by this class.
- * \param DescriptorType  he type of descriptors computed by this class.
+ * \param DescriptorType  The type of descriptors computed by this class.
  */
 template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
 {
   //#################### TYPEDEFS ####################
 public:
-  using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::KeypointImage;
   using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::DescriptorImage;
+  using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::KeypointImage;
 
   //#################### CONSTRUCTORS ####################
 private:
