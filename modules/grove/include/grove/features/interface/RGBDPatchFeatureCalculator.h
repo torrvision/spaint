@@ -90,29 +90,28 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Extract keypoints and compute the feature for an RGBD image.
-   *        Each keypoint position is in world coordinates, obtained chaining
-   *        the cameraPose transformation with the 3D coordinates of the point
-   *        in camera coordinates.
+   * \brief Extract keypoints from an RGBD image and computes feature descriptors for them.
+   *        Each keypoint position is in world coordinates, obtained by applying the cameraPose
+   *        transformation to the 3D coordinates of the point in camera coordinates.
    *
-   * \note  The implicit assumption is that pixels in the colour image and in
-   *        the depth image are registered.
-   * \note  Keypoint/Descriptors are computed on a grid in the input image pair,
-   *        according to the step set by set_feature_step.
+   * \note  We implicitly assume that pixels in the colour and depth images are registered.
+   * \note  Keypoints/descriptors are computed on a grid in the input image pair, with the step
+   *        set by set_feature_step.
    *
    * \param rgbImage        The colour image.
    * \param depthImage      The depth image.
+   * \param cameraPose      A transformation from the camera's reference frame to the
+   *                        world reference frame (this will be applied to the 3D
+   *                        keypoint positions in camera coordinates).
    * \param intrinsics      The intrinsic parameters of the depth camera.
    * \param keypointsImage  The output image that will contain the 3D coordinates
    *                        (in world reference frame, see cameraPose) and colour
-   *                        of the extracted features. Will be resized as necessary.
-   * \param featuresImage   The output image that will contain the descriptors.
-   * \param cameraPose      A transformation from the camera reference frame to a
-   *                        world reference frame that will be applied to the 3D
-   *                        keypoint positions.
+   *                        of the extracted keypoints. Will be resized as necessary.
+   * \param featuresImage   The output image that will contain the feature descriptors.
    */
-  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
-                               KeypointImage *keypointsImage, DescriptorImage *featuresImage, const Matrix4f& cameraPose) const = 0;
+  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+                               const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                               KeypointImage *keypointsImage, DescriptorImage *featuresImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

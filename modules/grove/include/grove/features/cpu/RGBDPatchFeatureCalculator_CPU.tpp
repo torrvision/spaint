@@ -26,10 +26,9 @@ RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::RGBDPatchFeatureCa
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template<typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_feature(
-    const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
-    const Vector4f &intrinsics, KeypointImage *keypointsImage,
-    DescriptorImage *featuresImage, const Matrix4f &cameraPose) const
+void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+                                                                                   const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                                                                                   KeypointImage *keypointsImage, DescriptorImage *featuresImage) const
 {
   // Validate inputs
   this->validate_input_images(rgbImage, depthImage);
