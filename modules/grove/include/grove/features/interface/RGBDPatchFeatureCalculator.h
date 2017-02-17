@@ -6,11 +6,6 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR
 
-#include <boost/shared_ptr.hpp>
-
-#include <ITMLib/Utils/ITMMath.h>
-#include <ORUtils/Image.h>
-
 #include <spaint/util/ITMImagePtrTypes.h>
 #include <spaint/util/ITMMemoryBlockPtrTypes.h>
 
@@ -18,26 +13,23 @@
 #include "../../keypoints/Keypoint2D.h"
 #include "../../keypoints/Keypoint3DColour.h"
 
-namespace grove
-{
+namespace grove {
 
 /**
- * \brief An instance of a class deriving from this one can be used to compute
- *        features based on depth and colour differences in RGBD images.
+ * \brief An instance of a class deriving from this one can be used to compute features based on depth and colour differences in RGBD images.
  *
- * The features are computed as described by Valentin et al. in "Exploiting
- * Uncertainty in Regression Forests for Accurate Camera Relocalization".
+ * The features are computed as described by Valentin et al. in "Exploiting Uncertainty in Regression Forests for Accurate Camera Relocalization".
  *
  * \param KeypointType    The type of keypoints computed by this class.
  * \param DescriptorType  he type of descriptors computed by this class.
  */
-template<typename KeypointType, typename DescriptorType>
+template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ORUtils::Image<KeypointType> KeypointImage;
   typedef ORUtils::Image<DescriptorType> DescriptorImage;
+  typedef ORUtils::Image<KeypointType> KeypointImage;
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
