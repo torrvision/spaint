@@ -4,24 +4,18 @@
  */
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
+
 #include "features/shared/RGBDPatchFeatureCalculator_Shared.h"
 
-namespace grove
-{
+namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
 template<typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator_CPU(
-    bool depthAdaptive,
-    uint32_t depthFeatureCount,
-    uint32_t depthFeatureOffset,
-    uint32_t rgbFeatureCount,
-    uint32_t rgbFeatureOffset)
-    : RGBDPatchFeatureCalculator<KeypointType, DescriptorType>(
-        depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
-{
-}
+RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator_CPU(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset,
+                                                                                             uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset)
+: RGBDPatchFeatureCalculator<KeypointType, DescriptorType>(depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
+{}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 

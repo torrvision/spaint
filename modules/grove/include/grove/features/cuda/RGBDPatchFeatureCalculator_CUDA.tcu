@@ -4,15 +4,15 @@
  */
 
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.h"
+
 #include "features/shared/RGBDPatchFeatureCalculator_Shared.h"
 
-namespace grove
-{
+namespace grove {
 
-namespace
-{
+namespace {
 
 //#################### CUDA KERNELS ####################
+
 template<typename KeypointType>
 __global__ void ck_compute_keypoints(KeypointType *keypoints,
     const Vector4u *rgb, const float *depths, const Vector4f &intrinsics,
@@ -79,19 +79,14 @@ __global__ void ck_compute_depth_feature(const KeypointType *keypoints,
 //#################### CONSTRUCTORS ####################
 
 template<typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator_CUDA(
-    bool depthAdaptive,
-    uint32_t depthFeatureCount,
-    uint32_t depthFeatureOffset,
-    uint32_t rgbFeatureCount,
-    uint32_t rgbFeatureOffset)
-    : RGBDPatchFeatureCalculator<KeypointType, DescriptorType>(
-        depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
+RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset,
+                                                                                               uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset)
+: RGBDPatchFeatureCalculator<KeypointType, DescriptorType>(depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
 {
   // Update the offset for use on the GPU.
-  this->m_rgbOffsets->UpdateDeviceFromHost();
-  this->m_rgbChannels->UpdateDeviceFromHost();
   this->m_depthOffsets->UpdateDeviceFromHost();
+  this->m_rgbChannels->UpdateDeviceFromHost();
+  this->m_rgbOffsets->UpdateDeviceFromHost();
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
