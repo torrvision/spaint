@@ -44,6 +44,9 @@ src/features/cpu/RGBDPatchFeatureCalculator_CPU.cpp
 
 SET(features_cpu_headers
 include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h
+)
+
+SET(features_cpu_templates
 include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp
 )
 
@@ -54,6 +57,9 @@ src/features/cuda/RGBDPatchFeatureCalculator_CUDA.cu
 
 SET(features_cuda_headers
 include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.h
+)
+
+SET(features_cuda_templates
 include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu
 )
 
@@ -64,6 +70,9 @@ src/features/interface/RGBDPatchFeatureCalculator.cpp
 
 SET(features_interface_headers
 include/grove/features/interface/RGBDPatchFeatureCalculator.h
+)
+
+SET(features_interface_templates
 include/grove/features/interface/RGBDPatchFeatureCalculator.tpp
 )
 
@@ -90,14 +99,15 @@ ${features_interface_headers}
 ${features_shared_headers}
 )
 
-IF(WITH_CUDA)
-  SET(sources ${sources}
-    ${features_cuda_sources}
-  )
+SET(templates
+${features_cpu_templates}
+${features_interface_templates}
+)
 
-  SET(headers ${headers}
-    ${features_cuda_headers}
-  )
+IF(WITH_CUDA)
+  SET(sources ${sources} ${features_cuda_sources})
+  SET(headers ${headers} ${features_cuda_headers})
+  SET(templates ${templates} ${features_cuda_templates})
 ENDIF()
 
 #############################
@@ -106,9 +116,9 @@ ENDIF()
 
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
-SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers})
-SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers})
-SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers})
+SOURCE_GROUP(features\\cpu FILES ${features_cpu_sources} ${features_cpu_headers} ${features_cpu_templates})
+SOURCE_GROUP(features\\cuda FILES ${features_cuda_sources} ${features_cuda_headers} ${features_cuda_templates})
+SOURCE_GROUP(features\\interface FILES ${features_interface_sources} ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
 
 ##########################################
