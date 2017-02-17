@@ -22,13 +22,8 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
-SET(features_sources
-src/features/FeatureCalculatorFactory.cpp
-)
-
-SET(features_headers
-include/grove/features/FeatureCalculatorFactory.h
-)
+SET(features_sources src/features/FeatureCalculatorFactory.cpp)
+SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 
 ##
 SET(features_base_headers
@@ -38,48 +33,22 @@ include/grove/features/base/Keypoint3DColour.h
 )
 
 ##
-SET(features_cpu_sources
-src/features/cpu/RGBDPatchFeatureCalculator_CPU.cpp
-)
-
-SET(features_cpu_headers
-include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h
-)
-
-SET(features_cpu_templates
-include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp
-)
+SET(features_cpu_sources src/features/cpu/RGBDPatchFeatureCalculator_CPU.cpp)
+SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)
+SET(features_cpu_templates include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.tpp)
 
 ##
-SET(features_cuda_sources
-src/features/cuda/RGBDPatchFeatureCalculator_CUDA.cu
-)
-
-SET(features_cuda_headers
-include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.h
-)
-
-SET(features_cuda_templates
-include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu
-)
+SET(features_cuda_sources src/features/cuda/RGBDPatchFeatureCalculator_CUDA.cu)
+SET(features_cuda_headers include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.h)
+SET(features_cuda_templates include/grove/features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu)
 
 ##
-SET(features_interface_sources
-src/features/interface/RGBDPatchFeatureCalculator.cpp
-)
-
-SET(features_interface_headers
-include/grove/features/interface/RGBDPatchFeatureCalculator.h
-)
-
-SET(features_interface_templates
-include/grove/features/interface/RGBDPatchFeatureCalculator.tpp
-)
+SET(features_interface_sources src/features/interface/RGBDPatchFeatureCalculator.cpp)
+SET(features_interface_headers include/grove/features/interface/RGBDPatchFeatureCalculator.h)
+SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatureCalculator.tpp)
 
 ##
-SET(features_shared_headers
-include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h
-)
+SET(features_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 #################################################################
 # Collect the project files into sources, headers and templates #
