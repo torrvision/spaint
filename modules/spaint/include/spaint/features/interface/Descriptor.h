@@ -1,6 +1,6 @@
 /**
  * spaint: Descriptor.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #ifndef H_SPAINT_DESCRIPTOR

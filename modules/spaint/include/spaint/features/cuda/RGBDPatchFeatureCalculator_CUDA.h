@@ -1,6 +1,6 @@
 /**
  * spaint: RGBDPatchFeatureCalculator_CUDA.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR_CUDA
@@ -33,8 +33,23 @@ public:
 public:
   /**
    * \brief Constructs a CUDA-based RGBD patch feature calculator.
+   *
+   *
+   * Note: meant to be instantiated with FeatureCalculatorFactory, to get correct default parameters.
+   *
+   * \param depthAdaptive      Whether to compute the depth-normalised version of the features.
+   * \param depthFeatureCount  The number of features computed from the depth image.
+   * \param depthFeatureOffset The offset in the output descriptor after which we store the depthFeatureCount depth features.
+   * \param rgbFeatureCount    The number of features computed from the RGB image.
+   * \param rgbFeatureOffset   The offset in the output descriptor after which we store the rgbFeatureCount colour features.
+   *
+   * \throws std::invalid_argument if depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT or if the offsets cause out of bounds access.
    */
-  RGBDPatchFeatureCalculator_CUDA();
+  RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive,
+                                  uint32_t depthFeatureCount,
+                                  uint32_t depthFeatureOffset,
+                                  uint32_t rgbFeatureCount,
+                                  uint32_t rgbFeatureOffset);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

@@ -1,6 +1,6 @@
 /**
  * spaint: RGBDPatchFeatureCalculator_CPU.tpp
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.h"
@@ -8,6 +8,20 @@
 
 namespace spaint
 {
+
+//#################### CONSTRUCTORS ####################
+
+template<typename KeypointType, typename DescriptorType>
+RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator_CPU(
+    bool depthAdaptive,
+    uint32_t depthFeatureCount,
+    uint32_t depthFeatureOffset,
+    uint32_t rgbFeatureCount,
+    uint32_t rgbFeatureOffset)
+    : RGBDPatchFeatureCalculator<KeypointType, DescriptorType>(
+        depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
+{
+}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
@@ -17,6 +31,9 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
     const Vector4f &intrinsics, KeypointImage *keypointsImage,
     DescriptorImage *featuresImage, const Matrix4f &cameraPose) const
 {
+  // Validate inputs
+  this->validate_input_images(rgbImage, depthImage);
+
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
   const float *depth = depthImage->GetData(MEMORYDEVICE_CPU);
 
@@ -47,11 +64,19 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
       const Vector2i xyOut(xOut, yOut);
       const Vector2i xyIn(xOut * this->m_featureStep, yOut * this->m_featureStep);
 
-      compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
-          inDims, outDims, intrinsics, cameraPose, this->m_normalizeDepth, xyIn, xyOut,
-          this->m_countDepthFeatures, this->m_offsetDepthFeatures);
+      // First of all compute keypoints.
+      compute_keypoint(keypoints, rgb, depth, intrinsics, inDims, outDims, xyIn, xyOut, cameraPose);
 
-      if(rgb)
+      // Compute depth features if needed.
+      if(depth && this->m_countDepthFeatures > 0)
+      {
+        compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
+            inDims, outDims, intrinsics, cameraPose, this->m_normalizeDepth, xyIn, xyOut,
+            this->m_countDepthFeatures, this->m_offsetDepthFeatures);
+      }
+
+      // Compute colour features.
+      if(rgb && this->m_countRgbFeatures > 0)
       {
         compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
             channelsRgb, inDims, outDims, this->m_normalizeRgb, xyIn, xyOut,

@@ -1,6 +1,6 @@
 /**
  * spaint: RGBDPatchFeatureCalculator.tpp
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #include "RGBDPatchFeatureCalculator.h"
@@ -40,22 +40,56 @@ namespace spaint {
 //#################### CONSTRUCTORS ####################
 
 template<typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator()
+RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalculator(
+    bool depthAdaptive,
+    uint32_t depthFeatureCount,
+    uint32_t depthFeatureOffset,
+    uint32_t rgbFeatureCount,
+    uint32_t rgbFeatureOffset)
 {
+  // First of all, check parameter validity
+  if(depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT)
+  {
+    throw std::invalid_argument("rgbFeatureCount + depthFeatureCount > DescriptorType::FEATURE_COUNT");
+  }
+
+  if(depthFeatureOffset + depthFeatureCount > DescriptorType::FEATURE_COUNT)
+  {
+    throw std::invalid_argument("depthFeatureOffset + depthFeatureCount > DescriptorType::FEATURE_COUNT");
+  }
+
+  if(rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT)
+  {
+    throw std::invalid_argument("rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT");
+  }
+
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
-  // Setup the features in the same way as Julien's code
-  m_countDepthFeatures = 128;
-  m_countRgbFeatures = 128;
-  m_featureStep = 4;
-  m_offsetDepthFeatures = 0;
-  m_offsetRgbFeatures = m_countDepthFeatures;
+  // Setup parameters as indicated
+  m_normalizeDepth = depthAdaptive;
+  m_normalizeRgb = depthAdaptive;
 
-  m_normalizeRgb = true;
+  m_countDepthFeatures = depthFeatureCount;
+  m_offsetDepthFeatures = depthFeatureOffset;
+
+  m_countRgbFeatures = rgbFeatureCount;
+  m_offsetRgbFeatures = rgbFeatureOffset;
+
+  // Setup the feature step in the same way as Julien's code (can be overridden with the setter each invocation)
+  m_featureStep = 4;
+
+
+//  m_countDepthFeatures = 128;
+//  m_countRgbFeatures = 128;
+//
+//  m_offsetDepthFeatures = 0;
+//  m_offsetRgbFeatures = m_countDepthFeatures;
+
+//  m_normalizeRgb = true;
   m_offsetsRgb = mbf.make_block<Vector4i>(m_countRgbFeatures);
   m_channelsRgb = mbf.make_block<uchar>(m_countRgbFeatures);
 
-  m_normalizeDepth = true;
+//  m_normalizeDepth = true;
   m_offsetsDepth = mbf.make_block<Vector4i>(m_countDepthFeatures);
 
   // Setup colour features
@@ -145,6 +179,23 @@ template<typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::set_feature_step(uint32_t featureStep)
 {
   m_featureStep = featureStep;
+}
+
+template<typename KeypointType, typename DescriptorType>
+void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::validate_input_images(
+    const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
+{
+  // Check inputs
+  if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normalizeDepth || m_normalizeRgb || m_countDepthFeatures > 0))
+  {
+    throw std::invalid_argument("A valid depth image is required to compute the features.");
+  }
+
+  // TODO: Structure does not provide colour informations, validation needs to change.
+//  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_countRgbFeatures > 0)
+//  {
+//    throw std::invalid_argument("A valid colour image is required to compute the features.");
+//  }
 }
 
 }

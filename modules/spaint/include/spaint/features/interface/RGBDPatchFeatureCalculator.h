@@ -1,6 +1,6 @@
 /**
  * spaint: RGBDPatchFeatureCalculator.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
 #ifndef H_SPAINT_RGBDPATCHFEATURECALCULATOR
@@ -8,6 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "Keypoint2D.h"
 #include "Keypoint3DColour.h"
 #include "Descriptor.h"
 #include "../../util/ITMImagePtrTypes.h"
@@ -70,8 +71,22 @@ protected:
 public:
   /**
    * \brief Constructs an RGBD patch feature calculator.
+   *
+   * Note: meant to be instantiated with FeatureCalculatorFactory, to get correct default parameters.
+   *
+   * \param depthAdaptive      Whether to compute the depth-normalised version of the features.
+   * \param depthFeatureCount  The number of features computed from the depth image.
+   * \param depthFeatureOffset The offset in the output descriptor after which we store the depthFeatureCount depth features.
+   * \param rgbFeatureCount    The number of features computed from the RGB image.
+   * \param rgbFeatureOffset   The offset in the output descriptor after which we store the rgbFeatureCount colour features.
+   *
+   * \throws std::invalid_argument if depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT or if the offsets cause out of bounds access.
    */
-  RGBDPatchFeatureCalculator();
+  RGBDPatchFeatureCalculator(bool depthAdaptive,
+                             uint32_t depthFeatureCount,
+                             uint32_t depthFeatureOffset,
+                             uint32_t rgbFeatureCount,
+                             uint32_t rgbFeatureOffset);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -143,9 +158,26 @@ public:
    * \param featureStep The step used when selecting keypoints and computing the features.
    */
   void set_feature_step(uint32_t featureStep);
+
+  //#################### PROTECTED MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Function used to validate whether the input images passed to compute_feature allow
+   *        computation of the required features.
+   *
+   * \param rgbImage        The colour image.
+   * \param depthImage      The depth image.
+   *
+   * \throws std::invalid_argument if the features cannot be computed.
+   */
+  void validate_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
 };
 
 //#################### TYPEDEFS ####################
+
+typedef RGBDPatchFeatureCalculator<Keypoint2D, RGBDPatchDescriptor> RGBPatchFeatureCalculator;
+typedef boost::shared_ptr<RGBPatchFeatureCalculator> RGBPatchFeatureCalculator_Ptr;
+typedef boost::shared_ptr<const RGBPatchFeatureCalculator> RGBPatchFeatureCalculator_CPtr;
 
 typedef RGBDPatchFeatureCalculator<Keypoint3DColour, RGBDPatchDescriptor> DA_RGBDPatchFeatureCalculator;
 typedef boost::shared_ptr<DA_RGBDPatchFeatureCalculator> DA_RGBDPatchFeatureCalculator_Ptr;
