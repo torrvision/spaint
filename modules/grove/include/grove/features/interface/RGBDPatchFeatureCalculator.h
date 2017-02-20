@@ -28,8 +28,8 @@ class RGBDPatchFeatureCalculator
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ORUtils::Image<DescriptorType> DescriptorImage;
-  typedef ORUtils::Image<KeypointType> KeypointImage;
+  typedef ORUtils::Image<DescriptorType> DescriptorsImage;
+  typedef ORUtils::Image<KeypointType> KeypointsImage;
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
@@ -111,7 +111,7 @@ public:
    */
   virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
                                const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                               KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const = 0;
+                               KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -132,7 +132,7 @@ public:
    * \param descriptorsImage The output image that will contain the feature descriptors.
    */
   void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
-                       KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const;
+                       KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
 
   /**
    * \brief Gets the step used when selecting keypoints and computing the features.

@@ -23,8 +23,8 @@ class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<Keypoi
 {
   //#################### TYPEDEFS ####################
 public:
-  using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::DescriptorImage;
-  using typename RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::KeypointImage;
+  using typename RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::DescriptorsImage;
+  using typename RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::KeypointsImage;
 
   //#################### CONSTRUCTORS ####################
 private:
@@ -48,7 +48,7 @@ public:
   /** Override */
   virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
                                const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                               KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const;
+                               KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
 
   //#################### FRIENDS ####################
 
