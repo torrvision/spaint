@@ -22,7 +22,7 @@ RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::RGBDPatchFeatureCa
 template<typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
                                                                                    const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                                                                                   KeypointImage *keypointsImage, DescriptorImage *featuresImage) const
+                                                                                   KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const
 {
   // Validate inputs
   this->check_input_images(rgbImage, depthImage);
@@ -42,10 +42,10 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
   // Resize the output images as needed
   // (typically this happens only once per run of the program if the images are properly cached).
   keypointsImage->ChangeDims(outDims);
-  featuresImage->ChangeDims(outDims);
+  descriptorsImage->ChangeDims(outDims);
 
   KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
-  DescriptorType *features = featuresImage->GetData(MEMORYDEVICE_CPU);
+  DescriptorType *features = descriptorsImage->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -64,7 +64,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
       if(depth && this->m_depthFeatureCount > 0)
       {
         compute_depth_patch_feature(keypoints, features, depth, offsetsDepth,
-            inDims, outDims, intrinsics, cameraPose, this->m_normalizeDepth, xyIn, xyOut,
+            inDims, outDims, intrinsics, cameraPose, this->m_normaliseDepth, xyIn, xyOut,
             this->m_depthFeatureCount, this->m_depthFeatureOffset);
       }
 
@@ -72,7 +72,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType, DescriptorType>::compute_featu
       if(rgb && this->m_rgbFeatureCount > 0)
       {
         compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb,
-            channelsRgb, inDims, outDims, this->m_normalizeRgb, xyIn, xyOut,
+            channelsRgb, inDims, outDims, this->m_normaliseRgb, xyIn, xyOut,
             this->m_rgbFeatureCount, this->m_rgbFeatureOffset);
       }
     }

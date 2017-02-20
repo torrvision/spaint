@@ -94,7 +94,7 @@ RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::RGBDPatchFeatureC
 template<typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
                                                                                     const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                                                                                    KeypointImage *keypointsImage, DescriptorImage *featuresImage) const
+                                                                                    KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const
 {
   // Validate inputs
   this->check_input_images(rgbImage, depthImage);
@@ -113,10 +113,10 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
 
   // Resize images appropriately. Will always be a NOP except the first time.
   keypointsImage->ChangeDims(outDims);
-  featuresImage->ChangeDims(outDims);
+  descriptorsImage->ChangeDims(outDims);
 
   KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  DescriptorType *features = featuresImage->GetData(MEMORYDEVICE_CUDA);
+  DescriptorType *features = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
   dim3 gridSize((outDims.x + blockSize.x - 1) / blockSize.x,
@@ -130,7 +130,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
   if(depth && this->m_depthFeatureCount > 0)
   {
     ck_compute_depth_feature<<<gridSize, blockSize>>>(keypoints, features, depth, offsetsDepth,
-        inDims, outDims, intrinsics, cameraPose, this->m_featureStep, this->m_normalizeDepth, this->m_depthFeatureCount,
+        inDims, outDims, intrinsics, cameraPose, this->m_featureStep, this->m_normaliseDepth, this->m_depthFeatureCount,
         this->m_depthFeatureOffset);
     ORcudaKernelCheck;
   }
@@ -139,7 +139,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType, DescriptorType>::compute_feat
   if(rgb && this->m_rgbFeatureCount > 0)
   {
     ck_compute_colour_feature<<<gridSize, blockSize>>>(keypoints, features, rgb, depth, offsetsRgb, channelsRgb,
-        inDims, outDims, this->m_featureStep, this->m_normalizeRgb, this->m_rgbFeatureCount, this->m_rgbFeatureOffset);
+        inDims, outDims, this->m_featureStep, this->m_normaliseRgb, this->m_rgbFeatureCount, this->m_rgbFeatureOffset);
     ORcudaKernelCheck;
   }
 }

@@ -15,8 +15,8 @@ namespace grove {
  *
  * The features are computed as described by Valentin et al. in "Exploiting Uncertainty in Regression Forests for Accurate Camera Relocalization".
  *
- * \param KeypointType    The type of keypoints computed by this class.
- * \param DescriptorType  The type of descriptors computed by this class.
+ * \param KeypointType    The type of keypoint computed by this class.
+ * \param DescriptorType  The type of descriptor computed by this class.
  */
 template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator_CPU : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
@@ -48,7 +48,7 @@ public:
   /** Override */
   virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
                                const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                               KeypointImage *keypointsImage, DescriptorImage *featuresImage) const;
+                               KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const;
 
   //#################### FRIENDS ####################
 

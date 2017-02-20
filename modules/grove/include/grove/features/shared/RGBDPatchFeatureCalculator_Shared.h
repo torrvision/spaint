@@ -6,13 +6,13 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
-#include <ITMLib/Utils/ITMProjectionUtils.h>
-#include <ORUtils/PlatformIndependence.h>
-
 #include <helper_math.h>
 
-namespace grove
-{
+#include <ITMLib/Utils/ITMProjectionUtils.h>
+
+#include <ORUtils/PlatformIndependence.h>
+
+namespace grove {
 
 /**
  * \brief Compute the keypoint according to the input images.

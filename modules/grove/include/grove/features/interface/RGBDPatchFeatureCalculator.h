@@ -20,8 +20,8 @@ namespace grove {
  *
  * The features are computed as described by Valentin et al. in "Exploiting Uncertainty in Regression Forests for Accurate Camera Relocalization".
  *
- * \param KeypointType    The type of keypoints computed by this class.
- * \param DescriptorType  The type of descriptors computed by this class.
+ * \param KeypointType    The type of keypoint computed by this class.
+ * \param DescriptorType  The type of descriptor computed by this class.
  */
 template <typename KeypointType, typename DescriptorType>
 class RGBDPatchFeatureCalculator
@@ -45,11 +45,11 @@ protected:
   /** The step used to sample keypoints from the image. */
   uint32_t m_featureStep;
 
-  /** Whether or not to normalize depth offsets by the depth associated to the corresponding keypoint. */
-  bool m_normalizeDepth;
+  /** Whether or not to normalise depth offsets by the depth associated to the corresponding keypoint. */
+  bool m_normaliseDepth;
 
-  /** Whether or not to normalize RGB offsets by the depth associated to the corresponding keypoint. */
-  bool m_normalizeRgb;
+  /** Whether or not to normalise RGB offsets by the depth associated to the corresponding keypoint. */
+  bool m_normaliseRgb;
 
   /** A memory block storing the colour channels associated to the RGB part of the descriptor. */
   ITMUCharMemoryBlock_Ptr m_rgbChannels;
@@ -90,7 +90,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Extract keypoints from an RGBD image and computes feature descriptors for them.
+   * \brief Extracts keypoints from an RGBD image and computes feature descriptors for them.
    *        Each keypoint position is in world coordinates, obtained by applying the cameraPose
    *        transformation to the 3D coordinates of the point in camera coordinates.
    *
@@ -98,41 +98,41 @@ public:
    * \note  Keypoints/descriptors are computed on a grid in the input image pair, with the step
    *        set by set_feature_step.
    *
-   * \param rgbImage        The colour image.
-   * \param depthImage      The depth image.
-   * \param cameraPose      A transformation from the camera's reference frame to the
-   *                        world reference frame (this will be applied to the 3D
-   *                        keypoint positions in camera coordinates).
-   * \param intrinsics      The intrinsic parameters of the depth camera.
-   * \param keypointsImage  The output image that will contain the 3D coordinates
-   *                        (in the world reference frame, see cameraPose) and colour
-   *                        of the extracted keypoints. Will be resized as necessary.
-   * \param featuresImage   The output image that will contain the feature descriptors.
+   * \param rgbImage         The colour image.
+   * \param depthImage       The depth image.
+   * \param cameraPose       A transformation from the camera's reference frame to the
+   *                         world reference frame (this will be applied to the 3D
+   *                         keypoint positions in camera coordinates).
+   * \param intrinsics       The intrinsic parameters of the depth camera.
+   * \param keypointsImage   The output image that will contain the 3D coordinates
+   *                         (in the world reference frame, see cameraPose) and colour
+   *                         of the extracted keypoints. Will be resized as necessary.
+   * \param descriptorsImage The output image that will contain the feature descriptors.
    */
   virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
                                const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                               KeypointImage *keypointsImage, DescriptorImage *featuresImage) const = 0;
+                               KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Extract keypoints from an RGBD image and compute feature descriptors for them.
+   * \brief Extracts keypoints from an RGBD image and compute feature descriptors for them.
    *        Each keypoint position is in camera coordinates, based on the depth camera's intrinsics.
    *
    * \note  We implicitly assume that pixels in the colour and depth images are registered.
    * \note  Keypoints/descriptors are computed on a grid in the input image pair, with the step
    *        set by set_feature_step.
    *
-   * \param rgbImage        The colour image.
-   * \param depthImage      The depth image.
-   * \param intrinsics      The intrinsic parameters of the depth camera.
-   * \param keypointsImage  The output image that will contain the 3D coordinates
-   *                        (in the camera's reference frame) and colour of the
-   *                        extracted features. Will be resized as necessary.
-   * \param featuresImage   The output image that will contain the feature descriptors.
+   * \param rgbImage         The colour image.
+   * \param depthImage       The depth image.
+   * \param intrinsics       The intrinsic parameters of the depth camera.
+   * \param keypointsImage   The output image that will contain the 3D coordinates
+   *                         (in the camera's reference frame) and colour of the
+   *                         extracted features. Will be resized as necessary.
+   * \param descriptorsImage The output image that will contain the feature descriptors.
    */
   void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
-                       KeypointImage *keypointsImage, DescriptorImage *featuresImage) const;
+                       KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const;
 
   /**
    * \brief Gets the step used when selecting keypoints and computing the features.

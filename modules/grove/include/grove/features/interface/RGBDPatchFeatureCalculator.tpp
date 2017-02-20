@@ -68,8 +68,8 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::RGBDPatchFeatureCalcul
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
 
   // Setup parameters as indicated
-  m_normalizeDepth = depthAdaptive;
-  m_normalizeRgb = depthAdaptive;
+  m_normaliseDepth = depthAdaptive;
+  m_normaliseRgb = depthAdaptive;
 
   m_depthFeatureCount = depthFeatureCount;
   m_depthFeatureOffset = depthFeatureOffset;
@@ -150,14 +150,14 @@ RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::~RGBDPatchFeatureCalcu
 
 template<typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
-                                                                               KeypointImage *keypointsImage, DescriptorImage *featuresImage) const
+                                                                               KeypointImage *keypointsImage, DescriptorImage *descriptorsImage) const
 {
   // Use the identity transform to call the virtual function.
   // Keypoints will have 3D coordinates in camera reference frame.
   Matrix4f identity;
   identity.setIdentity();
 
-  compute_feature(rgbImage, depthImage, identity, intrinsics, keypointsImage, featuresImage);
+  compute_feature(rgbImage, depthImage, identity, intrinsics, keypointsImage, descriptorsImage);
 }
 
 template<typename KeypointType, typename DescriptorType>
@@ -178,7 +178,7 @@ template<typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::check_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
 {
   // Check inputs
-  if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normalizeDepth || m_normalizeRgb || m_depthFeatureCount > 0))
+  if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normaliseDepth || m_normaliseRgb || m_depthFeatureCount > 0))
   {
     throw std::invalid_argument("A valid depth image is required to compute the features.");
   }
