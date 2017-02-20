@@ -14,9 +14,6 @@ namespace grove {
 
 /**
  * \brief This struct can be used to construct feature calculators.
- *
- * The features are computed as described by Valentin et al. in "Exploiting
- * Uncertainty in Regression Forests for Accurate Camera Relocalization".
  */
 struct FeatureCalculatorFactory
 {
