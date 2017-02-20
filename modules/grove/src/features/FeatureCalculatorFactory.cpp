@@ -21,17 +21,24 @@ DA_RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_da_rgbd_patch_
 {
   DA_RGBDPatchFeatureCalculator_CPtr calculator;
 
+  bool depthAdaptive = true;
+  uint32_t depthFeatureCount = 128, depthFeatureOffset = 0, rgbFeatureCount = 128, rgbFeatureOffset = 128;
+
   if(deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour, RGBDPatchDescriptor>(true, 128, 0, 128, 128));
+    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>(
+      depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset
+    ));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint3DColour, RGBDPatchDescriptor>(true, 128, 0, 128, 128));
+    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescriptor>(
+      depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset
+    ));
   }
 
   return calculator;
@@ -41,17 +48,24 @@ RGBPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_rgb_patch_feature_
 {
   RGBPatchFeatureCalculator_CPtr calculator;
 
+  bool depthAdaptive = false;
+  uint32_t depthFeatureCount = 0, depthFeatureOffset = 0, rgbFeatureCount = 256, rgbFeatureOffset = 0;
+
   if(deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint2D, RGBDPatchDescriptor>(false, 0, 0, 256, 0));
+    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>(
+      depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset
+    ));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
   {
-    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint2D, RGBDPatchDescriptor>(false, 0, 0, 256, 0));
+    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint2D,RGBDPatchDescriptor>(
+      depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset
+    ));
   }
 
   return calculator;
