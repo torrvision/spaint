@@ -42,7 +42,7 @@ namespace grove {
 
 template <typename KeypointType, typename DescriptorType>
 RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset,
-                                                                                     uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset)
+                                                                                    uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset)
 : m_depthFeatureCount(depthFeatureCount),
   m_depthFeatureOffset(depthFeatureOffset),
   m_featureStep(4), // as per Julien's code (can be overridden with the setter on each invocation)
