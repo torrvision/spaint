@@ -59,7 +59,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalcula
   if(rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT)
     throw std::invalid_argument("rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT");
 
-  // Set up the memory blocks.
+  // Set up the memory blocks used to specify the features.
   const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
   m_depthOffsets = mbf.make_block<Vector4i>(m_depthFeatureCount);
   m_rgbChannels = mbf.make_block<uchar>(m_rgbFeatureCount);
