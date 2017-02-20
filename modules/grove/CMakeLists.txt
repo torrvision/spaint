@@ -26,9 +26,7 @@ SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 
 ##
-SET(features_base_headers
-include/grove/features/base/Descriptor.h
-)
+SET(features_base_headers include/grove/features/base/Descriptor.h)
 
 ##
 SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)
