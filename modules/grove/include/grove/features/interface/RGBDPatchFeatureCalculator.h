@@ -151,8 +151,7 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Checks whether or not the input images passed to compute_feature allow for
-   *        computation of the required features.
+   * \brief Checks whether or not the input images passed to compute_feature allow the required features to be computed.
    *
    * \param rgbImage    The colour image.
    * \param depthImage  The depth image.
@@ -160,6 +159,18 @@ protected:
    * \throws std::invalid_argument If the features cannot be computed.
    */
   void check_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
+
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Sets up the colour features.
+   */
+  void setup_colour_features();
+
+  /**
+   * \brief Sets up the depth features.
+   */
+  void setup_depth_features();
 };
 
 //#################### TYPEDEFS ####################
