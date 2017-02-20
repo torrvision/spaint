@@ -10,9 +10,9 @@ namespace grove {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class RGBDPatchFeatureCalculator<Keypoint2D, RGBDPatchDescriptor>;
-template class RGBDPatchFeatureCalculator<Keypoint3DColour, RGBDPatchDescriptor>;
-template class RGBDPatchFeatureCalculator_CPU<Keypoint2D, RGBDPatchDescriptor>;
-template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour, RGBDPatchDescriptor>;
+template class RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor>;
+template class RGBDPatchFeatureCalculator<Keypoint3DColour,RGBDPatchDescriptor>;
+template class RGBDPatchFeatureCalculator_CPU<Keypoint2D,RGBDPatchDescriptor>;
+template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescriptor>;
 
 }
