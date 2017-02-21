@@ -739,17 +739,17 @@ void Application::save_mesh() const
 
     if(model->get_tag().empty())
     {
-      p = p / ("spaint-" + TimeUtil::get_iso_timestamp() + ".obj");
+      p = p / ("spaint-" + TimeUtil::get_iso_timestamp() + ".stl");
     }
     else
     {
-      p = p / (model->get_tag() + ".obj");
+      p = p / (model->get_tag() + ".stl");
     }
 
     boost::filesystem::create_directories(p.parent_path());
 
     std::cout << "Saving current reconstruction in: " << p << '\n';
-    mesh->WriteOBJ(p.c_str());
+    mesh->WriteSTL(p.c_str());
   }
   else
   {
