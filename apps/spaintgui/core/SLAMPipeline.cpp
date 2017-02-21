@@ -22,7 +22,7 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
     const std::vector<std::string>& trackerParams,
     spaint::SLAMComponent::MappingMode mappingMode,
     spaint::SLAMComponent::TrackingMode trackingMode)
-: MultiScenePipeline(settings, resourcesDir, 2, experimentTag)
+: MultiScenePipeline("slam", settings, resourcesDir, 2, experimentTag)
 // Need to use 2 labels to avoid crash.
 // TODO fix it
 // using 0 crashes for an invalid MemoryBlock allocation

@@ -410,7 +410,7 @@ try
       maxLabelCount,
       imageSourceEngine,
       trackerType,
-      trackerParams,
+      trackerConfigs,
       mappingMode,
       trackingMode,
       fiducialDetector,

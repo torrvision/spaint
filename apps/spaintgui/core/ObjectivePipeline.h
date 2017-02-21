@@ -31,7 +31,7 @@ public:
    * \param mirrorWorldPose   Whether or not to mirror the world pose when reconstructing the object.
    */
   ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                    spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::string& trackerParams = "",
+                    spaint::TrackerType trackerType = spaint::TRACKER_INFINITAM, const std::vector<std::string>& trackerParams = std::vector<std::string>(),
                     spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                     spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS,
                     const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),

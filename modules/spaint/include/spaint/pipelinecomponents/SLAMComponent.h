@@ -138,15 +138,6 @@ private:
   /** The ID of the scene (if any) whose pose is to be mirrored. */
   std::string m_mirrorSceneID;
 
-  /** The database of previous poses for relocalisation. */
-  PoseDatabase_Ptr m_poseDatabase;
-
-  /** The relocaliser. */
-  Relocaliser_Ptr m_relocaliser;
-
-  /** The ID of the scene to reconstruct. */
-  std::string m_sceneID;
-
   /** The tracker. */
   Tracker_Ptr m_tracker;
 

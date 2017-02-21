@@ -40,7 +40,7 @@ namespace bf = boost::filesystem;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
-using namespace RelocLib;
+using namespace FernRelocLib;
 using namespace tvgutil;
 
 namespace spaint
