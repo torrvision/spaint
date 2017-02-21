@@ -9,7 +9,6 @@
 #include "util/MemoryBlockFactory.h"
 
 #include <thrust/device_ptr.h>
-#include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 
 using namespace tvgutil;
@@ -221,11 +220,13 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   ck_compute_energies<<<gridSize, blockSize>>>(keypoints, predictions, inliers, nbInliers, poseCandidates, nbPoseCandidates);
   ORcudaKernelCheck;
 
-  // Sort by ascending energy
-  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
-  thrust::device_ptr<PoseCandidate> candidatesEnd(
-      poseCandidates + nbPoseCandidates);
-  thrust::sort(candidatesStart, candidatesEnd);
+  throw std::runtime_error("build fails with the following thrust call");
+
+//  // Sort by ascending energy
+//  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
+//  thrust::device_ptr<PoseCandidate> candidatesEnd(
+//      poseCandidates + nbPoseCandidates);
+//  thrust::sort(candidatesStart, candidatesEnd, &test);
 }
 
 void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
