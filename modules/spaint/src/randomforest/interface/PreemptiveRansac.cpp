@@ -631,16 +631,10 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     double differentiationStep = 0.0001;
     alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
 
-//    double epsg = 0.000001;
-//    double epsf = 0;
-//    double epsx = 0;
-//    alglib::ae_int_t maxits = 100;
-
-    double epsg = 0.00001;
-    double epsf = 0.00001;
-    double epsx = 0.00001;
-    alglib::ae_int_t maxits = 10;
-
+    double epsg = 0.000001;
+    double epsf = 0;
+    double epsx = 0;
+    alglib::ae_int_t maxits = 100;
     alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
 
     double energyBefore, energyAfter;
