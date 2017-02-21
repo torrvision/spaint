@@ -15,85 +15,6 @@
 namespace grove {
 
 /**
- * \brief Computes a keypoint for the specified pixel in the RGBD image.
- *
- * \param xyIn        The coordinates of the pixel in the RGBD image for which to compute the keypoint.
- * \param xyOut       The coordinates of the pixel in the keypoints image into which to store the computed keypoint.
- * \param inSize      The size of the RGBD image.
- * \param outSize     The size of the keypoints image.
- * \param rgb         A pointer to the colour image.
- * \param depths      A pointer to the depth image.
- * \param cameraPose  The transform bringing points in camera coordinates to the "descriptor" reference frame.
- *                    This is set to the identity matrix when relocalising the frame and to the inverse camera
- *                    pose when adapting the relocalisation forest.
- * \param intrinsics  The intrinsic parameters for the depth camera.
- * \param keypoints   A pointer to the keypoints image, into which the computed keypoint will be written.
- */
-template <typename KeypointType>
-_CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                             KeypointType *keypoints);
-
-/**
- * \brief Computes a 2D keypoint for the specified pixel in the RGBD image.
- *
- * The computed keypoint will always be valid.
- */
-template <>
-_CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                             Keypoint2D *keypoints)
-{
-  // Look up the keypoint corresponding to the specified pixel.
-  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
-  Keypoint2D& outKeypoint = keypoints[linearIdxOut];
-
-  // Set its parameters appropriately. Note that 2D keypoints are always valid (and represent the input coordinates).
-  outKeypoint.position = xyIn.toFloat();
-  outKeypoint.valid = true;
-}
-
-/**
- * \brief Computes a 3D keypoint for the specified pixel in the RGBD image.
- *
- * The coordinates are in the local/global frame depending on cameraPose.
- * Validity depends on the availability of depth information.
- */
-template <>
-_CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                             Keypoint3DColour *keypoints)
-{
-  // Look up the keypoint corresponding to the specified pixel.
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
-  Keypoint3DColour& outKeypoint = keypoints[linearIdxOut];
-
-  // Check whether depth is available for the specified pixel. If not, mark the keypoint as invalid and early out.
-  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
-  const float depth = depths[linearIdxIn];
-  if(depth <= 0.0f)
-  {
-    outKeypoint.valid = false;
-    return;
-  }
-
-  // Back-project the keypoint to determine its position in camera coordinates.
-  const Vector3f position = reproject(xyIn, depth, intrinsics);
-
-  // Determine the keypoint's position in "descriptor" coordinates.
-  outKeypoint.position = cameraPose * position;
-
-  // Record the pixel's colour in the keypoint for future reference. Default to black if no colour image is available.
-  outKeypoint.colour = rgb ? rgb[linearIdxIn].toVector3() : Vector3u(0, 0, 0);
-
-  // Mark the keypoint as valid.
-  outKeypoint.valid = true;
-}
-
-/**
  * \brief Fill the keypoint and compute the RGB part of the descriptor.
  *
  * \param keypoints     A pointer to the keypoint image to fill.
@@ -257,6 +178,86 @@ inline void compute_depth_patch_feature(const KeypointType *keypoints, Descripto
     outFeature.data[outputFeaturesOffset + featIdx] = depth_1_mm - depth_mm;
   }
 }
+
+/**
+ * \brief Computes a keypoint for the specified pixel in the RGBD image.
+ *
+ * \param xyIn        The coordinates of the pixel in the RGBD image for which to compute the keypoint.
+ * \param xyOut       The coordinates of the pixel in the keypoints image into which to store the computed keypoint.
+ * \param inSize      The size of the RGBD image.
+ * \param outSize     The size of the keypoints image.
+ * \param rgb         A pointer to the colour image.
+ * \param depths      A pointer to the depth image.
+ * \param cameraPose  The transform bringing points in camera coordinates to the "descriptor" reference frame.
+ *                    This is set to the identity matrix when relocalising the frame and to the inverse camera
+ *                    pose when adapting the relocalisation forest.
+ * \param intrinsics  The intrinsic parameters for the depth camera.
+ * \param keypoints   A pointer to the keypoints image, into which the computed keypoint will be written.
+ */
+template <typename KeypointType>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                             KeypointType *keypoints);
+
+/**
+ * \brief Computes a 2D keypoint for the specified pixel in the RGBD image.
+ *
+ * The computed keypoint will always be valid.
+ */
+template <>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                             Keypoint2D *keypoints)
+{
+  // Look up the keypoint corresponding to the specified pixel.
+  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
+  Keypoint2D& outKeypoint = keypoints[linearIdxOut];
+
+  // Set its parameters appropriately. Note that 2D keypoints are always valid (and represent the input coordinates).
+  outKeypoint.position = xyIn.toFloat();
+  outKeypoint.valid = true;
+}
+
+/**
+ * \brief Computes a 3D keypoint for the specified pixel in the RGBD image.
+ *
+ * The coordinates are in the local/global frame depending on cameraPose.
+ * Validity depends on the availability of depth information.
+ */
+template <>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                             Keypoint3DColour *keypoints)
+{
+  // Look up the keypoint corresponding to the specified pixel.
+  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
+  Keypoint3DColour& outKeypoint = keypoints[linearIdxOut];
+
+  // Check whether depth is available for the specified pixel. If not, mark the keypoint as invalid and early out.
+  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
+  const float depth = depths[linearIdxIn];
+  if(depth <= 0.0f)
+  {
+    outKeypoint.valid = false;
+    return;
+  }
+
+  // Back-project the keypoint to determine its position in camera coordinates.
+  const Vector3f position = reproject(xyIn, depth, intrinsics);
+
+  // Determine the keypoint's position in "descriptor" coordinates.
+  outKeypoint.position = cameraPose * position;
+
+  // Record the pixel's colour in the keypoint for future reference. Default to black if no colour image is available.
+  outKeypoint.colour = rgb ? rgb[linearIdxIn].toVector3() : Vector3u(0, 0, 0);
+
+  // Mark the keypoint as valid.
+  outKeypoint.valid = true;
+}
+
 }
 
 #endif
