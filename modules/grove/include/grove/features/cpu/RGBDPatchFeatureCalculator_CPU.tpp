@@ -61,7 +61,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       // If there is a depth image available and any depth features need to be computed for the keypoint, compute them.
       if(depths && this->m_depthFeatureCount > 0)
       {
-        compute_depth_patch_feature(
+        compute_depth_features(
           keypoints, descriptors, depths, depthOffsets, inSize, outSize,
           intrinsics, cameraPose, this->m_normaliseDepth, xyIn, xyOut,
           this->m_depthFeatureCount, this->m_depthFeatureOffset
@@ -71,7 +71,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       // If there is a colour image available and any colour features need to be computed for the keypoint, compute them.
       if(rgb && this->m_rgbFeatureCount > 0)
       {
-        compute_colour_patch_feature(
+        compute_colour_features(
           xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
           keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
           this->m_normaliseRgb, descriptors

@@ -33,10 +33,10 @@ namespace grove {
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_colour_patch_feature(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                                         const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
-                                         const KeypointType *keypoints, const uint32_t featuresCount, const uint32_t outputFeaturesOffset,
-                                         const bool normalise, DescriptorType *descriptors)
+inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                                    const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
+                                    const KeypointType *keypoints, const uint32_t featuresCount, const uint32_t outputFeaturesOffset,
+                                    const bool normalise, DescriptorType *descriptors)
 {
   const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
@@ -116,9 +116,9 @@ inline void compute_colour_patch_feature(const Vector2i& xyIn, const Vector2i& x
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_patch_feature(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
-                                        const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
-                                        bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+inline void compute_depth_features(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
+                                   const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
+                                   bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
