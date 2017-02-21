@@ -17,25 +17,25 @@ namespace grove {
 /**
  * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param xyIn                  The pixel in the RGBD image for which to compute colour features.
- * \param xyOut                 The position in the descriptors image into which to write the computed features.
- * \param inSize                The size of the RGBD image.
- * \param outSize               The size of the keypoints/descriptors images.
- * \param rgb                   A pointer to the colour image.
- * \param depths                A pointer to the depth image.
- * \param rgbOffsets            A pointer to the vector of offsets needed to specify the colour features to be computed.
- * \param rgbChannels           A pointer to the vector of colour channels needed to specify the colour features to be computed.
- * \param keypoints             A pointer to the keypoints image.
- * \param featuresCount         The number of colour features to be computed.
- * \param outputFeaturesOffset  The starting offset of the colour features in the feature descriptor.
- * \param normalise             Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
- * \param descriptors           A pointer to the descriptors image.
+ * \param xyIn              The pixel in the RGBD image for which to compute colour features.
+ * \param xyOut             The position in the descriptors image into which to write the computed features.
+ * \param inSize            The size of the RGBD image.
+ * \param outSize           The size of the keypoints/descriptors images.
+ * \param rgb               A pointer to the colour image.
+ * \param depths            A pointer to the depth image.
+ * \param rgbOffsets        A pointer to the vector of offsets needed to specify the colour features to be computed.
+ * \param rgbChannels       A pointer to the vector of colour channels needed to specify the colour features to be computed.
+ * \param keypoints         A pointer to the keypoints image.
+ * \param rgbFeatureCount   The number of colour features to be computed.
+ * \param rgbFeatureOffset  The starting offset of the colour features in the feature descriptor.
+ * \param normalise         Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
+ * \param descriptors       A pointer to the descriptors image.
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
                                     const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
-                                    const KeypointType *keypoints, const uint32_t featuresCount, const uint32_t outputFeaturesOffset,
+                                    const KeypointType *keypoints, const uint32_t rgbFeatureCount, const uint32_t rgbFeatureOffset,
                                     const bool normalise, DescriptorType *descriptors)
 {
   const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
@@ -52,7 +52,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
   const float depth = (depths && normalise) ? depths[linearIdxIn] : 0.f;
 
   // Compute the differences and fill the descriptor.
-  for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
+  for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
     const Vector4i offset = rgbOffsets[featIdx];
@@ -88,12 +88,12 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     //    const int linear_2 = y2 * img_size.x + x2;
 
     // References to the output storage.
-    DescriptorType &outFeature = descriptors[linearIdxOut];
+    DescriptorType& outFeature = descriptors[linearIdxOut];
     // This would be the correct definition but scoreforests's code has the other one
     //    outFeature.data[outputFeaturesOffset + featIdx] =
     //        rgb[linear_1][channel] - rgb[linear_2][channel];
 
-    outFeature.data[outputFeaturesOffset + featIdx] = rgb[linear_1][channel] - rgb[linearIdxIn][channel];
+    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear_1][channel] - rgb[linearIdxIn][channel];
   }
 }
 

@@ -14,9 +14,10 @@ namespace {
 //#################### CUDA KERNELS ####################
 
 template <typename KeypointType, typename DescriptorType>
-__global__ void ck_compute_colour_features(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
-                                           const Vector4i *offsetsRgb, const uchar *channelsRgb, Vector2i imgSize, Vector2i outSize,
-                                           uint32_t featureStep, bool normalise, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+__global__ void ck_compute_colour_features(Vector2i inSize, Vector2i outSize, const Vector4u *rgb, const float *depths,
+                                           const Vector4i *rgbOffsets, const uchar *rgbChannels, const KeypointType *keypoints,
+                                           uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t featureStep,
+                                           bool normalise, DescriptorType *descriptors)
 {
   // Determine the coordinates of the pixel in the descriptors image into which we will write the colour feature.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x, threadIdx.y + blockIdx.y * blockDim.y);
@@ -27,7 +28,7 @@ __global__ void ck_compute_colour_features(const KeypointType *keypoints, Descri
     const Vector2i xyIn = xyOut * featureStep;
 
     // Compute the colour feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_colour_features(xyIn, xyOut, imgSize, outSize, rgb, depths, offsetsRgb, channelsRgb, keypoints, featuresCount, outputFeaturesOffset, normalise, descriptors);
+    compute_colour_features(xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels, keypoints, rgbFeatureCount, rgbFeatureOffset, normalise, descriptors);
   }
 }
 
@@ -130,9 +131,9 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_featu
   if(rgb && this->m_rgbFeatureCount > 0)
   {
     ck_compute_colour_features<<<gridSize,blockSize>>>(
-      keypoints, descriptors, rgb, depths, rgbOffsets, rgbChannels,
-      inSize, outSize, this->m_featureStep, this->m_normaliseRgb,
-      this->m_rgbFeatureCount, this->m_rgbFeatureOffset
+      inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+      keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
+      this->m_featureStep, this->m_normaliseRgb, descriptors
     );
     ORcudaKernelCheck;
   }
