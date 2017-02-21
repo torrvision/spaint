@@ -508,15 +508,14 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
     cameraState[i] = candidateCameraPose.GetParams()[i];
   }
 
-  for (int inlierIdx = 0; inlierIdx < poseCandidate.nbInliers; ++inlierIdx)
+  for (int inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
   {
-    const PoseCandidate::Inlier &inlier = poseCandidate.inliers[inlierIdx];
+    const int inlierLinearIdx = inliersData[inlierIdx];
     const Vector3f inlierCameraPosition =
-    keypointsData[inlier.linearIdx].position.toVector3();
+        keypointsData[inlierLinearIdx].position;
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
-    * inlierCameraPosition;
-    const ScorePrediction &prediction = predictionsData[inlier.linearIdx];
-    // The assumption is that the inlier is valid (checked before)
+        * inlierCameraPosition;
+    const ScorePrediction &prediction = predictionsData[inlierLinearIdx];
 
     // Find the best mode
     // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
