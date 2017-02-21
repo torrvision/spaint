@@ -176,10 +176,12 @@ include/spaint/imageprocessing/shared/ImageProcessor_Shared.h
 ##
 SET(imagesources_sources
 src/imagesources/AsyncImageSourceEngine.cpp
+src/imagesources/SingleRGBDImagePipe.cpp
 )
 
 SET(imagesources_headers
 include/spaint/imagesources/AsyncImageSourceEngine.h
+include/spaint/imagesources/SingleRGBDImagePipe.h
 )
 
 ##
@@ -241,6 +243,7 @@ include/spaint/ogl/CameraRenderer.h
 include/spaint/ogl/FrameBuffer.h
 include/spaint/ogl/QuadricRenderer.h
 include/spaint/ogl/WrappedGL.h
+include/spaint/ogl/WrappedGLUT.h
 )
 
 ##
@@ -282,6 +285,8 @@ include/spaint/picking/shared/Picker_Shared.h
 
 ##
 SET(pipelinecomponents_sources
+src/pipelinecomponents/ObjectSegmentationComponent.cpp
+src/pipelinecomponents/ObjectSegmentationContext.cpp
 src/pipelinecomponents/PropagationComponent.cpp
 src/pipelinecomponents/SemanticSegmentationComponent.cpp
 src/pipelinecomponents/SLAMComponent.cpp
@@ -291,6 +296,8 @@ src/pipelinecomponents/SmoothingComponent.cpp
 )
 
 SET(pipelinecomponents_headers
+include/spaint/pipelinecomponents/ObjectSegmentationComponent.h
+include/spaint/pipelinecomponents/ObjectSegmentationContext.h
 include/spaint/pipelinecomponents/PropagationComponent.h
 include/spaint/pipelinecomponents/PropagationContext.h
 include/spaint/pipelinecomponents/SemanticSegmentationComponent.h
@@ -454,12 +461,21 @@ include/spaint/sampling/shared/UniformVoxelSampler_Shared.h
 
 ##
 SET(segmentation_sources
+src/segmentation/ColourAppearanceModel.cpp
 src/segmentation/SegmentationUtil.cpp
+src/segmentation/Segmenter.cpp
 )
 
 SET(segmentation_headers
+include/spaint/segmentation/ColourAppearanceModel.h
 include/spaint/segmentation/SegmentationUtil.h
+include/spaint/segmentation/Segmenter.h
 )
+
+IF(WITH_ARRAYFIRE AND WITH_OPENCV)
+  SET(segmentation_sources ${segmentation_sources} src/segmentation/BackgroundSubtractingObjectSegmenter.cpp)
+  SET(segmentation_headers ${segmentation_headers} include/spaint/segmentation/BackgroundSubtractingObjectSegmenter.h)
+ENDIF()
 
 ##
 SET(selectiontransformers_sources

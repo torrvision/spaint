@@ -44,7 +44,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** An image in which to store a mask of the changes that have been detected in the scene with respect to the reconstructed model. */
-  af::array m_changeMask;
+  AFArray_Ptr m_changeMask;
 
   /** An image in which to store the connected components of the change mask. */
   af::array m_connectedComponentImage;
@@ -55,7 +55,7 @@ private:
   /** The depth visualiser. */
   DepthVisualiser_CPtr m_depthVisualiser;
 
-  /** An image in which each pixel is the absolute difference between the raw depth image and the depth raycast. */
+  /** An image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast. */
   AFArray_Ptr m_diffRawRaycast;
 
   /** The random forest used to score the candidate connected components. */
@@ -118,6 +118,41 @@ public:
    * \return      A colour image containing the current touch interaction (if any).
    */
   ITMUChar4Image_CPtr generate_touch_image(const View_CPtr& view) const;
+
+  /**
+   * \brief Gets the depth of the reconstructed model as viewed from the current camera pose.
+   *
+   * \return  The depth of the reconstructed model as viewed from the current camera pose.
+   */
+  ITMFloatImage_CPtr get_depth_raycast() const;
+
+  /**
+   * \brief Gets an image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast.
+   *
+   * \return  An image in which each pixel is the absolute difference (in m) between the raw depth image and the depth raycast.
+   */
+  ITMFloatImage_CPtr get_diff_raw_raycast() const;
+
+  /**
+   * \brief Gets a mask denoting the detected touch region.
+   *
+   * \return  A mask denoting the detected touch region.
+   */
+  ITMUCharImage_CPtr get_touch_mask() const;
+
+  /**
+   * \brief Gets a thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out.
+   *
+   * \return  A thresholded version of the raw depth image captured from the camera in which parts of the scene > 2m away have been masked out.
+   */
+  ITMFloatImage_CPtr get_thresholded_raw_depth() const;
+
+  /**
+   * \brief Gets the depth value to use for pixels whose rays do not hit the scene when raycasting.
+   *
+   * \return  The depth value to use for pixels whose rays do not hit the scene when raycasting.
+   */
+  float invalid_depth_value() const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
@@ -207,6 +242,11 @@ private:
    */
   static Vector3f to_itm(const Eigen::Vector3f& v);
 };
+
+//#################### TYPEDEFS ####################
+
+typedef boost::shared_ptr<TouchDetector> TouchDetector_Ptr;
+typedef boost::shared_ptr<const TouchDetector> TouchDetector_CPtr;
 
 }
 

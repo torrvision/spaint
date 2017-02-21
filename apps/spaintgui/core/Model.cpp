@@ -126,6 +126,11 @@ void Model::mark_voxels(const std::string& sceneID, const Selection_CPtr& select
   m_voxelMarker->mark_voxels(*selection, *labels, get_slam_state(sceneID)->get_voxel_scene().get(), mode);
 }
 
+void Model::set_leap_fiducial_id(const std::string& leapFiducialID)
+{
+  m_leapFiducialID = leapFiducialID;
+}
+
 void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
 {
   m_semanticLabel = semanticLabel;
@@ -139,7 +144,10 @@ void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& 
     if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(m_settings));
     else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(m_settings));
 #ifdef WITH_LEAP
-    else if(inputState.key_down(KEYCODE_3)) m_selector.reset(new LeapSelector(m_settings));
+    else if(inputState.key_down(KEYCODE_3))
+    {
+      m_selector.reset(new LeapSelector(m_settings, m_voxelVisualisationEngine, LeapSelector::MODE_POINT, m_leapFiducialID));
+    }
 #endif
 #ifdef WITH_ARRAYFIRE
     else if(inputState.key_down(KEYCODE_4))

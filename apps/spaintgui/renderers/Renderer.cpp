@@ -54,9 +54,14 @@ public:
   /** Override */
   virtual void visit(const LeapSelector& selector) const
   {
+    // Render the camera representing the Leap Motion controller's coordinate frame.
+    CameraRenderer::render_camera(selector.get_camera(), CameraRenderer::AXES_XYZ, 0.1f);
+
+    // Get the most recent frame of data from the Leap Motion. If it's invalid or does not contain precisely one hand, early out.
     const Leap::Frame& frame = selector.get_frame();
     if(!frame.isValid() || frame.hands().count() != 1) return;
 
+    // Render the virtual hand.
     const Leap::Hand& hand = frame.hands()[0];
     for(int fingerIndex = 0, fingerCount = hand.fingers().count(); fingerIndex < fingerCount; ++fingerIndex)
     {
@@ -69,16 +74,31 @@ public:
 
         glColor3f(0.8f, 0.8f, 0.8f);
         QuadricRenderer::render_cylinder(
-          LeapSelector::from_leap_position(bone.prevJoint()),
-          LeapSelector::from_leap_position(bone.nextJoint()),
+          selector.from_leap_position(bone.prevJoint()),
+          selector.from_leap_position(bone.nextJoint()),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           LeapSelector::from_leap_size(bone.width() * 0.5f),
           10
         );
 
         glColor3f(1.0f, 0.0f, 0.0f);
-        QuadricRenderer::render_sphere(LeapSelector::from_leap_position(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
+        QuadricRenderer::render_sphere(selector.from_leap_position(bone.nextJoint()), LeapSelector::from_leap_size(bone.width() * 0.7f), 10, 10);
       }
+    }
+
+    // If the selector is in point mode and the user is pointing at a valid voxel in the world,
+    // draw a line between the tip of the virtual index finger and the voxel in question.
+    if(selector.get_mode() == LeapSelector::MODE_POINT && selector.get_position())
+    {
+      const Leap::Finger& indexFinger = hand.fingers()[1];
+      Eigen::Vector3f start = selector.from_leap_position(indexFinger.tipPosition());
+      Eigen::Vector3f end = *selector.get_position();
+
+      glColor3f(0.0f, 1.0f, 1.0f);
+      glBegin(GL_LINES);
+        glVertex3f(start.x(), start.y(), start.z());
+        glVertex3f(end.x(), end.y(), end.z());
+      glEnd();
     }
   }
 #endif
@@ -251,7 +271,7 @@ void Renderer::end_2d()
 {
   glDepthMask(true);
 
-  // We assume that the matrix mode is still set to GL_MODELVIEW at the start of this function.
+  glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
   glMatrixMode(GL_PROJECTION);
@@ -317,8 +337,8 @@ void Renderer::render_scene(const Vector2f& fracWindowPos, bool renderFiducials,
     ORUtils::SE3Pose pose = CameraPoseConverter::camera_to_pose(*camera);
 
     // Render the reconstructed scene, then render a synthetic scene over the top of it.
-    render_reconstructed_scene(sceneID, pose, subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex), subwindow);
-    render_synthetic_scene(sceneID, pose, renderFiducials);
+    render_reconstructed_scene(sceneID, pose, subwindow, viewIndex);
+    render_synthetic_scene(sceneID, pose, subwindow.get_camera_mode(), renderFiducials);
 
 #if WITH_GLUT && USE_PIXEL_DEBUGGING
     // Render the value of the pixel to which the user is pointing (for debugging purposes).
@@ -409,8 +429,7 @@ void Renderer::render_pixel_value(const Vector2f& fracWindowPos, const Subwindow
 }
 #endif
 
-void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
-                                          Subwindow& subwindow) const
+void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow& subwindow, int viewIndex) const
 {
   // Set up any post-processing that needs to be applied to the rendering result.
   // FIXME: At present, median filtering breaks in CPU mode, so we prevent it from running, but we should investigate why.
@@ -432,8 +451,8 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   SLAMState_CPtr slamState = m_model->get_slam_state(sceneID);
   generate_visualisation(
     image, slamState->get_voxel_scene(), slamState->get_surfel_scene(),
-    voxelRenderState, surfelRenderState, pose, slamState->get_view(),
-    subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
+    subwindow.get_voxel_render_state(viewIndex), subwindow.get_surfel_render_state(viewIndex),
+    pose, slamState->get_view(), subwindow.get_type(), subwindow.get_surfel_flag(), postprocessor
   );
 
   // Copy the raycasted scene to a texture.
@@ -448,7 +467,7 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   end_2d();
 }
 
-void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, bool renderFiducials) const
+void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const
 {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
@@ -492,7 +511,15 @@ void Renderer::render_synthetic_scene(const std::string& sceneID, const SE3Pose&
           CameraRenderer::render_camera(cam, CameraRenderer::AXES_XYZ, 0.1f, Vector3f(c, c, 0.0f));
         }
       }
+
+      // If the camera for the subwindow is in follow mode, render any overlay image generated during object segmentation.
+      if(cameraMode == Subwindow::CM_FOLLOW)
+      {
+        const ITMUChar4Image_CPtr& segmentationImage = m_model->get_segmentation_image(sceneID);
+        if(segmentationImage) render_overlay(segmentationImage);
+      }
     }
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
   }
   glMatrixMode(GL_PROJECTION);

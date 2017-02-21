@@ -21,9 +21,7 @@ using namespace InputSource;
 using namespace ITMLib;
 
 #ifdef WITH_GLUT
-  #include <spaint/ogl/WrappedGL.h>
-  #include <GL/glut.h>
-  #undef WIN32_LEAN_AND_MEAN
+#include <spaint/ogl/WrappedGLUT.h>
 #endif
 
 #ifdef WITH_OVR
@@ -42,6 +40,7 @@ using namespace spaint;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
+#include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 #include "core/SLAMPipeline.h"
 
@@ -61,6 +60,7 @@ struct CommandLineArguments
   bool detectFiducials;
   std::string experimentTag;
   int initialFrameNumber;
+  std::string leapFiducialID;
   bool mapSurfels;
   bool noRelocaliser;
   bool noTracker;
@@ -74,6 +74,7 @@ struct CommandLineArguments
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifier;
   std::string sequenceType;
+  bool trackObject;
   bool trackSurfels;
 };
 
@@ -91,6 +92,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
     ("experimentTag", po::value<std::string>(&args.experimentTag)->default_value(""), "experiment tag")
+    ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("noTracker", po::bool_switch(&args.noTracker), "don't use any tracker")
@@ -117,10 +119,16 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
   ;
 
+  po::options_description objectivePipelineOptions("Objective pipeline options");
+  objectivePipelineOptions.add_options()
+    ("trackObject", po::bool_switch(&args.trackObject), "track the object")
+  ;
+
   po::options_description options;
   options.add(genericOptions);
   options.add(cameraOptions);
   options.add(diskSequenceOptions);
+  options.add(objectivePipelineOptions);
 
   // Actually parse the command line.
   po::variables_map vm;
@@ -204,8 +212,12 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
 
-  // If the user wants to enable fiducial rendering, make sure that fiducial detection is also enabled.
-  if(args.renderFiducials) args.detectFiducials = true;
+  // If the user wants to enable fiducial rendering or specifies a fiducial to use for the Leap Motion,
+  // make sure that fiducial detection is enabled.
+  if(args.renderFiducials || args.leapFiducialID != "")
+  {
+    args.detectFiducials = true;
+  }
 
   return true;
 }
@@ -390,6 +402,22 @@ try
       args.detectFiducials
     ));
   }
+  else if(args.pipelineType == "objective")
+  {
+    pipeline.reset(new ObjectivePipeline(
+      settings,
+      Application::resources_dir().string(),
+      maxLabelCount,
+      imageSourceEngine,
+      trackerType,
+      trackerParams,
+      mappingMode,
+      trackingMode,
+      fiducialDetector,
+      args.detectFiducials,
+      !args.trackObject
+    ));
+  }
   else if(args.pipelineType == "slam")
   {
     pipeline.reset(new SLAMPipeline(settings,
@@ -403,7 +431,12 @@ try
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
-  // Configure the application.
+#ifdef WITH_LEAP
+  // Set the ID of the fiducial to use for the Leap Motion (if any).
+  pipeline->get_model()->set_leap_fiducial_id(args.leapFiducialID);
+#endif
+
+  // Configure the application
   Application app(pipeline, args.renderFiducials);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   app.set_batch_mode(args.batch);

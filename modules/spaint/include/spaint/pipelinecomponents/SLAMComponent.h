@@ -6,6 +6,9 @@
 #ifndef H_SPAINT_SLAMCOMPONENT
 #define H_SPAINT_SLAMCOMPONENT
 
+#include <FernRelocLib/PoseDatabase.h>
+#include <FernRelocLib/Relocaliser.h>
+
 #include <InputSource/CompositeImageSourceEngine.h>
 
 #include <ITMLib/Core/ITMDenseMapper.h>
@@ -14,9 +17,6 @@
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
-
-#include <RelocLib/PoseDatabase.h>
-#include <RelocLib/Relocaliser.h>
 
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
@@ -37,8 +37,8 @@ protected:
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<RelocLib::PoseDatabase> PoseDatabase_Ptr;
-  typedef boost::shared_ptr<RelocLib::Relocaliser> Relocaliser_Ptr;
+  typedef boost::shared_ptr<FernRelocLib::PoseDatabase> PoseDatabase_Ptr;
+  typedef boost::shared_ptr<FernRelocLib::Relocaliser<float> > Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
@@ -135,6 +135,18 @@ private:
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
 
+  /** The ID of the scene (if any) whose pose is to be mirrored. */
+  std::string m_mirrorSceneID;
+
+  /** The database of previous poses for relocalisation. */
+  PoseDatabase_Ptr m_poseDatabase;
+
+  /** The relocaliser. */
+  Relocaliser_Ptr m_relocaliser;
+
+  /** The ID of the scene to reconstruct. */
+  std::string m_sceneID;
+
   /** The tracker. */
   Tracker_Ptr m_tracker;
 
@@ -189,6 +201,13 @@ public:
    * \return  true, if the user wants fusion to be run, or false otherwise.
    */
   bool get_fusion_enabled() const;
+
+  /**
+   * \brief Makes the SLAM component mirror the pose of the specified scene, rather than using its own tracker.
+   *
+   * \param mirrorSceneID The ID of the scene whose pose is to be mirrored.
+   */
+  void mirror_pose_of(const std::string& mirrorSceneID);
 
   /**
    * \brief Attempts to run the SLAM component for a single frame.

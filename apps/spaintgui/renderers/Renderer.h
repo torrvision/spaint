@@ -14,8 +14,7 @@
 #include <spaint/ogl/WrappedGL.h>
 
 #ifdef WITH_GLUT
-  #include <GL/glut.h>
-  #undef WIN32_LEAN_AND_MEAN
+#include <spaint/ogl/WrappedGLUT.h>
 #endif
 
 #include <rigging/MoveableCamera.h>
@@ -248,23 +247,22 @@ private:
   /**
    * \brief Renders the specified reconstructed scene into a sub-window.
    *
-   * \param sceneID           The scene ID.
-   * \param pose              The camera pose.
-   * \param voxelRenderState  The voxel render state corresponding to the camera pose.
-   * \param surfelRenderState The surfel render state corresponding to the camera pose.
-   * \param subwindow         The sub-window into which to render.
+   * \param sceneID   The scene ID.
+   * \param pose      The camera pose.
+   * \param subwindow The sub-window into which to render.
+   * \param viewIndex The index of the free camera view for the sub-window.
    */
-  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, VoxelRenderState_Ptr& voxelRenderState, SurfelRenderState_Ptr& surfelRenderState,
-                                  Subwindow& subwindow) const;
+  void render_reconstructed_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow& subwindow, int viewIndex) const;
 
   /**
    * \brief Renders a synthetic scene to augment what actually exists in the real world.
    *
    * \param sceneID         The ID of the reconstructed scene to augment.
    * \param pose            The camera pose.
+   * \param cameraMode      The camera mode.
    * \param renderFiducials Whether or not to render the fiducials (if any) that have been detected in the 3D scene.
    */
-  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, bool renderFiducials) const;
+  void render_synthetic_scene(const std::string& sceneID, const ORUtils::SE3Pose& pose, Subwindow::CameraMode cameraMode, bool renderFiducials) const;
 
 #ifdef WITH_GLUT
   /**

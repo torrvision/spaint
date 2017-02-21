@@ -15,8 +15,8 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-MultiScenePipeline::MultiScenePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const std::string &experimentTag)
-: m_mode(MODE_NORMAL)
+MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const std::string &experimentTag)
+: m_mode(MODE_NORMAL), m_type(type)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
 #ifndef WITH_CUDA
@@ -57,6 +57,11 @@ Model_CPtr MultiScenePipeline::get_model() const
   return m_model;
 }
 
+const std::string& MultiScenePipeline::get_type() const
+{
+  return m_type;
+}
+
 void MultiScenePipeline::reset_forest(const std::string& sceneID)
 {
   MapUtil::call_if_found(m_semanticSegmentationComponents, sceneID, boost::bind(&SemanticSegmentationComponent::reset_forest, _1));
@@ -93,6 +98,12 @@ void MultiScenePipeline::run_mode_specific_section(const std::string& sceneID, c
     case MODE_PROPAGATION:
       MapUtil::call_if_found(m_propagationComponents, sceneID, boost::bind(&PropagationComponent::run, _1, renderState));
       break;
+    case MODE_SEGMENTATION:
+      MapUtil::call_if_found(m_objectSegmentationComponents, sceneID, boost::bind(&ObjectSegmentationComponent::run_segmentation, _1, renderState));
+      break;
+    case MODE_SEGMENTATION_TRAINING:
+      MapUtil::call_if_found(m_objectSegmentationComponents, sceneID, boost::bind(&ObjectSegmentationComponent::run_segmentation_training, _1, renderState));
+      break;
     case MODE_SMOOTHING:
       MapUtil::call_if_found(m_smoothingComponents, sceneID, boost::bind(&SmoothingComponent::run, _1, renderState));
       break;
@@ -122,4 +133,9 @@ void MultiScenePipeline::set_detect_fiducials(const std::string& sceneID, bool d
 void MultiScenePipeline::set_fusion_enabled(const std::string& sceneID, bool fusionEnabled)
 {
   MapUtil::lookup(m_slamComponents, sceneID)->set_fusion_enabled(fusionEnabled);
+}
+
+void MultiScenePipeline::toggle_segmentation_output()
+{
+  MapUtil::call_if_found(m_objectSegmentationComponents, Model::get_world_scene_id(), boost::bind(&ObjectSegmentationComponent::toggle_output, _1));
 }
