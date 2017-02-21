@@ -34,8 +34,8 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
   keypointsImage->ChangeDims(outSize);
   descriptorsImage->ChangeDims(outSize);
 
-  const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
   const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
   const Vector2i inSize = depthImage->noDims;
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
   const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
