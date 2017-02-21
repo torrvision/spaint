@@ -39,17 +39,15 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
                                     const bool normalise, DescriptorType *descriptors)
 {
   const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
+
+  // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
   const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
+  const KeypointType& keypoint = keypoints[linearIdxOut];
+  if(!keypoint.valid) return;
 
-  const KeypointType& outKeypoint = keypoints[linearIdxOut];
-  if(!outKeypoint.valid)
-  {
-    return;
-  }
-
-  // If normalisation is turned off or the depth image is invalid set the depth for the current pixel to 0.
-  // outKeypoint should have been invalid if we actually needed that information.
-  const float depth = (depths && normalise) ? depths[linearIdxIn] : 0.f;
+  // If we're normalising the RGB offsets based on depth and depth information is available,
+  // look up the depth for the input pixel; otherwise, default to 1.
+  const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
 
   // Compute the differences and fill the descriptor.
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
