@@ -50,8 +50,8 @@ __global__ void ck_compute_depth_feature(const KeypointType *keypoints, Descript
 }
 
 template <typename KeypointType>
-__global__ void ck_compute_keypoints(const Vector2i& inSize, const Vector2i& outSize, const Vector4u *rgb, const float *depths,
-                                     const Matrix4f& cameraPose, const Vector4f& intrinsics, const uint32_t featureStep,
+__global__ void ck_compute_keypoints(const Vector2i inSize, const Vector2i outSize, const Vector4u *rgb, const float *depths,
+                                     const Matrix4f cameraPose, const Vector4f intrinsics, const uint32_t featureStep,
                                      KeypointType *keypoints)
 {
   // Determine the coordinates of the pixel in the keypoints image into which we will write the keypoint.
