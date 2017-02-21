@@ -58,9 +58,6 @@ private:
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
 
-  /** The mesh used by the meshing engine. */
-  Mesh_Ptr m_mesh;
-
   /** The meshing engine. */
   MeshingEngine_Ptr m_meshingEngine;
 
