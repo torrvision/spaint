@@ -15,29 +15,31 @@
 namespace grove {
 
 /**
- * \brief Fill the keypoint and compute the RGB part of the descriptor.
+ * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param keypoints     A pointer to the keypoint image to fill.
- * \param descriptors   A pointer to the descriptors image.
- * \param rgb           A pointer to the colour image.
- * \param depths        A pointer to the depth values.
- * \param offsetsRgb    A pointer to the vector of colour offsets used to compute the descriptor.
- * \param channelsRgb   A pointer to the vector storing the colour channels used to compute the descriptor.
- * \param imgSize       The size of the input RGBD image.
- * \param outSize       The size of the output keypoint/descriptor images.
- * \param normalise     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
- * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
- * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
+ * \param xyIn                  The pixel in the RGBD image for which to compute colour features.
+ * \param xyOut                 The position in the descriptors image into which to write the computed features.
+ * \param inSize                The size of the RGBD image.
+ * \param outSize               The size of the keypoints/descriptors images.
+ * \param rgb                   A pointer to the colour image.
+ * \param depths                A pointer to the depth image.
+ * \param rgbOffsets            A pointer to the vector of offsets needed to specify the colour features to be computed.
+ * \param rgbChannels           A pointer to the vector of colour channels needed to specify the colour features to be computed.
+ * \param keypoints             A pointer to the keypoints image.
+ * \param featuresCount         The number of colour features to be computed.
+ * \param outputFeaturesOffset  The starting offset of the colour features in the feature descriptor.
+ * \param normalise             Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
+ * \param descriptors           A pointer to the descriptors image.
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_colour_patch_feature(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                                         const Vector4u *rgb, const float *depths, const Vector4i *offsetsRgb, const uchar *channelsRgb,
+                                         const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
                                          const KeypointType *keypoints, const uint32_t featuresCount, const uint32_t outputFeaturesOffset,
                                          const bool normalise, DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
+  const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
+  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
 
   const KeypointType& outKeypoint = keypoints[linearIdxOut];
   if(!outKeypoint.valid)
@@ -52,8 +54,8 @@ inline void compute_colour_patch_feature(const Vector2i& xyIn, const Vector2i& x
   // Compute the differences and fill the descriptor.
   for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
   {
-    const int channel = channelsRgb[featIdx];
-    const Vector4i offset = offsetsRgb[featIdx];
+    const int channel = rgbChannels[featIdx];
+    const Vector4i offset = rgbOffsets[featIdx];
 
     // Secondary points used when computing the differences.
     int x1, y1;
