@@ -29,13 +29,11 @@ namespace grove {
  *                      Note: set to identity when relocalising the frame and to
  *                      the inverse camera pose when adapting the relocalisation forest.
  */
-template<typename KeypointType>
+template <typename KeypointType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(KeypointType *keypoints,
-    const Vector4u *rgb, const float *depths, const Vector4f &intrinsics,
-    const Vector2i &imgSize, const Vector2i &outSize,
-    const Vector2i &xyIn, const Vector2i &xyOut,
-    const Matrix4f &cameraPose);
+inline void compute_keypoint(KeypointType *keypoints, const Vector4u *rgb, const float *depths, const Vector4f& intrinsics,
+                             const Vector2i& imgSize, const Vector2i& outSize, const Vector2i& xyIn, const Vector2i& xyOut,
+                             const Matrix4f& cameraPose);
 
 /**
  * \brief Compute the keypoint according to the input images.
@@ -43,22 +41,20 @@ inline void compute_keypoint(KeypointType *keypoints,
  * Specialisation for 3D keypoints. The coordinates are in the local/global frame depending on cameraPose.
  * Validity depends on the availability of depth informations.
  */
-template<>
+template <>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(Keypoint3DColour *keypoints,
-    const Vector4u *rgb, const float *depths, const Vector4f &intrinsics,
-    const Vector2i &imgSize, const Vector2i &outSize,
-    const Vector2i &xyIn, const Vector2i &xyOut,
-    const Matrix4f &cameraPose)
+inline void compute_keypoint(Keypoint3DColour *keypoints, const Vector4u *rgb, const float *depths, const Vector4f& intrinsics,
+                             const Vector2i& imgSize, const Vector2i& outSize, const Vector2i& xyIn, const Vector2i& xyOut,
+                             const Matrix4f& cameraPose)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
   const float depth = depths[linearIdxIn];
 
   // References to the output storage.
-  Keypoint3DColour &outKeypoint = keypoints[linearIdxOut];
+  Keypoint3DColour& outKeypoint = keypoints[linearIdxOut];
 
-  if (depth <= 0.f)
+  if(depth <= 0.f)
   {
     // Mark as invalid and return.
     outKeypoint.valid = false;
@@ -83,13 +79,11 @@ inline void compute_keypoint(Keypoint3DColour *keypoints,
  *
  * Specialisation for 2D keypoints. Always valid.
  */
-template<>
+template <>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(Keypoint2D *keypoints,
-    const Vector4u *rgb, const float *depths, const Vector4f &intrinsics,
-    const Vector2i &imgSize, const Vector2i &outSize,
-    const Vector2i &xyIn, const Vector2i &xyOut,
-    const Matrix4f &cameraPose)
+inline void compute_keypoint(Keypoint2D *keypoints, const Vector4u *rgb, const float *depths, const Vector4f& intrinsics,
+                             const Vector2i& imgSize, const Vector2i& outSize, const Vector2i& xyIn, const Vector2i& xyOut,
+                             const Matrix4f& cameraPose)
 {
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
 
@@ -117,20 +111,17 @@ inline void compute_keypoint(Keypoint2D *keypoints,
  * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
  * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
  */
-template<typename KeypointType, typename DescriptorType>
+template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_colour_patch_feature(const KeypointType *keypoints,
-    DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
-    const Vector4i *offsetsRgb, const uchar *channelsRgb,
-    const Vector2i &imgSize, const Vector2i &outSize, bool normalise,
-    const Vector2i &xyIn, const Vector2i &xyOut, uint32_t featuresCount,
-    uint32_t outputFeaturesOffset)
+inline void compute_colour_patch_feature(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
+                                         const Vector4i *offsetsRgb, const uchar *channelsRgb, const Vector2i &imgSize, const Vector2i &outSize,
+                                         bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
 
   const KeypointType &outKeypoint = keypoints[linearIdxOut];
-  if (!outKeypoint.valid)
+  if(!outKeypoint.valid)
   {
     return;
   }
@@ -140,8 +131,7 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints,
   const float depth = (depths && normalise) ? depths[linearIdxIn] : 0.f;
 
   // Compute the differences and fill the descriptor.
-  for (uint32_t featIdx = 0; featIdx < featuresCount;
-      ++featIdx)
+  for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
   {
     const int channel = channelsRgb[featIdx];
     const Vector4i offset = offsetsRgb[featIdx];
@@ -182,8 +172,7 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints,
     //    outFeature.data[outputFeaturesOffset + featIdx] =
     //        rgb[linear_1][channel] - rgb[linear_2][channel];
 
-    outFeature.data[outputFeaturesOffset + featIdx] = rgb[linear_1][channel]
-        - rgb[linearIdxIn][channel];
+    outFeature.data[outputFeaturesOffset + featIdx] = rgb[linear_1][channel] - rgb[linearIdxIn][channel];
   }
 }
 
@@ -204,22 +193,18 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints,
  * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
  * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
  */
-template<typename KeypointType, typename DescriptorType>
+template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_patch_feature(const KeypointType *keypoints,
-    DescriptorType *features, const float *depths,
-    const Vector4i *offsetsDepth, const Vector2i &imgSize,
-    const Vector2i &outSize, const Vector4f &intrinsics,
-    const Matrix4f &cameraPose, bool normalise, const Vector2i &xyIn,
-    const Vector2i &xyOut, uint32_t featuresCount,
-    uint32_t outputFeaturesOffset)
+inline void compute_depth_patch_feature(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
+                                        const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
+                                        bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
 
   // References to the output storage.
   const KeypointType &outKeypoint = keypoints[linearIdxOut];
-  if (!outKeypoint.valid)
+  if(!outKeypoint.valid)
   {
     return;
   }
@@ -228,8 +213,7 @@ inline void compute_depth_patch_feature(const KeypointType *keypoints,
   const float depth = depths[linearIdxIn];
 
   // Compute the differences and fill the descriptor.
-  for (uint32_t featIdx = 0; featIdx < featuresCount;
-      ++featIdx)
+  for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
   {
     const Vector4i offset = offsetsDepth[featIdx];
 
@@ -237,7 +221,7 @@ inline void compute_depth_patch_feature(const KeypointType *keypoints,
     int x1, y1;
     //    int x2, y2;
 
-    if (normalise)
+    if(normalise)
     {
       // Normalize the offset and clamp the coordinates inside the image bounds.
       x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
