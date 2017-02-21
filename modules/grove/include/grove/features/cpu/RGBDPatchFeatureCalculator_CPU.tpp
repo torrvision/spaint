@@ -30,13 +30,13 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
   // Ensure the output images are the right size (typically this only
   // happens once per program run if the images are properly cached).
   // They should have one pixel for each element of the sampling grid.
-  const Vector2i outDims = depthImage->noDims / this->m_featureStep;
-  keypointsImage->ChangeDims(outDims);
-  descriptorsImage->ChangeDims(outDims);
+  const Vector2i outSize = depthImage->noDims / this->m_featureStep;
+  keypointsImage->ChangeDims(outSize);
+  descriptorsImage->ChangeDims(outSize);
 
-  const float *depth = depthImage->GetData(MEMORYDEVICE_CPU);
+  const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
   const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
-  const Vector2i inDims = depthImage->noDims;
+  const Vector2i inSize = depthImage->noDims;
   const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
   const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
   const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
@@ -48,21 +48,21 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
 #ifdef WITH_OPENMP
   #pragma omp parallel for
 #endif
-  for(int yOut = 0; yOut < outDims.height; ++yOut)
+  for(int yOut = 0; yOut < outSize.height; ++yOut)
   {
-    for(int xOut = 0; xOut < outDims.width; ++xOut)
+    for(int xOut = 0; xOut < outSize.width; ++xOut)
     {
       const Vector2i xyOut(xOut, yOut);
       const Vector2i xyIn = xyOut * this->m_featureStep;
 
       // Compute the keypoint for the pixel.
-      compute_keypoint(keypoints, rgb, depth, intrinsics, inDims, outDims, xyIn, xyOut, cameraPose);
+      compute_keypoint(xyIn, xyOut, inSize, outSize, rgb, depths, cameraPose, intrinsics, keypoints);
 
       // If there is a depth image available and any depth features need to be computed for the keypoint, compute them.
-      if(depth && this->m_depthFeatureCount > 0)
+      if(depths && this->m_depthFeatureCount > 0)
       {
         compute_depth_patch_feature(
-          keypoints, features, depth, depthOffsets, inDims, outDims,
+          keypoints, features, depths, depthOffsets, inSize, outSize,
           intrinsics, cameraPose, this->m_normaliseDepth, xyIn, xyOut,
           this->m_depthFeatureCount, this->m_depthFeatureOffset
         );
@@ -72,7 +72,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       if(rgb && this->m_rgbFeatureCount > 0)
       {
         compute_colour_patch_feature(
-          keypoints, features, rgb, depth, rgbOffsets, rgbChannels, inDims, outDims,
+          keypoints, features, rgb, depths, rgbOffsets, rgbChannels, inSize, outSize,
           this->m_normaliseRgb, xyIn, xyOut, this->m_rgbFeatureCount, this->m_rgbFeatureOffset
         );
       }
