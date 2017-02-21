@@ -85,14 +85,12 @@ inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const 
                              const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
                              Keypoint2D *keypoints)
 {
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
-
-  // References to the output storage.
+  // Look up the keypoint corresponding to the specified pixel.
+  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
   Keypoint2D& outKeypoint = keypoints[linearIdxOut];
 
-  // The 2D keypoint is always valid (and represents the input coordinates).
-  outKeypoint.position.x = static_cast<float>(xyIn.x);
-  outKeypoint.position.y = static_cast<float>(xyIn.y);
+  // Set its parameters appropriately. Note that 2D keypoints are always valid (and represent the input coordinates).
+  outKeypoint.position = xyIn.toFloat();
   outKeypoint.valid = true;
 }
 
