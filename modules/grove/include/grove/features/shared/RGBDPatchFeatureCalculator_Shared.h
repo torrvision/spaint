@@ -113,7 +113,7 @@ inline void compute_keypoint(Keypoint2D *keypoints,
  * \param channelsRgb   A pointer to the vector storing the colour channels used to compute the descriptor.
  * \param imgSize       The size of the input RGBD image.
  * \param outSize       The size of the output keypoint/descriptor images.
- * \param normalize     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
+ * \param normalise     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
  * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
  * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
  */
@@ -122,7 +122,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_colour_patch_feature(const KeypointType *keypoints,
     DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
     const Vector4i *offsetsRgb, const uchar *channelsRgb,
-    const Vector2i &imgSize, const Vector2i &outSize, bool normalize,
+    const Vector2i &imgSize, const Vector2i &outSize, bool normalise,
     const Vector2i &xyIn, const Vector2i &xyOut, uint32_t featuresCount,
     uint32_t outputFeaturesOffset)
 {
@@ -137,7 +137,7 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints,
 
   // If normalisation is turned off or the depth image is invalid set the depth for the current pixel to 0.
   // outKeypoint should have been invalid if we actually needed that information.
-  const float depth = (depths && normalize) ? depths[linearIdxIn] : 0.f;
+  const float depth = (depths && normalise) ? depths[linearIdxIn] : 0.f;
 
   // Compute the differences and fill the descriptor.
   for (uint32_t featIdx = 0; featIdx < featuresCount;
@@ -150,9 +150,9 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints,
     int x1, y1;
     //    int x2, y2;
 
-    if (normalize)
+    if (normalise)
     {
-      // Normalize the offset by the depth of the central pixel
+      // Normalise the offset by the depth of the central pixel
       // and clamp the result to the actual image size.
       x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
           imgSize.width - 1);
@@ -200,7 +200,7 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints,
  * \param cameraPose    The transform bringing points in camera coordinates to the "descriptor" reference frame.
  *                      Note: set to identity when relocalising the frame and to
  *                      the inverse camera pose when adapting the relocalisation forest.
- * \param normalize     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
+ * \param normalise     Whether the offsets have to be normalised according to the depth in the keypoint pixel.
  * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
  * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
  */
@@ -210,7 +210,7 @@ inline void compute_depth_patch_feature(const KeypointType *keypoints,
     DescriptorType *features, const float *depths,
     const Vector4i *offsetsDepth, const Vector2i &imgSize,
     const Vector2i &outSize, const Vector4f &intrinsics,
-    const Matrix4f &cameraPose, bool normalize, const Vector2i &xyIn,
+    const Matrix4f &cameraPose, bool normalise, const Vector2i &xyIn,
     const Vector2i &xyOut, uint32_t featuresCount,
     uint32_t outputFeaturesOffset)
 {
@@ -237,7 +237,7 @@ inline void compute_depth_patch_feature(const KeypointType *keypoints,
     int x1, y1;
     //    int x2, y2;
 
-    if (normalize)
+    if (normalise)
     {
       // Normalize the offset and clamp the coordinates inside the image bounds.
       x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),

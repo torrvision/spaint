@@ -14,11 +14,11 @@ namespace {
 //#################### CUDA KERNELS ####################
 
 template <typename KeypointType, typename DescriptorType>
-__global__ void ck_compute_colour_feature(const KeypointType *keypoints, DescriptorType *features, const Vector4u *rgb, const float *depth,
+__global__ void ck_compute_colour_feature(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depth,
                                           const Vector4i *offsetsRgb, const uchar *channelsRgb, Vector2i imgSize, Vector2i outSize,
-                                          uint32_t featureStep, bool normalize, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+                                          uint32_t featureStep, bool normalise, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
-  // Determine the coordinates of the pixel in the descriptors image into whose descriptor we will write the colour feature.
+  // Determine the coordinates of the pixel in the descriptors image into which we will write the colour feature.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x, threadIdx.y + blockIdx.y * blockDim.y);
 
   if(xyOut.x < outSize.width && xyOut.y < outSize.height)
@@ -27,16 +27,16 @@ __global__ void ck_compute_colour_feature(const KeypointType *keypoints, Descrip
     const Vector2i xyIn = xyOut * featureStep;
 
     // Compute the colour feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_colour_patch_feature(keypoints, features, rgb, depth, offsetsRgb, channelsRgb, imgSize, outSize, normalize, xyIn, xyOut, featuresCount, outputFeaturesOffset);
+    compute_colour_patch_feature(keypoints, descriptors, rgb, depth, offsetsRgb, channelsRgb, imgSize, outSize, normalise, xyIn, xyOut, featuresCount, outputFeaturesOffset);
   }
 }
 
 template <typename KeypointType, typename DescriptorType>
-__global__ void ck_compute_depth_feature(const KeypointType *keypoints, DescriptorType *features, const float *depth, const Vector4i *offsetsDepth,
+__global__ void ck_compute_depth_feature(const KeypointType *keypoints, DescriptorType *descriptors, const float *depth, const Vector4i *offsetsDepth,
                                          Vector2i imgSize, Vector2i outSize, Vector4f intrinsics, Matrix4f cameraPose, uint32_t featureStep,
-                                         bool normalize, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+                                         bool normalise, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
-  // Determine the coordinates of the pixel in the descriptors image into whose descriptor we will write the depth feature.
+  // Determine the coordinates of the pixel in the descriptors image into which we will write the depth feature.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x, threadIdx.y + blockIdx.y * blockDim.y);
 
   if(xyOut.x < outSize.width && xyOut.y < outSize.height)
@@ -45,7 +45,7 @@ __global__ void ck_compute_depth_feature(const KeypointType *keypoints, Descript
     const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
     // Compute the depth feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_depth_patch_feature(keypoints, features, depth, offsetsDepth, imgSize, outSize, intrinsics, cameraPose, normalize, xyIn, xyOut, featuresCount, outputFeaturesOffset);
+    compute_depth_patch_feature(keypoints, descriptors, depth, offsetsDepth, imgSize, outSize, intrinsics, cameraPose, normalise, xyIn, xyOut, featuresCount, outputFeaturesOffset);
   }
 }
 
@@ -105,7 +105,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_featu
   const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CUDA);
 
   KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CUDA);
-  DescriptorType *features = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
+  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
   dim3 gridSize((outDims.x + blockSize.x - 1) / blockSize.x, (outDims.y + blockSize.y - 1) / blockSize.y);
@@ -118,7 +118,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_featu
   if(depth && this->m_depthFeatureCount > 0)
   {
     ck_compute_depth_feature<<<gridSize,blockSize>>>(
-      keypoints, features, depth, depthOffsets, inDims, outDims,
+      keypoints, descriptors, depth, depthOffsets, inDims, outDims,
       intrinsics, cameraPose, this->m_featureStep, this->m_normaliseDepth,
       this->m_depthFeatureCount, this->m_depthFeatureOffset
     );
@@ -129,7 +129,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_featu
   if(rgb && this->m_rgbFeatureCount > 0)
   {
     ck_compute_colour_feature<<<gridSize,blockSize>>>(
-      keypoints, features, rgb, depth, rgbOffsets, rgbChannels,
+      keypoints, descriptors, rgb, depth, rgbOffsets, rgbChannels,
       inDims, outDims, this->m_featureStep, this->m_normaliseRgb,
       this->m_rgbFeatureCount, this->m_rgbFeatureOffset
     );
