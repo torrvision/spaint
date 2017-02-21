@@ -6,6 +6,8 @@
 #include "randomforest/cuda/ExampleReservoirs_CUDA.h"
 #include "randomforest/cuda/ExampleReservoirs_CUDA.tcu"
 
+using namespace grove;
+
 namespace spaint
 {
 
@@ -23,7 +25,7 @@ __global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
 template<>
 _CPU_AND_GPU_CODE_
 inline Keypoint3DColour make_example_from_feature<Keypoint3DColour,
-    Keypoint3DColour>(const Keypoint3DColour &feature)
+Keypoint3DColour>(const Keypoint3DColour &feature)
 {
   return feature;
 }

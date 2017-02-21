@@ -64,7 +64,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       ParametersContainer::instance();
 
   m_featureExtractor =
-      FeatureCalculatorFactory::make_rgbd_patch_feature_calculator(
+      FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(
           settings->deviceType);
   m_rgbdPatchKeypointsImage = mbf.make_image<Keypoint3DColour>();
   m_rgbdPatchDescriptorImage = mbf.make_image<RGBDPatchDescriptor>();
@@ -785,9 +785,9 @@ void SLAMComponentWithScoreForest::compute_features(
   boost::timer::auto_cpu_timer t(6,
       "computing features on the GPU: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-  m_featureExtractor->compute_feature(inputRgbImage, inputDepthImage,
+  m_featureExtractor->compute_feature(inputRgbImage, inputDepthImage, invCameraPose,
       depthIntrinsics, m_rgbdPatchKeypointsImage.get(),
-      m_rgbdPatchDescriptorImage.get(), invCameraPose);
+      m_rgbdPatchDescriptorImage.get());
 }
 
 void SLAMComponentWithScoreForest::evaluate_forest()

@@ -15,7 +15,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/timer/timer.hpp>
 
-#include "../features/FeatureCalculatorFactory.h"
+#include <grove/features/FeatureCalculatorFactory.h>
+using namespace grove;
+
 #include "../randomforest/interface/ScoreForest.h"
 #include "../randomforest/interface/PreemptiveRansac.h"
 
@@ -71,7 +73,7 @@ private:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
+  DA_RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
   Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
   ScorePredictionsImage_Ptr m_predictionsImage;

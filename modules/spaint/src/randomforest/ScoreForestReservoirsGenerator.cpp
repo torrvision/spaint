@@ -10,6 +10,8 @@
 #include "randomforest/cuda/ExampleReservoirs_CUDA.h"
 #endif
 
+using namespace grove;
+
 namespace spaint
 {
 PositionReservoir_Ptr ScoreForestReservoirsGenerator::make_position_reservoir(

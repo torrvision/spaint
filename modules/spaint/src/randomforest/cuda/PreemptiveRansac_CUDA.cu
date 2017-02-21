@@ -11,6 +11,7 @@
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 
+using namespace grove;
 using namespace tvgutil;
 
 namespace spaint

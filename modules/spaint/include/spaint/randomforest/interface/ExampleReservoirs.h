@@ -6,10 +6,12 @@
 #ifndef H_SPAINT_EXAMPLERESERVOIRS
 #define H_SPAINT_EXAMPLERESERVOIRS
 
-#include "ITMLib/Utils/ITMMath.h"
+#include <ITMLib/Utils/ITMMath.h>
+
+#include <grove/keypoints/Keypoint3DColour.h>
+using namespace grove;
 
 #include "../../util/ITMMemoryBlockPtrTypes.h"
-#include "../../features/interface/RGBDPatchFeature.h"
 #include "../ScoreForestTypes.h"
 
 namespace spaint
@@ -55,7 +57,7 @@ protected:
   uint32_t m_rngSeed;
 };
 
-typedef ExampleReservoirs<Keypoint3DColour, Keypoint3DColour, LeafIndices> PositionReservoir;
+typedef ExampleReservoirs<grove::Keypoint3DColour, grove::Keypoint3DColour, LeafIndices> PositionReservoir;
 typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
 typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 

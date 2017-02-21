@@ -8,9 +8,11 @@
 
 #include <vector>
 
+#include <grove/features/interface/RGBDPatchFeatureCalculator.h>
+using namespace grove;
+
 #include "../../util/ITMImagePtrTypes.h"
 
-#include "../../features/interface/RGBDPatchFeature.h"
 #include "ScoreClusterer.h"
 #include "ExampleReservoirs.h"
 #include "../ScoreForestTypes.h"

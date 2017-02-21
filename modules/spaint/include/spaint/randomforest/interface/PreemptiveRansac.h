@@ -13,10 +13,12 @@
 #include <ITMLib/Utils/ITMMath.h>
 #include <ORUtils/PlatformIndependence.h>
 
+#include <grove/keypoints/Keypoint3DColour.h>
 #include <tvgutil/timing/AverageTimer.h>
 
-#include "../../features/interface/RGBDPatchFeature.h"
 #include "../ScoreForestTypes.h"
+
+using namespace grove; // TODO remove
 
 namespace spaint
 {

@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+using namespace grove;
+
 namespace spaint
 {
 __global__ void ck_reset_temporaries(int *clustersPerReservoir,

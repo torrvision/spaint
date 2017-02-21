@@ -6,8 +6,10 @@
 #ifndef H_SPAINT_PREEMPTIVERANSACSHARED
 #define H_SPAINT_PREEMPTIVERANSACSHARED
 
+#include <grove/keypoints/Keypoint3DColour.h>
+using namespace grove;
+
 #include "ORUtils/PlatformIndependence.h"
-#include "features/interface/RGBDPatchFeature.h"
 #include "randomforest/ScoreForestTypes.h"
 
 namespace spaint
