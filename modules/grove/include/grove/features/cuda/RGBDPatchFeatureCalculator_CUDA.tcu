@@ -14,7 +14,7 @@ namespace {
 //#################### CUDA KERNELS ####################
 
 template <typename KeypointType, typename DescriptorType>
-__global__ void ck_compute_colour_feature(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depth,
+__global__ void ck_compute_colour_feature(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
                                           const Vector4i *offsetsRgb, const uchar *channelsRgb, Vector2i imgSize, Vector2i outSize,
                                           uint32_t featureStep, bool normalise, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
@@ -27,7 +27,7 @@ __global__ void ck_compute_colour_feature(const KeypointType *keypoints, Descrip
     const Vector2i xyIn = xyOut * featureStep;
 
     // Compute the colour feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_colour_patch_feature(keypoints, descriptors, rgb, depth, offsetsRgb, channelsRgb, imgSize, outSize, normalise, xyIn, xyOut, featuresCount, outputFeaturesOffset);
+    compute_colour_patch_feature(xyIn, xyOut, imgSize, outSize, rgb, depths, offsetsRgb, channelsRgb, keypoints, featuresCount, outputFeaturesOffset, normalise, descriptors);
   }
 }
 

@@ -31,11 +31,12 @@ namespace grove {
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_colour_patch_feature(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
-                                         const Vector4i *offsetsRgb, const uchar *channelsRgb, const Vector2i &imgSize, const Vector2i &outSize,
-                                         bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+inline void compute_colour_patch_feature(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                                         const Vector4u *rgb, const float *depths, const Vector4i *offsetsRgb, const uchar *channelsRgb,
+                                         const KeypointType *keypoints, const uint32_t featuresCount, const uint32_t outputFeaturesOffset,
+                                         const bool normalise, DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
+  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
 
   const KeypointType& outKeypoint = keypoints[linearIdxOut];
@@ -63,9 +64,9 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints, Descript
       // Normalise the offset by the depth of the central pixel
       // and clamp the result to the actual image size.
       x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
-          imgSize.width - 1);
+          inSize.width - 1);
       y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0),
-          imgSize.height - 1);
+          inSize.height - 1);
       //      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
       //          img_size.width - 1);
       //      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
@@ -74,14 +75,14 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints, Descript
     else
     {
       // Force the secondary point to be inside the image plane.
-      x1 = min(max(xyIn.x + offset[0], 0), imgSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), imgSize.height - 1);
+      x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
+      y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
       //      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
       //      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
     }
 
     // Linear index of the pixel identified by the offset.
-    const int linear_1 = y1 * imgSize.x + x1;
+    const int linear_1 = y1 * inSize.x + x1;
     //    const int linear_2 = y2 * img_size.x + x2;
 
     // References to the output storage.

@@ -42,7 +42,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
   const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
 
   KeypointType *keypoints = keypointsImage->GetData(MEMORYDEVICE_CPU);
-  DescriptorType *features = descriptorsImage->GetData(MEMORYDEVICE_CPU);
+  DescriptorType *descriptors = descriptorsImage->GetData(MEMORYDEVICE_CPU);
 
   // For each pixel in the RGBD image:
 #ifdef WITH_OPENMP
@@ -62,7 +62,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       if(depths && this->m_depthFeatureCount > 0)
       {
         compute_depth_patch_feature(
-          keypoints, features, depths, depthOffsets, inSize, outSize,
+          keypoints, descriptors, depths, depthOffsets, inSize, outSize,
           intrinsics, cameraPose, this->m_normaliseDepth, xyIn, xyOut,
           this->m_depthFeatureCount, this->m_depthFeatureOffset
         );
@@ -72,8 +72,9 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       if(rgb && this->m_rgbFeatureCount > 0)
       {
         compute_colour_patch_feature(
-          keypoints, features, rgb, depths, rgbOffsets, rgbChannels, inSize, outSize,
-          this->m_normaliseRgb, xyIn, xyOut, this->m_rgbFeatureCount, this->m_rgbFeatureOffset
+          xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+          keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
+          this->m_normaliseRgb, descriptors
         );
       }
     }
