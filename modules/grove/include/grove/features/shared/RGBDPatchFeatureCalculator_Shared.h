@@ -18,6 +18,58 @@
 namespace grove {
 
 /**
+ * \brief TODO
+ */
+_CPU_AND_GPU_CODE_
+inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offset, const Vector2i& inSize, const bool normalise, const float depth, int& linear1
+#if USE_CORRECT_FEATURES
+, int& linear2
+#endif
+)
+{
+  // Calculate the position(s) of the secondary point(s) to use when computing the feature.
+  int x1, y1;
+#if USE_CORRECT_FEATURES
+  int x2, y2;
+#endif
+
+  // If depth normalisation is turned on, normalise the offset(s) by the depth of the central pixel.
+  // Otherwise, just use the offsets as they stand.
+  if(normalise)
+  {
+    x1 = xyIn.x + static_cast<int>(offset[0] / depth);
+    y1 = xyIn.y + static_cast<int>(offset[1] / depth);
+#if USE_CORRECT_FEATURES
+    x2 = xyIn.x + static_cast<int>(offset[2] / depth);
+    y2 = xyIn.y + static_cast<int>(offset[3] / depth);
+#endif
+  }
+  else
+  {
+    x1 = xyIn.x + offset[0];
+    y1 = xyIn.y + offset[1];
+#if USE_CORRECT_FEATURES
+    x2 = xyIn.x + offset[2];
+    y2 = xyIn.y + offset[3];
+#endif
+  }
+
+  // Constrain the secondary point(s) to be within the image.
+  x1 = min(max(x1, 0), inSize.width - 1);
+  y1 = min(max(y1, 0), inSize.height - 1);
+#if USE_CORRECT_FEATURES
+  x2 = min(max(x2, 0), inSize.width - 1);
+  y2 = min(max(y2, 0), inSize.height - 1);
+#endif
+
+  // Calculate the raster position(s) of the secondary point(s).
+  linear1 = y1 * inSize.width + x1;
+#if USE_CORRECT_FEATURES
+  linear2 = y2 * inSize.width + x2;
+#endif
+}
+
+/**
  * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
  * \param xyIn              The pixel in the RGBD image for which to compute colour features.
@@ -58,46 +110,16 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     const int channel = rgbChannels[featIdx];
     const Vector4i offset = rgbOffsets[featIdx];
 
-    // Calculate the position(s) of the secondary point(s) to use when computing the feature.
-    int x1, y1;
+    // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
+    int linear1;
 #if USE_CORRECT_FEATURES
-    int x2, y2;
+    int linear2;
 #endif
-
-    // If depth normalisation is turned on, normalise the offset(s) by the depth of the central pixel.
-    // Otherwise, just use the offsets as they stand.
-    if(normalise)
-    {
-      x1 = xyIn.x + static_cast<int>(offset[0] / depth);
-      y1 = xyIn.y + static_cast<int>(offset[1] / depth);
+    calculate_secondary_points(xyIn, offset, inSize, normalise, depth, linear1
 #if USE_CORRECT_FEATURES
-      x2 = xyIn.x + static_cast<int>(offset[2] / depth);
-      y2 = xyIn.y + static_cast<int>(offset[3] / depth);
+, linear2
 #endif
-    }
-    else
-    {
-      x1 = xyIn.x + offset[0];
-      y1 = xyIn.y + offset[1];
-#if USE_CORRECT_FEATURES
-      x2 = xyIn.x + offset[2];
-      y2 = xyIn.y + offset[3];
-#endif
-    }
-
-    // Constrain the secondary point(s) to be within the image.
-    x1 = min(max(x1, 0), inSize.width - 1);
-    y1 = min(max(y1, 0), inSize.height - 1);
-#if USE_CORRECT_FEATURES
-    x2 = min(max(x2, 0), inSize.width - 1);
-    y2 = min(max(y2, 0), inSize.height - 1);
-#endif
-
-    // Calculate the raster position(s) of the secondary point(s).
-    const int linear1 = y1 * inSize.width + x1;
-#if USE_CORRECT_FEATURES
-    const int linear2 = y2 * inSize.width + x2;
-#endif
+    );
 
     // Compute the feature and write it into the descriptor.
 #if USE_CORRECT_FEATURES
@@ -146,51 +168,21 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
   {
     const Vector4i offset = depthOffsets[featIdx];
 
-    // Calculate the position(s) of the secondary point(s) to use when computing the feature.
-    int x1, y1;
+    // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
+    int linear1;
 #if USE_CORRECT_FEATURES
-    int x2, y2;
+    int linear2;
 #endif
-
-    // If depth normalisation is turned on, normalise the offset(s) by the depth of the central pixel.
-    // Otherwise, just use the offsets as they stand.
-    if(normalise)
-    {
-      x1 = xyIn.x + static_cast<int>(offset[0] / depth);
-      y1 = xyIn.y + static_cast<int>(offset[1] / depth);
+    calculate_secondary_points(xyIn, offset, inSize, normalise, depth, linear1
 #if USE_CORRECT_FEATURES
-      x2 = xyIn.x + static_cast<int>(offset[2] / depth);
-      y2 = xyIn.y + static_cast<int>(offset[3] / depth);
+, linear2
 #endif
-    }
-    else
-    {
-      x1 = xyIn.x + offset[0];
-      y1 = xyIn.y + offset[1];
-#if USE_CORRECT_FEATURES
-      x2 = xyIn.x + offset[2];
-      y2 = xyIn.y + offset[3];
-#endif
-    }
-
-    // Constrain the secondary point(s) to be within the image.
-    x1 = min(max(x1, 0), inSize.width - 1);
-    y1 = min(max(y1, 0), inSize.height - 1);
-#if USE_CORRECT_FEATURES
-    x2 = min(max(x2, 0), inSize.width - 1);
-    y2 = min(max(y2, 0), inSize.height - 1);
-#endif
-
-    // Calculate the raster position(s) of the secondary point(s).
-    const int linear_1 = y1 * inSize.width + x1;
-#if USE_CORRECT_FEATURES
-    const int linear_2 = y2 * inSize.width + x2;
-#endif
+    );
 
     // Depth in mm of the central point.
     const float depth_mm = depth * 1000.f;
     // Max because ITM sometimes has invalid depths stored as -1
-    const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
+    const float depth_1_mm = max(depths[linear1] * 1000.f, 0.f);
 
     // Again, this would be the correct definition but scoreforests's code has the other one.
     //    outFeature.data[outputFeaturesOffset + featIdx] =
