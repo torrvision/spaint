@@ -141,10 +141,10 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_colour_featu
 
   for(uint32_t i = 0; i < m_rgbFeatureCount; ++i)
   {
-    offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
-    offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
-    offsets[i][2] = generate_offset(rng, radiusMin, radiusMax);
-    offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
+    for(int j = 0; j < 4; ++j)
+    {
+      offsets[i][j] = generate_offset(rng, radiusMin, radiusMax);
+    }
 
     // The "2 - rng..." is to perform the RGB to BGR conversion.
     channels[i] = 2 - rng.generate_int_from_uniform(channelMin, channelMax);
@@ -172,10 +172,10 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_depth_featur
 
   for(uint32_t i = 0; i < m_depthFeatureCount; ++i)
   {
-    offsets[i][0] = generate_offset(rng, radiusMin, radiusMax);
-    offsets[i][1] = generate_offset(rng, radiusMin, radiusMax);
-    offsets[i][2] = generate_offset(rng, radiusMin, radiusMax);
-    offsets[i][3] = generate_offset(rng, radiusMin, radiusMax);
+    for(int j = 0; j < 4; ++j)
+    {
+      offsets[i][j] = generate_offset(rng, radiusMin, radiusMax);
+    }
   }
 
 #if 0
