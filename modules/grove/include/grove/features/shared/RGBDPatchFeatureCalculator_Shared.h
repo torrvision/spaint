@@ -52,51 +52,55 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
   // look up the depth for the input pixel; otherwise, default to 1.
   const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
 
-  // Compute the differences and fill the descriptor.
+  // Compute the features and fill in the descriptor.
+  DescriptorType& outFeature = descriptors[linearIdxOut];
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
     const Vector4i offset = rgbOffsets[featIdx];
 
-    // Secondary points used when computing the differences.
+    // Calculate the positions of the secondary point(s) to use when computing the feature.
     int x1, y1;
 #if USE_CORRECT_FEATURES
     int x2, y2;
 #endif
 
-    if (normalise)
+    // If depth normalisation is turned on, normalise the offset(s) by the depth of the central pixel.
+    // Otherwise, just use the offsets as they stand.
+    if(normalise)
     {
-      // Normalise the offset by the depth of the central pixel
-      // and clamp the result to the actual image size.
-      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0), inSize.width - 1);
-      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0), inSize.height - 1);
-
+      x1 = xyIn.x + static_cast<int>(offset[0] / depth);
+      y1 = xyIn.y + static_cast<int>(offset[1] / depth);
 #if USE_CORRECT_FEATURES
-      x2 = min(max(xyIn.x + static_cast<int>(offset[2] / depth), 0), inSize.width - 1);
-      y2 = min(max(xyIn.y + static_cast<int>(offset[3] / depth), 0), inSize.height - 1);
+      x2 = xyIn.x + static_cast<int>(offset[2] / depth);
+      y2 = xyIn.y + static_cast<int>(offset[3] / depth);
 #endif
     }
     else
     {
-      // Force the secondary point to be inside the image plane.
-      x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
-
+      x1 = xyIn.x + offset[0];
+      y1 = xyIn.y + offset[1];
 #if USE_CORRECT_FEATURES
-      x2 = min(max(xyIn.x + offset[2], 0), inSize.width - 1);
-      y2 = min(max(xyIn.y + offset[3], 0), inSize.height - 1);
+      x2 = xyIn.x + offset[2];
+      y2 = xyIn.y + offset[3];
 #endif
     }
 
-    // Linear index of the pixel identified by the offset.
+    // Constrain the secondary point(s) to be within the image.
+    x1 = min(max(x1, 0), inSize.width - 1);
+    y1 = min(max(y1, 0), inSize.height - 1);
+#if USE_CORRECT_FEATURES
+    x2 = min(max(x2, 0), inSize.width - 1);
+    y2 = min(max(y2, 0), inSize.height - 1);
+#endif
+
+    // Linearise the position(s) of the secondary point(s).
     const int linear1 = y1 * inSize.width + x1;
 #if USE_CORRECT_FEATURES
     const int linear2 = y2 * inSize.width + x2;
 #endif
 
-    // References to the output storage.
-    DescriptorType& outFeature = descriptors[linearIdxOut];
-
+    // Compute the feature and write it into the descriptor.
 #if USE_CORRECT_FEATURES
     // This is the "correct" definition, but the SCoRe Forests code uses the other one.
     outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linear2][channel];
