@@ -19,7 +19,7 @@ namespace grove {
  * \param DescriptorType  The type of descriptor computed by this class.
  */
 template <typename KeypointType, typename DescriptorType>
-class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
+class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<KeypointType,DescriptorType>
 {
   //#################### TYPEDEFS ####################
 public:
