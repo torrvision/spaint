@@ -111,26 +111,28 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 }
 
 /**
- * \brief Compute the depth part of the descriptor.
+ * \brief Computes depth features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param keypoints     A pointer to the keypoint image to fill.
- * \param descriptors   A pointer to the descriptors image.
- * \param depths        A pointer to the depth values.
- * \param offsetsDepth  A pointer to the vector of depth offsets used to compute the descriptor.
- * \param imgSize       The size of the input RGBD image.
- * \param outSize       The size of the output keypoint/descriptor images.
- * \param intrinsics    The depth camera intrinsics.
- * \param cameraPose    The transform bringing points in camera coordinates to the "descriptor" reference frame.
- *                      Note: set to identity when relocalising the frame and to
- *                      the inverse camera pose when adapting the relocalisation forest.
- * \param normalise     Whether the offsets have to be normalised according to the depth in the keypoint pixel.
- * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
- * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
+ * \param xyIn                The pixel in the RGBD image for which to compute depth features.
+ * \param xyOut               The position in the descriptors image into which to write the computed features.
+ * \param inSize              The size of the RGBD image.
+ * \param outSize             The size of the keypoints/descriptors images.
+ * \param depths              A pointer to the depth image.
+ * \param depthOffsets        A pointer to the vector of offsets needed to specify the depth features to be computed.
+ * \param cameraPose          The transform bringing points in camera coordinates to the "descriptor" reference frame.
+ *                            This is set to the identity matrix when relocalising the frame and to the inverse camera
+ *                            pose when adapting the relocalisation forest.
+ * \param intrinsics          The intrinsic parameters for the depth camera.
+ * \param keypoints           A pointer to the keypoints image.
+ * \param depthFeatureCount   The number of depth features to be computed.
+ * \param depthFeatureOffset  The starting offset of the depth features in the feature descriptor.
+ * \param normalise           Whether or not to normalise the depth offsets by the RGBD pixel's depth value.
+ * \param descriptors         A pointer to the descriptors image.
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                                   const float *depths, const Vector4i *offsetsDepth, const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                                   const float *depths, const Vector4i *depthOffsets, const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                    const KeypointType *keypoints, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, bool normalise,
                                    DescriptorType *descriptors)
 {
@@ -150,7 +152,7 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
   // Compute the differences and fill the descriptor.
   for(uint32_t featIdx = 0; featIdx < depthFeatureCount; ++featIdx)
   {
-    const Vector4i offset = offsetsDepth[featIdx];
+    const Vector4i offset = depthOffsets[featIdx];
 
     // Secondary points used when computing the differences.
     int x1, y1;
