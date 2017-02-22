@@ -136,65 +136,73 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
                                    const KeypointType *keypoints, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, bool normalise,
                                    DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
+  // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
+  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
+  const KeypointType& keypoint = keypoints[linearIdxOut];
+  if(!keypoint.valid) return;
 
-  // References to the output storage.
-  const KeypointType& outKeypoint = keypoints[linearIdxOut];
-  if(!outKeypoint.valid)
-  {
-    return;
-  }
-
-  // Must be valid, outKeypoint would have been invalid otherwise.
+  // Look up the depth for the input pixel. This must be available, since otherwise the pixel's keypoint would have been invalid.
+  const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
   const float depth = depths[linearIdxIn];
 
-  // Compute the differences and fill the descriptor.
+  // Compute the features and fill in the descriptor.
+  DescriptorType& descriptor = descriptors[linearIdxOut];
   for(uint32_t featIdx = 0; featIdx < depthFeatureCount; ++featIdx)
   {
     const Vector4i offset = depthOffsets[featIdx];
 
-    // Secondary points used when computing the differences.
+    // Calculate the position(s) of the secondary point(s) to use when computing the feature.
     int x1, y1;
-    //    int x2, y2;
+#if USE_CORRECT_FEATURES
+    int x2, y2;
+#endif
 
+    // If depth normalisation is turned on, normalise the offset(s) by the depth of the central pixel.
+    // Otherwise, just use the offsets as they stand.
     if(normalise)
     {
-      // Normalize the offset and clamp the coordinates inside the image bounds.
-      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
-          inSize.width - 1);
-      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0),
-          inSize.height - 1);
-      //      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
-      //          img_size.width - 1);
-      //      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
-      //          img_size.height - 1);
+      x1 = xyIn.x + static_cast<int>(offset[0] / depth);
+      y1 = xyIn.y + static_cast<int>(offset[1] / depth);
+#if USE_CORRECT_FEATURES
+      x2 = xyIn.x + static_cast<int>(offset[2] / depth);
+      y2 = xyIn.y + static_cast<int>(offset[3] / depth);
+#endif
     }
     else
     {
-      // Just clamp the secondary point to the image bounds.
-      x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
-      //      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
-      //      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
+      x1 = xyIn.x + offset[0];
+      y1 = xyIn.y + offset[1];
+#if USE_CORRECT_FEATURES
+      x2 = xyIn.x + offset[2];
+      y2 = xyIn.y + offset[3];
+#endif
     }
 
-    // Linear index of the pixel identified by the offset.
-    const int linear_1 = y1 * inSize.x + x1;
-    //    const int linear_2 = y2 * img_size.x + x2;
+    // Constrain the secondary point(s) to be within the image.
+    x1 = min(max(x1, 0), inSize.width - 1);
+    y1 = min(max(y1, 0), inSize.height - 1);
+#if USE_CORRECT_FEATURES
+    x2 = min(max(x2, 0), inSize.width - 1);
+    y2 = min(max(y2, 0), inSize.height - 1);
+#endif
+
+    // Calculate the raster position(s) of the secondary point(s).
+    const int linear_1 = y1 * inSize.width + x1;
+#if USE_CORRECT_FEATURES
+    const int linear_2 = y2 * inSize.width + x2;
+#endif
 
     // Depth in mm of the central point.
     const float depth_mm = depth * 1000.f;
     // Max because ITM sometimes has invalid depths stored as -1
     const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
 
-    DescriptorType& outFeature = descriptors[linearIdxOut];
     // Again, this would be the correct definition but scoreforests's code has the other one.
     //    outFeature.data[outputFeaturesOffset + featIdx] =
     //        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
 
     // As for colour, the implementation differs from the paper
-    outFeature.data[depthFeatureOffset + featIdx] = depth_1_mm - depth_mm;
+    descriptor.data[depthFeatureOffset + featIdx] = depth_1_mm - depth_mm;
   }
 }
 
