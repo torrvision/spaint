@@ -44,6 +44,26 @@ SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatu
 SET(features_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 ##
+SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
+SET(reservoirs_templates include/grove/reservoirs/ExampleReservoirsFactory.tpp)
+
+##
+SET(reservoirs_cpu_headers include/grove/reservoirs/cpu/ExampleReservoirs_CPU.h)
+SET(reservoirs_cpu_templates include/grove/reservoirs/cpu/ExampleReservoirs_CPU.tpp)
+
+##
+SET(reservoirs_cuda_headers include/grove/reservoirs/cuda/ExampleReservoirs_CUDA.h)
+SET(reservoirs_cuda_sources src/reservoirs/cuda/ExampleReservoirs_CUDA.cu)
+SET(reservoirs_cuda_templates include/grove/reservoirs/cuda/ExampleReservoirs_CUDA.tcu)
+
+##
+SET(reservoirs_interface_headers include/grove/reservoirs/interface/ExampleReservoirs.h)
+SET(reservoirs_interface_templates include/grove/reservoirs/interface/ExampleReservoirs.tpp)
+
+##
+SET(reservoirs_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
+
+##
 SET(keypoints_headers
 include/grove/keypoints/Keypoint2D.h
 include/grove/keypoints/Keypoint3DColour.h
@@ -71,17 +91,38 @@ ${features_base_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${reservoirs_headers}
+${reservoirs_cpu_headers}
+${reservoirs_interface_headers}
+${reservoirs_shared_headers}
 ${keypoints_headers}
 )
 
 SET(templates
 ${features_cpu_templates}
 ${features_interface_templates}
+${reservoirs_cpu_templates}
+${reservoirs_interface_templates}
+${reservoirs_templates}
 )
 
 IF(WITH_CUDA)
-  SET(headers ${headers} ${features_cuda_headers})
-  SET(templates ${templates} ${features_cuda_templates})
+  SET(headers 
+      ${headers}
+      ${features_cuda_headers}
+      ${reservoirs_cuda_headers}
+      )
+      
+  SET(sources
+      ${sources}
+      ${reservoirs_cuda_sources}
+      )
+      
+  SET(templates
+      ${templates}
+      ${features_cuda_templates}
+      ${reservoirs_cuda_templates}
+      )
 ENDIF()
 
 #############################
@@ -95,6 +136,11 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_template
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers})
+SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
+SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
+SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
+SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 
 ##########################################

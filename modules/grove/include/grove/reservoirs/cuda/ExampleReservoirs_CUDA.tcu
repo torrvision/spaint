@@ -1,0 +1,107 @@
+/**
+ * grove: ExampleReservoirs_CUDA.tcu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
+ */
+
+#include "ExampleReservoirs_CUDA.h"
+
+#include <spaint/util/MemoryBlockFactory.h>
+
+#include "../shared/ExampleReservoirs_Shared.h"
+
+using namespace spaint;
+using namespace tvgutil;
+
+namespace grove {
+
+template <typename ExampleType, typename IndexType>
+__global__ void ck_add_examples(const ExampleType *examples,
+    const IndexType *exampleIndices, const Vector2i imgSize, CUDARNG *randomStates,
+    ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls,
+    uint32_t reservoirCapacity)
+{
+  const int x = threadIdx.x + blockIdx.x * blockDim.x;
+  const int y = threadIdx.y + blockIdx.y * blockDim.y;
+
+  if (x >= imgSize.x || y >= imgSize.y)
+    return;
+
+  const int linearIdx = y * imgSize.x + x;
+
+  example_reservoirs_add_example(examples[linearIdx], exampleIndices[linearIdx],
+      randomStates[linearIdx], reservoirs, reservoirSize, reservoirAddCalls,
+      reservoirCapacity);
+}
+
+// Declare non-templated function
+__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
+    uint32_t seed);
+
+template <typename ExampleType, typename IndexType>
+ExampleReservoirs_CUDA<ExampleType, IndexType>::ExampleReservoirs_CUDA(
+    uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed) :
+    ExampleReservoirs<ExampleType, IndexType>(reservoirCapacity, reservoirCount,
+        rngSeed)
+{
+  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  m_randomStates = mbf.make_block<CUDARNG>();
+  init_random();
+}
+
+template <typename ExampleType, typename IndexType>
+void ExampleReservoirs_CUDA<ExampleType, IndexType>::add_examples(
+    const ExampleImage_CPtr &examples, const IndexImage_CPtr &reservoirIndices)
+{
+  if(examples->noDims != reservoirIndices->noDims)
+    throw std::invalid_argument("The example and indices images should have the same size.");
+
+  const Vector2i imgSize = examples->noDims;
+  const size_t nbExamples = imgSize.width * imgSize.height;
+
+  // Check that we have enough random states and, if not, reallocate them
+  if (nbExamples > m_randomStates->dataSize)
+  {
+    m_randomStates->ChangeDims(nbExamples);
+    init_random();
+  }
+
+  const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CUDA);
+  const IndexType *indicesData = reservoirIndices->GetData(MEMORYDEVICE_CUDA);
+
+  CUDARNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
+  ExampleType *reservoirData = this->m_data->GetData(MEMORYDEVICE_CUDA);
+  int *reservoirSize = this->m_reservoirsSize->GetData(MEMORYDEVICE_CUDA);
+  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CUDA);
+
+  dim3 blockSize(32, 32);
+  dim3 gridSize((imgSize.width + blockSize.x - 1) / blockSize.x,
+      (imgSize.height + blockSize.y - 1) / blockSize.y);
+  ck_add_examples<<<gridSize, blockSize>>>(exampleData, indicesData, imgSize, randomStates,
+      reservoirData, reservoirSize, reservoirAddCalls, this->m_capacity);
+  ORcudaKernelCheck;
+}
+
+template <typename ExampleType, typename IndexType>
+void ExampleReservoirs_CUDA<ExampleType, IndexType>::clear()
+{
+  ExampleReservoirs<ExampleType, IndexType>::clear();
+  init_random();
+}
+
+template <typename ExampleType, typename IndexType>
+void ExampleReservoirs_CUDA<ExampleType, IndexType>::init_random()
+{
+  const size_t nbStates = m_randomStates->dataSize;
+
+  if (nbStates == 0) return;
+
+  CUDARNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
+
+  // Initialize random states
+  dim3 blockSize(256);
+  dim3 gridSize((nbStates + blockSize.x - 1) / blockSize.x);
+  ck_init_random_states<<<gridSize, blockSize>>>(randomStates, nbStates, this->m_rngSeed);
+  ORcudaKernelCheck;
+}
+
+}

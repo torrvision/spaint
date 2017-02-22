@@ -14,7 +14,7 @@ using namespace grove;
 #include "../../util/ITMImagePtrTypes.h"
 
 #include "ScoreClusterer.h"
-#include "ExampleReservoirs.h"
+//#include "ExampleReservoirs.h"
 #include "../ScoreForestTypes.h"
 
 #include "ORUtils/Vector.h"

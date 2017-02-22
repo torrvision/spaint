@@ -16,7 +16,9 @@
 #include "util/MemoryBlockFactory.h"
 
 #include "randomforest/cuda/ScoreClusterer_CUDA.h"
-#include "randomforest/ScoreForestReservoirsGenerator.h"
+
+#include <grove/reservoirs/ExampleReservoirsFactory.h>
+using namespace grove;
 
 //#define ENABLE_TIMERS
 //#define RANDOM_FEATURES
@@ -226,7 +228,10 @@ void ScoreForest::load_structure_from_file(const std::string &fileName)
   m_predictionsBlock = mbf.make_block<ScorePrediction>(totalNbLeaves);
   m_predictionsBlock->Clear();
 
-  m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(
+//  m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(
+//      ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, totalNbLeaves);
+
+  m_leafReservoirs = ExampleReservoirsFactory<Keypoint3DColour, LeafIndices>::make_reservoirs(
       ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, totalNbLeaves);
 
 #ifdef RANDOM_FEATURES

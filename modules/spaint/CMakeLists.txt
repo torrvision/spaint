@@ -344,19 +344,16 @@ include/spaint/propagation/shared/LabelPropagator_Shared.h
 
 ##
 SET(randomforest_cpu_sources
-src/randomforest/cpu/ExampleReservoirs_CPU.cpp
 src/randomforest/cpu/PreemptiveRansac_CPU.cpp
 )
 
 SET(randomforest_cuda_sources
-src/randomforest/cuda/ExampleReservoirs_CUDA.cu
 src/randomforest/cuda/ScoreClusterer_CUDA.cu
 src/randomforest/cuda/PreemptiveRansac_CUDA.cu
 src/randomforest/cuda/ScoreForest_CUDA.cu
 )
 
 SET(randomforest_interface_sources
-src/randomforest/interface/ExampleReservoirs.cpp
 src/randomforest/interface/ScoreClusterer.cpp
 src/randomforest/interface/PreemptiveRansac.cpp
 src/randomforest/interface/ScoreForest.cpp
@@ -364,41 +361,32 @@ src/randomforest/interface/ScoreForest.cpp
 
 SET(randomforest_sources
 src/randomforest/ForestUtil.cpp
-src/randomforest/ScoreForestReservoirsGenerator.cpp
 src/randomforest/SpaintDecisionFunctionGenerator.cpp
 )
 
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
-include/spaint/randomforest/ScoreForestReservoirsGenerator.h
 include/spaint/randomforest/ScoreForestTypes.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 )
 
 SET(randomforest_cpu_headers
-include/spaint/randomforest/cpu/ExampleReservoirs_CPU.h
-include/spaint/randomforest/cpu/ExampleReservoirs_CPU.tpp
 include/spaint/randomforest/cpu/PreemptiveRansac_CPU.h
 )
 
 SET(randomforest_cuda_headers
-include/spaint/randomforest/cuda/ExampleReservoirs_CUDA.h
-include/spaint/randomforest/cuda/ExampleReservoirs_CUDA.tcu
 include/spaint/randomforest/cuda/ScoreClusterer_CUDA.h
 include/spaint/randomforest/cuda/PreemptiveRansac_CUDA.h
 include/spaint/randomforest/cuda/ScoreForest_CUDA.h
 )
 
 SET(randomforest_interface_headers
-include/spaint/randomforest/interface/ExampleReservoirs.h
-include/spaint/randomforest/interface/ExampleReservoirs.tpp
 include/spaint/randomforest/interface/ScoreClusterer.h
 include/spaint/randomforest/interface/PreemptiveRansac.h
 include/spaint/randomforest/interface/ScoreForest.h
 )
 
 SET(randomforest_shared_headers
-include/spaint/randomforest/shared/ExampleReservoirs_Shared.h
 include/spaint/randomforest/shared/PreemptiveRansac_Shared.h
 include/spaint/randomforest/shared/ScoreForest_Shared.h
 )

@@ -6,13 +6,20 @@
 #ifndef H_SPAINT_SCORECLUSTERER
 #define H_SPAINT_SCORECLUSTERER
 
-#include "ExampleReservoirs.h"
 #include "../ScoreForestTypes.h"
 
 #include <boost/shared_ptr.hpp>
 
+#include <grove/keypoints/Keypoint3DColour.h>
+#include <grove/reservoirs/interface/ExampleReservoirs.h>
+using namespace grove;
+
 namespace spaint
 {
+typedef ExampleReservoirs<Keypoint3DColour, LeafIndices> PositionReservoir;
+typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
+typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
+
 class ScoreClusterer
 {
 public:
