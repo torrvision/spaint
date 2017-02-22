@@ -12,6 +12,9 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
+// Whether or not to use the "correct" features, rather than the ones from the SCoRe Forests code.
+#define USE_CORRECT_FEATURES 0
+
 namespace grove {
 
 /**
@@ -45,7 +48,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
   const KeypointType& keypoint = keypoints[linearIdxOut];
   if(!keypoint.valid) return;
 
-  // If we're normalising the RGB offsets based on depth and depth information is available,
+  // If we're normalising the RGB offsets based on depth, and depth information is available,
   // look up the depth for the input pixel; otherwise, default to 1.
   const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
 
@@ -57,41 +60,50 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 
     // Secondary points used when computing the differences.
     int x1, y1;
-    //    int x2, y2;
+#if USE_CORRECT_FEATURES
+    int x2, y2;
+#endif
 
     if (normalise)
     {
       // Normalise the offset by the depth of the central pixel
       // and clamp the result to the actual image size.
-      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
-          inSize.width - 1);
-      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0),
-          inSize.height - 1);
-      //      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
-      //          img_size.width - 1);
-      //      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
-      //          img_size.height - 1);
+      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0), inSize.width - 1);
+      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0), inSize.height - 1);
+
+#if USE_CORRECT_FEATURES
+      x2 = min(max(xyIn.x + static_cast<int>(offset[2] / depth), 0), inSize.width - 1);
+      y2 = min(max(xyIn.y + static_cast<int>(offset[3] / depth), 0), inSize.height - 1);
+#endif
     }
     else
     {
       // Force the secondary point to be inside the image plane.
       x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
       y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
-      //      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
-      //      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
+
+#if USE_CORRECT_FEATURES
+      x2 = min(max(xyIn.x + offset[2], 0), inSize.width - 1);
+      y2 = min(max(xyIn.y + offset[3], 0), inSize.height - 1);
+#endif
     }
 
     // Linear index of the pixel identified by the offset.
-    const int linear_1 = y1 * inSize.x + x1;
-    //    const int linear_2 = y2 * img_size.x + x2;
+    const int linear1 = y1 * inSize.width + x1;
+#if USE_CORRECT_FEATURES
+    const int linear2 = y2 * inSize.width + x2;
+#endif
 
     // References to the output storage.
     DescriptorType& outFeature = descriptors[linearIdxOut];
-    // This would be the correct definition but scoreforests's code has the other one
-    //    outFeature.data[outputFeaturesOffset + featIdx] =
-    //        rgb[linear_1][channel] - rgb[linear_2][channel];
 
-    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear_1][channel] - rgb[linearIdxIn][channel];
+#if USE_CORRECT_FEATURES
+    // This is the "correct" definition, but the SCoRe Forests code uses the other one.
+    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linear2][channel];
+#else
+    // This is the definition used in the SCoRe Forests code.
+    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linearIdxIn][channel];
+#endif
   }
 }
 
