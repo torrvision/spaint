@@ -12,85 +12,98 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
+// Whether or not to use the "correct" features, rather than the ones from the SCoRe Forests code.
+#define USE_CORRECT_FEATURES 0
+
 namespace grove {
 
 /**
- * \brief Fill the keypoint and compute the RGB part of the descriptor.
+ * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param keypoints     A pointer to the keypoint image to fill.
- * \param descriptors   A pointer to the descriptors image.
- * \param rgb           A pointer to the colour image.
- * \param depths        A pointer to the depth values.
- * \param offsetsRgb    A pointer to the vector of colour offsets used to compute the descriptor.
- * \param channelsRgb   A pointer to the vector storing the colour channels used to compute the descriptor.
- * \param imgSize       The size of the input RGBD image.
- * \param outSize       The size of the output keypoint/descriptor images.
- * \param normalise     Whether the offsets have to be normalized according to the depth in the keypoint pixel.
- * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
- * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
+ * \param xyIn              The pixel in the RGBD image for which to compute colour features.
+ * \param xyOut             The position in the descriptors image into which to write the computed features.
+ * \param inSize            The size of the RGBD image.
+ * \param outSize           The size of the keypoints/descriptors images.
+ * \param rgb               A pointer to the colour image.
+ * \param depths            A pointer to the depth image.
+ * \param rgbOffsets        A pointer to the vector of offsets needed to specify the colour features to be computed.
+ * \param rgbChannels       A pointer to the vector of colour channels needed to specify the colour features to be computed.
+ * \param keypoints         A pointer to the keypoints image.
+ * \param rgbFeatureCount   The number of colour features to be computed.
+ * \param rgbFeatureOffset  The starting offset of the colour features in the feature descriptor.
+ * \param normalise         Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
+ * \param descriptors       A pointer to the descriptors image.
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_colour_patch_feature(const KeypointType *keypoints, DescriptorType *descriptors, const Vector4u *rgb, const float *depths,
-                                         const Vector4i *offsetsRgb, const uchar *channelsRgb, const Vector2i &imgSize, const Vector2i &outSize,
-                                         bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                                    const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
+                                    const KeypointType *keypoints, const uint32_t rgbFeatureCount, const uint32_t rgbFeatureOffset,
+                                    const bool normalise, DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
+  const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
 
-  const KeypointType& outKeypoint = keypoints[linearIdxOut];
-  if(!outKeypoint.valid)
-  {
-    return;
-  }
+  // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
+  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
+  const KeypointType& keypoint = keypoints[linearIdxOut];
+  if(!keypoint.valid) return;
 
-  // If normalisation is turned off or the depth image is invalid set the depth for the current pixel to 0.
-  // outKeypoint should have been invalid if we actually needed that information.
-  const float depth = (depths && normalise) ? depths[linearIdxIn] : 0.f;
+  // If we're normalising the RGB offsets based on depth, and depth information is available,
+  // look up the depth for the input pixel; otherwise, default to 1.
+  const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
 
   // Compute the differences and fill the descriptor.
-  for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
+  for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
-    const int channel = channelsRgb[featIdx];
-    const Vector4i offset = offsetsRgb[featIdx];
+    const int channel = rgbChannels[featIdx];
+    const Vector4i offset = rgbOffsets[featIdx];
 
     // Secondary points used when computing the differences.
     int x1, y1;
-    //    int x2, y2;
+#if USE_CORRECT_FEATURES
+    int x2, y2;
+#endif
 
     if (normalise)
     {
       // Normalise the offset by the depth of the central pixel
       // and clamp the result to the actual image size.
-      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
-          imgSize.width - 1);
-      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0),
-          imgSize.height - 1);
-      //      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
-      //          img_size.width - 1);
-      //      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
-      //          img_size.height - 1);
+      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0), inSize.width - 1);
+      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0), inSize.height - 1);
+
+#if USE_CORRECT_FEATURES
+      x2 = min(max(xyIn.x + static_cast<int>(offset[2] / depth), 0), inSize.width - 1);
+      y2 = min(max(xyIn.y + static_cast<int>(offset[3] / depth), 0), inSize.height - 1);
+#endif
     }
     else
     {
       // Force the secondary point to be inside the image plane.
-      x1 = min(max(xyIn.x + offset[0], 0), imgSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), imgSize.height - 1);
-      //      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
-      //      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
+      x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
+      y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
+
+#if USE_CORRECT_FEATURES
+      x2 = min(max(xyIn.x + offset[2], 0), inSize.width - 1);
+      y2 = min(max(xyIn.y + offset[3], 0), inSize.height - 1);
+#endif
     }
 
     // Linear index of the pixel identified by the offset.
-    const int linear_1 = y1 * imgSize.x + x1;
-    //    const int linear_2 = y2 * img_size.x + x2;
+    const int linear1 = y1 * inSize.width + x1;
+#if USE_CORRECT_FEATURES
+    const int linear2 = y2 * inSize.width + x2;
+#endif
 
     // References to the output storage.
-    DescriptorType &outFeature = descriptors[linearIdxOut];
-    // This would be the correct definition but scoreforests's code has the other one
-    //    outFeature.data[outputFeaturesOffset + featIdx] =
-    //        rgb[linear_1][channel] - rgb[linear_2][channel];
+    DescriptorType& outFeature = descriptors[linearIdxOut];
 
-    outFeature.data[outputFeaturesOffset + featIdx] = rgb[linear_1][channel] - rgb[linearIdxIn][channel];
+#if USE_CORRECT_FEATURES
+    // This is the "correct" definition, but the SCoRe Forests code uses the other one.
+    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linear2][channel];
+#else
+    // This is the definition used in the SCoRe Forests code.
+    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linearIdxIn][channel];
+#endif
   }
 }
 
@@ -113,9 +126,9 @@ inline void compute_colour_patch_feature(const KeypointType *keypoints, Descript
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_patch_feature(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
-                                        const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
-                                        bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+inline void compute_depth_features(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
+                                   const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
+                                   bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;

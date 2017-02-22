@@ -39,7 +39,10 @@ protected:
   /** The offset in the descriptor after which we store the depth features. */
   uint32_t m_depthFeatureOffset;
 
-  /** A memory block storing the offsets used to sample the depth values used in the descriptor. */
+  /**
+   * A memory block storing the offsets used to sample the depth values used in the descriptor.
+   * There are two offsets involved per depth feature, so we encode them in a Vector4i.
+   */
   ITMInt4MemoryBlock_Ptr m_depthOffsets;
 
   /** The step used to sample keypoints from the image. */
@@ -60,7 +63,10 @@ protected:
   /** The offset in the descriptor after which we store the RGB features. */
   uint32_t m_rgbFeatureOffset;
 
-  /** A memory block storing the offsets used to sample the colour pixels used in the descriptor. */
+  /**
+   * A memory block storing the offsets used to sample the colour pixels used in the descriptor.
+   * There are two offsets involved per colour feature, so we encode them in a Vector4i.
+   */
   ITMInt4MemoryBlock_Ptr m_rgbOffsets;
 
   //#################### CONSTRUCTORS ####################

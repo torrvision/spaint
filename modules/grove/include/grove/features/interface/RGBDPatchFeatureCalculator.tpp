@@ -130,6 +130,7 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_colour_featu
   // Initialise a random number generator with the default seed found in both the std and boost headers.
   RandomNumberGenerator rng(5489u);
 
+  // Note: The range of the offsets used is designed to be consistent with the range of the depths by which we might later normalise them.
   const int channelMin = 0;
   const int channelMax = 2;
   const int radiusMin = 2;   // as per Julien's code
