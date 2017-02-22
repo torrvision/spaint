@@ -164,17 +164,17 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     int raster1, raster2;
     calculate_secondary_points(xyIn, offset, inSize, normalise, depth, raster1, raster2);
 
-    // Depth in mm of the central point.
-    const float depth_mm = depth * 1000.f;
-    // Max because ITM sometimes has invalid depths stored as -1
-    const float depth_1_mm = max(depths[raster1] * 1000.f, 0.f);
+    // Convert the depths of the central point and the first secondary point to millimetres.
+    const float depthMm = depth * 1000.0f;
+    const float depth1Mm = max(depths[raster1] * 1000.f, 0.f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
 
 #if USE_CORRECT_FEATURES
-    // Again, this would be the correct definition but scoreforests's code has the other one.
-    descriptor.data[depthFeatureOffset + featIdx] = depths[raster1] * 1000.f - depths[raster2] * 1000.f;
+    // This is the "correct" definition, but the SCoRe Forests code uses the other one.
+    const float depth2Mm = max(depths[raster2] * 1000.0f, 0.0f);
+    descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depth2Mm;
 #else
-    // As for colour, the implementation differs from the paper
-    descriptor.data[depthFeatureOffset + featIdx] = depth_1_mm - depth_mm;
+    // This is the definition used in the SCoRe Forests code.
+    descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depthMm;
 #endif
   }
 }
