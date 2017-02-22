@@ -41,8 +41,6 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
                                     const KeypointType *keypoints, const uint32_t rgbFeatureCount, const uint32_t rgbFeatureOffset,
                                     const bool normalise, DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
-
   // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
   const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
   const KeypointType& keypoint = keypoints[linearIdxOut];
@@ -50,6 +48,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 
   // If we're normalising the RGB offsets based on depth, and depth information is available,
   // look up the depth for the input pixel; otherwise, default to 1.
+  const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
   const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
 
   // Compute the features and fill in the descriptor.
@@ -59,7 +58,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     const int channel = rgbChannels[featIdx];
     const Vector4i offset = rgbOffsets[featIdx];
 
-    // Calculate the positions of the secondary point(s) to use when computing the feature.
+    // Calculate the position(s) of the secondary point(s) to use when computing the feature.
     int x1, y1;
 #if USE_CORRECT_FEATURES
     int x2, y2;
@@ -94,7 +93,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     y2 = min(max(y2, 0), inSize.height - 1);
 #endif
 
-    // Linearise the position(s) of the secondary point(s).
+    // Calculate the raster position(s) of the secondary point(s).
     const int linear1 = y1 * inSize.width + x1;
 #if USE_CORRECT_FEATURES
     const int linear2 = y2 * inSize.width + x2;
