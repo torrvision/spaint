@@ -18,15 +18,15 @@
 namespace grove {
 
 /**
- * \brief Calculate the position(s) of the secondary point(s) to use when computing a feature.
+ * \brief Calculates the raster position(s) of the secondary point(s) to use when computing a feature.
  *
- * \param xyIn      TODO
- * \param offset    TODO
- * \param inSize    TODO
- * \param normalise TODO
- * \param depth     TODO
- * \param raster1   TODO
- * \param raster2   TODO
+ * \param xyIn      The pixel in the RGBD image for which features are being computed.
+ * \param offsets   The unnormalised offsets of the secondary point(s) to use when computing the feature.
+ * \param inSize    The size of the RGBD image.
+ * \param normalise Whether or not to normalise the offsets by the RGBD pixel's depth value.
+ * \param depth     The RGBD pixel's depth value.
+ * \param raster1   An int into which to write the raster position of the first secondary point.
+ * \param raster2   An int into which to write the raster position of the second secondary point (if needed).
  */
 _CPU_AND_GPU_CODE_
 inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offset, const Vector2i& inSize, const bool normalise, const float depth, int& raster1, int& raster2)
@@ -107,11 +107,11 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
-    const Vector4i offset = rgbOffsets[featIdx];
+    const Vector4i offsets = rgbOffsets[featIdx];
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points(xyIn, offset, inSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
     // Compute the feature and write it into the descriptor.
 #if USE_CORRECT_FEATURES
@@ -119,7 +119,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
 #else
     // This is the definition used in the SCoRe Forests code.
-    descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[rasterIdxIn][channel];
+    descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[rasterIdxIn][channel]);
 #endif
   }
 }
@@ -158,19 +158,20 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
   DescriptorType& descriptor = descriptors[rasterIdxOut];
   for(uint32_t featIdx = 0; featIdx < depthFeatureCount; ++featIdx)
   {
-    const Vector4i offset = depthOffsets[featIdx];
+    const Vector4i offsets = depthOffsets[featIdx];
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points(xyIn, offset, inSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
     // Convert the depths of the central point and the first secondary point to millimetres.
     const float depthMm = depth * 1000.0f;
-    const float depth1Mm = max(depths[raster1] * 1000.f, 0.f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
+    const float depth1Mm = fmaxf(depths[raster1] * 1000.f, 0.0f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
 
+    // Compute the feature and write it into the descriptor.
 #if USE_CORRECT_FEATURES
     // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-    const float depth2Mm = max(depths[raster2] * 1000.0f, 0.0f);
+    const float depth2Mm = fmaxf(depths[raster2] * 1000.0f, 0.0f);
     descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depth2Mm;
 #else
     // This is the definition used in the SCoRe Forests code.
