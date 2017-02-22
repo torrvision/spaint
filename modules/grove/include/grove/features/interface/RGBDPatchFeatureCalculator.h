@@ -115,14 +115,14 @@ public:
    *                         of the extracted keypoints. Will be resized as necessary.
    * \param descriptorsImage The output image that will contain the feature descriptors.
    */
-  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
-                               const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                               KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const = 0;
+  virtual void compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+                                              const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                                              KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Extracts keypoints from an RGBD image and compute feature descriptors for them.
+   * \brief Extracts keypoints from an RGBD image and computes feature descriptors for them.
    *        Each keypoint position is in camera coordinates, based on the depth camera's intrinsics.
    *
    * \note  We implicitly assume that pixels in the colour and depth images are registered.
@@ -137,8 +137,8 @@ public:
    *                         extracted features. Will be resized as necessary.
    * \param descriptorsImage The output image that will contain the feature descriptors.
    */
-  void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
-                       KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
+  void compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+                                      KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
 
   /**
    * \brief Gets the step used when selecting keypoints and computing the features.
@@ -157,7 +157,7 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Checks whether or not the input images passed to compute_feature allow the required features to be computed.
+   * \brief Checks whether or not the input images passed to compute_keypoints_and_features allow the required features to be computed.
    *
    * \param rgbImage    The colour image.
    * \param depthImage  The depth image.

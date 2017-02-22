@@ -79,16 +79,16 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::~RGBDPatchFeatureCalcul
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
-                                                                              KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
+void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, const Vector4f& intrinsics,
+                                                                                             KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
-  // Forward the call on to the version of compute_feature that returns points in world coordinates,
-  // passing in the identity matrix as the camera -> world transformation. This will yield keypoints
-  // whose 3D coordinates are in the camera's reference frame, as desired.
+  // Forward the call on to the version of compute_keypoints_and_features that returns points in world coordinates,
+  // passing in the identity matrix as the camera -> world transformation. This will yield keypoints whose 3D
+  // coordinates are in the camera's reference frame, as desired.
   Matrix4f identity;
   identity.setIdentity();
 
-  compute_feature(rgbImage, depthImage, identity, intrinsics, keypointsImage, descriptorsImage);
+  compute_keypoints_and_features(rgbImage, depthImage, identity, intrinsics, keypointsImage, descriptorsImage);
 }
 
 template <typename KeypointType, typename DescriptorType>
