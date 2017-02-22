@@ -52,7 +52,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
   const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
 
   // Compute the features and fill in the descriptor.
-  DescriptorType& outFeature = descriptors[linearIdxOut];
+  DescriptorType& descriptor = descriptors[linearIdxOut];
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
@@ -102,10 +102,10 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     // Compute the feature and write it into the descriptor.
 #if USE_CORRECT_FEATURES
     // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linear2][channel];
+    descriptor.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linear2][channel];
 #else
     // This is the definition used in the SCoRe Forests code.
-    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linearIdxIn][channel];
+    descriptor.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linearIdxIn][channel];
 #endif
   }
 }
@@ -129,16 +129,16 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& imgSize, const Vector2i& outSize,
+inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
                                    const float *depths, const Vector4i *offsetsDepth, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                                   const KeypointType *keypoints, uint32_t featuresCount, uint32_t outputFeaturesOffset, bool normalise,
-                                   DescriptorType *features)
+                                   const KeypointType *keypoints, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, bool normalise,
+                                   DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
+  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
 
   // References to the output storage.
-  const KeypointType &outKeypoint = keypoints[linearIdxOut];
+  const KeypointType& outKeypoint = keypoints[linearIdxOut];
   if(!outKeypoint.valid)
   {
     return;
@@ -148,7 +148,7 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
   const float depth = depths[linearIdxIn];
 
   // Compute the differences and fill the descriptor.
-  for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
+  for(uint32_t featIdx = 0; featIdx < depthFeatureCount; ++featIdx)
   {
     const Vector4i offset = offsetsDepth[featIdx];
 
@@ -160,9 +160,9 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     {
       // Normalize the offset and clamp the coordinates inside the image bounds.
       x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
-          imgSize.width - 1);
+          inSize.width - 1);
       y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0),
-          imgSize.height - 1);
+          inSize.height - 1);
       //      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
       //          img_size.width - 1);
       //      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
@@ -171,14 +171,14 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     else
     {
       // Just clamp the secondary point to the image bounds.
-      x1 = min(max(xyIn.x + offset[0], 0), imgSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), imgSize.height - 1);
+      x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
+      y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
       //      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
       //      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
     }
 
     // Linear index of the pixel identified by the offset.
-    const int linear_1 = y1 * imgSize.x + x1;
+    const int linear_1 = y1 * inSize.x + x1;
     //    const int linear_2 = y2 * img_size.x + x2;
 
     // Depth in mm of the central point.
@@ -186,13 +186,13 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     // Max because ITM sometimes has invalid depths stored as -1
     const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
 
-    DescriptorType &outFeature = features[linearIdxOut];
+    DescriptorType& outFeature = descriptors[linearIdxOut];
     // Again, this would be the correct definition but scoreforests's code has the other one.
     //    outFeature.data[outputFeaturesOffset + featIdx] =
     //        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
 
     // As for colour, the implementation differs from the paper
-    outFeature.data[outputFeaturesOffset + featIdx] = depth_1_mm - depth_mm;
+    outFeature.data[depthFeatureOffset + featIdx] = depth_1_mm - depth_mm;
   }
 }
 
