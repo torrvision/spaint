@@ -129,9 +129,10 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_features(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
-                                   const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
-                                   bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& imgSize, const Vector2i& outSize,
+                                   const float *depths, const Vector4i *offsetsDepth, const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                                   const KeypointType *keypoints, uint32_t featuresCount, uint32_t outputFeaturesOffset, bool normalise,
+                                   DescriptorType *features)
 {
   const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;

@@ -33,9 +33,10 @@ __global__ void ck_compute_colour_features(Vector2i inSize, Vector2i outSize, co
 }
 
 template <typename KeypointType, typename DescriptorType>
-__global__ void ck_compute_depth_features(const KeypointType *keypoints, DescriptorType *descriptors, const float *depth, const Vector4i *offsetsDepth,
-                                          Vector2i imgSize, Vector2i outSize, Vector4f intrinsics, Matrix4f cameraPose, uint32_t featureStep,
-                                          bool normalise, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+__global__ void ck_compute_depth_features(Vector2i inSize, Vector2i outSize, const float *depths, const Vector4i *depthOffsets,
+                                          Matrix4f cameraPose, Vector4f intrinsics, const KeypointType *keypoints,
+                                          uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t featureStep,
+                                          bool normalise, DescriptorType *descriptors)
 {
   // Determine the coordinates of the pixel in the descriptors image into which we will write the depth feature.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x, threadIdx.y + blockIdx.y * blockDim.y);
@@ -46,7 +47,7 @@ __global__ void ck_compute_depth_features(const KeypointType *keypoints, Descrip
     const Vector2i xyIn(xyOut.x * featureStep, xyOut.y * featureStep);
 
     // Compute the depth feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_depth_features(keypoints, descriptors, depth, offsetsDepth, imgSize, outSize, intrinsics, cameraPose, normalise, xyIn, xyOut, featuresCount, outputFeaturesOffset);
+    compute_depth_features(xyIn, xyOut, inSize, outSize, depths, depthOffsets, cameraPose, intrinsics, keypoints, depthFeatureCount, depthFeatureOffset, normalise, descriptors);
   }
 }
 
@@ -120,9 +121,9 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_featu
   if(depths && this->m_depthFeatureCount > 0)
   {
     ck_compute_depth_features<<<gridSize,blockSize>>>(
-      keypoints, descriptors, depths, depthOffsets, inSize, outSize,
-      intrinsics, cameraPose, this->m_featureStep, this->m_normaliseDepth,
-      this->m_depthFeatureCount, this->m_depthFeatureOffset
+      inSize, outSize, depths, depthOffsets, cameraPose, intrinsics,
+      keypoints, this->m_depthFeatureCount, this->m_depthFeatureOffset,
+      this->m_featureStep, this->m_normaliseDepth, descriptors
     );
     ORcudaKernelCheck;
   }

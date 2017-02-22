@@ -62,9 +62,9 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       if(depths && this->m_depthFeatureCount > 0)
       {
         compute_depth_features(
-          keypoints, descriptors, depths, depthOffsets, inSize, outSize,
-          intrinsics, cameraPose, this->m_normaliseDepth, xyIn, xyOut,
-          this->m_depthFeatureCount, this->m_depthFeatureOffset
+          xyIn, xyOut, inSize, outSize, depths, depthOffsets, cameraPose, intrinsics,
+          keypoints, this->m_depthFeatureCount, this->m_depthFeatureOffset,
+          this->m_normaliseDepth, descriptors
         );
       }
 
