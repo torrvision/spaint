@@ -11,7 +11,7 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 ExampleReservoirs<ExampleType, IndexType>::ExampleReservoirs(
     uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
 {
@@ -34,33 +34,33 @@ ExampleReservoirs<ExampleType, IndexType>::ExampleReservoirs(
 
 //#################### DESTRUCTOR ####################
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 ExampleReservoirs<ExampleType, IndexType>::~ExampleReservoirs()
 {
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 uint32_t ExampleReservoirs<ExampleType, IndexType>::get_capacity() const
 {
   return m_capacity;
 }
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 typename ExampleReservoirs<ExampleType, IndexType>::ExampleImage_CPtr ExampleReservoirs<
 ExampleType, IndexType>::get_reservoirs() const
 {
   return m_data;
 }
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 uint32_t ExampleReservoirs<ExampleType, IndexType>::get_reservoirs_count() const
 {
   return m_reservoirCount;
 }
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType, IndexType>::get_reservoirs_size() const
 {
   return m_reservoirsSize;
@@ -68,7 +68,7 @@ ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType, IndexType>::get_reservoirs
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
-template<typename ExampleType, typename IndexType>
+template <typename ExampleType, typename IndexType>
 void ExampleReservoirs<ExampleType, IndexType>::clear()
 {
   m_reservoirsSize->Clear();

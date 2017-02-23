@@ -9,8 +9,9 @@
 namespace grove
 {
 
-__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
-    uint32_t seed)
+//#################### CUDA KERNELS ####################
+
+__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates, uint32_t seed)
 {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
 

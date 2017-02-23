@@ -14,6 +14,8 @@ using namespace tvgutil;
 
 namespace grove {
 
+//#################### CUDA KERNELS ####################
+
 template <typename ExampleType, typename IndexType>
 __global__ void ck_add_examples(const ExampleType *examples,
     const IndexType *exampleIndices, const Vector2i imgSize, CUDARNG *randomStates,
@@ -33,9 +35,11 @@ __global__ void ck_add_examples(const ExampleType *examples,
       reservoirCapacity);
 }
 
-// Declare non-templated function
+// Declare a non-templated kernel used to initialise the RNG states. See the associated .cu file.
 __global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
     uint32_t seed);
+
+//#################### CONSTRUCTORS ####################
 
 template <typename ExampleType, typename IndexType>
 ExampleReservoirs_CUDA<ExampleType, IndexType>::ExampleReservoirs_CUDA(
@@ -44,21 +48,26 @@ ExampleReservoirs_CUDA<ExampleType, IndexType>::ExampleReservoirs_CUDA(
         rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+
+  // Initialise the random number generators.
   m_randomStates = mbf.make_block<CUDARNG>();
   init_random();
 }
+
+//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename IndexType>
 void ExampleReservoirs_CUDA<ExampleType, IndexType>::add_examples(
     const ExampleImage_CPtr &examples, const IndexImage_CPtr &reservoirIndices)
 {
+  // Check preconditions.
   if(examples->noDims != reservoirIndices->noDims)
     throw std::invalid_argument("The example and indices images should have the same size.");
 
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;
 
-  // Check that we have enough random states and, if not, reallocate them
+  // Check that we have enough random states and, if not, reallocate them.
   if (nbExamples > m_randomStates->dataSize)
   {
     m_randomStates->ChangeDims(nbExamples);
@@ -69,9 +78,9 @@ void ExampleReservoirs_CUDA<ExampleType, IndexType>::add_examples(
   const IndexType *indicesData = reservoirIndices->GetData(MEMORYDEVICE_CUDA);
 
   CUDARNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CUDA);
+  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CUDA);
   ExampleType *reservoirData = this->m_data->GetData(MEMORYDEVICE_CUDA);
   int *reservoirSize = this->m_reservoirsSize->GetData(MEMORYDEVICE_CUDA);
-  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32, 32);
   dim3 gridSize((imgSize.width + blockSize.x - 1) / blockSize.x,
@@ -87,6 +96,8 @@ void ExampleReservoirs_CUDA<ExampleType, IndexType>::clear()
   ExampleReservoirs<ExampleType, IndexType>::clear();
   init_random();
 }
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename IndexType>
 void ExampleReservoirs_CUDA<ExampleType, IndexType>::init_random()
