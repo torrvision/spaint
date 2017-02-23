@@ -18,6 +18,57 @@
 namespace grove {
 
 /**
+ * \brief Calculates the raster position(s) of the secondary point(s) to use when computing a feature.
+ *
+ * \param xyIn      The pixel in the RGBD image for which features are being computed.
+ * \param offsets   The unnormalised offsets of the secondary point(s) to use when computing the feature.
+ * \param inSize    The size of the RGBD image.
+ * \param normalise Whether or not to normalise the offsets by the RGBD pixel's depth value.
+ * \param depth     The RGBD pixel's depth value.
+ * \param raster1   An int into which to write the raster position of the first secondary point.
+ * \param raster2   An int into which to write the raster position of the second secondary point (if needed).
+ */
+_CPU_AND_GPU_CODE_
+inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offset, const Vector2i& inSize, const bool normalise, const float depth, int& raster1, int& raster2)
+{
+  int x1, y1;
+  int x2 = 0, y2 = 0;
+
+  // If depth normalisation is turned on, normalise the offset(s) by the depth of the central pixel.
+  // Otherwise, just use the offsets as they stand.
+  if(normalise)
+  {
+    x1 = xyIn.x + static_cast<int>(offset[0] / depth);
+    y1 = xyIn.y + static_cast<int>(offset[1] / depth);
+#if USE_CORRECT_FEATURES
+    x2 = xyIn.x + static_cast<int>(offset[2] / depth);
+    y2 = xyIn.y + static_cast<int>(offset[3] / depth);
+#endif
+  }
+  else
+  {
+    x1 = xyIn.x + offset[0];
+    y1 = xyIn.y + offset[1];
+#if USE_CORRECT_FEATURES
+    x2 = xyIn.x + offset[2];
+    y2 = xyIn.y + offset[3];
+#endif
+  }
+
+  // Constrain the secondary point(s) to be within the image.
+  x1 = min(max(x1, 0), inSize.width - 1);
+  y1 = min(max(y1, 0), inSize.height - 1);
+#if USE_CORRECT_FEATURES
+  x2 = min(max(x2, 0), inSize.width - 1);
+  y2 = min(max(y2, 0), inSize.height - 1);
+#endif
+
+  // Calculate the raster position(s) of the secondary point(s).
+  raster1 = y1 * inSize.width + x1;
+  raster2 = y2 * inSize.width + x2;
+}
+
+/**
  * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
  * \param xyIn              The pixel in the RGBD image for which to compute colour features.
@@ -41,154 +92,91 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
                                     const KeypointType *keypoints, const uint32_t rgbFeatureCount, const uint32_t rgbFeatureOffset,
                                     const bool normalise, DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * inSize.width + xyIn.x;
-
   // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
-  const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
-  const KeypointType& keypoint = keypoints[linearIdxOut];
+  const int rasterIdxOut = xyOut.y * outSize.width + xyOut.x;
+  const KeypointType& keypoint = keypoints[rasterIdxOut];
   if(!keypoint.valid) return;
 
   // If we're normalising the RGB offsets based on depth, and depth information is available,
   // look up the depth for the input pixel; otherwise, default to 1.
-  const float depth = (normalise && depths) ? depths[linearIdxIn] : 1.0f;
+  const int rasterIdxIn = xyIn.y * inSize.width + xyIn.x;
+  const float depth = (normalise && depths) ? depths[rasterIdxIn] : 1.0f;
 
-  // Compute the differences and fill the descriptor.
+  // Compute the features and fill in the descriptor.
+  DescriptorType& descriptor = descriptors[rasterIdxOut];
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
-    const Vector4i offset = rgbOffsets[featIdx];
+    const Vector4i offsets = rgbOffsets[featIdx];
 
-    // Secondary points used when computing the differences.
-    int x1, y1;
-#if USE_CORRECT_FEATURES
-    int x2, y2;
-#endif
+    // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
+    int raster1, raster2;
+    calculate_secondary_points(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
-    if (normalise)
-    {
-      // Normalise the offset by the depth of the central pixel
-      // and clamp the result to the actual image size.
-      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0), inSize.width - 1);
-      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0), inSize.height - 1);
-
-#if USE_CORRECT_FEATURES
-      x2 = min(max(xyIn.x + static_cast<int>(offset[2] / depth), 0), inSize.width - 1);
-      y2 = min(max(xyIn.y + static_cast<int>(offset[3] / depth), 0), inSize.height - 1);
-#endif
-    }
-    else
-    {
-      // Force the secondary point to be inside the image plane.
-      x1 = min(max(xyIn.x + offset[0], 0), inSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), inSize.height - 1);
-
-#if USE_CORRECT_FEATURES
-      x2 = min(max(xyIn.x + offset[2], 0), inSize.width - 1);
-      y2 = min(max(xyIn.y + offset[3], 0), inSize.height - 1);
-#endif
-    }
-
-    // Linear index of the pixel identified by the offset.
-    const int linear1 = y1 * inSize.width + x1;
-#if USE_CORRECT_FEATURES
-    const int linear2 = y2 * inSize.width + x2;
-#endif
-
-    // References to the output storage.
-    DescriptorType& outFeature = descriptors[linearIdxOut];
-
+    // Compute the feature and write it into the descriptor.
 #if USE_CORRECT_FEATURES
     // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linear2][channel];
+    descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
 #else
     // This is the definition used in the SCoRe Forests code.
-    outFeature.data[rgbFeatureOffset + featIdx] = rgb[linear1][channel] - rgb[linearIdxIn][channel];
+    descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[rasterIdxIn][channel]);
 #endif
   }
 }
 
 /**
- * \brief Compute the depth part of the descriptor.
+ * \brief Computes depth features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param keypoints     A pointer to the keypoint image to fill.
- * \param descriptors   A pointer to the descriptors image.
- * \param depths        A pointer to the depth values.
- * \param offsetsDepth  A pointer to the vector of depth offsets used to compute the descriptor.
- * \param imgSize       The size of the input RGBD image.
- * \param outSize       The size of the output keypoint/descriptor images.
- * \param intrinsics    The depth camera intrinsics.
- * \param cameraPose    The transform bringing points in camera coordinates to the "descriptor" reference frame.
- *                      Note: set to identity when relocalising the frame and to
- *                      the inverse camera pose when adapting the relocalisation forest.
- * \param normalise     Whether the offsets have to be normalised according to the depth in the keypoint pixel.
- * \param xyIn          The pixel in the input image for which the keypoint/descriptor has to be computed.
- * \param xyOut         The position in the output keypoints/descriptor image where to store the computed values.
+ * \param xyIn                The pixel in the RGBD image for which to compute depth features.
+ * \param xyOut               The position in the descriptors image into which to write the computed features.
+ * \param inSize              The size of the RGBD image.
+ * \param outSize             The size of the keypoints/descriptors images.
+ * \param depths              A pointer to the depth image.
+ * \param depthOffsets        A pointer to the vector of offsets needed to specify the depth features to be computed.
+ * \param keypoints           A pointer to the keypoints image.
+ * \param depthFeatureCount   The number of depth features to be computed.
+ * \param depthFeatureOffset  The starting offset of the depth features in the feature descriptor.
+ * \param normalise           Whether or not to normalise the depth offsets by the RGBD pixel's depth value.
+ * \param descriptors         A pointer to the descriptors image.
  */
 template <typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_depth_features(const KeypointType *keypoints, DescriptorType *features, const float *depths, const Vector4i *offsetsDepth,
-                                   const Vector2i& imgSize, const Vector2i& outSize, const Vector4f& intrinsics, const Matrix4f& cameraPose,
-                                   bool normalise, const Vector2i& xyIn, const Vector2i& xyOut, uint32_t featuresCount, uint32_t outputFeaturesOffset)
+inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
+                                   const float *depths, const Vector4i *depthOffsets, const KeypointType *keypoints,
+                                   uint32_t depthFeatureCount, uint32_t depthFeatureOffset, bool normalise, DescriptorType *descriptors)
 {
-  const int linearIdxIn = xyIn.y * imgSize.x + xyIn.x;
-  const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
+  // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
+  const int rasterIdxOut = xyOut.y * outSize.width + xyOut.x;
+  const KeypointType& keypoint = keypoints[rasterIdxOut];
+  if(!keypoint.valid) return;
 
-  // References to the output storage.
-  const KeypointType &outKeypoint = keypoints[linearIdxOut];
-  if(!outKeypoint.valid)
+  // Look up the depth for the input pixel. This must be available, since otherwise the pixel's keypoint would have been invalid.
+  const int rasterIdxIn = xyIn.y * inSize.width + xyIn.x;
+  const float depth = depths[rasterIdxIn];
+
+  // Compute the features and fill in the descriptor.
+  DescriptorType& descriptor = descriptors[rasterIdxOut];
+  for(uint32_t featIdx = 0; featIdx < depthFeatureCount; ++featIdx)
   {
-    return;
-  }
+    const Vector4i offsets = depthOffsets[featIdx];
 
-  // Must be valid, outKeypoint would have been invalid otherwise.
-  const float depth = depths[linearIdxIn];
+    // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
+    int raster1, raster2;
+    calculate_secondary_points(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
-  // Compute the differences and fill the descriptor.
-  for(uint32_t featIdx = 0; featIdx < featuresCount; ++featIdx)
-  {
-    const Vector4i offset = offsetsDepth[featIdx];
+    // Convert the depths of the central point and the first secondary point to millimetres.
+    const float depthMm = depth * 1000.0f;
+    const float depth1Mm = fmaxf(depths[raster1] * 1000.f, 0.0f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
 
-    // Secondary points used when computing the differences.
-    int x1, y1;
-    //    int x2, y2;
-
-    if(normalise)
-    {
-      // Normalize the offset and clamp the coordinates inside the image bounds.
-      x1 = min(max(xyIn.x + static_cast<int>(offset[0] / depth), 0),
-          imgSize.width - 1);
-      y1 = min(max(xyIn.y + static_cast<int>(offset[1] / depth), 0),
-          imgSize.height - 1);
-      //      x2 = min(max(xy_in.x + static_cast<int>(offset[2] / depth), 0),
-      //          img_size.width - 1);
-      //      y2 = min(max(xy_in.y + static_cast<int>(offset[3] / depth), 0),
-      //          img_size.height - 1);
-    }
-    else
-    {
-      // Just clamp the secondary point to the image bounds.
-      x1 = min(max(xyIn.x + offset[0], 0), imgSize.width - 1);
-      y1 = min(max(xyIn.y + offset[1], 0), imgSize.height - 1);
-      //      x2 = min(max(xy_in.x + offset[2], 0), img_size.width - 1);
-      //      y2 = min(max(xy_in.y + offset[3], 0), img_size.height - 1);
-    }
-
-    // Linear index of the pixel identified by the offset.
-    const int linear_1 = y1 * imgSize.x + x1;
-    //    const int linear_2 = y2 * img_size.x + x2;
-
-    // Depth in mm of the central point.
-    const float depth_mm = depth * 1000.f;
-    // Max because ITM sometimes has invalid depths stored as -1
-    const float depth_1_mm = max(depths[linear_1] * 1000.f, 0.f);
-
-    DescriptorType &outFeature = features[linearIdxOut];
-    // Again, this would be the correct definition but scoreforests's code has the other one.
-    //    outFeature.data[outputFeaturesOffset + featIdx] =
-    //        depths[linear_1] * 1000.f - depths[linear_2] * 1000.f;
-
-    // As for colour, the implementation differs from the paper
-    outFeature.data[outputFeaturesOffset + featIdx] = depth_1_mm - depth_mm;
+    // Compute the feature and write it into the descriptor.
+#if USE_CORRECT_FEATURES
+    // This is the "correct" definition, but the SCoRe Forests code uses the other one.
+    const float depth2Mm = fmaxf(depths[raster2] * 1000.0f, 0.0f);
+    descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depth2Mm;
+#else
+    // This is the definition used in the SCoRe Forests code.
+    descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depthMm;
+#endif
   }
 }
 

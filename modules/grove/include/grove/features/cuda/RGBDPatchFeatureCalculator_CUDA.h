@@ -19,7 +19,7 @@ namespace grove {
  * \param DescriptorType  The type of descriptor computed by this class.
  */
 template <typename KeypointType, typename DescriptorType>
-class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<KeypointType, DescriptorType>
+class RGBDPatchFeatureCalculator_CUDA : public RGBDPatchFeatureCalculator<KeypointType,DescriptorType>
 {
   //#################### TYPEDEFS ####################
 public:
@@ -46,9 +46,9 @@ private:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual void compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
-                               const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                               KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
+  virtual void compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+                                              const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                                              KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const;
 
   //#################### FRIENDS ####################
 

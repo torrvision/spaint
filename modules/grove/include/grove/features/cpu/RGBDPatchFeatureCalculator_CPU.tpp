@@ -20,9 +20,9 @@ RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::RGBDPatchFeatureCal
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_feature(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
-                                                                                  const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                                                                                  KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
+void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoints_and_features(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage,
+                                                                                                 const Matrix4f& cameraPose, const Vector4f& intrinsics,
+                                                                                                 KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
   // Check that the input images are valid.
   this->check_input_images(rgbImage, depthImage);
@@ -62,9 +62,9 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_featur
       if(depths && this->m_depthFeatureCount > 0)
       {
         compute_depth_features(
-          keypoints, descriptors, depths, depthOffsets, inSize, outSize,
-          intrinsics, cameraPose, this->m_normaliseDepth, xyIn, xyOut,
-          this->m_depthFeatureCount, this->m_depthFeatureOffset
+          xyIn, xyOut, inSize, outSize, depths, depthOffsets, keypoints,
+          this->m_depthFeatureCount, this->m_depthFeatureOffset,
+          this->m_normaliseDepth, descriptors
         );
       }
 
