@@ -11,14 +11,21 @@
 #include <spaint/util/ITMImagePtrTypes.h>
 #include <spaint/util/ITMMemoryBlockPtrTypes.h>
 
-//#include <grove/keypoints/Keypoint3DColour.h>
-
 namespace grove
 {
 
+/**
+ * \brief An instance of a class deriving from this one can be used to store a number of "Examples" in a set of fixed-size reservoirs.
+ *
+ * \param ExampleType The type of the examples stored in the reservoirs. Must have a member named "valid", convertible to boolean.
+ * \param IndexType   A vector-type used to select the reservoirs wherein to store each example. Must have a "size()" function returning
+ *                    the number of reservoirs to associate to each example, and an "operator[]" returning one of the "size()" reservoir
+ *                    indices for each call.
+ */
 template<typename ExampleType, typename IndexType>
 class ExampleReservoirs
 {
+  //#################### TYPEDEFS ####################
 public:
   typedef ORUtils::Image<ExampleType> ExampleImage;
   typedef boost::shared_ptr<ExampleImage> ExampleImage_Ptr;
@@ -32,32 +39,98 @@ public:
   typedef boost::shared_ptr<IndexImage> IndexImage_Ptr;
   typedef boost::shared_ptr<const IndexImage> IndexImage_CPtr;
 
+  //#################### PROTECTED MEMBER VARIABLES ####################
+protected:
+  /** The capacity of each reservoir. */
+  uint32_t m_capacity;
+
+  /** The actual reservoirs: an image wherein each row allows the storage of up to m_capacity examples. */
+  ReservoirsImage_Ptr m_data;
+
+  /** The number of reservoirs. */
+  uint32_t m_reservoirCount;
+
+  /** The number of times the insertion of an example has been attempted for each reservoir. Has an element for each reservoir (i.e. row in m_data). */
+  ITMIntMemoryBlock_Ptr m_reservoirsAddCalls;
+
+  /** The current size of each reservoir.  Has an element for each reservoir (i.e. row in m_data). */
+  ITMIntMemoryBlock_Ptr m_reservoirsSize;
+
+  /** The seed for the random number generation. */
+  uint32_t m_rngSeed;
+
+  //#################### CONSTRUCTORS ####################
+protected:
+  /**
+   * \brief Constructs an instance of the ExampleReservoirs class.
+   *
+   * \param reservoirCapacity The capacity of each reservoir.
+   * \param reservoirCount    The number of reservoirs to create.
+   * \param rngSeed           The seed for the random number generation routines used to decide whether to add examples to reservoirs.
+   */
   ExampleReservoirs(uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed = 42);
+
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys an instance of the ExampleReservoirs class.
+   */
   virtual ~ExampleReservoirs();
 
+  //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Add examples to the reservoirs.
+   *
+   * \note  Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
+   *
+   * \param examples         The examples to add to the reservoirs. Only those that have the "valid" member set to true
+   *                         will be added.
+   * \param reservoirIndices Indices of the reservoirs wherein to add each element of the examples image. Must have the same size as examples.
+   *
+   * \throws std::invalid_argument If examples and reservoirIndices have different dimensions.
+   */
+  virtual void add_examples(const ExampleImage_CPtr &examples, const IndexImage_CPtr &reservoirIndices) = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the reservoir capacity.
+   *
+   * \return The reservoir capacity.
+   */
+  uint32_t get_capacity() const;
+
+  /**
+   * \brief Returns a pointer to the reservoirs.
+   *
+   * \note One reservoir per row, each row has get_capacity() length but only get_reservoirs_size()[rowIdx] are valid.
+   *
+   * \return A constant pointer to the example reservoirs.
+   */
   ReservoirsImage_CPtr get_reservoirs() const;
 
+  /**
+   * \brief Gets the number of reservoirs.
+   *
+   * \return The number of reservoirs.
+   */
+  uint32_t get_reservoirs_count() const;
+
+  /**
+   * \brief Returns the current size of each reservoir.
+   *
+   * \return A constant pointer to a vector storing the size of each reservoir.
+   */
   ITMIntMemoryBlock_CPtr get_reservoirs_size() const;
 
-  int get_reservoirs_count() const;
-
-  int get_capacity() const;
-
-  virtual void add_examples(const ExampleImage_CPtr &examples,
-      const IndexImage_CPtr &reservoirIndices) = 0;
+  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Clear the reservoirs. Discards all examples and reinitialises the random number generator.
+   */
   virtual void clear();
-
-protected:
-  uint32_t m_capacity;
-  ReservoirsImage_Ptr m_data;
-  ITMIntMemoryBlock_Ptr m_reservoirsAddCalls;
-  ITMIntMemoryBlock_Ptr m_reservoirsSize;
-  uint32_t m_rngSeed;
 };
-
-//typedef ExampleReservoirs<grove::Keypoint3DColour, grove::Keypoint3DColour, LeafIndices> PositionReservoir;
-//typedef boost::shared_ptr<PositionReservoir> PositionReservoir_Ptr;
-//typedef boost::shared_ptr<const PositionReservoir> PositionReservoir_CPtr;
 
 }
 
