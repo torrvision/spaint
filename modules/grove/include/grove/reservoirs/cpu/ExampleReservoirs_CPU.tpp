@@ -14,27 +14,34 @@ using namespace tvgutil;
 
 namespace grove {
 
+//#################### CONSTRUCTORS ####################
+
 template <typename ExampleType, typename IndexType>
 ExampleReservoirs_CPU<ExampleType, IndexType>::ExampleReservoirs_CPU(
     uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed) :
     ExampleReservoirs<ExampleType, IndexType>(reservoirCapacity, reservoirCount, rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+
+  // Initialise the random number generators.
   m_randomStates = mbf.make_block<CPURNG>();
   init_random();
 }
+
+//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename IndexType>
 void ExampleReservoirs_CPU<ExampleType, IndexType>::add_examples(const ExampleImage_CPtr &examples,
     const IndexImage_CPtr &reservoirIndices)
 {
+  // Check preconditions.
   if(examples->noDims != reservoirIndices->noDims)
     throw std::invalid_argument("The example and indices images should have the same size.");
 
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;
 
-  // Check that we have enough random states and if not reallocate them
+  // Check that we have enough random states and, if not, reallocate them.
   if (nbExamples > m_randomStates->dataSize)
   {
     m_randomStates->ChangeDims(nbExamples);
@@ -45,9 +52,9 @@ void ExampleReservoirs_CPU<ExampleType, IndexType>::add_examples(const ExampleIm
   const IndexType *indicesData = reservoirIndices->GetData(MEMORYDEVICE_CPU);
 
   CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
+  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CPU);
   ExampleType *reservoirData = this->m_data->GetData(MEMORYDEVICE_CPU);
   int *reservoirSize = this->m_reservoirsSize->GetData(MEMORYDEVICE_CPU);
-  int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
@@ -71,6 +78,8 @@ void ExampleReservoirs_CPU<ExampleType, IndexType>::clear()
   ExampleReservoirs<ExampleType, IndexType>::clear();
   init_random();
 }
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename IndexType>
 void ExampleReservoirs_CPU<ExampleType, IndexType>::init_random()
