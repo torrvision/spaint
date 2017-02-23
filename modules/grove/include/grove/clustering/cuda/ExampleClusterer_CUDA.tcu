@@ -344,7 +344,7 @@ __global__ void ck_compute_modes(const ExampleType *examples,
 }
 
 template <typename ExampleType, typename ClusterType>
-ExampleClusterer_CUDA<ExampleType, ClusterType>::ExampleClusterer_CUDA(float sigma, float tau, int minClusterSize)
+ExampleClusterer_CUDA<ExampleType, ClusterType>::ExampleClusterer_CUDA(float sigma, float tau, uint32_t minClusterSize)
   : ExampleClusterer<ExampleType, ClusterType>(sigma, tau, minClusterSize)
 {}
 

@@ -14,6 +14,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
+#include <spaint/util/ITMImagePtrTypes.h>
 #include <spaint/util/ITMMemoryBlockPtrTypes.h>
 
 namespace grove
@@ -32,7 +33,7 @@ public:
   typedef boost::shared_ptr<const ExampleImage> ExampleImage_CPtr;
 
 public:
-  ExampleClusterer(float sigma, float tau, int minClusterSize);
+  ExampleClusterer(float sigma, float tau, uint32_t minClusterSize);
   virtual ~ExampleClusterer();
 
   virtual void find_modes(const ExampleImage_CPtr &exampleReservoirs,
@@ -43,7 +44,7 @@ public:
 protected:
   float m_sigma;
   float m_tau;
-  int m_minClusterSize;
+  uint32_t m_minClusterSize;
 
   ITMFloatImage_Ptr m_densities;
   ITMIntImage_Ptr m_parents;

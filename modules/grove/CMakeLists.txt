@@ -22,6 +22,10 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
+SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
+SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
+
+##
 SET(clustering_base_headers 
     include/grove/clustering/base/Mode3DColour.h
     include/grove/clustering/base/Prediction3DColour.h
@@ -100,6 +104,7 @@ ${toplevel_sources}
 )
 
 SET(headers
+${clustering_headers}
 ${clustering_base_headers}
 ${clustering_interface_headers}
 ${features_headers}
@@ -116,6 +121,7 @@ ${keypoints_headers}
 
 SET(templates
 ${clustering_interface_templates}
+${clustering_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
 ${reservoirs_cpu_templates}
@@ -149,6 +155,7 @@ ENDIF()
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources})
+SOURCE_GROUP(clustering FILES ${clustering_headers} ${clustering_templates})
 SOURCE_GROUP(clustering\\base FILES ${clustering_base_headers})
 SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
 SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
@@ -158,7 +165,7 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_template
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
-SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers})
+SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})

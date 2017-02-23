@@ -24,7 +24,7 @@ public:
   using typename ExampleClusterer<ExampleType, ClusterType>::ExampleImage_CPtr;
 
 public:
-  ExampleClusterer_CUDA(float sigma, float tau, int minClusterSize);
+  ExampleClusterer_CUDA(float sigma, float tau, uint32_t minClusterSize);
 
   virtual void find_modes(const ExampleImage_CPtr &exampleReservoirs,
                           const ITMIntMemoryBlock_CPtr &keypointReservoirsSize,
