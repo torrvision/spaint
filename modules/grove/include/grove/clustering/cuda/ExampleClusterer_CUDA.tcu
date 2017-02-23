@@ -7,24 +7,20 @@
 
 #include <iostream>
 
+#include "../shared/ExampleClusterer_Shared.h"
+
 namespace grove
 {
 __global__ void ck_reset_temporaries(int *clustersPerReservoir,
     int *clusterSizes, int *clusterSizesHistogram, int reservoirCapacity,
     int startReservoirIdx)
 {
+  // This is launched with 1 block, 1 thread per reservoir.
+  // No need to check if reservoirIdx is within bounds. It always is.
   const int reservoirIdx = threadIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
 
-  // Reset number of clusters per reservoir
-  clustersPerReservoir[reservoirIdx] = 0;
-
-  // Reset cluster sizes and histogram
-  for (int i = 0; i < reservoirCapacity; ++i)
-  {
-    clusterSizes[reservoirOffset + i] = 0;
-    clusterSizesHistogram[reservoirOffset + i] = 0;
-  }
+  example_clusterer_reset_temporaries(clustersPerReservoir, clusterSizes, clusterSizesHistogram,
+                                      reservoirIdx, reservoirCapacity);
 }
 
 template <typename ExampleType>
@@ -33,35 +29,12 @@ __global__ void ck_compute_density(const ExampleType *examples,
     int startReservoirIdx, float sigma)
 {
   // The assumption is that the kernel indices are always valid.
+  // 1 block per reservoir, 1 thread per element
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int reservoirSize = reservoirSizes[reservoirIdx];
   const int elementIdx = threadIdx.x;
-  const int elementOffset = reservoirOffset + elementIdx;
 
-  const float three_sigma_sq = (3.f * sigma) * (3.f * sigma); // Points farther away have small contribution to the density
-  const float minus_one_over_two_sigma_sq = -1.f / (2.f * sigma * sigma);
-
-  float density = 0.f;
-
-  if (elementIdx < reservoirSize)
-  {
-    const Vector3f centerPosition(examples[elementOffset].position);
-
-    for (int i = 0; i < reservoirSize; ++i)
-    {
-      const Vector3f examplePosition(examples[reservoirOffset + i].position);
-      const Vector3f diff = examplePosition - centerPosition;
-      const float normSq = dot(diff, diff);
-
-      if (normSq < three_sigma_sq)
-      {
-        density += expf(normSq * minus_one_over_two_sigma_sq);
-      }
-    }
-  }
-
-  densities[elementOffset] = density;
+  example_clusterer_compute_density(examples, reservoirSizes, densities,
+                                    reservoirCapacity, reservoirIdx, elementIdx, sigma);
 }
 
 template <typename ExampleType>
@@ -71,95 +44,37 @@ __global__ void ck_link_neighbors(const ExampleType *examples,
     int startReservoirIdx, float tauSq)
 {
   // The assumption is that the kernel indices are always valid.
+  // 1 block per reservoir, 1 thread per element
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int reservoirSize = reservoirSizes[reservoirIdx];
   const int elementIdx = threadIdx.x;
-  const int elementOffset = reservoirOffset + elementIdx;
 
-  int parentIdx = elementIdx;
-  int clusterIdx = -1;
-
-  if (elementIdx < reservoirSize)
-  {
-    const Vector3f centerPosition(examples[elementOffset].position);
-    const float centerDensity = densities[elementOffset];
-    float minDistance = tauSq;
-
-    for (int i = 0; i < reservoirSize; ++i)
-    {
-      if (i == elementIdx)
-        continue;
-
-      const Vector3f examplePosition(examples[reservoirOffset + i].position);
-      const float exampleDensity = densities[reservoirOffset + i];
-
-      const Vector3f diff = examplePosition - centerPosition;
-      const float normSq = dot(diff, diff);
-
-      if (normSq < minDistance && centerDensity < exampleDensity)
-      {
-        minDistance = normSq;
-        parentIdx = i;
-      }
-    }
-
-    // current element is the root of a subtree, get a unique cluster index
-    if (parentIdx == elementIdx)
-    {
-      clusterIdx = atomicAdd(&nbClustersPerReservoir[reservoirIdx], 1);
-    }
-  }
-
-  parents[elementOffset] = parentIdx;
-  clusterIndices[elementOffset] = clusterIdx;
+  example_clusterer_link_neighbors(examples, reservoirSizes, densities, parents,
+                                   clusterIndices, nbClustersPerReservoir, reservoirCapacity,
+                                   reservoirIdx, elementIdx, tauSq);
 }
 
 __global__ void ck_identify_clusters(const int *parents, int *clusterIndices, int *clusterSizes,
     int reservoirCapacity, int startReservoirIdx)
 {
   // The assumption is that the kernel indices are always valid.
+  // 1 block per reservoir, 1 thread per element
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
   const int elementIdx = threadIdx.x;
-  const int elementOffset = reservoirOffset + elementIdx;
 
-  // No need to check if the current element is valid
-  // ck_link_neighbors sets the parent for invalid elements to themselves
-  int parentIdx = parents[elementOffset];
-  int currentIdx = elementIdx;
-  while (parentIdx != currentIdx)
-  {
-    currentIdx = parentIdx;
-    parentIdx = parents[reservoirOffset + parentIdx];
-  }
-
-  // found the root of the subtree, get its cluster idx
-  const int clusterIdx = clusterIndices[reservoirOffset + parentIdx];
-  clusterIndices[elementOffset] = clusterIdx;
-
-  // If it's a valid cluster then increase its size
-  if (clusterIdx >= 0)
-  {
-    atomicAdd(&clusterSizes[reservoirOffset + clusterIdx], 1);
-  }
+  example_clusterer_identify_clusters(parents, clusterIndices, clusterSizes,
+                                      reservoirCapacity, reservoirIdx, elementIdx);
 }
 
 __global__ void ck_compute_cluster_histogram(const int *clusterSizes,
     const int *nbClustersPerReservoir, int *clusterSizesHistogram,
     int reservoirCapacity, int startReservoirIdx)
 {
-  // The assumption is that the kernel indices are always valid.
+  // The assumption is that the block indices are always valid.
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int validClusters = nbClustersPerReservoir[reservoirIdx];
   const int clusterIdx = threadIdx.x;
 
-  if (clusterIdx >= validClusters)
-    return;
-
-  const int clusterSize = clusterSizes[reservoirOffset + clusterIdx];
-  atomicAdd(&clusterSizesHistogram[reservoirOffset + clusterSize], 1);
+  example_clusterer_compute_cluster_histogram(clusterSizes, nbClustersPerReservoir, clusterSizesHistogram,
+                                              reservoirCapacity, reservoirIdx, clusterIdx);
 }
 
 __global__ void ck_select_clusters(const int *clusterSizes,
@@ -170,89 +85,13 @@ __global__ void ck_select_clusters(const int *clusterSizes,
   // The assumption is that the kernel indices are always valid.
   // "Sequential kernel": only one block is launched
   const int reservoirIdx = threadIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int validClusters = nbClustersPerReservoir[reservoirIdx];
-  const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
 
-  // Reset output
-  for (int i = 0; i < maxSelectedClusters; ++i)
-  {
-    selectedClusters[selectedClustersOffset + i] = -1;
-  }
-
-  // Scan the histogram from the top to find the minimum cluster size we want to select
-  int nbSelectedClusters = 0;
-  int selectedClusterSize = reservoirCapacity - 1;
-  for (;
-      selectedClusterSize >= minClusterSize
-          && nbSelectedClusters < maxSelectedClusters; --selectedClusterSize)
-  {
-    nbSelectedClusters += clusterSizesHistogram[reservoirOffset
-        + selectedClusterSize];
-  }
-
-  // Empty reservoir
-  if (nbSelectedClusters == 0)
-    return;
-
-  // nbSelectedClusters might be greater than maxSelectedClusters if more clusters had the same size,
-  // need to keep this into account: at first add all clusters with size greater than minClusterSize
-  // then another loop over the clusters add as many clusters with size == selectedClusterSize as possible
-
-  nbSelectedClusters = 0;
-
-  // first loop, >
-  for (int i = 0; i < validClusters && nbSelectedClusters < maxSelectedClusters;
-      ++i)
-  {
-    if (clusterSizes[reservoirOffset + i] > selectedClusterSize)
-    {
-      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
-    }
-  }
-
-  // second loop, ==
-  for (int i = 0; i < validClusters && nbSelectedClusters < maxSelectedClusters;
-      ++i)
-  {
-    if (clusterSizes[reservoirOffset + i] == selectedClusterSize)
-    {
-      selectedClusters[selectedClustersOffset + nbSelectedClusters++] = i;
-    }
-  }
-
-  // Sort clusters by descending number of inliers
-  // Quadratic but small enough to not care for now
-  for (int i = 0; i < nbSelectedClusters; ++i)
-  {
-    int maxSize = clusterSizes[reservoirOffset
-        + selectedClusters[selectedClustersOffset + i]];
-    int maxIdx = i;
-
-    for (int j = i + 1; j < nbSelectedClusters; ++j)
-    {
-      int size = clusterSizes[reservoirOffset
-          + selectedClusters[selectedClustersOffset + j]];
-      if (size > maxSize)
-      {
-        maxSize = size;
-        maxIdx = j;
-      }
-    }
-
-    // Swap
-    if (maxIdx != i)
-    {
-      int temp = selectedClusters[selectedClustersOffset + i];
-      selectedClusters[selectedClustersOffset + i] =
-          selectedClusters[selectedClustersOffset + maxIdx];
-      selectedClusters[selectedClustersOffset + maxIdx] = temp;
-    }
-  }
+  example_clusterer_select_clusters(clusterSizes, clusterSizesHistogram, nbClustersPerReservoir,
+                                    selectedClusters, reservoirCapacity, maxSelectedClusters,
+                                    minClusterSize, reservoirIdx);
 }
 
 // TODO: this will need specialization for 2D keypoints without colour.
-// Alternatively will need to be split in two different methods.
 template <typename ExampleType, typename ClusterType>
 __global__ void ck_compute_modes(const ExampleType *examples,
     const int *reservoirSizes, const int *clusterIndices,
@@ -261,86 +100,11 @@ __global__ void ck_compute_modes(const ExampleType *examples,
 {
   // One thread per cluster, one block per reservoir
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int reservoirSize = reservoirSizes[reservoirIdx];
-
   const int clusterIdx = threadIdx.x;
-  const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
 
-  ClusterType &reservoirPrediction = predictions[reservoirIdx];
-  if (threadIdx.x == 0)
-    reservoirPrediction.nbModes = 0;
-
-  __syncthreads();
-
-  const int selectedClusterId = selectedClusters[selectedClustersOffset
-      + clusterIdx];
-  if (selectedClusterId >= 0)
-  {
-    // compute position and colour mean
-    int sampleCount = 0;
-    Vector3f positionMean(0.f);
-    Vector3f colourMean(0.f);
-
-    // Iterate over all examples and use only those belonging to selectedClusterId
-    for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
-    {
-      const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
-      if (sampleCluster == selectedClusterId)
-      {
-        const ExampleType &sample = examples[reservoirOffset + sampleIdx];
-
-        ++sampleCount;
-        positionMean += sample.position;
-        colourMean += sample.colour.toFloat();
-      }
-    }
-
-    //this mode is invalid..
-    if (sampleCount <= 1) // Should never reach this point since we check minClusterSize earlier
-      return;
-
-    positionMean /= static_cast<float>(sampleCount);
-    colourMean /= static_cast<float>(sampleCount);
-
-    // Now iterate again and compute the covariance
-    Matrix3f positionCovariance;
-    positionCovariance.setZeros();
-
-    for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
-    {
-      const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
-      if (sampleCluster == selectedClusterId)
-      {
-        const ExampleType &sample = examples[reservoirOffset + sampleIdx];
-
-        for (int i = 0; i < 3; ++i)
-        {
-          for (int j = 0; j < 3; ++j)
-          {
-            positionCovariance.m[i * 3 + j] += (sample.position.v[i]
-                - positionMean.v[i])
-                * (sample.position.v[j] - positionMean.v[j]);
-          }
-        }
-      }
-    }
-
-    positionCovariance /= static_cast<float>(sampleCount - 1);
-    const float positionDeterminant = positionCovariance.det();
-
-    // Get the mode idx
-    const int modeIdx = atomicAdd(&reservoirPrediction.nbModes, 1);
-
-    // Fill the mode
-    // This does not compile without an additional template parameter
-    // ScoreMode &outMode = reservoirPrediction.modes[modeIdx];
-    reservoirPrediction.modes[modeIdx].nbInliers = sampleCount;
-    reservoirPrediction.modes[modeIdx].position = positionMean;
-    reservoirPrediction.modes[modeIdx].determinant = positionDeterminant;
-    positionCovariance.inv(reservoirPrediction.modes[modeIdx].positionInvCovariance);
-    reservoirPrediction.modes[modeIdx].colour = colourMean.toUChar();
-  }
+  example_clusterer_compute_modes(examples, reservoirSizes, clusterIndices,
+                                  selectedClusters, predictions, reservoirCapacity,
+                                  maxSelectedClusters, reservoirIdx, clusterIdx);
 }
 
 template <typename ExampleType, typename ClusterType>

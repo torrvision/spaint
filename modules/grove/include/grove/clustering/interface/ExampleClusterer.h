@@ -6,9 +6,6 @@
 #ifndef H_GROVE_EXAMPLECLUSTERER
 #define H_GROVE_EXAMPLECLUSTERER
 
-//#include "../base/Prediction3DColour.h"
-//#include "../../keypoints/Keypoint3DColour.h"
-
 #include <boost/shared_ptr.hpp>
 
 #include <ORUtils/Image.h>
@@ -54,8 +51,6 @@ protected:
   ITMIntImage_Ptr m_selectedClusters;
   ITMIntImage_Ptr m_nbClustersPerReservoir;
 };
-//
-//typedef boost::shared_ptr<ExampleClusterer> ScoreClusterer_Ptr;
-//typedef boost::shared_ptr<const ExampleClusterer> ScoreClusterer_CPtr;
+
 }
 #endif

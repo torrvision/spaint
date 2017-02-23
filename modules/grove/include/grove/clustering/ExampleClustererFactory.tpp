@@ -33,7 +33,7 @@ typename ExampleClustererFactory<ExampleType, IndexType>::Clusterer_Ptr ExampleC
     throw std::runtime_error("Error: CPU implementation not available.");
   }
 
-  return reservoir;
+  return clusterer;
 }
 
 }
