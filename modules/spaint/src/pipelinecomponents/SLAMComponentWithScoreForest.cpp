@@ -68,7 +68,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
           settings->deviceType);
   m_rgbdPatchKeypointsImage = mbf.make_image<Keypoint3DColour>();
   m_rgbdPatchDescriptorImage = mbf.make_image<RGBDPatchDescriptor>();
-  m_predictionsImage = mbf.make_image<ScorePrediction>();
+  m_predictionsImage = mbf.make_image<Prediction3DColour>();
 
   m_relocalisationForestPath = parametersContainer.get_string(
       parametersNamespace + "m_relocalisationForestPath",

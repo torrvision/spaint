@@ -41,9 +41,9 @@ inline void evaluate_forest_shared(const ScoreForest::NodeEntry* forestTexture,
 
 _CPU_AND_GPU_CODE_
 inline void get_prediction_for_leaf_shared(
-    const ScorePrediction* leafPredictions,
+    const Prediction3DColour* leafPredictions,
     const ScoreForest::LeafIndices* leafIndices,
-    ScorePrediction* outPredictions, Vector2i imgSize, int x, int y)
+    Prediction3DColour* outPredictions, Vector2i imgSize, int x, int y)
 {
   const int linearIdx = y * imgSize.width + x;
   const ScoreForest::LeafIndices selectedLeaves = leafIndices[linearIdx];
@@ -56,17 +56,17 @@ inline void get_prediction_for_leaf_shared(
   }
 
   // TODO: maybe copying them is faster...
-  const ScorePrediction *selectedPredictions[SCOREFOREST_NTREES];
+  const Prediction3DColour *selectedPredictions[SCOREFOREST_NTREES];
   for (int treeIdx = 0; treeIdx < SCOREFOREST_NTREES; ++treeIdx)
   {
     selectedPredictions[treeIdx] = &leafPredictions[selectedLeaves[treeIdx]];
   }
 
-  ScorePrediction &outPrediction = outPredictions[linearIdx];
+  Prediction3DColour &outPrediction = outPredictions[linearIdx];
   outPrediction.nbModes = 0;
 
   // Merge first MAX_MODES from the sorted mode arrays
-  while (outPrediction.nbModes < ScorePrediction::MAX_MODES)
+  while (outPrediction.nbModes < Prediction3DColour::MAX_MODES)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;

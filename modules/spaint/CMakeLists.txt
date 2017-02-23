@@ -348,13 +348,11 @@ src/randomforest/cpu/PreemptiveRansac_CPU.cpp
 )
 
 SET(randomforest_cuda_sources
-src/randomforest/cuda/ScoreClusterer_CUDA.cu
 src/randomforest/cuda/PreemptiveRansac_CUDA.cu
 src/randomforest/cuda/ScoreForest_CUDA.cu
 )
 
 SET(randomforest_interface_sources
-src/randomforest/interface/ScoreClusterer.cpp
 src/randomforest/interface/PreemptiveRansac.cpp
 src/randomforest/interface/ScoreForest.cpp
 )
@@ -375,13 +373,11 @@ include/spaint/randomforest/cpu/PreemptiveRansac_CPU.h
 )
 
 SET(randomforest_cuda_headers
-include/spaint/randomforest/cuda/ScoreClusterer_CUDA.h
 include/spaint/randomforest/cuda/PreemptiveRansac_CUDA.h
 include/spaint/randomforest/cuda/ScoreForest_CUDA.h
 )
 
 SET(randomforest_interface_headers
-include/spaint/randomforest/interface/ScoreClusterer.h
 include/spaint/randomforest/interface/PreemptiveRansac.h
 include/spaint/randomforest/interface/ScoreForest.h
 )

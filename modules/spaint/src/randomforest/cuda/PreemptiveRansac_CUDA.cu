@@ -32,7 +32,7 @@ __global__ void ck_init_random_generators(CUDARNG *randomGenerators,
 
 template<typename RNG>
 __global__ void ck_generate_pose_candidates(const Keypoint3DColour *keypoints,
-    const ScorePrediction *predictions, const Vector2i imgSize,
+    const Prediction3DColour *predictions, const Vector2i imgSize,
     RNG *randomGenerators, PoseCandidate *poseCandidates, int *nbPoseCandidates,
     int maxNbPoseCandidates,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
@@ -63,7 +63,7 @@ __global__ void ck_generate_pose_candidates(const Keypoint3DColour *keypoints,
 }
 
 __global__ void ck_compute_energies(const Keypoint3DColour *keypoints,
-    const ScorePrediction *predictions, const int *inlierIndices,
+    const Prediction3DColour *predictions, const int *inlierIndices,
     uint32_t nbInliers, PoseCandidate *poseCandidates, int nbCandidates)
 {
   const int tId = threadIdx.x;
@@ -115,7 +115,7 @@ __global__ void ck_reset_candidate_energies(PoseCandidate *poseCandidates,
 
 template<bool useMask, typename RNG>
 __global__ void ck_sample_inliers(const Keypoint3DColour *keypointsData,
-    const ScorePrediction *predictionsData, const Vector2i imgSize,
+    const Prediction3DColour *predictionsData, const Vector2i imgSize,
     RNG *randomGenerators, int *inlierIndices, int *inlierCount,
     int nbMaxSamples, int *inlierMaskData = NULL)
 {
@@ -164,7 +164,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(
       MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictions = m_predictionsImage->GetData(
+  const Prediction3DColour *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
   CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
@@ -207,7 +207,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
 
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(
       MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictions = m_predictionsImage->GetData(
+  const Prediction3DColour *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
   const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliers = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
@@ -235,7 +235,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CUDA);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
+  const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
 
   int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);

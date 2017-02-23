@@ -22,6 +22,20 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
+SET(clustering_base_headers 
+    include/grove/clustering/base/Mode3DColour.h
+    include/grove/clustering/base/Prediction3DColour.h
+    )
+    
+##
+SET(clustering_cuda_headers include/grove/clustering/cuda/ExampleClusterer_CUDA.h)
+SET(clustering_cuda_templates include/grove/clustering/cuda/ExampleClusterer_CUDA.tcu)
+    
+##
+SET(clustering_interface_headers include/grove/clustering/interface/ExampleClusterer.h)
+SET(clustering_interface_templates include/grove/clustering/interface/ExampleClusterer.tpp)
+
+##
 SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
 
@@ -86,6 +100,8 @@ ${toplevel_sources}
 )
 
 SET(headers
+${clustering_base_headers}
+${clustering_interface_headers}
 ${features_headers}
 ${features_base_headers}
 ${features_cpu_headers}
@@ -99,6 +115,7 @@ ${keypoints_headers}
 )
 
 SET(templates
+${clustering_interface_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
 ${reservoirs_cpu_templates}
@@ -109,6 +126,7 @@ ${reservoirs_templates}
 IF(WITH_CUDA)
   SET(headers 
       ${headers}
+      ${clustering_cuda_headers}
       ${features_cuda_headers}
       ${reservoirs_cuda_headers}
       )
@@ -120,6 +138,7 @@ IF(WITH_CUDA)
       
   SET(templates
       ${templates}
+      ${clustering_cuda_templates}
       ${features_cuda_templates}
       ${reservoirs_cuda_templates}
       )
@@ -130,6 +149,9 @@ ENDIF()
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources})
+SOURCE_GROUP(clustering\\base FILES ${clustering_base_headers})
+SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
+SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
 SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})

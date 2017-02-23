@@ -6,6 +6,7 @@
 #include "ExampleReservoirs.h"
 
 #include <spaint/util/MemoryBlockFactory.h>
+using spaint::MemoryBlockFactory;
 
 namespace grove {
 

@@ -23,9 +23,9 @@ __global__ void ck_evaluate_forest(const ScoreForest::NodeEntry* forestTexture,
       y);
 }
 
-__global__ void ck_get_predictions(const ScorePrediction* leafPredictions,
+__global__ void ck_get_predictions(const Prediction3DColour* leafPredictions,
     const ScoreForest::LeafIndices* leafIndices,
-    ScorePrediction* outPredictions, Vector2i imgSize)
+    Prediction3DColour* outPredictions, Vector2i imgSize)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -70,12 +70,12 @@ void ScoreForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
   const LeafIndices* leafIndices = leaf_indices->GetData(MEMORYDEVICE_CUDA);
 
 // Leaf predictions
-  const ScorePrediction *leafPredictionsData = m_predictionsBlock->GetData(
+  const Prediction3DColour *leafPredictionsData = m_predictionsBlock->GetData(
       MEMORYDEVICE_CUDA);
 
 // ~12MB for 160x120 image
   predictions->ChangeDims(imgSize);
-  ScorePrediction *outPredictionsData = predictions->GetData(MEMORYDEVICE_CUDA);
+  Prediction3DColour *outPredictionsData = predictions->GetData(MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x,
@@ -86,7 +86,7 @@ void ScoreForest_CUDA::get_predictions(const LeafIndicesImage_Ptr &leaf_indices,
   ORcudaKernelCheck;
 }
 
-ScorePrediction ScoreForest_CUDA::get_prediction(size_t treeIdx,
+Prediction3DColour ScoreForest_CUDA::get_prediction(size_t treeIdx,
     size_t leafIdx) const
 {
   if (treeIdx >= get_nb_trees())

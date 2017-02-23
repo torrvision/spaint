@@ -8,12 +8,14 @@
 
 #include <vector>
 
+#include <grove/clustering/base/Prediction3DColour.h>
+#include <grove/clustering/interface/ExampleClusterer.h>
 #include <grove/features/interface/RGBDPatchFeatureCalculator.h>
+#include <grove/reservoirs/interface/ExampleReservoirs.h>
 using namespace grove;
 
 #include "../../util/ITMImagePtrTypes.h"
 
-#include "ScoreClusterer.h"
 //#include "ExampleReservoirs.h"
 #include "../ScoreForestTypes.h"
 
@@ -67,7 +69,7 @@ public:
   size_t get_nb_trees() const;
   size_t get_nb_nodes_in_tree(size_t treeIdx) const;
   size_t get_nb_leaves_in_tree(size_t treeIdx) const;
-  virtual ScorePrediction get_prediction(size_t treeIdx,
+  virtual Prediction3DColour get_prediction(size_t treeIdx,
       size_t leafIdx) const = 0;
 
 protected:
@@ -76,8 +78,8 @@ protected:
 
   NodeImage_Ptr m_nodeImage;
   ScorePredictionsBlock_Ptr m_predictionsBlock;
-  PositionReservoir_Ptr m_leafReservoirs;
-  ScoreClusterer_Ptr m_gpuClusterer;
+  boost::shared_ptr<ExampleReservoirs<Keypoint3DColour, LeafIndices> > m_leafReservoirs;
+  boost::shared_ptr<ExampleClusterer<Keypoint3DColour, Prediction3DColour> > m_gpuClusterer;
 
   size_t m_reservoirCapacity;
   size_t m_maxReservoirsToUpdate;

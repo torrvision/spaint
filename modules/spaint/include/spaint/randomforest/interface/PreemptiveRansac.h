@@ -13,6 +13,7 @@
 #include <ITMLib/Utils/ITMMath.h>
 #include <ORUtils/PlatformIndependence.h>
 
+#include <grove/clustering/base/Prediction3DColour.h>
 #include <grove/keypoints/Keypoint3DColour.h>
 #include <tvgutil/timing/AverageTimer.h>
 

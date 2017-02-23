@@ -337,13 +337,13 @@ namespace
 struct PointForLM
 {
   Vector3f point;
-  ScoreMode mode;
+  Mode3DColour mode;
 
   PointForLM()
   {
   }
 
-  PointForLM(const Vector3f &pt, const ScoreMode &md) :
+  PointForLM(const Vector3f &pt, const Mode3DColour &md) :
       point(pt), mode(md)
   {
   }
@@ -490,7 +490,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 {
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
+  const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
   const size_t nbInliers = m_inliersIndicesImage->dataSize;
   const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
@@ -580,7 +580,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
         keypointsData[inlierLinearIdx].position;
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
         * inlierCameraPosition;
-    const ScorePrediction &prediction = predictionsData[inlierLinearIdx];
+    const Prediction3DColour &prediction = predictionsData[inlierLinearIdx];
 
     PointForLM ptLM;
     // The assumption is that the inlier is valid (checked before)

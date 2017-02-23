@@ -15,8 +15,7 @@
 
 #include "util/MemoryBlockFactory.h"
 
-#include "randomforest/cuda/ScoreClusterer_CUDA.h"
-
+#include <grove/clustering/cuda/ExampleClusterer_CUDA.h>
 #include <grove/reservoirs/ExampleReservoirsFactory.h>
 using namespace grove;
 
@@ -40,7 +39,7 @@ ScoreForest::ScoreForest()
   const float clustererTau = 0.05f;
   const int minClusterSize = 20;
   m_gpuClusterer.reset(
-      new ScoreClusterer_CUDA(clustererSigma, clustererTau, minClusterSize));
+      new ExampleClusterer_CUDA<Keypoint3DColour, Prediction3DColour>(clustererSigma, clustererTau, minClusterSize));
 
   // Allocate the image that will store the leaf indices (will be resized as needed)
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>();
@@ -118,8 +117,8 @@ void ScoreForest::add_features_to_forest(
     boost::timer::auto_cpu_timer t(6,
         "GPU clustering: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock,
-        m_reservoirUpdateStartIdx, updateCount);
+    m_gpuClusterer->find_modes(m_leafReservoirs->get_reservoirs(), m_leafReservoirs->get_reservoirs_size(),
+        m_predictionsBlock, m_reservoirUpdateStartIdx, updateCount);
 //    cudaDeviceSynchronize();
   }
 
@@ -152,7 +151,8 @@ void ScoreForest::update_forest()
     boost::timer::auto_cpu_timer t(6,
         "GPU clustering: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_gpuClusterer->find_modes(m_leafReservoirs, m_predictionsBlock,
+    m_gpuClusterer->find_modes(m_leafReservoirs->get_reservoirs(), m_leafReservoirs->get_reservoirs_size(),
+        m_predictionsBlock,
         m_reservoirUpdateStartIdx, updateCount);
 //    cudaDeviceSynchronize();
   }
@@ -225,7 +225,7 @@ void ScoreForest::load_structure_from_file(const std::string &fileName)
   m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
   m_nodeImage->Clear();
 
-  m_predictionsBlock = mbf.make_block<ScorePrediction>(totalNbLeaves);
+  m_predictionsBlock = mbf.make_block<grove::Prediction3DColour>(totalNbLeaves);
   m_predictionsBlock->Clear();
 
 //  m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(

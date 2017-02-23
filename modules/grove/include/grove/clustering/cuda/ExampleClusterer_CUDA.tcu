@@ -1,17 +1,13 @@
 /**
- * spaint: ScoreClusterer_CUDA.cu
+ * grove: ExampleClusterer_CUDA.cu
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "randomforest/cuda/ScoreClusterer_CUDA.h"
-
-#include "util/MemoryBlockFactory.h"
+#include "ExampleClusterer_CUDA.h"
 
 #include <iostream>
 
-using namespace grove;
-
-namespace spaint
+namespace grove
 {
 __global__ void ck_reset_temporaries(int *clustersPerReservoir,
     int *clusterSizes, int *clusterSizesHistogram, int reservoirCapacity,
@@ -31,7 +27,8 @@ __global__ void ck_reset_temporaries(int *clustersPerReservoir,
   }
 }
 
-__global__ void ck_compute_density(const Keypoint3DColour *examples,
+template <typename ExampleType>
+__global__ void ck_compute_density(const ExampleType *examples,
     const int *reservoirSizes, float *densities, int reservoirCapacity,
     int startReservoirIdx, float sigma)
 {
@@ -49,11 +46,11 @@ __global__ void ck_compute_density(const Keypoint3DColour *examples,
 
   if (elementIdx < reservoirSize)
   {
-    const Vector3f centerPosition = examples[elementOffset].position;
+    const Vector3f centerPosition(examples[elementOffset].position);
 
     for (int i = 0; i < reservoirSize; ++i)
     {
-      const Vector3f examplePosition = examples[reservoirOffset + i].position;
+      const Vector3f examplePosition(examples[reservoirOffset + i].position);
       const Vector3f diff = examplePosition - centerPosition;
       const float normSq = dot(diff, diff);
 
@@ -67,7 +64,8 @@ __global__ void ck_compute_density(const Keypoint3DColour *examples,
   densities[elementOffset] = density;
 }
 
-__global__ void ck_link_neighbors(const Keypoint3DColour *examples,
+template <typename ExampleType>
+__global__ void ck_link_neighbors(const ExampleType *examples,
     const int *reservoirSizes, const float *densities, int *parents,
     int *clusterIndices, int *nbClustersPerReservoir, int reservoirCapacity,
     int startReservoirIdx, float tauSq)
@@ -84,7 +82,7 @@ __global__ void ck_link_neighbors(const Keypoint3DColour *examples,
 
   if (elementIdx < reservoirSize)
   {
-    const Vector3f centerPosition = examples[elementOffset].position;
+    const Vector3f centerPosition(examples[elementOffset].position);
     const float centerDensity = densities[elementOffset];
     float minDistance = tauSq;
 
@@ -93,7 +91,7 @@ __global__ void ck_link_neighbors(const Keypoint3DColour *examples,
       if (i == elementIdx)
         continue;
 
-      const Vector3f examplePosition = examples[reservoirOffset + i].position;
+      const Vector3f examplePosition(examples[reservoirOffset + i].position);
       const float exampleDensity = densities[reservoirOffset + i];
 
       const Vector3f diff = examplePosition - centerPosition;
@@ -117,14 +115,12 @@ __global__ void ck_link_neighbors(const Keypoint3DColour *examples,
   clusterIndices[elementOffset] = clusterIdx;
 }
 
-__global__ void ck_identify_clusters(const int *reservoirSizes,
-    const int *parents, int *clusterIndices, int *clusterSizes,
+__global__ void ck_identify_clusters(const int *parents, int *clusterIndices, int *clusterSizes,
     int reservoirCapacity, int startReservoirIdx)
 {
   // The assumption is that the kernel indices are always valid.
   const int reservoirIdx = blockIdx.x + startReservoirIdx;
   const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int reservoirSize = reservoirSizes[reservoirIdx];
   const int elementIdx = threadIdx.x;
   const int elementOffset = reservoirOffset + elementIdx;
 
@@ -255,9 +251,12 @@ __global__ void ck_select_clusters(const int *clusterSizes,
   }
 }
 
-__global__ void ck_compute_modes(const Keypoint3DColour *examples,
+// TODO: this will need specialization for 2D keypoints without colour.
+// Alternatively will need to be split in two different methods.
+template <typename ExampleType, typename ClusterType>
+__global__ void ck_compute_modes(const ExampleType *examples,
     const int *reservoirSizes, const int *clusterIndices,
-    const int *selectedClusters, ScorePrediction *predictions,
+    const int *selectedClusters, ClusterType *predictions,
     int reservoirCapacity, int startReservoirIdx, int maxSelectedClusters)
 {
   // One thread per cluster, one block per reservoir
@@ -268,7 +267,7 @@ __global__ void ck_compute_modes(const Keypoint3DColour *examples,
   const int clusterIdx = threadIdx.x;
   const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
 
-  ScorePrediction &reservoirPrediction = predictions[reservoirIdx];
+  ClusterType &reservoirPrediction = predictions[reservoirIdx];
   if (threadIdx.x == 0)
     reservoirPrediction.nbModes = 0;
 
@@ -289,8 +288,7 @@ __global__ void ck_compute_modes(const Keypoint3DColour *examples,
       const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
       if (sampleCluster == selectedClusterId)
       {
-        const Keypoint3DColour &sample = examples[reservoirOffset
-            + sampleIdx];
+        const ExampleType &sample = examples[reservoirOffset + sampleIdx];
 
         ++sampleCount;
         positionMean += sample.position;
@@ -314,8 +312,7 @@ __global__ void ck_compute_modes(const Keypoint3DColour *examples,
       const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
       if (sampleCluster == selectedClusterId)
       {
-        const Keypoint3DColour &sample = examples[reservoirOffset
-            + sampleIdx];
+        const ExampleType &sample = examples[reservoirOffset + sampleIdx];
 
         for (int i = 0; i < 3; ++i)
         {
@@ -336,33 +333,30 @@ __global__ void ck_compute_modes(const Keypoint3DColour *examples,
     const int modeIdx = atomicAdd(&reservoirPrediction.nbModes, 1);
 
     // Fill the mode
-    ScoreMode &outMode = reservoirPrediction.modes[modeIdx];
-    outMode.nbInliers = sampleCount;
-    outMode.position = positionMean;
-    outMode.determinant = positionDeterminant;
-    positionCovariance.inv(outMode.positionInvCovariance);
-    outMode.colour = colourMean.toUChar();
+    // This does not compile without an additional template parameter
+    // ScoreMode &outMode = reservoirPrediction.modes[modeIdx];
+    reservoirPrediction.modes[modeIdx].nbInliers = sampleCount;
+    reservoirPrediction.modes[modeIdx].position = positionMean;
+    reservoirPrediction.modes[modeIdx].determinant = positionDeterminant;
+    positionCovariance.inv(reservoirPrediction.modes[modeIdx].positionInvCovariance);
+    reservoirPrediction.modes[modeIdx].colour = colourMean.toUChar();
   }
 }
 
-ScoreClusterer_CUDA::ScoreClusterer_CUDA(float sigma, float tau, int minClusterSize) :
-    ScoreClusterer(sigma, tau, minClusterSize)
-{
-  MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_densities = mbf.make_image<float>();
-  m_parents = mbf.make_image<int>();
-  m_clusterIdx = mbf.make_image<int>();
-  m_clusterSizes = mbf.make_image<int>();
-  m_clusterSizesHistogram = mbf.make_image<int>();
-  m_selectedClusters = mbf.make_image<int>();
-  m_nbClustersPerReservoir = mbf.make_image<int>();
-}
+template <typename ExampleType, typename ClusterType>
+ExampleClusterer_CUDA<ExampleType, ClusterType>::ExampleClusterer_CUDA(float sigma, float tau, int minClusterSize)
+  : ExampleClusterer<ExampleType, ClusterType>(sigma, tau, minClusterSize)
+{}
 
-void ScoreClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
-    ScorePredictionsBlock_Ptr &predictions, size_t startIdx, size_t count)
+template <typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
+    const ExampleImage_CPtr &exampleReservoirs,
+    const ITMIntMemoryBlock_CPtr &keypointReservoirsSize,
+    ClusterBlock_Ptr &predictions,
+    uint32_t startIdx, uint32_t count)
 {
-  const int nbReservoirs = reservoirs->get_reservoirs_count();
-  const int reservoirCapacity = reservoirs->get_capacity();
+  const uint32_t nbReservoirs = exampleReservoirs->noDims.height;
+  const uint32_t reservoirCapacity = exampleReservoirs->noDims.width;
 
   if (startIdx + count > nbReservoirs)
     throw std::runtime_error("startIdx + count > nbReservoirs");
@@ -370,31 +364,29 @@ void ScoreClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   {
     // Happens only once
     const Vector2i temporariesSize(reservoirCapacity, nbReservoirs);
-    m_densities->ChangeDims(temporariesSize);
-    m_parents->ChangeDims(temporariesSize);
-    m_clusterIdx->ChangeDims(temporariesSize);
-    m_clusterSizes->ChangeDims(temporariesSize);
-    m_clusterSizesHistogram->ChangeDims(temporariesSize);
+    this->m_densities->ChangeDims(temporariesSize);
+    this->m_parents->ChangeDims(temporariesSize);
+    this->m_clusterIdx->ChangeDims(temporariesSize);
+    this->m_clusterSizes->ChangeDims(temporariesSize);
+    this->m_clusterSizesHistogram->ChangeDims(temporariesSize);
 
-    m_selectedClusters->ChangeDims(
-        Vector2i(ScorePrediction::MAX_MODES, nbReservoirs));
+    this->m_selectedClusters->ChangeDims(
+        Vector2i(ClusterType::MAX_MODES, nbReservoirs));
 
-    m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
+    this->m_nbClustersPerReservoir->ChangeDims(Vector2i(1, nbReservoirs));
   }
 
-  const Keypoint3DColour *examples = reservoirs->get_reservoirs()->GetData(
-      MEMORYDEVICE_CUDA);
-  const int *reservoirSizes = reservoirs->get_reservoirs_size()->GetData(
-      MEMORYDEVICE_CUDA);
-  float *densities = m_densities->GetData(MEMORYDEVICE_CUDA);
+  const ExampleType *examples = exampleReservoirs->GetData(MEMORYDEVICE_CUDA);
+  const int *reservoirSizes = keypointReservoirsSize->GetData(MEMORYDEVICE_CUDA);
+  float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
   dim3 gridSize(count); // One block per reservoir to process
 
-  int *nbClustersPerReservoir = m_nbClustersPerReservoir->GetData(
+  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(
       MEMORYDEVICE_CUDA);
-  int *clusterSizes = m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
-  int *clusterSizesHistogram = m_clusterSizesHistogram->GetData(
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(
       MEMORYDEVICE_CUDA);
 
   // 1 single block, 1 thread per reservoir
@@ -403,35 +395,34 @@ void ScoreClusterer_CUDA::find_modes(const PositionReservoir_CPtr &reservoirs,
   ORcudaKernelCheck;
 
   ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity,
-      startIdx, m_sigma);
+      startIdx, this->m_sigma);
   ORcudaKernelCheck;
 
-  int *parents = m_parents->GetData(MEMORYDEVICE_CUDA);
-  int *clusterIndices = m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
 
   ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
-      nbClustersPerReservoir, reservoirCapacity, startIdx, m_tau * m_tau);
+      nbClustersPerReservoir, reservoirCapacity, startIdx, this->m_tau * this->m_tau);
   ORcudaKernelCheck;
 
-  ck_identify_clusters<<<gridSize, blockSize>>>(reservoirSizes, parents, clusterIndices, clusterSizes,
-      reservoirCapacity, startIdx);
+  ck_identify_clusters<<<gridSize, blockSize>>>(parents, clusterIndices, clusterSizes, reservoirCapacity, startIdx);
   ORcudaKernelCheck;
 
   ck_compute_cluster_histogram<<<gridSize, blockSize>>>(clusterSizes, nbClustersPerReservoir,
       clusterSizesHistogram, reservoirCapacity, startIdx);
   ORcudaKernelCheck;
 
-  int *selectedClusters = m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
+  int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
   // 1 single block, 1 thread per reservoir
   ck_select_clusters<<<1, gridSize>>>(clusterSizes, clusterSizesHistogram,
       nbClustersPerReservoir, selectedClusters, reservoirCapacity, startIdx,
-      ScorePrediction::MAX_MODES, m_minClusterSize);
+      ClusterType::MAX_MODES, this->m_minClusterSize);
   ORcudaKernelCheck;
 
-  ScorePrediction *predictionsData = predictions->GetData(MEMORYDEVICE_CUDA);
-  ck_compute_modes<<<gridSize, ScorePrediction::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
+  ClusterType *predictionsData = predictions->GetData(MEMORYDEVICE_CUDA);
+  ck_compute_modes<<<gridSize, ClusterType::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
       predictionsData, reservoirCapacity, startIdx,
-      ScorePrediction::MAX_MODES);
+      ClusterType::MAX_MODES);
   ORcudaKernelCheck;
 
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();

@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include <spaint/util/MemoryBlockFactory.h>
-using namespace spaint;
+using spaint::MemoryBlockFactory;
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 using namespace tvgutil;
