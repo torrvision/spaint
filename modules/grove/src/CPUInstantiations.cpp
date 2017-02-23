@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "clustering/ExampleClustererFactory.h"
+#include "clustering/ExampleClustererFactory.tpp"
 #include "clustering/base/Prediction3DColour.h"
 #include "clustering/interface/ExampleClusterer.tpp"
 

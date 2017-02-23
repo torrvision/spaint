@@ -14,7 +14,7 @@
 namespace grove {
 
 template <typename ExampleType, typename ClusterType>
-typename ExampleClustererFactory<ExampleType, IndexType>::Clusterer_Ptr ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(
+typename ExampleClustererFactory<ExampleType, ClusterType>::Clusterer_Ptr ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(
     ITMLib::ITMLibSettings::DeviceType deviceType, float sigma, float tau, uint32_t minClusterSize)
 {
   Clusterer_Ptr clusterer;

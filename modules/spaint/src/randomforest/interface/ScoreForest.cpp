@@ -15,7 +15,7 @@
 
 #include "util/MemoryBlockFactory.h"
 
-#include <grove/clustering/cuda/ExampleClusterer_CUDA.h>
+#include <grove/clustering/ExampleClustererFactory.h>
 #include <grove/reservoirs/ExampleReservoirsFactory.h>
 using namespace grove;
 
@@ -38,8 +38,10 @@ ScoreForest::ScoreForest()
   const float clustererSigma = 0.1f;
   const float clustererTau = 0.05f;
   const int minClusterSize = 20;
-  m_gpuClusterer.reset(
-      new ExampleClusterer_CUDA<Keypoint3DColour, Prediction3DColour>(clustererSigma, clustererTau, minClusterSize));
+
+  // Hardcoded CUDA for now.
+  m_gpuClusterer = ExampleClustererFactory<Keypoint3DColour, Prediction3DColour>::make_clusterer(
+      ITMLib::ITMLibSettings::DEVICE_CUDA, clustererSigma, clustererTau, minClusterSize);
 
   // Allocate the image that will store the leaf indices (will be resized as needed)
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>();
