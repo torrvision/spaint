@@ -31,6 +31,13 @@ inline void example_clusterer_reset_temporaries(
   }
 }
 
+template <typename ClusterType>
+_CPU_AND_GPU_CODE_TEMPLATE_
+inline void example_clusterer_reset_predictions(ClusterType *predictions, int predictionIdx)
+{
+  predictions[predictionIdx].nbModes = 0;
+}
+
 template <typename ExampleType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void example_clusterer_compute_density(const ExampleType *examples,
@@ -277,17 +284,6 @@ inline void example_clusterer_compute_modes(const ExampleType *examples,
   const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
 
   ClusterType &reservoirPrediction = predictions[reservoirIdx];
-
-  if (clusterIdx == 0)
-    reservoirPrediction.nbModes = 0;
-
-#ifdef __CUDACC__
-  __syncthreads();
-#else
-#ifdef WITH_OPENMP
-#pragma omp barrier
-#endif
-#endif
 
   const int selectedClusterId = selectedClusters[selectedClustersOffset
       + clusterIdx];

@@ -22,6 +22,13 @@ __global__ void ck_reset_temporaries(int *clustersPerReservoir,
                                       reservoirIdx, reservoirCapacity);
 }
 
+template <typename ClusterType>
+__global__ void ck_reset_predictions(ClusterType *predictions)
+{
+  const int predictionIdx = threadIdx.x;
+  example_clusterer_reset_predictions(predictions, predictionIdx);
+}
+
 template <typename ExampleType>
 __global__ void ck_compute_density(const ExampleType *examples,
     const int *reservoirSizes, float *densities, int reservoirCapacity, float sigma)
@@ -155,6 +162,9 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
   // 1 single block, 1 thread per reservoir
   ck_reset_temporaries<<<1, gridSize>>>(nbClustersPerReservoir, clusterSizes,
       clusterSizesHistogram, reservoirCapacity);
+  ORcudaKernelCheck;
+
+  ck_reset_predictions<<<1, gridSize>>>(predictionsData);
   ORcudaKernelCheck;
 
   ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity, this->m_sigma);
