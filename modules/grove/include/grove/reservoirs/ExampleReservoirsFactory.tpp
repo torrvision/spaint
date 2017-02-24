@@ -13,8 +13,8 @@
 
 namespace grove {
 
-template <typename ExampleType, typename IndexType>
-typename ExampleReservoirsFactory<ExampleType, IndexType>::Reservoirs_Ptr ExampleReservoirsFactory<ExampleType, IndexType>::make_reservoirs(
+template <typename ExampleType>
+typename ExampleReservoirsFactory<ExampleType>::Reservoirs_Ptr ExampleReservoirsFactory<ExampleType>::make_reservoirs(
     ITMLib::ITMLibSettings::DeviceType deviceType, uint32_t reservoirCapacity,
     uint32_t reservoirCount, uint32_t rngSeed)
 {
@@ -24,7 +24,7 @@ typename ExampleReservoirsFactory<ExampleType, IndexType>::Reservoirs_Ptr Exampl
   {
 #ifdef WITH_CUDA
     reservoir.reset(
-        new ExampleReservoirs_CUDA<ExampleType, IndexType>(reservoirCapacity, reservoirCount, rngSeed));
+        new ExampleReservoirs_CUDA<ExampleType>(reservoirCapacity, reservoirCount, rngSeed));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
@@ -32,7 +32,7 @@ typename ExampleReservoirsFactory<ExampleType, IndexType>::Reservoirs_Ptr Exampl
   else
   {
     reservoir.reset(
-        new ExampleReservoirs_CPU<ExampleType, IndexType>(reservoirCapacity, reservoirCount, rngSeed));
+        new ExampleReservoirs_CPU<ExampleType>(reservoirCapacity, reservoirCount, rngSeed));
   }
 
   return reservoir;

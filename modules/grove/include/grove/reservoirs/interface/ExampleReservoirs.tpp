@@ -12,8 +12,8 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-template <typename ExampleType, typename IndexType>
-ExampleReservoirs<ExampleType, IndexType>::ExampleReservoirs(
+template <typename ExampleType>
+ExampleReservoirs<ExampleType>::ExampleReservoirs(
     uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
@@ -35,42 +35,70 @@ ExampleReservoirs<ExampleType, IndexType>::ExampleReservoirs(
 
 //#################### DESTRUCTOR ####################
 
-template <typename ExampleType, typename IndexType>
-ExampleReservoirs<ExampleType, IndexType>::~ExampleReservoirs()
+template <typename ExampleType>
+ExampleReservoirs<ExampleType>::~ExampleReservoirs()
 {
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename IndexType>
-uint32_t ExampleReservoirs<ExampleType, IndexType>::get_capacity() const
+template <typename ExampleType>
+uint32_t ExampleReservoirs<ExampleType>::get_capacity() const
 {
   return m_capacity;
 }
 
-template <typename ExampleType, typename IndexType>
-typename ExampleReservoirs<ExampleType, IndexType>::ExampleImage_CPtr ExampleReservoirs<
-ExampleType, IndexType>::get_reservoirs() const
+template <typename ExampleType>
+typename ExampleReservoirs<ExampleType>::ExampleImage_CPtr ExampleReservoirs<ExampleType>::get_reservoirs() const
 {
   return m_data;
 }
 
-template <typename ExampleType, typename IndexType>
-uint32_t ExampleReservoirs<ExampleType, IndexType>::get_reservoirs_count() const
+template <typename ExampleType>
+uint32_t ExampleReservoirs<ExampleType>::get_reservoirs_count() const
 {
   return m_reservoirCount;
 }
 
-template <typename ExampleType, typename IndexType>
-ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType, IndexType>::get_reservoirs_size() const
+template <typename ExampleType>
+ITMIntMemoryBlock_CPtr ExampleReservoirs<ExampleType>::get_reservoirs_size() const
 {
   return m_reservoirsSize;
 }
 
+template <typename ExampleType>
+template <int IndexLength>
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
+    const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices)
+{
+  // Check preconditions.
+  if(examples->noDims != reservoirIndices->noDims)
+    throw std::invalid_argument("The example and indices images should have the same size.");
+
+  // Compute the step between elements of the reservoirIndices image.
+  const uint32_t indexStep = sizeof(ORUtils::VectorX<int, IndexLength>);
+
+  // Extract raw memory pointers.
+  const char* reservoirIndicesCPU = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CPU));
+  const char* reservoirIndicesCUDA = reinterpret_cast<const char*>(reservoirIndices->GetData(MEMORYDEVICE_CUDA));
+
+  // Call the non-templated virtual function.
+  add_examples(examples, reservoirIndicesCPU, reservoirIndicesCUDA, IndexLength, indexStep);
+}
+
+template <typename ExampleType>
+template <int IndexLength>
+void ExampleReservoirs<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
+    const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices)
+{
+  const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > reservoirIndicesConst = reservoirIndices;
+  add_examples(examples, reservoirIndicesConst);
+}
+
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename IndexType>
-void ExampleReservoirs<ExampleType, IndexType>::clear()
+template <typename ExampleType>
+void ExampleReservoirs<ExampleType>::clear()
 {
   m_reservoirsSize->Clear();
   m_reservoirsAddCalls->Clear();

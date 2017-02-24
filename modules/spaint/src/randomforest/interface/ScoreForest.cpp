@@ -233,7 +233,7 @@ void ScoreForest::load_structure_from_file(const std::string &fileName)
 //  m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(
 //      ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, totalNbLeaves);
 
-  m_leafReservoirs = ExampleReservoirsFactory<Keypoint3DColour, LeafIndices>::make_reservoirs(
+  m_leafReservoirs = ExampleReservoirsFactory<Keypoint3DColour>::make_reservoirs(
       ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, totalNbLeaves);
 
 #ifdef RANDOM_FEATURES
@@ -414,9 +414,8 @@ ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
   {
     boost::timer::auto_cpu_timer t(6,
         "creating and clearing reservoirs: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-    m_leafReservoirs = ScoreForestReservoirsGenerator::make_position_reservoir(
-        ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity,
-        m_predictionsBlock->dataSize);
+    m_leafReservoirs = ExampleReservoirsFactory<Keypoint3DColour>::make_reservoirs(
+        ITMLib::ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, m_predictionsBlock->dataSize);
   }
 }
 

@@ -21,13 +21,12 @@ namespace grove
  *                    the number of reservoirs to associate to each example, and an "operator[]" returning one of the "size()" reservoir
  *                    indices for each call.
  */
-template <typename ExampleType, typename IndexType>
-class ExampleReservoirs_CUDA : public ExampleReservoirs<ExampleType, IndexType>
+template <typename ExampleType>
+class ExampleReservoirs_CUDA : public ExampleReservoirs<ExampleType>
 {
   //#################### TYPEDEFS ####################
 public:
-  using typename ExampleReservoirs<ExampleType, IndexType>::ExampleImage_CPtr;
-  using typename ExampleReservoirs<ExampleType, IndexType>::IndexImage_CPtr;
+  using typename ExampleReservoirs<ExampleType>::ExampleImage_CPtr;
 
   //#################### CONSTRUCTORS ####################
 public:
@@ -43,22 +42,29 @@ public:
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Add examples to the reservoirs.
-   *
-   * \note  Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
-   *
-   * \param examples         The examples to add to the reservoirs. Only those that have the "valid" member set to true
-   *                         will be added.
-   * \param reservoirIndices Indices of the reservoirs wherein to add each element of the examples image. Must have the same size as examples.
-   *
-   * \throws std::invalid_argument If examples and reservoirIndices have different dimensions.
-   */
-  virtual void add_examples(const ExampleImage_CPtr &examples, const IndexImage_CPtr &reservoirIndices);
-
-  /**
    * \brief Clear the reservoirs. Discards all examples and reinitialises the random number generator.
    */
   virtual void clear();
+
+  //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+protected:
+  /**
+   * \brief Add examples to the reservoirs.
+   *
+   * \note  This method will be called by the templated add_examples method, the reservoirIndicesCPU and reservoirIndicesCUDA
+   *        parameters will point to the beginning of the memory associated to the "index image".
+   *        Access to the reservoirIndicesCount indices is strided according to reservoirIndicesStep.
+   *
+   * \param examples              The examples to add to the reservoirs. Only those that have the "valid" member set to true
+   *                              will be added.
+   * \param reservoirIndicesCPU   Raw pointer to the CPU memory associated to the indices.
+   * \param reservoirIndicesCUDA  Raw pointer to the CUDA memory associated to the indices.
+   * \param reservoirIndicesCount Number of integer indices for each element of the indices image.
+   * \param reservoirIndicesStep  Step between the beginning of neighboring elements in the indices image.
+   */
+  virtual void add_examples(const ExampleImage_CPtr &examples, const char *reservoirIndicesCPU,
+                            const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
+                            uint32_t reservoirIndicesStep);
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:

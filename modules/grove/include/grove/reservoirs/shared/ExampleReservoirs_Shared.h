@@ -21,24 +21,25 @@ namespace grove {
  * If ALWAYS_ADD_EXAMPLES is 0 then whether to replace an existing example is randomly decided as well.
  *
  * \param example            The example to add to the reservoirs.
- * \param indices            The indices to the reservoir wherein to add the example.
+ * \param indices            Pointer to the indices to the reservoir wherein to add the example.
+ * \param indicesCount       Number of elements in the indices array.
  * \param randomGenerator    A random number generator.
  * \param reservoirs         A pointer to the reservoir data.
  * \param reservoirSize      A pointer to the current sizes of each reservoir.
  * \param reservoirAddCalls  A pointer to the number of times an add operation has been attempted for each reservoir.
  * \param reservoirCapacity  The maximum size of each reservoir.
  */
-template <typename ExampleType, typename IndexType, typename RNGType>
+template <typename ExampleType, typename RNGType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void example_reservoirs_add_example(const ExampleType &example,
-    const IndexType &indices, RNGType &randomGenerator, ExampleType *reservoirs,
+    const int *indices, uint32_t indicesCount, RNGType &randomGenerator, ExampleType *reservoirs,
     int *reservoirSize, int *reservoirAddCalls, uint32_t reservoirCapacity)
 {
   // Early out if the example is invalid.
   if (!example.valid) return;
 
   // Try to add the example to each reservoir in indices.
-  for (int i = 0; i < indices.size(); ++i)
+  for (uint32_t i = 0; i < indicesCount; ++i)
   {
     // The reservoir index, representing its row in the reservoirs array.
     const int reservoirIdx = indices[i];

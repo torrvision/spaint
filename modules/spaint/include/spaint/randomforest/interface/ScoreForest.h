@@ -78,7 +78,7 @@ protected:
 
   NodeImage_Ptr m_nodeImage;
   ScorePredictionsBlock_Ptr m_predictionsBlock;
-  boost::shared_ptr<ExampleReservoirs<Keypoint3DColour, LeafIndices> > m_leafReservoirs;
+  boost::shared_ptr<ExampleReservoirs<Keypoint3DColour> > m_leafReservoirs;
   boost::shared_ptr<ExampleClusterer<Keypoint3DColour, Prediction3DColour> > m_gpuClusterer;
 
   size_t m_reservoirCapacity;

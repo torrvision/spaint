@@ -13,11 +13,11 @@
 namespace grove
 {
 
-template <typename ExampleType, typename IndexType>
+template <typename ExampleType>
 class ExampleReservoirsFactory
 {
 public:
-  typedef ExampleReservoirs<ExampleType, IndexType> Reservoirs;
+  typedef ExampleReservoirs<ExampleType> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
   typedef boost::shared_ptr<const Reservoirs> Reservoirs_CPtr;
 

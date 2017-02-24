@@ -26,8 +26,12 @@ template class RGBDPatchFeatureCalculator<Keypoint3DColour,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CPU<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescriptor>;
 
-template class ExampleReservoirs<Keypoint3DColour, ORUtils::VectorX<int, 5> >;
-template class ExampleReservoirs_CPU<Keypoint3DColour, ORUtils::VectorX<int, 5> >;
-template class ExampleReservoirsFactory<Keypoint3DColour, ORUtils::VectorX<int, 5> >;
+template class ExampleReservoirs<Keypoint3DColour>;
+template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
+    const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, 5> > >&);
+template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
+    const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, 5> > >&);
+template class ExampleReservoirs_CPU<Keypoint3DColour>;
+template class ExampleReservoirsFactory<Keypoint3DColour>;
 
 }

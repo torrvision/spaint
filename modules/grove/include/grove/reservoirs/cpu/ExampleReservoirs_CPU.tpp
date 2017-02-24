@@ -16,10 +16,10 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-template <typename ExampleType, typename IndexType>
-ExampleReservoirs_CPU<ExampleType, IndexType>::ExampleReservoirs_CPU(
+template <typename ExampleType>
+ExampleReservoirs_CPU<ExampleType>::ExampleReservoirs_CPU(
     uint32_t reservoirCapacity, uint32_t reservoirCount, uint32_t rngSeed) :
-    ExampleReservoirs<ExampleType, IndexType>(reservoirCapacity, reservoirCount, rngSeed)
+    ExampleReservoirs<ExampleType>(reservoirCapacity, reservoirCount, rngSeed)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -30,14 +30,20 @@ ExampleReservoirs_CPU<ExampleType, IndexType>::ExampleReservoirs_CPU(
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename IndexType>
-void ExampleReservoirs_CPU<ExampleType, IndexType>::add_examples(const ExampleImage_CPtr &examples,
-    const IndexImage_CPtr &reservoirIndices)
+template <typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::clear()
 {
-  // Check preconditions.
-  if(examples->noDims != reservoirIndices->noDims)
-    throw std::invalid_argument("The example and indices images should have the same size.");
+  ExampleReservoirs<ExampleType>::clear();
+  init_random();
+}
 
+//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+
+template <typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &examples,
+    const char *reservoirIndicesCPU, const char *reservoirIndicesCUDA, uint32_t reservoirIndicesCount,
+    uint32_t reservoirIndicesStep)
+{
   const Vector2i imgSize = examples->noDims;
   const size_t nbExamples = imgSize.width * imgSize.height;
 
@@ -49,7 +55,6 @@ void ExampleReservoirs_CPU<ExampleType, IndexType>::add_examples(const ExampleIm
   }
 
   const ExampleType *exampleData = examples->GetData(MEMORYDEVICE_CPU);
-  const IndexType *indicesData = reservoirIndices->GetData(MEMORYDEVICE_CPU);
 
   CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
   int *reservoirAddCalls = this->m_reservoirsAddCalls->GetData(MEMORYDEVICE_CPU);
@@ -64,25 +69,20 @@ void ExampleReservoirs_CPU<ExampleType, IndexType>::add_examples(const ExampleIm
     for (int x = 0; x < imgSize.width; ++x)
     {
       const int linearIdx = y * imgSize.x + x;
+      const int linearIndicesIdx = (y * imgSize.x + x) * reservoirIndicesStep;
+      const int* indices = reinterpret_cast<const int*>(reservoirIndicesCPU + linearIndicesIdx);
 
-      example_reservoirs_add_example(exampleData[linearIdx],
-          indicesData[linearIdx], randomStates[linearIdx], reservoirData,
+      example_reservoirs_add_example(exampleData[linearIdx], indices,
+          reservoirIndicesStep, randomStates[linearIdx], reservoirData,
           reservoirSize, reservoirAddCalls, this->m_capacity);
     }
   }
 }
 
-template <typename ExampleType, typename IndexType>
-void ExampleReservoirs_CPU<ExampleType, IndexType>::clear()
-{
-  ExampleReservoirs<ExampleType, IndexType>::clear();
-  init_random();
-}
-
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-template <typename ExampleType, typename IndexType>
-void ExampleReservoirs_CPU<ExampleType, IndexType>::init_random()
+template <typename ExampleType>
+void ExampleReservoirs_CPU<ExampleType>::init_random()
 {
   const size_t nbStates = m_randomStates->dataSize;
   CPURNG *randomStates = m_randomStates->GetData(MEMORYDEVICE_CPU);
