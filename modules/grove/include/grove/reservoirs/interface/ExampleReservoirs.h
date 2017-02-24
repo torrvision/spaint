@@ -119,6 +119,17 @@ public:
   void add_examples(const ExampleImage_CPtr &examples,
                     const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices);
 
+  /**
+   * \brief Add examples to the reservoirs. Templated on the number of reservoirs an example will be added to. Non-const variant.
+   *
+   * \note  Adding examples to a reservoir that is filled to capacity may cause older examples to be randomly discarded.
+   *
+   * \param examples         The examples to add to the reservoirs. Only those that have the "valid" member set to true
+   *                         will be added.
+   * \param reservoirIndices Indices of the reservoirs wherein to add each element of the examples image. Must have the same size as examples.
+   *
+   * \throws std::invalid_argument If examples and reservoirIndices have different dimensions.
+   */
   template <int IndexLength>
   void add_examples(const ExampleImage_CPtr &examples,
                     const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, IndexLength> > > &reservoirIndices);
