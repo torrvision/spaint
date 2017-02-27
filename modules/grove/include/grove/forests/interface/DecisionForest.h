@@ -13,6 +13,13 @@
 
 #include <spaint/util/ITMImagePtrTypes.h>
 
+#ifdef WITH_SCOREFORESTS
+// Forward declare stuff to avoid cluttering the global namespace with the every ScoreForest class.
+class EnsembleLearner;
+class Learner;
+class PredictionGaussianMean;
+#endif
+
 namespace grove {
 
 template <typename DescriptorType, int TreeCount>
@@ -32,7 +39,7 @@ public:
 
   struct NodeEntry
   {
-    uint32_t leftChildIdx;  // No need to store the right child, it's left + 1
+    int leftChildIdx;       // No need to store the right child, it's left + 1
     int leafIdx;            // Index of the associated leaf (-1 if the node is not a leaf)
     uint32_t featureIdx;    // Index of the feature to evaluate;
     float featureThreshold; // Feature threshold
@@ -43,7 +50,7 @@ public:
   typedef boost::shared_ptr<const ORUtils::Image<NodeEntry> > NodeImage_CPtr;
 
 public:
-  DecisionForest(const std::string& fileName);
+  explicit DecisionForest(const std::string& fileName);
   virtual ~DecisionForest();
 
   virtual void find_leaves(const DescriptorImage_CPtr& descriptors, LeafIndicesImage_Ptr& leafIndices) const = 0;
@@ -66,6 +73,17 @@ protected:
   uint32_t m_nbTotalLeaves;
 
   NodeImage_Ptr m_nodeImage;
+
+  //#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+public:
+  explicit DecisionForest(const EnsembleLearner &pretrainedForest);
+
+private:
+  int convert_node(const Learner *learner, uint32_t nodeIdx, uint32_t treeIdx,
+      uint32_t nbTrees, uint32_t outputIdx, uint32_t outputFirstFreeIdx, NodeEntry *outputNodes,
+      uint32_t& outputNbLeaves);
+#endif
 
 };
 

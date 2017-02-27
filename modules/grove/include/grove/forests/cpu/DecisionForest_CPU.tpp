@@ -38,4 +38,14 @@ void DecisionForest_CPU<DescriptorType, TreeCount>::find_leaves(const Descriptor
   }
 }
 
+//#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CPU<DescriptorType, TreeCount>::DecisionForest_CPU(const EnsembleLearner &pretrainedForest)
+  : DecisionForest<DescriptorType, TreeCount>(pretrainedForest)
+{}
+
+#endif
+
 }

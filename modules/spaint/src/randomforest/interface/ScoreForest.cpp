@@ -398,7 +398,7 @@ ScoreForest::ScoreForest(const EnsembleLearner &pretrained_forest) :
     m_nbLeavesPerTree.push_back(nbLeavesAfter - nbLeavesBefore);
   }
 
-  m_predictionsBlock = mbf.make_block<ScorePrediction>(leafPredictions.size());
+  m_predictionsBlock = mbf.make_block<grove::Prediction3DColour>(leafPredictions.size());
   convert_predictions(leafPredictions);
 
   // NOPs if we use the CPU only implementation
@@ -479,7 +479,7 @@ int ScoreForest::convert_node(const Learner *tree, int node_idx, int tree_idx,
 void ScoreForest::convert_predictions(
     const std::vector<PredictionGaussianMean> &leafPredictions)
 {
-  ScorePrediction *gpuPredictions = m_predictionsBlock->GetData(
+  Prediction3DColour *gpuPredictions = m_predictionsBlock->GetData(
       MEMORYDEVICE_CPU);
 
 #pragma omp parallel for
@@ -493,12 +493,12 @@ void ScoreForest::convert_predictions(
         [](const std::vector<PredictedGaussianMean> &a, const std::vector<PredictedGaussianMean> &b)
         { return a[0]._nbPoints > b[0]._nbPoints;});
 
-    ScorePrediction &currentTargetPred = gpuPredictions[leafIdx];
+    Prediction3DColour &currentTargetPred = gpuPredictions[leafIdx];
     currentTargetPred.nbModes = 0; // Reset modes
 
     for (size_t modeIdx = 0;
         modeIdx < modes.size()
-            && currentTargetPred.nbModes < ScorePrediction::MAX_MODES;
+            && currentTargetPred.nbModes < Prediction3DColour::MAX_MODES;
         ++modeIdx)
     {
       const auto &mode = modes[modeIdx];

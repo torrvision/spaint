@@ -49,4 +49,14 @@ void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const Descripto
   ORcudaKernelCheck;
 }
 
+//#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const EnsembleLearner &pretrainedForest)
+  : DecisionForest<DescriptorType, TreeCount>(pretrainedForest)
+{}
+
+#endif
+
 }

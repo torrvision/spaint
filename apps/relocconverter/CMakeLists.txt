@@ -40,6 +40,7 @@ SOURCE_GROUP(sources FILES ${sources})
 # Specify additional include directories #
 ##########################################
 
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/grove/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 
 ##########################################
@@ -47,7 +48,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 ##########################################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
-TARGET_LINK_LIBRARIES(${targetname} spaint tvgutil tvginput cudadevrt)
+TARGET_LINK_LIBRARIES(${targetname} grove spaint tvgutil tvginput cudadevrt)
 
 #################################
 # Specify the libraries to link #

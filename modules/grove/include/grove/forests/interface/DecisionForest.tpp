@@ -8,6 +8,10 @@
 #include <fstream>
 #include <boost/lexical_cast.hpp>
 
+#ifdef WITH_SCOREFORESTS
+#include <Learner.hpp>
+#endif
+
 #include <spaint/util/MemoryBlockFactory.h>
 using spaint::MemoryBlockFactory;
 
@@ -214,5 +218,102 @@ void DecisionForest<DescriptorType, TreeCount>::save_structure_to_file(const std
 
   if(!out) throw std::runtime_error("Error saving the forest to a file: " + fileName);
 }
+
+//#################### SCOREFOREST INTEROP FUNCTIONS ####################
+#ifdef WITH_SCOREFORESTS
+
+template <typename DescriptorType, int TreeCount>
+DecisionForest<DescriptorType, TreeCount>::DecisionForest(const EnsembleLearner &pretrainedForest)
+  : DecisionForest()
+{
+  // Convert list of nodes into an appropriate image
+  const uint32_t nbTrees = pretrainedForest.GetNbTrees();
+  const uint32_t maxNbNodes = pretrainedForest.GetMaxNbNodesInAnyLearner();
+
+  if (nbTrees != get_nb_trees())
+  {
+    throw std::runtime_error(
+        "Number of trees in the loaded forest different from the instantiation of GPUForest.");
+  }
+
+  // Create texture storing the nodes
+  const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+  m_nodeImage = mbf.make_image<NodeEntry>(Vector2i(nbTrees, maxNbNodes));
+  m_nodeImage->Clear();
+
+  // Fill the nodes
+  NodeEntry *forestData = m_nodeImage->GetData(MEMORYDEVICE_CPU);
+  uint32_t totalNbLeaves = 0;
+
+  for (uint32_t treeIdx = 0; treeIdx < nbTrees; ++treeIdx)
+  {
+    const Learner* tree = pretrainedForest.GetTree(treeIdx);
+    const uint32_t nbNodes = tree->GetNbNodes();
+
+    // Bug in scoreforest: tree->GetNbLeaves() always returns 1 for loaded trees because
+    // the base learner class does not store the leaves and DTBP does not perform the loading.
+    // const int nbLeaves = tree->GetNbLeaves();
+
+    uint32_t nbLeavesBefore = totalNbLeaves;
+    // We set the first free entry to 1 since we reserve 0 for the root
+    convert_node(tree, 0, treeIdx, nbTrees, 0, 1, forestData, totalNbLeaves);
+
+    uint32_t nbLeaves = totalNbLeaves - nbLeavesBefore;
+
+    std::cout << "Converted tree " << treeIdx << ", had " << nbNodes
+        << " nodes and " << nbLeaves << " leaves." << std::endl;
+
+    m_nbNodesPerTree.push_back(nbNodes);
+    m_nbLeavesPerTree.push_back(nbLeaves);
+  }
+
+  // NOPs if we use the CPU only implementation
+  m_nodeImage->UpdateDeviceFromHost();
+}
+
+template <typename DescriptorType, int TreeCount>
+int DecisionForest<DescriptorType, TreeCount>::convert_node(const Learner *tree, uint32_t nodeIdx, uint32_t treeIdx,
+    uint32_t nbTrees, uint32_t outputIdx, uint32_t outputFirstFreeIdx, NodeEntry *outputNodes,
+    uint32_t& outputNbLeaves)
+{
+  const Node* node = tree->GetNode(nodeIdx);
+  NodeEntry &outputNode = outputNodes[outputIdx * nbTrees + treeIdx];
+
+  // The assumption is that outputIdx is already reserved for the current node
+  if (node->IsALeaf())
+  {
+    outputNode.leftChildIdx = -1; // Is a leaf
+    outputNode.featureIdx = 0;
+    outputNode.featureThreshold = 0.f;
+    // outputFirstFreeIdx does not change
+
+    // post-increment to get the current leaf index
+    outputNode.leafIdx = outputNbLeaves++;
+  }
+  else
+  {
+    outputNode.leafIdx = -1; // Not a leaf
+
+    // Reserve 2 entries for the child nodes.
+    outputNode.leftChildIdx = outputFirstFreeIdx++;
+    int rightChildIdx = outputFirstFreeIdx++; // No need to store it in the texture since it's always leftChildIdx + 1
+
+    // Use the ScoreForest cast to get the split parameters.
+    const InnerNode *innerNode = ToInnerNode(node);
+    std::vector<float> params = innerNode->GetFeature()->GetParameters();
+
+    outputNode.featureIdx = params[1];
+    outputNode.featureThreshold = params[2];
+
+    outputFirstFreeIdx = convert_node(tree, node->GetLeftChildIndex(), treeIdx,
+        nbTrees, outputNode.leftChildIdx, outputFirstFreeIdx, outputNodes, outputNbLeaves);
+    outputFirstFreeIdx = convert_node(tree, node->GetRightChildIndex(), treeIdx,
+        nbTrees, rightChildIdx, outputFirstFreeIdx, outputNodes, outputNbLeaves);
+  }
+
+  return outputFirstFreeIdx;
+}
+
+#endif
 
 }

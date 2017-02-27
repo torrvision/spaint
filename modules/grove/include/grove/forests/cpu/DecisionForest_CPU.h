@@ -34,6 +34,11 @@ public:
   DecisionForest_CPU(const std::string& fileName);
 
   virtual void find_leaves(const DescriptorImage_CPtr& descriptors, LeafIndicesImage_Ptr& leafIndices) const;
+
+#ifdef WITH_SCOREFORESTS
+public:
+  explicit DecisionForest_CPU(const EnsembleLearner &pretrainedForest);
+#endif
 };
 
 }
