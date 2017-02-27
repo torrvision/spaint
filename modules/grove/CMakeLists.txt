@@ -65,6 +65,10 @@ SET(features_interface_templates include/grove/features/interface/RGBDPatchFeatu
 SET(features_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 ##
+SET(forests_interface_headers include/grove/forests/interface/DecisionForest.h)
+SET(forests_interface_templates include/grove/forests/interface/DecisionForest.tpp)
+
+##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
 SET(reservoirs_templates include/grove/reservoirs/ExampleReservoirsFactory.tpp)
 
@@ -116,6 +120,7 @@ ${features_base_headers}
 ${features_cpu_headers}
 ${features_interface_headers}
 ${features_shared_headers}
+${forests_interface_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
@@ -128,6 +133,7 @@ ${clustering_interface_templates}
 ${clustering_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
+${forests_interface_templates}
 ${reservoirs_cpu_templates}
 ${reservoirs_interface_templates}
 ${reservoirs_templates}
@@ -170,6 +176,7 @@ SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_template
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})
 SOURCE_GROUP(features\\interface FILES ${features_interface_headers} ${features_interface_templates})
 SOURCE_GROUP(features\\shared FILES ${features_shared_headers})
+SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})

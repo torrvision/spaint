@@ -10,11 +10,15 @@
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.tpp"
 #include "features/interface/RGBDPatchFeatureCalculator.tpp"
 
+#include "forests/interface/DecisionForest.tpp"
+
 #include "reservoirs/ExampleReservoirsFactory.tpp"
 #include "reservoirs/cpu/ExampleReservoirs_CPU.tpp"
 #include "reservoirs/interface/ExampleReservoirs.tpp"
 
 namespace grove {
+
+static const int FOREST_TREES = 5;
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
@@ -26,11 +30,13 @@ template class RGBDPatchFeatureCalculator<Keypoint3DColour,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CPU<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescriptor>;
 
+template class DecisionForest<RGBDPatchDescriptor, FOREST_TREES>;
+
 template class ExampleReservoirs<Keypoint3DColour>;
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
-    const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, 5> > >&);
+    const boost::shared_ptr<ORUtils::Image<ORUtils::VectorX<int, FOREST_TREES> > >&);
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
-    const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, 5> > >&);
+    const boost::shared_ptr<const ORUtils::Image<ORUtils::VectorX<int, FOREST_TREES> > >&);
 template class ExampleReservoirs_CPU<Keypoint3DColour>;
 template class ExampleReservoirsFactory<Keypoint3DColour>;
 
