@@ -22,6 +22,11 @@ public:
 
   static Forest_Ptr make_forest(
       ITMLib::ITMLibSettings::DeviceType deviceType, const std::string& fileName);
+
+#ifdef WITH_SCOREFORESTS
+  static Forest_Ptr make_forest(
+      ITMLib::ITMLibSettings::DeviceType deviceType, const EnsembleLearner &pretrainedForest);
+#endif
 };
 
 }

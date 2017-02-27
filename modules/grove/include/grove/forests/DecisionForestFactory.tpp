@@ -14,7 +14,7 @@
 namespace grove {
 
 template <typename DescriptorType, int TreeCount>
-DecisionForestFactory<DescriptorType, TreeCount>::Forest_Ptr DecisionForestFactory<DescriptorType, TreeCount>::make_forest(
+typename DecisionForestFactory<DescriptorType, TreeCount>::Forest_Ptr DecisionForestFactory<DescriptorType, TreeCount>::make_forest(
     ITMLib::ITMLibSettings::DeviceType deviceType, const std::string& fileName)
 {
   Forest_Ptr forest;
@@ -36,5 +36,33 @@ DecisionForestFactory<DescriptorType, TreeCount>::Forest_Ptr DecisionForestFacto
 
   return forest;
 }
+
+#ifdef WITH_SCOREFORESTS
+
+template <typename DescriptorType, int TreeCount>
+typename DecisionForestFactory<DescriptorType, TreeCount>::Forest_Ptr DecisionForestFactory<DescriptorType, TreeCount>::make_forest(
+      ITMLib::ITMLibSettings::DeviceType deviceType, const EnsembleLearner &pretrainedForest)
+{
+  Forest_Ptr forest;
+
+  if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
+  {
+#ifdef WITH_CUDA
+    forest.reset(
+        new DecisionForest_CUDA<DescriptorType, TreeCount>(pretrainedForest));
+#else
+    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+#endif
+  }
+  else
+  {
+    forest.reset(
+        new DecisionForest_CPU<DescriptorType, TreeCount>(pretrainedForest));
+  }
+
+  return forest;
+}
+
+#endif
 
 }

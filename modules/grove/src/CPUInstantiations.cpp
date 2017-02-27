@@ -10,7 +10,7 @@
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.tpp"
 #include "features/interface/RGBDPatchFeatureCalculator.tpp"
 
-#include "forests/DecisionForestFactory.h"
+#include "forests/DecisionForestFactory.tpp"
 #include "forests/cpu/DecisionForest_CPU.tpp"
 #include "forests/interface/DecisionForest.tpp"
 

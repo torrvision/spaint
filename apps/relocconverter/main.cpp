@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include <grove/forests/cpu/DecisionForest_CPU.h>
+#include <grove/forests/DecisionForestFactory.h>
 #include "spaint/randomforest/cuda/ScoreForest_CUDA.h"
 
 #include <iostream>
@@ -43,12 +43,10 @@ int main(int argc, char *argv[])
           learnFromTree, loadFeatures, randomSeed));
   m_dataset->LoadForest();
 
-  DecisionForest_CPU<RGBDPatchDescriptor, nbTrees> scoreForest(*m_dataset->GetForest());
-
-//  ScoreForest_Ptr m_scoreForest(new ScoreForest_CUDA(*m_dataset->GetForest()));
+  auto scoreForest = DecisionForestFactory<RGBDPatchDescriptor, nbTrees>::make_forest(ITMLib::ITMLibSettings::DEVICE_CPU, *m_dataset->GetForest());
 
   std::cout << "Saving forest in: " << outputFile << std::endl;
-  scoreForest.save_structure_to_file(outputFile);
+  scoreForest->save_structure_to_file(outputFile);
 
 #if 0
   // Randomly select one prediction per tree
