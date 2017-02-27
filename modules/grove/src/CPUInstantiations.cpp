@@ -10,6 +10,8 @@
 #include "features/cpu/RGBDPatchFeatureCalculator_CPU.tpp"
 #include "features/interface/RGBDPatchFeatureCalculator.tpp"
 
+#include "forests/DecisionForestFactory.h"
+#include "forests/cpu/DecisionForest_CPU.tpp"
 #include "forests/interface/DecisionForest.tpp"
 
 #include "reservoirs/ExampleReservoirsFactory.tpp"
@@ -33,6 +35,8 @@ template class RGBDPatchFeatureCalculator_CPU<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescriptor>;
 
 template class DecisionForest<RGBDPatchDescriptor, FOREST_TREES>;
+template class DecisionForest_CPU<RGBDPatchDescriptor, FOREST_TREES>;
+template class DecisionForestFactory<RGBDPatchDescriptor, FOREST_TREES>;
 
 template class ExampleReservoirs<Keypoint3DColour>;
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,

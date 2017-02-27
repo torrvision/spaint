@@ -1,5 +1,5 @@
 /**
- * grove: ExampleClustererFactory.cpp
+ * grove: ExampleClustererFactory.tpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
