@@ -8,9 +8,15 @@
 
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu"
 
+#include "forests/cuda/DecisionForest_CUDA.tcu"
+
 #include "reservoirs/cuda/ExampleReservoirs_CUDA.tcu"
 
 namespace grove {
+
+namespace {
+  static const int FOREST_TREES = 5; // TODO change
+}
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
@@ -18,6 +24,7 @@ template class ExampleClusterer_CUDA<Keypoint3DColour, Prediction3DColour>;
 
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>;
+template class DecisionForest_CUDA<RGBDPatchDescriptor, FOREST_TREES>;
 
 template class ExampleReservoirs_CUDA<Keypoint3DColour>;
 

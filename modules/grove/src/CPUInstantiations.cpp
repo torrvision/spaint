@@ -18,7 +18,9 @@
 
 namespace grove {
 
-static const int FOREST_TREES = 5;
+namespace {
+  static const int FOREST_TREES = 5;
+}
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 

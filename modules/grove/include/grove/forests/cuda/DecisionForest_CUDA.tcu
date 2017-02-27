@@ -1,0 +1,52 @@
+/**
+ * grove: DecisionForest_CUDA.tcu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
+ */
+
+#include "DecisionForest_CUDA.h"
+
+#include "../shared/DecisionForest_Shared.h"
+
+namespace grove {
+
+template <typename NodeType, typename DescriptorType, typename LeafType>
+__global__ void ck_decision_forest_find_leaves(
+    const NodeType* forestTexture,
+    const DescriptorType* descriptorsData, Vector2i descriptorsImgSize,
+    LeafType* leafData)
+{
+  const int x = blockIdx.x * blockDim.x + threadIdx.x;
+  const int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (x >= descriptorsImgSize.x || y >= descriptorsImgSize.y)
+    return;
+
+  decision_forest_find_leaves_shared(forestTexture, descriptorsData, descriptorsImgSize, leafData, x, y);
+}
+
+template <typename DescriptorType, int TreeCount>
+DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const std::string& fileName)
+  : DecisionForest<DescriptorType, TreeCount>(fileName)
+{}
+
+template <typename DescriptorType, int TreeCount>
+void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const DescriptorImage_CPtr& descriptors,
+                                                                 LeafIndicesImage_Ptr& leafIndices) const
+{
+  const NodeEntry* forestTexture = this->m_nodeImage->GetData(MEMORYDEVICE_CUDA);
+
+  const Vector2i imgSize = descriptors->noDims;
+  const DescriptorType* descriptorsData = descriptors->GetData(MEMORYDEVICE_CUDA);
+
+  leafIndices->ChangeDims(imgSize);
+  LeafIndices* leafData = leafIndices->GetData(MEMORYDEVICE_CUDA);
+
+  const dim3 blockSize(32, 32);
+  const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x,
+      (imgSize.y + blockSize.y - 1) / blockSize.y);
+
+  ck_decision_forest_find_leaves<<<gridSize,blockSize>>>(forestTexture, descriptorsData, imgSize, leafData);
+  ORcudaKernelCheck;
+}
+
+}

@@ -19,23 +19,23 @@ using tvgutil::RandomNumberGenerator;
 
 namespace grove {
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 DecisionForest<DescriptorType, TreeCount>::DecisionForest()
   : m_nbTotalLeaves(0)
 {}
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 DecisionForest<DescriptorType, TreeCount>::DecisionForest(const std::string& fileName)
   : DecisionForest()
 {
   load_structure_from_file(fileName);
 }
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 DecisionForest<DescriptorType, TreeCount>::~DecisionForest()
 {}
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_leaves() const
 {
   uint32_t nbLeaves = 0;
@@ -46,13 +46,13 @@ uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_leaves() const
   return nbLeaves;
 }
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_trees() const
 {
   return TREE_COUNT;
 }
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_nodes_in_tree(uint32_t treeIdx) const
 {
   if (treeIdx >= get_nb_trees())
@@ -61,7 +61,7 @@ uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_nodes_in_tree(uint32_
   return m_nbNodesPerTree[treeIdx];
 }
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_leaves_in_tree(uint32_t treeIdx) const
 {
   if (treeIdx >= get_nb_trees())
@@ -70,7 +70,7 @@ uint32_t DecisionForest<DescriptorType, TreeCount>::get_nb_leaves_in_tree(uint32
   return m_nbLeavesPerTree[treeIdx];
 }
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const std::string &fileName)
 {
   // clean current forest
@@ -185,7 +185,7 @@ void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const s
   m_nodeImage->UpdateDeviceFromHost();
 }
 
-template<typename DescriptorType, int TreeCount>
+template <typename DescriptorType, int TreeCount>
 void DecisionForest<DescriptorType, TreeCount>::save_structure_to_file(const std::string &fileName) const
 {
   const uint32_t nbTrees = get_nb_trees();
