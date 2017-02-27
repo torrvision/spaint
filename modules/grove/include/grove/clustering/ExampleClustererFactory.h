@@ -22,7 +22,7 @@ public:
   typedef boost::shared_ptr<const Clusterer> Clusterer_CPtr;
 
   static Clusterer_Ptr make_clusterer(ITMLib::ITMLibSettings::DeviceType deviceType,
-                                      float sigma, float tau, uint32_t minClusterSize);
+                                      float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 };
 
 }

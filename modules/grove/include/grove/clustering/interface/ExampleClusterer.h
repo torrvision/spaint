@@ -30,7 +30,7 @@ public:
   typedef boost::shared_ptr<const ExampleImage> ExampleImage_CPtr;
 
 public:
-  ExampleClusterer(float sigma, float tau, uint32_t minClusterSize);
+  ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
   virtual ~ExampleClusterer();
 
   virtual void find_modes(const ExampleImage_CPtr &exampleReservoirs,
@@ -41,6 +41,7 @@ public:
 protected:
   float m_sigma;
   float m_tau;
+  uint32_t m_maxClusterCount;
   uint32_t m_minClusterSize;
 
   ITMFloatImage_Ptr m_densities;

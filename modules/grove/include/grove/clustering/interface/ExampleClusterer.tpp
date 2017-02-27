@@ -11,8 +11,8 @@ using spaint::MemoryBlockFactory;
 namespace grove {
 
 template <typename ExampleType, typename ClusterType>
-ExampleClusterer<ExampleType, ClusterType>::ExampleClusterer(float sigma, float tau, uint32_t minClusterSize) :
-    m_sigma(sigma), m_tau(tau), m_minClusterSize(minClusterSize)
+ExampleClusterer<ExampleType, ClusterType>::ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize) :
+    m_sigma(sigma), m_tau(tau), m_maxClusterCount(maxClusterCount), m_minClusterSize(minClusterSize)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 

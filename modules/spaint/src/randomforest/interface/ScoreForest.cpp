@@ -37,11 +37,12 @@ ScoreForest::ScoreForest()
   // Tentative values
   const float clustererSigma = 0.1f;
   const float clustererTau = 0.05f;
-  const int minClusterSize = 20;
+  const uint32_t maxClusterCount = Prediction3DColour::MAX_MODES;
+  const uint32_t minClusterSize = 20;
 
   // Hardcoded CUDA for now.
   m_gpuClusterer = ExampleClustererFactory<Keypoint3DColour, Prediction3DColour>::make_clusterer(
-      ITMLib::ITMLibSettings::DEVICE_CUDA, clustererSigma, clustererTau, minClusterSize);
+      ITMLib::ITMLibSettings::DEVICE_CUDA, clustererSigma, clustererTau, maxClusterCount, minClusterSize);
 
   // Allocate the image that will store the leaf indices (will be resized as needed)
   m_leafImage = MemoryBlockFactory::instance().make_image<LeafIndices>();

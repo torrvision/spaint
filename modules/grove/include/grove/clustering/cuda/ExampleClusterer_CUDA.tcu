@@ -112,8 +112,8 @@ __global__ void ck_compute_modes(const ExampleType *examples,
 }
 
 template <typename ExampleType, typename ClusterType>
-ExampleClusterer_CUDA<ExampleType, ClusterType>::ExampleClusterer_CUDA(float sigma, float tau, uint32_t minClusterSize)
-  : ExampleClusterer<ExampleType, ClusterType>(sigma, tau, minClusterSize)
+ExampleClusterer_CUDA<ExampleType, ClusterType>::ExampleClusterer_CUDA(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
+  : ExampleClusterer<ExampleType, ClusterType>(sigma, tau, maxClusterCount, minClusterSize)
 {}
 
 template <typename ExampleType, typename ClusterType>
@@ -130,6 +130,7 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
     throw std::runtime_error("startIdx + count > nbReservoirs");
 
   const Vector2i temporariesSize(reservoirCapacity, count);
+
   if(this->m_densities->noDims.x < temporariesSize.x || this->m_densities->noDims.y < temporariesSize.y)
   {
     // Happens only once
@@ -139,7 +140,7 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
     this->m_clusterSizes->ChangeDims(temporariesSize);
     this->m_clusterSizesHistogram->ChangeDims(temporariesSize);
 
-    this->m_selectedClusters->ChangeDims(Vector2i(ClusterType::MAX_MODES, count));
+    this->m_selectedClusters->ChangeDims(Vector2i(this->m_maxClusterCount, count));
     this->m_nbClustersPerReservoir->ChangeDims(Vector2i(1, count));
   }
 
@@ -188,11 +189,11 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
   // 1 single block, 1 thread per reservoir
   ck_select_clusters<<<1, gridSize>>>(clusterSizes, clusterSizesHistogram,
       nbClustersPerReservoir, selectedClusters, reservoirCapacity,
-      ClusterType::MAX_MODES, this->m_minClusterSize);
+      this->m_maxClusterCount, this->m_minClusterSize);
   ORcudaKernelCheck;
 
-  ck_compute_modes<<<gridSize, ClusterType::MAX_MODES>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
-      predictionsData, reservoirCapacity, ClusterType::MAX_MODES);
+  ck_compute_modes<<<gridSize, this->m_maxClusterCount>>>(examples, reservoirSizes, clusterIndices, selectedClusters,
+      predictionsData, reservoirCapacity, this->m_maxClusterCount);
   ORcudaKernelCheck;
 
 //  m_nbClustersPerReservoir->UpdateHostFromDevice();
