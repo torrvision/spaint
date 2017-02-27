@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
+#include <grove/features/interface/RGBDPatchFeatureCalculator.h>
 #include <grove/forests/DecisionForestFactory.h>
-#include "spaint/randomforest/cuda/ScoreForest_CUDA.h"
 
 #include <iostream>
 
@@ -13,11 +13,10 @@
 #include <boost/random.hpp>
 
 using namespace grove;
-using namespace spaint;
 
 int main(int argc, char *argv[])
 {
-  static const int nbTrees = SCOREFOREST_NTREES;
+  static const int nbTrees = 5;
   const float proportionOfDataGivenToLearner = 1.0f;
   const std::string learnerType = "DFBP";
   const bool loadSavedForest = true;
