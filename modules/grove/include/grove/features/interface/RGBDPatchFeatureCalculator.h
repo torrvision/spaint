@@ -157,14 +157,17 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   /**
-   * \brief Checks whether or not the input images passed to compute_keypoints_and_features allow the required features to be computed.
+   * \brief Compute the size of the generated feature image.
+   *        Includes a check on whether or not the input images passed to compute_keypoints_and_features allow the required features to be computed.
    *
    * \param rgbImage    The colour image.
    * \param depthImage  The depth image.
    *
+   * \return The size of the generated feature image.
+   *
    * \throws std::invalid_argument If the features cannot be computed.
    */
-  void check_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
+  Vector2i compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

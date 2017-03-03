@@ -106,20 +106,34 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::set_feature_step(u
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-void RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::check_input_images(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
+Vector2i RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
 {
-  if((depthImage->noDims.x * depthImage->noDims.y == 0) && (m_normaliseDepth || m_normaliseRgb || m_depthFeatureCount > 0))
+  const bool requireColour = m_rgbFeatureCount > 0;
+  const bool requireDepth = m_normaliseDepth || m_normaliseRgb || m_depthFeatureCount > 0;
+
+  const bool validColour = rgbImage && (rgbImage->noDims.x * rgbImage->noDims.y > 0);
+  const bool validDepth = depthImage && (depthImage->noDims.x * depthImage->noDims.y > 0);
+
+  if(requireDepth && !validDepth)
   {
     throw std::invalid_argument("Error: A valid depth image is required to compute the features.");
   }
 
-#if 0
-  // Note: Since the Structure Sensor does not provide colour information, we do not throw if the colour image is null.
-  if((rgbImage->noDims.x * rgbImage->noDims.y == 0) && m_rgbFeatureCount > 0)
+  if(requireColour && !validColour)
   {
-    throw std::invalid_argument("Error: A valid colour image is required to compute the features.");
+    // Note: Since the Structure Sensor does not provide colour information,
+    // we do not throw if the colour image is null AND we are also computing depth features.
+    if(!requireDepth)
+    {
+      throw std::invalid_argument("Error: A valid colour image is required to compute the features.");
+    }
   }
-#endif
+
+  // Use the depth image size as base, unless we want colour features only.
+  const Vector2i baseDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
+
+  // Compute output dimensions.
+  return baseDims / m_featureStep;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

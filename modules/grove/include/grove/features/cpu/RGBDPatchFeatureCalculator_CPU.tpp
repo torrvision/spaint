@@ -24,20 +24,18 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
                                                                                                  const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                                                                                  KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
-  // Check that the input images are valid.
-  this->check_input_images(rgbImage, depthImage);
+  // Check that the input images are valid and compute the output dimensions.
+  const Vector2i outSize = this->compute_output_dims(rgbImage, depthImage);
 
   // Ensure the output images are the right size (typically this only
   // happens once per program run if the images are properly cached).
-  // They should have one pixel for each element of the sampling grid.
-  const Vector2i outSize = depthImage->noDims / this->m_featureStep;
   keypointsImage->ChangeDims(outSize);
   descriptorsImage->ChangeDims(outSize);
 
   const Vector4i *depthOffsets = this->m_depthOffsets->GetData(MEMORYDEVICE_CPU);
-  const float *depths = depthImage->GetData(MEMORYDEVICE_CPU);
+  const float *depths = depthImage ? depthImage->GetData(MEMORYDEVICE_CPU) : NULL;
   const Vector2i inSize = depthImage->noDims;
-  const Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
+  const Vector4u *rgb = rgbImage ? rgbImage->GetData(MEMORYDEVICE_CPU): NULL;
   const uchar *rgbChannels = this->m_rgbChannels->GetData(MEMORYDEVICE_CPU);
   const Vector4i *rgbOffsets = this->m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
 
