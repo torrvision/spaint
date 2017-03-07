@@ -17,9 +17,9 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-DA_RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
+DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
-  DA_RGBDPatchFeatureCalculator_CPtr calculator;
+  DA_RGBDPatchFeatureCalculator_Ptr calculator;
 
   bool depthAdaptive = true;
   uint32_t depthFeatureCount = 128, depthFeatureOffset = 0, rgbFeatureCount = 128, rgbFeatureOffset = 128;
@@ -44,9 +44,9 @@ DA_RGBDPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_da_rgbd_patch_
   return calculator;
 }
 
-RGBPatchFeatureCalculator_CPtr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
+RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
-  RGBPatchFeatureCalculator_CPtr calculator;
+  RGBPatchFeatureCalculator_Ptr calculator;
 
   bool depthAdaptive = false;
   uint32_t depthFeatureCount = 0, depthFeatureOffset = 0, rgbFeatureCount = 256, rgbFeatureOffset = 0;
