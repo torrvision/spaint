@@ -35,6 +35,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
 
@@ -173,6 +174,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
 
 #########################################

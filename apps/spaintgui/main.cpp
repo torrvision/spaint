@@ -17,6 +17,7 @@
 #endif
 
 #include <InputSource/OpenNIEngine.h>
+#include <InputSource/RealSenseEngine.h>
 using namespace InputSource;
 using namespace ITMLib;
 
@@ -256,6 +257,7 @@ try
 
   if(args.depthImageMask == "" || args.cameraAfterDisk)
   {
+#if 0
 #ifdef WITH_OPENNI
     std::cout << "[spaint] Reading images from OpenNI device: " << args.openNIDeviceURI << '\n';
     boost::optional<std::string> uri = args.openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(args.openNIDeviceURI);
@@ -269,6 +271,9 @@ try
 #else
     quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
 #endif
+#endif
+
+    imageSourceEngine->addSubengine(new RealSenseEngine(args.calibrationFilename.c_str()));
   }
 
   // Construct the fiducial detector (if any).
