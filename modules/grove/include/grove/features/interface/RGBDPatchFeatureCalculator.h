@@ -162,12 +162,13 @@ protected:
    *
    * \param rgbImage    The colour image.
    * \param depthImage  The depth image.
+   * \param inputDims   Will be filled with the dimensions of either the colour or depth image, according to the configuration.
    *
    * \return The size of the generated feature image.
    *
    * \throws std::invalid_argument If the features cannot be computed.
    */
-  Vector2i compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const;
+  Vector2i compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, Vector2i &inputDims) const;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

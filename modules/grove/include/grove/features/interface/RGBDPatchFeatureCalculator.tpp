@@ -106,7 +106,7 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::set_feature_step(u
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 template <typename KeypointType, typename DescriptorType>
-Vector2i RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage) const
+Vector2i RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_output_dims(const ITMUChar4Image *rgbImage, const ITMFloatImage *depthImage, Vector2i &inputDims) const
 {
   const bool requireColour = m_rgbFeatureCount > 0;
   const bool requireDepth = m_normaliseDepth || m_normaliseRgb || m_depthFeatureCount > 0;
@@ -130,10 +130,10 @@ Vector2i RGBDPatchFeatureCalculator<KeypointType, DescriptorType>::compute_outpu
   }
 
   // Use the depth image size as base, unless we want colour features only.
-  const Vector2i baseDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
+  inputDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
 
   // Compute output dimensions.
-  return baseDims / m_featureStep;
+  return inputDims / m_featureStep;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
