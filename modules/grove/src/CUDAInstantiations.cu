@@ -24,8 +24,10 @@ template class ExampleClusterer_CUDA<Keypoint3DColour, Prediction3DColour>;
 
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>;
+
 template class DecisionForest_CUDA<RGBDPatchDescriptor, FOREST_TREES>;
 
+template class ExampleReservoirs_CUDA<Keypoint2D>;
 template class ExampleReservoirs_CUDA<Keypoint3DColour>;
 
 }
