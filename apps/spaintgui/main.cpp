@@ -190,14 +190,6 @@ try
   glutInit(&argc, argv);
 #endif
 
-#ifdef WITH_ARRAYFIRE
-  // Choose a device for ArrayFire.
-  if(af::getDeviceCount() > 1)
-  {
-    af::setDevice(1);
-  }
-#endif
-
 #ifdef WITH_OVR
   // If we built with Rift support, initialise the Rift SDK.
   ovr_Initialize();
