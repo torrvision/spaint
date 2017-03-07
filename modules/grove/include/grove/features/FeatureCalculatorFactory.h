@@ -24,14 +24,14 @@ struct FeatureCalculatorFactory
    *
    * \param deviceType The device on which the feature calculator should operate.
    */
-  static DA_RGBDPatchFeatureCalculator_CPtr make_da_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static DA_RGBDPatchFeatureCalculator_Ptr make_da_rgbd_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 
   /**
    * \brief Makes an RGB patch feature calculator.
    *
    * \param deviceType The device on which the feature calculator should operate.
    */
-  static RGBPatchFeatureCalculator_CPtr make_rgb_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static RGBPatchFeatureCalculator_Ptr make_rgb_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType);
 };
 
 }
