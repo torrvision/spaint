@@ -14,9 +14,6 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
-// Whether or not to use the "correct" features, rather than the ones from the SCoRe Forests code.
-#define USE_CORRECT_FEATURES 0
-
 namespace grove {
 
 /**
@@ -176,8 +173,7 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     int raster1, raster2;
     calculate_secondary_points<DifferenceType>(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
-    // Convert the depths of the central point and the first secondary point to millimetres.
-    const float depthMm = depth * 1000.0f;
+    // Convert the depth of the first secondary point to millimetres.
     const float depth1Mm = fmaxf(depths[raster1] * 1000.f, 0.0f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
 
     // Compute the feature and write it into the descriptor.
@@ -189,6 +185,9 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     }
     else
     {
+      // Convert the depth of the central point to millimetres.
+      const float depthMm = depth * 1000.0f;
+
       // This is the definition used in the SCoRe Forests code.
       descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depthMm;
     }
