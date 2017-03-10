@@ -19,8 +19,6 @@ namespace grove {
 
 DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
-//  DA_RGBDPatchFeatureCalculator_Ptr calculator;
-
   bool depthAdaptive = true;
   RGBDPatchFeatureCalculatorDifferenceType differenceType = RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE;
   const uint32_t depthMinRadius = 1;       // as per Julien's code (was 2 / 2)
@@ -36,31 +34,10 @@ DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_f
         deviceType,
         depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius,
         differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius);
-
-//  if(deviceType == ITMLibSettings::DEVICE_CUDA)
-//  {
-//#ifdef WITH_CUDA
-//    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>(
-//      depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius, differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius
-//    ));
-//#else
-//    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-//#endif
-//  }
-//  else
-//  {
-//    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescriptor>(
-//      depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius, differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius
-//    ));
-//  }
-
-//  return calculator;
 }
 
 RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
-//  RGBPatchFeatureCalculator_Ptr calculator;
-
   bool depthAdaptive = false;
   RGBDPatchFeatureCalculatorDifferenceType differenceType = RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE;
   const uint32_t depthMinRadius = 0;       // Unused
@@ -76,25 +53,6 @@ RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_c
         deviceType,
         depthAdaptive, differenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius, depthMaxRadius,
         differenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius);
-
-//  if(deviceType == ITMLibSettings::DEVICE_CUDA)
-//  {
-//#ifdef WITH_CUDA
-//    calculator.reset(new RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>(
-//      depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset
-//    ));
-//#else
-//    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
-//#endif
-//  }
-//  else
-//  {
-//    calculator.reset(new RGBDPatchFeatureCalculator_CPU<Keypoint2D,RGBDPatchDescriptor>(
-//      depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset
-//    ));
-//  }
-
-//  return calculator;
 }
 
 }
