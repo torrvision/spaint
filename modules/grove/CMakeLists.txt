@@ -22,8 +22,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
-SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
+SET(features_templates include/grove/features/FeatureCalculatorFactory.tpp)
+SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 
 ##
 SET(features_base_headers include/grove/features/base/Descriptor.h)
@@ -75,6 +76,7 @@ ${keypoints_headers}
 )
 
 SET(templates
+${features_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
 )
@@ -89,7 +91,7 @@ ENDIF()
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources})
-SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
+SOURCE_GROUP(features FILES ${features_sources} ${features_headers} ${features_templates})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})

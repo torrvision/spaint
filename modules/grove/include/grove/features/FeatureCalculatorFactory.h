@@ -20,6 +20,38 @@ struct FeatureCalculatorFactory
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
   /**
+   * \brief Makes a patch feature calculator with custom parameters.
+   *
+   * \param deviceType           The device on which the feature calculator should operate.
+   * \param depthAdaptive        Whether or not to compute the depth-normalised version of the features.
+   * \param depthDifferenceType  The kind of differencing to use for the depth part of the descriptor.
+   * \param depthFeatureCount    The number of features to compute from the depth image.
+   * \param depthFeatureOffset   The offset in the descriptor after which we store the depth features.
+   * \param depthMinRadius       The minimum radius used to generate depth offsets.
+   * \param depthMaxRadius       The maximum radius used to generate depth offsets.
+   * \param rgbDifferenceType    The kind of differencing to use for the colour part of the descriptor.
+   * \param rgbFeatureCount      The number of features to compute from the RGB image.
+   * \param rgbFeatureOffset     The offset in the descriptor after which we store the colour features.
+   * \param rgbMinRadius         The minimum radius used to generate colour offsets.
+   * \param rgbMaxRadius         The maximum radius used to generate colour offsets.
+   *
+   * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets cause out-of-bounds access.
+   */
+  template <typename KeypointType, typename DescriptorType>
+  static boost::shared_ptr<RGBDPatchFeatureCalculator<KeypointType, DescriptorType> > make_custom_patch_feature_calculator(ITMLib::ITMLibSettings::DeviceType deviceType,
+                                                                                                                           bool depthAdaptive,
+                                                                                                                           RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+                                                                                                                           uint32_t depthFeatureCount,
+                                                                                                                           uint32_t depthFeatureOffset,
+                                                                                                                           uint32_t depthMinRadius,
+                                                                                                                           uint32_t depthMaxRadius,
+                                                                                                                           RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+                                                                                                                           uint32_t rgbFeatureCount,
+                                                                                                                           uint32_t rgbFeatureOffset,
+                                                                                                                           uint32_t rgbMinRadius,
+                                                                                                                           uint32_t rgbMaxRadius);
+
+  /**
    * \brief Makes a DA-RGBD patch feature calculator.
    *
    * \param deviceType The device on which the feature calculator should operate.

@@ -6,6 +6,8 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
+#include "../interface/RGBDPatchFeatureCalculator.h"
+
 #include <helper_math.h>
 
 #include <ITMLib/Utils/ITMProjectionUtils.h>
@@ -28,7 +30,8 @@ namespace grove {
  * \param raster1   An int into which to write the raster position of the first secondary point.
  * \param raster2   An int into which to write the raster position of the second secondary point (if needed).
  */
-_CPU_AND_GPU_CODE_
+template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType>
+_CPU_AND_GPU_CODE_TEMPLATE_
 inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offset, const Vector2i& inSize, const bool normalise, const float depth, int& raster1, int& raster2)
 {
   int x1, y1;
@@ -40,28 +43,34 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
   {
     x1 = xyIn.x + static_cast<int>(offset[0] / depth);
     y1 = xyIn.y + static_cast<int>(offset[1] / depth);
-#if USE_CORRECT_FEATURES
-    x2 = xyIn.x + static_cast<int>(offset[2] / depth);
-    y2 = xyIn.y + static_cast<int>(offset[3] / depth);
-#endif
+
+    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    {
+      x2 = xyIn.x + static_cast<int>(offset[2] / depth);
+      y2 = xyIn.y + static_cast<int>(offset[3] / depth);
+    }
   }
   else
   {
     x1 = xyIn.x + offset[0];
     y1 = xyIn.y + offset[1];
-#if USE_CORRECT_FEATURES
-    x2 = xyIn.x + offset[2];
-    y2 = xyIn.y + offset[3];
-#endif
+
+    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    {
+      x2 = xyIn.x + offset[2];
+      y2 = xyIn.y + offset[3];
+    }
   }
 
   // Constrain the secondary point(s) to be within the image.
   x1 = min(max(x1, 0), inSize.width - 1);
   y1 = min(max(y1, 0), inSize.height - 1);
-#if USE_CORRECT_FEATURES
-  x2 = min(max(x2, 0), inSize.width - 1);
-  y2 = min(max(y2, 0), inSize.height - 1);
-#endif
+
+  if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+  {
+    x2 = min(max(x2, 0), inSize.width - 1);
+    y2 = min(max(y2, 0), inSize.height - 1);
+  }
 
   // Calculate the raster position(s) of the secondary point(s).
   raster1 = y1 * inSize.width + x1;
@@ -85,7 +94,7 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
  * \param normalise         Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
  * \param descriptors       A pointer to the descriptors image.
  */
-template <typename KeypointType, typename DescriptorType>
+template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
                                     const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
@@ -111,16 +120,19 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points<DifferenceType>(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
     // Compute the feature and write it into the descriptor.
-#if USE_CORRECT_FEATURES
-    // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-    descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
-#else
-    // This is the definition used in the SCoRe Forests code.
-    descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[rasterIdxIn][channel]);
-#endif
+    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    {
+      // This is the "correct" definition, but the SCoRe Forests code uses the other one.
+      descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
+    }
+    else
+    {
+      // This is the definition used in the SCoRe Forests code.
+      descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[rasterIdxIn][channel]);
+    }
   }
 }
 
@@ -139,7 +151,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
  * \param normalise           Whether or not to normalise the depth offsets by the RGBD pixel's depth value.
  * \param descriptors         A pointer to the descriptors image.
  */
-template <typename KeypointType, typename DescriptorType>
+template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
                                    const float *depths, const Vector4i *depthOffsets, const KeypointType *keypoints,
@@ -162,21 +174,24 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points<DifferenceType>(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
     // Convert the depths of the central point and the first secondary point to millimetres.
     const float depthMm = depth * 1000.0f;
     const float depth1Mm = fmaxf(depths[raster1] * 1000.f, 0.0f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
 
     // Compute the feature and write it into the descriptor.
-#if USE_CORRECT_FEATURES
-    // This is the "correct" definition, but the SCoRe Forests code uses the other one.
-    const float depth2Mm = fmaxf(depths[raster2] * 1000.0f, 0.0f);
-    descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depth2Mm;
-#else
-    // This is the definition used in the SCoRe Forests code.
-    descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depthMm;
-#endif
+    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    {
+      // This is the "correct" definition, but the SCoRe Forests code uses the other one.
+      const float depth2Mm = fmaxf(depths[raster2] * 1000.0f, 0.0f);
+      descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depth2Mm;
+    }
+    else
+    {
+      // This is the definition used in the SCoRe Forests code.
+      descriptor.data[depthFeatureOffset + featIdx] = depth1Mm - depthMm;
+    }
   }
 }
 
