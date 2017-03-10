@@ -41,15 +41,30 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset,
-                                                                                    uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset)
-: m_depthFeatureCount(depthFeatureCount),
+RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator(bool depthAdaptive,
+                                                                                    RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+                                                                                    uint32_t depthFeatureCount,
+                                                                                    uint32_t depthFeatureOffset,
+                                                                                    uint32_t depthMinRadius,
+                                                                                    uint32_t depthMaxRadius,
+                                                                                    RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+                                                                                    uint32_t rgbFeatureCount,
+                                                                                    uint32_t rgbFeatureOffset,
+                                                                                    uint32_t rgbMinRadius,
+                                                                                    uint32_t rgbMaxRadius)
+: m_depthDifferenceType(depthDifferenceType),
+  m_depthFeatureCount(depthFeatureCount),
   m_depthFeatureOffset(depthFeatureOffset),
+  m_depthMaxRadius(depthMaxRadius),
+  m_depthMinRadius(depthMinRadius),
   m_featureStep(4), // as per Julien's code (can be overridden with the setter on each invocation)
   m_normaliseDepth(depthAdaptive),
   m_normaliseRgb(depthAdaptive),
+  m_rgbDifferenceType(rgbDifferenceType),
   m_rgbFeatureCount(rgbFeatureCount),
-  m_rgbFeatureOffset(rgbFeatureOffset)
+  m_rgbFeatureOffset(rgbFeatureOffset),
+  m_rgbMaxRadius(rgbMaxRadius),
+  m_rgbMinRadius(rgbMinRadius)
 {
   // Check that the specified feature counts and feature offsets are valid.
   if(depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT)
@@ -144,11 +159,8 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_colour_featu
   // Initialise a random number generator with the default seed found in both the std and boost headers.
   RandomNumberGenerator rng(5489u);
 
-  // Note: The range of the offsets used is designed to be consistent with the range of the depths by which we might later normalise them.
   const int channelMin = 0;
   const int channelMax = 2;
-  const int radiusMin = 2;   // as per Julien's code
-  const int radiusMax = 130; // as per Julien's code
 
   Vector4i *offsets = m_rgbOffsets->GetData(MEMORYDEVICE_CPU);
   uchar *channels = m_rgbChannels->GetData(MEMORYDEVICE_CPU);
@@ -157,7 +169,8 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_colour_featu
   {
     for(int j = 0; j < 4; ++j)
     {
-      offsets[i][j] = generate_offset(rng, radiusMin, radiusMax);
+      // Note: The range of the offsets used is designed to be consistent with the range of the depths by which we might later normalise them.
+      offsets[i][j] = generate_offset(rng, m_rgbMinRadius, m_rgbMaxRadius);
     }
 
     // The "2 - rng..." is to perform the RGB to BGR conversion.
@@ -179,16 +192,13 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_depth_featur
   // Initialise a random number generator with the default seed found in both the std and boost headers.
   RandomNumberGenerator rng(5489u);
 
-  const int radiusMin = 1;       // as per Julien's code (was 2 / 2)
-  const int radiusMax = 130 / 2; // as per Julien's code
-
   Vector4i *offsets = m_depthOffsets->GetData(MEMORYDEVICE_CPU);
 
   for(uint32_t i = 0; i < m_depthFeatureCount; ++i)
   {
     for(int j = 0; j < 4; ++j)
     {
-      offsets[i][j] = generate_offset(rng, radiusMin, radiusMax);
+      offsets[i][j] = generate_offset(rng, m_depthMinRadius, m_depthMaxRadius);
     }
   }
 

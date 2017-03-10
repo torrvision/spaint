@@ -44,8 +44,9 @@ SET(clustering_interface_templates include/grove/clustering/interface/ExampleClu
 SET(clustering_shared_headers include/grove/clustering/shared/ExampleClusterer_Shared.h)
 
 ##
-SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 SET(features_headers include/grove/features/FeatureCalculatorFactory.h)
+SET(features_templates include/grove/features/FeatureCalculatorFactory.tpp)
+SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 
 ##
 SET(features_base_headers include/grove/features/base/Descriptor.h)
@@ -150,6 +151,7 @@ ${keypoints_headers}
 SET(templates
 ${clustering_interface_templates}
 ${clustering_templates}
+${features_templates}
 ${features_cpu_templates}
 ${features_interface_templates}
 ${forests_templates}
@@ -193,7 +195,7 @@ SOURCE_GROUP(clustering\\base FILES ${clustering_base_headers})
 SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
 SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
 SOURCE_GROUP(clustering\\shared FILES ${clustering_shared_headers})
-SOURCE_GROUP(features FILES ${features_sources} ${features_headers})
+SOURCE_GROUP(features FILES ${features_sources} ${features_headers} ${features_templates})
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(features\\cpu FILES ${features_cpu_headers} ${features_cpu_templates})
 SOURCE_GROUP(features\\cuda FILES ${features_cuda_headers} ${features_cuda_templates})

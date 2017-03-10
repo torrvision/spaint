@@ -12,9 +12,19 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CPU(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset,
-                                                                                            uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset)
-: RGBDPatchFeatureCalculator<KeypointType,DescriptorType>(depthAdaptive, depthFeatureCount, depthFeatureOffset, rgbFeatureCount, rgbFeatureOffset)
+RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CPU(bool depthAdaptive, RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius, RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+                                                                                            uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius)
+: RGBDPatchFeatureCalculator<KeypointType,DescriptorType>(depthAdaptive,
+                                                          depthDifferenceType,
+                                                          depthFeatureCount,
+                                                          depthFeatureOffset,
+                                                          depthMinRadius,
+                                                          depthMaxRadius,
+                                                          rgbDifferenceType,
+                                                          rgbFeatureCount,
+                                                          rgbFeatureOffset,
+                                                          rgbMinRadius,
+                                                          rgbMaxRadius)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -59,21 +69,43 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
       // If there is a depth image available and any depth features need to be computed for the keypoint, compute them.
       if(depths && this->m_depthFeatureCount > 0)
       {
-        compute_depth_features(
-          xyIn, xyOut, inSize, outSize, depths, depthOffsets, keypoints,
-          this->m_depthFeatureCount, this->m_depthFeatureOffset,
-          this->m_normaliseDepth, descriptors
-        );
+        if(this->m_depthDifferenceType == PAIRWISE_DIFFERENCE)
+        {
+          compute_depth_features<RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE>(
+            xyIn, xyOut, inSize, outSize, depths, depthOffsets, keypoints,
+            this->m_depthFeatureCount, this->m_depthFeatureOffset,
+            this->m_normaliseDepth, descriptors
+          );
+        }
+        else
+        {
+          compute_depth_features<RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE>(
+            xyIn, xyOut, inSize, outSize, depths, depthOffsets, keypoints,
+            this->m_depthFeatureCount, this->m_depthFeatureOffset,
+            this->m_normaliseDepth, descriptors
+          );
+        }
       }
 
       // If there is a colour image available and any colour features need to be computed for the keypoint, compute them.
       if(rgb && this->m_rgbFeatureCount > 0)
       {
-        compute_colour_features(
-          xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
-          keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
-          this->m_normaliseRgb, descriptors
-        );
+        if(this->m_rgbDifferenceType == PAIRWISE_DIFFERENCE)
+        {
+          compute_colour_features<RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE>(
+            xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+            keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
+            this->m_normaliseRgb, descriptors
+          );
+        }
+        else
+        {
+          compute_colour_features<RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE>(
+            xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+            keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
+            this->m_normaliseRgb, descriptors
+          );
+        }
       }
     }
   }

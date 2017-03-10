@@ -33,15 +33,31 @@ private:
    *
    * Note: This is private to force clients to make use of FeatureCalculatorFactory, which knows the correct values to use for the arguments.
    *
-   * \param depthAdaptive      Whether or not to compute the depth-normalised version of the features.
-   * \param depthFeatureCount  The number of features to compute from the depth image.
-   * \param depthFeatureOffset The offset in the descriptor after which we store the depth features.
-   * \param rgbFeatureCount    The number of features to compute from the RGB image.
-   * \param rgbFeatureOffset   The offset in the descriptor after which we store the colour features.
+   * \param depthAdaptive        Whether or not to compute the depth-normalised version of the features.
+   * \param depthDifferenceType  The kind of differencing to use for the depth part of the descriptor.
+   * \param depthFeatureCount    The number of features to compute from the depth image.
+   * \param depthFeatureOffset   The offset in the descriptor after which we store the depth features.
+   * \param depthMinRadius       The minimum radius used to generate depth offsets.
+   * \param depthMaxRadius       The maximum radius used to generate depth offsets.
+   * \param rgbDifferenceType    The kind of differencing to use for the colour part of the descriptor.
+   * \param rgbFeatureCount      The number of features to compute from the RGB image.
+   * \param rgbFeatureOffset     The offset in the descriptor after which we store the colour features.
+   * \param rgbMinRadius         The minimum radius used to generate colour offsets.
+   * \param rgbMaxRadius         The maximum radius used to generate colour offsets.
    *
    * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets cause out-of-bounds access.
    */
-  RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset);
+  RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive,
+                                  RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+                                  uint32_t depthFeatureCount,
+                                  uint32_t depthFeatureOffset,
+                                  uint32_t depthMinRadius,
+                                  uint32_t depthMaxRadius,
+                                  RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+                                  uint32_t rgbFeatureCount,
+                                  uint32_t rgbFeatureOffset,
+                                  uint32_t rgbMinRadius,
+                                  uint32_t rgbMaxRadius);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
