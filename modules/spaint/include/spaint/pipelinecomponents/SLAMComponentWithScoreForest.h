@@ -73,7 +73,7 @@ private:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  DA_RGBDPatchFeatureCalculator_CPtr m_featureExtractor;
+  DA_RGBDPatchFeatureCalculator_Ptr m_featureExtractor;
   Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
   ScorePredictionsImage_Ptr m_predictionsImage;
