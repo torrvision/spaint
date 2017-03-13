@@ -15,37 +15,13 @@
 
 #include <grove/clustering/base/Prediction3DColour.h>
 #include <grove/keypoints/Keypoint3DColour.h>
+#include <grove/ransac/base/PoseCandidate.h>
 #include <tvgutil/timing/AverageTimer.h>
-
-#include "../ScoreForestTypes.h"
 
 using namespace grove; // TODO remove
 
 namespace spaint
 {
-
-struct PoseCandidate
-{
-  enum
-  {
-    KABSCH_POINTS = 3
-  };
-
-  Matrix4f cameraPose;
-  Vector3f cameraPoints[KABSCH_POINTS];
-  Vector3f worldPoints[KABSCH_POINTS];
-  float energy;
-};
-
-_CPU_AND_GPU_CODE_ inline bool operator <(const PoseCandidate &a,
-    const PoseCandidate &b)
-{
-  return a.energy < b.energy;
-}
-
-typedef ORUtils::MemoryBlock<PoseCandidate> PoseCandidateMemoryBlock;
-typedef boost::shared_ptr<PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_Ptr;
-typedef boost::shared_ptr<const PoseCandidateMemoryBlock> PoseCandidateMemoryBlock_CPtr;
 
 class PreemptiveRansac
 {

@@ -86,6 +86,9 @@ SET(forests_interface_templates include/grove/forests/interface/DecisionForest.t
 SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
 
 ##
+SET(ransac_base_headers include/grove/ransac/base/PoseCandidate.h)
+
+##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
 SET(reservoirs_templates include/grove/reservoirs/ExampleReservoirsFactory.tpp)
 
@@ -141,6 +144,7 @@ ${forests_headers}
 ${forests_cpu_headers}
 ${forests_interface_headers}
 ${forests_shared_headers}
+${ransac_base_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
@@ -206,6 +210,7 @@ SOURCE_GROUP(forests\\cpu FILES ${forests_cpu_headers} ${forests_cpu_templates})
 SOURCE_GROUP(forests\\cuda FILES ${forests_cuda_headers} ${forests_cuda_templates})
 SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
+SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})

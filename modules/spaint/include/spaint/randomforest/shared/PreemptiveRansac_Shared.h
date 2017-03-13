@@ -170,8 +170,8 @@ inline bool preemptive_ransac_generate_candidate(
     const Prediction3DColour &selectedPrediction = predictionsData[linearIdx];
     const Mode3DColour &selectedMode = selectedPrediction.modes[modeIdx];
 
-    poseCandidate.cameraPoints[s] = selectedKeypoint.position;
-    poseCandidate.worldPoints[s] = selectedMode.position;
+    poseCandidate.pointsCamera[s] = selectedKeypoint.position;
+    poseCandidate.pointsWorld[s] = selectedMode.position;
   }
 
   return true;

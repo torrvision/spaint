@@ -322,9 +322,9 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     for (int s = 0; s < PoseCandidate::KABSCH_POINTS; ++s)
     {
       localPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          candidate.cameraPoints[s].v);
+          candidate.pointsCamera[s].v);
       worldPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(
-          candidate.worldPoints[s].v);
+          candidate.pointsWorld[s].v);
     }
 
     Eigen::Map<Eigen::Matrix4f>(candidate.cameraPose.m) = Kabsch(localPoints,
