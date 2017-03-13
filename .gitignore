@@ -19,3 +19,6 @@ libraries/*.log
 tags
 tests/mike/
 *.swp
+
+# QtCtreator CMake
+CMakeLists.txt.user*
