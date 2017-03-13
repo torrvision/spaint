@@ -1,21 +1,21 @@
 /**
- * spaint: PreemptiveRansac_CUDA.cu
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * grove: PreemptiveRansac_CUDA.cu
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "randomforest/cuda/PreemptiveRansac_CUDA.h"
-#include "randomforest/shared/PreemptiveRansac_Shared.h"
-
-#include "util/MemoryBlockFactory.h"
+#include "ransac/cuda/PreemptiveRansac_CUDA.h"
 
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 
-using namespace grove;
+#include <spaint/util/MemoryBlockFactory.h>
+using spaint::MemoryBlockFactory;
+
+#include "ransac/shared/PreemptiveRansac_Shared.h"
+
 using namespace tvgutil;
 
-namespace spaint
-{
+namespace grove {
 
 namespace
 {

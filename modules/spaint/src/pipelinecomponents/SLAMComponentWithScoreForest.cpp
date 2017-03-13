@@ -9,8 +9,6 @@
 #include "ITMLib/Utils/ITMProjectionUtils.h"
 
 #include "randomforest/cuda/ScoreForest_CUDA.h"
-#include "randomforest/cpu/PreemptiveRansac_CPU.h"
-#include "randomforest/cuda/PreemptiveRansac_CUDA.h"
 #include "util/MemoryBlockFactory.h"
 #include "util/PosePersister.h"
 
@@ -19,6 +17,9 @@
 #include "tvgutil/timing/TimeUtil.h"
 
 #include <boost/lexical_cast.hpp>
+
+#include <grove/features/FeatureCalculatorFactory.h>
+#include <grove/ransac/RansacFactory.h>
 
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
@@ -82,7 +83,11 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_updateForestModesEveryFrame = true;
 
 //  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
-  m_preemptiveRansac.reset(new PreemptiveRansac_CPU());
+//  m_preemptiveRansac.reset(new PreemptiveRansac_CPU());
+
+  // Force CPU ransac for now, the GPU implementation is slower.
+  //  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(settings->deviceType);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac((ITMLibSettings::DEVICE_CPU));
 
   // Refinement ICP tracker
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);

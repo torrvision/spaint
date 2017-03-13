@@ -1,17 +1,17 @@
 /**
- * spaint: PreemptiveRansac_CUDA.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * grove: PreemptiveRansac_CUDA.h
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_PREEMPTIVERANSACCUDA
-#define H_SPAINT_PREEMPTIVERANSACCUDA
+#ifndef H_GROVE_PREEMPTIVERANSACCUDA
+#define H_GROVE_PREEMPTIVERANSACCUDA
 
-#include "randomforest/interface/PreemptiveRansac.h"
+#include "../interface/PreemptiveRansac.h"
 
-#include "tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h"
+#include <tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h>
 
-namespace spaint
-{
+namespace grove {
+
 class PreemptiveRansac_CUDA: public PreemptiveRansac
 {
 public:

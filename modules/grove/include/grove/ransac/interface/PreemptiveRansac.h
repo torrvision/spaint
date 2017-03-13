@@ -1,10 +1,10 @@
 /**
- * spaint: PreemptiveRansac.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * grove: PreemptiveRansac.h
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_PREEMPTIVERANSAC
-#define H_SPAINT_PREEMPTIVERANSAC
+#ifndef H_GROVE_PREEMPTIVERANSAC
+#define H_GROVE_PREEMPTIVERANSAC
 
 #include <vector>
 
@@ -13,15 +13,13 @@
 #include <ITMLib/Utils/ITMMath.h>
 #include <ORUtils/PlatformIndependence.h>
 
-#include <grove/clustering/base/Prediction3DColour.h>
-#include <grove/keypoints/Keypoint3DColour.h>
-#include <grove/ransac/base/PoseCandidate.h>
 #include <tvgutil/timing/AverageTimer.h>
 
-using namespace grove; // TODO remove
+#include "../../clustering/base/Prediction3DColour.h"
+#include "../../keypoints/Keypoint3DColour.h"
+#include "../../ransac/base/PoseCandidate.h"
 
-namespace spaint
-{
+namespace grove {
 
 class PreemptiveRansac
 {
@@ -82,5 +80,7 @@ private:
 
 typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;
 typedef boost::shared_ptr<const PreemptiveRansac> PreemptiveRansac_CPtr;
+
 }
+
 #endif

@@ -343,17 +343,11 @@ include/spaint/propagation/shared/LabelPropagator_Shared.h
 )
 
 ##
-SET(randomforest_cpu_sources
-src/randomforest/cpu/PreemptiveRansac_CPU.cpp
-)
-
 SET(randomforest_cuda_sources
-src/randomforest/cuda/PreemptiveRansac_CUDA.cu
 src/randomforest/cuda/ScoreForest_CUDA.cu
 )
 
 SET(randomforest_interface_sources
-src/randomforest/interface/PreemptiveRansac.cpp
 src/randomforest/interface/ScoreForest.cpp
 )
 
@@ -368,22 +362,15 @@ include/spaint/randomforest/ScoreForestTypes.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
 )
 
-SET(randomforest_cpu_headers
-include/spaint/randomforest/cpu/PreemptiveRansac_CPU.h
-)
-
 SET(randomforest_cuda_headers
-include/spaint/randomforest/cuda/PreemptiveRansac_CUDA.h
 include/spaint/randomforest/cuda/ScoreForest_CUDA.h
 )
 
 SET(randomforest_interface_headers
-include/spaint/randomforest/interface/PreemptiveRansac.h
 include/spaint/randomforest/interface/ScoreForest.h
 )
 
 SET(randomforest_shared_headers
-include/spaint/randomforest/shared/PreemptiveRansac_Shared.h
 include/spaint/randomforest/shared/ScoreForest_Shared.h
 )
 
@@ -710,7 +697,6 @@ ${propagation_sources}
 ${propagation_cpu_sources}
 ${propagation_interface_sources}
 ${randomforest_sources}
-${randomforest_cpu_sources}
 ${randomforest_interface_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
@@ -755,7 +741,6 @@ ${propagation_cpu_headers}
 ${propagation_interface_headers}
 ${propagation_shared_headers}
 ${randomforest_headers}
-${randomforest_cpu_headers}
 ${randomforest_interface_headers}
 ${randomforest_shared_headers}
 ${sampling_headers}
@@ -867,7 +852,6 @@ SOURCE_GROUP(propagation\\cuda FILES ${propagation_cuda_sources} ${propagation_c
 SOURCE_GROUP(propagation\\interface FILES ${propagation_interface_sources} ${propagation_interface_headers})
 SOURCE_GROUP(propagation\\shared FILES ${propagation_shared_headers})
 SOURCE_GROUP(randomforest FILES ${randomforest_sources} ${randomforest_headers})
-SOURCE_GROUP(randomforest\\cpu FILES ${randomforest_cpu_sources} ${randomforest_cpu_headers})
 SOURCE_GROUP(randomforest\\cuda FILES ${randomforest_cuda_sources} ${randomforest_cuda_headers})
 SOURCE_GROUP(randomforest\\interface FILES ${randomforest_interface_sources} ${randomforest_interface_headers})
 SOURCE_GROUP(randomforest\\shared FILES ${randomforest_shared_headers})

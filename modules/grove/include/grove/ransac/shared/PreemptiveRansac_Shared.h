@@ -1,26 +1,26 @@
 /**
- * spaint: PreemptiveRansacForest_Shared.h
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * grove: PreemptiveRansacForest_Shared.h
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_SPAINT_PREEMPTIVERANSACSHARED
-#define H_SPAINT_PREEMPTIVERANSACSHARED
+#ifndef H_GROVE_PREEMPTIVERANSACSHARED
+#define H_GROVE_PREEMPTIVERANSACSHARED
 
-#include <grove/keypoints/Keypoint3DColour.h>
-using namespace grove;
+#include <ORUtils/PlatformIndependence.h>
 
-#include "ORUtils/PlatformIndependence.h"
-#include "randomforest/ScoreForestTypes.h"
+#include "../../clustering/base/Prediction3DColour.h"
+#include "../../keypoints/Keypoint3DColour.h"
 
-namespace spaint
-{
+namespace grove {
 
-namespace
-{
+namespace {
+
 enum
 {
-  MAX_CANDIDATE_GENERATION_ITERATIONS = 6000, SAMPLE_INLIER_ITERATIONS = 50
+  MAX_CANDIDATE_GENERATION_ITERATIONS = 6000,
+  SAMPLE_INLIER_ITERATIONS = 50
 };
+
 }
 
 template<typename RNG>

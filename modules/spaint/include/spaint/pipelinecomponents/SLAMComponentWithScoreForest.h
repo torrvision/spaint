@@ -15,11 +15,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <grove/features/FeatureCalculatorFactory.h>
+#include <grove/features/interface/RGBDPatchFeatureCalculator.h>
+#include <grove/ransac/interface/PreemptiveRansac.h>
 using namespace grove;
 
 #include "../randomforest/interface/ScoreForest.h"
-#include "../randomforest/interface/PreemptiveRansac.h"
 
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
 

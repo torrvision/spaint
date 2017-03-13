@@ -1,19 +1,21 @@
 /**
- * spaint: PreemptiveRansac_CPU.cpp
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * grove: PreemptiveRansac_CPU.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "randomforest/cpu/PreemptiveRansac_CPU.h"
-#include "randomforest/shared/PreemptiveRansac_Shared.h"
-
-#include "util/MemoryBlockFactory.h"
+#include "ransac/cpu/PreemptiveRansac_CPU.h"
 
 #include <Eigen/Dense>
 
+#include <spaint/util/MemoryBlockFactory.h>
+using spaint::MemoryBlockFactory;
+
+#include "ransac/shared/PreemptiveRansac_Shared.h"
+
 using namespace tvgutil;
 
-namespace spaint
-{
+namespace grove {
+
 PreemptiveRansac_CPU::PreemptiveRansac_CPU() :
     PreemptiveRansac()
 {

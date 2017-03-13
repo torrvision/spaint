@@ -1,27 +1,29 @@
 /**
- * spaint: PreemptiveRansac.cpp
- * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
+ * grove: PreemptiveRansac.cpp
+ * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "randomforest/interface/PreemptiveRansac.h"
+#include "ransac/interface/PreemptiveRansac.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <ceres/ceres.h>
-#include <ceres/rotation.h>
+//#include <ceres/ceres.h>
+//#include <ceres/rotation.h>
 
 #include <Eigen/Dense>
 #include <libalglib/optimization.h>
 #include <omp.h>
-#include "ORUtils/SE3Pose.h"
 
-#include "util/MemoryBlockFactory.h"
+#include <ORUtils/SE3Pose.h>
+
+#include <spaint/util/MemoryBlockFactory.h>
+using spaint::MemoryBlockFactory;
 
 //#define ENABLE_TIMERS
 
-namespace spaint
-{
+namespace grove {
+
 PreemptiveRansac::PreemptiveRansac() :
     m_timerCandidateGeneration("Candidate Generation"), m_timerFirstComputeEnergy(
         "First Energy Computation"), m_timerFirstTrim("First Trim"), m_timerTotal(
@@ -348,6 +350,8 @@ struct PointForLM
   {
   }
 
+  // If we use ceres uncomment
+#if 0
   template<typename T>
   inline bool operator()(const T * const camera, T *residual) const
   {
@@ -400,6 +404,7 @@ struct PointForLM
 //    residual[0] = ceres::DotProduct(pointDiff, pointDiff);
     return true;
   }
+#endif
 };
 
 typedef std::vector<PointForLM> PointsForLM;

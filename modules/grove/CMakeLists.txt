@@ -14,6 +14,7 @@ SET(targetname grove)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
@@ -86,7 +87,26 @@ SET(forests_interface_templates include/grove/forests/interface/DecisionForest.t
 SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
 
 ##
+SET(ransac_headers include/grove/ransac/RansacFactory.h)
+SET(ransac_sources src/ransac/RansacFactory.cpp)
+
+##
 SET(ransac_base_headers include/grove/ransac/base/PoseCandidate.h)
+
+##
+SET(ransac_cpu_headers include/grove/ransac/cpu/PreemptiveRansac_CPU.h)
+SET(ransac_cpu_sources src/ransac/cpu/PreemptiveRansac_CPU.cpp)
+
+##
+SET(ransac_cuda_headers include/grove/ransac/cuda/PreemptiveRansac_CUDA.h)
+SET(ransac_cuda_sources src/ransac/cuda/PreemptiveRansac_CUDA.cu)
+
+##
+SET(ransac_interface_headers include/grove/ransac/interface/PreemptiveRansac.h)
+SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
+
+##
+SET(ransac_shared_headers include/grove/ransac/shared/PreemptiveRansac_Shared.h)
 
 ##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
@@ -127,6 +147,9 @@ ENDIF()
 
 SET(sources
 ${features_sources}
+${ransac_sources}
+${ransac_cpu_sources}
+${ransac_interface_sources}
 ${toplevel_sources}
 )
 
@@ -144,7 +167,11 @@ ${forests_headers}
 ${forests_cpu_headers}
 ${forests_interface_headers}
 ${forests_shared_headers}
+${ransac_headers}
 ${ransac_base_headers}
+${ransac_cpu_headers}
+${ransac_interface_headers}
+${ransac_shared_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
@@ -172,11 +199,13 @@ IF(WITH_CUDA)
       ${clustering_cuda_headers}
       ${features_cuda_headers}
       ${forests_cuda_headers}
+      ${ransac_cuda_headers}
       ${reservoirs_cuda_headers}
       )
       
   SET(sources
       ${sources}
+      ${ransac_cuda_sources}
       ${reservoirs_cuda_sources}
       )
       
@@ -210,7 +239,12 @@ SOURCE_GROUP(forests\\cpu FILES ${forests_cpu_headers} ${forests_cpu_templates})
 SOURCE_GROUP(forests\\cuda FILES ${forests_cuda_headers} ${forests_cuda_templates})
 SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
+SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
 SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
+SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})
+SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
+SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
+SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
