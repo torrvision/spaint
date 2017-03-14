@@ -109,6 +109,10 @@ SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
 SET(ransac_shared_headers include/grove/ransac/shared/PreemptiveRansac_Shared.h)
 
 ##
+SET(relocalisation_interface_headers include/grove/relocalisation/interface/ScoreRelocaliser.h)
+SET(relocalisation_interface_sources src/relocalisation/interface/ScoreRelocaliser.cpp)
+
+##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
 SET(reservoirs_templates include/grove/reservoirs/ExampleReservoirsFactory.tpp)
 
@@ -150,6 +154,7 @@ ${features_sources}
 ${ransac_sources}
 ${ransac_cpu_sources}
 ${ransac_interface_sources}
+${relocalisation_interface_sources}
 ${toplevel_sources}
 )
 
@@ -172,6 +177,7 @@ ${ransac_base_headers}
 ${ransac_cpu_headers}
 ${ransac_interface_headers}
 ${ransac_shared_headers}
+${relocalisation_interface_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
@@ -245,6 +251,7 @@ SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})
 SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
 SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
 SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
+SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_headers} ${relocalisation_interface_sources})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
