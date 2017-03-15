@@ -9,6 +9,7 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Utils/ITMLibSettings.h>
 #include <ITMLib/Utils/ITMImageTypes.h>
 #include <ORUtils/Image.h>
@@ -52,7 +53,7 @@ public:
   virtual ~ScoreRelocaliser();
 
   void reset();
-  void integrate_measurements(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose);
+  void integrate_measurements(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &cameraPose);
   void idle_update();
   boost::optional<PoseCandidate> estimate_pose(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
 
@@ -60,6 +61,7 @@ protected:
   virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices, const ScorePredictionsBlock_CPtr &leafPredictions, ScorePredictionsImage_Ptr &outputPredictions) const = 0;
 
 protected:
+  typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> ITMLowLevelEngine_Ptr;
   uint32_t m_reservoirsCapacity;
   uint32_t m_rngSeed;
   float m_clustererSigma;
@@ -73,6 +75,7 @@ protected:
   Reservoirs_Ptr m_exampleReservoirs;
   Clusterer_Ptr m_exampleClusterer;
   PreemptiveRansac_Ptr m_preemptiveRansac;
+  ITMLowLevelEngine_Ptr m_lowLevelEngine;
 
   ScorePredictionsBlock_Ptr m_predictionsBlock;
 

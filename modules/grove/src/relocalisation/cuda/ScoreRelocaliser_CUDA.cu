@@ -5,6 +5,8 @@
 
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 
+#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
+using ITMLib::ITMLowLevelEngineFactory;
 #include <ITMLib/Utils/ITMLibSettings.h>
 using ITMLib::ITMLibSettings;
 
@@ -52,7 +54,10 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename)
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(ITMLibSettings::DEVICE_CUDA, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
 
   // RANSAC is forced to the CPU implementation for now, the CUDA one is slower.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU);
+//  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA);
+
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CUDA));
 
   // Clear state
   reset();

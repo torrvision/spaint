@@ -47,10 +47,10 @@ void ScoreRelocaliser::reset()
   m_reservoirUpdateStartIdx = 0;
 }
 
-void ScoreRelocaliser::integrate_measurements(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
+void ScoreRelocaliser::integrate_measurements(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &cameraPose)
 {
   // First: select keypoints and compute descriptors.
-  compute_features(colourImage, depthImage, depthIntrinsics, cameraPose.GetInvM());
+  compute_features(colourImage, depthImage, depthIntrinsics, cameraPose);
 
   // Second: find the leaves associated to the keypoints.
   m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
@@ -88,21 +88,29 @@ void ScoreRelocaliser::idle_update()
 
 boost::optional<PoseCandidate> ScoreRelocaliser::estimate_pose(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics)
 {
-  // We don't have a camera pose, use the identity when computing the keypoints, to get coordinates in camera space.
-  Matrix4f identity;
-  identity.setIdentity();
+  boost::optional<PoseCandidate> result;
 
-  // First: select keypoints and compute descriptors.
-  compute_features(colourImage, depthImage, depthIntrinsics, identity);
+  // Try to estimate a pose only if we have enough depth values.
+  if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  {
+    // We don't have a camera pose, use the identity when computing the keypoints, to get coordinates in camera space.
+    Matrix4f identity;
+    identity.setIdentity();
 
-  // Second: find the leaves associated to the keypoints.
-  m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+    // First: select keypoints and compute descriptors.
+    compute_features(colourImage, depthImage, depthIntrinsics, identity);
 
-  // Third: get the predictions associated to those leaves.
-  get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
+    // Second: find the leaves associated to the keypoints.
+    m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
 
-  // Finally: perform RANSAC.
-  return m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
+    // Third: get the predictions associated to those leaves.
+    get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
+
+    // Finally: perform RANSAC.
+    result = m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
+  }
+
+  return result;
 }
 
 void ScoreRelocaliser::compute_features(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose) const

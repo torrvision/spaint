@@ -5,6 +5,8 @@
 
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 
+#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
+using ITMLib::ITMLowLevelEngineFactory;
 #include <ITMLib/Utils/ITMLibSettings.h>
 using ITMLib::ITMLibSettings;
 
@@ -35,6 +37,8 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string &forestFilename)
   m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(ITMLibSettings::DEVICE_CPU, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
   m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU);
+
+  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(ITMLibSettings::DEVICE_CPU));
 
   // Clear state
   reset();

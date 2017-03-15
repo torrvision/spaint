@@ -221,13 +221,11 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   ck_compute_energies<<<gridSize, blockSize>>>(keypoints, predictions, inliers, nbInliers, poseCandidates, nbPoseCandidates);
   ORcudaKernelCheck;
 
-  throw std::runtime_error("build fails with the following thrust call");
+//  throw std::runtime_error("build fails with the following thrust call");
 
-//  // Sort by ascending energy
-//  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
-//  thrust::device_ptr<PoseCandidate> candidatesEnd(
-//      poseCandidates + nbPoseCandidates);
-//  thrust::sort(candidatesStart, candidatesEnd, &test);
+  // Sort by ascending energy
+  thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
+  thrust::device_ptr<PoseCandidate> candidatesEnd(poseCandidates + nbPoseCandidates);
 }
 
 void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
