@@ -34,6 +34,7 @@ public:
   typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
   typedef ORUtils::Image<LeafIndices> LeafIndicesImage;
   typedef boost::shared_ptr<LeafIndicesImage> LeafIndicesImage_Ptr;
+  typedef boost::shared_ptr<const LeafIndicesImage> LeafIndicesImage_CPtr;
 
   typedef ExampleClusterer<ExampleType, ClusterType> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
@@ -44,14 +45,29 @@ public:
   typedef ExampleReservoirs<ExampleType> Reservoirs;
   typedef boost::shared_ptr<Reservoirs> Reservoirs_Ptr;
 
-  explicit ScoreRelocaliser(ITMLib::ITMLibSettings::DeviceType deviceType, const std::string &forestFilename);
+protected:
+  ScoreRelocaliser(const std::string &forestFilename);
+
+public:
+  virtual ~ScoreRelocaliser();
 
   void reset();
   void integrate_measurements(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose);
   void idle_update();
-  boost::optional<ORUtils::SE3Pose> estimate_pose(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage) const;
+  boost::optional<PoseCandidate> estimate_pose(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
 
-private:
+protected:
+  virtual void get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices, const ScorePredictionsBlock_CPtr &leafPredictions, ScorePredictionsImage_Ptr &outputPredictions) const = 0;
+
+protected:
+  uint32_t m_reservoirsCapacity;
+  uint32_t m_rngSeed;
+  float m_clustererSigma;
+  float m_clustererTau;
+  uint32_t m_maxClusterCount;
+  uint32_t m_minClusterSize;
+  std::string m_forestFilename;
+
   DA_RGBDPatchFeatureCalculator_Ptr m_featureCalculator;
   ScoreForest_Ptr m_scoreForest;
   Reservoirs_Ptr m_exampleReservoirs;
@@ -66,6 +82,7 @@ private:
   uint32_t m_lastFeaturesAddedStartIdx;
   uint32_t m_reservoirUpdateStartIdx;
 
+private:
   // Per-frame data
   Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
@@ -77,6 +94,9 @@ private:
   uint32_t compute_nb_reservoirs_to_update() const;
   void update_reservoir_start_idx();
 };
+
+typedef boost::shared_ptr<ScoreRelocaliser> ScoreRelocaliser_Ptr;
+typedef boost::shared_ptr<const ScoreRelocaliser> ScoreRelocaliser_CPtr;
 
 }
 

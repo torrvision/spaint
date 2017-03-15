@@ -8,48 +8,35 @@
 #include <spaint/util/MemoryBlockFactory.h>
 using spaint::MemoryBlockFactory;
 
-#include "clustering/ExampleClustererFactory.h"
-#include "features/FeatureCalculatorFactory.h"
-#include "forests/DecisionForestFactory.h"
-#include "ransac/RansacFactory.h"
-#include "reservoirs/ExampleReservoirsFactory.h"
-
 namespace grove {
 
-ScoreRelocaliser::ScoreRelocaliser(ITMLib::ITMLibSettings::DeviceType deviceType, const std::string &forestFilename)
+ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
 {
-  m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(deviceType);
-  m_scoreForest = DecisionForestFactory<DescriptorType, TREE_COUNT>::make_forest(deviceType, forestFilename);
+  // Just set the variables, instantiation of the sub-algorithms is left to the sub class.
+  m_forestFilename = forestFilename;
 
-  m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  const uint32_t reservoirCapacity = 1024;
-  const uint32_t rngSeed = 42;
-  m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(deviceType, reservoirCapacity, m_reservoirsCount, rngSeed);
+  // except m_reservoirsCount since that number depends on the forest.
+  m_reservoirsCapacity = 1024;
+  m_rngSeed = 42;
 
   // Tentative values
-  const float clustererSigma = 0.1f;
-  const float clustererTau = 0.05f;
-  const uint32_t maxClusterCount = Prediction3DColour::MAX_MODES;
-  const uint32_t minClusterSize = 20;
-  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(deviceType, clustererSigma, clustererTau, maxClusterCount, minClusterSize);
+  m_clustererSigma = 0.1f;
+  m_clustererTau = 0.05f;
+  m_maxClusterCount = Prediction3DColour::MAX_MODES;
+  m_minClusterSize = 20;
 
-  // CUDA implementation is slow, force CPU for now. TODO: fix.
-//  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(deviceType);
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLib::ITMLibSettings::DEVICE_CPU);
-
-  // Setup memory blocks/images
+  // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_predictionsBlock = mbf.make_block<ClusterType>(m_reservoirsCount);
   m_predictionsImage = mbf.make_image<ClusterType>();
   m_rgbdPatchDescriptorImage = mbf.make_image<DescriptorType>();
   m_rgbdPatchKeypointsImage = mbf.make_image<ExampleType>();
   m_leafIndicesImage = mbf.make_image<LeafIndices>();
 
   m_maxReservoirsToUpdate = 256;
-
-  // Clear state
-  reset();
 }
+
+ScoreRelocaliser::~ScoreRelocaliser()
+{}
 
 void ScoreRelocaliser::reset()
 {
@@ -97,6 +84,25 @@ void ScoreRelocaliser::idle_update()
   m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(), m_exampleReservoirs->get_reservoirs_size(), m_predictionsBlock, m_reservoirUpdateStartIdx, updateCount);
 
   update_reservoir_start_idx();
+}
+
+boost::optional<PoseCandidate> ScoreRelocaliser::estimate_pose(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics)
+{
+  // We don't have a camera pose, use the identity when computing the keypoints, to get coordinates in camera space.
+  Matrix4f identity;
+  identity.setIdentity();
+
+  // First: select keypoints and compute descriptors.
+  compute_features(colourImage, depthImage, depthIntrinsics, identity);
+
+  // Second: find the leaves associated to the keypoints.
+  m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+
+  // Third: get the predictions associated to those leaves.
+  get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
+
+  // Finally: perform RANSAC.
+  return m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
 }
 
 void ScoreRelocaliser::compute_features(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose) const

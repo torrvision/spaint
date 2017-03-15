@@ -109,8 +109,23 @@ SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
 SET(ransac_shared_headers include/grove/ransac/shared/PreemptiveRansac_Shared.h)
 
 ##
+SET(relocalisation_headers include/grove/relocalisation/RelocaliserFactory.h)
+SET(relocalisation_sources src/relocalisation/RelocaliserFactory.cpp)
+
+##
+SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)
+SET(relocalisation_cpu_sources src/relocalisation/cpu/ScoreRelocaliser_CPU.cpp)
+
+##
+SET(relocalisation_cuda_headers include/grove/relocalisation/cuda/ScoreRelocaliser_CUDA.h)
+SET(relocalisation_cuda_sources src/relocalisation/cuda/ScoreRelocaliser_CUDA.cu)
+
+##
 SET(relocalisation_interface_headers include/grove/relocalisation/interface/ScoreRelocaliser.h)
 SET(relocalisation_interface_sources src/relocalisation/interface/ScoreRelocaliser.cpp)
+
+##
+SET(relocalisation_shared_headers include/grove/relocalisation/shared/ScoreRelocaliser_Shared.h)
 
 ##
 SET(reservoirs_headers include/grove/reservoirs/ExampleReservoirsFactory.h)
@@ -154,6 +169,8 @@ ${features_sources}
 ${ransac_sources}
 ${ransac_cpu_sources}
 ${ransac_interface_sources}
+${relocalisation_sources}
+${relocalisation_cpu_sources}
 ${relocalisation_interface_sources}
 ${toplevel_sources}
 )
@@ -177,7 +194,10 @@ ${ransac_base_headers}
 ${ransac_cpu_headers}
 ${ransac_interface_headers}
 ${ransac_shared_headers}
+${relocalisation_headers}
+${relocalisation_cpu_headers}
 ${relocalisation_interface_headers}
+${relocalisation_shared_headers}
 ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
@@ -206,12 +226,14 @@ IF(WITH_CUDA)
       ${features_cuda_headers}
       ${forests_cuda_headers}
       ${ransac_cuda_headers}
+      ${relocalisation_cuda_headers}
       ${reservoirs_cuda_headers}
       )
       
   SET(sources
       ${sources}
       ${ransac_cuda_sources}
+      ${relocalisation_cuda_sources}
       ${reservoirs_cuda_sources}
       )
       
@@ -251,7 +273,11 @@ SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})
 SOURCE_GROUP(ransac\\cuda FILES ${ransac_cuda_headers} ${ransac_cuda_sources})
 SOURCE_GROUP(ransac\\interface FILES ${ransac_interface_headers} ${ransac_interface_sources})
 SOURCE_GROUP(ransac\\shared FILES ${ransac_shared_headers})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_headers} ${relocalisation_sources})
+SOURCE_GROUP(relocalisation\\cpu FILES ${relocalisation_cpu_headers} ${relocalisation_cpu_sources})
+SOURCE_GROUP(relocalisation\\cuda FILES ${relocalisation_cuda_headers} ${relocalisation_cuda_sources})
 SOURCE_GROUP(relocalisation\\interface FILES ${relocalisation_interface_headers} ${relocalisation_interface_sources})
+SOURCE_GROUP(relocalisation\\shared FILES ${relocalisation_shared_headers})
 SOURCE_GROUP(reservoirs FILES ${reservoirs_sources} ${reservoirs_headers} ${reservoirs_templates})
 SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_templates})
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
