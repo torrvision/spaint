@@ -3,5 +3,5 @@
 ###################
 
 IF(BUILD_GROVE)
-  TARGET_LINK_LIBRARIES(${targetname} grove)
+  TARGET_LINK_LIBRARIES(${targetname} grove cudadevrt)
 ENDIF()
