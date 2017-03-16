@@ -15,11 +15,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <grove/features/interface/RGBDPatchFeatureCalculator.h>
-#include <grove/ransac/interface/PreemptiveRansac.h>
-using namespace grove;
-
-#include "../randomforest/interface/ScoreForest.h"
+#include <grove/relocalisation/interface/ScoreRelocaliser.h>
 
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
 
@@ -61,25 +57,17 @@ public:
 protected:
   virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
 
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
-  boost::optional<PoseCandidate> estimate_pose();
-  void compute_features(const ITMUChar4Image *inputRgbImage,
-      const ITMFloatImage *inputDepthImage, const Vector4f &depthIntrinsics,
-      const Matrix4f &invCameraPose);
-  void compute_features(const ITMUChar4Image *inputRgbImage,
-      const ITMFloatImage *inputDepthImage, const Vector4f &depthIntrinsics);
-  void evaluate_forest();
-
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  DA_RGBDPatchFeatureCalculator_Ptr m_featureExtractor;
-  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
-  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
-  ScorePredictionsImage_Ptr m_predictionsImage;
-  ScoreForest_Ptr m_relocalisationForest;
+  grove::ScoreRelocaliser_Ptr m_scoreRelocaliser;
+
+//  DA_RGBDPatchFeatureCalculator_Ptr m_featureExtractor;
+//  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
+//  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
+//  ScorePredictionsImage_Ptr m_predictionsImage;
+//  ScoreForest_Ptr m_relocalisationForest;
   std::string m_relocalisationForestPath;
-  PreemptiveRansac_Ptr m_preemptiveRansac;
+//  PreemptiveRansac_Ptr m_preemptiveRansac;
   bool m_updateForestModesEveryFrame;
 
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;

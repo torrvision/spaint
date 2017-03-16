@@ -93,7 +93,6 @@ private:
   LeafIndicesImage_Ptr m_leafIndicesImage;
 
 private:
-  void compute_features(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose) const;
   uint32_t compute_nb_reservoirs_to_update() const;
   void update_reservoir_start_idx();
 };

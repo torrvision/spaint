@@ -50,7 +50,7 @@ void ScoreRelocaliser::reset()
 void ScoreRelocaliser::integrate_measurements(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &cameraPose)
 {
   // First: select keypoints and compute descriptors.
-  compute_features(colourImage, depthImage, depthIntrinsics, cameraPose);
+  m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, cameraPose, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
 
   // Second: find the leaves associated to the keypoints.
   m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
@@ -80,7 +80,6 @@ void ScoreRelocaliser::idle_update()
     return;
 
   const uint32_t updateCount = compute_nb_reservoirs_to_update();
-
   m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(), m_exampleReservoirs->get_reservoirs_size(), m_predictionsBlock, m_reservoirUpdateStartIdx, updateCount);
 
   update_reservoir_start_idx();
@@ -93,12 +92,8 @@ boost::optional<PoseCandidate> ScoreRelocaliser::estimate_pose(const ITMUChar4Im
   // Try to estimate a pose only if we have enough depth values.
   if(m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
-    // We don't have a camera pose, use the identity when computing the keypoints, to get coordinates in camera space.
-    Matrix4f identity;
-    identity.setIdentity();
-
     // First: select keypoints and compute descriptors.
-    compute_features(colourImage, depthImage, depthIntrinsics, identity);
+    m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
 
     // Second: find the leaves associated to the keypoints.
     m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
@@ -111,12 +106,6 @@ boost::optional<PoseCandidate> ScoreRelocaliser::estimate_pose(const ITMUChar4Im
   }
 
   return result;
-}
-
-void ScoreRelocaliser::compute_features(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics, const Matrix4f &invCameraPose) const
-{
-  m_featureCalculator->compute_keypoints_and_features(colourImage, depthImage, invCameraPose,
-                                                      depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
 }
 
 uint32_t ScoreRelocaliser::compute_nb_reservoirs_to_update() const

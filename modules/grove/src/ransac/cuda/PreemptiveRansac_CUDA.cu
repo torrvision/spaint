@@ -226,6 +226,7 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
   // Sort by ascending energy
   thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
   thrust::device_ptr<PoseCandidate> candidatesEnd(poseCandidates + nbPoseCandidates);
+  thrust::sort(candidatesStart, candidatesEnd);
 }
 
 void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
