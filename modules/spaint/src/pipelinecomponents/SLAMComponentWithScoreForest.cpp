@@ -8,7 +8,6 @@
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 #include "ITMLib/Utils/ITMProjectionUtils.h"
 
-#include "randomforest/cuda/ScoreForest_CUDA.h"
 #include "util/PosePersister.h"
 
 #include "tvgutil/containers/ParametersContainer.h"
@@ -17,8 +16,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <grove/features/FeatureCalculatorFactory.h>
-#include <grove/ransac/RansacFactory.h>
 #include <grove/relocalisation/RelocaliserFactory.h>
 
 //#define ENABLE_TIMERS
@@ -42,6 +39,7 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 using namespace FernRelocLib;
+using namespace grove;
 using namespace tvgutil;
 
 namespace spaint

@@ -31,7 +31,6 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseTBB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
@@ -343,14 +342,6 @@ include/spaint/propagation/shared/LabelPropagator_Shared.h
 )
 
 ##
-SET(randomforest_cuda_sources
-src/randomforest/cuda/ScoreForest_CUDA.cu
-)
-
-SET(randomforest_interface_sources
-src/randomforest/interface/ScoreForest.cpp
-)
-
 SET(randomforest_sources
 src/randomforest/ForestUtil.cpp
 src/randomforest/SpaintDecisionFunctionGenerator.cpp
@@ -358,20 +349,7 @@ src/randomforest/SpaintDecisionFunctionGenerator.cpp
 
 SET(randomforest_headers
 include/spaint/randomforest/ForestUtil.h
-include/spaint/randomforest/ScoreForestTypes.h
 include/spaint/randomforest/SpaintDecisionFunctionGenerator.h
-)
-
-SET(randomforest_cuda_headers
-include/spaint/randomforest/cuda/ScoreForest_CUDA.h
-)
-
-SET(randomforest_interface_headers
-include/spaint/randomforest/interface/ScoreForest.h
-)
-
-SET(randomforest_shared_headers
-include/spaint/randomforest/shared/ScoreForest_Shared.h
 )
 
 ##
@@ -697,7 +675,6 @@ ${propagation_sources}
 ${propagation_cpu_sources}
 ${propagation_interface_sources}
 ${randomforest_sources}
-${randomforest_interface_sources}
 ${sampling_sources}
 ${sampling_cpu_sources}
 ${sampling_interface_sources}
@@ -741,8 +718,6 @@ ${propagation_cpu_headers}
 ${propagation_interface_headers}
 ${propagation_shared_headers}
 ${randomforest_headers}
-${randomforest_interface_headers}
-${randomforest_shared_headers}
 ${sampling_headers}
 ${sampling_cpu_headers}
 ${sampling_interface_headers}
@@ -786,7 +761,6 @@ IF(WITH_CUDA)
     ${markers_cuda_sources}
     ${picking_cuda_sources}
     ${propagation_cuda_sources}
-    ${randomforest_cuda_sources}
     ${sampling_cuda_sources}
     ${selectiontransformers_cuda_sources}
     ${smoothing_cuda_sources}
@@ -798,7 +772,6 @@ IF(WITH_CUDA)
     ${markers_cuda_headers}
     ${picking_cuda_headers}
     ${propagation_cuda_headers}
-    ${randomforest_cuda_headers}
     ${sampling_cuda_headers}
     ${selectiontransformers_cuda_headers}
     ${smoothing_cuda_headers}
@@ -852,9 +825,6 @@ SOURCE_GROUP(propagation\\cuda FILES ${propagation_cuda_sources} ${propagation_c
 SOURCE_GROUP(propagation\\interface FILES ${propagation_interface_sources} ${propagation_interface_headers})
 SOURCE_GROUP(propagation\\shared FILES ${propagation_shared_headers})
 SOURCE_GROUP(randomforest FILES ${randomforest_sources} ${randomforest_headers})
-SOURCE_GROUP(randomforest\\cuda FILES ${randomforest_cuda_sources} ${randomforest_cuda_headers})
-SOURCE_GROUP(randomforest\\interface FILES ${randomforest_interface_sources} ${randomforest_interface_headers})
-SOURCE_GROUP(randomforest\\shared FILES ${randomforest_shared_headers})
 SOURCE_GROUP(sampling FILES ${sampling_sources} ${sampling_headers})
 SOURCE_GROUP(sampling\\cpu FILES ${sampling_cpu_sources} ${sampling_cpu_headers})
 SOURCE_GROUP(sampling\\cuda FILES ${sampling_cuda_sources} ${sampling_cuda_headers})
