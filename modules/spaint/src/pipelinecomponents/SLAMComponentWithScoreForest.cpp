@@ -1,5 +1,5 @@
 /**
- * spaint: SLAMComponent.cpp
+ * spaint: SLAMComponentWithScoreForest.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
@@ -60,26 +60,13 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   const static std::string parametersNamespace = "SLAMComponentWithScoreForest.";
   const ParametersContainer &parametersContainer = ParametersContainer::instance();
 
-//  m_featureExtractor = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(settings->deviceType);
-//  m_rgbdPatchKeypointsImage = mbf.make_image<Keypoint3DColour>();
-//  m_rgbdPatchDescriptorImage = mbf.make_image<RGBDPatchDescriptor>();
-//  m_predictionsImage = mbf.make_image<Prediction3DColour>();
-
   const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf").string();
   m_relocalisationForestPath = parametersContainer.get_string(parametersNamespace + "m_relocalisationForestPath", defaultRelocalisationForestPath);
   std::cout << "Loading relocalization forest from: " << m_relocalisationForestPath << '\n';
 
-//  m_relocalisationForest.reset(new ScoreForest_CUDA(m_relocalisationForestPath));
   m_updateForestModesEveryFrame = true;
 
   m_scoreRelocaliser = RelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocalisationForestPath);
-
-//  m_preemptiveRansac.reset(new PreemptiveRansac_CUDA());
-//  m_preemptiveRansac.reset(new PreemptiveRansac_CPU());
-
-  // Force CPU ransac for now, the GPU implementation is slower.
-  //  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(settings->deviceType);
-//  m_preemptiveRansac = RansacFactory::make_preemptive_ransac((ITMLibSettings::DEVICE_CPU));
 
   // Refinement ICP tracker
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
@@ -203,7 +190,6 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         "update forest, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_scoreRelocaliser->idle_update();
-//    cudaDeviceSynchronize();
   }
 
   if (performRelocalization)
@@ -250,21 +236,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     exit(0);
 #endif
 
-    boost::optional<PoseCandidate> pose_candidate =
-        m_scoreRelocaliser->estimate_pose(inputRGBImage, inputDepthImage, depthIntrinsics);
-
-//    compute_features(inputRGBImage, inputDepthImage, depthIntrinsics);
-//    evaluate_forest();
-//    boost::optional<PoseCandidate> pose_candidate =
-//        m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage,
-//            m_predictionsImage);
+    boost::optional<PoseCandidate> pose_candidate = m_scoreRelocaliser->estimate_pose(inputRGBImage, inputDepthImage, depthIntrinsics);
 
     if (pose_candidate)
     {
-//      std::cout << "The final pose is:" << pose_candidate->cameraPose
-//          << "\n and has " << pose_candidate->nbInliers << " inliers."
-//          << std::endl;
-
 #ifdef VISUALIZE_INLIERS
       cv::Mat inliers = cv::Mat::zeros(
           cv::Size(m_rgbdPatchDescriptorImage->noDims.width, m_rgbdPatchDescriptorImage->noDims.height),
@@ -324,8 +299,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
       trackingState->pose_d->SetInvM(pose_candidate->cameraPose);
 
-      VoxelRenderState_Ptr liveVoxelRenderState =
-          slamState->get_live_voxel_render_state();
+      VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
       SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
       const bool resetVisibleList = true;
       m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(),
@@ -572,18 +546,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   if (performLearning)
   {
-    Matrix4f invCameraPose = trackedPose.GetInvM();
-//    compute_features(inputRGBImage, inputDepthImage, depthIntrinsics,
-//        invCameraPose);
-
 //#ifdef ENABLE_TIMERS
 //    boost::timer::auto_cpu_timer t(6,
 //        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 //#endif
 
-//    m_relocalisationForest->add_features_to_forest(m_rgbdPatchKeypointsImage,
-//        m_rgbdPatchDescriptorImage);
-
+    const Matrix4f invCameraPose = trackedPose.GetInvM();
     m_scoreRelocaliser->integrate_measurements(inputRGBImage, inputDepthImage, depthIntrinsics, invCameraPose);
 
     if (relocalizationTimer)

@@ -61,13 +61,7 @@ protected:
 private:
   grove::ScoreRelocaliser_Ptr m_scoreRelocaliser;
 
-//  DA_RGBDPatchFeatureCalculator_Ptr m_featureExtractor;
-//  Keypoint3DColourImage_Ptr m_rgbdPatchKeypointsImage;
-//  RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;
-//  ScorePredictionsImage_Ptr m_predictionsImage;
-//  ScoreForest_Ptr m_relocalisationForest;
   std::string m_relocalisationForestPath;
-//  PreemptiveRansac_Ptr m_preemptiveRansac;
   bool m_updateForestModesEveryFrame;
 
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
