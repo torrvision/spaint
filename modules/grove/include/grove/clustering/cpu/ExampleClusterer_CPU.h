@@ -1,10 +1,10 @@
 /**
- * grove: ExampleClusterer_CUDA.h
+ * grove: ExampleClusterer_CPU.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_EXAMPLECLUSTERERCUDA
-#define H_GROVE_EXAMPLECLUSTERERCUDA
+#ifndef H_GROVE_EXAMPLECLUSTERERCPU
+#define H_GROVE_EXAMPLECLUSTERERCPU
 
 #include "../interface/ExampleClusterer.h"
 
@@ -12,7 +12,7 @@ namespace grove
 {
 
 template <typename ExampleType, typename ClusterType>
-class ExampleClusterer_CUDA : public ExampleClusterer<ExampleType, ClusterType>
+class ExampleClusterer_CPU : public ExampleClusterer<ExampleType, ClusterType>
 {
 public:
   using typename ExampleClusterer<ExampleType, ClusterType>::ClusterBlock;
@@ -24,7 +24,7 @@ public:
   using typename ExampleClusterer<ExampleType, ClusterType>::ExampleImage_CPtr;
 
 public:
-  ExampleClusterer_CUDA(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
+  ExampleClusterer_CPU(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
 protected:
   virtual const ExampleType* get_pointer_to_reservoir(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const;

@@ -32,7 +32,11 @@ SET(clustering_base_headers
     include/grove/clustering/base/Mode3DColour.h
     include/grove/clustering/base/Prediction3DColour.h
     )
-    
+
+##
+SET(clustering_cpu_headers include/grove/clustering/cpu/ExampleClusterer_CPU.h)
+SET(clustering_cpu_templates include/grove/clustering/cpu/ExampleClusterer_CPU.tpp)
+
 ##
 SET(clustering_cuda_headers include/grove/clustering/cuda/ExampleClusterer_CUDA.h)
 SET(clustering_cuda_templates include/grove/clustering/cuda/ExampleClusterer_CUDA.tcu)
@@ -178,6 +182,7 @@ ${toplevel_sources}
 SET(headers
 ${clustering_headers}
 ${clustering_base_headers}
+${clustering_cpu_headers}
 ${clustering_interface_headers}
 ${clustering_shared_headers}
 ${features_headers}
@@ -206,6 +211,7 @@ ${keypoints_headers}
 )
 
 SET(templates
+${clustering_cpu_templates}
 ${clustering_interface_templates}
 ${clustering_templates}
 ${features_templates}
@@ -253,6 +259,7 @@ ENDIF()
 SOURCE_GROUP("" FILES ${toplevel_sources})
 SOURCE_GROUP(clustering FILES ${clustering_headers} ${clustering_templates})
 SOURCE_GROUP(clustering\\base FILES ${clustering_base_headers})
+SOURCE_GROUP(clustering\\cpu FILES ${clustering_cpu_headers} ${clustering_cpu_templates})
 SOURCE_GROUP(clustering\\cuda FILES ${clustering_cuda_headers} ${clustering_cuda_templates})
 SOURCE_GROUP(clustering\\interface FILES ${clustering_interface_headers} ${clustering_interface_templates})
 SOURCE_GROUP(clustering\\shared FILES ${clustering_shared_headers})

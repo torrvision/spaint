@@ -5,7 +5,7 @@
 
 #include "ExampleClustererFactory.h"
 
-//#include "cpu/
+#include "cpu/ExampleClusterer_CPU.h"
 
 #ifdef WITH_CUDA
 #include "cuda/ExampleClusterer_CUDA.h"
@@ -30,7 +30,8 @@ typename ExampleClustererFactory<ExampleType, ClusterType>::Clusterer_Ptr Exampl
   }
   else
   {
-    throw std::runtime_error("Error: CPU implementation not available.");
+    clusterer.reset(
+        new ExampleClusterer_CPU<ExampleType, ClusterType>(sigma, tau, maxClusterCount, minClusterSize));
   }
 
   return clusterer;
