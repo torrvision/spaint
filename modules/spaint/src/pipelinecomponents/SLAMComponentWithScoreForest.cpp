@@ -67,6 +67,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_updateForestModesEveryFrame = true;
 
   m_scoreRelocaliser = RelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocalisationForestPath);
+//  m_scoreRelocaliser = RelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
 
   // Refinement ICP tracker
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);

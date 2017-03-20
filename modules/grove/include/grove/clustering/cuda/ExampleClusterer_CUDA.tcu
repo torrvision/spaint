@@ -9,8 +9,8 @@
 
 #include "../shared/ExampleClusterer_Shared.h"
 
-namespace grove
-{
+namespace grove {
+
 __global__ void ck_reset_temporaries(int *clustersPerReservoir,
     int *clusterSizes, int *clusterSizesHistogram, int reservoirCapacity)
 {
@@ -141,7 +141,7 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
     this->m_clusterSizesHistogram->ChangeDims(temporariesSize);
 
     this->m_selectedClusters->ChangeDims(Vector2i(this->m_maxClusterCount, count));
-    this->m_nbClustersPerReservoir->ChangeDims(Vector2i(1, count));
+    this->m_nbClustersPerReservoir->ChangeDims(count);
   }
 
   // Grab a pointer to the beginning of the first reservoir of interest (having index startIdx).
@@ -215,7 +215,138 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::find_modes(
 //          << m_clusterSizes->GetData(MEMORYDEVICE_CPU)[(i + startIdx)
 //              * reservoirCapacity + j] << " elements." << std::endl;
 //    }
-//  }
+  //  }
+}
+
+template<typename ExampleType, typename ClusterType>
+const ExampleType *ExampleClusterer_CUDA<ExampleType, ClusterType>::get_pointer_to_reservoir(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const
+{
+  const int reservoirCapacity = exampleReservoirs->noDims.width;
+  return exampleReservoirs->GetData(MEMORYDEVICE_CUDA) + reservoirIdx * reservoirCapacity;
+}
+
+template<typename ExampleType, typename ClusterType>
+const int *ExampleClusterer_CUDA<ExampleType, ClusterType>::get_pointer_to_reservoir_size(const ITMIntMemoryBlock_CPtr &exampleReservoirsSize, uint32_t reservoirIdx) const
+{
+  return exampleReservoirsSize->GetData(MEMORYDEVICE_CUDA) + reservoirIdx;
+}
+
+template<typename ExampleType, typename ClusterType>
+ClusterType *ExampleClusterer_CUDA<ExampleType, ClusterType>::get_pointer_to_prediction(const ClusterBlock_Ptr &predictions, uint32_t predictionIdx) const
+{
+  return predictions->GetData(MEMORYDEVICE_CUDA) + predictionIdx;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::reset_temporaries(uint32_t reservoirCapacity, uint32_t reservoirCount)
+{
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+
+  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
+
+  // 1 single block, 1 thread per reservoir
+  ck_reset_temporaries<<<1, gridSize>>>(nbClustersPerReservoir, clusterSizes, clusterSizesHistogram, reservoirCapacity);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::compute_modes(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount)
+{
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+  dim3 blockSize(maxClusterCount); // One thread per cluster
+
+  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
+
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+
+  int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
+
+  // 1 block per reservoir, 1 thread per cluster
+  ck_compute_modes<<<gridSize, blockSize>>>(examples, reservoirSizes, clusterIndices, selectedClusters, predictionsData, reservoirCapacity, maxClusterCount);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize, uint32_t reservoirCapacity, uint32_t reservoirCount)
+{
+  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
+  int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CUDA);
+
+  dim3 blockSize(reservoirCount); // One thread per reservoir
+  ck_select_clusters<<<1, blockSize>>>(clusterSizes, clusterSizesHistogram, nbClustersPerReservoir, selectedClusters, reservoirCapacity, maxClusterCount, minClusterSize);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::compute_cluster_size_histograms(uint32_t reservoirCapacity, uint32_t reservoirCount)
+{
+  dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+
+  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CUDA);
+
+  ck_compute_cluster_histogram<<<gridSize, blockSize>>>(clusterSizes, nbClustersPerReservoir, clusterSizesHistogram, reservoirCapacity);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::identify_clusters(uint32_t reservoirCapacity, uint32_t reservoirCount)
+{
+  dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+  int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CUDA);
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
+
+  ck_identify_clusters<<<gridSize, blockSize>>>(parents, clusterIndices, clusterSizes, reservoirCapacity);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::link_neighbors(const ExampleType *examples, const int *reservoirSizes, uint32_t reservoirCapacity, uint32_t reservoirCount, float tauSq)
+{
+  dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+
+  const float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
+  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CUDA);
+  int *parents = this->m_parents->GetData(MEMORYDEVICE_CUDA);
+  int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CUDA);
+
+  ck_link_neighbors<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, parents, clusterIndices,
+      nbClustersPerReservoir, reservoirCapacity, tauSq);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::compute_density(const ExampleType *examples, const int *reservoirSizes, uint32_t reservoirCapacity, uint32_t reservoirCount, float sigma)
+{
+  float *densities = this->m_densities->GetData(MEMORYDEVICE_CUDA);
+
+  dim3 blockSize(reservoirCapacity); // One thread per item in each reservoir
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+
+  ck_compute_density<<<gridSize, blockSize>>>(examples, reservoirSizes, densities, reservoirCapacity, sigma);
+  ORcudaKernelCheck;
+}
+
+template<typename ExampleType, typename ClusterType>
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::reset_predictions(ClusterType *predictionsData, uint32_t reservoirCount) const
+{
+  dim3 gridSize(reservoirCount); // One block per reservoir to process
+
+  ck_reset_predictions<<<1, gridSize>>>(predictionsData);
+  ORcudaKernelCheck;
 }
 
 }

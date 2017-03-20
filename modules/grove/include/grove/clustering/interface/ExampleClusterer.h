@@ -36,7 +36,7 @@ public:
   virtual void find_modes(const ExampleImage_CPtr &exampleReservoirs,
                           const ITMIntMemoryBlock_CPtr &keypointReservoirsSize,
                           ClusterBlock_Ptr &predictions,
-                          uint32_t startIdx, uint32_t count) = 0;
+                          uint32_t startIdx, uint32_t count);
 
 protected:
   float m_sigma;
@@ -50,7 +50,24 @@ protected:
   ITMIntImage_Ptr m_clusterSizes;
   ITMIntImage_Ptr m_clusterSizesHistogram;
   ITMIntImage_Ptr m_selectedClusters;
-  ITMIntImage_Ptr m_nbClustersPerReservoir;
+  ITMIntMemoryBlock_Ptr m_nbClustersPerReservoir;
+
+protected:
+  virtual const ExampleType* get_pointer_to_reservoir(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const = 0;
+  virtual const int* get_pointer_to_reservoir_size(const ITMIntMemoryBlock_CPtr &exampleReservoirsSize, uint32_t reservoirIdx) const = 0;
+  virtual ClusterType* get_pointer_to_prediction(const ClusterBlock_Ptr &predictions, uint32_t predictionIdx) const = 0;
+
+  virtual void reset_temporaries(uint32_t reservoirCapacity, uint32_t reservoirCount) = 0;
+  virtual void reset_predictions(ClusterType *predictionsData, uint32_t reservoirCount) const = 0;
+  virtual void compute_density(const ExampleType *examples, const int *reservoirSizes, uint32_t reservoirCapacity, uint32_t reservoirCount, float sigma) = 0;
+  virtual void link_neighbors(const ExampleType *examples, const int *reservoirSizes, uint32_t reservoirCapacity, uint32_t reservoirCount, float tauSq) = 0;
+  virtual void identify_clusters(uint32_t reservoirCapacity, uint32_t reservoirCount) = 0;
+  virtual void compute_cluster_size_histograms(uint32_t reservoirCapacity, uint32_t reservoirCount) = 0;
+  virtual void select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize, uint32_t reservoirCapacity, uint32_t reservoirCount) = 0;
+  virtual void compute_modes(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount) = 0;
+
+private:
+  void allocate_temporaries(uint32_t reservoirCapacity, uint32_t reservoirCount);
 };
 
 }
