@@ -67,6 +67,9 @@ void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleCluster
   // Identify clusters
   identify_clusters(reservoirCapacity, count);
 
+  // Compute cluster size histogram
+  compute_cluster_size_histograms(reservoirCapacity, count);
+
   // Select best clusters
   select_clusters(m_maxClusterCount, m_minClusterSize, reservoirCapacity, count);
 

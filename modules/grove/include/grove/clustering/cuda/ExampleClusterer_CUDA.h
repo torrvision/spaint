@@ -26,10 +26,10 @@ public:
 public:
   ExampleClusterer_CUDA(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
-  virtual void find_modes(const ExampleImage_CPtr &exampleReservoirs,
-                          const ITMIntMemoryBlock_CPtr &keypointReservoirsSize,
-                          ClusterBlock_Ptr &predictions,
-                          uint32_t startIdx, uint32_t count);
+  void find_modes(const ExampleImage_CPtr &exampleReservoirs,
+                  const ITMIntMemoryBlock_CPtr &keypointReservoirsSize,
+                  ClusterBlock_Ptr &predictions,
+                  uint32_t startIdx, uint32_t count);
 
 protected:
   virtual const ExampleType* get_pointer_to_reservoir(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const;
