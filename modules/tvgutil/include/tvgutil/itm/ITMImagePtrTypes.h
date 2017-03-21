@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_ITMIMAGEPTRTYPES
-#define H_SPAINT_ITMIMAGEPTRTYPES
+#ifndef H_TVGUTIL_ITMIMAGEPTRTYPES
+#define H_TVGUTIL_ITMIMAGEPTRTYPES
 
 #include <boost/shared_ptr.hpp>
 

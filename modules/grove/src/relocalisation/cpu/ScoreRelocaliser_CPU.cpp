@@ -10,8 +10,8 @@ using ITMLib::ITMLowLevelEngineFactory;
 #include <ITMLib/Utils/ITMLibSettings.h>
 using ITMLib::ITMLibSettings;
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
 
 #include "clustering/ExampleClustererFactory.h"
 #include "features/FeatureCalculatorFactory.h"

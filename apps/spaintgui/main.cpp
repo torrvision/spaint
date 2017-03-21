@@ -33,11 +33,11 @@ using namespace ITMLib;
 #endif
 
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
-#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
 
 #include <tvgutil/containers/ParametersContainer.h>
 #include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/itm/MemoryBlockFactory.h>
 using namespace tvgutil;
 
 #include "core/ObjectivePipeline.h"

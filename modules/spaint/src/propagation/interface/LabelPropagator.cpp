@@ -5,7 +5,8 @@
 
 #include "propagation/interface/LabelPropagator.h"
 
-#include "util/MemoryBlockFactory.h"
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
 
 namespace spaint {
 

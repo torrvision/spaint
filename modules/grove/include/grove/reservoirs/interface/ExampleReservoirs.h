@@ -8,11 +8,10 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include <spaint/util/ITMImagePtrTypes.h>
-#include <spaint/util/ITMMemoryBlockPtrTypes.h>
+#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <tvgutil/itm/ITMMemoryBlockPtrTypes.h>
 
-namespace grove
-{
+namespace grove {
 
 /**
  * \brief An instance of a class deriving from this one can be used to store a number of "Examples" in a set of fixed-size reservoirs.

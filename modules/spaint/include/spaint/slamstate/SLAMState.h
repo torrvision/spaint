@@ -8,8 +8,9 @@
 
 #include <map>
 
+#include <tvgutil/itm/ITMImagePtrTypes.h>
+
 #include "../fiducials/Fiducial.h"
-#include "../util/ITMImagePtrTypes.h"
 #include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintSurfelScene.h"
 #include "../util/SpaintVoxelScene.h"

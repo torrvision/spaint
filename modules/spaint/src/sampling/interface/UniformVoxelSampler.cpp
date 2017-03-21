@@ -5,9 +5,9 @@
 
 #include "sampling/interface/UniformVoxelSampler.h"
 
+#include <tvgutil/itm/MemoryBlockFactory.h>
 #include <tvgutil/numbers/RandomNumberGenerator.h>
-
-#include "util/MemoryBlockFactory.h"
+using namespace tvgutil;
 
 namespace spaint {
 

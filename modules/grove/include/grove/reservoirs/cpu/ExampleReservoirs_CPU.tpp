@@ -5,12 +5,10 @@
 
 #include "ExampleReservoirs_CPU.h"
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
 
 #include "../shared/ExampleReservoirs_Shared.h"
-
-using namespace tvgutil;
 
 namespace grove {
 

@@ -12,10 +12,9 @@
 #include <Learner.hpp>
 #endif
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
-
+#include <tvgutil/itm/MemoryBlockFactory.h>
 #include <tvgutil/numbers/RandomNumberGenerator.h>
+using tvgutil::MemoryBlockFactory;
 using tvgutil::RandomNumberGenerator;
 
 // Whether to replace the pre-computed feature indices and thresholds with random ones.

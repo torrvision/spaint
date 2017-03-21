@@ -4,9 +4,10 @@
  */
 
 #include "MarkVoxelsCommand.h"
-
-#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
+
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 

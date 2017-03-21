@@ -3,10 +3,10 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "util/MemoryBlockFactory.h"
+#include "itm/MemoryBlockFactory.h"
 using namespace ITMLib;
 
-namespace spaint {
+namespace tvgutil {
 
 //#################### SINGLETON IMPLEMENTATION ####################
 

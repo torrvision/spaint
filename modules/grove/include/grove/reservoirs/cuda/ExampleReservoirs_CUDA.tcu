@@ -5,8 +5,7 @@
 
 #include "ExampleReservoirs_CUDA.h"
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
+#include <tvgutil/itm/MemoryBlockFactory.h>
 
 #include "../shared/ExampleReservoirs_Shared.h"
 

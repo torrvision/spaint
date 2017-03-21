@@ -5,7 +5,8 @@
 
 #include "features/interface/VOPFeatureCalculator.h"
 
-#include "util/MemoryBlockFactory.h"
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"

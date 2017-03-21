@@ -5,8 +5,8 @@
 
 #include "ExampleReservoirs.h"
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using tvgutil::MemoryBlockFactory;
 
 namespace grove {
 

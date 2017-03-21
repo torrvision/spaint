@@ -580,7 +580,6 @@ SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/ImagePersister.cpp
 src/util/LabelManager.cpp
-src/util/MemoryBlockFactory.cpp
 src/util/PosePersister.cpp
 src/util/RGBDUtil.cpp
 )
@@ -590,11 +589,8 @@ include/spaint/util/CameraFactory.h
 include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/ImagePersister.h
-include/spaint/util/ITMImagePtrTypes.h
-include/spaint/util/ITMMemoryBlockPtrTypes.h
 include/spaint/util/ITMObjectPtrTypes.h
 include/spaint/util/LabelManager.h
-include/spaint/util/MemoryBlockFactory.h
 include/spaint/util/PosePersister.h
 include/spaint/util/RGBDUtil.h
 include/spaint/util/SpaintSurfel.h
@@ -856,7 +852,6 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 # Specify additional include directories #
 ##########################################
 
-INCLUDE_DIRECTORIES(include/) # ugly hack to get the grove merge working, will need fixing
 INCLUDE_DIRECTORIES(include/spaint)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/grove/include)

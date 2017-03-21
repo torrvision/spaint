@@ -8,8 +8,7 @@
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
+#include <tvgutil/itm/MemoryBlockFactory.h>
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
 

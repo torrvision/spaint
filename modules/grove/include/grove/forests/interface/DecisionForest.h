@@ -11,7 +11,7 @@
 
 #include <ORUtils/Image.h>
 
-#include <spaint/util/ITMImagePtrTypes.h>
+#include <tvgutil/itm/ITMImagePtrTypes.h>
 
 #ifdef WITH_SCOREFORESTS
 // Forward declare stuff to avoid cluttering the global namespace with the every ScoreForest class.

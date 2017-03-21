@@ -3,8 +3,8 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_MEMORYBLOCKFACTORY
-#define H_SPAINT_MEMORYBLOCKFACTORY
+#ifndef H_TVGUTIL_MEMORYBLOCKFACTORY
+#define H_TVGUTIL_MEMORYBLOCKFACTORY
 
 #include <boost/shared_ptr.hpp>
 
@@ -13,7 +13,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
-namespace spaint {
+namespace tvgutil {
 
 /**
  * \brief An instance of this class can be used to make memory blocks.

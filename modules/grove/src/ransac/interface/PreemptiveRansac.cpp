@@ -17,8 +17,8 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <spaint/util/MemoryBlockFactory.h>
-using spaint::MemoryBlockFactory;
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
 
 //#define ENABLE_TIMERS
 

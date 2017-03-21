@@ -14,6 +14,7 @@ SET(targetname tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -57,6 +58,17 @@ SET(filesystem_headers
 include/tvgutil/filesystem/FilesystemUtil.h
 include/tvgutil/filesystem/PathFinder.h
 include/tvgutil/filesystem/SequentialPathGenerator.h
+)
+
+##
+SET(itm_sources
+src/itm/MemoryBlockFactory.cpp
+)
+
+SET(itm_headers
+include/tvgutil/itm/ITMImagePtrTypes.h
+include/tvgutil/itm/ITMMemoryBlockPtrTypes.h
+include/tvgutil/itm/MemoryBlockFactory.h
 )
 
 ##
@@ -133,6 +145,11 @@ ${statistics_headers}
 ${timing_headers}
 )
 
+IF(WITH_INFINITAM)
+  SET(sources ${sources} ${itm_sources})
+  SET(headers ${headers} ${itm_headers})
+ENDIF()
+
 #############################
 # Specify the source groups #
 #############################
@@ -140,6 +157,7 @@ ${timing_headers}
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(containers FILES ${containers_sources} ${containers_headers})
 SOURCE_GROUP(filesystem FILES ${filesystem_sources} ${filesystem_headers})
+SOURCE_GROUP(itm FILES ${itm_sources} ${itm_headers})
 SOURCE_GROUP(misc FILES ${misc_sources} ${misc_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})

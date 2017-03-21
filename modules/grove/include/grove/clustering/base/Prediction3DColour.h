@@ -9,7 +9,7 @@
 #include <ORUtils/PlatformIndependence.h>
 #include <ORUtils/Vector.h>
 
-#include <spaint/util/ITMImagePtrTypes.h>
+#include <tvgutil/itm/ITMImagePtrTypes.h>
 
 #include "Mode3DColour.h"
 

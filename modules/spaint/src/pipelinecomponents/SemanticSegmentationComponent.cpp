@@ -8,11 +8,13 @@
 #include <rafl/examples/Example.h>
 using namespace rafl;
 
+#include <tvgutil/itm/MemoryBlockFactory.h>
+using namespace tvgutil;
+
 #include "features/FeatureCalculatorFactory.h"
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
-#include "util/MemoryBlockFactory.h"
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"

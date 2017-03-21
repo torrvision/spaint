@@ -6,7 +6,7 @@
 #ifndef H_SPAINT_SINGLERGBDIMAGEPIPE
 #define H_SPAINT_SINGLERGBDIMAGEPIPE
 
-#include "../util/ITMImagePtrTypes.h"
+#include <tvgutil/itm/ITMImagePtrTypes.h>
 #include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
