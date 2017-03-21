@@ -161,6 +161,11 @@ void PreemptiveRansac_CUDA::init_random()
 
 void PreemptiveRansac_CUDA::generate_pose_candidates()
 {
+  // The pose update phase needs keypoint and predictions on the host,
+  // Performing the move here since this function is called once per frame, the update function is called many times per frame.
+  m_keypointsImage->UpdateHostFromDevice();
+  m_predictionsImage->UpdateHostFromDevice();
+
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(
       MEMORYDEVICE_CUDA);

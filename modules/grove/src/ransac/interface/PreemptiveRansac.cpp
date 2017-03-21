@@ -113,11 +113,9 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 {
   m_timerTotal.start();
 
+  // Copy keypoint and references in the local variables, to avoid explicitely passing them to every function.
   m_keypointsImage = keypoints;
   m_predictionsImage = forestPredictions;
-
-  m_keypointsImage->UpdateHostFromDevice(); // Need the keypoints on the host for now
-  m_predictionsImage->UpdateHostFromDevice(); // Also the predictions
 
   {
 #ifdef ENABLE_TIMERS
@@ -128,8 +126,6 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
     generate_pose_candidates();
     m_timerCandidateGeneration.stop();
   }
-
-  PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
   // Reset the number of inliers for the new pose estimation.
   m_inliersIndicesImage->dataSize = 0;
@@ -214,9 +210,8 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
 
   m_timerTotal.stop();
 
-  return
-      m_poseCandidates->dataSize > 0 ?
-          candidates[0] : boost::optional<PoseCandidate>();
+  PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+  return m_poseCandidates->dataSize > 0 ? candidates[0] : boost::optional<PoseCandidate>();
 }
 
 void PreemptiveRansac::get_best_poses(
