@@ -248,8 +248,7 @@ void Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q, Eigen::Vector3f &weights,
       * Q_centred.transpose();
 
   // SVD
-  Eigen::JacobiSVD<Eigen::Matrix3f> svd(C,
-      Eigen::ComputeThinU | Eigen::ComputeThinV);
+  Eigen::JacobiSVD<Eigen::Matrix3f> svd(C, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
   const Eigen::Matrix3f V = svd.matrixU();
   const Eigen::Matrix3f W = svd.matrixV();
