@@ -9,43 +9,48 @@
 
 namespace grove {
 
+//#################### CUDA KERNELS ####################
+
 template <typename NodeType, typename DescriptorType, typename LeafType>
-__global__ void ck_decision_forest_find_leaves(
-    const NodeType* forestTexture,
-    const DescriptorType* descriptorsData, Vector2i descriptorsImgSize,
-    LeafType* leafData)
+__global__ void ck_decision_forest_find_leaves(const NodeType *forestTexture,
+                                               const DescriptorType *descriptorsData,
+                                               Vector2i descriptorsImgSize,
+                                               LeafType *leafData)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (x >= descriptorsImgSize.x || y >= descriptorsImgSize.y)
-    return;
+  if (x >= descriptorsImgSize.x || y >= descriptorsImgSize.y) return;
 
-  decision_forest_find_leaves_shared(forestTexture, descriptorsData, descriptorsImgSize, leafData, x, y);
+  decision_forest_find_leaves_shared(forestTexture, descriptorsData, leafData, descriptorsImgSize, x, y);
 }
 
-template <typename DescriptorType, int TreeCount>
-DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const std::string& fileName)
-  : DecisionForest<DescriptorType, TreeCount>(fileName)
-{}
+//#################### CONSTRUCTORS ####################
 
 template <typename DescriptorType, int TreeCount>
-void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const DescriptorImage_CPtr& descriptors,
-                                                                 LeafIndicesImage_Ptr& leafIndices) const
+DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const std::string &fileName)
+  : DecisionForest<DescriptorType, TreeCount>(fileName)
 {
-  const NodeEntry* forestTexture = this->m_nodeImage->GetData(MEMORYDEVICE_CUDA);
+}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
+
+template <typename DescriptorType, int TreeCount>
+void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const DescriptorImage_CPtr &descriptors,
+                                                                 LeafIndicesImage_Ptr &leafIndices) const
+{
+  const NodeEntry *forestTexture = this->m_nodeImage->GetData(MEMORYDEVICE_CUDA);
 
   const Vector2i imgSize = descriptors->noDims;
-  const DescriptorType* descriptorsData = descriptors->GetData(MEMORYDEVICE_CUDA);
+  const DescriptorType *descriptorsData = descriptors->GetData(MEMORYDEVICE_CUDA);
 
   leafIndices->ChangeDims(imgSize);
-  LeafIndices* leafData = leafIndices->GetData(MEMORYDEVICE_CUDA);
+  LeafIndices *leafData = leafIndices->GetData(MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
-  const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x,
-      (imgSize.y + blockSize.y - 1) / blockSize.y);
+  const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x, (imgSize.y + blockSize.y - 1) / blockSize.y);
 
-  ck_decision_forest_find_leaves<<<gridSize,blockSize>>>(forestTexture, descriptorsData, imgSize, leafData);
+  ck_decision_forest_find_leaves<<<gridSize, blockSize>>>(forestTexture, descriptorsData, imgSize, leafData);
   ORcudaKernelCheck;
 }
 
@@ -55,8 +60,9 @@ void DecisionForest_CUDA<DescriptorType, TreeCount>::find_leaves(const Descripto
 template <typename DescriptorType, int TreeCount>
 DecisionForest_CUDA<DescriptorType, TreeCount>::DecisionForest_CUDA(const EnsembleLearner &pretrainedForest)
   : DecisionForest<DescriptorType, TreeCount>(pretrainedForest)
-{}
+{
+}
 
 #endif
 
-}
+} // namespace grove
