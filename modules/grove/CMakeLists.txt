@@ -29,6 +29,7 @@ SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
 
 ##
 SET(clustering_base_headers 
+    include/grove/clustering/base/Keypoint3DColourClusteringUtils.h
     include/grove/clustering/base/Mode3DColour.h
     include/grove/clustering/base/Prediction3DColour.h
     )

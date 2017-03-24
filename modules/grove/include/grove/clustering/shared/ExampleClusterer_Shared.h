@@ -56,13 +56,12 @@ inline void example_clusterer_compute_density(const ExampleType *examples,
 
   if (elementIdx < reservoirSize)
   {
-    const Vector3f centerPosition(examples[elementOffset].position);
+    const ExampleType centerExample = examples[elementOffset];
 
     for (int i = 0; i < reservoirSize; ++i)
     {
-      const Vector3f examplePosition(examples[reservoirOffset + i].position);
-      const Vector3f diff = examplePosition - centerPosition;
-      const float normSq = dot(diff, diff);
+      const ExampleType otherExample = examples[reservoirOffset + i];
+      const float normSq = distanceSquared(centerExample, otherExample);
 
       if (normSq < threeSigmaSq)
       {
@@ -90,8 +89,9 @@ inline void example_clusterer_link_neighbors(const ExampleType *examples,
 
   if (elementIdx < reservoirSize)
   {
-    const Vector3f centerPosition(examples[elementOffset].position);
+    const ExampleType centerExample = examples[elementOffset];
     const float centerDensity = densities[elementOffset];
+
     float minDistance = tauSq;
 
     for (int i = 0; i < reservoirSize; ++i)
@@ -99,13 +99,12 @@ inline void example_clusterer_link_neighbors(const ExampleType *examples,
       if (i == elementIdx)
         continue;
 
-      const Vector3f examplePosition(examples[reservoirOffset + i].position);
-      const float exampleDensity = densities[reservoirOffset + i];
+      const ExampleType otherExample = examples[reservoirOffset + i];
+      const float otherDensity = densities[reservoirOffset + i];
 
-      const Vector3f diff = examplePosition - centerPosition;
-      const float normSq = dot(diff, diff);
+      const float normSq = distanceSquared(centerExample, otherExample);
 
-      if (normSq < minDistance && centerDensity < exampleDensity)
+      if (normSq < minDistance && centerDensity < otherDensity)
       {
         minDistance = normSq;
         parentIdx = i;
@@ -271,7 +270,6 @@ inline void example_clusterer_select_clusters(const int *clusterSizes,
   }
 }
 
-// TODO: this will need specialization for 2D keypoints without colour.
 template <typename ExampleType, typename ClusterType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void example_clusterer_compute_modes(const ExampleType *examples,
@@ -279,67 +277,13 @@ inline void example_clusterer_compute_modes(const ExampleType *examples,
     const int *selectedClusters, ClusterType *predictions,
     int reservoirCapacity, int maxSelectedClusters, int reservoirIdx, int clusterIdx)
 {
-  const int reservoirOffset = reservoirIdx * reservoirCapacity;
-  const int reservoirSize = reservoirSizes[reservoirIdx];
   const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
+  const int selectedClusterId = selectedClusters[selectedClustersOffset + clusterIdx];
 
-  ClusterType &reservoirPrediction = predictions[reservoirIdx];
-
-  const int selectedClusterId = selectedClusters[selectedClustersOffset
-      + clusterIdx];
   if (selectedClusterId >= 0)
   {
-    // compute position and colour mean
-    int sampleCount = 0;
-    Vector3f positionMean(0.f);
-    Vector3f colourMean(0.f);
-
-    // Iterate over all examples and use only those belonging to selectedClusterId
-    for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
-    {
-      const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
-      if (sampleCluster == selectedClusterId)
-      {
-        const ExampleType &sample = examples[reservoirOffset + sampleIdx];
-
-        ++sampleCount;
-        positionMean += sample.position;
-        colourMean += sample.colour.toFloat();
-      }
-    }
-
-    //this mode is invalid..
-    if (sampleCount <= 1) // Should never reach this point since we check minClusterSize earlier
-      return;
-
-    positionMean /= static_cast<float>(sampleCount);
-    colourMean /= static_cast<float>(sampleCount);
-
-    // Now iterate again and compute the covariance
-    Matrix3f positionCovariance;
-    positionCovariance.setZeros();
-
-    for (int sampleIdx = 0; sampleIdx < reservoirSize; ++sampleIdx)
-    {
-      const int sampleCluster = clusterIndices[reservoirOffset + sampleIdx];
-      if (sampleCluster == selectedClusterId)
-      {
-        const ExampleType &sample = examples[reservoirOffset + sampleIdx];
-
-        for (int i = 0; i < 3; ++i)
-        {
-          for (int j = 0; j < 3; ++j)
-          {
-            positionCovariance.m[i * 3 + j] += (sample.position.v[i]
-                - positionMean.v[i])
-                * (sample.position.v[j] - positionMean.v[j]);
-          }
-        }
-      }
-    }
-
-    positionCovariance /= static_cast<float>(sampleCount - 1);
-    const float positionDeterminant = positionCovariance.det();
+    // Grab a reference to the prediction for the current reservoir.
+    ClusterType &reservoirPrediction = predictions[reservoirIdx];
 
     // Get the mode idx
     int modeIdx = -1;
@@ -353,14 +297,18 @@ inline void example_clusterer_compute_modes(const ExampleType *examples,
     modeIdx = reservoirPrediction.nbModes++;
 #endif
 
-    // Fill the mode
-    // This does not compile without an additional template parameter
-    // ScoreMode &outMode = reservoirPrediction.modes[modeIdx];
-    reservoirPrediction.modes[modeIdx].nbInliers = sampleCount;
-    reservoirPrediction.modes[modeIdx].position = positionMean;
-    reservoirPrediction.modes[modeIdx].determinant = positionDeterminant;
-    positionCovariance.inv(reservoirPrediction.modes[modeIdx].positionInvCovariance);
-    reservoirPrediction.modes[modeIdx].colour = colourMean.toUChar();
+    // Size of the current reservoir.
+    const int reservoirSize = reservoirSizes[reservoirIdx];
+
+    // Offset in the examples and clusterIndices array where we can find the first element associated to the current reservoir.
+    const int reservoirOffset = reservoirIdx * reservoirCapacity;
+
+    // Pointers to the examples and clustersIndices associated to the current reservoir.
+    const ExampleType *reservoirExamples = examples + reservoirOffset;
+    const int *reservoirClusterIndices = clusterIndices + reservoirOffset;
+
+    // Compute the actual mode.
+    computeMode(reservoirExamples, reservoirClusterIndices, reservoirSize, selectedClusterId, reservoirPrediction.modes[modeIdx]);
   }
 }
 

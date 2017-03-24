@@ -4,6 +4,7 @@
  */
 
 #include "clustering/base/Prediction3DColour.h"
+#include "clustering/base/Keypoint3DColourClusteringUtils.h"
 #include "clustering/cuda/ExampleClusterer_CUDA.tcu"
 
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu"
