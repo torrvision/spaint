@@ -78,7 +78,7 @@ void ExampleReservoirs_CUDA<ExampleType>::add_examples(const ExampleImage_CPtr &
   // Check that we have enough random states and, if not, reallocate them.
   if (nbExamples > m_randomStates->dataSize)
   {
-    m_randomStates->ChangeDims(nbExamples);
+    m_randomStates->Resize(nbExamples);
     init_random();
   }
 

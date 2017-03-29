@@ -115,7 +115,7 @@ void ExampleClusterer<ExampleType, ClusterType>::allocate_temporaries(uint32_t r
     m_clusterSizesHistogram->ChangeDims(temporariesSize);
 
     m_selectedClusters->ChangeDims(Vector2i(m_maxClusterCount, reservoirCount));
-    m_nbClustersPerReservoir->ChangeDims(reservoirCount);
+    m_nbClustersPerReservoir->Resize(reservoirCount);
   }
 }
 

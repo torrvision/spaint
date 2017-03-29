@@ -48,7 +48,7 @@ void ExampleReservoirs_CPU<ExampleType>::add_examples(const ExampleImage_CPtr &e
   // Check that we have enough random states and, if not, reallocate them.
   if (nbExamples > m_randomStates->dataSize)
   {
-    m_randomStates->ChangeDims(nbExamples);
+    m_randomStates->Resize(nbExamples);
     init_random();
   }
 
