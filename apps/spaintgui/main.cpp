@@ -17,32 +17,36 @@
 #endif
 
 #include <InputSource/OpenNIEngine.h>
-using namespace InputSource;
-using namespace ITMLib;
+#ifdef WITH_REALSENSE
+#include <InputSource/RealSenseEngine.h>
+#endif
 
 #ifdef WITH_GLUT
 #include <spaint/ogl/WrappedGLUT.h>
 #endif
 
 #ifdef WITH_OVR
-  #include <OVR_CAPI.h>
+#include <OVR_CAPI.h>
 #endif
 
 #ifdef WITH_OPENCV
-  #include <spaint/fiducials/ArUcoFiducialDetector.h>
+#include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
 
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
-using namespace spaint;
 
 #include <tvgutil/containers/ParametersContainer.h>
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
 #include "core/SLAMPipeline.h"
+
+using namespace InputSource;
+using namespace ITMLib;
+using namespace spaint;
+using namespace tvgutil;
 
 //#################### NAMESPACE ALIASES ####################
 
@@ -79,6 +83,48 @@ struct CommandLineArguments
 };
 
 //#################### FUNCTIONS ####################
+
+ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
+{
+  if(cameraSubengine->getDepthImageSize().x == 0)
+  {
+    delete cameraSubengine;
+    return NULL;
+  }
+  else return cameraSubengine;
+}
+
+ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
+{
+  ImageSourceEngine *cameraSubengine = NULL;
+
+#ifdef WITH_OPENNI
+  // Probe for an OpenNI camera.
+  if(cameraSubengine == NULL)
+  {
+    std::cout << "[spaint] Probing OpenNI camera: " << args.openNIDeviceURI << '\n';
+    boost::optional<std::string> uri = args.openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(args.openNIDeviceURI);
+    bool useInternalCalibration = !uri; // if reading from a file, assume that the provided calibration is to be used
+    cameraSubengine = check_camera_subengine(new OpenNIEngine(args.calibrationFilename.c_str(), uri ? uri->c_str() : NULL, useInternalCalibration
+#if USE_LOW_USB_BANDWIDTH_MODE
+      // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
+      , Vector2i(320, 240)
+#endif
+    ));
+  }
+#endif
+
+#ifdef WITH_REALSENSE
+  // Probe for a RealSense camera.
+  if(cameraSubengine == NULL)
+  {
+    std::cout << "[spaint] Probing RealSense camera\n";
+    cameraSubengine = check_camera_subengine(new RealSenseEngine(args.calibrationFilename.c_str()));
+  }
+#endif
+
+  return cameraSubengine;
+}
 
 bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 {
@@ -350,19 +396,8 @@ try
 
   if(args.depthImageMask.empty() || args.cameraAfterDisk)
   {
-#ifdef WITH_OPENNI
-    std::cout << "[spaint] Reading images from OpenNI device: " << args.openNIDeviceURI << '\n';
-    boost::optional<std::string> uri = args.openNIDeviceURI == "Default" ? boost::none : boost::optional<std::string>(args.openNIDeviceURI);
-    bool useInternalCalibration = !uri; // if reading from a file, assume that the provided calibration is to be used
-    imageSourceEngine->addSubengine(new OpenNIEngine(args.calibrationFilename.c_str(), uri ? uri->c_str() : NULL, useInternalCalibration
-#if USE_LOW_USB_BANDWIDTH_MODE
-      // If there is insufficient USB bandwidth available to support 640x480 RGB input, use 320x240 instead.
-      , Vector2i(320, 240)
-#endif
-    ));
-#else
-    quit("Error: OpenNI support not currently available. Reconfigure in CMake with the WITH_OPENNI option set to ON.");
-#endif
+    ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
+    if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
   }
 
   // Construct the fiducial detector (if any).

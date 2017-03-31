@@ -37,6 +37,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseVicon.cmake)
@@ -163,11 +164,12 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
-# Note: spaint needs to precede rafl on Linux
+# Note: spaint needs to precede rafl on Linux.
 TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkCeres.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLUT.cmake)
@@ -179,9 +181,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenCV.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenGL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOpenNI.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkOVR.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkRealSense.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkScoreForests.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkVicon.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
 #########################################
 # Copy resource files to the build tree #
