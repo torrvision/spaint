@@ -426,8 +426,8 @@ void SLAMComponent::setup_tracker()
 
   for(size_t i = infinitamFirstTrackerIdx; i < m_trackerParams.size(); ++i)
   {
-    compositeTracker->SetTracker(ITMTrackerFactory::Instance().Make(
-      m_trackerParams[i].c_str(), rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene->sceneParams
+    compositeTracker->SetTracker(ITMTrackerFactory::Instance().Make(settings->deviceType,
+      m_trackerParams[i].c_str(), rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene->sceneParams
     ), i);
   }
 

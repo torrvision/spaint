@@ -113,7 +113,7 @@ struct SpaintVoxel
     sdf = SDF_initialValue();
     w_depth = 0;
 #ifndef USE_LOW_POWER_MODE
-    clr = (uchar)0;
+    clr = Vector3u((uchar)0);
     w_color = 0;
 #endif
     packedLabel = PackedLabel(0, LG_USER);
