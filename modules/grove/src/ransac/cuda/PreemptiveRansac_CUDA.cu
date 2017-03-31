@@ -213,8 +213,8 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
       MEMORYDEVICE_CUDA);
   const Prediction3DColour *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CUDA);
-  const size_t nbInliers = m_inliersIndicesImage->dataSize;
-  const int *inliers = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
+  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const int *inliers = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
 
   ck_reset_candidate_energies<<<1, nbPoseCandidates>>>(poseCandidates, nbPoseCandidates);
@@ -243,13 +243,13 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 
   int *nbInlier_device = m_nbSampledInliers_device->GetData(MEMORYDEVICE_CUDA);
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CUDA);
-  int *inlierIndicesData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CUDA);
+  int *inlierIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
   CUDARNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CUDA);
 
   // Only if the number of inliers (host side) is zero, we clear the device number.
   // The assumption is that the number on device memory will remain in sync with the host
   // since only this method is allowed to modify it.
-  if (m_inliersIndicesImage->dataSize == 0)
+  if (m_inliersIndicesBlock->dataSize == 0)
   {
     ORcudaSafeCall(cudaMemsetAsync(nbInlier_device, 0, sizeof(int)));
   }
@@ -273,14 +273,14 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   }
 
   // Make the selected inlier indices available to the cpu
-  m_inliersIndicesImage->dataSize = m_nbSampledInliers_device->GetElement(0,
+  m_inliersIndicesBlock->dataSize = m_nbSampledInliers_device->GetElement(0,
       MEMORYDEVICE_CUDA); // Update the number of inliers
 }
 
 void PreemptiveRansac_CUDA::update_candidate_poses()
 {
   m_poseCandidates->UpdateHostFromDevice();
-  m_inliersIndicesImage->UpdateHostFromDevice();
+  m_inliersIndicesBlock->UpdateHostFromDevice();
 
   PreemptiveRansac::update_candidate_poses();
 

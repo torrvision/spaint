@@ -88,7 +88,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
       MEMORYDEVICE_CPU);
 
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
-  int *inlierIndicesData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
+  int *inlierIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
@@ -117,7 +117,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 #ifdef WITH_OPENMP
 #pragma omp atomic capture
 #endif
-      inlierIdx = m_inliersIndicesImage->dataSize++;
+      inlierIdx = m_inliersIndicesBlock->dataSize++;
 
       inlierIndicesData[inlierIdx] = sampledLinearIdx;
     }
@@ -147,8 +147,8 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
       MEMORYDEVICE_CPU);
   const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
-  const size_t nbInliers = m_inliersIndicesImage->dataSize;
-  const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
+  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const int *inliersData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
 
   const float totalEnergy = preemptive_ransac_compute_candidate_energy(
       candidate.cameraPose, keypointsData, predictionsData, inliersData,

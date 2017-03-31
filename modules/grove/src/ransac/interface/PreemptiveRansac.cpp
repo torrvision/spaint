@@ -52,7 +52,7 @@ PreemptiveRansac::PreemptiveRansac() :
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_nbMaxPoseCandidates);
 
   m_nbMaxInliers = 3000; // 500 per ransac iteration, starting from 64, not 1024.
-  m_inliersIndicesImage = mbf.make_image<int>(m_nbMaxInliers);
+  m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
 
 #ifdef ENABLE_TIMERS
@@ -128,7 +128,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
   }
 
   // Reset the number of inliers for the new pose estimation.
-  m_inliersIndicesImage->dataSize = 0;
+  m_inliersIndicesBlock->dataSize = 0;
 
   if (m_trimKinitAfterFirstEnergyComputation < m_poseCandidates->dataSize)
   {
@@ -171,7 +171,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(
   // Reset inlier mask (and inliers)
   m_inliersMaskImage->ChangeDims(m_keypointsImage->noDims); // Happens only once
   m_inliersMaskImage->Clear();
-  m_inliersIndicesImage->dataSize = 0;
+  m_inliersIndicesBlock->dataSize = 0;
 
   int iteration = 0;
 
@@ -491,8 +491,8 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
       MEMORYDEVICE_CPU);
   const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
-  const size_t nbInliers = m_inliersIndicesImage->dataSize;
-  const int *inliersData = m_inliersIndicesImage->GetData(MEMORYDEVICE_CPU);
+  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const int *inliersData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
 
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
 

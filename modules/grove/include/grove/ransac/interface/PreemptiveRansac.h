@@ -13,6 +13,8 @@
 #include <ITMLib/Utils/ITMMath.h>
 #include <ORUtils/PlatformIndependence.h>
 
+#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <tvgutil/itm/ITMMemoryBlockPtrTypes.h>
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../../clustering/base/Prediction3DColour.h"
@@ -57,7 +59,7 @@ protected:
 
   size_t m_nbMaxInliers;
   ITMIntImage_Ptr m_inliersMaskImage;
-  ITMIntImage_Ptr m_inliersIndicesImage;
+  ITMIntMemoryBlock_Ptr m_inliersIndicesBlock;
 
   virtual void generate_pose_candidates() = 0;
   virtual void sample_inlier_candidates(bool useMask = false) = 0;

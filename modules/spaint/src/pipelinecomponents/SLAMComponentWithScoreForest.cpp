@@ -85,8 +85,8 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
       );
 
   m_refinementTracker.reset(
-      ITMTrackerFactory::Instance().Make(m_refinementTrackerParams.c_str(), rgbImageSize,
-          depthImageSize, settings.get(), m_lowLevelEngine.get(), NULL,
+      ITMTrackerFactory::Instance().Make(settings->deviceType, m_refinementTrackerParams.c_str(), rgbImageSize,
+          depthImageSize, m_lowLevelEngine.get(), NULL,
           voxelScene->sceneParams));
   m_refinementTrackingController.reset(
       new ITMTrackingController(m_refinementTracker.get(), settings.get()));
