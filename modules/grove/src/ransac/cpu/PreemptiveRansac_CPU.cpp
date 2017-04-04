@@ -4,6 +4,7 @@
  */
 
 #include "ransac/cpu/PreemptiveRansac_CPU.h"
+using namespace tvgutil;
 
 #include <Eigen/Dense>
 
