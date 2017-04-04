@@ -31,6 +31,9 @@ IF(MSVC_IDE)
   # Prevent the definitions of min and max when including windows.h.
   ADD_DEFINITIONS(-DNOMINMAX)
 
+  # Prevent Winsock from being included when including windows.h.
+  ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
+
   # Make sure that the maths constants are defined.
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 
