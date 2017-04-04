@@ -1,0 +1,16 @@
+###################
+# UseAlgLib.cmake #
+###################
+
+SET(ALGLIB_ROOT "$ENV{HOMEPATH}/Downloads/alglib" CACHE FILEPATH "The ALGLIB root directory")
+
+FIND_PATH(ALGLIB_INCLUDE_DIR alglib/alglibmisc.h HINTS "${ALGLIB_ROOT}/install/include")
+INCLUDE_DIRECTORIES(${ALGLIB_INCLUDE_DIR})
+
+IF(MSVC_IDE)
+  FIND_LIBRARY(ALGLIB_LIBRARY_DEBUG alglib_d HINTS "${ALGLIB_ROOT}/install/lib")
+  FIND_LIBRARY(ALGLIB_LIBRARY_RELEASE alglib HINTS "${ALGLIB_ROOT}/install/lib")
+  SET(ALGLIB_LIBRARY debug ${ALGLIB_LIBRARY_DEBUG} optimized ${ALGLIB_LIBRARY_RELEASE})
+ELSE()
+  FIND_LIBRARY(ALGLIB_LIBRARY alglib HINTS "${ALGLIB_ROOT}/install/lib")
+ENDIF()

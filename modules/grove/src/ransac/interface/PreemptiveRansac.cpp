@@ -12,7 +12,7 @@
 //#include <ceres/rotation.h>
 
 #include <Eigen/Dense>
-#include <libalglib/optimization.h>
+#include <alglib/optimization.h>
 #include <omp.h>
 
 #include <ORUtils/SE3Pose.h>

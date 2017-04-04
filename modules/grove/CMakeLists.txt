@@ -12,6 +12,7 @@ SET(targetname grove)
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseAlglib.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
