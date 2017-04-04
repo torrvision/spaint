@@ -17,8 +17,8 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 //#define ENABLE_TIMERS
 

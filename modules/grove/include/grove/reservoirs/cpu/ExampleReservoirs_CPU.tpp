@@ -5,8 +5,8 @@
 
 #include "ExampleReservoirs_CPU.h"
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 #include "../shared/ExampleReservoirs_Shared.h"
 

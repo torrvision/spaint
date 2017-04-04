@@ -299,6 +299,7 @@ SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 
 INCLUDE_DIRECTORIES(include/grove)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 

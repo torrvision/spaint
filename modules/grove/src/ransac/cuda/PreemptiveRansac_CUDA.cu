@@ -8,10 +8,11 @@
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
+#include <itmx/MemoryBlockFactory.h>
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
 
+using namespace itmx;
 using namespace tvgutil;
 
 namespace grove {

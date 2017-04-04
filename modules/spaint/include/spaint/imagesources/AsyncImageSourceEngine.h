@@ -10,7 +10,8 @@
 
 #include <boost/thread.hpp>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
+
 #include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {

@@ -9,7 +9,7 @@
 #include <ORUtils/PlatformIndependence.h>
 #include <ORUtils/Vector.h>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
 
 #include "Mode3DColour.h"
 
@@ -40,7 +40,7 @@ struct Prediction3DColour
   _CPU_AND_GPU_CODE_
   int get_best_mode_and_energy(const Vector3f &v, float &maxScore) const
   {
-    const float exponent = powf(2.0f * M_PI, 3);
+    const float exponent = powf(2.0f * static_cast<float>(M_PI), 3);
 
     int argmax = -1;
     maxScore = -1.f; // If set to 0 the comparison later fails for very small values
@@ -57,7 +57,7 @@ struct Prediction3DColour
           modes[m].positionInvCovariance * diff);
       const float descriptiveStatistics = expf(-0.5f * mahalanobisSq);
 
-      const float normalization = 1.0 / sqrtf(modes[m].determinant * exponent);
+      const float normalization = 1.0f / sqrtf(modes[m].determinant * exponent);
       const float evalGaussian = normalization * descriptiveStatistics;
 
       const float nbPts = static_cast<float>(modes[m].nbInliers);

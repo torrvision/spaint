@@ -4,12 +4,12 @@
  */
 
 #include "ExampleReservoirs_CUDA.h"
+using namespace tvgutil;
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 #include "../shared/ExampleReservoirs_Shared.h"
-
-using namespace tvgutil;
 
 namespace grove {
 
@@ -18,7 +18,7 @@ namespace grove {
 template <typename ExampleType>
 __global__ void ck_add_examples(const ExampleType *examples,
     const Vector2i imgSize, const char *reservoirIndices, uint32_t reservoirIndicesCount,
-    uint32_t reservoirIndicesStep, CUDARNG *randomStates,
+    uint32_t reservoirIndicesStep, SimpleRandomNumberGenerator_CUDA *randomStates,
     ExampleType *reservoirs, int *reservoirSize, int *reservoirAddCalls,
     uint32_t reservoirCapacity)
 {
@@ -38,7 +38,7 @@ __global__ void ck_add_examples(const ExampleType *examples,
 }
 
 // Declare a non-templated kernel used to initialise the RNG states. See the associated .cu file.
-__global__ void ck_init_random_states(CUDARNG *randomStates, uint32_t nbStates,
+__global__ void ck_init_random_states(SimpleRandomNumberGenerator_CUDA *randomStates, uint32_t nbStates,
     uint32_t seed);
 
 //#################### CONSTRUCTORS ####################

@@ -253,7 +253,7 @@ inline float preemptive_ransac_compute_candidate_energy(
     // Has at least a valid mode
     if (argmax < 0)
     {
-#ifdef __CUDACC__
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
       // should have not been inserted in the inlier set
       printf("prediction has no valid modes\n");
       asm("trap;");
@@ -264,7 +264,7 @@ inline float preemptive_ransac_compute_candidate_energy(
 
     if (pred.modes[argmax].nbInliers == 0)
     {
-#ifdef __CUDACC__
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
       // the original implementation had a simple continue
       printf("mode has no inliers\n");
       asm("trap;");

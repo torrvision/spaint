@@ -33,11 +33,12 @@
 #include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
 
+#include <itmx/MemoryBlockFactory.h>
+
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/containers/ParametersContainer.h>
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/itm/MemoryBlockFactory.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
@@ -45,6 +46,8 @@
 
 using namespace InputSource;
 using namespace ITMLib;
+
+using namespace itmx;
 using namespace spaint;
 using namespace tvgutil;
 

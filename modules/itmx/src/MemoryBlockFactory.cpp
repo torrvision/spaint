@@ -1,12 +1,12 @@
 /**
- * spaint: MemoryBlockFactory.cpp
+ * itmx: MemoryBlockFactory.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "itm/MemoryBlockFactory.h"
+#include "MemoryBlockFactory.h"
 using namespace ITMLib;
 
-namespace tvgutil {
+namespace itmx {
 
 //#################### SINGLETON IMPLEMENTATION ####################
 

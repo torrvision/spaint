@@ -749,7 +749,7 @@ void Application::save_mesh() const
     boost::filesystem::create_directories(p.parent_path());
 
     std::cout << "Saving current reconstruction in: " << p << '\n';
-    mesh->WriteSTL(p.c_str());
+    mesh->WriteSTL(p.string().c_str());
   }
   else
   {

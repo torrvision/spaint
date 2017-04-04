@@ -13,9 +13,10 @@
 #include <Learner.hpp>
 #endif
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
+
 #include <tvgutil/numbers/RandomNumberGenerator.h>
-using tvgutil::MemoryBlockFactory;
 using tvgutil::RandomNumberGenerator;
 
 // Whether to replace the pre-computed feature indices and thresholds with random ones.

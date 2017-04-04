@@ -17,8 +17,8 @@
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 using namespace ITMLib;
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 #include "ocv/OpenCVUtil.h"
 #include "picking/PickerFactory.h"

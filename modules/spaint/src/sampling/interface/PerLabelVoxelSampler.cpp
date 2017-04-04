@@ -5,7 +5,9 @@
 
 #include "sampling/interface/PerLabelVoxelSampler.h"
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
+
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 using namespace tvgutil;
 

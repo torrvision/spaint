@@ -148,6 +148,7 @@ SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 # Specify additional include directories #
 ##########################################
 
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/spaint/include)
@@ -165,7 +166,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 #################################
 
 # Note: spaint needs to precede rafl on Linux.
-TARGET_LINK_LIBRARIES(${targetname} spaint rafl rigging tvginput tvgutil)
+TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)

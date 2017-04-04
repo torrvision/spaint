@@ -5,8 +5,8 @@
 
 #include "ExampleClusterer.h"
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 namespace grove {
 
