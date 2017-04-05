@@ -350,7 +350,7 @@ try
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
     // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
-    trackerParams.push_back("192.168.10.1:801");
+    trackerConfigs.push_back("192.168.10.1:801");
 
 #if 0
     // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
