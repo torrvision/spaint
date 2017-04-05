@@ -1,8 +1,8 @@
 ###################
-# UseAlgLib.cmake #
+# UseALGLIB.cmake #
 ###################
 
-SET(ALGLIB_ROOT "$ENV{HOMEPATH}/Downloads/alglib" CACHE FILEPATH "The ALGLIB root directory")
+FIND_PATH(ALGLIB_ROOT gpl3.txt HINTS "${PROJECT_SOURCE_DIR}/libraries/alglib")
 
 FIND_PATH(ALGLIB_INCLUDE_DIR alglib/alglibmisc.h HINTS "${ALGLIB_ROOT}/install/include")
 INCLUDE_DIRECTORIES(${ALGLIB_INCLUDE_DIR})
