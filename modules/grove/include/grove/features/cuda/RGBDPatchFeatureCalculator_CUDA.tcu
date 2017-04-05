@@ -129,7 +129,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
   {
     if(this->m_depthDifferenceType == PAIRWISE_DIFFERENCE)
     {
-      ck_compute_depth_features<RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE><<<gridSize,blockSize>>>(
+      ck_compute_depth_features<PAIRWISE_DIFFERENCE><<<gridSize,blockSize>>>(
         inSize, outSize, depths, depthOffsets, keypoints,
         this->m_depthFeatureCount, this->m_depthFeatureOffset,
         this->m_featureStep, this->m_normaliseDepth, descriptors
@@ -137,7 +137,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
     }
     else
     {
-      ck_compute_depth_features<RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE><<<gridSize,blockSize>>>(
+      ck_compute_depth_features<CENTRAL_DIFFERENCE><<<gridSize,blockSize>>>(
         inSize, outSize, depths, depthOffsets, keypoints,
         this->m_depthFeatureCount, this->m_depthFeatureOffset,
         this->m_featureStep, this->m_normaliseDepth, descriptors
@@ -151,7 +151,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
   {
     if(this->m_rgbDifferenceType == PAIRWISE_DIFFERENCE)
     {
-      ck_compute_colour_features<RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE><<<gridSize,blockSize>>>(
+      ck_compute_colour_features<PAIRWISE_DIFFERENCE><<<gridSize,blockSize>>>(
         inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
         keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
         this->m_featureStep, this->m_normaliseRgb, descriptors
@@ -159,7 +159,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
     }
     else
     {
-      ck_compute_colour_features<RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE><<<gridSize,blockSize>>>(
+      ck_compute_colour_features<CENTRAL_DIFFERENCE><<<gridSize,blockSize>>>(
         inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
         keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
         this->m_featureStep, this->m_normaliseRgb, descriptors

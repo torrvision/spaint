@@ -41,7 +41,7 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
     x1 = xyIn.x + static_cast<int>(offset[0] / depth);
     y1 = xyIn.y + static_cast<int>(offset[1] / depth);
 
-    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    if(DifferenceType == PAIRWISE_DIFFERENCE)
     {
       x2 = xyIn.x + static_cast<int>(offset[2] / depth);
       y2 = xyIn.y + static_cast<int>(offset[3] / depth);
@@ -52,7 +52,7 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
     x1 = xyIn.x + offset[0];
     y1 = xyIn.y + offset[1];
 
-    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    if(DifferenceType == PAIRWISE_DIFFERENCE)
     {
       x2 = xyIn.x + offset[2];
       y2 = xyIn.y + offset[3];
@@ -63,7 +63,7 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
   x1 = min(max(x1, 0), inSize.width - 1);
   y1 = min(max(y1, 0), inSize.height - 1);
 
-  if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+  if(DifferenceType == PAIRWISE_DIFFERENCE)
   {
     x2 = min(max(x2, 0), inSize.width - 1);
     y2 = min(max(y2, 0), inSize.height - 1);
@@ -120,7 +120,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     calculate_secondary_points<DifferenceType>(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
 
     // Compute the feature and write it into the descriptor.
-    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    if(DifferenceType == PAIRWISE_DIFFERENCE)
     {
       // This is the "correct" definition, but the SCoRe Forests code uses the other one.
       descriptor.data[rgbFeatureOffset + featIdx] = rgb[raster1][channel] - rgb[raster2][channel];
@@ -177,7 +177,7 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
     const float depth1Mm = fmaxf(depths[raster1] * 1000.f, 0.0f);  // we use max because InfiniTAM sometimes has invalid depths stored as -1
 
     // Compute the feature and write it into the descriptor.
-    if(DifferenceType == RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE)
+    if(DifferenceType == PAIRWISE_DIFFERENCE)
     {
       // This is the "correct" definition, but the SCoRe Forests code uses the other one.
       const float depth2Mm = fmaxf(depths[raster2] * 1000.0f, 0.0f);

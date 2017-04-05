@@ -13,7 +13,10 @@
 
 #include <Eigen/Dense>
 #include <alglib/optimization.h>
+
+#ifdef WITH_OPENMP
 #include <omp.h>
+#endif
 
 #include <ORUtils/SE3Pose.h>
 
