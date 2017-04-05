@@ -19,7 +19,7 @@ namespace spaint {
 void PosePersister::save_pose(const Matrix4f& pose, const std::string& path)
 {
   // Open the output file.
-  std::ofstream outFile(path);
+  std::ofstream outFile(path.c_str());
 
   // If the open failed throw an exception.
   if (!outFile) throw std::runtime_error("Could not open output file: " + path);
