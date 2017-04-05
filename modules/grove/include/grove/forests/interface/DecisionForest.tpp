@@ -32,7 +32,7 @@ DecisionForest<DescriptorType, TreeCount>::DecisionForest() : m_nbTotalLeaves(0)
 }
 
 template <typename DescriptorType, int TreeCount>
-DecisionForest<DescriptorType, TreeCount>::DecisionForest(const std::string &fileName) : DecisionForest()
+DecisionForest<DescriptorType, TreeCount>::DecisionForest(const std::string &fileName)
 {
   load_structure_from_file(fileName);
 }
@@ -88,7 +88,7 @@ void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const s
   m_nbLeavesPerTree.clear();
   m_nbTotalLeaves = 0;
 
-  std::ifstream in(fileName);
+  std::ifstream in(fileName.c_str());
 
   if (!in) throw std::runtime_error("Couldn't load a forest from: " + fileName);
 
@@ -192,7 +192,7 @@ void DecisionForest<DescriptorType, TreeCount>::load_structure_from_file(const s
 template <typename DescriptorType, int TreeCount>
 void DecisionForest<DescriptorType, TreeCount>::save_structure_to_file(const std::string &fileName) const
 {
-  std::ofstream out(fileName, std::ios::trunc);
+  std::ofstream out(fileName.c_str(), std::ios::trunc);
 
   // Write the number of trees
   const uint32_t nbTrees = get_nb_trees();
