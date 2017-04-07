@@ -6,7 +6,7 @@
 #include "features/interface/VOPFeatureCalculator.h"
 
 #include <itmx/MemoryBlockFactory.h>
-using namespace itmx;
+using itmx::MemoryBlockFactory;
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"

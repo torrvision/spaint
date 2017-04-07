@@ -6,7 +6,7 @@
 #include "pipelinecomponents/SemanticSegmentationComponent.h"
 
 #include <itmx/MemoryBlockFactory.h>
-using namespace itmx;
+using itmx::MemoryBlockFactory;
 
 #include <rafl/examples/Example.h>
 using namespace rafl;

@@ -18,7 +18,7 @@
 using namespace ITMLib;
 
 #include <itmx/MemoryBlockFactory.h>
-using namespace itmx;
+using itmx::MemoryBlockFactory;
 
 #include "ocv/OpenCVUtil.h"
 #include "picking/PickerFactory.h"

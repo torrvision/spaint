@@ -6,10 +6,9 @@
 #include "sampling/interface/UniformVoxelSampler.h"
 
 #include <itmx/MemoryBlockFactory.h>
-using namespace itmx;
+using itmx::MemoryBlockFactory;
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>
-using namespace tvgutil;
 
 namespace spaint {
 
