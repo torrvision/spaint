@@ -2,6 +2,7 @@ build*/
 compile_commands.json
 docs/
 install/
+libraries/alglib/
 libraries/arrayfire*/
 libraries/boost_1_56_0/
 libraries/boost-setup/

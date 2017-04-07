@@ -12,7 +12,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
 
 #include "interface/SemanticVisualiser.h"
 #include "../util/ITMObjectPtrTypes.h"

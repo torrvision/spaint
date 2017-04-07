@@ -71,7 +71,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
       {
         if(this->m_depthDifferenceType == PAIRWISE_DIFFERENCE)
         {
-          compute_depth_features<RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE>(
+          compute_depth_features<PAIRWISE_DIFFERENCE>(
             xyIn, xyOut, inSize, outSize, depths, depthOffsets, keypoints,
             this->m_depthFeatureCount, this->m_depthFeatureOffset,
             this->m_normaliseDepth, descriptors
@@ -79,7 +79,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
         }
         else
         {
-          compute_depth_features<RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE>(
+          compute_depth_features<CENTRAL_DIFFERENCE>(
             xyIn, xyOut, inSize, outSize, depths, depthOffsets, keypoints,
             this->m_depthFeatureCount, this->m_depthFeatureOffset,
             this->m_normaliseDepth, descriptors
@@ -92,7 +92,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
       {
         if(this->m_rgbDifferenceType == PAIRWISE_DIFFERENCE)
         {
-          compute_colour_features<RGBDPatchFeatureCalculatorDifferenceType::PAIRWISE_DIFFERENCE>(
+          compute_colour_features<PAIRWISE_DIFFERENCE>(
             xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
             keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
             this->m_normaliseRgb, descriptors
@@ -100,7 +100,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
         }
         else
         {
-          compute_colour_features<RGBDPatchFeatureCalculatorDifferenceType::CENTRAL_DIFFERENCE>(
+          compute_colour_features<CENTRAL_DIFFERENCE>(
             xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
             keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
             this->m_normaliseRgb, descriptors

@@ -5,8 +5,8 @@
 
 #include "ExampleReservoirs.h"
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using tvgutil::MemoryBlockFactory;
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
 
 namespace grove {
 

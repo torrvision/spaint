@@ -11,10 +11,12 @@
 #include <boost/optional.hpp>
 
 #include <ITMLib/Utils/ITMMath.h>
+
 #include <ORUtils/PlatformIndependence.h>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
-#include <tvgutil/itm/ITMMemoryBlockPtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
+#include <itmx/ITMMemoryBlockPtrTypes.h>
+
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../../clustering/base/Prediction3DColour.h"

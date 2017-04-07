@@ -6,8 +6,8 @@
 #include "MarkVoxelsCommand.h"
 using namespace spaint;
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 //#################### CONSTRUCTORS ####################
 

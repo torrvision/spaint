@@ -33,11 +33,12 @@
 #include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
 
+#include <itmx/MemoryBlockFactory.h>
+
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/containers/ParametersContainer.h>
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/itm/MemoryBlockFactory.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
@@ -45,6 +46,8 @@
 
 using namespace InputSource;
 using namespace ITMLib;
+
+using namespace itmx;
 using namespace spaint;
 using namespace tvgutil;
 
@@ -347,7 +350,7 @@ try
 #ifdef WITH_VICON
     // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
     // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
-    trackerParams.push_back("192.168.10.1:801");
+    trackerConfigs.push_back("192.168.10.1:801");
 
 #if 0
     // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.

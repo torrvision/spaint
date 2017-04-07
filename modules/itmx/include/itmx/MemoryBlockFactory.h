@@ -1,10 +1,10 @@
 /**
- * spaint: MemoryBlockFactory.h
+ * itmx: MemoryBlockFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_MEMORYBLOCKFACTORY
-#define H_TVGUTIL_MEMORYBLOCKFACTORY
+#ifndef H_ITMX_MEMORYBLOCKFACTORY
+#define H_ITMX_MEMORYBLOCKFACTORY
 
 #include <boost/shared_ptr.hpp>
 
@@ -13,7 +13,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
-namespace tvgutil {
+namespace itmx {
 
 /**
  * \brief An instance of this class can be used to make memory blocks.

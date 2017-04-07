@@ -12,7 +12,7 @@
 
 #include <ORUtils/Image.h>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
 
 #ifdef WITH_SCOREFORESTS
 // Forward declare stuff, to avoid cluttering the global namespace with every ScoreForest class.

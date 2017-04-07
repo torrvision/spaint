@@ -4,11 +4,12 @@
  */
 
 #include "ransac/cpu/PreemptiveRansac_CPU.h"
+using namespace tvgutil;
 
 #include <Eigen/Dense>
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
 

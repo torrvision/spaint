@@ -5,11 +5,11 @@
 
 #include "pipelinecomponents/SemanticSegmentationComponent.h"
 
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
+
 #include <rafl/examples/Example.h>
 using namespace rafl;
-
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
 
 #include "features/FeatureCalculatorFactory.h"
 #include "randomforest/ForestUtil.h"

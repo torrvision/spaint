@@ -11,7 +11,8 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
+
 #include <tvgutil/misc/ThreadPool.h>
 
 namespace spaint {

@@ -11,8 +11,8 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
-#include <tvgutil/itm/ITMMemoryBlockPtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
+#include <itmx/ITMMemoryBlockPtrTypes.h>
 
 namespace grove
 {

@@ -8,9 +8,6 @@
 
 #include "SLAMComponent.h"
 
-#include <tuple>
-#include <random>
-
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/timer/timer.hpp>

@@ -6,8 +6,8 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
-#include <tvgutil/itm/ITMMemoryBlockPtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
+#include <itmx/ITMMemoryBlockPtrTypes.h>
 
 #include "../base/Descriptor.h"
 #include "../../keypoints/Keypoint2D.h"

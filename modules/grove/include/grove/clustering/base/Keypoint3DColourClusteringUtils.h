@@ -47,7 +47,7 @@ inline void computeMode(
   if (sampleCount <= 1)
   {
 // Should never reach this point since we check minClusterSize earlier
-#ifdef __CUDACC__
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
     printf("computeMode: got a cluster with less than 2 elements.\n");
     asm("trap;");
 #else

@@ -5,8 +5,8 @@
 
 #include "ExampleClusterer.h"
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 namespace grove {
 
@@ -30,9 +30,9 @@ ExampleClusterer<ExampleType, ClusterType>::~ExampleClusterer()
 {}
 
 template<typename ExampleType, typename ClusterType>
-void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleClusterer::ExampleImage_CPtr &exampleReservoirs,
+void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleImage_CPtr &exampleReservoirs,
                                   const ITMIntMemoryBlock_CPtr &keypointReservoirsSize,
-                                  ExampleClusterer::ClusterBlock_Ptr &predictions,
+                                  ClusterBlock_Ptr &predictions,
                                   uint32_t startIdx,
                                   uint32_t count)
 {

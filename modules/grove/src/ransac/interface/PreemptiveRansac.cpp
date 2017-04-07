@@ -12,13 +12,16 @@
 //#include <ceres/rotation.h>
 
 #include <Eigen/Dense>
-#include <libalglib/optimization.h>
+#include <alglib/optimization.h>
+
+#ifdef WITH_OPENMP
 #include <omp.h>
+#endif
 
 #include <ORUtils/SE3Pose.h>
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 //#define ENABLE_TIMERS
 

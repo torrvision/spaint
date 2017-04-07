@@ -45,7 +45,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::reset_temporaries(uint32_t 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     example_clusterer_reset_temporaries(nbClustersPerReservoir, clusterSizes, clusterSizesHistogram,
                                         reservoirIdx, reservoirCapacity);
@@ -61,7 +61,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_modes(const Example
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     for(uint32_t clusterIdx = 0; clusterIdx < maxClusterCount; ++clusterIdx)
     {
@@ -83,7 +83,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::select_clusters(uint32_t ma
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     example_clusterer_select_clusters(clusterSizes, clusterSizesHistogram, nbClustersPerReservoir,
                                       selectedClusters, reservoirCapacity, maxClusterCount,
@@ -101,7 +101,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_cluster_size_histog
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     for(uint32_t clusterIdx = 0; clusterIdx < reservoirCapacity; ++clusterIdx)
     {
@@ -121,7 +121,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::identify_clusters(uint32_t 
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     for(uint32_t elementIdx = 0; elementIdx < reservoirCapacity; ++elementIdx)
     {
@@ -142,7 +142,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::link_neighbors(const Exampl
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     for(uint32_t elementIdx = 0; elementIdx < reservoirCapacity; ++elementIdx)
     {
@@ -161,7 +161,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_density(const Examp
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t reservoirIdx = 0; reservoirIdx < reservoirCount; ++reservoirIdx)
+  for(int reservoirIdx = 0; reservoirIdx < static_cast<int>(reservoirCount); ++reservoirIdx)
   {
     for(uint32_t elementIdx = 0; elementIdx < reservoirCapacity; ++elementIdx)
     {
@@ -177,7 +177,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::reset_predictions(ClusterTy
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for(uint32_t predictionIdx = 0; predictionIdx < reservoirCount; ++predictionIdx)
+  for(int predictionIdx = 0; predictionIdx < static_cast<int>(reservoirCount); ++predictionIdx)
   {
     example_clusterer_reset_predictions(predictionsData, predictionIdx);
   }

@@ -10,8 +10,8 @@ using ITMLib::ITMLowLevelEngineFactory;
 #include <ITMLib/Utils/ITMLibSettings.h>
 using ITMLib::ITMLibSettings;
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using tvgutil::MemoryBlockFactory;
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
 
 #include "clustering/ExampleClustererFactory.h"
 #include "features/FeatureCalculatorFactory.h"

@@ -6,7 +6,8 @@
 #ifndef H_SPAINT_COLOURAPPEARANCEMODEL
 #define H_SPAINT_COLOURAPPEARANCEMODEL
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
+
 #include <tvgutil/statistics/ProbabilityMassFunction.h>
 
 namespace spaint {

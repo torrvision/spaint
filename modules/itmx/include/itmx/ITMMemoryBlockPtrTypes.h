@@ -1,10 +1,10 @@
 /**
- * spaint: ITMMemoryBlockPtrTypes.h
+ * itmx: ITMMemoryBlockPtrTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_ITMMEMORYBLOCKPTRTYPES
-#define H_TVGUTIL_ITMMEMORYBLOCKPTRTYPES
+#ifndef H_ITMX_ITMMEMORYBLOCKPTRTYPES
+#define H_ITMX_ITMMEMORYBLOCKPTRTYPES
 
 #include <boost/shared_ptr.hpp>
 

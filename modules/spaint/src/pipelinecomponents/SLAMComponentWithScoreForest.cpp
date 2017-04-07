@@ -168,9 +168,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   }
 
   const bool performRelocalization = m_relocaliseAfterEveryFrame
-      || trackingResult == TrackingResult::TRACKING_FAILED;
+      || trackingResult == ITMTrackingState::TRACKING_FAILED;
   const bool performLearning = m_relocaliseAfterEveryFrame
-      || trackingResult == TrackingResult::TRACKING_GOOD;
+      || trackingResult == ITMTrackingState::TRACKING_GOOD;
 
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
@@ -326,7 +326,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
             m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
 
         const Matrix4f final_pose =
-            trackingResult == TrackingResult::TRACKING_GOOD ?
+            trackingResult == ITMTrackingState::TRACKING_GOOD ?
                 trackingState->pose_d->GetInvM() : pose_candidate->cameraPose;
 
         PosePersister::save_pose_on_thread(final_pose,
@@ -505,7 +505,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
       if (m_saveRelocalisationPoses)
       {
-        trackingResult = TrackingResult::TRACKING_POOR;
+        trackingResult = ITMTrackingState::TRACKING_POOR;
       }
     }
     else
@@ -572,7 +572,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   {
     // Restore tracked pose
     trackingState->pose_d->SetFrom(&trackedPose);
-    trackingResult = TrackingResult::TRACKING_GOOD; // The assumption is that we are using the ground truth trajectory.
+    trackingResult = ITMTrackingState::TRACKING_GOOD; // The assumption is that we are using the ground truth trajectory.
   }
 
   return trackingResult;

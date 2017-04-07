@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include <tvgutil/itm/ITMImagePtrTypes.h>
+#include <itmx/ITMImagePtrTypes.h>
 
 #include "../fiducials/Fiducial.h"
 #include "../util/ITMObjectPtrTypes.h"

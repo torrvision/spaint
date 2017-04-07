@@ -5,8 +5,8 @@
 
 #include "visualisation/interface/SemanticVisualiser.h"
 
-#include <tvgutil/itm/MemoryBlockFactory.h>
-using namespace tvgutil;
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 namespace spaint {
 
