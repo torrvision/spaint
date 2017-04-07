@@ -1,10 +1,10 @@
 /**
- * spaint: ITMImagePtrTypes.h
+ * itmx: ITMImagePtrTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_ITMIMAGEPTRTYPES
-#define H_SPAINT_ITMIMAGEPTRTYPES
+#ifndef H_ITMX_ITMIMAGEPTRTYPES
+#define H_ITMX_ITMIMAGEPTRTYPES
 
 #include <boost/shared_ptr.hpp>
 

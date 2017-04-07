@@ -4,9 +4,10 @@
  */
 
 #include "MarkVoxelsCommand.h"
-
-#include <spaint/util/MemoryBlockFactory.h>
 using namespace spaint;
+
+#include <itmx/MemoryBlockFactory.h>
+using namespace itmx;
 
 //#################### CONSTRUCTORS ####################
 

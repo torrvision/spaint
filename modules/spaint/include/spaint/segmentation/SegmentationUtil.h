@@ -8,7 +8,7 @@
 
 #include <boost/mpl/identity.hpp>
 
-#include "../util/ITMImagePtrTypes.h"
+#include <itmx/ITMImagePtrTypes.h>
 
 namespace spaint {
 

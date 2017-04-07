@@ -17,10 +17,12 @@
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 using namespace ITMLib;
 
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
+
 #include "ocv/OpenCVUtil.h"
 #include "picking/PickerFactory.h"
 #include "util/CameraPoseConverter.h"
-#include "util/MemoryBlockFactory.h"
 using namespace rigging;
 
 namespace spaint {

@@ -1,18 +1,19 @@
 /**
- * spaint: MemoryBlockFactory.h
+ * itmx: MemoryBlockFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#ifndef H_SPAINT_MEMORYBLOCKFACTORY
-#define H_SPAINT_MEMORYBLOCKFACTORY
+#ifndef H_ITMX_MEMORYBLOCKFACTORY
+#define H_ITMX_MEMORYBLOCKFACTORY
 
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief An instance of this class can be used to make memory blocks.
@@ -48,10 +49,23 @@ public:
    * \return          The memory block.
    */
   template <typename T>
-  boost::shared_ptr<ORUtils::MemoryBlock<T> > make_block(size_t dataSize) const
+  boost::shared_ptr<ORUtils::MemoryBlock<T> > make_block(size_t dataSize = 0) const
   {
     bool allocateGPU = m_deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA;
     return boost::shared_ptr<ORUtils::MemoryBlock<T> >(new ORUtils::MemoryBlock<T>(dataSize, true, allocateGPU));
+  }
+
+  /**
+   * \brief Makes an image of the specified type and size.
+   *
+   * \param size  The size of the image to make.
+   * \return      The image.
+   */
+  template <typename T>
+  boost::shared_ptr<ORUtils::Image<T> > make_image(const ORUtils::Vector2<int> size = ORUtils::Vector2<int>(0, 0)) const
+  {
+    bool allocateGPU = m_deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA;
+    return boost::shared_ptr<ORUtils::Image<T> >(new ORUtils::Image<T>(size, true, allocateGPU));
   }
 
   /**

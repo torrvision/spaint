@@ -5,6 +5,9 @@
 
 #include "pipelinecomponents/SemanticSegmentationComponent.h"
 
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
+
 #include <rafl/examples/Example.h>
 using namespace rafl;
 
@@ -12,7 +15,6 @@ using namespace rafl;
 #include "randomforest/ForestUtil.h"
 #include "randomforest/SpaintDecisionFunctionGenerator.h"
 #include "sampling/VoxelSamplerFactory.h"
-#include "util/MemoryBlockFactory.h"
 
 #ifdef WITH_OPENCV
 #include "ocv/OpenCVUtil.h"

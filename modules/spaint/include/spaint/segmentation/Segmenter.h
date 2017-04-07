@@ -11,7 +11,7 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include "../util/ITMImagePtrTypes.h"
+#include <itmx/ITMImagePtrTypes.h>
 
 namespace spaint {
 

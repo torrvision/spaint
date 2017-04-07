@@ -8,7 +8,7 @@
 
 #include <ITMLib/Objects/RenderStates/ITMRenderState.h>
 
-#include "../../util/ITMImagePtrTypes.h"
+#include <itmx/ITMImagePtrTypes.h>
 
 namespace spaint {
 

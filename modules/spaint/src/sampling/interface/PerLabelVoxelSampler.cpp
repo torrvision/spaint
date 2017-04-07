@@ -5,9 +5,10 @@
 
 #include "sampling/interface/PerLabelVoxelSampler.h"
 
-#include <tvgutil/numbers/RandomNumberGenerator.h>
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
 
-#include "util/MemoryBlockFactory.h"
+#include <tvgutil/numbers/RandomNumberGenerator.h>
 
 namespace spaint {
 

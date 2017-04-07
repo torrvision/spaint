@@ -5,7 +5,8 @@
 
 #include "visualisation/interface/SemanticVisualiser.h"
 
-#include "util/MemoryBlockFactory.h"
+#include <itmx/MemoryBlockFactory.h>
+using itmx::MemoryBlockFactory;
 
 namespace spaint {
 

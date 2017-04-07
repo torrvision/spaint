@@ -11,7 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
-#include "ITMImagePtrTypes.h"
+#include <itmx/ITMImagePtrTypes.h>
 
 namespace spaint {
 
