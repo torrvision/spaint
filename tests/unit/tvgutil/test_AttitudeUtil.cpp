@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(test_conversions)
 
   Vector4f quaternion;
   AttitudeUtil::rotation_vector_to_quaternion(rotationVector.v, quaternion.v);
-  check_close(quaternion.v, Vector4f(0.9238795f, 0.3826834f, 0.0f, 0.0f), TOL);
+  check_close(quaternion, Vector4f(0.9238795f, 0.3826834f, 0.0f, 0.0f), TOL);
 
   {
     Vector3f rotationVector_;
