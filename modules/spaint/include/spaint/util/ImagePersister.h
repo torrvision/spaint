@@ -8,10 +8,12 @@
 
 #include <vector>
 
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 
 #include <itmx/ITMImagePtrTypes.h>
+
+#include <tvgutil/misc/ThreadPool.h>
 
 namespace spaint {
 
@@ -93,8 +95,7 @@ public:
   static void save_image_on_thread(const boost::shared_ptr<const ORUtils::Image<T> >& image, const std::string& path, ImageFileType fileType = IFT_UNKNOWN)
   {
     void (*p)(const boost::shared_ptr<const ORUtils::Image<T> >&, const std::string&, ImageFileType) = &save_image;
-    boost::thread t(p, image, path, fileType);
-    t.detach();
+    tvgutil::ThreadPool::instance().post_task(boost::bind(p, image, path, fileType));
   }
 
   /**
