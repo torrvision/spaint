@@ -96,6 +96,16 @@ public:
   void draw_canvas_line(const cv::Point2f& point1, const cv::Point2f& point2, const cv::Scalar& colour, int thickness = 1) const;
 
   /**
+   * \brief Draws a square in canvas coordinates.
+   *
+   * \param centre     The centre of the square.
+   * \param colour     The colour of the square.
+   * \param radius     The radius of the square.
+   * \param thickness  The thickness of the square (if thickness = -1 then the square will be drawn filled).
+   */
+  void draw_canvas_square(const cv::Point2f& centre, const cv::Scalar& colour, int radius = 5, int thickness = -1) const;
+
+  /**
    * \brief Draws text in canvas coordinates.
    *
    * \param text       The text to be drawn.
@@ -132,6 +142,16 @@ public:
    * \param thickness The thickness of the line.
    */
   void draw_cartesian_line(const cv::Point2f& point1, const cv::Point2f& point2, const cv::Scalar& colour, int thickness = 1) const;
+
+  /**
+   * \brief Draws a square in Cartesian coordinates.
+   *
+   * \param centre    The centre of the square.
+   * \param colour    The colour of the square.
+   * \param radius    The radius of the square.
+   * \param thickness The thickness of the square (if thickness = -1 then the square will be drawn filled).
+   */
+  void draw_cartesian_square(const cv::Point2f& centre, const cv::Scalar& colour, int radius = 2, int thickness = -1) const;
 
   /**
    * \brief Draws a line graph.
