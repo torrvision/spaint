@@ -44,6 +44,7 @@ OPTION(BUILD_AUXILIARY_APPS "Build the auxiliary applications?" ON)
 OPTION(BUILD_EVALUATION_MODULES "Build the evaluation modules?" ON)
 OPTION(BUILD_GROVE "Build grove?" ON)
 OPTION(BUILD_INFERMOUS "Build infermous?" OFF)
+OPTION(BUILD_RELOCVIS "Build relocvis?" OFF)
 OPTION(BUILD_SPAINT "Build spaint?" ON)
 OPTION(BUILD_TESTS "Build the tests?" ON)
 

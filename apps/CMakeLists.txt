@@ -9,7 +9,10 @@ IF(BUILD_AUXILIARY_APPS)
 
     IF(WITH_OPENCV)
       ADD_SUBDIRECTORY(raflvis)
-      ADD_SUBDIRECTORY(relocvis)
+
+      IF(BUILD_RELOCVIS)
+        ADD_SUBDIRECTORY(relocvis)
+      ENDIF()
 
       IF(BUILD_SPAINT AND WITH_ARRAYFIRE)
         ADD_SUBDIRECTORY(touchtrain)
