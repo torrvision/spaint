@@ -2,6 +2,10 @@
 # CMakeLists.txt for tests/scratch #
 ####################################
 
+IF(WITH_ALGLIB)
+  ADD_SUBDIRECTORY(alglib)
+ENDIF()
+
 IF(WITH_ARRAYFIRE)
   ADD_SUBDIRECTORY(arrayfire)
 ENDIF()

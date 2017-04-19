@@ -21,6 +21,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/OfferPixelDebugging.cmake)
 # Specify the libraries to use #
 ################################
 
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
@@ -164,6 +165,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetCUDAAppTarget.cmake)
 TARGET_LINK_LIBRARIES(${targetname} spaint itmx rafl rigging tvginput tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkSDL.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkALGLIB.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkArrayFire.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkGLEW.cmake)
