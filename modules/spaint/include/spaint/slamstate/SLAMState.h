@@ -9,9 +9,9 @@
 #include <map>
 
 #include <itmx/ITMImagePtrTypes.h>
+#include <itmx/ITMObjectPtrTypes.h>
 
 #include "../fiducials/Fiducial.h"
-#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintSurfelScene.h"
 #include "../util/SpaintVoxelScene.h"
 
