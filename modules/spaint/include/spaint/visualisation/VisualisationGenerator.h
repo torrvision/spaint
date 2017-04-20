@@ -13,9 +13,9 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
 #include <itmx/ITMImagePtrTypes.h>
+#include <itmx/ITMObjectPtrTypes.h>
 
 #include "interface/SemanticVisualiser.h"
-#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintSurfelScene.h"
 
 namespace spaint {

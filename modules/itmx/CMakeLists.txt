@@ -28,6 +28,7 @@ src/MemoryBlockFactory.cpp
 SET(toplevel_headers
 include/itmx/ITMImagePtrTypes.h
 include/itmx/ITMMemoryBlockPtrTypes.h
+include/itmx/ITMObjectPtrTypes.h
 include/itmx/MemoryBlockFactory.h
 )
 

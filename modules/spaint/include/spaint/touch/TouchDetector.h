@@ -8,6 +8,8 @@
 
 #include <arrayfire.h>
 
+#include <itmx/ITMObjectPtrTypes.h>
+
 #include <rafl/core/RandomForest.h>
 
 #include <rigging/SimpleCamera.h>
@@ -16,7 +18,6 @@
 
 #include "TouchSettings.h"
 #include "../imageprocessing/interface/ImageProcessor.h"
-#include "../util/ITMObjectPtrTypes.h"
 #include "../visualisation/interface/DepthVisualiser.h"
 
 namespace spaint {

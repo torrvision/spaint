@@ -8,8 +8,9 @@
 
 #include <map>
 
+#include <itmx/ITMObjectPtrTypes.h>
+
 #include "FiducialMeasurement.h"
-#include "../util/ITMObjectPtrTypes.h"
 
 namespace spaint {
 

@@ -1,5 +1,5 @@
 /**
- * spaint: ITMObjectPtrTypes.h
+ * itmx: ITMObjectPtrTypes.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
