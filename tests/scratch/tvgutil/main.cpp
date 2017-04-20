@@ -2,6 +2,53 @@
 #if 1
 
 #include <iostream>
+#include <map>
+#include <string>
+
+#include <boost/any.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <tvgutil/containers/MapUtil.h>
+using namespace tvgutil;
+
+class AppParams
+{
+private:
+  typedef std::map<std::string,std::string> Base;
+  Base m_base;
+public:
+  typedef std::string KeyType;
+  typedef std::string ValueType;
+
+  template <typename T>
+  void insert(const KeyType& key, const T& value)
+  {
+    m_base.insert(std::make_pair(key, boost::lexical_cast<std::string>(value)));
+  }
+
+  operator const Base&() const
+  {
+    return m_base;
+  }
+};
+
+int main()
+{
+  AppParams ps;
+  ps.insert("Foo", 23);
+  ps.insert("Bar", "Wibble");
+  int i = MapUtil::typed_lookup(ps, "Foo", i);
+  std::string s = MapUtil::typed_lookup(ps, "Bar", s);
+  std::cout << i << ' ' << s << '\n';
+  return 0;
+}
+
+#endif
+
+//###
+#if 0
+
+#include <iostream>
 
 #include <boost/thread.hpp>
 

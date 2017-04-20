@@ -115,6 +115,12 @@ public:
   {
     value = boost::lexical_cast<T>(lookup(map, key));
   }
+
+  template <typename M, typename T>
+  static T typed_lookup(const M& m, const typename M::KeyType& key, const T& /* dummy */)
+  {
+    return boost::lexical_cast<T>(lookup((const std::map<typename M::KeyType,typename M::ValueType>&)m, key));
+  }
 };
 
 }
