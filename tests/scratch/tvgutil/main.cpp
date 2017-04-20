@@ -1,9 +1,13 @@
 //###
 #if 1
 
+#include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <map>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
@@ -14,21 +18,26 @@ using namespace tvgutil;
 class AppParams
 {
 private:
-  typedef std::map<std::string,std::string> Base;
+  typedef std::map<std::string,boost::any> Base;
   Base m_base;
 public:
-  typedef std::string KeyType;
-  typedef std::string ValueType;
-
-  template <typename T>
-  void insert(const KeyType& key, const T& value)
+  template <typename V>
+  void insert(const std::string& key, const V& value)
   {
-    m_base.insert(std::make_pair(key, boost::lexical_cast<std::string>(value)));
+    m_base.insert(std::make_pair(key, value));
   }
 
-  operator const Base&() const
+  void insert(const std::string& key, const char *value)
   {
-    return m_base;
+    m_base.insert(std::make_pair(key, std::string(value)));
+  }
+
+  template <typename V>
+  V operator()(const std::string& key, const V& /* dummy */) const
+  {
+    Base::const_iterator it = m_base.find(key);
+    if(it != m_base.end()) return boost::any_cast<V>(it->second);
+    else throw std::runtime_error("...");
   }
 };
 
@@ -37,9 +46,14 @@ int main()
   AppParams ps;
   ps.insert("Foo", 23);
   ps.insert("Bar", "Wibble");
-  int i = MapUtil::typed_lookup(ps, "Foo", i);
-  std::string s = MapUtil::typed_lookup(ps, "Bar", s);
+  std::vector<std::string> vec;
+  vec.push_back("9");
+  ps.insert("Baz", vec);
+  int i = ps("Foo", i);
+  std::string s = ps("Bar", s);
+  std::vector<std::string> v = ps("Baz", v);
   std::cout << i << ' ' << s << '\n';
+  std::copy(v.begin(), v.end(), std::ostream_iterator<std::string>(std::cout, " "));
   return 0;
 }
 
