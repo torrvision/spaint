@@ -26,56 +26,6 @@ void ParametersContainer::add_value(const std::string &key, const std::string &v
   m_container[key].push_back(value);
 }
 
-bool ParametersContainer::get_bool(const std::string &key) const
-{
-  return get_typed_value<bool>(key);
-}
-
-bool ParametersContainer::get_bool(const std::string &key, bool defaultValue) const
-{
-  return get_typed_value<bool>(key, defaultValue);
-}
-
-int ParametersContainer::get_int(const std::string &key) const
-{
-  return get_typed_value<int>(key);
-}
-
-int ParametersContainer::get_int(const std::string &key, int defaultValue) const
-{
-  return get_typed_value<int>(key, defaultValue);
-}
-
-float ParametersContainer::get_float(const std::string &key) const
-{
-  return get_typed_value<float>(key);
-}
-
-float ParametersContainer::get_float(const std::string &key, float defaultValue) const
-{
-  return get_typed_value<float>(key, defaultValue);
-}
-
-std::vector<std::string> ParametersContainer::get_multiple_strings(const std::string &key) const
-{
-  return MapUtil::lookup(m_container, key);
-}
-
-std::vector<std::string> ParametersContainer::get_multiple_strings(const std::string &key, const std::vector<std::string> defaultValue) const
-{
-  return MapUtil::lookup(m_container, key, defaultValue);
-}
-
-std::string ParametersContainer::get_string(const std::string &key) const
-{
-  return get_typed_value<std::string>(key);
-}
-
-std::string ParametersContainer::get_string(const std::string &key, const std::string &defaultValue) const
-{
-  return get_typed_value<std::string>(key, defaultValue);
-}
-
 //#################### STREAM OPERATORS ####################
 std::ostream& operator<<(std::ostream &os, const ParametersContainer &rhs)
 {

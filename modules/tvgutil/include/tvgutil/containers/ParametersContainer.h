@@ -60,130 +60,6 @@ public:
   void add_value(const std::string &key, const std::string &value);
 
   /**
-   * \brief Returns a boolean from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   *
-   * \param key The key.
-   * \return    The integer value.
-   *
-   * \throws std::runtime_error       If the container does not contain the specified key.
-   * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to bool.
-   */
-  bool get_bool(const std::string &key) const;
-
-  /**
-   * \brief Returns a boolean from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   * If the key is missing returns the default value.
-   *
-   * \param key          The key.
-   * \param defaultValue The default value.
-   * \return             The integer value.
-   *
-   * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to bool.
-   */
-  bool get_bool(const std::string &key, bool defaultValue) const;
-
-  /**
-   * \brief Returns an integer from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   *
-   * \param key The key.
-   * \return    The integer value.
-   *
-   * \throws std::runtime_error       If the container does not contain the specified key.
-   * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to int.
-   */
-  int get_int(const std::string &key) const;
-
-  /**
-   * \brief Returns an integer from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   * If the key is missing returns the default value.
-   *
-   * \param key          The key.
-   * \param defaultValue The default value.
-   * \return             The integer value.
-   *
-   * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to int.
-   */
-  int get_int(const std::string &key, int defaultValue) const;
-
-  /**
-   * \brief Returns a float from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   *
-   * \param key The key.
-   * \return    The float value.
-   *
-   * \throws std::runtime_error       If the container does not contain the specified key.
-   * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to float.
-   */
-  float get_float(const std::string &key) const;
-
-  /**
-   * \brief Returns a float from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   * If the key is missing returns the default value.
-   *
-   * \param key          The key.
-   * \param defaultValue The default value.
-   * \return             The integer value.
-   *
-   * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to float.
-   */
-  float get_float(const std::string &key, float defaultValue) const;
-
-  /**
-   * \brief Returns all the values associated to the key.
-   *
-   * \param key The key.
-   * \return    The values.
-   *
-   * \throws std::runtime_error       If the container does not contain the specified key.
-   */
-  std::vector<std::string> get_multiple_strings(const std::string &key) const;
-
-  /**
-   * \brief Returns all the values associated to the key.
-   *
-   * \param key           The key.
-   * \param defaultValue  The default value.
-   * \return              The values.
-   */
-  std::vector<std::string> get_multiple_strings(const std::string &key, const std::vector<std::string> defaultValue) const;
-
-  /**
-   * \brief Returns a string from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   *
-   * \param key The key.
-   * \return    The string.
-   *
-   * \throws std::runtime_error       If the container does not contain the specified key.
-   */
-  std::string get_string(const std::string &key) const;
-
-  /**
-   * \brief Returns a string from the container.
-   *
-   * If multiple values have been added to the same key, the first is returned.
-   * If the key is missing returns the default value.
-   *
-   * \param key          The key.
-   * \param defaultValue The default value.
-   * \return             The string.
-   */
-  std::string get_string(const std::string &key, const std::string &defaultValue) const;
-
-  /**
    * \brief Returns a typed value from the container.
    *
    * If multiple values have been added to the same key, the first is returned.
@@ -229,7 +105,7 @@ public:
   //#################### STREAM OPERATORS ####################
 public:
   /**
-   * \brief Outputs a the contents of the container.
+   * \brief Outputs the contents of the container.
    *
    * \param os  The stream to which to output the container.
    * \param rhs The container to output.
