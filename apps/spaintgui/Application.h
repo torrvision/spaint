@@ -23,6 +23,8 @@
 
 #include <SDL.h>
 
+#include <ITMLib/Engines/Meshing/Interface/ITMMeshingEngine.h>
+
 #include <tvginput/InputState.h>
 
 #include <tvgutil/commands/CommandManager.h>
@@ -42,6 +44,9 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMLib::ITMMesh> Mesh_Ptr;
+  typedef ITMLib::ITMMeshingEngine<spaint::SpaintVoxel,ITMVoxelIndex> MeshingEngine;
+  typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
