@@ -6,58 +6,49 @@
 #ifndef H_TVGUTIL_GLOBALPARAMETERS
 #define H_TVGUTIL_GLOBALPARAMETERS
 
-#include <map>
 #include <ostream>
-#include <sstream>
-#include <stdexcept>
 #include <vector>
-
-#include <boost/lexical_cast.hpp>
-#include <boost/mpl/identity.hpp>
 
 #include "../containers/MapUtil.h"
 
 namespace tvgutil {
 
 /**
- * \brief An instance of this class can be used to hold a number of parameters used to configure the application.
+ * \brief The singleton instance of this class can be used to access the global parameters used to configure an application.
  *
- * The container acts as a Key-Value storage returning typed variables.
+ * The parameters are represented as a key -> [value] map, i.e. there can be multiple values for the same named parameter.
  */
 class GlobalParameters
 {
   //#################### PRIVATE VARIABLES ####################
 private:
-  /** The actual container. */
-  std::map<std::string, std::vector<std::string> > m_container;
+  /** The key -> [value] map storing the values for the parameters. */
+  std::map<std::string, std::vector<std::string> > m_params;
 
-  //#################### CONSTRUCTORS ####################
+  //#################### SINGLETON IMPLEMENTATION ####################
 private:
   /**
-   * \brief Constructs a parameter container that can be used to hold a number of parameters used to configure the application.
+   * \brief Constructs the singleton instance.
    */
   GlobalParameters();
 
-  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Returns a global instance of a parameter container that can be used to configure deeply nested classes.
+   * \brief Gets the singleton instance.
    *
-   * \return A global instance of the parameter container.
+   * \return The singleton instance.
    */
   static GlobalParameters& instance();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Adds a key-value pair to the container.
+   * \brief Adds a value to the list of values for the specified parameter.
    *
-   * Multiple values can be added to the same key.
-   *
-   * \param key   The key to which associate the value.
-   * \param value The value to add to the container.
+   * \param key   The name of the parameter with which to associate the value.
+   * \param value The value to add.
    */
-  void add_value(const std::string &key, const std::string &value);
+  void add_value(const std::string& key, const std::string& value);
 
   /**
    * \brief Returns a typed value from the container.
@@ -71,9 +62,9 @@ public:
    * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
    */
   template<typename T>
-  T get_typed_value(const std::string &key) const
+  T get_first_value(const std::string& key) const
   {
-    std::vector<std::string> values = MapUtil::lookup(m_container, key);
+    const std::vector<std::string>& values = MapUtil::lookup(m_params, key);
 
     if(values.empty())
       throw std::runtime_error("Value for " + key + " not found in the container.");
@@ -94,10 +85,10 @@ public:
    * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
    */
   template<typename T>
-  T get_typed_value(const std::string &key, typename boost::mpl::identity<const T>::type &defaultValue) const
+  T get_first_value(const std::string& key, typename boost::mpl::identity<const T>::type& defaultValue) const
   {
     static std::vector<std::string> defaultEmptyVector;
-    std::vector<std::string> values = MapUtil::lookup(m_container, key, defaultEmptyVector);
+    const std::vector<std::string>& values = MapUtil::lookup(m_params, key, defaultEmptyVector);
 
     return values.empty() ? defaultValue : boost::lexical_cast<T>(values[0]);
   }
@@ -105,13 +96,13 @@ public:
   //#################### STREAM OPERATORS ####################
 public:
   /**
-   * \brief Outputs the contents of the container.
+   * \brief Outputs the global parameters to a stream.
    *
-   * \param os  The stream to which to output the container.
-   * \param rhs The container to output.
+   * \param os  The stream to which to output the global parameters.
+   * \param rhs The global parameters to output.
    * \return    The stream.
    */
-  friend std::ostream& operator<<(std::ostream &os, const GlobalParameters &rhs);
+  friend std::ostream& operator<<(std::ostream& os, const GlobalParameters& rhs);
 };
 
 //#################### TEMPLATE SPECIALIZATIONS ####################
@@ -129,9 +120,9 @@ public:
  * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
  */
 template<>
-inline bool GlobalParameters::get_typed_value<bool>(const std::string &key) const
+inline bool GlobalParameters::get_first_value<bool>(const std::string &key) const
 {
-  std::vector<std::string> values = MapUtil::lookup(m_container, key);
+  std::vector<std::string> values = MapUtil::lookup(m_params, key);
 
   if(values.empty())
     throw std::runtime_error("Value for " + key + " not found in the container.");
@@ -157,10 +148,10 @@ inline bool GlobalParameters::get_typed_value<bool>(const std::string &key) cons
  * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
  */
 template<>
-inline bool GlobalParameters::get_typed_value<bool>(const std::string &key, typename boost::mpl::identity<const bool>::type &defaultValue) const
+inline bool GlobalParameters::get_first_value<bool>(const std::string &key, typename boost::mpl::identity<const bool>::type &defaultValue) const
 {
   static std::vector<std::string> defaultEmptyVector;
-  std::vector<std::string> values = MapUtil::lookup(m_container, key, defaultEmptyVector);
+  std::vector<std::string> values = MapUtil::lookup(m_params, key, defaultEmptyVector);
 
   bool value = defaultValue;
 
