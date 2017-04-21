@@ -27,8 +27,8 @@ public:
   ExampleClusterer_CUDA(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
 protected:
-  virtual const ExampleType* get_pointer_to_reservoir(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const;
-  virtual const int* get_pointer_to_reservoir_size(const ITMIntMemoryBlock_CPtr &exampleReservoirsSize, uint32_t reservoirIdx) const;
+  virtual const ExampleType* get_pointer_to_example_set(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const;
+  virtual const int* get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr &exampleReservoirsSize, uint32_t reservoirIdx) const;
   virtual ClusterType* get_pointer_to_prediction(const ClusterBlock_Ptr &predictions, uint32_t predictionIdx) const;
 
   virtual void reset_temporaries(uint32_t reservoirCapacity, uint32_t reservoirCount);

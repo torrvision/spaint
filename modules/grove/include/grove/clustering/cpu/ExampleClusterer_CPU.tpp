@@ -17,14 +17,14 @@ ExampleClusterer_CPU<ExampleType, ClusterType>::ExampleClusterer_CPU(float sigma
 {}
 
 template<typename ExampleType, typename ClusterType>
-const ExampleType *ExampleClusterer_CPU<ExampleType, ClusterType>::get_pointer_to_reservoir(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const
+const ExampleType *ExampleClusterer_CPU<ExampleType, ClusterType>::get_pointer_to_example_set(const ExampleImage_CPtr &exampleReservoirs, uint32_t reservoirIdx) const
 {
   const int reservoirCapacity = exampleReservoirs->noDims.width;
   return exampleReservoirs->GetData(MEMORYDEVICE_CPU) + reservoirIdx * reservoirCapacity;
 }
 
 template<typename ExampleType, typename ClusterType>
-const int *ExampleClusterer_CPU<ExampleType, ClusterType>::get_pointer_to_reservoir_size(const ITMIntMemoryBlock_CPtr &exampleReservoirsSize, uint32_t reservoirIdx) const
+const int *ExampleClusterer_CPU<ExampleType, ClusterType>::get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr &exampleReservoirsSize, uint32_t reservoirIdx) const
 {
   return exampleReservoirsSize->GetData(MEMORYDEVICE_CPU) + reservoirIdx;
 }
@@ -38,7 +38,7 @@ ClusterType *ExampleClusterer_CPU<ExampleType, ClusterType>::get_pointer_to_pred
 template<typename ExampleType, typename ClusterType>
 void ExampleClusterer_CPU<ExampleType, ClusterType>::reset_temporaries(uint32_t reservoirCapacity, uint32_t reservoirCount)
 {
-  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU);
+  int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
 
@@ -75,7 +75,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_modes(const Example
 template<typename ExampleType, typename ClusterType>
 void ExampleClusterer_CPU<ExampleType, ClusterType>::select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize, uint32_t reservoirCapacity, uint32_t reservoirCount)
 {
-  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU);
+  int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);
@@ -94,7 +94,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::select_clusters(uint32_t ma
 template<typename ExampleType, typename ClusterType>
 void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_cluster_size_histograms(uint32_t reservoirCapacity, uint32_t reservoirCount)
 {
-  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU);
+  int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *clusterSizes = this->m_clusterSizes->GetData(MEMORYDEVICE_CPU);
   int *clusterSizesHistogram = this->m_clusterSizesHistogram->GetData(MEMORYDEVICE_CPU);
 
@@ -135,7 +135,7 @@ template<typename ExampleType, typename ClusterType>
 void ExampleClusterer_CPU<ExampleType, ClusterType>::link_neighbors(const ExampleType *examples, const int *reservoirSizes, uint32_t reservoirCapacity, uint32_t reservoirCount, float tauSq)
 {
   const float *densities = this->m_densities->GetData(MEMORYDEVICE_CPU);
-  int *nbClustersPerReservoir = this->m_nbClustersPerReservoir->GetData(MEMORYDEVICE_CPU);
+  int *nbClustersPerReservoir = this->m_nbClustersPerExampleSet->GetData(MEMORYDEVICE_CPU);
   int *parents = this->m_parents->GetData(MEMORYDEVICE_CPU);
   int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
 
