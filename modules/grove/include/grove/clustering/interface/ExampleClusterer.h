@@ -29,8 +29,8 @@ namespace grove {
  * \note  The following functions are required to be defined:
  *        - _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType &a, const ExampleType &b)
  *          Returns the squared distancebetween two examples.
- *        - CPU_AND_GPU_CODE_ inline void computeMode(const ExampleType *examples, const int *exampleKeys,
- *                                                    int examplesCount, int key, ClusterType &outputMode)
+ *        - CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples, const int *exampleKeys,
+ *                                                                  int examplesCount, int key, ClusterType &outputMode)
  *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
  *
  * \param ExampleType The type of examples to cluster.
@@ -167,12 +167,12 @@ protected:
    * \param exampleSetCapacity Maximum size of each example set.
    * \param exampleSetCount    Number of example sets to be clustered.
    */
-  virtual void compute_modes(const ExampleType *exampleSets,
-                             const int *exampleSetsSizes,
-                             ClusterType *predictionsData,
-                             uint32_t maxClusterCount,
-                             uint32_t exampleSetsCapacity,
-                             uint32_t exampleSetsCount) = 0;
+  virtual void compute_cluster_parameters(const ExampleType *exampleSets,
+                                          const int *exampleSetsSizes,
+                                          ClusterType *predictionsData,
+                                          uint32_t maxClusterCount,
+                                          uint32_t exampleSetsCapacity,
+                                          uint32_t exampleSetsCount) = 0;
 
   /**
    * \brief Virtual function returning a pointer to the first example of the example set setIdx.

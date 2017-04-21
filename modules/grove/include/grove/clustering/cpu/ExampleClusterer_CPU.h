@@ -38,7 +38,7 @@ protected:
   virtual void identify_clusters(uint32_t reservoirCapacity, uint32_t reservoirCount);
   virtual void compute_cluster_size_histograms(uint32_t reservoirCapacity, uint32_t reservoirCount);
   virtual void select_clusters(uint32_t maxClusterCount, uint32_t minClusterSize, uint32_t reservoirCapacity, uint32_t reservoirCount);
-  virtual void compute_modes(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount);
+  virtual void compute_cluster_parameters(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount);
 };
 
 }

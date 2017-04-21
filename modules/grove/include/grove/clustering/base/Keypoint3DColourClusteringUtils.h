@@ -13,6 +13,14 @@
 
 namespace grove {
 
+/**
+ * \brief computes the squared distance between two Keypoint3DColour.
+ *
+ * \param a A Keypoint3DColour.
+ * \param b Another Keypoint3DColour.
+ *
+ * \return  The squared distance between a and b.
+ */
 _CPU_AND_GPU_CODE_
 inline float distanceSquared(const Keypoint3DColour &a, const Keypoint3DColour &b)
 {
@@ -20,16 +28,28 @@ inline float distanceSquared(const Keypoint3DColour &a, const Keypoint3DColour &
   return dot(diff, diff);
 }
 
+/**
+ * \brief Constructs a modal cluster given a certain number of example keypoints.
+ *
+ * \note  Each example has an associated key, only examples with key equal to "key"
+ *        are used to construct the cluster.
+ *
+ * \param examples      The example keypoints that potentially may be part of the cluster.
+ * \param exampleKeys   Keys associated to each example.
+ * \param examplesCount The number of examples.
+ * \param key           Only examples having key equal to this parameters are used to compute the cluster parameters.
+ * \param outputCluster The constructed cluster.
+ */
 _CPU_AND_GPU_CODE_
-inline void computeMode(
-    const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, int key, Mode3DColour &outputMode)
+inline void createClusterFromExamples(
+    const Keypoint3DColour *examples, const int *exampleKeys, int examplesCount, int key, Mode3DColour &outputCluster)
 {
-  // compute position and colour mean
+  // Compute position and colour mean.
   int sampleCount = 0;
   Vector3f positionMean(0.f);
   Vector3f colourMean(0.f);
 
-  // Iterate over all examples and use only those belonging to selectedClusterId
+  // Iterate over all examples and use only those belonging to cluster key.
   for (int sampleIdx = 0; sampleIdx < examplesCount; ++sampleIdx)
   {
     const int sampleCluster = exampleKeys[sampleIdx];
@@ -43,22 +63,22 @@ inline void computeMode(
     }
   }
 
-  // this mode is invalid..
+  // This mode is invalid.
   if (sampleCount <= 1)
   {
-// Should never reach this point since we check minClusterSize earlier
+// Should never reach this point since we should have checked minClusterSize earlier.
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
-    printf("computeMode: got a cluster with less than 2 elements.\n");
+    printf("createClusterFromExamples: got a cluster with less than 2 elements.\n");
     asm("trap;");
 #else
-    throw std::runtime_error("computeMode: got a cluster with less than 2 elements.");
+    throw std::runtime_error("createClusterFromExamples: got a cluster with less than 2 elements.");
 #endif
   }
 
   positionMean /= static_cast<float>(sampleCount);
   colourMean /= static_cast<float>(sampleCount);
 
-  // Now iterate again and compute the covariance
+  // Now iterate again and compute the covariance.
   Matrix3f positionCovariance;
   positionCovariance.setZeros();
 
@@ -84,12 +104,12 @@ inline void computeMode(
   positionCovariance /= static_cast<float>(sampleCount - 1);
   const float positionDeterminant = positionCovariance.det();
 
-  // Fill the mode
-  outputMode.nbInliers = sampleCount;
-  outputMode.position = positionMean;
-  outputMode.determinant = positionDeterminant;
-  positionCovariance.inv(outputMode.positionInvCovariance);
-  outputMode.colour = colourMean.toUChar();
+  // Fill the cluster.
+  outputCluster.colour = colourMean.toUChar();
+  outputCluster.determinant = positionDeterminant;
+  outputCluster.nbInliers = sampleCount;
+  outputCluster.position = positionMean;
+  positionCovariance.inv(outputCluster.positionInvCovariance);
 }
 
 } // namespace grove

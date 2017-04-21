@@ -80,8 +80,9 @@ void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleImage_C
   // Select best clusters.
   select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, count);
 
-  // Finally, compute modes for each cluster and store the predictions.
-  compute_modes(exampleSetsData, exampleSetsSizeData, predictionsData, m_maxClusterCount, exampleSetCapacity, count);
+  // Finally, compute parameters for each cluster and store the predictions.
+  compute_cluster_parameters(
+      exampleSetsData, exampleSetsSizeData, predictionsData, m_maxClusterCount, exampleSetCapacity, count);
 
 // Debug.
 #if 0

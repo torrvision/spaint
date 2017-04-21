@@ -6,12 +6,15 @@
 #ifndef H_GROVE_MODE3DCOLOUR
 #define H_GROVE_MODE3DCOLOUR
 
+#include <ITMLib/Utils/ITMMath.h>
+
 #include <ORUtils/Vector.h>
 
 namespace grove {
 
 /**
- * \brief This struct represents a 3D modal cluster of points with an associated colour, used during the camera pose regression.
+ * \brief This struct represents a 3D modal cluster of points with an associated colour.
+ *        Used during the camera pose regression.
  */
 struct Mode3DColour
 {
@@ -31,6 +34,6 @@ struct Mode3DColour
   Matrix3f positionInvCovariance;
 };
 
-}
+} // namespace grove
 
 #endif

@@ -53,7 +53,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType>::reset_temporaries(uint32_t 
 }
 
 template<typename ExampleType, typename ClusterType>
-void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_modes(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount)
+void ExampleClusterer_CPU<ExampleType, ClusterType>::compute_cluster_parameters(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount)
 {
   int *clusterIndices = this->m_clusterIdx->GetData(MEMORYDEVICE_CPU);
   int *selectedClusters = this->m_selectedClusters->GetData(MEMORYDEVICE_CPU);

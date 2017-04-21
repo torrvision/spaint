@@ -36,6 +36,8 @@ struct Prediction3DColour
    * \param maxScore Will contain the energy associated to the closest mode.
    *
    * \return The index of the closest modal cluster. -1 if nbModes is 0.
+   *
+   * TODO: This should become a free function and be in a different file.
    */
   _CPU_AND_GPU_CODE_
   int get_best_mode_and_energy(const Vector3f &v, float &maxScore) const

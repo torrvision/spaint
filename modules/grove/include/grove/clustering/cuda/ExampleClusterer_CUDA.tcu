@@ -150,7 +150,7 @@ void ExampleClusterer_CUDA<ExampleType, ClusterType>::reset_temporaries(uint32_t
 }
 
 template<typename ExampleType, typename ClusterType>
-void ExampleClusterer_CUDA<ExampleType, ClusterType>::compute_modes(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount)
+void ExampleClusterer_CUDA<ExampleType, ClusterType>::compute_cluster_parameters(const ExampleType *examples, const int *reservoirSizes, ClusterType *predictionsData, uint32_t maxClusterCount, uint32_t reservoirCapacity, uint32_t reservoirCount)
 {
   dim3 gridSize(reservoirCount); // One block per reservoir to process
   dim3 blockSize(maxClusterCount); // One thread per cluster

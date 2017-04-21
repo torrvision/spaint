@@ -307,8 +307,8 @@ inline void example_clusterer_compute_modes(const ExampleType *examples,
     const ExampleType *reservoirExamples = examples + reservoirOffset;
     const int *reservoirClusterIndices = clusterIndices + reservoirOffset;
 
-    // Compute the actual mode.
-    computeMode(reservoirExamples, reservoirClusterIndices, reservoirSize, selectedClusterId, reservoirPrediction.modes[modeIdx]);
+    // Build the actual cluster.
+    createClusterFromExamples(reservoirExamples, reservoirClusterIndices, reservoirSize, selectedClusterId, reservoirPrediction.modes[modeIdx]);
   }
 }
 
