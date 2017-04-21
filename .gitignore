@@ -4,7 +4,7 @@ docs/
 install/
 libraries/alglib/
 libraries/arrayfire*/
-libraries/boost_1_56_0/
+libraries/boost_1_*/
 libraries/boost-setup/
 libraries/ceres-solver-1.11.0/
 libraries/Eigen-3.2.2/
