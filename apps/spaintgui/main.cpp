@@ -37,8 +37,8 @@
 
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 
-#include <tvgutil/containers/ParametersContainer.h>
 #include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/misc/GlobalParameters.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
@@ -186,14 +186,14 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   // Parse options from configuration file, if necessary.
   if(vm.count("configFile"))
   {
-    // Allow unregistered options: those are added to the global ParametersContainer instance, to be used by other classes.
+    // Allow unregistered options: those are added to the global parameters, to be used by other classes.
     po::parsed_options parsedOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
 
     // Store registered options in the variable map
     po::store(parsedOptions, vm);
 
     // Check for unregistered options
-    ParametersContainer &parametersContainer = ParametersContainer::instance();
+    GlobalParameters& globalParams = GlobalParameters::instance();
     for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
     {
       const po::basic_option<char> &option = parsedOptions.options[optionIdx];
@@ -202,7 +202,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
         // Add all values in order
         for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
         {
-          parametersContainer.add_value(option.string_key, option.value[valueIdx]);
+          globalParams.add_value(option.string_key, option.value[valueIdx]);
         }
       }
     }

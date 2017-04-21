@@ -1,10 +1,10 @@
 /**
- * tvgutil: ParametersContainer.h
+ * tvgutil: GlobalParameters.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_PARAMETERSCONTAINER
-#define H_TVGUTIL_PARAMETERSCONTAINER
+#ifndef H_TVGUTIL_GLOBALPARAMETERS
+#define H_TVGUTIL_GLOBALPARAMETERS
 
 #include <map>
 #include <ostream>
@@ -15,7 +15,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/identity.hpp>
 
-#include "MapUtil.h"
+#include "../containers/MapUtil.h"
 
 namespace tvgutil {
 
@@ -24,7 +24,7 @@ namespace tvgutil {
  *
  * The container acts as a Key-Value storage returning typed variables.
  */
-class ParametersContainer
+class GlobalParameters
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -32,11 +32,11 @@ private:
   std::map<std::string, std::vector<std::string> > m_container;
 
   //#################### CONSTRUCTORS ####################
-public:
+private:
   /**
    * \brief Constructs a parameter container that can be used to hold a number of parameters used to configure the application.
    */
-  ParametersContainer();
+  GlobalParameters();
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -45,7 +45,7 @@ public:
    *
    * \return A global instance of the parameter container.
    */
-  static ParametersContainer& instance();
+  static GlobalParameters& instance();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -111,7 +111,7 @@ public:
    * \param rhs The container to output.
    * \return    The stream.
    */
-  friend std::ostream& operator<<(std::ostream &os, const ParametersContainer &rhs);
+  friend std::ostream& operator<<(std::ostream &os, const GlobalParameters &rhs);
 };
 
 //#################### TEMPLATE SPECIALIZATIONS ####################
@@ -129,7 +129,7 @@ public:
  * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
  */
 template<>
-inline bool ParametersContainer::get_typed_value<bool>(const std::string &key) const
+inline bool GlobalParameters::get_typed_value<bool>(const std::string &key) const
 {
   std::vector<std::string> values = MapUtil::lookup(m_container, key);
 
@@ -157,7 +157,7 @@ inline bool ParametersContainer::get_typed_value<bool>(const std::string &key) c
  * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
  */
 template<>
-inline bool ParametersContainer::get_typed_value<bool>(const std::string &key, typename boost::mpl::identity<const bool>::type &defaultValue) const
+inline bool GlobalParameters::get_typed_value<bool>(const std::string &key, typename boost::mpl::identity<const bool>::type &defaultValue) const
 {
   static std::vector<std::string> defaultEmptyVector;
   std::vector<std::string> values = MapUtil::lookup(m_container, key, defaultEmptyVector);

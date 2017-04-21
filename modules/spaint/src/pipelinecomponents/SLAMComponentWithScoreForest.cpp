@@ -10,8 +10,8 @@
 
 #include "util/PosePersister.h"
 
-#include "tvgutil/containers/ParametersContainer.h"
 #include "tvgutil/filesystem/PathFinder.h"
+#include "tvgutil/misc/GlobalParameters.h"
 #include "tvgutil/timing/TimeUtil.h"
 
 #include <boost/lexical_cast.hpp>
@@ -58,10 +58,10 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   const Settings_CPtr& settings = m_context->get_settings();
 
   const static std::string parametersNamespace = "SLAMComponentWithScoreForest.";
-  const ParametersContainer &parametersContainer = ParametersContainer::instance();
+  const GlobalParameters& globalParams = GlobalParameters::instance();
 
   const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf").string();
-  m_relocalisationForestPath = parametersContainer.get_typed_value<std::string>(parametersNamespace + "m_relocalisationForestPath", defaultRelocalisationForestPath);
+  m_relocalisationForestPath = globalParams.get_typed_value<std::string>(parametersNamespace + "m_relocalisationForestPath", defaultRelocalisationForestPath);
   std::cout << "Loading relocalization forest from: " << m_relocalisationForestPath << '\n';
 
   m_updateForestModesEveryFrame = true;
@@ -76,7 +76,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
   m_refinementTrackerParams =
-      parametersContainer.get_typed_value<std::string>(
+      globalParams.get_typed_value<std::string>(
           parametersNamespace + "m_refinementTrackerParams",
           "type=extended,levels=rrbb,minstep=1e-4,"
           "outlierSpaceC=0.1,outlierSpaceF=0.004,"
@@ -97,9 +97,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(
   m_relocalizationCalls = 0;
   m_relocalizationTimes.clear();
 
-  m_relocaliseAfterEveryFrame = parametersContainer.get_typed_value<bool>(
+  m_relocaliseAfterEveryFrame = globalParams.get_typed_value<bool>(
       parametersNamespace + "m_relocaliseAfterEveryFrame", false);
-  m_saveRelocalisationPoses = parametersContainer.get_typed_value<bool>(
+  m_saveRelocalisationPoses = globalParams.get_typed_value<bool>(
       parametersNamespace + "m_saveRelocalisationPoses", false);
 
   if (m_saveRelocalisationPoses)
