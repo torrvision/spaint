@@ -14,7 +14,6 @@ SET(targetname tvgutil)
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 
 #############################
 # Specify the project files #
@@ -79,8 +78,6 @@ src/numbers/RandomNumberGenerator.cpp
 SET(numbers_headers
 include/tvgutil/numbers/NumberSequenceGenerator.h
 include/tvgutil/numbers/RandomNumberGenerator.h
-include/tvgutil/numbers/SimpleRandomNumberGenerator_CPU.h
-include/tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h
 )
 
 ##

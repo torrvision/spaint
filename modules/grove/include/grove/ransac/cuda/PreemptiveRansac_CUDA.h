@@ -7,8 +7,7 @@
 #define H_GROVE_PREEMPTIVERANSACCUDA
 
 #include "../interface/PreemptiveRansac.h"
-
-#include <tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h>
+#include "../../numbers/SimpleRandomNumberGenerator_CUDA.h"
 
 namespace grove {
 
@@ -24,7 +23,7 @@ protected:
   virtual void update_candidate_poses();
 
 private:
-  tvgutil::CUDARNGMemoryBlock_Ptr m_randomGenerators;
+  CUDARNGMemoryBlock_Ptr m_randomGenerators;
   uint32_t m_rngSeed;
 
   ITMIntImage_Ptr m_nbPoseCandidates_device;

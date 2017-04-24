@@ -1,18 +1,17 @@
 /**
- * tvgutil: SimpleRandomNumberGenerator_CPU.h
+ * grove: SimpleRandomNumberGenerator_CPU.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_SIMPLERANDOMNUMBERGENERATORCPU
-#define H_TVGUTIL_SIMPLERANDOMNUMBERGENERATORCPU
+#ifndef H_GROVE_SIMPLERANDOMNUMBERGENERATORCPU
+#define H_GROVE_SIMPLERANDOMNUMBERGENERATORCPU
 
 #include <boost/random.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "ORUtils/MemoryBlock.h"
 
-namespace tvgutil
-{
+namespace grove {
 
 /**
  * \brief An instance of this class represents a random number generator.

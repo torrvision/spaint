@@ -1,10 +1,10 @@
 /**
- * tvgutil: SimpleRandomNumberGenerator_CUDA.h
+ * grove: SimpleRandomNumberGenerator_CUDA.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_SIMPLERANDOMNUMBERGENERATORCUDA
-#define H_TVGUTIL_SIMPLERANDOMNUMBERGENERATORCUDA
+#ifndef H_GROVE_SIMPLERANDOMNUMBERGENERATORCUDA
+#define H_GROVE_SIMPLERANDOMNUMBERGENERATORCUDA
 
 #include <boost/shared_ptr.hpp>
 #include <curand_kernel.h>
@@ -13,8 +13,7 @@
 #include "ORUtils/MemoryBlock.h"
 #include "ORUtils/PlatformIndependence.h"
 
-namespace tvgutil
-{
+namespace grove {
 
 /**
  * \brief An instance of this class represents a CUDA random number generator.

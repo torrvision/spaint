@@ -7,11 +7,9 @@
 #define H_GROVE_EXAMPLERESERVOIRSCUDA
 
 #include "../interface/ExampleReservoirs.h"
+#include "../../numbers/SimpleRandomNumberGenerator_CUDA.h"
 
-#include <tvgutil/numbers/SimpleRandomNumberGenerator_CUDA.h>
-
-namespace grove
-{
+namespace grove {
 
 /**
  * \brief An instance of this class one can be used to store a number of "Examples" in a set of fixed-size reservoirs using CUDA.
@@ -69,7 +67,7 @@ protected:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** A set of random number generators used by the CUDA threads. */
-  tvgutil::CUDARNGMemoryBlock_Ptr m_randomStates;
+  CUDARNGMemoryBlock_Ptr m_randomStates;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

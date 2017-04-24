@@ -93,6 +93,12 @@ SET(forests_interface_templates include/grove/forests/interface/DecisionForest.t
 SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
 
 ##
+SET(numbers_headers
+include/grove/numbers/SimpleRandomNumberGenerator_CPU.h
+include/grove/numbers/SimpleRandomNumberGenerator_CUDA.h
+)
+
+##
 SET(ransac_headers include/grove/ransac/RansacFactory.h)
 SET(ransac_sources src/ransac/RansacFactory.cpp)
 
@@ -196,6 +202,7 @@ ${forests_headers}
 ${forests_cpu_headers}
 ${forests_interface_headers}
 ${forests_shared_headers}
+${numbers_headers}
 ${ransac_headers}
 ${ransac_base_headers}
 ${ransac_cpu_headers}
@@ -276,6 +283,7 @@ SOURCE_GROUP(forests\\cpu FILES ${forests_cpu_headers} ${forests_cpu_templates})
 SOURCE_GROUP(forests\\cuda FILES ${forests_cuda_headers} ${forests_cuda_templates})
 SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
+SOURCE_GROUP(numbers FILES ${numbers_headers})
 SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
 SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
 SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})

@@ -7,8 +7,7 @@
 #define H_GROVE_EXAMPLERESERVOIRSCPU
 
 #include "../interface/ExampleReservoirs.h"
-
-#include <tvgutil/numbers/SimpleRandomNumberGenerator_CPU.h>
+#include "../../numbers/SimpleRandomNumberGenerator_CPU.h"
 
 namespace grove {
 
@@ -68,7 +67,7 @@ protected:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** A set of random number generators used during the add operation. */
-  tvgutil::CPURNGMemoryBlock_Ptr m_randomStates;
+  CPURNGMemoryBlock_Ptr m_randomStates;
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:

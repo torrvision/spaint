@@ -7,8 +7,7 @@
 #define H_GROVE_PREEMPTIVERANSACCPU
 
 #include "../interface/PreemptiveRansac.h"
-
-#include <tvgutil/numbers/SimpleRandomNumberGenerator_CPU.h>
+#include "../../numbers/SimpleRandomNumberGenerator_CPU.h"
 
 namespace grove {
 
@@ -24,7 +23,7 @@ protected:
   virtual void update_candidate_poses();
 
 private:
-  tvgutil::CPURNGMemoryBlock_Ptr m_randomGenerators;
+  CPURNGMemoryBlock_Ptr m_randomGenerators;
   uint32_t m_rngSeed;
 
   void init_random();
