@@ -33,7 +33,6 @@ SET(clustering_base_headers
     include/grove/clustering/base/ClusterContainer.h
     include/grove/clustering/base/Keypoint3DColourClusteringUtils.h
     include/grove/clustering/base/Mode3DColour.h
-    include/grove/clustering/base/Prediction3DColour.h
     )
 
 ##
@@ -92,6 +91,12 @@ SET(forests_interface_templates include/grove/forests/interface/DecisionForest.t
 
 ##
 SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
+
+##
+SET(keypoints_headers
+include/grove/keypoints/Keypoint2D.h
+include/grove/keypoints/Keypoint3DColour.h
+)
 
 ##
 SET(numbers_headers
@@ -161,10 +166,7 @@ SET(reservoirs_interface_templates include/grove/reservoirs/interface/ExampleRes
 SET(reservoirs_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 ##
-SET(keypoints_headers
-include/grove/keypoints/Keypoint2D.h
-include/grove/keypoints/Keypoint3DColour.h
-)
+SET(scoreforests_headers include/grove/scoreforests/ScorePrediction.h)
 
 ##
 SET(toplevel_sources src/CPUInstantiations.cpp)
@@ -203,6 +205,7 @@ ${forests_headers}
 ${forests_cpu_headers}
 ${forests_interface_headers}
 ${forests_shared_headers}
+${keypoints_headers}
 ${numbers_headers}
 ${ransac_headers}
 ${ransac_base_headers}
@@ -217,7 +220,7 @@ ${reservoirs_headers}
 ${reservoirs_cpu_headers}
 ${reservoirs_interface_headers}
 ${reservoirs_shared_headers}
-${keypoints_headers}
+${scoreforests_headers}
 )
 
 SET(templates
@@ -284,6 +287,7 @@ SOURCE_GROUP(forests\\cpu FILES ${forests_cpu_headers} ${forests_cpu_templates})
 SOURCE_GROUP(forests\\cuda FILES ${forests_cuda_headers} ${forests_cuda_templates})
 SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
+SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_headers})
 SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
 SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
@@ -301,7 +305,7 @@ SOURCE_GROUP(reservoirs\\cpu FILES ${reservoirs_cpu_headers} ${reservoirs_cpu_te
 SOURCE_GROUP(reservoirs\\cuda FILES ${reservoirs_cuda_headers} ${reservoirs_cuda_sources} ${reservoirs_cuda_templates})
 SOURCE_GROUP(reservoirs\\interface FILES ${reservoirs_interface_headers} ${reservoirs_interface_templates})
 SOURCE_GROUP(reservoirs\\shared FILES ${reservoirs_shared_headers})
-SOURCE_GROUP(keypoints FILES ${keypoints_headers})
+SOURCE_GROUP(scoreforests FILES ${scoreforests_headers})
 
 ##########################################
 # Specify additional include directories #

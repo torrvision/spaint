@@ -1,18 +1,17 @@
 /**
- * grove: Prediction3DColour.h
+ * grove: ScorePrediction.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_PREDICTION3DCOLOUR
-#define H_GROVE_PREDICTION3DCOLOUR
+#ifndef H_GROVE_SCOREPREDICTION
+#define H_GROVE_SCOREPREDICTION
 
 #include <ORUtils/PlatformIndependence.h>
-#include <ORUtils/Vector.h>
 
 #include <itmx/ITMImagePtrTypes.h>
 
-#include "ClusterContainer.h"
-#include "Mode3DColour.h"
+#include "../clustering/base/ClusterContainer.h"
+#include "../clustering/base/Mode3DColour.h"
 
 namespace grove {
 
@@ -94,4 +93,4 @@ inline int score_prediction_get_best_mode(const ScorePrediction &prediction, con
 
 } // namespace grove
 
-#endif // H_GROVE_PREDICTION3DCOLOUR
+#endif // H_GROVE_SCOREPREDICTION

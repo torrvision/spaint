@@ -5,7 +5,6 @@
 
 #include "clustering/ExampleClustererFactory.tpp"
 #include "clustering/base/Mode3DColour.h"
-#include "clustering/base/Prediction3DColour.h"
 #include "clustering/base/Keypoint3DColourClusteringUtils.h"
 #include "clustering/cpu/ExampleClusterer_CPU.tpp"
 #include "clustering/interface/ExampleClusterer.tpp"

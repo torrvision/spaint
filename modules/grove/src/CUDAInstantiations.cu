@@ -3,7 +3,6 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "clustering/base/Prediction3DColour.h"
 #include "clustering/base/Keypoint3DColourClusteringUtils.h"
 #include "clustering/cuda/ExampleClusterer_CUDA.tcu"
 

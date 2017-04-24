@@ -8,8 +8,8 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
-#include "../../clustering/base/Prediction3DColour.h"
 #include "../../keypoints/Keypoint3DColour.h"
+#include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
 

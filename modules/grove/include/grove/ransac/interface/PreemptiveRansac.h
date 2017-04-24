@@ -19,9 +19,9 @@
 
 #include <tvgutil/timing/AverageTimer.h>
 
-#include "../../clustering/base/Prediction3DColour.h"
 #include "../../keypoints/Keypoint3DColour.h"
 #include "../../ransac/base/PoseCandidate.h"
+#include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
 

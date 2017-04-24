@@ -11,7 +11,7 @@
 #include <ORUtils/PlatformIndependence.h>
 #include <ORUtils/Vector.h>
 
-#include "../../clustering/base/Prediction3DColour.h"
+#include "../../scoreforests/ScorePrediction.h"
 
 
 namespace grove {
