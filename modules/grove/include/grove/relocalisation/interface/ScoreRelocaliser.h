@@ -15,7 +15,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/SE3Pose.h>
 
-#include "../../clustering/base/Mode3DColour.h"
+#include "../../scoreforests/Mode3DColour.h"
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"

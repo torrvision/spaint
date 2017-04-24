@@ -29,11 +29,7 @@ SET(clustering_headers include/grove/clustering/ExampleClustererFactory.h)
 SET(clustering_templates include/grove/clustering/ExampleClustererFactory.tpp)
 
 ##
-SET(clustering_base_headers
-    include/grove/clustering/base/ClusterContainer.h
-    include/grove/clustering/base/Keypoint3DColourClusteringUtils.h
-    include/grove/clustering/base/Mode3DColour.h
-    )
+SET(clustering_base_headers include/grove/clustering/base/ClusterContainer.h)
 
 ##
 SET(clustering_cpu_headers include/grove/clustering/cpu/ExampleClusterer_CPU.h)
@@ -94,8 +90,8 @@ SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
 
 ##
 SET(keypoints_headers
-include/grove/keypoints/Keypoint2D.h
-include/grove/keypoints/Keypoint3DColour.h
+    include/grove/keypoints/Keypoint2D.h
+    include/grove/keypoints/Keypoint3DColour.h
 )
 
 ##
@@ -166,7 +162,11 @@ SET(reservoirs_interface_templates include/grove/reservoirs/interface/ExampleRes
 SET(reservoirs_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
 
 ##
-SET(scoreforests_headers include/grove/scoreforests/ScorePrediction.h)
+SET(scoreforests_headers
+    include/grove/scoreforests/Keypoint3DColourClusteringUtils.h
+    include/grove/scoreforests/Mode3DColour.h
+    include/grove/scoreforests/ScorePrediction.h
+    )
 
 ##
 SET(toplevel_sources src/CPUInstantiations.cpp)

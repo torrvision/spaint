@@ -8,7 +8,7 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
-#include "../../keypoints/Keypoint3DColour.h"
+#include "../keypoints/Keypoint3DColour.h"
 #include "Mode3DColour.h"
 
 namespace grove {

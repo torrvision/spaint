@@ -3,7 +3,6 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "clustering/base/Keypoint3DColourClusteringUtils.h"
 #include "clustering/cuda/ExampleClusterer_CUDA.tcu"
 
 #include "features/cuda/RGBDPatchFeatureCalculator_CUDA.tcu"
@@ -11,6 +10,9 @@
 #include "forests/cuda/DecisionForest_CUDA.tcu"
 
 #include "reservoirs/cuda/ExampleReservoirs_CUDA.tcu"
+
+#include "scoreforests/Keypoint3DColourClusteringUtils.h"
+#include "scoreforests/Mode3DColour.h"
 
 namespace grove {
 

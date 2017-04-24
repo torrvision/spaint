@@ -11,7 +11,7 @@
 #include <itmx/ITMImagePtrTypes.h>
 
 #include "../clustering/base/ClusterContainer.h"
-#include "../clustering/base/Mode3DColour.h"
+#include "Mode3DColour.h"
 
 namespace grove {
 

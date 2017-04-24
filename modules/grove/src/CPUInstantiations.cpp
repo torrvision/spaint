@@ -4,8 +4,6 @@
  */
 
 #include "clustering/ExampleClustererFactory.tpp"
-#include "clustering/base/Mode3DColour.h"
-#include "clustering/base/Keypoint3DColourClusteringUtils.h"
 #include "clustering/cpu/ExampleClusterer_CPU.tpp"
 #include "clustering/interface/ExampleClusterer.tpp"
 
@@ -20,6 +18,9 @@
 #include "reservoirs/ExampleReservoirsFactory.tpp"
 #include "reservoirs/cpu/ExampleReservoirs_CPU.tpp"
 #include "reservoirs/interface/ExampleReservoirs.tpp"
+
+#include "scoreforests/Keypoint3DColourClusteringUtils.h"
+#include "scoreforests/Mode3DColour.h"
 
 namespace grove {
 
