@@ -32,7 +32,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string &forestFilename)
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  m_predictionsBlock = MemoryBlockFactory::instance().make_block<ClusterType>(m_reservoirsCount);
+  m_predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
 
   m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(ITMLibSettings::DEVICE_CPU, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
@@ -53,11 +53,11 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(
   const LeafIndices* leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CPU);
 
   // Leaf predictions
-  const Prediction3DColour *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CPU);
 
   // No-op after the first time.
   outputPredictions->ChangeDims(imgSize);
-  Prediction3DColour *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
+  ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CPU);
 
 #ifdef WITH_OPENMP
 #pragma omp parallel for

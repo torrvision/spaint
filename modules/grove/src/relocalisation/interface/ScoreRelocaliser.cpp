@@ -22,12 +22,12 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
   // Tentative values
   m_clustererSigma = 0.1f;
   m_clustererTau = 0.05f;
-  m_maxClusterCount = Prediction3DColour::MAX_MODES;
+  m_maxClusterCount = ScorePrediction::MAX_CLUSTERS;
   m_minClusterSize = 20;
 
   // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_predictionsImage = mbf.make_image<ClusterType>();
+  m_predictionsImage = mbf.make_image<ScorePrediction>();
   m_rgbdPatchDescriptorImage = mbf.make_image<DescriptorType>();
   m_rgbdPatchKeypointsImage = mbf.make_image<ExampleType>();
   m_leafIndicesImage = mbf.make_image<LeafIndices>();

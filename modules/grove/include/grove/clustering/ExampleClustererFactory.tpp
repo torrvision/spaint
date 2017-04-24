@@ -13,8 +13,8 @@
 
 namespace grove {
 
-template <typename ExampleType, typename ClusterType>
-typename ExampleClustererFactory<ExampleType, ClusterType>::Clusterer_Ptr ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+typename ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::Clusterer_Ptr ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::make_clusterer(
     ITMLib::ITMLibSettings::DeviceType deviceType, float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
 {
   Clusterer_Ptr clusterer;
@@ -23,7 +23,7 @@ typename ExampleClustererFactory<ExampleType, ClusterType>::Clusterer_Ptr Exampl
   {
 #ifdef WITH_CUDA
     clusterer.reset(
-        new ExampleClusterer_CUDA<ExampleType, ClusterType>(sigma, tau, maxClusterCount, minClusterSize));
+        new ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
 #else
     throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
@@ -31,7 +31,7 @@ typename ExampleClustererFactory<ExampleType, ClusterType>::Clusterer_Ptr Exampl
   else
   {
     clusterer.reset(
-        new ExampleClusterer_CPU<ExampleType, ClusterType>(sigma, tau, maxClusterCount, minClusterSize));
+        new ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
   }
 
   return clusterer;

@@ -21,7 +21,7 @@ namespace {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class ExampleClusterer_CUDA<Keypoint3DColour, Prediction3DColour>;
+template class ExampleClusterer_CUDA<Keypoint3DColour, Mode3DColour>;
 
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>;

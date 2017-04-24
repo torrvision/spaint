@@ -15,7 +15,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/SE3Pose.h>
 
-#include "../../clustering/base/Prediction3DColour.h"
+#include "../../clustering/base/Mode3DColour.h"
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"
@@ -27,7 +27,7 @@ namespace grove {
 class ScoreRelocaliser
 {
 public:
-  typedef Prediction3DColour ClusterType;
+  typedef Mode3DColour ClusterType;
   typedef Keypoint3DColour ExampleType;
   typedef RGBDPatchDescriptor DescriptorType;
   enum { TREE_COUNT = 5 };

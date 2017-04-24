@@ -12,13 +12,15 @@ using namespace itmx;
 
 namespace grove {
 
-template <typename ExampleType, typename ClusterType>
-ExampleClusterer<ExampleType, ClusterType>::ExampleClusterer(float sigma,
-                                                             float tau,
-                                                             uint32_t maxClusterCount,
-                                                             uint32_t minClusterSize)
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float sigma,
+                                                                           float tau,
+                                                                           uint32_t maxClusterCount,
+                                                                           uint32_t minClusterSize)
   : m_maxClusterCount(maxClusterCount), m_minClusterSize(minClusterSize), m_sigma(sigma), m_tau(tau)
 {
+  if (maxClusterCount > MAX_CLUSTERS) throw std::invalid_argument("maxClusterCount > MAX_CLUSTERS");
+
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
   // Everything is empty for now, we'll resize them as soon as we know the actual sizes.
@@ -31,17 +33,17 @@ ExampleClusterer<ExampleType, ClusterType>::ExampleClusterer(float sigma,
   m_nbClustersPerExampleSet = mbf.make_block<int>();
 }
 
-template <typename ExampleType, typename ClusterType>
-ExampleClusterer<ExampleType, ClusterType>::~ExampleClusterer()
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::~ExampleClusterer()
 {
 }
 
-template <typename ExampleType, typename ClusterType>
-void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleImage_CPtr &exampleSets,
-                                                            const ITMIntMemoryBlock_CPtr &exampleSetsSize,
-                                                            ClusterBlock_Ptr &clusterContainers,
-                                                            uint32_t startIdx,
-                                                            uint32_t count)
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::find_modes(const ExampleImage_CPtr &exampleSets,
+                                                                          const ITMIntMemoryBlock_CPtr &exampleSetsSize,
+                                                                          ClustersBlock_Ptr &clusterContainers,
+                                                                          uint32_t startIdx,
+                                                                          uint32_t count)
 {
   const uint32_t nbExampleSets = exampleSets->noDims.height;
   const uint32_t exampleSetCapacity = exampleSets->noDims.width;
@@ -56,14 +58,14 @@ void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleImage_C
   const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, startIdx);
   // Grab a pointer to the size of the first exampleSet of interest.
   const int *exampleSetsSizeData = get_pointer_to_example_set_size(exampleSetsSize, startIdx);
-  // Grab a pointer to the first prediction to compute.
-  ClusterType *predictionsData = get_pointer_to_prediction(clusterContainers, startIdx);
+  // Grab a pointer to the first cluster to compute.
+  Clusters *clustersData = get_pointer_to_cluster(clusterContainers, startIdx);
 
   // Reset working variables.
   reset_temporaries(exampleSetCapacity, count);
 
   // Reset output predictions.
-  reset_predictions(predictionsData, count);
+  reset_clusters(clustersData, count);
 
   // Compute densities.
   compute_density(exampleSetsData, exampleSetsSizeData, exampleSetCapacity, count, m_sigma);
@@ -82,7 +84,7 @@ void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleImage_C
 
   // Finally, compute parameters for each cluster and store the predictions.
   compute_cluster_parameters(
-      exampleSetsData, exampleSetsSizeData, predictionsData, m_maxClusterCount, exampleSetCapacity, count);
+      exampleSetsData, exampleSetsSizeData, clustersData, m_maxClusterCount, exampleSetCapacity, count);
 
 // Debug.
 #if 0
@@ -105,9 +107,9 @@ void ExampleClusterer<ExampleType, ClusterType>::find_modes(const ExampleImage_C
 #endif
 }
 
-template <typename ExampleType, typename ClusterType>
-void ExampleClusterer<ExampleType, ClusterType>::allocate_temporaries(uint32_t exampleSetCapacity,
-                                                                      uint32_t exampleSetCount)
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::allocate_temporaries(uint32_t exampleSetCapacity,
+                                                                                    uint32_t exampleSetCount)
 {
   const Vector2i temporariesSize(static_cast<int>(exampleSetCapacity), static_cast<int>(exampleSetCount));
 

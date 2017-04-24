@@ -19,9 +19,9 @@ namespace grove {
 template<int TREE_COUNT>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void get_prediction_for_leaf_shared(
-    const Prediction3DColour* leafPredictions,
+    const ScorePrediction* leafPredictions,
     const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-    Prediction3DColour* outPredictions, Vector2i imgSize, int x, int y)
+    ScorePrediction* outPredictions, Vector2i imgSize, int x, int y)
 {
   typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
 
@@ -36,19 +36,19 @@ inline void get_prediction_for_leaf_shared(
   }
 
   // Copy the prediction selected for each tree. This is to have them contigous in memory for the following operations.
-  Prediction3DColour selectedPredictions[TREE_COUNT];
+  ScorePrediction selectedPredictions[TREE_COUNT];
   for (int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
     selectedPredictions[treeIdx] = leafPredictions[selectedLeaves[treeIdx]];
   }
 
   // Not using a reference to the output image to avoid global memory accesses.
-  Prediction3DColour finalPrediction;
-  finalPrediction.nbModes = 0;
+  ScorePrediction finalPrediction;
+  finalPrediction.nbClusters = 0;
 
   // Merge first MAX_MODES from the sorted mode arrays.
   // The assumption is that the modes in leafPredictions are already sorted by descending number of inliers.
-  while (finalPrediction.nbModes < Prediction3DColour::MAX_MODES)
+  while (finalPrediction.nbClusters < ScorePrediction::MAX_CLUSTERS)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;
@@ -60,7 +60,7 @@ inline void get_prediction_for_leaf_shared(
       const int currentModeIdx = treeModeIdx[treeIdx];
 
       // The number of modes for the prediction associated to the current tree.
-      const int predictionModeCount = selectedPredictions[treeIdx].nbModes;
+      const int predictionModeCount = selectedPredictions[treeIdx].nbClusters;
 
       // If the prediction has less modes than the currentModeIdx we cannot do anything for this tree.
       if(predictionModeCount <= currentModeIdx)
@@ -69,7 +69,7 @@ inline void get_prediction_for_leaf_shared(
       }
 
       // The mode that we are evaluating.
-      const Mode3DColour &currentMode = selectedPredictions[treeIdx].modes[currentModeIdx];
+      const Mode3DColour &currentMode = selectedPredictions[treeIdx].clusters[currentModeIdx];
 
       // The first not processed mode has more inliers than the current best mode
       if (currentMode.nbInliers > bestTreeNbInliers)
@@ -87,7 +87,7 @@ inline void get_prediction_for_leaf_shared(
     }
 
     // Copy the chosen mode into the output array.
-    finalPrediction.modes[finalPrediction.nbModes++] = selectedPredictions[bestTreeIdx].modes[treeModeIdx[bestTreeIdx]];
+    finalPrediction.clusters[finalPrediction.nbClusters++] = selectedPredictions[bestTreeIdx].clusters[treeModeIdx[bestTreeIdx]];
 
     // Increment the starting index for the associated tree.
     treeModeIdx[bestTreeIdx]++;

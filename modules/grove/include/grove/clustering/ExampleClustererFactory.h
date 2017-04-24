@@ -13,11 +13,11 @@
 namespace grove
 {
 
-template <typename ExampleType, typename ClusterType>
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS = 10>
 class ExampleClustererFactory
 {
 public:
-  typedef ExampleClusterer<ExampleType, ClusterType> Clusterer;
+  typedef ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
   typedef boost::shared_ptr<const Clusterer> Clusterer_CPtr;
 

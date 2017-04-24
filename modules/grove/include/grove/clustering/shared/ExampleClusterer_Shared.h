@@ -8,6 +8,8 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
+#include "../base/ClusterContainer.h"
+
 namespace grove {
 
 _CPU_AND_GPU_CODE_
@@ -31,11 +33,11 @@ inline void example_clusterer_reset_temporaries(
   }
 }
 
-template <typename ClusterType>
+template <typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void example_clusterer_reset_predictions(ClusterType *predictions, int predictionIdx)
+inline void example_clusterer_reset_cluster_container(ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers, int containerIdx)
 {
-  predictions[predictionIdx].nbModes = 0;
+  clusterContainers[containerIdx].nbClusters = 0;
 }
 
 template <typename ExampleType>
@@ -270,11 +272,11 @@ inline void example_clusterer_select_clusters(const int *clusterSizes,
   }
 }
 
-template <typename ExampleType, typename ClusterType>
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void example_clusterer_compute_modes(const ExampleType *examples,
     const int *reservoirSizes, const int *clusterIndices,
-    const int *selectedClusters, ClusterType *predictions,
+    const int *selectedClusters, ClusterContainer<ClusterType, MAX_CLUSTERS> *clusterContainers,
     int reservoirCapacity, int maxSelectedClusters, int reservoirIdx, int clusterIdx)
 {
   const int selectedClustersOffset = reservoirIdx * maxSelectedClusters;
@@ -282,19 +284,19 @@ inline void example_clusterer_compute_modes(const ExampleType *examples,
 
   if (selectedClusterId >= 0)
   {
-    // Grab a reference to the prediction for the current reservoir.
-    ClusterType &reservoirPrediction = predictions[reservoirIdx];
+    // Grab a reference to the clsuter container for the current reservoir.
+    ClusterContainer<ClusterType, MAX_CLUSTERS> &currentClusterContainer = clusterContainers[reservoirIdx];
 
     // Get the mode idx
     int modeIdx = -1;
 
 #ifdef __CUDACC__
-    modeIdx = atomicAdd(&reservoirPrediction.nbModes, 1);
+    modeIdx = atomicAdd(&currentClusterContainer.nbClusters, 1);
 #else
 #ifdef WITH_OPENMP
 #pragma omp atomic capture
 #endif
-    modeIdx = reservoirPrediction.nbModes++;
+    modeIdx = currentClusterContainer.nbClusters++;
 #endif
 
     // Size of the current reservoir.
@@ -308,7 +310,7 @@ inline void example_clusterer_compute_modes(const ExampleType *examples,
     const int *reservoirClusterIndices = clusterIndices + reservoirOffset;
 
     // Build the actual cluster.
-    createClusterFromExamples(reservoirExamples, reservoirClusterIndices, reservoirSize, selectedClusterId, reservoirPrediction.modes[modeIdx]);
+    createClusterFromExamples(reservoirExamples, reservoirClusterIndices, reservoirSize, selectedClusterId, currentClusterContainer.clusters[modeIdx]);
   }
 }
 

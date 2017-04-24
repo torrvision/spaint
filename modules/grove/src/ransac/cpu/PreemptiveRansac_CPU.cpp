@@ -41,7 +41,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
-  const Prediction3DColour *predictions = m_predictionsImage->GetData(
+  const ScorePrediction *predictions = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
@@ -85,7 +85,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
-  const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
 
   int *inlierMaskData = m_inliersMaskImage->GetData(MEMORYDEVICE_CPU);
@@ -146,7 +146,7 @@ void PreemptiveRansac_CPU::compute_pose_energy(PoseCandidate &candidate) const
 {
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
-  const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
   const size_t nbInliers = m_inliersIndicesBlock->dataSize;
   const int *inliersData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);

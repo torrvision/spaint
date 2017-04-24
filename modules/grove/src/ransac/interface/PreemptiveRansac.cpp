@@ -492,7 +492,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 {
   const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(
       MEMORYDEVICE_CPU);
-  const Prediction3DColour *predictionsData = m_predictionsImage->GetData(
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(
       MEMORYDEVICE_CPU);
   const size_t nbInliers = m_inliersIndicesBlock->dataSize;
   const int *inliersData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
@@ -582,7 +582,7 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
         keypointsData[inlierLinearIdx].position;
     const Vector3f inlierWorldPosition = candidateCameraPose.GetM()
         * inlierCameraPosition;
-    const Prediction3DColour &prediction = predictionsData[inlierLinearIdx];
+    const ScorePrediction &prediction = predictionsData[inlierLinearIdx];
 
     PointForLM ptLM;
     // The assumption is that the inlier is valid (checked before)
@@ -590,10 +590,10 @@ bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
 
     // Find the best mode
     // (do not rely on the one stored in the inlier because for the randomly sampled inliers it's not set)
-    const int bestModeIdx = prediction.get_best_mode(inlierWorldPosition);
-    if (bestModeIdx < 0 || bestModeIdx >= prediction.nbModes)
+    const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
+    if (bestModeIdx < 0 || bestModeIdx >= prediction.nbClusters)
       throw std::runtime_error("best mode idx invalid."); // should have not been selected as inlier
-    ptLM.mode = prediction.modes[bestModeIdx];
+    ptLM.mode = prediction.clusters[bestModeIdx];
 
     if (length(ptLM.mode.position - inlierWorldPosition)
         < m_poseOptimizationInlierThreshold)

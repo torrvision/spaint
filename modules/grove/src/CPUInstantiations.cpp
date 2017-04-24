@@ -4,6 +4,7 @@
  */
 
 #include "clustering/ExampleClustererFactory.tpp"
+#include "clustering/base/Mode3DColour.h"
 #include "clustering/base/Prediction3DColour.h"
 #include "clustering/base/Keypoint3DColourClusteringUtils.h"
 #include "clustering/cpu/ExampleClusterer_CPU.tpp"
@@ -29,9 +30,9 @@ namespace {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class ExampleClusterer<Keypoint3DColour, Prediction3DColour>;
-template class ExampleClusterer_CPU<Keypoint3DColour, Prediction3DColour>;
-template class ExampleClustererFactory<Keypoint3DColour, Prediction3DColour>;
+template class ExampleClusterer<Keypoint3DColour, Mode3DColour>;
+template class ExampleClusterer_CPU<Keypoint3DColour, Mode3DColour>;
+template class ExampleClustererFactory<Keypoint3DColour, Mode3DColour>;
 
 template boost::shared_ptr<RGBDPatchFeatureCalculator<Keypoint2D,RGBDPatchDescriptor> >
   FeatureCalculatorFactory::make_custom_patch_feature_calculator<Keypoint2D,RGBDPatchDescriptor>(

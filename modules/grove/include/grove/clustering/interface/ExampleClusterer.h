@@ -14,6 +14,8 @@
 #include <itmx/ITMImagePtrTypes.h>
 #include <itmx/ITMMemoryBlockPtrTypes.h>
 
+#include "../base/ClusterContainer.h"
+
 namespace grove {
 
 /**
@@ -33,18 +35,20 @@ namespace grove {
  *                                                                  int examplesCount, int key, ClusterType &outputMode)
  *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
  *
- * \param ExampleType The type of examples to cluster.
- * \param ClusterType The type of the container of clusters being generated. Must have a nbModes member and an array of
- *                    modes of type ModeType (TODO: refactor the class and change the template type).
+ * \param ExampleType  The type of examples to cluster.
+ * \param ClusterType  The type of of clusters being generated.
+ * \param MAX_CLUSTERS The maximum number of clusters being generated.
  */
-template <typename ExampleType, typename ClusterType>
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS = 10>
 class ExampleClusterer
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ORUtils::MemoryBlock<ClusterType> ClusterBlock;
-  typedef boost::shared_ptr<ClusterBlock> ClusterBlock_Ptr;
-  typedef boost::shared_ptr<const ClusterBlock> ClusterBlock_CPtr;
+  typedef ClusterContainer<ClusterType, MAX_CLUSTERS> Clusters;
+
+  typedef ORUtils::MemoryBlock<Clusters> ClustersBlock;
+  typedef boost::shared_ptr<ClustersBlock> ClustersBlock_Ptr;
+  typedef boost::shared_ptr<const ClustersBlock> ClustersBlock_CPtr;
 
   typedef ORUtils::Image<ExampleType> ExampleImage;
   typedef boost::shared_ptr<ExampleImage> ExampleImage_Ptr;
@@ -59,7 +63,10 @@ public:
    * \param tau              The maximum distance that two examples must have to be part of the same cluster.
    * \param maxClusterCount  The maximum number of clusters retained for each set of examples
    *                         (all clusters are estimated but only the maxClusterCount largest ones are returned).
+   *                         Must be <= than MAX_CLUSTERS.
    * \param minClusterSize   The minimum number of elements that have to be in a cluster for it to be valid.
+   *
+   * \throws std::invalid_argument if maxClusterCount is > than MAX_CLUSTERS.
    */
   ExampleClusterer(float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize);
 
@@ -86,7 +93,7 @@ public:
    */
   void find_modes(const ExampleImage_CPtr &exampleSets,
                   const ITMIntMemoryBlock_CPtr &exampleSetsSize,
-                  ClusterBlock_Ptr &clusterContainers,
+                  ClustersBlock_Ptr &clusterContainers,
                   uint32_t startIdx,
                   uint32_t count);
 
@@ -169,10 +176,21 @@ protected:
    */
   virtual void compute_cluster_parameters(const ExampleType *exampleSets,
                                           const int *exampleSetsSizes,
-                                          ClusterType *predictionsData,
+                                          Clusters *clustersData,
                                           uint32_t maxClusterCount,
                                           uint32_t exampleSetsCapacity,
                                           uint32_t exampleSetsCount) = 0;
+
+  /**
+   * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
+   *        Used to get a raw pointer, independent from the memory type.
+   *
+   * \param clusters The output cluster containers.
+   * \param setIdx   The index to the first set of interest.
+   *
+   * \return         A raw pointer to the output cluster container for set setIdx.
+   */
+  virtual Clusters *get_pointer_to_cluster(const ClustersBlock_Ptr &clusters, uint32_t clusterIdx) const = 0;
 
   /**
    * \brief Virtual function returning a pointer to the first example of the example set setIdx.
@@ -197,18 +215,6 @@ protected:
    */
   virtual const int *get_pointer_to_example_set_size(const ITMIntMemoryBlock_CPtr &exampleSetsSize,
                                                      uint32_t setIdx) const = 0;
-
-  /**
-   * \brief Virtual function returning a pointer to the output cluster container for set setIdx.
-   *        Used to get a raw pointer, independent from the memory type.
-   *
-   * \param predictions The output cluster containers.
-   * \param setIdx      The index to the first set of interest.
-   *
-   * \return            A raw pointer to the output cluster container for set setIdx.
-   * TODO: change name
-   */
-  virtual ClusterType *get_pointer_to_prediction(const ClusterBlock_Ptr &predictions, uint32_t setIdx) const = 0;
 
   /**
    * \brief Analyse the tree structure to identify clusters of neighboring examples.
@@ -236,10 +242,10 @@ protected:
   /**
    * \brief Reset output cluster containers.
    *
-   * \param predictionsData Pointer to the storage for the extracted clusters.
-   * \param reservoirCount  Number of example sets to be clustered.
+   * \param clustersData  Pointer to the storage for the extracted clusters.
+   * \param clustersCount Number of example sets to be clustered.
    */
-  virtual void reset_predictions(ClusterType *predictionsData, uint32_t reservoirCount) const = 0;
+  virtual void reset_clusters(Clusters *clustersData, uint32_t clustersCount) const = 0;
 
   /**
    * \brief Reset temporary values used during the clustering operation.

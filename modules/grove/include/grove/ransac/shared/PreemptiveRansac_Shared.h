@@ -27,7 +27,7 @@ template<typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline bool preemptive_ransac_generate_candidate(
     const Keypoint3DColour *keypointsData,
-    const Prediction3DColour *predictionsData, const Vector2i &imgSize,
+    const ScorePrediction *predictionsData, const Vector2i &imgSize,
     RNG &randomGenerator, PoseCandidate &poseCandidate,
     bool m_useAllModesPerLeafInPoseHypothesisGeneration,
     bool m_checkMinDistanceBetweenSampledModes,
@@ -52,30 +52,30 @@ inline bool preemptive_ransac_generate_candidate(
     if (!selectedKeypoint.valid)
       continue;
 
-    const Prediction3DColour &selectedPrediction =
+    const ScorePrediction &selectedPrediction =
         predictionsData[linearFeatureIdx];
 
     // Prediction has no modes
-    if (selectedPrediction.nbModes == 0)
+    if (selectedPrediction.nbClusters == 0)
       continue;
 
     // either use the first mode or select one randomly
     const int selectedModeIdx =
         m_useAllModesPerLeafInPoseHypothesisGeneration ?
             randomGenerator.generate_int_from_uniform(0,
-                selectedPrediction.nbModes) :
+                selectedPrediction.nbClusters) :
             0;
 
     // Cache camera and world points, used for the following checks
     const Vector3f selectedModeWorldPt =
-        selectedPrediction.modes[selectedModeIdx].position;
+        selectedPrediction.clusters[selectedModeIdx].position;
     const Vector3f selectedFeatureCameraPt = selectedKeypoint.position;
 
     // This is the first pixel, check that the pixel colour corresponds with the selected mode
     if (selectedPixelCount == 0)
     {
       const Vector3i colourDiff = selectedKeypoint.colour.toInt()
-          - selectedPrediction.modes[selectedModeIdx].colour.toInt();
+          - selectedPrediction.clusters[selectedModeIdx].colour.toInt();
       const bool consistentColour = abs(colourDiff.x) <= 30
           && abs(colourDiff.y) <= 30 && abs(colourDiff.z) <= 30;
 
@@ -93,10 +93,10 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherLinearIdx = selectedPixelLinearIdx[idxOther];
         const int otherModeIdx = selectedPixelMode[idxOther];
-        const Prediction3DColour &otherPrediction = predictionsData[otherLinearIdx];
+        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
 
         const Vector3f otherModeWorldPt =
-            otherPrediction.modes[otherModeIdx].position;
+            otherPrediction.clusters[otherModeIdx].position;
         const Vector3f diff = otherModeWorldPt - selectedModeWorldPt;
         const float distOtherSq = dot(diff, diff);
 
@@ -118,7 +118,7 @@ inline bool preemptive_ransac_generate_candidate(
       {
         const int otherModeIdx = selectedPixelMode[m];
         const int otherLinearIdx = selectedPixelLinearIdx[m];
-        const Prediction3DColour &otherPrediction = predictionsData[otherLinearIdx];
+        const ScorePrediction &otherPrediction = predictionsData[otherLinearIdx];
 
         const Vector3f otherFeatureCameraPt =
             keypointsData[otherLinearIdx].position;
@@ -133,7 +133,7 @@ inline bool preemptive_ransac_generate_candidate(
         }
 
         const Vector3f otherModeWorldPt =
-            otherPrediction.modes[otherModeIdx].position;
+            otherPrediction.clusters[otherModeIdx].position;
         const Vector3f diffWorld = otherModeWorldPt - selectedModeWorldPt;
 
         const float distWorld = length(diffWorld);
@@ -167,8 +167,8 @@ inline bool preemptive_ransac_generate_candidate(
     const int modeIdx = selectedPixelMode[s];
 
     const Keypoint3DColour &selectedKeypoint = keypointsData[linearIdx];
-    const Prediction3DColour &selectedPrediction = predictionsData[linearIdx];
-    const Mode3DColour &selectedMode = selectedPrediction.modes[modeIdx];
+    const ScorePrediction &selectedPrediction = predictionsData[linearIdx];
+    const Mode3DColour &selectedMode = selectedPrediction.clusters[modeIdx];
 
     poseCandidate.pointsCamera[s] = selectedKeypoint.position;
     poseCandidate.pointsWorld[s] = selectedMode.position;
@@ -181,7 +181,7 @@ template<bool useMask, typename RNG>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline int preemptive_ransac_sample_inlier(
     const Keypoint3DColour *keypointsData,
-    const Prediction3DColour *predictionsData, const Vector2i &imgSize,
+    const ScorePrediction *predictionsData, const Vector2i &imgSize,
     RNG &randomGenerator, int *inlierMaskData = NULL)
 {
   int inlierLinearIdx = -1;
@@ -198,7 +198,7 @@ inline int preemptive_ransac_sample_inlier(
       continue;
 
     // Check that we have a prediction with a non null number of modes
-    if (predictionsData[linearIdx].nbModes == 0)
+    if (predictionsData[linearIdx].nbClusters == 0)
       continue;
 
     bool validIndex = !useMask;
@@ -232,7 +232,7 @@ inline int preemptive_ransac_sample_inlier(
 _CPU_AND_GPU_CODE_
 inline float preemptive_ransac_compute_candidate_energy(
     const Matrix4f &candidatePose, const Keypoint3DColour *keypoints,
-    const Prediction3DColour *predictions, const int *inlierIndices,
+    const ScorePrediction *predictions, const int *inlierIndices,
     uint32_t nbInliers, uint32_t inlierStartIdx = 0, uint32_t inlierStep = 1)
 {
   float localEnergy = 0.f;
@@ -244,11 +244,11 @@ inline float preemptive_ransac_compute_candidate_energy(
     const Vector3f localPixel = keypoints[linearIdx].position;
     const Vector3f projectedPixel = candidatePose * localPixel;
 
-    const Prediction3DColour &pred = predictions[linearIdx];
+    const ScorePrediction &pred = predictions[linearIdx];
 
     // eval individual energy
     float energy;
-    int argmax = pred.get_best_mode_and_energy(projectedPixel, energy);
+    int argmax = score_prediction_get_best_mode_and_energy(pred, projectedPixel, energy);
 
     // Has at least a valid mode
     if (argmax < 0)
@@ -262,7 +262,7 @@ inline float preemptive_ransac_compute_candidate_energy(
 #endif
     }
 
-    if (pred.modes[argmax].nbInliers == 0)
+    if (pred.clusters[argmax].nbInliers == 0)
     {
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__)
       // the original implementation had a simple continue
@@ -273,8 +273,8 @@ inline float preemptive_ransac_compute_candidate_energy(
 #endif
     }
 
-    energy /= static_cast<float>(pred.nbModes);
-    energy /= static_cast<float>(pred.modes[argmax].nbInliers);
+    energy /= static_cast<float>(pred.nbClusters);
+    energy /= static_cast<float>(pred.clusters[argmax].nbInliers);
 
     if (energy < 1e-6f)
       energy = 1e-6f;

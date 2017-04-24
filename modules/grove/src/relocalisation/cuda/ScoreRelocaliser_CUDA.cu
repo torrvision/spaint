@@ -25,9 +25,9 @@ namespace grove {
 
 template<int TREE_COUNT>
 __global__ void ck_get_predictions(
-    const Prediction3DColour* leafPredictions,
+    const ScorePrediction* leafPredictions,
     const ORUtils::VectorX<int, TREE_COUNT>* leafIndices,
-    Prediction3DColour* outPredictions,
+    ScorePrediction* outPredictions,
     Vector2i imgSize)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -48,7 +48,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename)
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
-  m_predictionsBlock = MemoryBlockFactory::instance().make_block<ClusterType>(m_reservoirsCount);
+  m_predictionsBlock = MemoryBlockFactory::instance().make_block<ScorePrediction>(m_reservoirsCount);
 
   m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(ITMLibSettings::DEVICE_CUDA, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(ITMLibSettings::DEVICE_CUDA, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
@@ -72,11 +72,11 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(
   const LeafIndices* leafIndicesData = leafIndices->GetData(MEMORYDEVICE_CUDA);
 
   // Leaf predictions
-  const Prediction3DColour *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *leafPredictionsData = leafPredictions->GetData(MEMORYDEVICE_CUDA);
 
   // No-op after the first time.
   outputPredictions->ChangeDims(imgSize);
-  Prediction3DColour *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CUDA);
+  ScorePrediction *outPredictionsData = outputPredictions->GetData(MEMORYDEVICE_CUDA);
 
   const dim3 blockSize(32, 32);
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x, (imgSize.y + blockSize.y - 1) / blockSize.y);
