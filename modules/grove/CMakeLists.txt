@@ -94,8 +94,8 @@ SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
 
 ##
 SET(numbers_headers
-include/grove/numbers/SimpleRandomNumberGenerator_CPU.h
-include/grove/numbers/SimpleRandomNumberGenerator_CUDA.h
+include/grove/numbers/CPURNG.h
+include/grove/numbers/CUDARNG.h
 )
 
 ##

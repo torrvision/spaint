@@ -1,10 +1,10 @@
 /**
- * grove: SimpleRandomNumberGenerator_CPU.h
+ * grove: CPURNG.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_GROVE_SIMPLERANDOMNUMBERGENERATORCPU
-#define H_GROVE_SIMPLERANDOMNUMBERGENERATORCPU
+#ifndef H_GROVE_CPURNG
+#define H_GROVE_CPURNG
 
 #include <boost/random.hpp>
 #include <boost/shared_ptr.hpp>
@@ -18,7 +18,7 @@ namespace grove {
  *        Note: similar to the RandomNumberGenerator class but simpler and lightweight,
  *        meant to be used as templated RNG in shared code.
  */
-class SimpleRandomNumberGenerator_CPU
+class CPURNG
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -32,7 +32,7 @@ public:
    *
    * \param seed  The seed with which to initialise the generation engine.
    */
-  explicit SimpleRandomNumberGenerator_CPU(unsigned int seed = 42) :
+  explicit CPURNG(unsigned int seed = 42) :
       m_gen(seed)
   {
   }
@@ -89,7 +89,6 @@ public:
   }
 };
 
-typedef SimpleRandomNumberGenerator_CPU CPURNG;
 typedef ORUtils::MemoryBlock<CPURNG> CPURNGMemoryBlock;
 typedef boost::shared_ptr<CPURNGMemoryBlock> CPURNGMemoryBlock_Ptr;
 typedef boost::shared_ptr<const CPURNGMemoryBlock> CPURNGMemoryBlock_CPtr;

@@ -7,7 +7,7 @@
 #define H_GROVE_PREEMPTIVERANSACCPU
 
 #include "../interface/PreemptiveRansac.h"
-#include "../../numbers/SimpleRandomNumberGenerator_CPU.h"
+#include "../../numbers/CPURNG.h"
 
 namespace grove {
 

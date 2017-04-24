@@ -7,7 +7,7 @@
 #define H_GROVE_EXAMPLERESERVOIRSCUDA
 
 #include "../interface/ExampleReservoirs.h"
-#include "../../numbers/SimpleRandomNumberGenerator_CUDA.h"
+#include "../../numbers/CUDARNG.h"
 
 namespace grove {
 

@@ -7,7 +7,7 @@
 #define H_GROVE_EXAMPLERESERVOIRSCPU
 
 #include "../interface/ExampleReservoirs.h"
-#include "../../numbers/SimpleRandomNumberGenerator_CPU.h"
+#include "../../numbers/CPURNG.h"
 
 namespace grove {
 

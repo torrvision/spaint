@@ -7,7 +7,7 @@
 #define H_GROVE_PREEMPTIVERANSACCUDA
 
 #include "../interface/PreemptiveRansac.h"
-#include "../../numbers/SimpleRandomNumberGenerator_CUDA.h"
+#include "../../numbers/CUDARNG.h"
 
 namespace grove {
 

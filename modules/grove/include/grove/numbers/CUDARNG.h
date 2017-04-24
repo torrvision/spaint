@@ -1,10 +1,10 @@
 /**
- * grove: SimpleRandomNumberGenerator_CUDA.h
+ * grove: CUDARNG.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_GROVE_SIMPLERANDOMNUMBERGENERATORCUDA
-#define H_GROVE_SIMPLERANDOMNUMBERGENERATORCUDA
+#ifndef H_GROVE_CUDARNG
+#define H_GROVE_CUDARNG
 
 #include <boost/shared_ptr.hpp>
 #include <curand_kernel.h>
@@ -20,21 +20,12 @@ namespace grove {
  *        Note: similar to the RandomNumberGenerator class but simpler and lightweight,
  *        meant to be used as templated RNG in shared code.
  */
-class SimpleRandomNumberGenerator_CUDA
+class CUDARNG
 {
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The random state. */
   curandState_t m_state;
-
-  //#################### CONSTRUCTORS ####################
-public:
-  /**
-   * \brief Constructs a random number generator that can be invoked from CUDA kernels.
-   */
-  SimpleRandomNumberGenerator_CUDA()
-  {
-  }
 
 #ifdef __CUDACC__ // Needed to hide CUDART_MIN_DENORM_F and __float2int_rz
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -92,7 +83,6 @@ public:
 #endif
 };
 
-typedef SimpleRandomNumberGenerator_CUDA CUDARNG;
 typedef ORUtils::MemoryBlock<CUDARNG> CUDARNGMemoryBlock;
 typedef boost::shared_ptr<CUDARNGMemoryBlock> CUDARNGMemoryBlock_Ptr;
 typedef boost::shared_ptr<const CUDARNGMemoryBlock> CUDARNGMemoryBlock_CPtr;
