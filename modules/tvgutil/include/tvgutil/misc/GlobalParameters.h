@@ -15,7 +15,7 @@
 namespace tvgutil {
 
 /**
- * \brief The singleton instance of this class can be used to access the global parameters used to configure an application.
+ * \brief This class can be used to access the global parameters used to configure an application.
  *
  * The parameters are represented as a key -> [value] map, i.e. there can be multiple values for the same named parameter.
  */
@@ -24,7 +24,7 @@ class GlobalParameters
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The key -> [value] map storing the values for the parameters. */
-  std::map<std::string, std::vector<std::string> > m_params;
+  std::map<std::string,std::vector<std::string> > m_params;
 
   //#################### SINGLETON IMPLEMENTATION ####################
 private:
