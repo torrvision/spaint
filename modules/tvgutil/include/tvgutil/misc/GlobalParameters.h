@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "../containers/MapUtil.h"
+#include "ConversionUtil.h"
 
 namespace tvgutil {
 
@@ -51,38 +52,38 @@ public:
   void add_value(const std::string& key, const std::string& value);
 
   /**
-   * \brief Gets the first value (if any) associated with the specified parameter and converts it to the specified type.
+   * \brief Gets the first value associated with the specified parameter and converts it to the specified type.
    *
-   * \param key The name of the parameter whose value is to be looked up.
-   * \return    The first value (if any) associated with the specified parameter.
+   * \param key The name of the parameter whose values are to be looked up.
+   * \return    The first value associated with the specified parameter.
    *
    * \throws std::runtime_error       If the specified parameter does not exist.
-   * \throws boost::bad_lexical_cast  If the value cannot be converted to the requested type.
+   * \throws boost::bad_lexical_cast  If the parameter exists but the first value cannot be converted to the specified type.
    */
-  template<typename T>
+  template <typename T>
   T get_first_value(const std::string& key) const
   {
     const std::vector<std::string>& values = MapUtil::lookup(m_params, key);
     if(values.empty()) throw std::runtime_error("Value for " + key + " not found in the container");
-    return boost::lexical_cast<T>(values[0]);
+    return from_string<T>(values[0]);
   }
 
   /**
-   * \brief Gets the first value (if any) associated with the specified parameter and converts it to the specified type.
-   *        If no such value exists (for whatever reason), the specified default value is returned.
+   * \brief Gets the first value associated with the specified parameter and converts it to the specified type.
+   *        If no such parameter exists, the specified default value is returned.
    *
-   * \param key           The name of the parameter whose value is to be looked up.
-   * \param defaultValue  The default value to return if the lookup fails (for whatever reason).
-   * \return              The first value associated with the specified parameter, if possible, or the default value otherwise.
+   * \param key           The name of the parameter whose values are to be looked up.
+   * \param defaultValue  The default value to return if the specified parameter does not exist.
+   * \return              The first value associated with the specified parameter, if the parameter exists, or the default value otherwise.
    *
-   * \throws boost::bad_lexical_cast  If the lookup succeeds but the value cannot be converted to the specified type.
+   * \throws boost::bad_lexical_cast  If the parameter exists but the first value cannot be converted to the specified type.
    */
-  template<typename T>
+  template <typename T>
   T get_first_value(const std::string& key, typename boost::mpl::identity<const T>::type& defaultValue) const
   {
     static std::vector<std::string> defaultEmptyVector;
     const std::vector<std::string>& values = MapUtil::lookup(m_params, key, defaultEmptyVector);
-    return values.empty() ? defaultValue : boost::lexical_cast<T>(values[0]);
+    return values.empty() ? defaultValue : from_string<T>(values[0]);
   }
 
   //#################### STREAM OPERATORS ####################
@@ -90,71 +91,12 @@ public:
   /**
    * \brief Outputs the global parameters to a stream.
    *
-   * \param os  The stream to which to output the global parameters.
+   * \param os  The stream.
    * \param rhs The global parameters to output.
    * \return    The stream.
    */
   friend std::ostream& operator<<(std::ostream& os, const GlobalParameters& rhs);
 };
-
-//#################### TEMPLATE SPECIALIZATIONS ####################
-
-/**
- * \brief Returns a typed value from the container.
- *
- * Specialization for bool since lexical_cast does not handle "true" and "false".
- * If multiple values have been added to the same key, the first is returned.
- *
- * \param key The key.
- * \return    The value.
- *
- * \throws std::runtime_error       If the container does not contain the specified key.
- * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
- */
-template<>
-inline bool GlobalParameters::get_first_value<bool>(const std::string &key) const
-{
-  std::vector<std::string> values = MapUtil::lookup(m_params, key);
-
-  if(values.empty())
-    throw std::runtime_error("Value for " + key + " not found in the container.");
-
-  bool value;
-  std::istringstream ss(values[0]);
-  ss >> std::boolalpha >> value;
-
-  return value;
-}
-
-/**
- * \brief Returns a typed value from the container.
- *
- * Specialization for bool since lexical_cast does not handle "true" and "false".
- * If multiple values have been added to the same key, the first is returned.
- * If the key is missing returns the default value.
- *
- * \param key          The key.
- * \param defaultValue The default value.
- * \return             The value.
- *
- * \throws boost::bad_lexical_cast  If the corresponding value in the container cannot be converted to the requested type.
- */
-template<>
-inline bool GlobalParameters::get_first_value<bool>(const std::string &key, typename boost::mpl::identity<const bool>::type &defaultValue) const
-{
-  static std::vector<std::string> defaultEmptyVector;
-  std::vector<std::string> values = MapUtil::lookup(m_params, key, defaultEmptyVector);
-
-  bool value = defaultValue;
-
-  if(!values.empty())
-  {
-    std::istringstream ss(values[0]);
-    ss >> std::boolalpha >> value;
-  }
-
-  return value;
-}
 
 }
 
