@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 
   for (auto sequence : sequenceNames)
   {
-    const fs::path gtPath = gtFolder / sequence / "Test";
+    const fs::path gtPath = gtFolder / sequence / "Test" / "merged";
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
     std::cerr << "Processing sequence " << sequence << " in:\n\t" << gtPath
