@@ -375,7 +375,6 @@ void SLAMComponent::setup_tracker()
 
   // Setup a composite tracker that will be assigned to m_tracker.
   boost::shared_ptr<ITMCompositeTracker> compositeTracker(new ITMCompositeTracker(
-      m_trackerParams.size(),
       m_trackerType == TRACKER_INFINITAM_NO_REFINE ? ITMCompositeTracker::POLICY_STOP_ON_FIRST_SUCCESS : ITMCompositeTracker::POLICY_REFINE
   ));
 
@@ -386,7 +385,7 @@ void SLAMComponent::setup_tracker()
     case TRACKER_RIFT:
     {
 #ifdef WITH_OVR
-      compositeTracker->SetTracker(new RiftTracker, 0);
+      compositeTracker->AddTracker(new RiftTracker);
       infinitamFirstTrackerIdx = 1;
       break;
 #else
@@ -426,9 +425,9 @@ void SLAMComponent::setup_tracker()
 
   for(size_t i = infinitamFirstTrackerIdx; i < m_trackerParams.size(); ++i)
   {
-    compositeTracker->SetTracker(ITMTrackerFactory::Instance().Make(settings->deviceType,
+    compositeTracker->AddTracker(ITMTrackerFactory::Instance().Make(settings->deviceType,
       m_trackerParams[i].c_str(), rgbImageSize, depthImageSize, m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene->sceneParams
-    ), i);
+    ));
   }
 
   m_tracker = compositeTracker;
