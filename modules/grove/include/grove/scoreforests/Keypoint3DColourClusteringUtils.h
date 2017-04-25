@@ -14,7 +14,7 @@
 namespace grove {
 
 /**
- * \brief computes the squared distance between two Keypoint3DColour.
+ * \brief computes the squared distance between two Keypoint3DColour instances.
  *
  * \param a A Keypoint3DColour.
  * \param b Another Keypoint3DColour.

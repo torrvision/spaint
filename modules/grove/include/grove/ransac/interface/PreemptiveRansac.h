@@ -10,10 +10,6 @@
 
 #include <boost/optional.hpp>
 
-#include <ITMLib/Utils/ITMMath.h>
-
-#include <ORUtils/PlatformIndependence.h>
-
 #include <itmx/ITMImagePtrTypes.h>
 #include <itmx/ITMMemoryBlockPtrTypes.h>
 
@@ -27,17 +23,24 @@ namespace grove {
 
 class PreemptiveRansac
 {
+  //#################### TYPEDEFS ####################
 public:
   typedef tvgutil::AverageTimer<boost::chrono::nanoseconds> AverageTimer;
 
+  //#################### CONSTRUCTORS ####################
+public:
   PreemptiveRansac();
+
+  //#################### DESTRUCTOR ####################
+public:
   virtual ~PreemptiveRansac();
 
-  int get_min_nb_required_points() const;
-  boost::optional<PoseCandidate> estimate_pose(
-      const Keypoint3DColourImage_CPtr &keypoints,
-      const ScorePredictionsImage_CPtr &forestPredictions);
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  boost::optional<PoseCandidate> estimate_pose(const Keypoint3DColourImage_CPtr &keypoints,
+                                               const ScorePredictionsImage_CPtr &forestPredictions);
   void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
+  int get_min_nb_required_points() const;
 
 protected:
   // Member variables from scoreforests
@@ -85,6 +88,6 @@ private:
 typedef boost::shared_ptr<PreemptiveRansac> PreemptiveRansac_Ptr;
 typedef boost::shared_ptr<const PreemptiveRansac> PreemptiveRansac_CPtr;
 
-}
+} // namespace grove
 
-#endif
+#endif // H_GROVE_PREEMPTIVERANSAC
