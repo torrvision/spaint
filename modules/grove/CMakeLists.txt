@@ -90,8 +90,8 @@ SET(forests_shared_headers include/grove/forests/shared/DecisionForest_Shared.h)
 
 ##
 SET(keypoints_headers
-    include/grove/keypoints/Keypoint2D.h
-    include/grove/keypoints/Keypoint3DColour.h
+include/grove/keypoints/Keypoint2D.h
+include/grove/keypoints/Keypoint3DColour.h
 )
 
 ##
@@ -163,10 +163,10 @@ SET(reservoirs_shared_headers include/grove/features/shared/RGBDPatchFeatureCalc
 
 ##
 SET(scoreforests_headers
-    include/grove/scoreforests/Keypoint3DColourClusteringUtils.h
-    include/grove/scoreforests/Mode3DColour.h
-    include/grove/scoreforests/ScorePrediction.h
-    )
+include/grove/scoreforests/Keypoint3DColourClusteringUtils.h
+include/grove/scoreforests/Mode3DColour.h
+include/grove/scoreforests/ScorePrediction.h
+)
 
 ##
 SET(toplevel_sources src/CPUInstantiations.cpp)
