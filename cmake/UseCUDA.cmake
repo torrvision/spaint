@@ -38,7 +38,7 @@ IF(WITH_CUDA)
       SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
     ENDIF()
 
-    SET(CUDA_NVCC_FLAGS -Xcompiler "--std=c++11"; ${CUDA_NVCC_FLAGS})
+    SET(CUDA_NVCC_FLAGS -Xcompiler --std=c++11; ${CUDA_NVCC_FLAGS})
 
     # Work around an Ubuntu 16.04 compilation error.
     IF(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER 5.0)
