@@ -13,9 +13,16 @@
 
 namespace grove {
 
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-typename ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::Clusterer_Ptr ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::make_clusterer(
-    ITMLib::ITMLibSettings::DeviceType deviceType, float sigma, float tau, uint32_t maxClusterCount, uint32_t minClusterSize)
+typename ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::Clusterer_Ptr
+    ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::make_clusterer(
+        ITMLib::ITMLibSettings::DeviceType deviceType,
+        float sigma,
+        float tau,
+        uint32_t maxClusterCount,
+        uint32_t minClusterSize)
 {
   Clusterer_Ptr clusterer;
 
@@ -25,7 +32,8 @@ typename ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::Cluste
     clusterer.reset(
         new ExampleClusterer_CUDA<ExampleType, ClusterType, MAX_CLUSTERS>(sigma, tau, maxClusterCount, minClusterSize));
 #else
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+    throw std::runtime_error(
+        "Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
@@ -37,4 +45,4 @@ typename ExampleClustererFactory<ExampleType, ClusterType, MAX_CLUSTERS>::Cluste
   return clusterer;
 }
 
-}
+} // namespace grove
