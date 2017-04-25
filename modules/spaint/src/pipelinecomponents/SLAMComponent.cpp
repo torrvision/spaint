@@ -320,19 +320,19 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 
 ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
 {
-  ITMCompositeTracker *compositeTracker = new ITMCompositeTracker(2);
+  ITMCompositeTracker *compositeTracker = new ITMCompositeTracker;
 
   const Settings_CPtr& settings = m_context->get_settings();
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
 
-  compositeTracker->SetTracker(primaryTracker, 0);
-  compositeTracker->SetTracker(
+  compositeTracker->AddTracker(primaryTracker);
+  compositeTracker->AddTracker(
     ITMTrackerFactory::Instance().MakeICPTracker(
       rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
       m_lowLevelEngine.get(), m_imuCalibrator.get(), slamState->get_voxel_scene()->sceneParams
-    ), 1
+    )
   );
 
   return compositeTracker;
