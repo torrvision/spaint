@@ -20,3 +20,6 @@ libraries/*.log
 tags
 tests/mike/
 *.swp
+
+# QtCreator CMake
+CMakeLists.txt.user*
