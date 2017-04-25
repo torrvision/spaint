@@ -397,7 +397,7 @@ void SLAMComponent::setup_tracker()
     {
 #ifdef WITH_VICON
       m_fallibleTracker = new RobustViconTracker(m_trackerParams[0], "kinect", rgbImageSize, depthImageSize, settings, m_lowLevelEngine, voxelScene);
-      compositeTracker->SetTracker(m_fallibleTracker, 0);
+      compositeTracker->AddTracker(m_fallibleTracker);
       infinitamFirstTrackerIdx = 1;
       break;
 #else
@@ -409,7 +409,7 @@ void SLAMComponent::setup_tracker()
     {
 #ifdef WITH_VICON
       m_fallibleTracker = new ViconTracker(m_trackerParams[0], "kinect");
-      compositeTracker->SetTracker(m_fallibleTracker, 0);
+      compositeTracker->AddTracker(m_fallibleTracker);
       infinitamFirstTrackerIdx = 1;
       break;
 #else
