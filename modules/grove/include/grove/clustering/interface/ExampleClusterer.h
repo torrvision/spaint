@@ -31,13 +31,15 @@ namespace grove {
  * \note  The following functions are required to be defined:
  *        - _CPU_AND_GPU_CODE_ inline float distanceSquared(const ExampleType &a, const ExampleType &b)
  *          Returns the squared distancebetween two examples.
- *        - CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples, const int *exampleKeys,
- *                                                                  int examplesCount, int key, ClusterType &outputMode)
+ *        - _CPU_AND_GPU_CODE_ inline void createClusterFromExamples(const ExampleType *examples, const int
+ * *exampleKeys,
+ *                                                                  int examplesCount, int key, ClusterType
+ * &outputCluster)
  *          Aggregates all the examples in the examples array having a certain key into a single cluster mode.
  *
  * \param ExampleType  The type of examples to cluster.
- * \param ClusterType  The type of of clusters being generated.
- * \param MAX_CLUSTERS The maximum number of clusters being generated.
+ * \param ClusterType  The type of clusters being generated.
+ * \param MAX_CLUSTERS The maximum number of clusters being generated for each set of examples.
  */
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS = 10>
 class ExampleClusterer
@@ -282,4 +284,4 @@ private:
 
 } // namespace grove
 
-#endif
+#endif // H_GROVE_EXAMPLECLUSTERER

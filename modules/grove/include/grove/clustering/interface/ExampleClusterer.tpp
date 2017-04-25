@@ -1,5 +1,5 @@
 /**
- * grove: ExampleClusterer.cpp
+ * grove: ExampleClusterer.tpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
@@ -11,6 +11,8 @@
 using namespace itmx;
 
 namespace grove {
+
+//#################### CONSTRUCTORS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float sigma,
@@ -24,19 +26,49 @@ ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::ExampleClusterer(float
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
   // Everything is empty for now, we'll resize them as soon as we know the actual sizes.
-  m_densities = mbf.make_image<float>();
-  m_parents = mbf.make_image<int>();
   m_clusterIdx = mbf.make_image<int>();
   m_clusterSizes = mbf.make_image<int>();
   m_clusterSizesHistogram = mbf.make_image<int>();
-  m_selectedClusters = mbf.make_image<int>();
+  m_densities = mbf.make_image<float>();
   m_nbClustersPerExampleSet = mbf.make_block<int>();
+  m_parents = mbf.make_image<int>();
+  m_selectedClusters = mbf.make_image<int>();
 }
+
+//#################### DESTRUCTOR ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::~ExampleClusterer()
 {
 }
+
+//#################### PRIVATE MEMBER FUNCTIONS ####################
+
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
+void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::allocate_temporaries(uint32_t exampleSetCapacity,
+                                                                                    uint32_t exampleSetCount)
+{
+  const Vector2i temporariesSize(static_cast<int>(exampleSetCapacity), static_cast<int>(exampleSetCount));
+
+  // We perform the check instead of relying on ChangeDims performing a NOP because reservoirCount
+  // might be smaller than the current size and we want to avoid reallocating the blocks.
+  if (m_densities->noDims.x < temporariesSize.x || m_densities->noDims.y < temporariesSize.y)
+  {
+    // The following variables have a column per each element of the example sets and a row per each example set to cluster.
+    m_clusterIdx->ChangeDims(temporariesSize);
+    m_clusterSizes->ChangeDims(temporariesSize);
+    m_clusterSizesHistogram->ChangeDims(temporariesSize);
+    m_densities->ChangeDims(temporariesSize);
+    m_parents->ChangeDims(temporariesSize);
+
+    // One column per each potential cluster to output and a row for each example set.
+    m_selectedClusters->ChangeDims(Vector2i(m_maxClusterCount, exampleSetCount));
+    // One element per example set.
+    m_nbClustersPerExampleSet->Resize(exampleSetCount);
+  }
+}
+
+//#################### PUBLIC MEMBER FUNCTIONS ####################
 
 template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::find_modes(const ExampleImage_CPtr &exampleSets,
@@ -54,7 +86,7 @@ void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::find_modes(const 
   // reallocations).
   allocate_temporaries(exampleSetCapacity, count);
 
-  // Grab a pointer to the beginning of the first exampleSet of interest (having index startIdx).
+  // Grab a pointer to the beginning of the first exampleSet of interest.
   const ExampleType *exampleSetsData = get_pointer_to_example_set(exampleSets, startIdx);
   // Grab a pointer to the size of the first exampleSet of interest.
   const int *exampleSetsSizeData = get_pointer_to_example_set_size(exampleSetsSize, startIdx);
@@ -70,16 +102,16 @@ void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::find_modes(const 
   // Compute densities.
   compute_density(exampleSetsData, exampleSetsSizeData, exampleSetCapacity, count, m_sigma);
 
-  // Link neighbors.
+  // Link neighbors in a tree structure and cut the branches according to the maximum distance tau.
   link_neighbors(exampleSetsData, exampleSetsSizeData, exampleSetCapacity, count, m_tau * m_tau);
 
-  // Identify clusters.
+  // Identify clusters (assign identifiers to the clusters).
   identify_clusters(exampleSetCapacity, count);
 
-  // Compute cluster size histograms.
+  // Compute cluster size histograms (used to select the largest clusters).
   compute_cluster_size_histograms(exampleSetCapacity, count);
 
-  // Select best clusters.
+  // Select largest clusters.
   select_clusters(m_maxClusterCount, m_minClusterSize, exampleSetCapacity, count);
 
   // Finally, compute parameters for each cluster and store the predictions.
@@ -105,28 +137,6 @@ void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::find_modes(const 
     }
   }
 #endif
-}
-
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
-void ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>::allocate_temporaries(uint32_t exampleSetCapacity,
-                                                                                    uint32_t exampleSetCount)
-{
-  const Vector2i temporariesSize(static_cast<int>(exampleSetCapacity), static_cast<int>(exampleSetCount));
-
-  // We perform the check instead of relying on ChangeDims performing a NOP because reservoirCount
-  // might be smaller than the current size and we want to avoid reallocating the blocks.
-  if (m_densities->noDims.x < temporariesSize.x || m_densities->noDims.y < temporariesSize.y)
-  {
-    // Happens only once
-    m_densities->ChangeDims(temporariesSize);
-    m_parents->ChangeDims(temporariesSize);
-    m_clusterIdx->ChangeDims(temporariesSize);
-    m_clusterSizes->ChangeDims(temporariesSize);
-    m_clusterSizesHistogram->ChangeDims(temporariesSize);
-
-    m_selectedClusters->ChangeDims(Vector2i(m_maxClusterCount, exampleSetCount));
-    m_nbClustersPerExampleSet->Resize(exampleSetCount);
-  }
 }
 
 } // namespace grove
