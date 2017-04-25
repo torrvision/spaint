@@ -39,7 +39,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>::compute_clust
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
+  for (int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
     for (uint32_t clusterIdx = 0; clusterIdx < maxClusterCount; ++clusterIdx)
     {
@@ -49,8 +49,8 @@ void ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>::compute_clust
                                       selectedClusters,
                                       clustersData,
                                       exampleSetCapacity,
+                                      exampleSetIdx,
                                       maxClusterCount,
-                                      setIdx,
                                       clusterIdx);
     }
   }
@@ -204,7 +204,7 @@ void ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>::reset_tempora
   for (int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
   {
     example_clusterer_reset_temporaries(
-        nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram, setIdx, exampleSetCapacity);
+        nbClustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetCapacity, setIdx);
   }
 }
 
@@ -222,16 +222,16 @@ void ExampleClusterer_CPU<ExampleType, ClusterType, MAX_CLUSTERS>::select_cluste
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (int setIdx = 0; setIdx < static_cast<int>(exampleSetCount); ++setIdx)
+  for (int exampleSetIdx = 0; exampleSetIdx < static_cast<int>(exampleSetCount); ++exampleSetIdx)
   {
     example_clusterer_select_clusters(clusterSizes,
                                       clusterSizesHistogram,
                                       nbClustersPerExampleSet,
                                       selectedClusters,
                                       exampleSetCapacity,
+                                      exampleSetIdx,
                                       maxClusterCount,
-                                      minClusterSize,
-                                      setIdx);
+                                      minClusterSize);
   }
 }
 

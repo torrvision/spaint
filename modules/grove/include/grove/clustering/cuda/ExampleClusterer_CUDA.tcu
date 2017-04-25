@@ -58,8 +58,8 @@ __global__ void ck_compute_modes(const ExampleType *examples,
                                   selectedClusters,
                                   clusterContainers,
                                   exampleSetCapacity,
-                                  maxSelectedClusters,
                                   exampleSetIdx,
+                                  maxSelectedClusters,
                                   clusterIdx);
 }
 
@@ -118,7 +118,7 @@ __global__ void ck_reset_temporaries(int *clustersPerExampleSet,
   const int exampleSetIdx = threadIdx.x;
 
   example_clusterer_reset_temporaries(
-      clustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetIdx, exampleSetCapacity);
+      clustersPerExampleSet, clusterSizes, clusterSizesHistogram, exampleSetCapacity, exampleSetIdx);
 }
 
 __global__ void ck_select_clusters(const int *clusterSizes,
@@ -131,16 +131,16 @@ __global__ void ck_select_clusters(const int *clusterSizes,
 {
   // The assumption is that the kernel indices are always valid.
   // "Sequential kernel": only one block is launched
-  const int reservoirIdx = threadIdx.x;
+  const int exampleSetIdx = threadIdx.x;
 
   example_clusterer_select_clusters(clusterSizes,
                                     clusterSizesHistogram,
                                     nbClustersPerExampleSet,
                                     selectedClusters,
                                     exampleSetCapacity,
+                                    exampleSetIdx,
                                     maxSelectedClusters,
-                                    minClusterSize,
-                                    reservoirIdx);
+                                    minClusterSize);
 }
 
 //#################### CONSTRUCTORS ####################
