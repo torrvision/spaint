@@ -201,6 +201,12 @@ PreemptiveRansac::~PreemptiveRansac()
 boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DColourImage_CPtr &keypoints,
                                                                const ScorePredictionsImage_CPtr &forestPredictions)
 {
+  // NOTE: In this function and in the virtual functions of the CPU and CUDA subclasses we directly access and write
+  // onto the dataSize of several MemoryBlock variables instead of keeping a separate "valid size" variable.
+  // This is done on purpose since the Update*From* functions of MemoryBlock/Images only move the first "dataSize"
+  // elements of the block. By changing the number to the actual number of elements to move we can gain a slight speed
+  // up of the system.
+
   m_timerTotal.start();
 
   // Copy keypoints and predictions in the local variables, to avoid explicitely passing them to every function.
