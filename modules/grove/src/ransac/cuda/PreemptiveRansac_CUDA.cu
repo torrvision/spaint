@@ -133,7 +133,8 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
   if (sampleIdx >= nbMaxSamples) return;
 
-  // Try to sample the index of a valid keypoint, using the mask if necessary.
+  // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask
+  // if necessary.
   const int sampledLinearIdx = preemptive_ransac_sample_inlier<useMask>(
       keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx], inlierMaskData);
 
