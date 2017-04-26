@@ -159,7 +159,7 @@ SET(reservoirs_interface_headers include/grove/reservoirs/interface/ExampleReser
 SET(reservoirs_interface_templates include/grove/reservoirs/interface/ExampleReservoirs.tpp)
 
 ##
-SET(reservoirs_shared_headers include/grove/features/shared/RGBDPatchFeatureCalculator_Shared.h)
+SET(reservoirs_shared_headers include/grove/reservoirs/shared/ExampleReservoirs_Shared.h)
 
 ##
 SET(scoreforests_headers
