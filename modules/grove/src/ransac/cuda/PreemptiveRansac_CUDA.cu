@@ -66,11 +66,11 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
                                                               PoseCandidate *poseCandidates,
                                                               int *nbPoseCandidates,
                                                               int maxNbPoseCandidates,
-                                                              bool m_useAllModesPerLeafInPoseHypothesisGeneration,
-                                                              bool m_checkMinDistanceBetweenSampledModes,
-                                                              float m_minDistanceBetweenSampledModes,
-                                                              bool m_checkRigidTransformationConstraint,
-                                                              float m_translationErrorMaxForCorrectPose)
+                                                              bool useAllModesPerLeafInPoseHypothesisGeneration,
+                                                              bool checkMinDistanceBetweenSampledModes,
+                                                              float minDistanceBetweenSampledModes,
+                                                              bool checkRigidTransformationConstraint,
+                                                              float translationErrorMaxForCorrectPose)
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -84,11 +84,11 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
                                                     imgSize,
                                                     randomGenerators[candidateIdx],
                                                     candidate,
-                                                    m_useAllModesPerLeafInPoseHypothesisGeneration,
-                                                    m_checkMinDistanceBetweenSampledModes,
-                                                    m_minDistanceBetweenSampledModes,
-                                                    m_checkRigidTransformationConstraint,
-                                                    m_translationErrorMaxForCorrectPose);
+                                                    useAllModesPerLeafInPoseHypothesisGeneration,
+                                                    checkMinDistanceBetweenSampledModes,
+                                                    minDistanceBetweenSampledModes,
+                                                    checkRigidTransformationConstraint,
+                                                    translationErrorMaxForCorrectPose);
 
   // If we succeeded, grab an unique index and store the candidate in the array.
   if (valid)
