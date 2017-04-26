@@ -163,14 +163,50 @@ protected:
 
   //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
 protected:
-  virtual void generate_pose_candidates() = 0;
-  virtual void sample_inlier_candidates(bool useMask = false) = 0;
+  /**
+   * \brief Compute the energy associated to each remaining pose hypothesis ans rerank them by increasing energy.
+   */
   virtual void compute_and_sort_energies() = 0;
+
+  /**
+   * \brief Generate a certain number of camera pose hypotheses according to the method described in the paper.
+   */
+  virtual void generate_pose_candidates() = 0;
+
+  /**
+   * \brief Sample a certain number of keypoints from the input image. Those keypoints will be used for the subsequent
+   *        energy computation.
+   *
+   * \param useMask Whether or not to store in a persistent mask the location of already sampled keypoints.
+   */
+  virtual void sample_inlier_candidates(bool useMask = false) = 0;
+
+  /**
+   * \brief Perform the continuous optimisation step described in the paper to update each remaining pose hypothesis.
+   */
   virtual void update_candidate_poses() = 0;
 
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
+  /**
+   * \brief For every generated pose hypothesis (3 pairs of points in camera/world coordinates) run the Kabsch algorithm
+   *        and estimate the rigid transformation matrix.
+   *
+   * \note  Will probably go away as soon as we implement a proper SVD solver that can run on both CPU and GPU.
+   */
   void compute_candidate_poses_kabsch();
+
+  /**
+   * \brief Optimise a PoseCandidate pose minimising a non-linear error term depending on the parameters of the class.
+   *        See the paper for details.
+   *
+   * \note  Will probably go away as soon as we implement the optimisation as shared code that can run on both CPU and
+   *        GPU.
+   *
+   * \param poseCandidate The pose candidate to optimise.
+   *
+   * \return Whether the optimisation succeeded or not.
+   */
   bool update_candidate_pose(PoseCandidate &poseCandidate) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
