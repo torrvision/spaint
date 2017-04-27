@@ -6,9 +6,8 @@
 #include "relocalisation/cuda/ScoreRelocaliser_CUDA.h"
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-using ITMLib::ITMLowLevelEngineFactory;
 #include <ITMLib/Utils/ITMLibSettings.h>
-using ITMLib::ITMLibSettings;
+using namespace ITMLib;
 
 #include <itmx/MemoryBlockFactory.h>
 using itmx::MemoryBlockFactory;
@@ -43,7 +42,7 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
 
 ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename) : ScoreRelocaliser(forestFilename)
 {
-  // Instantiate the sub-algorithms knowing that we are on the GPU.
+  // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
   // Features.
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DEVICE_CUDA);
