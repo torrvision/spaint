@@ -227,6 +227,7 @@ private:
 //#################### TYPEDEFS ####################
 typedef boost::shared_ptr<ScoreRelocaliser> ScoreRelocaliser_Ptr;
 typedef boost::shared_ptr<const ScoreRelocaliser> ScoreRelocaliser_CPtr;
-}
 
-#endif
+} // namespace grove
+
+#endif // H_GROVE_SCORERELOCALISER
