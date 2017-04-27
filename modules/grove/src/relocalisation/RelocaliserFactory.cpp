@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "relocalisation//RelocaliserFactory.h"
+#include "relocalisation/RelocaliserFactory.h"
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 
 #ifdef WITH_CUDA
@@ -16,7 +16,8 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ScoreRelocaliser_Ptr RelocaliserFactory::make_score_relocaliser(ITMLibSettings::DeviceType deviceType, const std::string &forestFilename)
+ScoreRelocaliser_Ptr RelocaliserFactory::make_score_relocaliser(ITMLibSettings::DeviceType deviceType,
+                                                                const std::string &forestFilename)
 {
   ScoreRelocaliser_Ptr relocaliser;
 
@@ -25,7 +26,8 @@ ScoreRelocaliser_Ptr RelocaliserFactory::make_score_relocaliser(ITMLibSettings::
 #ifdef WITH_CUDA
     relocaliser.reset(new ScoreRelocaliser_CUDA(forestFilename));
 #else
-    throw std::runtime_error("Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
+    throw std::runtime_error(
+        "Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
 #endif
   }
   else
@@ -36,4 +38,4 @@ ScoreRelocaliser_Ptr RelocaliserFactory::make_score_relocaliser(ITMLibSettings::
   return relocaliser;
 }
 
-}
+} // namespace grove
