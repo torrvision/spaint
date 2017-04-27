@@ -44,7 +44,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename)
 {
   m_featureCalculator = FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DEVICE_CUDA);
 
-  m_scoreForest = DecisionForestFactory<DescriptorType, TREE_COUNT>::make_forest(ITMLibSettings::DEVICE_CUDA, m_forestFilename);
+  m_scoreForest = DecisionForestFactory<DescriptorType, FOREST_TREE_COUNT>::make_forest(ITMLibSettings::DEVICE_CUDA, m_forestFilename);
 
   // These variables have to be set here, since they depend on the forest.
   m_reservoirsCount = m_scoreForest->get_nb_leaves();
