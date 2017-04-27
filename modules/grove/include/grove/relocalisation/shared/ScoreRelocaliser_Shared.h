@@ -13,29 +13,47 @@
 
 #include "../../scoreforests/ScorePrediction.h"
 
-
 namespace grove {
 
-template<int TREE_COUNT>
-_CPU_AND_GPU_CODE_TEMPLATE_
-inline void get_prediction_for_leaf_shared(
-    const ScorePrediction* leafPredictions,
-    const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
-    ScorePrediction* outPredictions, Vector2i imgSize, int x, int y)
+/**
+ * \brief Merge score predictions associated to multiple leaves in a single ScorePrediction.
+ *
+ * \note  Merging is performed taking the largest clusters from each leaf. The assumption is that modal cluters in each
+ *        leaf are already sorted by descending size.
+ *
+ * \param leafPredictions A pointer to the sotrage area holding all the ScorePredictions associated to forest leaves.
+ * \param leafIndices     A pointer to the storage area where the leaf indices for the current example are stored.
+ * \param outPredictions  A pointer to the storage area that will hold the final merged prediction.
+ * \param imgSize         The dimensions of the leafIndices and outPredictions arrays. Row major.
+ * \param x               The x coordinate of the leaves to process.
+ * \param y               The y coordinate of the leaves to process.
+ */
+template <int TREE_COUNT>
+_CPU_AND_GPU_CODE_TEMPLATE_ inline void
+    get_prediction_for_leaf_shared(const ScorePrediction *leafPredictions,
+                                   const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
+                                   ScorePrediction *outPredictions,
+                                   Vector2i imgSize,
+                                   int x,
+                                   int y)
 {
+  // Convenience typedef.
   typedef ORUtils::VectorX<int, TREE_COUNT> LeafIndices;
 
+  // Compute the linear index to the current leaves/output prediction.
   const int linearIdx = y * imgSize.width + x;
+
+  // Grab a copy of the relevant leaves in a local variable.
   const LeafIndices selectedLeaves = leafIndices[linearIdx];
 
-  // Setup the indices of the selected mode for each prediction
+  // Setup and zero the indices of the current mode for each prediction
   int treeModeIdx[TREE_COUNT];
   for (int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
     treeModeIdx[treeIdx] = 0;
   }
 
-  // Copy the prediction selected for each tree. This is to have them contigous in memory for the following operations.
+  // Copy the selected prediction for each leaf. This is to have them contigous in memory for the following operations.
   ScorePrediction selectedPredictions[TREE_COUNT];
   for (int treeIdx = 0; treeIdx < TREE_COUNT; ++treeIdx)
   {
@@ -46,8 +64,8 @@ inline void get_prediction_for_leaf_shared(
   ScorePrediction finalPrediction;
   finalPrediction.nbClusters = 0;
 
-  // Merge first MAX_MODES from the sorted mode arrays.
-  // The assumption is that the modes in leafPredictions are already sorted by descending number of inliers.
+  // Merge the first MAX_CLUSTERS from the selected cluster arrays.
+  // The assumption is that the modal clusters in leafPredictions are already sorted by descending number of inliers.
   while (finalPrediction.nbClusters < ScorePrediction::MAX_CLUSTERS)
   {
     int bestTreeIdx = 0;
@@ -62,16 +80,16 @@ inline void get_prediction_for_leaf_shared(
       // The number of modes for the prediction associated to the current tree.
       const int predictionModeCount = selectedPredictions[treeIdx].nbClusters;
 
-      // If the prediction has less modes than the currentModeIdx we cannot do anything for this tree.
-      if(predictionModeCount <= currentModeIdx)
+      // If the prediction has less modes than currentModeIdx we cannot do anything for this tree.
+      if (predictionModeCount <= currentModeIdx)
       {
         continue;
       }
 
-      // The mode that we are evaluating.
+      // The mode that we are evaluating (the first non processed mode).
       const Mode3DColour &currentMode = selectedPredictions[treeIdx].clusters[currentModeIdx];
 
-      // The first not processed mode has more inliers than the current best mode
+      // The current mode has more inliers than the currently best mode.
       if (currentMode.nbInliers > bestTreeNbInliers)
       {
         // Update best tree index and number of inliers.
@@ -80,23 +98,24 @@ inline void get_prediction_for_leaf_shared(
       }
     }
 
-    // No valid modes in any tree.
+    // No valid modes in any tree. Early out.
     if (bestTreeNbInliers == 0)
     {
       break;
     }
 
     // Copy the chosen mode into the output array.
-    finalPrediction.clusters[finalPrediction.nbClusters++] = selectedPredictions[bestTreeIdx].clusters[treeModeIdx[bestTreeIdx]];
+    finalPrediction.clusters[finalPrediction.nbClusters++] =
+        selectedPredictions[bestTreeIdx].clusters[treeModeIdx[bestTreeIdx]];
 
     // Increment the starting index for the associated tree.
     treeModeIdx[bestTreeIdx]++;
   }
 
-  // Store the prediction in the output image.
+  // Finally, store the prediction in the output image.
   outPredictions[linearIdx] = finalPrediction;
 }
 
-}
+} // namespace grove
 
-#endif
+#endif // H_GROVE_SCORERELOCALISERSHARED
