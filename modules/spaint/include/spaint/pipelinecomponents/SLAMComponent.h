@@ -18,6 +18,8 @@
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 
+#include <itmx/relocalisation/Relocaliser.h>
+
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
 #include "../trackers/FallibleTracker.h"
@@ -37,8 +39,6 @@ protected:
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<FernRelocLib::PoseDatabase> PoseDatabase_Ptr;
-  typedef boost::shared_ptr<FernRelocLib::Relocaliser<float> > Relocaliser_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
   typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
   typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
@@ -78,17 +78,11 @@ protected:
   /** The dense voxel mapper. */
   DenseMapper_Ptr m_denseVoxelMapper;
 
-  /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
-  size_t m_keyframeDelay;
-
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
-  /** The database of previous poses for relocalisation. */
-  PoseDatabase_Ptr m_poseDatabase;
-
   /** The relocaliser. */
-  Relocaliser_Ptr m_relocaliser;
+  itmx::Relocaliser_Ptr m_relocaliser;
 
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;

@@ -18,6 +18,9 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
+#include <itmx/relocalisation/RelocaliserFactory.h>
+using namespace itmx;
+
 #include "segmentation/SegmentationUtil.h"
 
 #ifdef WITH_OVR
@@ -86,6 +89,9 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   const Vector2i trackedImageSize = m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize);
   slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
   m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
+
+  // Set up the relocaliser.
+  m_relocaliser = RelocaliserFactory::make_default_fern_relocaliser(depthImageSize, settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max);
 
   // Set up the live render states.
   slamState->set_live_voxel_render_state(VoxelRenderState_Ptr(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType)));
@@ -259,24 +265,12 @@ void SLAMComponent::reset_scene()
   // Reset the tracking state.
   slamState->get_tracking_state()->Reset();
 
-  // Reset the pose database and the relocaliser.
-  m_poseDatabase.reset(new PoseDatabase);
-
-  const Vector2i& depthImageSize = slamState->get_depth_image_size();
-  const float harvestingThreshold = 0.2f;
-  const int numFerns = 500;
-  const int numDecisionsPerFern = 4;
-  const Settings_CPtr& settings = m_context->get_settings();
-  m_relocaliser.reset(new Relocaliser<float>(
-    depthImageSize,
-    Vector2f(settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max),
-    harvestingThreshold, numFerns, numDecisionsPerFern
-  ));
+  // Reset the relocaliser.
+  m_relocaliser->reset();
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
   m_fusionEnabled = true;
-  m_keyframeDelay = 0;
 }
 
 void SLAMComponent::set_detect_fiducials(bool detectFiducials)
@@ -325,38 +319,35 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
-  // Copy the current depth input across to the CPU for use by the relocaliser.
-  view->depth->UpdateHostFromDevice();
-
-  // Decide whether or not the relocaliser should consider using this frame as a keyframe.
-  bool considerKeyframe = false;
+  // If tracking was good, then integrate the RGB-D images into the relocaliser.
   if(trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
-    if(m_keyframeDelay == 0) considerKeyframe = true;
-    else --m_keyframeDelay;
+    m_relocaliser->integrate_rgbd_pose_pair(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all, *trackingState->pose_d);
+  }
+  else
+  {
+    // Always give the relocaliser a chance to perform bookkeeping.
+    m_relocaliser->update();
   }
 
-  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-  // that is currently in the database, and may add the current frame as a new keyframe if the tracking has been
-  // good for some time and the current frame differs sufficiently from the existing keyframes.
-  int nearestNeighbour;
-  bool keyframeAdded = m_relocaliser->ProcessFrame(view->depth, trackingState->pose_d, 0, 1, &nearestNeighbour, NULL, considerKeyframe);
-
-  // If no keyframe was added and the tracking failed, but a nearest keyframe was found by the relocaliser, reset
-  // the pose to that of the keyframe and rerun the tracker for this frame.
-  if(!keyframeAdded && trackerResult == ITMTrackingState::TRACKING_FAILED && nearestNeighbour != -1)
+  // Only if the tracking failed, try to relocalise the camera.
+  if(trackerResult == ITMTrackingState::TRACKING_FAILED)
   {
-    trackingState->pose_d->SetFrom(&m_relocaliser->RetrievePose(nearestNeighbour).pose);
+    boost::optional<ORUtils::SE3Pose> relocalisedPose = m_relocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
 
-    const bool resetVisibleList = true;
-    m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-    prepare_for_tracking(TRACK_VOXELS);
-    m_trackingController->Track(trackingState.get(), view.get());
-    trackerResult = trackingState->trackerResult;
+    // If we succeeded try to refine with ICP.
+    if(relocalisedPose)
+    {
+      trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
 
-    // Set the number of frames for which the tracking quality must be good before the relocaliser can consider
-    // adding a new keyframe.
-    m_keyframeDelay = 10;
+      const bool resetVisibleList = true;
+      m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+      prepare_for_tracking(TRACK_VOXELS);
+      m_trackingController->Track(trackingState.get(), view.get());
+
+      // Copy the new tracker result.
+      trackerResult = trackingState->trackerResult;
+    }
   }
 
   return trackerResult;
