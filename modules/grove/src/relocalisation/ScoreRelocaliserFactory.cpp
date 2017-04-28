@@ -1,9 +1,9 @@
 /**
- * grove: RelocaliserFactory.cpp
+ * grove: ScoreRelocaliserFactory.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "relocalisation/RelocaliserFactory.h"
+#include "relocalisation/ScoreRelocaliserFactory.h"
 #include "relocalisation/cpu/ScoreRelocaliser_CPU.h"
 
 #ifdef WITH_CUDA
@@ -16,8 +16,8 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-ScoreRelocaliser_Ptr RelocaliserFactory::make_score_relocaliser(ITMLibSettings::DeviceType deviceType,
-                                                                const std::string &forestFilename)
+ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DeviceType deviceType,
+                                                                     const std::string &forestFilename)
 {
   ScoreRelocaliser_Ptr relocaliser;
 

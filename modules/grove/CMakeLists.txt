@@ -123,8 +123,8 @@ SET(ransac_interface_sources src/ransac/interface/PreemptiveRansac.cpp)
 SET(ransac_shared_headers include/grove/ransac/shared/PreemptiveRansac_Shared.h)
 
 ##
-SET(relocalisation_headers include/grove/relocalisation/RelocaliserFactory.h)
-SET(relocalisation_sources src/relocalisation/RelocaliserFactory.cpp)
+SET(relocalisation_headers include/grove/relocalisation/ScoreRelocaliserFactory.h)
+SET(relocalisation_sources src/relocalisation/ScoreRelocaliserFactory.cpp)
 
 ##
 SET(relocalisation_cpu_headers include/grove/relocalisation/cpu/ScoreRelocaliser_CPU.h)

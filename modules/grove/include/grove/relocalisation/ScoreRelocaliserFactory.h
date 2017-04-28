@@ -1,10 +1,10 @@
 /**
- * grove: RelocaliserFactory.h
+ * grove: ScoreRelocaliserFactory.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_GROVE_RELOCALISERFACTORY
-#define H_GROVE_RELOCALISERFACTORY
+#ifndef H_GROVE_SCORERELOCALISERFACTORY
+#define H_GROVE_SCORERELOCALISERFACTORY
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
@@ -15,7 +15,7 @@ namespace grove {
 /**
  * \brief This class allows the construction of a ScoreRelocaliser.
  */
-class RelocaliserFactory
+class ScoreRelocaliserFactory
 {
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -35,4 +35,4 @@ public:
 
 } // namespace grove
 
-#endif // H_GROVE_RELOCALISERFACTORY
+#endif // H_GROVE_SCORERELOCALISERFACTORY

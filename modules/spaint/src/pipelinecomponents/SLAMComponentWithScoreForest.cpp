@@ -16,7 +16,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <grove/relocalisation/RelocaliserFactory.h>
+#include <grove/relocalisation/ScoreRelocaliserFactory.h>
 
 //#define ENABLE_TIMERS
 //#define VISUALIZE_INLIERS
@@ -68,9 +68,9 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
 
   m_updateForestModesEveryFrame = true;
 
-  m_scoreRelocaliser = RelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocalisationForestPath);
-  //  m_scoreRelocaliser = RelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU,
-  //  m_relocalisationForestPath);
+  m_relocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocalisationForestPath);
+  //  m_relocaliser =
+  //      ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
 
   // Refinement ICP tracker
   const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
@@ -179,7 +179,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "update forest, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_scoreRelocaliser->update();
+    m_relocaliser->update();
   }
 
   if (performRelocalization)
@@ -222,11 +222,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #endif
 
     boost::optional<ORUtils::SE3Pose> relocalisedPose =
-        m_scoreRelocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics);
+        m_relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics);
 
     if (relocalisedPose)
     {
-      trackingState->pose_d->SetFrom(&(relocalisedPose.get()));
+      trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
 
       VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
       SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
@@ -462,7 +462,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     //        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
     //#endif
 
-    m_scoreRelocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
+    m_relocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
 
     if (relocalizationTimer)
     {

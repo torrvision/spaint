@@ -12,8 +12,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <grove/relocalisation/interface/ScoreRelocaliser.h>
-
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
 
 namespace spaint
@@ -56,8 +54,6 @@ protected:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
-  grove::ScoreRelocaliser_Ptr m_scoreRelocaliser;
-
   std::string m_relocalisationForestPath;
   bool m_updateForestModesEveryFrame;
 
