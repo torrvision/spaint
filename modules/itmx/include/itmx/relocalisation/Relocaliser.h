@@ -22,7 +22,7 @@ protected:
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~Relocaliser();
+  virtual ~Relocaliser() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -34,6 +34,8 @@ public:
   virtual boost::optional<ORUtils::SE3Pose> relocalise(const ITMUChar4Image *colourImage,
                                                        const ITMFloatImage *depthImage,
                                                        const Vector4f &depthIntrinsics) = 0;
+
+  virtual void reset() = 0;
 
   virtual void update() = 0;
 };

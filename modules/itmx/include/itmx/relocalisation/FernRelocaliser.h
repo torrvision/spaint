@@ -38,6 +38,8 @@ public:
   virtual boost::optional<ORUtils::SE3Pose>
       relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
 
+  virtual void reset();
+
   virtual void update();
 
   //#################### PRIVATE TYPEDEFS ####################
@@ -47,6 +49,15 @@ private:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** The number of decisions per fern. */
+  int m_decisionsPerFern;
+
+  /** The size of the input depth images. */
+  Vector2i m_depthImageSize;
+
+  /** The keyframe harvesting threshold. */
+  float m_harvestingThreshold;
+
   /**
    * The policy deciding whether a frame for which the integrate_rgbd_pose_pair function is called can be actually
    * integrated in the Fern conservatory.
@@ -55,6 +66,12 @@ private:
 
   /** The delay before trying to add another keyframe to the Fern conservatory. */
   uint32_t m_keyframeDelay;
+
+  /** The number of ferns to use for relocalisation. */
+  int m_numFerns;
+
+  /** The minimum and maximum range of the depth images. */
+  Vector2f m_rangeParameters;
 
   /** The wrapped relocaliser. */
   WrappedRelocaliser_Ptr m_relocaliser;

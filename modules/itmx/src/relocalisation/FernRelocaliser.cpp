@@ -15,10 +15,14 @@ FernRelocaliser::FernRelocaliser(Vector2i depthImageSize,
                                  int decisionsPerFern,
                                  KeyframeAddPolicy keyframeAddPolicy)
 {
+  m_decisionsPerFern = decisionsPerFern;
+  m_depthImageSize = depthImageSize;
+  m_harvestingThreshold = harvestingThreshold;
   m_keyframeAddPolicy = keyframeAddPolicy;
-  m_keyframeDelay = 0;
-  m_relocaliser.reset(new WrappedRelocaliser(
-      depthImageSize, Vector2f(viewFrustumMin, viewFrustumMax), harvestingThreshold, numFerns, decisionsPerFern));
+  m_numFerns = numFerns;
+  m_rangeParameters = Vector2f(viewFrustumMin, viewFrustumMax);
+
+  reset();
 }
 
 void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy */,
@@ -81,6 +85,13 @@ boost::optional<ORUtils::SE3Pose> FernRelocaliser::relocalise(const ITMUChar4Ima
   }
 
   return result;
+}
+
+void FernRelocaliser::reset()
+{
+  m_keyframeDelay = 0;
+  m_relocaliser.reset(new WrappedRelocaliser(
+      m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern));
 }
 
 void FernRelocaliser::update()

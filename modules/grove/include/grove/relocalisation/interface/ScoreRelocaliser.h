@@ -16,6 +16,7 @@
 #include <ORUtils/SE3Pose.h>
 
 #include <itmx/ITMObjectPtrTypes.h>
+#include <itmx/relocalisation/Relocaliser.h>
 
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
@@ -34,7 +35,7 @@ namespace grove {
  *        Tommaso Cavallari, Stuart Golodetz*, Nicholas A. Lord*,
  *        Julien Valentin, Luigi Di Stefano and Philip H. S. Torr
  */
-class ScoreRelocaliser
+class ScoreRelocaliser : public itmx::Relocaliser
 {
   //#################### ENUMS ####################
 public:
@@ -81,25 +82,14 @@ public:
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Try to estimate the pose of the camera used to acquire an input RGB-D image pair.
+   * \brief Returns the best poses estimated by the last run of the P-RANSAC algorithm.
    *
-   * \param colourImage     A colour image acquired by the camera.
-   * \param depthImage      A depth image acquired by the camera.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
+   * \note  Should be called AFTER calling estimate_pose.
    *
-   * \return The estimate camera pose if successful, an empty optional value otherwise.
+   * \param poseCandidates Output array that will be filled with the best poses estimated by the relocaliser.
+   *                       Poses are sorted in descending quality order.
    */
-  boost::optional<PoseCandidate> estimate_pose(const ITMUChar4Image *colourImage,
-                                               const ITMFloatImage *depthImage,
-                                               const Vector4f &depthIntrinsics);
-
-  /**
-   * \brief Perform an update step of the relocaliser, learning more on the scene being explored.
-   *
-   * \note  This function may be called instead of integrate_measurements when there are no new measurements to
-   *        integrate in the relocaliser but there is spare processing time to update the adapted forest.
-   */
-  void idle_update();
+  void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
 
   /**
    * \brief Integrates the informations provided by a new RGB-D image pair into the relocalisation forest.
@@ -109,15 +99,35 @@ public:
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    * \param cameraPose      The pose of the camera that acquired the RGB-D image pair in a world coordinate frame.
    */
-  void integrate_measurements(const ITMUChar4Image *colourImage,
-                              const ITMFloatImage *depthImage,
-                              const Vector4f &depthIntrinsics,
-                              const Matrix4f &cameraPose);
+  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
+                                        const ITMFloatImage *depthImage,
+                                        const Vector4f &depthIntrinsics,
+                                        const ORUtils::SE3Pose &cameraPose);
+
+  /**
+   * \brief Try to estimate the pose of the camera used to acquire an input RGB-D image pair.
+   *
+   * \param colourImage     A colour image acquired by the camera.
+   * \param depthImage      A depth image acquired by the camera.
+   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
+   *
+   * \return The estimate camera pose if successful, an empty optional value otherwise.
+   */
+  virtual boost::optional<ORUtils::SE3Pose>
+      relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
 
   /**
    * \brief Reset the relocaliser, allowing the relocalisation in a new environment.
    */
-  void reset();
+  virtual void reset();
+
+  /**
+   * \brief Perform an update step of the relocaliser, learning more on the scene being explored.
+   *
+   * \note  This function may be called instead of integrate_measurements when there are no new measurements to
+   *        integrate in the relocaliser but there is spare processing time to update the adapted forest.
+   */
+  virtual void update();
 
   //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
 protected:

@@ -53,60 +53,22 @@ ScoreRelocaliser::~ScoreRelocaliser() {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-boost::optional<PoseCandidate> ScoreRelocaliser::estimate_pose(const ITMUChar4Image *colourImage,
-                                                               const ITMFloatImage *depthImage,
-                                                               const Vector4f &depthIntrinsics)
+void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate> &poseCandidates) const
 {
-  boost::optional<PoseCandidate> result;
-
-  // Try to estimate a pose only if we have enough valid depth values.
-  if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
-  {
-    // First: select keypoints and compute descriptors.
-    m_featureCalculator->compute_keypoints_and_features(
-        colourImage, depthImage, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
-
-    // Second: find all the leaves associated to the keypoints.
-    m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
-
-    // Third: merge the predictions associated to those leaves.
-    get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
-
-    // Finally: perform RANSAC.
-    result = m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
-  }
-
-  return result;
+  // Just forward the vector to P-RANSAC.
+  m_preemptiveRansac->get_best_poses(poseCandidates);
 }
 
-void ScoreRelocaliser::idle_update()
-{
-  // We are back to the first reservoir that was updated when
-  // the last batch of features were added to the forest.
-  // No need to perform further updates, we would get the same modes.
-  // This check works only if the m_maxReservoirsToUpdate quantity
-  // remains constant throughout the whole program.
-  if (m_reservoirUpdateStartIdx == m_lastFeaturesAddedStartIdx) return;
-
-  const uint32_t updateCount = compute_nb_reservoirs_to_update();
-  m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
-                                 m_exampleReservoirs->get_reservoirs_size(),
-                                 m_predictionsBlock,
-                                 m_reservoirUpdateStartIdx,
-                                 updateCount);
-
-  update_reservoir_start_idx();
-}
-
-void ScoreRelocaliser::integrate_measurements(const ITMUChar4Image *colourImage,
-                                              const ITMFloatImage *depthImage,
-                                              const Vector4f &depthIntrinsics,
-                                              const Matrix4f &cameraPose)
+void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
+                                                const ITMFloatImage *depthImage,
+                                                const Vector4f &depthIntrinsics,
+                                                const ORUtils::SE3Pose &cameraPose)
 {
   // First: select keypoints and compute descriptors.
+  const Matrix4f invCameraPose = cameraPose.GetInvM();
   m_featureCalculator->compute_keypoints_and_features(colourImage,
                                                       depthImage,
-                                                      cameraPose,
+                                                      invCameraPose,
                                                       depthIntrinsics,
                                                       m_rgbdPatchKeypointsImage.get(),
                                                       m_rgbdPatchDescriptorImage.get());
@@ -133,6 +95,40 @@ void ScoreRelocaliser::integrate_measurements(const ITMUChar4Image *colourImage,
   update_reservoir_start_idx();
 }
 
+boost::optional<ORUtils::SE3Pose> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                               const ITMFloatImage *depthImage,
+                                                               const Vector4f &depthIntrinsics)
+{
+  boost::optional<ORUtils::SE3Pose> result;
+
+  // Try to estimate a pose only if we have enough valid depth values.
+  if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  {
+    // First: select keypoints and compute descriptors.
+    m_featureCalculator->compute_keypoints_and_features(
+        colourImage, depthImage, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
+
+    // Second: find all the leaves associated to the keypoints.
+    m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+
+    // Third: merge the predictions associated to those leaves.
+    get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
+
+    // Finally: perform RANSAC.
+    boost::optional<PoseCandidate> poseCandidate =
+        m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
+
+    // If we succeeded grab the transformation matrix and fill the SE3Pose.
+    if (poseCandidate)
+    {
+      result = ORUtils::SE3Pose();
+      result->SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
+    }
+  }
+
+  return result;
+}
+
 void ScoreRelocaliser::reset()
 {
   m_exampleReservoirs->clear();
@@ -140,6 +136,25 @@ void ScoreRelocaliser::reset()
 
   m_lastFeaturesAddedStartIdx = 0;
   m_reservoirUpdateStartIdx = 0;
+}
+
+void ScoreRelocaliser::update()
+{
+  // We are back to the first reservoir that was updated when
+  // the last batch of features were added to the forest.
+  // No need to perform further updates, we would get the same modes.
+  // This check works only if the m_maxReservoirsToUpdate quantity
+  // remains constant throughout the whole program.
+  if (m_reservoirUpdateStartIdx == m_lastFeaturesAddedStartIdx) return;
+
+  const uint32_t updateCount = compute_nb_reservoirs_to_update();
+  m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
+                                 m_exampleReservoirs->get_reservoirs_size(),
+                                 m_predictionsBlock,
+                                 m_reservoirUpdateStartIdx,
+                                 updateCount);
+
+  update_reservoir_start_idx();
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################

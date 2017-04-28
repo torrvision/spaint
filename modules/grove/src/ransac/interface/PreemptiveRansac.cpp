@@ -318,7 +318,6 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates
 {
   // No need to check dataSize since it will likely be 1 after running estimate_pose. If estimate_pose has never run
   // this will probably return garbage.
-  // TODO: improve.
   const PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
 
   // Setup output container.
