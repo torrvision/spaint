@@ -21,6 +21,16 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 #############################
 
 ##
+SET(relocalisation_sources
+src/relocalisation/FernRelocaliser.cpp
+)
+
+SET(relocalisation_headers
+include/itmx/relocalisation/FernRelocaliser.h
+include/itmx/relocalisation/Relocaliser.h
+)
+
+##
 SET(toplevel_sources
 src/MemoryBlockFactory.cpp
 )
@@ -37,10 +47,12 @@ include/itmx/MemoryBlockFactory.h
 #################################################################
 
 SET(sources
+${relocalisation_sources}
 ${toplevel_sources}
 )
 
 SET(headers
+${relocalisation_headers}
 ${toplevel_headers}
 )
 
@@ -49,6 +61,7 @@ ${toplevel_headers}
 #############################
 
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP("relocalisation" FILES ${relocalisation_sources} ${relocalisation_headers})
 
 ##########################################
 # Specify additional include directories #
