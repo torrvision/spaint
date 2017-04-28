@@ -18,11 +18,11 @@ class Relocaliser
 {
   //#################### CONSTRUCTORS ####################
 protected:
-  Relocaliser() {}
+  Relocaliser();
 
   //#################### DESTRUCTOR ####################
 public:
-  virtual ~Relocaliser() {}
+  virtual ~Relocaliser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
