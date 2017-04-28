@@ -7,6 +7,8 @@
 
 namespace itmx {
 
+//#################### CONSTRUCTORS ####################
+
 FernRelocaliser::FernRelocaliser(Vector2i depthImageSize,
                                  float viewFrustumMin,
                                  float viewFrustumMax,
@@ -24,6 +26,8 @@ FernRelocaliser::FernRelocaliser(Vector2i depthImageSize,
 
   reset();
 }
+
+//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy */,
                                                const ITMFloatImage *depthImage,
