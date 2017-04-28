@@ -28,7 +28,7 @@ public:
   enum KeyframeAddPolicy { ALWAYS_TRY_ADD, DELAY_AFTER_RELOCALISATION };
 
   //#################### CONSTRUCTORS ####################
-protected:
+public:
   /**
    * \brief Constructs a FernRelocaliser.
    *
