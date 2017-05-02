@@ -31,6 +31,20 @@ public:
    */
   ScoreRelocaliser_CUDA(const std::string &forestFilename);
 
+  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Returns a specific prediction from the forest.
+   *
+   * \param treeIdx The index of the tree containing the prediciton of interest.
+   * \param leafIdx The index of the required leaf prediction.
+   *
+   * \return The ScorePrediction of interest.
+   *
+   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
+   */
+  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const;
+
   //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 protected:
   /**

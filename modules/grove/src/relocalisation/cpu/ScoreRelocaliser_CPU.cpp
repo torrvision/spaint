@@ -57,6 +57,18 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string &forestFilename) : 
   reset();
 }
 
+//#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+
+ScorePrediction ScoreRelocaliser_CPU::get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const
+{
+  if (treeIdx >= m_scoreForest->get_nb_trees() || leafIdx >= m_scoreForest->get_nb_leaves_in_tree(treeIdx))
+  {
+    throw std::invalid_argument("Invalid tree or leaf index.");
+  }
+
+  return m_predictionsBlock->GetElement(leafIdx * m_scoreForest->get_nb_trees() + treeIdx, MEMORYDEVICE_CPU);
+}
+
 //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 
 void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPtr &leafIndices,

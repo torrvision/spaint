@@ -92,6 +92,34 @@ public:
   void get_best_poses(std::vector<PoseCandidate> &poseCandidates) const;
 
   /**
+   * \brief Returns a pointer to an image containing the keypoints used to perform the relocalisation.
+   *
+   * \return A pointer to an image containing the keypoints used to perform the relocalisation.
+   */
+  Keypoint3DColourImage_CPtr get_keypoints_image() const;
+
+  /**
+   * \brief Returns a pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   *
+   * \return A pointer to an image containing the forest predictions for each pixel in the keypoint image.
+   */
+  ScorePredictionsImage_CPtr get_predictions_image() const;
+
+  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Returns a specific prediction from the forest.
+   *
+   * \param treeIdx The index of the tree containing the prediciton of interest.
+   * \param leafIdx The index of the required leaf prediction.
+   *
+   * \return The ScorePrediction of interest.
+   *
+   * \throws std::invalid_argument if either treeIdx or leafIdx are greater than the maximum number of trees or leaves.
+   */
+  virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
+
+  /**
    * \brief Integrates the informations provided by a new RGB-D image pair into the relocalisation forest.
    *
    * \param colourImage     A colour image acquired by the camera.

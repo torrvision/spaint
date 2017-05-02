@@ -59,6 +59,10 @@ void ScoreRelocaliser::get_best_poses(std::vector<PoseCandidate> &poseCandidates
   m_preemptiveRansac->get_best_poses(poseCandidates);
 }
 
+Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const { return m_rgbdPatchKeypointsImage; }
+
+ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const { return m_predictionsImage; }
+
 void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
                                                 const ITMFloatImage *depthImage,
                                                 const Vector4f &depthIntrinsics,
