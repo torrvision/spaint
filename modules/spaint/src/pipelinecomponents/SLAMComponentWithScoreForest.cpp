@@ -20,20 +20,23 @@
 
 #include <grove/relocalisation/ScoreRelocaliserFactory.h>
 
-//#define ENABLE_TIMERS
-//#define VISUALIZE_INLIERS
+// Whether to enable VERBOSE timers, printing the time spent in each relocalisation phase, for each frame.
+//#define ENABLE_VERBOSE_TIMERS
+
+// Whether or not to save the modes associated to a certain set of forest leaves after the adaptation.
 //#define SAVE_LEAF_MODES
-//#define SAVE_INLIERS
-//#define USE_FERN_RELOCALISER
+
+// Whether or not to show the correspondences used to perform P-RANSAC.
 //#define SHOW_RANSAC_CORRESPONDENCES
 
-#ifdef ENABLE_TIMERS
-#include <boost/timer/timer.hpp>
-#endif
-
-#ifdef VISUALIZE_INLIERS
+#ifdef SHOW_RANSAC_CORRESPONDENCES
+#include <itmx/MemoryBlockFactory.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#endif
+
+#ifdef ENABLE_VERBOSE_TIMERS
+#include <boost/timer/timer.hpp>
 #endif
 
 namespace bf = boost::filesystem;
@@ -207,49 +210,52 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   if (m_updateRelocaliserEveryFrame && !performLearning)
   {
-#ifdef ENABLE_TIMERS
-    boost::timer::auto_cpu_timer t(6, "update forest, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#ifdef ENABLE_VERBOSE_TIMERS
+    boost::timer::auto_cpu_timer t(6, "relocaliser update, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
     m_relocaliser->update();
   }
 
   if (performRelocalization)
   {
-#ifdef ENABLE_TIMERS
+#ifdef ENABLE_VERBOSE_TIMERS
     boost::timer::auto_cpu_timer t(6, "relocalization, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
 #ifdef SAVE_LEAF_MODES
-
-    // Leaf indices selected randomly during the forest conversion step
-    std::vector<size_t> predictionIndices{5198, 447, 5438, 7355, 1649};
-
-    //    std::vector<size_t> predictionIndices
-    //    { 5198, 447, 5438, 1664, 4753 };
-
-    // For each prediction print centroids, covariances, nbInliers
-    for (size_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
     {
-      const ScorePrediction p = m_relocalisationForest->get_prediction(treeIdx, predictionIndices[treeIdx]);
-      std::cout << p.nbModes << ' ' << predictionIndices[treeIdx] << '\n';
-      for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
+      // Need to go through the ScoreRelocaliser interface.
+      ScoreRelocaliser_Ptr scoreRelocaliser = boost::dynamic_pointer_cast<ScoreRelocaliser>(m_relocaliser);
+      // Leaf indices selected randomly during the forest conversion step
+      std::vector<uint32_t> predictionIndices{5198, 447, 5438, 7355, 1649};
+
+      //    std::vector<uint32_t> predictionIndices
+      //    { 5198, 447, 5438, 1664, 4753 };
+
+      // For each prediction print centroids, covariances, nbInliers
+      for (uint32_t treeIdx = 0; treeIdx < predictionIndices.size(); ++treeIdx)
       {
-        const GPUForestMode &m = p.modes[modeIdx];
-        std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
+        const ScorePrediction p = scoreRelocaliser->get_raw_prediction(treeIdx, predictionIndices[treeIdx]);
+        std::cout << p.nbClusters << ' ' << predictionIndices[treeIdx] << '\n';
+        for (int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
+        {
+          const Mode3DColour &m = p.clusters[modeIdx];
+          std::cout << m.nbInliers << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
 
-        // Invet and transpose the covariance to print it in row-major
-        Matrix3f posCovariance;
-        m.positionInvCovariance.inv(posCovariance);
-        posCovariance = posCovariance.t();
+          // Invert and transpose the covariance to print it in row-major format.
+          Matrix3f posCovariance;
+          m.positionInvCovariance.inv(posCovariance);
+          posCovariance = posCovariance.t();
 
-        for (int i = 0; i < 9; ++i) std::cout << posCovariance.m[i] << ' ';
+          for (int i = 0; i < 9; ++i) std::cout << posCovariance.m[i] << ' ';
+          std::cout << '\n';
+        }
         std::cout << '\n';
       }
-      std::cout << '\n';
-    }
 
-    // Done for this test
-    exit(0);
+      // Done for this test
+      exit(0);
+    }
 #endif
 
     boost::optional<ORUtils::SE3Pose> relocalisedPose =
@@ -292,6 +298,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       // Will need dynamic cast from the relocaliser type to get the best poses and read the first
       if (relocalisationCount++ == 451)
       {
+        // Need to go through the ScoreRelocaliser interface.
+        ScoreRelocaliser_Ptr scoreRelocaliser = boost::dynamic_pointer_cast<ScoreRelocaliser>(m_relocaliser);
+
         // Render RGB
         ITMUChar4Image_Ptr renderedRGB = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
 
@@ -302,7 +311,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
         // Get last pose candidates
         std::vector<PoseCandidate> candidates;
-        m_preemptiveRansac->get_best_poses(candidates);
+        scoreRelocaliser->get_best_poses(candidates);
 
         ITMUChar4Image_Ptr rendered = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
 
@@ -335,12 +344,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
           {
 
             // Draw camera point
-            Vector2f ptCamera = project(candidate.cameraPoints[i], depthIntrinsics);
+            Vector2f ptCamera = project(candidate.pointsCamera[i], depthIntrinsics);
             cv::circle(rgbKabsch, cv::Point(ptCamera.x, ptCamera.y), 12, cv::Scalar::all(255), CV_FILLED);
             cv::circle(rgbKabsch, cv::Point(ptCamera.x, ptCamera.y), 9, colours[i], CV_FILLED);
 
             // Draw world point
-            Vector2f ptRaycast = project(pose.GetM() * candidate.worldPoints[i], depthIntrinsics);
+            Vector2f ptRaycast = project(pose.GetM() * candidate.pointsWorld[i], depthIntrinsics);
             cv::circle(raycastedPose, cv::Point(ptRaycast.x, ptRaycast.y), 12, cv::Scalar::all(255), CV_FILLED);
             cv::circle(raycastedPose, cv::Point(ptRaycast.x, ptRaycast.y), 9, colours[i], CV_FILLED);
           }
@@ -397,7 +406,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         }
 
 #if 0
-        // Print candidate 0 modes
+        // Print the modes associated to candidate 0.
         PoseCandidate candidate = candidates[0];
 
         Vector2f ptCamera[3];
@@ -406,31 +415,28 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
         ScorePrediction predictions[3];
         for (int i = 0; i < 3; ++i)
         {
-          ptCamera[i] = project(candidate.cameraPoints[i], depthIntrinsics);
+          ptCamera[i] = project(candidate.pointsCamera[i], depthIntrinsics);
           ptCameraInt[i] = ptCamera[i].toInt();
-          linearIdxDownsampled[i] = (inputDepthImage->noDims.width / 4)
-          * (ptCameraInt[i].y / 4) + ptCameraInt[i].x / 4;
+          linearIdxDownsampled[i] = (inputDepthImage->noDims.width / 4) * (ptCameraInt[i].y / 4) + ptCameraInt[i].x / 4;
           predictions[i] =
-          m_predictionsImage->GetData(MEMORYDEVICE_CPU)[linearIdxDownsampled[i]];
+              scoreRelocaliser->get_predictions_image()->GetData(MEMORYDEVICE_CPU)[linearIdxDownsampled[i]];
         }
 
         for (int i = 0; i < 3; ++i)
         {
           const ScorePrediction p = predictions[i];
-          std::cout << p.nbModes << ' ' << linearIdxDownsampled[i] << '\n';
-          for (int modeIdx = 0; modeIdx < p.nbModes; ++modeIdx)
+          std::cout << p.nbClusters << ' ' << linearIdxDownsampled[i] << '\n';
+          for (int modeIdx = 0; modeIdx < p.nbClusters; ++modeIdx)
           {
-            const ScoreMode &m = p.modes[modeIdx];
-            std::cout << 1 << ' ' << m.position.x << ' ' << m.position.y << ' '
-            << m.position.z << ' ';
+            const Mode3DColour &m = p.clusters[modeIdx];
+            std::cout << 1 << ' ' << m.position.x << ' ' << m.position.y << ' ' << m.position.z << ' ';
 
             // Invet and transpose the covariance to print it in row-major
             Matrix3f posCovariance;
             m.positionInvCovariance.inv(posCovariance);
             posCovariance = posCovariance.t();
 
-            for (int i = 0; i < 9; ++i)
-            std::cout << posCovariance.m[i] << ' ';
+            for (int i = 0; i < 9; ++i) std::cout << posCovariance.m[i] << ' ';
             std::cout << '\n';
           }
           std::cout << '\n';
@@ -444,7 +450,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
       if (m_saveRelocalisationPoses)
       {
-        // Prevent fusion from happening to avoid integrating new data in the map since we are in evaluation mode.
+        // Prevent fusion from happening to avoid integrating new data in the map, since we are in evaluation mode.
         trackingResult = ITMTrackingState::TRACKING_POOR;
       }
     }
@@ -484,10 +490,9 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   if (performLearning)
   {
-    //#ifdef ENABLE_TIMERS
-    //    boost::timer::auto_cpu_timer t(6,
-    //        "add features to forest: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
-    //#endif
+#ifdef ENABLE_VERBOSE_TIMERS
+    boost::timer::auto_cpu_timer t(6, "relocaliser, integration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
+#endif
 
     m_relocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
 
@@ -508,8 +513,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   {
     // Restore tracked pose
     trackingState->pose_d->SetFrom(&trackedPose);
-    trackingResult =
-        ITMTrackingState::TRACKING_GOOD; // The assumption is that we are using the ground truth trajectory.
+    // The assumption is that we are using the ground truth trajectory so the tracker always succeeds.
+    trackingResult = ITMTrackingState::TRACKING_GOOD;
   }
 
   return trackingResult;
