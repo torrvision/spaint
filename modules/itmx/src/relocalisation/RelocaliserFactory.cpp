@@ -32,19 +32,13 @@ Relocaliser_Ptr RelocaliserFactory::make_default_fern_relocaliser(Vector2i depth
                                                                   float viewFrustumMin,
                                                                   float viewFrustumMax)
 {
-  // Magic parameters from InfiniTAM.
-  const float harvestingThreshold = 0.2f;
-  const int numFerns = 500;
-  const int numDecisionsPerFern = 4;
-  const FernRelocaliser::KeyframeAddPolicy keyframePolicy = FernRelocaliser::DELAY_AFTER_RELOCALISATION;
-
   return make_custom_fern_relocaliser(depthImageSize,
                                       viewFrustumMin,
                                       viewFrustumMax,
-                                      harvestingThreshold,
-                                      numFerns,
-                                      numDecisionsPerFern,
-                                      keyframePolicy);
+                                      FernRelocaliser::get_default_harvesting_threshold(),
+                                      FernRelocaliser::get_default_num_ferns(),
+                                      FernRelocaliser::get_default_num_decisions_per_fern(),
+                                      FernRelocaliser::get_default_keyframe_add_policy());
 }
 
 } // namespace itmx

@@ -48,6 +48,36 @@ public:
                   int decisionsPerFern,
                   KeyframeAddPolicy keyframeAddPolicy = DELAY_AFTER_RELOCALISATION);
 
+  //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Returns the default harvesting threshold.
+   *
+   * \return The default harvesting threshold.
+   */
+  static float get_default_harvesting_threshold();
+
+  /**
+   * \brief Returns the default policy used when adding keyframes to the relocaliser.
+   *
+   * \return The default policy used when adding keyframes to the relocaliser.
+   */
+  static FernRelocaliser::KeyframeAddPolicy get_default_keyframe_add_policy();
+
+  /**
+   * \brief Returns the default number of decisions per each fern.
+   *
+   * \return The default number of decisions per each fern.
+   */
+  static int get_default_num_decisions_per_fern();
+
+  /**
+   * \brief Returns the default number of ferns.
+   *
+   * \return The default number of ferns.
+   */
+  static int get_default_num_ferns();
+
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
   /**

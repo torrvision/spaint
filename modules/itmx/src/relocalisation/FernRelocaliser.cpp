@@ -27,6 +27,28 @@ FernRelocaliser::FernRelocaliser(Vector2i depthImageSize,
   reset();
 }
 
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+float FernRelocaliser::get_default_harvesting_threshold()
+{
+  return 0.2f; // From InfiniTAM.
+}
+
+FernRelocaliser::KeyframeAddPolicy FernRelocaliser::get_default_keyframe_add_policy()
+{
+  return DELAY_AFTER_RELOCALISATION; // Standard behaviour.
+}
+
+int FernRelocaliser::get_default_num_decisions_per_fern()
+{
+  return 4; // From InfiniTAM.
+}
+
+int FernRelocaliser::get_default_num_ferns()
+{
+  return 500; // From InfiniTAM.
+}
+
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy */,
