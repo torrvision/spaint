@@ -14,13 +14,12 @@
 
 #include "tvgutil/filesystem/SequentialPathGenerator.h"
 
-namespace spaint
-{
+namespace spaint {
 
 /**
  * \brief An instance of this pipeline component can be used to perform simultaneous localisation and mapping (SLAM).
  */
-class SLAMComponentWithScoreForest: public SLAMComponent
+class SLAMComponentWithScoreForest : public SLAMComponent
 {
   //#################### CONSTRUCTORS ####################
 public:
@@ -35,11 +34,13 @@ public:
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    */
-  SLAMComponentWithScoreForest(const SLAMContext_Ptr& context,
-      const std::string& sceneID,
-      const ImageSourceEngine_Ptr& imageSourceEngine, TrackerType trackerType,
-      const std::vector<std::string>& trackerParams, MappingMode mappingMode =
-          MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS);
+  SLAMComponentWithScoreForest(const SLAMContext_Ptr &context,
+                               const std::string &sceneID,
+                               const ImageSourceEngine_Ptr &imageSourceEngine,
+                               TrackerType trackerType,
+                               const std::vector<std::string> &trackerParams,
+                               MappingMode mappingMode = MAP_VOXELS_ONLY,
+                               TrackingMode trackingMode = TRACK_VOXELS);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -55,7 +56,7 @@ protected:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   std::string m_relocalisationForestPath;
-  bool m_updateForestModesEveryFrame;
+  bool m_updateRelocaliserEveryFrame;
 
   boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
   Tracker_Ptr m_refinementTracker;
@@ -63,11 +64,11 @@ private:
   TrackingController_Ptr m_refinementTrackingController;
 
   // For evaluation
-  bool m_relocaliseAfterEveryFrame;
+  bool m_relocaliseEveryFrame;
   bool m_saveRelocalisationPoses;
 
   // For profiling
-  bool m_timeRelocalizer;
+  bool m_timeRelocaliser;
   size_t m_learningCalls;
   boost::timer::cpu_times m_learningTimes;
   size_t m_relocalizationCalls;
@@ -77,7 +78,6 @@ private:
 //#################### TYPEDEFS ####################
 
 typedef boost::shared_ptr<SLAMComponentWithScoreForest> SLAMComponentWithScoreForest_Ptr;
-
 }
 
 #endif
