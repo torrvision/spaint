@@ -23,12 +23,14 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 ##
 SET(relocalisation_sources
 src/relocalisation/FernRelocaliser.cpp
+src/relocalisation/RefiningRelocaliser.cpp
 src/relocalisation/Relocaliser.cpp
 src/relocalisation/RelocaliserFactory.cpp
 )
 
 SET(relocalisation_headers
 include/itmx/relocalisation/FernRelocaliser.h
+include/itmx/relocalisation/RefiningRelocaliser.h
 include/itmx/relocalisation/Relocaliser.h
 include/itmx/relocalisation/RelocaliserFactory.h
 )
