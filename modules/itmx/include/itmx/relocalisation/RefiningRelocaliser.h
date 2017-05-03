@@ -14,7 +14,7 @@ namespace itmx {
 
 /**
  * \brief An instance of this class allows performing camera relocalisation from RGB-D image pairs followed by a
- * refinement step.
+ *        refinement step.
  */
 class RefiningRelocaliser : public Relocaliser
 {
@@ -38,13 +38,6 @@ protected:
    * \brief Constructs a RefiningRelocaliser.
    */
   RefiningRelocaliser();
-
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destructs a RefiningRelocaliser.
-   */
-  virtual ~RefiningRelocaliser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

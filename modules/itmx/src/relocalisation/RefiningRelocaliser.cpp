@@ -11,8 +11,4 @@ namespace itmx {
 
 RefiningRelocaliser::RefiningRelocaliser() {}
 
-//#################### DESTRUCTOR ####################
-
-RefiningRelocaliser::~RefiningRelocaliser() {}
-
 } // namespace itmx

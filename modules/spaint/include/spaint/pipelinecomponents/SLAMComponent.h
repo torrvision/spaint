@@ -13,7 +13,6 @@
 
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
-#include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
@@ -38,10 +37,6 @@ protected:
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
   typedef ITMLib::ITMTrackingState::TrackingResult TrackingResult;
 
   //#################### ENUMERATIONS ####################
