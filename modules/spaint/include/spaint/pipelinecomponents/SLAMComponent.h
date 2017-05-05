@@ -18,6 +18,7 @@
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 
 #include <itmx/relocalisation/Relocaliser.h>
+#include <itmx/relocalisation/RefiningRelocaliser.h>
 
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
@@ -77,7 +78,7 @@ protected:
   LowLevelEngine_Ptr m_lowLevelEngine;
 
   /** The relocaliser. */
-  itmx::Relocaliser_Ptr m_relocaliser;
+  itmx::RefiningRelocaliser_Ptr m_refiningRelocaliser;
 
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
@@ -86,7 +87,7 @@ protected:
   TrackingController_Ptr m_trackingController;
 
   //#################### PRIVATE VARIABLES ####################
-private:
+protected:
   /** The dense surfel mapper. */
   DenseSurfelMapper_Ptr m_denseSurfelMapper;
 

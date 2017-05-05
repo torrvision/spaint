@@ -42,6 +42,13 @@ protected:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
+   * \brief Gets a pointer to the refined relocaliser.
+   *
+   * \return A pointer to the inner relocaliser.
+   */
+  virtual Relocaliser_Ptr get_inner_relocaliser() const = 0;
+
+  /**
    * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
    *
    * \param colourImage     The colour image.

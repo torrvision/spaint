@@ -90,8 +90,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
   m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 
-  // Set up the relocaliser.
-  m_relocaliser = RelocaliserFactory::make_default_fern_relocaliser(depthImageSize, settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max);
+  // Set up the relocaliser TODO, setup the refining relocaliser.
+//  m_refiningRelocaliser = RelocaliserFactory::make_default_fern_relocaliser(depthImageSize, settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max);
 
   // Set up the live render states.
   slamState->set_live_voxel_render_state(VoxelRenderState_Ptr(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType)));
@@ -266,7 +266,7 @@ void SLAMComponent::reset_scene()
   slamState->get_tracking_state()->Reset();
 
   // Reset the relocaliser.
-  m_relocaliser->reset();
+//  m_refiningRelocaliser->reset();
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
@@ -322,18 +322,18 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
   // If tracking was good, then integrate the RGB-D images into the relocaliser.
   if(trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
-    m_relocaliser->integrate_rgbd_pose_pair(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all, *trackingState->pose_d);
+    m_refiningRelocaliser->integrate_rgbd_pose_pair(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all, *trackingState->pose_d);
   }
   else
   {
     // Always give the relocaliser a chance to perform bookkeeping.
-    m_relocaliser->update();
+    m_refiningRelocaliser->update();
   }
 
   // Only if the tracking failed, try to relocalise the camera.
   if(trackerResult == ITMTrackingState::TRACKING_FAILED)
   {
-    boost::optional<ORUtils::SE3Pose> relocalisedPose = m_relocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
+    boost::optional<ORUtils::SE3Pose> relocalisedPose = m_refiningRelocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
 
     // If we succeeded try to refine with ICP.
     if(relocalisedPose)

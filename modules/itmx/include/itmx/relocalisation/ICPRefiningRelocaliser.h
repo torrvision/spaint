@@ -43,14 +43,22 @@ public:
    */
   ICPRefiningRelocaliser(const Relocaliser_Ptr &relocaliser,
                          const Scene_Ptr &scene,
-                         const ITMLib::ITMLibSettings &settings,
+                         const Settings_CPtr &settings,
                          const ITMLib::ITMRGBDCalib &calibration,
                          const Vector2i imgSize_rgb,
                          const Vector2i imgsize_d,
-                         const std::string &trackerConfig);
+                         const std::string &trackerConfig,
+                         const VoxelRenderState_Ptr &voxelRenderState);
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Gets a pointer to the refined relocaliser.
+   *
+   * \return A pointer to the inner relocaliser.
+   */
+  virtual Relocaliser_Ptr get_inner_relocaliser() const;
+
   /**
    * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
    *
@@ -114,7 +122,7 @@ private:
 
   Scene_Ptr m_scene;
 
-  ITMLib::ITMLibSettings m_itmLibSettings;
+  Settings_CPtr m_itmLibSettings;
 
   Tracker_Ptr m_tracker;
 
