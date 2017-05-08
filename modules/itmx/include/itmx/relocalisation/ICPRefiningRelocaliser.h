@@ -21,6 +21,9 @@ namespace itmx {
 /**
  * \brief An instance of this class allows performing camera relocalisation from RGB-D image pairs followed by an
  *        ICP refinement step.
+ *
+ * \param VoxelType The type if voxels used to recontruct the scene that will be used during the raycasting step.
+ * \param IndexType The type of indexing used to access the reconstructed scene.
  */
 template <typename VoxelType, typename IndexType>
 class ICPRefiningRelocaliser : public RefiningRelocaliser
@@ -40,15 +43,23 @@ public:
 public:
   /**
    * \brief Constructs an ICPRefiningRelocaliser.
+   *
+   * \param relocaliser   A relocaliser whose results will be refined via ICP.
+   * \param calibration   The calibration params of tha used to acquire the images to be relocalised.
+   * \param imgSize_rgb   The size of the colour images that will be used during the relocalisation.
+   * \param imgSize_depth The size of the depth images that will be used during the relocalisation.
+   * \param scene         A pointer to the scene that will be reconstructed. Used to raycast the images that will be
+   *                      used during ICP.
+   * \param settings      A pointer to the InfiniTAM settings used to reconstruct the scene.
+   * \param trackerConfig A string specifying the parameters to used to instantiate an ICP tracker used for refinement.
    */
   ICPRefiningRelocaliser(const Relocaliser_Ptr &relocaliser,
-                         const Scene_Ptr &scene,
-                         const Settings_CPtr &settings,
                          const ITMLib::ITMRGBDCalib &calibration,
                          const Vector2i imgSize_rgb,
                          const Vector2i imgsize_d,
-                         const std::string &trackerConfig,
-                         const VoxelRenderState_Ptr &voxelRenderState);
+                         const Scene_Ptr &scene,
+                         const Settings_CPtr &settings,
+                         const std::string &trackerConfig);
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
@@ -114,26 +125,37 @@ public:
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
+  /** A DenseMapper used to find visible blocks in the scene. */
   DenseMapper_Ptr m_denseMapper;
 
+  /** A low level engine used by the tracker. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
+  /** The wrapped relocaliser. */
   Relocaliser_Ptr m_relocaliser;
 
+  /** The reconstructed scene. */
   Scene_Ptr m_scene;
 
-  Settings_CPtr m_itmLibSettings;
+  /** Settings used when reconstructing the scene. */
+  Settings_CPtr m_settings;
 
+  /** A tracker used to refine the relocalised poses. */
   Tracker_Ptr m_tracker;
 
+  /** A tracking controller used to setup and perform the actual refinement. */
   TrackingController_Ptr m_trackingController;
 
+  /** A tracking state used to hold refinement results. */
   TrackingState_Ptr m_trackingState;
 
+  /** A visualization engine used to perform the raycasting. */
   VisualisationEngine_Ptr m_visualisationEngine;
 
+  /** A view used to pass the input images to the tracker and the visualization engine. */
   View_Ptr m_view;
 
+  /** A renderState used to hold the raycasting results. */
   VoxelRenderState_Ptr m_voxelRenderState;
 };
 

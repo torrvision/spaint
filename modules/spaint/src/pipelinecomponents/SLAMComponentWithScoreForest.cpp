@@ -127,15 +127,13 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
                                                 "framesToSkip=20,framesToWeight=50,failureDec=20.0");
 
   // Set up the refining relocaliser.
-  m_refiningRelocaliser.reset(
-      new ICPRefiningRelocaliser<SpaintVoxel, ITMVoxelIndex>(nestedRelocaliser,
-                                                             voxelScene,
-                                                             settings,
-                                                             m_imageSourceEngine->getCalib(),
-                                                             rgbImageSize,
-                                                             depthImageSize,
-                                                             m_refinementTrackerParams,
-                                                             slamState->get_live_voxel_render_state()));
+  m_refiningRelocaliser.reset(new ICPRefiningRelocaliser<SpaintVoxel, ITMVoxelIndex>(nestedRelocaliser,
+                                                                                     m_imageSourceEngine->getCalib(),
+                                                                                     rgbImageSize,
+                                                                                     depthImageSize,
+                                                                                     voxelScene,
+                                                                                     settings,
+                                                                                     m_refinementTrackerParams));
 
   m_refinementTracker.reset(ITMTrackerFactory::Instance().Make(settings->deviceType,
                                                                m_refinementTrackerParams.c_str(),
@@ -281,18 +279,18 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
       trackingResult = relocalisationDetails.refinementResult;
 
-//      VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
-//      SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
-//      const bool resetVisibleList = true;
-//      m_denseVoxelMapper->UpdateVisibleList(
-//          view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-//      m_refinementTrackingController->Prepare(trackingState.get(),
-//                                              voxelScene.get(),
-//                                              view.get(),
-//                                              m_context->get_voxel_visualisation_engine().get(),
-//                                              liveVoxelRenderState.get());
-//      m_refinementTrackingController->Track(trackingState.get(), view.get());
-//      trackingResult = trackingState->trackerResult;
+      //      VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
+      //      SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
+      //      const bool resetVisibleList = true;
+      //      m_denseVoxelMapper->UpdateVisibleList(
+      //          view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
+      //      m_refinementTrackingController->Prepare(trackingState.get(),
+      //                                              voxelScene.get(),
+      //                                              view.get(),
+      //                                              m_context->get_voxel_visualisation_engine().get(),
+      //                                              liveVoxelRenderState.get());
+      //      m_refinementTrackingController->Track(trackingState.get(), view.get());
+      //      trackingResult = trackingState->trackerResult;
 
       if (m_saveRelocalisationPoses)
       {

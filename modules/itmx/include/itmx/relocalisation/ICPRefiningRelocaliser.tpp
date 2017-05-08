@@ -21,20 +21,19 @@ namespace itmx {
 
 template <typename VoxelType, typename IndexType>
 ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr &relocaliser,
-                                                                     const Scene_Ptr &scene,
-                                                                     const Settings_CPtr &settings,
                                                                      const ITMLib::ITMRGBDCalib &calibration,
                                                                      const Vector2i imgSize_rgb,
                                                                      const Vector2i imgsize_d,
-                                                                     const std::string &trackerConfig,
-                                                                     const VoxelRenderState_Ptr &voxelRenderState)
-  : m_relocaliser(relocaliser), m_scene(scene), m_itmLibSettings(settings)
+                                                                     const Scene_Ptr &scene,
+                                                                     const Settings_CPtr &settings,
+                                                                     const std::string &trackerConfig)
+  : m_relocaliser(relocaliser), m_scene(scene), m_settings(settings)
 {
-  m_denseMapper.reset(new DenseMapper(m_itmLibSettings.get()));
+  m_denseMapper.reset(new DenseMapper(m_settings.get()));
 
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
-  m_tracker.reset(ITMTrackerFactory::Instance().Make(settings->deviceType,
+  m_tracker.reset(ITMTrackerFactory::Instance().Make(m_settings->deviceType,
                                                      trackerConfig.c_str(),
                                                      imgSize_rgb,
                                                      imgsize_d,
@@ -42,18 +41,17 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
                                                      NULL,
                                                      m_scene->sceneParams));
 
-  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_itmLibSettings.get()));
+  m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_settings.get()));
 
-  m_trackingState.reset(new ITMTrackingState(imgsize_d, m_itmLibSettings->GetMemoryType()));
+  m_trackingState.reset(new ITMTrackingState(imgsize_d, m_settings->GetMemoryType()));
 
   m_visualisationEngine.reset(
-      ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType, IndexType>(m_itmLibSettings->deviceType));
+      ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType, IndexType>(m_settings->deviceType));
 
-  m_view.reset(
-      new ITMView(calibration, imgSize_rgb, imgsize_d, m_itmLibSettings->deviceType == ITMLibSettings::DEVICE_CUDA));
+  m_view.reset(new ITMView(calibration, imgSize_rgb, imgsize_d, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA));
   m_view->depth->Clear();
 
-  // If we initialise a m_voxelRenderState with a new variable there is a crash after a while, probably due to never
+  // If we initialise a m_voxelRenderState with a new variable, there is a crash after a while, probably due to never
   // using it to integrate frames in the scene.
   // Reasons are unclear.
   // Two workarounds:
@@ -63,11 +61,11 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
   //    cleaner.
   // I chose n. 2
 
-//  m_voxelRenderState = voxelRenderState;
-//  m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
-//      m_trackingController->GetTrackedImageSize(imgSize_rgb, imgsize_d),
-//      m_scene->sceneParams,
-//      m_itmLibSettings->GetMemoryType()));
+  //  m_voxelRenderState = voxelRenderState;
+  //  m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
+  //      m_trackingController->GetTrackedImageSize(imgSize_rgb, imgsize_d),
+  //      m_scene->sceneParams,
+  //      m_itmLibSettings->GetMemoryType()));
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
@@ -116,11 +114,11 @@ boost::optional<ORUtils::SE3Pose>
 
   // Set up the view (copy directions depend on the device type).
   m_view->depth->SetFrom(depthImage,
-                         m_itmLibSettings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA
-                                                                                     : ITMFloatImage::CPU_TO_CPU);
+                         m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMFloatImage::CUDA_TO_CUDA
+                                                                               : ITMFloatImage::CPU_TO_CPU);
   m_view->rgb->SetFrom(colourImage,
-                       m_itmLibSettings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA
-                                                                                   : ITMUChar4Image::CPU_TO_CPU);
+                       m_settings->deviceType == ITMLibSettings::DEVICE_CUDA ? ITMUChar4Image::CUDA_TO_CUDA
+                                                                             : ITMUChar4Image::CPU_TO_CPU);
 
   // Set up the tracking state using the relocalised pose.
   m_trackingState->pose_d->SetFrom(refinementDetails.initialPose.get_ptr());
@@ -129,7 +127,7 @@ boost::optional<ORUtils::SE3Pose>
   m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
       m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
       m_scene->sceneParams,
-      m_itmLibSettings->GetMemoryType()));
+      m_settings->GetMemoryType()));
 
   // We need to update the list of visible blocks.
   const bool resetVisibleList = true;
@@ -146,8 +144,8 @@ boost::optional<ORUtils::SE3Pose>
   // Now copy the tracking state in the details struct.
   refinementDetails.refinementResult = m_trackingState->trackerResult;
 
-  // Return the refined pose if the tracking didn't fail. If it failed return an empty optional, since the initial pose
-  // was obviously bad.
+  // Return the refined pose if the tracking didn't fail.
+  // If it failed return an empty optional, since the initial pose was obviously bad.
   return boost::make_optional(refinementDetails.refinementResult != ITMTrackingState::TRACKING_FAILED,
                               *m_trackingState->pose_d);
 }
