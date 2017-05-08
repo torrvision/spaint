@@ -1,7 +1,7 @@
 #! /bin/bash -e
 
 # Check that a valid build type has been specified.
-if [ $# -ne 2 ] || ([ "$1" != "Unix Makefiles" ] && [ "$1" != "Eclipse CDT4 - Unix Makefiles" ] && [ "$1" != "Xcode" ]) || ([ $2 != "Debug" ] && [ $2 != "Release" ] && [ $2 != "RelWithDebInfo" ])
+if [ $# -ne 2 ] || ([ "$1" != "Unix Makefiles" ] && [ "$1" != "Eclipse CDT4 - Unix Makefiles" ] && [ "$1" != "Ninja" ] && [ "$1" != "Xcode" ]) || ([ $2 != "Debug" ] && [ $2 != "Release" ] && [ $2 != "RelWithDebInfo" ])
 then
   echo "Usage: build-nix.sh {Unix Makefiles|Eclipse CDT4 - Unix Makefiles|Xcode} {Debug|Release|RelWithDebInfo}"
   exit
