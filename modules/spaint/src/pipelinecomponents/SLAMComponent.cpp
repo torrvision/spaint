@@ -12,39 +12,30 @@
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
-#include <ITMLib/Trackers/ITMTrackerFactory.h>
 using namespace FernRelocLib;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
 #include "segmentation/SegmentationUtil.h"
-
-#ifdef WITH_OVR
-#include "trackers/RiftTracker.h"
-#endif
-
-#ifdef WITH_VICON
-#include "trackers/RobustViconTracker.h"
-#include "trackers/ViconTracker.h"
-#endif
+#include "trackers/TrackerFactory.h"
 
 namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
 SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                             TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode, TrackingMode trackingMode,
+                             const std::string& trackerConfig, MappingMode mappingMode, TrackingMode trackingMode,
                              const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials)
 : m_context(context),
   m_detectFiducials(detectFiducials),
+  m_fallibleTracker(NULL),
   m_fiducialDetector(fiducialDetector),
   m_imageSourceEngine(imageSourceEngine),
   m_initialFramesToFuse(50), // FIXME: This value should be passed in rather than hard-coded.
   m_mappingMode(mappingMode),
   m_sceneID(sceneID),
-  m_trackerParams(trackerParams),
-  m_trackerType(trackerType),
+  m_trackerConfig(trackerConfig),
   m_trackingMode(trackingMode)
 {
   // Determine the RGB and depth image sizes.
@@ -318,26 +309,6 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
-ITMTracker *SLAMComponent::make_hybrid_tracker(ITMTracker *primaryTracker) const
-{
-  ITMCompositeTracker *compositeTracker = new ITMCompositeTracker;
-
-  const Settings_CPtr& settings = m_context->get_settings();
-  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  const Vector2i& depthImageSize = slamState->get_depth_image_size();
-  const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
-
-  compositeTracker->AddTracker(primaryTracker);
-  compositeTracker->AddTracker(
-    ITMTrackerFactory::Instance().MakeICPTracker(
-      rgbImageSize, depthImageSize, settings->deviceType, ORUtils::KeyValueConfig(settings->trackerConfig),
-      m_lowLevelEngine.get(), m_imuCalibrator.get(), slamState->get_voxel_scene()->sceneParams
-    )
-  );
-
-  return compositeTracker;
-}
-
 void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
@@ -371,50 +342,9 @@ void SLAMComponent::setup_tracker()
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
-  m_fallibleTracker = NULL;
 
-  switch(m_trackerType)
-  {
-    case TRACKER_RIFT:
-    {
-#ifdef WITH_OVR
-      m_tracker.reset(make_hybrid_tracker(new RiftTracker));
-      break;
-#else
-      // This should never happen as things stand - we never try to use the Rift tracker if Rift support isn't available.
-      throw std::runtime_error("Error: Rift support not currently available. Reconfigure in CMake with the WITH_OVR option set to on.");
-#endif
-    }
-    case TRACKER_ROBUSTVICON:
-    {
-#ifdef WITH_VICON
-      m_fallibleTracker = new RobustViconTracker(m_trackerParams, "kinect", rgbImageSize, depthImageSize, settings, m_lowLevelEngine, voxelScene);
-      m_tracker.reset(m_fallibleTracker);
-      break;
-#else
-      // This should never happen as things stand - we never try to use the robust Vicon tracker if Vicon support isn't available.
-      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
-#endif
-    }
-    case TRACKER_VICON:
-    {
-#ifdef WITH_VICON
-      m_fallibleTracker = new ViconTracker(m_trackerParams, "kinect");
-      m_tracker.reset(make_hybrid_tracker(m_fallibleTracker));
-      break;
-#else
-      // This should never happen as things stand - we never try to use the Vicon tracker if Vicon support isn't available.
-      throw std::runtime_error("Error: Vicon support not currently available. Reconfigure in CMake with the WITH_VICON option set to on.");
-#endif
-    }
-    default: // TRACKER_INFINITAM
-    {
-      m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
-      m_tracker.reset(ITMTrackerFactory::Instance().Make(
-        rgbImageSize, depthImageSize, settings.get(), m_lowLevelEngine.get(), m_imuCalibrator.get(), voxelScene->sceneParams
-      ));
-    }
-  }
+  m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
+  m_tracker = TrackerFactory::make_tracker_from_string(m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, voxelScene->sceneParams, m_fallibleTracker, settings->deviceType);
 }
 
 }
