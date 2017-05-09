@@ -40,14 +40,14 @@ public:
    * \brief Makes a tracker based on the configuration specified in an XML file on disk.
    *
    * \param trackerConfigFilename The name of the XML file containing the tracker configuration.
-   * \param trackSurfels          TODO
-   * \param rgbImageSize          TODO
-   * \param depthImageSize        TODO
-   * \param lowLevelEngine        TODO
-   * \param imuCalibrator         TODO
-   * \param sceneParams           TODO
-   * \param fallibleTracker       TODO
-   * \param deviceType            TODO
+   * \param trackSurfels          Whether or not we're tracking against the surfel scene, rather than the voxel one.
+   * \param rgbImageSize          The size of the colour input images.
+   * \param depthImageSize        The size of the depth input images.
+   * \param lowLevelEngine        The engine used to perform low-level image processing operations.
+   * \param imuCalibrator         The IMU calibrator.
+   * \param sceneParams           The parameters of the voxel scene.
+   * \param fallibleTracker       A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param deviceType            The type of device on which the tracker should operate.
    * \param nestingFlag           A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                      The tracker.
    */
@@ -61,14 +61,14 @@ public:
    * \brief Makes a tracker based on the configuration specified in an XML string.
    *
    * \param trackerConfig   The XML string containing the tracker configuration.
-   * \param trackSurfels    TODO
-   * \param rgbImageSize    TODO
-   * \param depthImageSize  TODO
-   * \param lowLevelEngine  TODO
-   * \param imuCalibrator   TODO
-   * \param sceneParams     TODO
-   * \param fallibleTracker TODO
-   * \param deviceType      TODO
+   * \param trackSurfels    Whether or not we're tracking against the surfel scene, rather than the voxel one.
+   * \param rgbImageSize    The size of the colour input images.
+   * \param depthImageSize  The size of the depth input images.
+   * \param lowLevelEngine  The engine used to perform low-level image processing operations.
+   * \param imuCalibrator   The IMU calibrator.
+   * \param sceneParams     The parameters of the voxel scene.
+   * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param deviceType      The type of device on which the tracker should operate.
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
@@ -81,7 +81,21 @@ public:
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
   /**
-   * \brief TODO
+   * \brief Makes a "simple" tracker (i.e. a tracker that is not a composite, or one that is imported from a file)
+   *        based on a specified tracker type and parameter string.
+   *
+   * \param trackerType     The type of tracker to construct.
+   * \param trackerParams   A string specifying the parameters for the tracker (if any).
+   * \param trackSurfels    Whether or not we're tracking against the surfel scene, rather than the voxel one.
+   * \param rgbImageSize    The size of the colour input images.
+   * \param depthImageSize  The size of the depth input images.
+   * \param lowLevelEngine  The engine used to perform low-level image processing operations.
+   * \param imuCalibrator   The IMU calibrator.
+   * \param sceneParams     The parameters of the voxel scene.
+   * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param deviceType      The type of device on which the tracker should operate.
+   * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
+   * \return                The tracker.
    */
   static Tracker_Ptr make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
@@ -93,14 +107,14 @@ private:
    * \brief Makes a tracker based on the configuration specified in a property tree.
    *
    * \param trackerConfig   The property tree containing the tracker configuration.
-   * \param trackSurfels    TODO
-   * \param rgbImageSize    TODO
-   * \param depthImageSize  TODO
-   * \param lowLevelEngine  TODO
-   * \param imuCalibrator   TODO
-   * \param sceneParams     TODO
-   * \param fallibleTracker TODO
-   * \param deviceType      TODO
+   * \param trackSurfels    Whether or not we're tracking against the surfel scene, rather than the voxel one.
+   * \param rgbImageSize    The size of the colour input images.
+   * \param depthImageSize  The size of the depth input images.
+   * \param lowLevelEngine  The engine used to perform low-level image processing operations.
+   * \param imuCalibrator   The IMU calibrator.
+   * \param sceneParams     The parameters of the voxel scene.
+   * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
+   * \param deviceType      The type of device on which the tracker should operate.
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
