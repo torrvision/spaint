@@ -82,11 +82,18 @@ struct CommandLineArguments
 
   // Derived arguments
   std::vector<bf::path> sequenceDirs;
-  std::string trackerConfig;
 };
 
 //#################### FUNCTIONS ####################
 
+/**
+ * \brief Checks whether or not the specified camera subengine is able to provide depth images.
+ *
+ * \note If the check fails, the camera subengine will be deallocated.
+ *
+ * \param cameraSubengine The camera subengine to check.
+ * \return                The camera subengine, if it is able to provide depth images, or NULL otherwise.
+ */
 ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
 {
   if(cameraSubengine->getDepthImageSize().x == 0)
@@ -97,6 +104,12 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
   else return cameraSubengine;
 }
 
+/**
+ * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      The camera subengine, if a suitable camera is attached, or NULL otherwise.
+ */
 ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
 {
   ImageSourceEngine *cameraSubengine = NULL;
@@ -129,15 +142,27 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   return cameraSubengine;
 }
 
-void make_tracker_config(CommandLineArguments& args)
+/**
+ * \brief Makes the overall tracker configuration based on any tracker specifiers that were passed in on the command line.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      The overall tracker configuration.
+ */
+std::string make_tracker_config(CommandLineArguments& args)
 {
-  size_t trackerConfigCount = args.sequenceSpecifiers.size();
-  if(trackerConfigCount == 0 || args.cameraAfterDisk) ++trackerConfigCount;
+  std::string result;
 
-  if(trackerConfigCount > 1) args.trackerConfig += "<tracker type='composite' policy='sequential'>";
+  // Determine the number of different trackers that will be needed.
+  size_t trackerCount = args.sequenceSpecifiers.size();
+  if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
 
-  for(size_t i = 0; i < trackerConfigCount; ++i)
+  // If more than one tracker is needed, make the overall tracker a composite.
+  if(trackerCount > 1) result += "<tracker type='composite' policy='sequential'>";
+
+  // For each tracker that is needed:
+  for(size_t i = 0; i < trackerCount; ++i)
   {
+    // Look to see if the user specified an explicit tracker specifier for it on the command line; if not, use a default tracker specifier.
     const std::string trackerSpecifier = i < args.trackerSpecifiers.size() ? args.trackerSpecifiers[i] : "InfiniTAM";
 
     // Separate the tracker specifier into chunks.
@@ -147,33 +172,44 @@ void make_tracker_config(CommandLineArguments& args)
     tokenizer tok(trackerSpecifier.begin(), trackerSpecifier.end(), sep("+"));
     std::vector<std::string> chunks(tok.begin(), tok.end());
 
-    // Make a tracker configuration based on the specifier chunks.
+    // Add a tracker configuration based on the specifier chunks to the overall tracker configuration.
+    // If more than one chunk is involved, bundle the subsidiary trackers into a refining composite.
     size_t chunkCount = chunks.size();
-    if(chunkCount > 1) args.trackerConfig += "<tracker type='composite'>";
+    if(chunkCount > 1) result += "<tracker type='composite'>";
 
     for(size_t i = 0; i < chunkCount; ++i)
     {
       if(chunks[i] == "InfiniTAM")
       {
-        args.trackerConfig += "<tracker type='infinitam'/>";
+        result += "<tracker type='infinitam'/>";
       }
       else if(chunks[i] == "Disk")
       {
         const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
-        args.trackerConfig += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
+        result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
       }
       else
       {
-        args.trackerConfig += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
+        result += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
       }
     }
 
-    if(chunkCount > 1) args.trackerConfig += "</tracker>";
+    // If more than one chunk was involved, add the necessary closing tag for the refining composite.
+    if(chunkCount > 1) result += "</tracker>";
   }
 
-  if(trackerConfigCount > 1) args.trackerConfig += "</tracker>";
+  // If more than one tracker was needed, add the necessary closing tag for the overall composite.
+  if(trackerCount > 1) result += "</tracker>";
+
+  return result;
 }
 
+/**
+ * \brief Post-process the program's command-line arguments.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      true, if the program should continue after post-processing its arguments, or false otherwise.
+ */
 bool postprocess_arguments(CommandLineArguments& args)
 {
   // If the user specifies both sequence and explicit depth / RGB image mask flags, print an error message.
@@ -211,9 +247,6 @@ bool postprocess_arguments(CommandLineArguments& args)
     }
   }
 
-  // Make the tracker configuration based on any tracker specifiers passed in by the user.
-  make_tracker_config(args);
-
   // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
   if(args.trackSurfels) args.mapSurfels = true;
 
@@ -227,6 +260,14 @@ bool postprocess_arguments(CommandLineArguments& args)
   return true;
 }
 
+/**
+ * \brief Parse any command-line arguments passed in by the user.
+ *
+ * \param argc  The command-line argument count.
+ * \param argv  The raw command-line arguments.
+ * \param args  The parsed command-line arguments.
+ * \return      true, if the program should continue after parsing the command-line arguments, or false otherwise.
+ */
 bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 {
   // Specify the possible options.
@@ -287,6 +328,12 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   return true;
 }
 
+/**
+ * \brief Outputs the specified error message and terminates the program with the specified exit code.
+ *
+ * \param message The error message.
+ * \param code    The exit code.
+ */
 void quit(const std::string& message, int code = EXIT_FAILURE)
 {
   std::cerr << message << '\n';
@@ -372,7 +419,7 @@ try
       maxLabelCount,
       imageSourceEngine,
       seed,
-      args.trackerConfig,
+      make_tracker_config(args),
       mappingMode,
       trackingMode,
       fiducialDetector,
@@ -386,7 +433,7 @@ try
       Application::resources_dir().string(),
       maxLabelCount,
       imageSourceEngine,
-      args.trackerConfig,
+      make_tracker_config(args),
       mappingMode,
       trackingMode,
       fiducialDetector,
