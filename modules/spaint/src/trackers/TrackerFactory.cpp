@@ -170,7 +170,9 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
   }
   else if(trackerType == "import")
   {
-    // Import a tracker configuration from the specified file. The parameters can either be of the form "builtin:<Name>", or be an absolute path.
+    // Use the tracker parameters to determine the file from which to import the tracker configuration.
+    // The parameters can either be of the form "builtin:<Name>", or be an absolute path.
+    std::string trackerConfigFilename;
     const std::string builtinLabel = "builtin:";
     if(trackerParams.length() >= builtinLabel.length() && trackerParams.substr(0, builtinLabel.length()) == builtinLabel)
     {
@@ -178,21 +180,20 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
       // FIXME: It might be better to pass the trackerconfigs directory in as a parameter here.
       const std::string builtinName = trackerParams.substr(builtinLabel.length());
       boost::filesystem::path builtinPath = find_subdir_from_executable("resources") / "trackerconfigs" / (builtinName + ".xml");
-      return make_tracker_from_file(
-        builtinPath.string(), trackSurfels, rgbImageSize, depthImageSize,
-        lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker,
-        deviceType, nestingFlag
-      );
+      trackerConfigFilename = builtinPath.string();
     }
     else
     {
       // If we're not loading a built-in, the parameters specify the relevant filename directly.
-      return make_tracker_from_file(
-        trackerParams, trackSurfels, rgbImageSize, depthImageSize,
-        lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker,
-        deviceType, nestingFlag
-      );
+      trackerConfigFilename = trackerParams;
     }
+
+    // Import the tracker configuration from the specified file.
+    return make_tracker_from_file(
+      trackerConfigFilename, trackSurfels, rgbImageSize, depthImageSize,
+      lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker,
+      deviceType, nestingFlag
+    );
   }
   else
   {
