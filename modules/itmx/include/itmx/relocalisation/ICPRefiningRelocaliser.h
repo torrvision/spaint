@@ -14,6 +14,9 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 #include <ITMLib/Objects/Scene/ITMScene.h>
 
+#include <tvgutil/filesystem/SequentialPathGenerator.h>
+#include <tvgutil/timing/AverageTimer.h>
+
 #include "../ITMObjectPtrTypes.h"
 
 namespace itmx {
@@ -39,6 +42,10 @@ public:
   typedef ITMLib::ITMVisualisationEngine<VoxelType, IndexType> VisualisationEngine;
   typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
 
+  //#################### TYPEDEFS ####################
+private:
+  typedef tvgutil::AverageTimer<boost::chrono::milliseconds> AverageTimer;
+
   //#################### CONSTRUCTORS ####################
 public:
   /**
@@ -60,6 +67,13 @@ public:
                          const Scene_Ptr &scene,
                          const Settings_CPtr &settings,
                          const std::string &trackerConfig);
+
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys an ICPRefiningRelocaliser.
+   */
+  ~ICPRefiningRelocaliser();
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
@@ -123,6 +137,32 @@ public:
    */
   virtual void update();
 
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief This function saves the relocalised and refined poses in text files used for evaluation.
+   *
+   * \note Saving happens only if m_saveRelocalisationPoses is true.
+   *
+   * \param relocalisedPose     The relocalised pose.
+   * \param refinedPose         The pose after refinement.
+   */
+  void save_poses(const Matrix4f &relocalisedPose, const Matrix4f &refinedPose);
+
+  /**
+   * \brief Starts a timer (waiting for all CUDA operations to terminate first, if necessary).
+   *
+   * \param timer The timer.
+   */
+  void start_timer(AverageTimer &timer);
+
+  /**
+   * \brief Stops a timer (waiting for all CUDA operations to terminate first, if necessary).
+   *
+   * \param timer The timer.
+   */
+  void stop_timer(AverageTimer &timer);
+
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** A DenseMapper used to find visible blocks in the scene. */
@@ -131,14 +171,32 @@ private:
   /** A low level engine used by the tracker. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
+  /** The path generator used when saving the relocalised poses. */
+  boost::optional<tvgutil::SequentialPathGenerator> m_relocalisationPosesPathGenerator;
+
   /** The wrapped relocaliser. */
   Relocaliser_Ptr m_relocaliser;
+
+  /** Whether or not to save the relocalised poses. */
+  bool m_saveRelocalisationPoses;
 
   /** The reconstructed scene. */
   Scene_Ptr m_scene;
 
   /** Settings used when reconstructing the scene. */
   Settings_CPtr m_settings;
+
+  /** The timer used to profile the integration calls. */
+  AverageTimer m_timerIntegration;
+
+  /** The timer used to profile the relocalisation calls. */
+  AverageTimer m_timerRelocalisation;
+
+  /** The timer used to profile the update calls. */
+  AverageTimer m_timerUpdate;
+
+  /** Whether or not timers are enabled and stats are printed on destruction. */
+  bool m_timersEnabled;
 
   /** A tracker used to refine the relocalised poses. */
   Tracker_Ptr m_tracker;

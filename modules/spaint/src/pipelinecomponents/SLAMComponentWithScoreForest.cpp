@@ -8,11 +8,11 @@
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 #include "ITMLib/Utils/ITMProjectionUtils.h"
 
+#include <itmx/PosePersister.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
 #include <itmx/relocalisation/RelocaliserFactory.h>
 
-#include "util/PosePersister.h"
 
 #include "tvgutil/filesystem/PathFinder.h"
 #include "tvgutil/misc/GlobalParameters.h"
@@ -62,150 +62,17 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
                                                            TrackingMode trackingMode)
   : SLAMComponent(context, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode)
 {
-  const Settings_CPtr &settings = m_context->get_settings();
-
-  const static std::string parametersNamespace = "SLAMComponentWithScoreForest.";
-  const GlobalParameters &globalParams = GlobalParameters::instance();
-
-  const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
-  const Vector2i &depthImageSize = slamState->get_depth_image_size();
-  const Vector2i &rgbImageSize = slamState->get_rgb_image_size();
-  const SpaintVoxelScene_Ptr &voxelScene = slamState->get_voxel_scene();
-
-  const std::string defaultRelocalisationForestPath =
-      (bf::path(m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf").string();
-  m_relocalisationForestPath = globalParams.get_first_value<std::string>(
-      parametersNamespace + "m_relocalisationForestPath", defaultRelocalisationForestPath);
-  std::cout << "Loading relocalization forest from: " << m_relocalisationForestPath << '\n';
-
-  m_updateRelocaliserEveryFrame =
-      globalParams.get_first_value<bool>(parametersNamespace + "m_updateRelocaliserEveryFrame", true);
-  m_relocaliseEveryFrame = globalParams.get_first_value<bool>(parametersNamespace + "m_relocaliseEveryFrame", false);
-
-  // TODO: make this a proper member variable.
-  const std::string m_relocaliserType =
-      globalParams.get_first_value<std::string>(parametersNamespace + "m_relocaliserType", "forest");
-  Relocaliser_Ptr nestedRelocaliser;
-  if (m_relocaliserType == "forest")
-  {
-    nestedRelocaliser =
-        ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocalisationForestPath);
-    //  nestedRelocaliser =
-    //      ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
-  }
-  else if (m_relocaliserType == "ferns")
-  {
-    if (m_relocaliseEveryFrame)
-    {
-      // Need to force the policy allowing the learning of new keyframes after relocalisation.
-      nestedRelocaliser =
-          RelocaliserFactory::make_custom_fern_relocaliser(depthImageSize,
-                                                           settings->sceneParams.viewFrustum_min,
-                                                           settings->sceneParams.viewFrustum_max,
-                                                           FernRelocaliser::get_default_harvesting_threshold(),
-                                                           FernRelocaliser::get_default_num_ferns(),
-                                                           FernRelocaliser::get_default_num_decisions_per_fern(),
-                                                           FernRelocaliser::ALWAYS_TRY_ADD);
-    }
-    else
-    {
-      nestedRelocaliser = RelocaliserFactory::make_default_fern_relocaliser(
-          depthImageSize, settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max);
-    }
-  }
-  else
-  {
-    throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
-  }
-
-  // Refinement ICP tracker
-  m_refinementTrackerParams =
-      globalParams.get_first_value<std::string>(parametersNamespace + "m_refinementTrackerParams",
-                                                "type=extended,levels=rrbb,minstep=1e-4,"
-                                                "outlierSpaceC=0.1,outlierSpaceF=0.004,"
-                                                "numiterC=20,numiterF=20,tukeyCutOff=8,"
-                                                "framesToSkip=20,framesToWeight=50,failureDec=20.0");
-
-  // Set up the refining relocaliser.
-  m_refiningRelocaliser.reset(new ICPRefiningRelocaliser<SpaintVoxel, ITMVoxelIndex>(nestedRelocaliser,
-                                                                                     m_imageSourceEngine->getCalib(),
-                                                                                     rgbImageSize,
-                                                                                     depthImageSize,
-                                                                                     voxelScene,
-                                                                                     settings,
-                                                                                     m_refinementTrackerParams));
-
-  m_refinementTracker.reset(ITMTrackerFactory::Instance().Make(settings->deviceType,
-                                                               m_refinementTrackerParams.c_str(),
-                                                               rgbImageSize,
-                                                               depthImageSize,
-                                                               m_lowLevelEngine.get(),
-                                                               NULL,
-                                                               voxelScene->sceneParams));
-  m_refinementTrackingController.reset(new ITMTrackingController(m_refinementTracker.get(), settings.get()));
-
-  m_timeRelocaliser = globalParams.get_first_value<bool>(parametersNamespace + "m_timeRelocaliser", false);
-  m_learningCalls = 0;
-  m_learningTimes.clear();
-  m_relocalizationCalls = 0;
-  m_relocalizationTimes.clear();
-
-  m_saveRelocalisationPoses =
-      globalParams.get_first_value<bool>(parametersNamespace + "m_saveRelocalisationPoses", false);
-
-  if (m_saveRelocalisationPoses)
-  {
-    const std::string posesFolder = m_context->get_tag().empty() ? TimeUtil::get_iso_timestamp() : m_context->get_tag();
-
-    m_sequentialPathGenerator.reset(SequentialPathGenerator(find_subdir_from_executable("reloc_poses") / posesFolder));
-
-    std::cout << "Saving relocalization poses in: " << m_sequentialPathGenerator->get_base_dir() << std::endl;
-    boost::filesystem::create_directories(m_sequentialPathGenerator->get_base_dir());
-  }
 }
 
 //#################### DESTRUCTOR ####################
 SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest()
 {
-  if (m_timeRelocaliser)
-  {
-    std::cout << "Relocalizer called " << m_relocalizationCalls << "times.\n";
-
-    if (m_relocalizationCalls > 0)
-    {
-      std::cout << "\tTotal time: " << boost::timer::format(m_relocalizationTimes, 6);
-      // Average times
-      m_relocalizationTimes.system /= m_relocalizationCalls;
-      m_relocalizationTimes.user /= m_relocalizationCalls;
-      m_relocalizationTimes.wall /= m_relocalizationCalls;
-      std::cout << "\tAverage time: " << boost::timer::format(m_relocalizationTimes, 6);
-    }
-
-    std::cout << "Learner called " << m_learningCalls << "times.\n";
-    if (m_learningCalls > 0)
-    {
-      std::cout << "\tTotal time: " << boost::timer::format(m_learningTimes, 6);
-      // Average times
-      m_learningTimes.system /= m_learningCalls;
-      m_learningTimes.user /= m_learningCalls;
-      m_learningTimes.wall /= m_learningCalls;
-      std::cout << "\tAverage time: " << boost::timer::format(m_learningTimes, 6);
-    }
-  }
 }
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
 SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisation(TrackingResult trackingResult)
 {
-  boost::optional<boost::timer::cpu_timer> relocalizationTimer;
-
-  if (m_timeRelocaliser)
-  {
-    ORcudaSafeCall(cudaDeviceSynchronize());
-    relocalizationTimer = boost::timer::cpu_timer();
-  }
-
   const bool performRelocalization = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_FAILED;
   const bool performLearning = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_GOOD;
 
@@ -220,7 +87,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
   const Vector4f depthIntrinsics = view->calib.intrinsics_d.projectionParamsSimple.all;
 
-  if (m_updateRelocaliserEveryFrame && !performLearning)
+  if (m_relocaliserUpdateEveryFrame && !performLearning)
   {
 #ifdef ENABLE_VERBOSE_TIMERS
     boost::timer::auto_cpu_timer t(6, "relocaliser update, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -237,7 +104,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #ifdef SAVE_LEAF_MODES
     {
       // Need to go through the ScoreRelocaliser interface.
-      ScoreRelocaliser_Ptr scoreRelocaliser = boost::dynamic_pointer_cast<ScoreRelocaliser>(m_relocaliser);
+      ScoreRelocaliser_Ptr scoreRelocaliser =
+          boost::dynamic_pointer_cast<ScoreRelocaliser>(m_refiningRelocaliser->get_inner_relocaliser());
       // Leaf indices selected randomly during the forest conversion step
       std::vector<uint32_t> predictionIndices{5198, 447, 5438, 7355, 1649};
 
@@ -279,33 +147,6 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
       trackingResult = relocalisationDetails.refinementResult;
 
-      //      VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
-      //      SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
-      //      const bool resetVisibleList = true;
-      //      m_denseVoxelMapper->UpdateVisibleList(
-      //          view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-      //      m_refinementTrackingController->Prepare(trackingState.get(),
-      //                                              voxelScene.get(),
-      //                                              view.get(),
-      //                                              m_context->get_voxel_visualisation_engine().get(),
-      //                                              liveVoxelRenderState.get());
-      //      m_refinementTrackingController->Track(trackingState.get(), view.get());
-      //      trackingResult = trackingState->trackerResult;
-
-      if (m_saveRelocalisationPoses)
-      {
-        // Save poses
-        PosePersister::save_pose_on_thread(relocalisationDetails.initialPose->GetInvM(),
-                                           m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
-        PosePersister::save_pose_on_thread(relocalisedPose->GetInvM(),
-                                           m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
-
-        const Matrix4f final_pose = trackingResult == ITMTrackingState::TRACKING_GOOD
-                                        ? relocalisedPose->GetInvM()
-                                        : relocalisationDetails.initialPose->GetInvM();
-        PosePersister::save_pose_on_thread(final_pose, m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
-      }
-
 #ifdef SHOW_RANSAC_CORRESPONDENCES
       static int relocalisationCount = 0;
 
@@ -313,7 +154,12 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       if (relocalisationCount++ == 451)
       {
         // Need to go through the ScoreRelocaliser interface.
-        ScoreRelocaliser_Ptr scoreRelocaliser = boost::dynamic_pointer_cast<ScoreRelocaliser>(m_relocaliser);
+        ScoreRelocaliser_Ptr scoreRelocaliser =
+            boost::dynamic_pointer_cast<ScoreRelocaliser>(m_refiningRelocaliser->get_inner_relocaliser());
+
+        // Need to have the scene and renderState available.
+        VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
+        SpaintVoxelScene_Ptr voxelScene = slamState->get_voxel_scene();
 
         // Render RGB
         ITMUChar4Image_Ptr renderedRGB = MemoryBlockFactory::instance().make_image<Vector4u>(Vector2i(640, 480));
@@ -461,44 +307,10 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       }
 
 #endif
-
-      if (m_saveRelocalisationPoses)
-      {
-        // Prevent fusion from happening to avoid integrating new data in the map, since we are in evaluation mode.
-        trackingResult = ITMTrackingState::TRACKING_POOR;
-      }
     }
     else
     {
       std::cout << "Cannot estimate a pose candidate." << std::endl;
-
-      if (m_saveRelocalisationPoses)
-      {
-        // Save dummy poses
-        Matrix4f invalid_pose;
-        invalid_pose.setValues(std::numeric_limits<float>::quiet_NaN());
-
-        PosePersister::save_pose_on_thread(invalid_pose, m_sequentialPathGenerator->make_path("pose-%06i.reloc.txt"));
-        PosePersister::save_pose_on_thread(invalid_pose, m_sequentialPathGenerator->make_path("pose-%06i.icp.txt"));
-        PosePersister::save_pose_on_thread(invalid_pose, m_sequentialPathGenerator->make_path("pose-%06i.final.txt"));
-      }
-    }
-
-    if (m_sequentialPathGenerator)
-    {
-      m_sequentialPathGenerator->increment_index();
-    }
-
-    if (relocalizationTimer)
-    {
-      ORcudaSafeCall(cudaDeviceSynchronize());
-      relocalizationTimer->stop();
-
-      boost::timer::cpu_times elapsedTimes = relocalizationTimer->elapsed();
-      m_relocalizationTimes.system += elapsedTimes.system;
-      m_relocalizationTimes.wall += elapsedTimes.wall;
-      m_relocalizationTimes.user += elapsedTimes.user;
-      ++m_relocalizationCalls;
     }
   }
 
@@ -509,23 +321,11 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #endif
 
     m_refiningRelocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
-
-    if (relocalizationTimer)
-    {
-      ORcudaSafeCall(cudaDeviceSynchronize());
-      relocalizationTimer->stop();
-
-      boost::timer::cpu_times elapsedTimes = relocalizationTimer->elapsed();
-      m_learningTimes.system += elapsedTimes.system;
-      m_learningTimes.wall += elapsedTimes.wall;
-      m_learningTimes.user += elapsedTimes.user;
-      ++m_learningCalls;
-    }
   }
 
   if (m_relocaliseEveryFrame)
   {
-    // Restore tracked pose
+    // Restore tracked pose.
     trackingState->pose_d->SetFrom(&trackedPose);
     // The assumption is that we are using the ground truth trajectory so the tracker always succeeds.
     trackingResult = ITMTrackingState::TRACKING_GOOD;

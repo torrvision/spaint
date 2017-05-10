@@ -79,6 +79,21 @@ protected:
   /** The relocaliser. */
   itmx::RefiningRelocaliser_Ptr m_refiningRelocaliser;
 
+  /** Whether or not to perform relocalisation after processing every frame, for evaluation. */
+  bool m_relocaliseEveryFrame;
+
+  /** The path to the relocalisation forest. */
+  std::string m_relocaliserForestPath;
+
+  /** The type of relocaliser. */
+  std::string m_relocaliserType;
+
+  /** The tracker params used to instantiate the refining relocaliser. */
+  std::string m_relocaliserRefinementTrackerParams;
+
+  /** Whether or not to update the relocaliser after processing every frame. */
+  bool m_relocaliserUpdateEveryFrame;
+
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
 
@@ -222,6 +237,11 @@ protected:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
+  /**
+   * \brief Sets up the relocaliser.
+   */
+  void setup_relocaliser();
+
   /**
    * \brief Sets up the tracker.
    */

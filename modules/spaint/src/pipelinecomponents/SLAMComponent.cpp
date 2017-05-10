@@ -5,6 +5,8 @@
 
 #include "pipelinecomponents/SLAMComponent.h"
 
+#include <boost/filesystem.hpp>
+namespace bf = boost::filesystem;
 #include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
@@ -17,8 +19,16 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
 
+#include <grove/relocalisation/ScoreRelocaliserFactory.h>
+using namespace grove;
+
+#include <itmx/relocalisation/ICPRefiningRelocaliser.h>
+#include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
 #include <itmx/relocalisation/RelocaliserFactory.h>
 using namespace itmx;
+
+#include <tvgutil/misc/GlobalParameters.h>
+using namespace tvgutil;
 
 #include "segmentation/SegmentationUtil.h"
 #include "trackers/TrackerFactory.h"
@@ -81,8 +91,8 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   slamState->set_tracking_state(TrackingState_Ptr(new ITMTrackingState(trackedImageSize, memoryType)));
   m_tracker->UpdateInitialPose(slamState->get_tracking_state().get());
 
-  // Set up the relocaliser TODO, setup the refining relocaliser.
-//  m_refiningRelocaliser = RelocaliserFactory::make_default_fern_relocaliser(depthImageSize, settings->sceneParams.viewFrustum_min, settings->sceneParams.viewFrustum_max);
+  // Set up the relocaliser.
+  setup_relocaliser();
 
   // Set up the live render states.
   slamState->set_live_voxel_render_state(VoxelRenderState_Ptr(ITMRenderStateFactory<ITMVoxelIndex>::CreateRenderState(trackedImageSize, voxelScene->sceneParams, memoryType)));
@@ -345,6 +355,82 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
+
+void SLAMComponent::setup_relocaliser()
+{
+  const static std::string parametersNamespace = "SLAMComponent.";
+  const GlobalParameters &globalParams = GlobalParameters::instance();
+
+  m_relocaliseEveryFrame = globalParams.get_first_value<bool>(parametersNamespace +
+                                                              "m_relocaliseEveryFrame", false);
+
+  m_relocaliserType = globalParams.get_first_value<std::string>(parametersNamespace +
+                                                                "m_relocaliserType", "forest");
+
+  m_relocaliserUpdateEveryFrame = globalParams.get_first_value<bool>(parametersNamespace +
+                                                                     "m_updateRelocaliserEveryFrame", true);
+
+  // Useful variables.
+  const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
+  const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
+  const Settings_CPtr &settings = m_context->get_settings();
+  const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
+
+  // A pointer to the actual relocaliser that will be nested in the refining relocaliser.
+  Relocaliser_Ptr nestedRelocaliser;
+  if (m_relocaliserType == "forest")
+  {
+    const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) /
+                                                         "DefaultRelocalizationForest.rf").string();
+
+    m_relocaliserForestPath = globalParams.get_first_value<std::string>(parametersNamespace +
+                                                                           "m_relocalisationForestPath", defaultRelocalisationForestPath);
+    std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
+
+    nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocaliserForestPath);
+    //  nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
+  }
+  else if (m_relocaliserType == "ferns")
+  {
+    if (m_relocaliseEveryFrame)
+    {
+      // Need to force the policy allowing the learning of new keyframes after relocalisation.
+      nestedRelocaliser = RelocaliserFactory::make_custom_fern_relocaliser(depthImageSize,
+                                                                           settings->sceneParams.viewFrustum_min,
+                                                                           settings->sceneParams.viewFrustum_max,
+                                                                           FernRelocaliser::get_default_harvesting_threshold(),
+                                                                           FernRelocaliser::get_default_num_ferns(),
+                                                                           FernRelocaliser::get_default_num_decisions_per_fern(),
+                                                                           FernRelocaliser::ALWAYS_TRY_ADD);
+    }
+    else
+    {
+      nestedRelocaliser = RelocaliserFactory::make_default_fern_relocaliser(depthImageSize,
+                                                                            settings->sceneParams.viewFrustum_min,
+                                                                            settings->sceneParams.viewFrustum_max);
+    }
+  }
+  else
+  {
+    throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
+  }
+
+  // Refinement ICP tracker
+  m_relocaliserRefinementTrackerParams = globalParams.get_first_value<std::string>(parametersNamespace + "m_refinementTrackerParams",
+                                                                                   "type=extended,levels=rrbb,minstep=1e-4,"
+                                                                                   "outlierSpaceC=0.1,outlierSpaceF=0.004,"
+                                                                                   "numiterC=20,numiterF=20,tukeyCutOff=8,"
+                                                                                   "framesToSkip=20,framesToWeight=50,failureDec=20.0");
+
+  // Set up the refining relocaliser.
+  m_refiningRelocaliser.reset(new ICPRefiningRelocaliser<SpaintVoxel, ITMVoxelIndex>(nestedRelocaliser,
+                                                                                     m_imageSourceEngine->getCalib(),
+                                                                                     rgbImageSize,
+                                                                                     depthImageSize,
+                                                                                     voxelScene,
+                                                                                     settings,
+                                                                                     m_relocaliserRefinementTrackerParams));
+}
 
 void SLAMComponent::setup_tracker()
 {

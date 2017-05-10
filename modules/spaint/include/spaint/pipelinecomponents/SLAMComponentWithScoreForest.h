@@ -50,27 +50,6 @@ public:
   //#################### PROTECTED MEMBER FUNCTIONS ####################
 protected:
   virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
-
-  //#################### PRIVATE MEMBER VARIABLES ####################
-private:
-  std::string m_relocalisationForestPath;
-  bool m_updateRelocaliserEveryFrame;
-
-  boost::optional<tvgutil::SequentialPathGenerator> m_sequentialPathGenerator;
-  Tracker_Ptr m_refinementTracker;
-  std::string m_refinementTrackerParams;
-  TrackingController_Ptr m_refinementTrackingController;
-
-  // For evaluation
-  bool m_relocaliseEveryFrame;
-  bool m_saveRelocalisationPoses;
-
-  // For profiling
-  bool m_timeRelocaliser;
-  size_t m_learningCalls;
-  boost::timer::cpu_times m_learningTimes;
-  size_t m_relocalizationCalls;
-  boost::timer::cpu_times m_relocalizationTimes;
 };
 
 //#################### TYPEDEFS ####################
