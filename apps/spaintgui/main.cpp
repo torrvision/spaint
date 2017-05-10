@@ -8,6 +8,7 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+#include <boost/tokenizer.hpp>
 
 // Note: This must appear before anything that could include SDL.h, since it includes boost/asio.hpp, a header that has a WinSock conflict with SDL.h.
 #include "Application.h"
@@ -58,9 +59,10 @@ namespace po = boost::program_options;
 
 struct CommandLineArguments
 {
+  // User-specifiable arguments
   std::string calibrationFilename;
   bool cameraAfterDisk;
-  std::string depthImageMask;
+  std::vector<std::string> depthImageMasks;
   bool detectFiducials;
   int initialFrameNumber;
   std::string leapFiducialID;
@@ -68,17 +70,30 @@ struct CommandLineArguments
   bool noRelocaliser;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   bool renderFiducials;
-  std::string rgbImageMask;
-  std::string sequenceSpecifier;
-  std::string sequenceType;
+  std::vector<std::string> rgbImageMasks;
+  std::vector<std::string> sequenceSpecifiers;
+  std::vector<std::string> sequenceTypes;
+  std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
+
+  // Derived arguments
+  std::vector<bf::path> sequenceDirs;
 };
 
 //#################### FUNCTIONS ####################
 
+/**
+ * \brief Checks whether or not the specified camera subengine is able to provide depth images.
+ *
+ * \note If the check fails, the camera subengine will be deallocated.
+ *
+ * \param cameraSubengine The camera subengine to check.
+ * \return                The camera subengine, if it is able to provide depth images, or NULL otherwise.
+ */
 ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
 {
   if(cameraSubengine->getDepthImageSize().x == 0)
@@ -89,6 +104,12 @@ ImageSourceEngine *check_camera_subengine(ImageSourceEngine *cameraSubengine)
   else return cameraSubengine;
 }
 
+/**
+ * \brief Attempts to make a camera subengine to read images from any suitable camera that is attached.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      The camera subengine, if a suitable camera is attached, or NULL otherwise.
+ */
 ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
 {
   ImageSourceEngine *cameraSubengine = NULL;
@@ -121,6 +142,132 @@ ImageSourceEngine *make_camera_subengine(const CommandLineArguments& args)
   return cameraSubengine;
 }
 
+/**
+ * \brief Makes the overall tracker configuration based on any tracker specifiers that were passed in on the command line.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      The overall tracker configuration.
+ */
+std::string make_tracker_config(CommandLineArguments& args)
+{
+  std::string result;
+
+  // Determine the number of different trackers that will be needed.
+  size_t trackerCount = args.sequenceSpecifiers.size();
+  if(trackerCount == 0 || args.cameraAfterDisk) ++trackerCount;
+
+  // If more than one tracker is needed, make the overall tracker a composite.
+  if(trackerCount > 1) result += "<tracker type='composite' policy='sequential'>";
+
+  // For each tracker that is needed:
+  for(size_t i = 0; i < trackerCount; ++i)
+  {
+    // Look to see if the user specified an explicit tracker specifier for it on the command line; if not, use a default tracker specifier.
+    const std::string trackerSpecifier = i < args.trackerSpecifiers.size() ? args.trackerSpecifiers[i] : "InfiniTAM";
+
+    // Separate the tracker specifier into chunks.
+    typedef boost::char_separator<char> sep;
+    typedef boost::tokenizer<sep> tokenizer;
+
+    tokenizer tok(trackerSpecifier.begin(), trackerSpecifier.end(), sep("+"));
+    std::vector<std::string> chunks(tok.begin(), tok.end());
+
+    // Add a tracker configuration based on the specifier chunks to the overall tracker configuration.
+    // If more than one chunk is involved, bundle the subsidiary trackers into a refining composite.
+    size_t chunkCount = chunks.size();
+    if(chunkCount > 1) result += "<tracker type='composite'>";
+
+    for(size_t i = 0; i < chunkCount; ++i)
+    {
+      if(chunks[i] == "InfiniTAM")
+      {
+        result += "<tracker type='infinitam'/>";
+      }
+      else if(chunks[i] == "Disk")
+      {
+        const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
+        result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
+      }
+      else
+      {
+        result += "<tracker type='import'><params>builtin:" + chunks[i] + "</params></tracker>";
+      }
+    }
+
+    // If more than one chunk was involved, add the necessary closing tag for the refining composite.
+    if(chunkCount > 1) result += "</tracker>";
+  }
+
+  // If more than one tracker was needed, add the necessary closing tag for the overall composite.
+  if(trackerCount > 1) result += "</tracker>";
+
+  return result;
+}
+
+/**
+ * \brief Post-process the program's command-line arguments.
+ *
+ * \param args  The program's command-line arguments.
+ * \return      true, if the program should continue after post-processing its arguments, or false otherwise.
+ */
+bool postprocess_arguments(CommandLineArguments& args)
+{
+  // If the user specifies both sequence and explicit depth / RGB image mask flags, print an error message.
+  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.rgbImageMasks.empty()))
+  {
+    std::cout << "Error: Either sequence flags or explicit depth / RGB image mask flags may be specified, but not both.\n";
+    return false;
+  }
+
+  // For each sequence (if any) that the user specifies (either via a sequence name or a path), set the depth / RGB image masks appropriately.
+  for(size_t i = 0, size = args.sequenceSpecifiers.size(); i < size; ++i)
+  {
+    // Determine the sequence type.
+    const std::string sequenceType = i < args.sequenceTypes.size() ? args.sequenceTypes[i] : "sequence";
+
+    // Determine the directory containing the sequence and record it for later use.
+    const std::string& sequenceSpecifier = args.sequenceSpecifiers[i];
+    const bf::path dir = bf::is_directory(sequenceSpecifier)
+      ? sequenceSpecifier
+      : find_subdir_from_executable(sequenceType + "s") / sequenceSpecifier;
+    args.sequenceDirs.push_back(dir);
+
+    // Set the depth / RGB image masks.
+    args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+    args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
+  }
+
+  // If the user hasn't explicitly specified a calibration file, try to find one in the first sequence directory (if it exists).
+  if(args.calibrationFilename == "" && !args.sequenceDirs.empty())
+  {
+    bf::path defaultCalibrationFilename = args.sequenceDirs[0] / "calib.txt";
+    if(bf::exists(defaultCalibrationFilename))
+    {
+      args.calibrationFilename = defaultCalibrationFilename.string();
+    }
+  }
+
+  // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
+  if(args.trackSurfels) args.mapSurfels = true;
+
+  // If the user wants to enable fiducial rendering or specifies a fiducial to use for the Leap Motion,
+  // make sure that fiducial detection is enabled.
+  if(args.renderFiducials || args.leapFiducialID != "")
+  {
+    args.detectFiducials = true;
+  }
+
+  return true;
+}
+
+/**
+ * \brief Parse any command-line arguments passed in by the user.
+ *
+ * \param argc  The command-line argument count.
+ * \param argv  The raw command-line arguments.
+ * \param args  The parsed command-line arguments.
+ * \return      true, if the program should continue after parsing the command-line arguments, or false otherwise.
+ */
 bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 {
   // Specify the possible options.
@@ -135,6 +282,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
+    ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
 
@@ -145,12 +293,13 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   po::options_description diskSequenceOptions("Disk sequence options");
   diskSequenceOptions.add_options()
-    ("depthMask,d", po::value<std::string>(&args.depthImageMask)->default_value(""), "depth image mask")
+    ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
-    ("rgbMask,r", po::value<std::string>(&args.rgbImageMask)->default_value(""), "RGB image mask")
-    ("sequenceSpecifier,s", po::value<std::string>(&args.sequenceSpecifier)->default_value(""), "sequence specifier")
-    ("sequenceType", po::value<std::string>(&args.sequenceType)->default_value("sequence"), "sequence type")
+    ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
+    ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
+    ("sequenceType", po::value<std::vector<std::string> >(&args.sequenceTypes)->multitoken(), "sequence type")
   ;
 
   po::options_description objectivePipelineOptions("Objective pipeline options");
@@ -176,41 +325,15 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     return false;
   }
 
-  // If the user specifies a sequence (either via a sequence name or a path),
-  // set the depth / RGB image masks and the calibration filename appropriately.
-  if(args.sequenceSpecifier != "")
-  {
-    const bf::path dir = bf::is_directory(args.sequenceSpecifier)
-      ? args.sequenceSpecifier
-      : find_subdir_from_executable(args.sequenceType + "s") / args.sequenceSpecifier;
-
-    args.depthImageMask = (dir / "depthm%06i.pgm").string();
-    args.rgbImageMask = (dir / "rgbm%06i.ppm").string();
-
-    // If the user hasn't explicitly specified a calibration file, try to find one in the sequence directory.
-    if(args.calibrationFilename == "")
-    {
-      bf::path defaultCalibrationFilename = dir / "calib.txt";
-      if(bf::exists(defaultCalibrationFilename))
-      {
-        args.calibrationFilename = defaultCalibrationFilename.string();
-      }
-    }
-  }
-
-  // If the user wants to enable surfel tracking, make sure that surfel mapping is also enabled.
-  if(args.trackSurfels) args.mapSurfels = true;
-
-  // If the user wants to enable fiducial rendering or specifies a fiducial to use for the Leap Motion,
-  // make sure that fiducial detection is enabled.
-  if(args.renderFiducials || args.leapFiducialID != "")
-  {
-    args.detectFiducials = true;
-  }
-
   return true;
 }
 
+/**
+ * \brief Outputs the specified error message and terminates the program with the specified exit code.
+ *
+ * \param message The error message.
+ * \param code    The exit code.
+ */
 void quit(const std::string& message, int code = EXIT_FAILURE)
 {
   std::cerr << message << '\n';
@@ -221,9 +344,9 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
-  // Parse the command-line arguments.
+  // Parse and post-process the command-line arguments.
   CommandLineArguments args;
-  if(!parse_command_line(argc, argv, args))
+  if(!parse_command_line(argc, argv, args) || !postprocess_arguments(args))
   {
     return 0;
   }
@@ -246,46 +369,8 @@ try
 
   // Specify the settings.
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  settings->trackerConfig = NULL;
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
-  if(args.trackSurfels) settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=0,framesToWeight=1,failureDec=20.0";
-  else settings->trackerConfig = "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0";
-
-  TrackerType trackerType = TRACKER_INFINITAM;
-  std::string trackerParams;
-
-  // If we're trying to use the Rift tracker:
-  if(trackerType == TRACKER_RIFT)
-  {
-#ifdef WITH_OVR
-    // If the Rift isn't available when the program runs, make sure that we're not trying to use the Rift tracker.
-    if(ovrHmd_Detect() == 0) trackerType = TRACKER_INFINITAM;
-#else
-    // If we haven't built with Rift support, make sure that we're not trying to use the Rift tracker.
-    trackerType = TRACKER_INFINITAM;
-#endif
-  }
-
-  // If we're trying to use the Vicon tracker:
-  if(trackerType == TRACKER_VICON || trackerType == TRACKER_ROBUSTVICON)
-  {
-#ifdef WITH_VICON
-    // If we built with Vicon support, specify the Vicon host (at present this refers to Iain's machine on the
-    // oculab network in the JR), and set an appropriate tracking regime for the corresponding ICP tracker.
-    trackerParams = "192.168.10.1:801";
-
-#if 0
-    // FIXME: The tracking regime should ultimately be moved out of ITMLibSettings.
-    settings->noHierarchyLevels = 2;
-    delete [] settings->trackingRegime;
-    settings->trackingRegime = new TrackerIterationType[settings->noHierarchyLevels];
-    settings->trackingRegime[0] = TRACKER_ITERATION_BOTH;
-    settings->trackingRegime[1] = TRACKER_ITERATION_TRANSLATION;
-#endif
-#else
-    // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
-    trackerType = TRACKER_INFINITAM;
-#endif
-  }
 
   // Pass the device type to the memory block factory.
   MemoryBlockFactory::instance().set_device_type(settings->deviceType);
@@ -293,17 +378,22 @@ try
   // Construct the image source engine.
   boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
 
-  if(args.depthImageMask != "")
+  // Add a subengine for each disk sequence specified.
+  for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
   {
-    std::cout << "[spaint] Reading images from disk: " << args.rgbImageMask << ' ' << args.depthImageMask << '\n';
-    ImageMaskPathGenerator pathGenerator(args.rgbImageMask.c_str(), args.depthImageMask.c_str());
+    const std::string& depthImageMask = args.depthImageMasks[i];
+    const std::string& rgbImageMask = args.rgbImageMasks[i];
+
+    std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
+    ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
     imageSourceEngine->addSubengine(new AsyncImageSourceEngine(
       new ImageFileReader<ImageMaskPathGenerator>(args.calibrationFilename.c_str(), pathGenerator, args.initialFrameNumber),
       args.prefetchBufferCapacity
     ));
   }
 
-  if(args.depthImageMask == "" || args.cameraAfterDisk)
+  // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
+  if(args.depthImageMasks.empty() || args.cameraAfterDisk)
   {
     ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
     if(cameraSubengine != NULL) imageSourceEngine->addSubengine(cameraSubengine);
@@ -330,8 +420,7 @@ try
       maxLabelCount,
       imageSourceEngine,
       seed,
-      trackerType,
-      trackerParams,
+      make_tracker_config(args),
       mappingMode,
       trackingMode,
       fiducialDetector,
@@ -345,8 +434,7 @@ try
       Application::resources_dir().string(),
       maxLabelCount,
       imageSourceEngine,
-      trackerType,
-      trackerParams,
+      make_tracker_config(args),
       mappingMode,
       trackingMode,
       fiducialDetector,
