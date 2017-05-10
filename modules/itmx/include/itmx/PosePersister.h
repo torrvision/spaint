@@ -1,10 +1,10 @@
 /**
- * spaint: PosePersister.h
+ * itmx: PosePersister.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_POSEPERSISTER
-#define H_SPAINT_POSEPERSISTER
+#ifndef H_ITMX_POSEPERSISTER
+#define H_ITMX_POSEPERSISTER
 
 #include <string>
 
@@ -12,7 +12,7 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-namespace spaint {
+namespace itmx {
 
 /**
  * \brief This class contains utility functions for saving camera poses.

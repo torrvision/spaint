@@ -43,6 +43,7 @@ include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 ##
 SET(toplevel_sources
 src/MemoryBlockFactory.cpp
+src/PosePersister.cpp
 )
 
 SET(toplevel_headers
@@ -50,6 +51,7 @@ include/itmx/ITMImagePtrTypes.h
 include/itmx/ITMMemoryBlockPtrTypes.h
 include/itmx/ITMObjectPtrTypes.h
 include/itmx/MemoryBlockFactory.h
+include/itmx/PosePersister.h
 )
 
 #################################################################
@@ -82,6 +84,7 @@ SOURCE_GROUP("relocalisation" FILES ${relocalisation_sources} ${relocalisation_h
 ##########################################
 
 INCLUDE_DIRECTORIES(include/itmx)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #

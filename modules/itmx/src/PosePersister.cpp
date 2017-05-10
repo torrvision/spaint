@@ -1,9 +1,9 @@
 /**
- * spaint: ImagePersister.cpp
+ * itmx: ImagePersister.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "util/PosePersister.h"
+#include "PosePersister.h"
 
 #include <fstream>
 #include <stdexcept>
@@ -12,7 +12,7 @@
 
 #include <tvgutil/misc/ThreadPool.h>
 
-namespace spaint {
+namespace itmx {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 

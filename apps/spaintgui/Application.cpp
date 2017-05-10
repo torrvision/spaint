@@ -19,12 +19,14 @@ using boost::assign::map_list_of;
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 using namespace ITMLib;
 
+#include <itmx/PosePersister.h>
+using namespace itmx;
+
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
 #include <spaint/ogl/WrappedGL.h>
 #include <spaint/util/ImagePersister.h>
-#include <spaint/util/PosePersister.h>
 using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
