@@ -68,6 +68,16 @@ public:
   }
 
   /**
+   * \brief Computes the average time taken by the event on each run. Does not throw if the event has never been run.
+   *
+   * \return                    The average time taken by the event on each run (or 0 if the event has not run).
+   */
+  Scale average_duration_nothrow() const
+  {
+    return m_count == 0 ? Scale(0) : Scale(m_totalDuration / m_count);
+  }
+
+  /**
    * \brief Gets the number of times the event being timed has been executed.
    *
    * return The number of times the event being timed has been executed.
