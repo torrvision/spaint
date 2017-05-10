@@ -266,6 +266,27 @@ bool postprocess_arguments(CommandLineArguments& args)
 }
 
 /**
+ * \brief Stores the parsed options in the GlobalParameters instance.
+ *
+ * \param parsedOptions The options to store in GlobalParameters.
+ */
+void store_parsed_options_into_global_parameters(const po::parsed_options& parsedOptions)
+{
+  GlobalParameters& globalParams = GlobalParameters::instance();
+
+  for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
+  {
+    const po::basic_option<char> &option = parsedOptions.options[optionIdx];
+
+    // Add all values in the correct order.
+    for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
+    {
+      globalParams.add_value(option.string_key, option.value[valueIdx]);
+    }
+  }
+}
+
+/**
  * \brief Parse any command-line arguments passed in by the user.
  *
  * \param argc  The command-line argument count.
@@ -324,34 +345,28 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   // Actually parse the command line.
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, options), vm);
+  po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
+
+  // Store the parsed options in both the variables map and GlobalParameters.
+  po::store(parsedCommandLineOptions, vm);
+  store_parsed_options_into_global_parameters(parsedCommandLineOptions);
 
   // Parse options from configuration file, if necessary.
   if(vm.count("configFile"))
   {
     // Allow unregistered options: those are added to the global parameters, to be used by other classes.
-    po::parsed_options parsedOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
+    po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
 
     // Store registered options in the variable map
-    po::store(parsedOptions, vm);
+    po::store(parsedConfigFileOptions, vm);
 
-    // Check for unregistered options
-    GlobalParameters& globalParams = GlobalParameters::instance();
-    for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
-    {
-      const po::basic_option<char> &option = parsedOptions.options[optionIdx];
-      if (option.unregistered)
-      {
-        // Add all values in order
-        for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
-        {
-          globalParams.add_value(option.string_key, option.value[valueIdx]);
-        }
-      }
-    }
+    // Store all options (including unregistered ones) into the GlobalParameters.
+    store_parsed_options_into_global_parameters(parsedConfigFileOptions);
   }
 
   po::notify(vm);
+
+  std::cout << "Global params:\n" << GlobalParameters::instance() << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
