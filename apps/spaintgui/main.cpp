@@ -75,7 +75,6 @@ struct CommandLineArguments
   bool noTracker;
   std::string openNIDeviceURI;
   std::string pipelineType;
-  std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
@@ -306,7 +305,6 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
-    ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
