@@ -21,7 +21,6 @@
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
 #include "../trackers/FallibleTracker.h"
-#include "../trackers/TrackerType.h"
 
 namespace spaint {
 
@@ -135,14 +134,8 @@ private:
   /** The tracker. */
   Tracker_Ptr m_tracker;
 
-  /**
-   * The parameters for the tracker (if any). For example, this would be the host on which the
-   * Vicon software is running (e.g. "<IP address>:<port>") if we're using the Vicon tracker.
-   */
-  std::string m_trackerParams;
-
-  /** The type of tracker to use. */
-  TrackerType m_trackerType;
+  /** The tracker configuration to use (in XML format). */
+  std::string m_trackerConfig;
 
   /** The tracking controller. */
   TrackingController_Ptr m_trackingController;
@@ -161,17 +154,15 @@ public:
    * \param context           The shared context needed for SLAM.
    * \param sceneID           The ID of the scene to reconstruct.
    * \param imageSourceEngine The engine used to provide input images to the fusion process.
-   * \param trackerType       The type of tracker to use.
-   * \param trackerParams     The parameters for the tracker (if any).
+   * \param trackerConfig     The tracker configuration to use.
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    * \param fiducialDetector  The fiducial detector to use (if any).
    * \param detectFiducials   Whether or not to initially detect fiducials in the scene.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                TrackerType trackerType, const std::string& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
-                TrackingMode trackingMode = TRACK_VOXELS, const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(),
-                bool detectFiducials = false);
+                const std::string& trackerConfig, MappingMode mappingMode = MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS,
+                const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(), bool detectFiducials = false);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -220,14 +211,6 @@ public:
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################
 private:
-  /**
-   * \brief Makes a hybrid tracker that refines the results of a primary tracker using ICP.
-   *
-   * \param primaryTracker  The primary tracker (e.g. a Rift or Vicon tracker).
-   * \return                The hybrid tracker.
-   */
-  ITMLib::ITMTracker *make_hybrid_tracker(ITMLib::ITMTracker *primaryTracker) const;
-
   /**
    * \brief Render from the live camera position to prepare for tracking.
    *

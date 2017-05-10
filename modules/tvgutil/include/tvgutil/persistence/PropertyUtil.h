@@ -57,7 +57,16 @@ struct PropertyUtil
    * \return                                        The property tree.
    * \throws boost::property_tree::xml_parser_error If the load fails.
    */
-  static boost::property_tree::ptree load_properties_from_xml(const std::string& filename);
+  static boost::property_tree::ptree load_properties_from_xml_file(const std::string& filename);
+
+  /**
+   * \brief Attempts to load a property tree from a string containing XML.
+   *
+   * \param xmlString                               The string containing XML.
+   * \return                                        The property tree.
+   * \throws boost::property_tree::xml_parser_error If the load fails.
+   */
+  static boost::property_tree::ptree load_properties_from_xml_string(const std::string& xmlString);
 
   /**
    * \brief Converts a property tree into a property map.
