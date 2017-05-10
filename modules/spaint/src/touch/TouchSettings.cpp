@@ -17,7 +17,7 @@ namespace spaint {
 TouchSettings::TouchSettings(const boost::filesystem::path& touchSettingsFile)
 {
   // Load in the settings.
-  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(touchSettingsFile.string());
+  boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml_file(touchSettingsFile.string());
   std::map<std::string,std::string> properties = PropertyUtil::make_property_map(tree);
 
   std::string forestPath;

@@ -23,7 +23,6 @@
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
 #include "../trackers/FallibleTracker.h"
-#include "../trackers/TrackerType.h"
 
 namespace spaint {
 
@@ -131,15 +130,8 @@ protected:
   /** The tracker. */
   Tracker_Ptr m_tracker;
 
-  /**
-   * The parameters for the trackers. Each string in the vector will contain the parameters for the respective tracker.
-   * For example, this would be the host on which the Vicon software is running (e.g. "<IP address>:<port>") if we're using the Vicon tracker,
-   * followed by the parameters for the ICP tracker performing pose refinement.
-   */
-  std::vector<std::string> m_trackerParams;
-
-  /** The type of tracker to use. */
-  TrackerType m_trackerType;
+  /** The tracker configuration to use (in XML format). */
+  std::string m_trackerConfig;
 
   /** The tracking mode to use. */
   TrackingMode m_trackingMode;
@@ -155,17 +147,15 @@ public:
    * \param context           The shared context needed for SLAM.
    * \param sceneID           The ID of the scene to reconstruct.
    * \param imageSourceEngine The engine used to provide input images to the fusion process.
-   * \param trackerType       The type of tracker to use.
-   * \param trackerParams     The parameters for the tracker (if any).
+   * \param trackerConfig     The tracker configuration to use.
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    * \param fiducialDetector  The fiducial detector to use (if any).
    * \param detectFiducials   Whether or not to initially detect fiducials in the scene.
    */
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
-                TrackerType trackerType, const std::vector<std::string>& trackerParams, MappingMode mappingMode = MAP_VOXELS_ONLY,
-                TrackingMode trackingMode = TRACK_VOXELS, const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(),
-                bool detectFiducials = false);
+                const std::string& trackerConfig, MappingMode mappingMode = MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS,
+                const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(), bool detectFiducials = false);
 
   //#################### DESTRUCTOR ####################
 public:

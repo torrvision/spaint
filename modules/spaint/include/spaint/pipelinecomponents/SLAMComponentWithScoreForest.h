@@ -29,16 +29,14 @@ public:
    * \param context           The shared context needed for SLAM.
    * \param sceneID           The ID of the scene to reconstruct.
    * \param imageSourceEngine The engine used to provide input images to the fusion process.
-   * \param trackerType       The type of tracker to use.
-   * \param trackerParams     The parameters for the tracker (if any).
+   * \param trackerConfig     The tracker configuration to use.
    * \param mappingMode       The mapping mode to use.
    * \param trackingMode      The tracking mode to use.
    */
   SLAMComponentWithScoreForest(const SLAMContext_Ptr &context,
                                const std::string &sceneID,
                                const ImageSourceEngine_Ptr &imageSourceEngine,
-                               TrackerType trackerType,
-                               const std::vector<std::string> &trackerParams,
+                               const std::string& trackerConfig,
                                MappingMode mappingMode = MAP_VOXELS_ONLY,
                                TrackingMode trackingMode = TRACK_VOXELS);
 

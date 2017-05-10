@@ -25,16 +25,14 @@ public:
    * \param maxLabelCount     The maximum number of labels that can be in use.
    * \param imageSourceEngine The engine used to provide input images to the SLAM component for the scene.
    * \param seed              The seed to use for the random number generators used by the voxel samplers.
-   * \param trackerType       The type of tracker to use when reconstructing the scene.
-   * \param trackerParams     The parameters for the tracker (if any).
+   * \param trackerConfig     The tracker configuration to use when reconstructing the scene.
    * \param mappingMode       The mapping mode that the scene's SLAM component should use.
    * \param trackingMode      The tracking mode that the scene's SLAM component should use.
    * \param fiducialDetector  The fiducial detector to use (if any).
    * \param detectFiducials   Whether or not to initially detect fiducials in the 3D scene.
    */
   SemanticPipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
-                   const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed,
-                   spaint::TrackerType trackerType, const std::vector<std::string>& trackerParams,
+                   const CompositeImageSourceEngine_Ptr& imageSourceEngine, unsigned int seed, const std::string& trackerConfig,
                    spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                    spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS,
                    const spaint::FiducialDetector_CPtr& fiducialDetector = spaint::FiducialDetector_CPtr(),

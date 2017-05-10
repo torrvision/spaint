@@ -15,18 +15,19 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-                                     TrackerType trackerType, const std::vector<std::string>& trackerParams, SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
+ObjectivePipeline::ObjectivePipeline(const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount,
+                                     const CompositeImageSourceEngine_Ptr& imageSourceEngine, const std::string& trackerConfig,
+                                     SLAMComponent::MappingMode mappingMode, SLAMComponent::TrackingMode trackingMode,
                                      const FiducialDetector_CPtr& fiducialDetector, bool detectFiducials, bool mirrorWorldPose)
 : MultiScenePipeline("objective", settings, resourcesDir, maxLabelCount)
 {
   const std::string worldSceneID = Model::get_world_scene_id();
   SingleRGBDImagePipe_Ptr pipe(new SingleRGBDImagePipe(imageSourceEngine));
-  m_slamComponents[worldSceneID].reset(new SLAMComponent(m_model, worldSceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode, fiducialDetector, detectFiducials));
+  m_slamComponents[worldSceneID].reset(new SLAMComponent(m_model, worldSceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode, fiducialDetector, detectFiducials));
   m_objectSegmentationComponents[worldSceneID].reset(new ObjectSegmentationComponent(m_model, worldSceneID, pipe));
 
   const std::string objectSceneID = "Object";
-  SLAMComponent_Ptr objectSLAMComponent(new SLAMComponent(m_model, objectSceneID, pipe, trackerType, trackerParams, mappingMode, trackingMode));
+  SLAMComponent_Ptr objectSLAMComponent(new SLAMComponent(m_model, objectSceneID, pipe, trackerConfig, mappingMode, trackingMode));
   if(mirrorWorldPose) objectSLAMComponent->mirror_pose_of(worldSceneID);
   m_slamComponents[objectSceneID] = objectSLAMComponent;
 }

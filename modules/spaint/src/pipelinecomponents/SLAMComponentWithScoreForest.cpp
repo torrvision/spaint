@@ -57,11 +57,10 @@ namespace spaint {
 SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr &context,
                                                            const std::string &sceneID,
                                                            const ImageSourceEngine_Ptr &imageSourceEngine,
-                                                           TrackerType trackerType,
-                                                           const std::vector<std::string> &trackerParams,
+                                                           const std::string& trackerConfig,
                                                            MappingMode mappingMode,
                                                            TrackingMode trackingMode)
-  : SLAMComponent(context, sceneID, imageSourceEngine, trackerType, trackerParams, mappingMode, trackingMode)
+  : SLAMComponent(context, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode)
 {
   const Settings_CPtr &settings = m_context->get_settings();
 

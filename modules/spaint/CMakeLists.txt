@@ -550,10 +550,13 @@ include/spaint/touch/TouchSettings.h
 )
 
 ##
-SET(trackers_sources)
+SET(trackers_sources
+src/trackers/TrackerFactory.cpp
+)
 
 SET(trackers_headers
 include/spaint/trackers/FallibleTracker.h
+include/spaint/trackers/TrackerFactory.h
 include/spaint/trackers/TrackerType.h
 )
 

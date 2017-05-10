@@ -18,8 +18,7 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
     const std::string& experimentTag,
     const std::string& resourcesDir,
     const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-    spaint::TrackerType trackerType,
-    const std::vector<std::string>& trackerParams,
+    const std::string& trackerConfig,
     spaint::SLAMComponent::MappingMode mappingMode,
     spaint::SLAMComponent::TrackingMode trackingMode)
 : MultiScenePipeline("slam", settings, resourcesDir, 2, experimentTag)
@@ -33,8 +32,7 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
       m_model,
       sceneID,
       imageSourceEngine,
-      trackerType,
-      trackerParams,
+      trackerConfig,
       mappingMode,
       trackingMode
   ));

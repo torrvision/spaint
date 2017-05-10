@@ -19,8 +19,7 @@ public:
                const std::string& experimentTag,
                const std::string& resourcesDir,
                const CompositeImageSourceEngine_Ptr& imageSourceEngine,
-               spaint::TrackerType trackerType,
-               const std::vector<std::string>& trackerParams,
+               const std::string& trackerConfig,
                spaint::SLAMComponent::MappingMode mappingMode = spaint::SLAMComponent::MAP_VOXELS_ONLY,
                spaint::SLAMComponent::TrackingMode trackingMode = spaint::SLAMComponent::TRACK_VOXELS);
 

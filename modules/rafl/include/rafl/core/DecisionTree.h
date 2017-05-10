@@ -145,7 +145,7 @@ public:
     explicit Settings(const std::string& filename)
     {
       using tvgutil::PropertyUtil;
-      boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml(filename);
+      boost::property_tree::ptree tree = PropertyUtil::load_properties_from_xml_file(filename);
       initialise(PropertyUtil::make_property_map(tree));
     }
 
