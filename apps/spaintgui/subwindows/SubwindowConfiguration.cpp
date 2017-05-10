@@ -57,6 +57,7 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
 
       if(pipelineType == "semantic")       specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR));
       else if(pipelineType == "objective") specifiers.push_back(SubwindowSpecifier(objectSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
+      else                                 specifiers.push_back(SubwindowSpecifier(worldSceneID, VisualisationGenerator::VT_SCENE_COLOUR));
 
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, 1), specifiers[0].m_sceneID, specifiers[0].m_visualisationType, imgSize));
       config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, 1), specifiers[1].m_sceneID, specifiers[1].m_visualisationType, imgSize));
@@ -68,8 +69,8 @@ SubwindowConfiguration_Ptr SubwindowConfiguration::make_default(size_t subwindow
       const float x = 0.665f;
       const float y = 0.5f;
       config->add_subwindow(Subwindow(Vector2f(0, 0), Vector2f(x, y * 2), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICLAMBERTIAN, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICCOLOUR, imgSize));
-      config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), worldSceneID, VisualisationGenerator::VT_SCENE_SEMANTICPHONG, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, 0), Vector2f(1, y), worldSceneID, VisualisationGenerator::VT_INPUT_COLOUR, imgSize));
+      config->add_subwindow(Subwindow(Vector2f(x, y), Vector2f(1, y * 2), worldSceneID, VisualisationGenerator::VT_INPUT_DEPTH, imgSize));
       break;
     }
     default:
