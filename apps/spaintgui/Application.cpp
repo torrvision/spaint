@@ -9,11 +9,13 @@ using namespace tvginput;
 #include <fstream>
 #include <stdexcept>
 
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
+namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/Meshing/ITMMeshingEngineFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
@@ -31,6 +33,7 @@ using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/filesystem/PathFinder.h>
+#include <tvgutil/misc/GlobalParameters.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
@@ -727,6 +730,7 @@ void Application::save_mesh() const
 {
   if(m_meshingEngine)
   {
+    const GlobalParameters& globalParams = GlobalParameters::instance();
     const Settings_CPtr settings = m_pipeline->get_model()->get_settings();
     const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
     const std::string& sceneID = mainSubwindow.get_scene_id();
@@ -737,21 +741,21 @@ void Application::save_mesh() const
 
     m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    boost::filesystem::path p = find_subdir_from_executable("meshes");
+    // Find the location where we are going to save the mesh.
+    const bf::path meshesSubdir = find_subdir_from_executable("meshes");
 
-    if(model->get_tag().empty())
-    {
-      p = p / ("spaint-" + TimeUtil::get_iso_timestamp() + ".stl");
-    }
-    else
-    {
-      p = p / (model->get_tag() + ".stl");
-    }
+    // Make sure the folder exists.
+    bf::create_directories(meshesSubdir);
 
-    boost::filesystem::create_directories(p.parent_path());
+    // Use the experimentTag as a filename, or the current timestamp if the tag has not been specified.
+    const std::string meshFilename = globalParams.get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
+                                     + ".stl";
 
-    std::cout << "Saving current reconstruction in: " << p << '\n';
-    mesh->WriteSTL(p.string().c_str());
+    // Compute the full path.
+    const bf::path meshFullPath = meshesSubdir / meshFilename;
+
+    std::cout << "Saving current reconstruction in: " << meshFullPath << '\n';
+    mesh->WriteSTL(meshFullPath.string().c_str());
   }
   else
   {

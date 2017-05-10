@@ -501,7 +501,6 @@ try
   else if(args.pipelineType == "slam")
   {
     pipeline.reset(new SLAMPipeline(settings,
-                                    args.experimentTag,
                                     Application::resources_dir().string(),
                                     imageSourceEngine,
                                     make_tracker_config(args),

@@ -43,7 +43,6 @@ public:
   virtual const std::string& get_resources_dir() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
-  virtual std::string get_tag() const = 0;
   virtual VisualisationGenerator_CPtr get_visualisation_generator() const = 0;
   virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const = 0;
 

@@ -16,7 +16,6 @@ class SLAMPipeline : public MultiScenePipeline
   //#################### CONSTRUCTORS ####################
 public:
   SLAMPipeline(const Settings_Ptr& settings,
-               const std::string& experimentTag,
                const std::string& resourcesDir,
                const CompositeImageSourceEngine_Ptr& imageSourceEngine,
                const std::string& trackerConfig,

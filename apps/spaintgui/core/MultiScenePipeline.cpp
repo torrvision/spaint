@@ -15,7 +15,7 @@ using namespace tvgutil;
 
 //#################### CONSTRUCTORS ####################
 
-MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount, const std::string &experimentTag)
+MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_Ptr& settings, const std::string& resourcesDir, size_t maxLabelCount)
 : m_mode(MODE_NORMAL), m_type(type)
 {
   // Make sure that we're not trying to run on the GPU if CUDA support isn't enabled.
@@ -28,7 +28,7 @@ MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_P
 #endif
 
   // Set up the spaint model.
-  m_model.reset(new Model(settings, resourcesDir, maxLabelCount, experimentTag));
+  m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
 }
 
 //#################### DESTRUCTOR ####################
