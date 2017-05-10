@@ -378,11 +378,11 @@ try
   // Construct the image source engine.
   boost::shared_ptr<CompositeImageSourceEngine> imageSourceEngine(new CompositeImageSourceEngine);
 
-  // Instantiate an engine for each pair of image masks provided
+  // Add a subengine for each disk sequence specified.
   for(size_t i = 0; i < args.depthImageMasks.size(); ++i)
   {
-    const std::string depthImageMask = args.depthImageMasks[i];
-    const std::string rgbImageMask = args.rgbImageMasks[i];
+    const std::string& depthImageMask = args.depthImageMasks[i];
+    const std::string& rgbImageMask = args.rgbImageMasks[i];
 
     std::cout << "[spaint] Reading images from disk: " << rgbImageMask << ' ' << depthImageMask << '\n';
     ImageMaskPathGenerator pathGenerator(rgbImageMask.c_str(), depthImageMask.c_str());
@@ -392,6 +392,7 @@ try
     ));
   }
 
+  // If no disk sequences were specified, or we want to switch to the camera once all the disk sequences finish, add a camera subengine.
   if(args.depthImageMasks.empty() || args.cameraAfterDisk)
   {
     ImageSourceEngine *cameraSubengine = make_camera_subengine(args);
