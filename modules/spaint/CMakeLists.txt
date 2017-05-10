@@ -557,7 +557,6 @@ src/trackers/TrackerFactory.cpp
 SET(trackers_headers
 include/spaint/trackers/FallibleTracker.h
 include/spaint/trackers/TrackerFactory.h
-include/spaint/trackers/TrackerType.h
 )
 
 IF(WITH_OVR)
