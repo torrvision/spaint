@@ -113,6 +113,15 @@ bool pose_matches(const Eigen::Matrix4f &gtPose,
   return translationError <= translationMaxError && angleError <= angleMaxError;
 }
 
+bool pose_file_matches(const Eigen::Matrix4f &gtPose, const fs::path &poseFile)
+{
+  if(!fs::is_regular(poseFile))
+    return false;
+
+  const Eigen::Matrix4f otherPose = read_pose_from_file(poseFile);
+  return pose_matches(gtPose, otherPose);
+}
+
 struct SequenceResults
 {
   int poseCount
@@ -155,11 +164,15 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
     const Eigen::Matrix4f gtPose = read_pose_from_file(gtPath);
     const Eigen::Matrix4f relocPose = read_pose_from_file(relocPath);
     const Eigen::Matrix4f icpPose = read_pose_from_file(icpPath);
-    const Eigen::Matrix4f finalPose = read_pose_from_file(finalPath);
+//    const Eigen::Matrix4f finalPose = read_pose_from_file(finalPath);
 
     bool validReloc = pose_matches(gtPose, relocPose);
     bool validICP = pose_matches(gtPose, icpPose);
-    bool validFinal = pose_matches(gtPose, finalPose);
+//    bool validFinal = pose_matches(gtPose, finalPose);
+
+//    bool validReloc = pose_file_matches(gtPose, relocPath);
+//    bool validICP = pose_file_matches(gtPose, icpPath);
+//    bool validFinal = pose_file_matches(gtPose, finalPath);
 
 //    std::cout << res.poseCount << "-> Reloc: " << std::boolalpha << validReloc
 //        << " - ICP: " << validICP << std::noboolalpha << '\n';
@@ -167,11 +180,11 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
     ++res.poseCount;
     res.validPosesAfterReloc += validReloc;
     res.validPosesAfterICP += validICP;
-    res.validFinalPoses += validFinal;
+//    res.validFinalPoses += validFinal;
 
     res.relocalizationResults.push_back(validReloc);
     res.icpResults.push_back(validICP);
-    res.finalResults.push_back(validFinal);
+//    res.finalResults.push_back(validFinal);
   }
 
   return res;
@@ -206,8 +219,8 @@ int main(int argc, char *argv[])
     const fs::path gtPath = gtFolder / sequence / "Test" / "merged";
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
-    std::cerr << "Processing sequence " << sequence << " in:\n\t" << gtPath
-        << "\n\t" << relocFolder << std::endl;
+    std::cerr << "Processing sequence " << sequence << " in: " << gtPath
+        << "\t - " << relocFolder << std::endl;
     try
     {
       results[sequence] = evaluate_sequence(gtPath, relocFolder);
