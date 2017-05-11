@@ -18,11 +18,14 @@ using boost::assign::map_list_of;
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 using namespace ITMLib;
 
+#include <itmx/persistence/ImagePersister.h>
+#include <itmx/persistence/PosePersister.h>
+using namespace itmx;
+
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
 #include <spaint/ogl/WrappedGL.h>
-#include <spaint/util/ImagePersister.h>
 using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
@@ -700,6 +703,10 @@ void Application::save_sequence_frame()
   // Save the current input images.
   ImagePersister::save_image_on_thread(slamState->get_input_raw_depth_image_copy(), m_sequencePathGenerator->make_path("depthm%06i.pgm"));
   ImagePersister::save_image_on_thread(slamState->get_input_rgb_image_copy(), m_sequencePathGenerator->make_path("rgbm%06i.ppm"));
+
+  // Save the inverse pose (i.e. the camera -> world transformation).
+  PosePersister::save_pose_on_thread(slamState->get_pose().GetInvM(), m_sequencePathGenerator->make_path("posem%06i.txt"));
+
   m_sequencePathGenerator->increment_index();
 }
 

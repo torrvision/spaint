@@ -6,7 +6,7 @@
 #include "MarkVoxelsCommand.h"
 using namespace spaint;
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 //#################### CONSTRUCTORS ####################

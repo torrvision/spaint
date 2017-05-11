@@ -8,7 +8,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <itmx/ITMObjectPtrTypes.h>
+#include <itmx/base/ITMObjectPtrTypes.h>
 
 #include "FallibleTracker.h"
 

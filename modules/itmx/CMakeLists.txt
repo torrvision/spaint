@@ -15,21 +15,34 @@ SET(targetname itmx)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
 # Specify the project files #
 #############################
 
 ##
-SET(toplevel_sources
-src/MemoryBlockFactory.cpp
+SET(base_sources
+src/base/MemoryBlockFactory.cpp
 )
 
-SET(toplevel_headers
-include/itmx/ITMImagePtrTypes.h
-include/itmx/ITMMemoryBlockPtrTypes.h
-include/itmx/ITMObjectPtrTypes.h
-include/itmx/MemoryBlockFactory.h
+SET(base_headers
+include/itmx/base/ITMImagePtrTypes.h
+include/itmx/base/ITMMemoryBlockPtrTypes.h
+include/itmx/base/ITMObjectPtrTypes.h
+include/itmx/base/MemoryBlockFactory.h
+)
+
+##
+SET(persistence_sources
+src/persistence/ImagePersister.cpp
+src/persistence/PosePersister.cpp
+)
+
+SET(persistence_headers
+include/itmx/persistence/ImagePersister.h
+include/itmx/persistence/PosePersister.h
 )
 
 #################################################################
@@ -37,24 +50,28 @@ include/itmx/MemoryBlockFactory.h
 #################################################################
 
 SET(sources
-${toplevel_sources}
+${base_sources}
+${persistence_sources}
 )
 
 SET(headers
-${toplevel_headers}
+${base_headers}
+${persistence_headers}
 )
 
 #############################
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
+SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
+SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
 
 ##########################################
 # Specify additional include directories #
 ##########################################
 
 INCLUDE_DIRECTORIES(include/itmx)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/tvgutil/include)
 
 ##########################################
 # Specify the target and where to put it #

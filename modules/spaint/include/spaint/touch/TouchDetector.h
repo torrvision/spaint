@@ -8,7 +8,7 @@
 
 #include <arrayfire.h>
 
-#include <itmx/ITMObjectPtrTypes.h>
+#include <itmx/base/ITMObjectPtrTypes.h>
 
 #include <rafl/core/RandomForest.h>
 
