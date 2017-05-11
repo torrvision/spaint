@@ -119,13 +119,13 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::~ICPRefiningRelocaliser()
   if (m_timersEnabled)
   {
     std::cout << "Integration calls: " << m_timerIntegration.count()
-              << ", average duration: " << m_timerIntegration.average_duration_nothrow() << '\n';
+              << ", average duration: " << m_timerIntegration.average_duration() << '\n';
 
     std::cout << "Relocalisation calls: " << m_timerRelocalisation.count()
-              << ", average duration: " << m_timerRelocalisation.average_duration_nothrow() << '\n';
+              << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
 
     std::cout << "Update calls: " << m_timerUpdate.count()
-              << ", average duration: " << m_timerUpdate.average_duration_nothrow() << '\n';
+              << ", average duration: " << m_timerUpdate.average_duration() << '\n';
   }
 }
 

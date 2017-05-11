@@ -117,10 +117,7 @@ Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q)
  */
 void printTimer(const PreemptiveRansac::AverageTimer &timer)
 {
-  std::cout << timer.name() << ": " << timer.count() << " times, avg: "
-            << (timer.count() > 0 ? boost::chrono::duration_cast<boost::chrono::milliseconds>(timer.average_duration())
-                                  : boost::chrono::milliseconds())
-            << ".\n";
+  std::cout << timer.name() << ": " << timer.count() << " times, avg: " << timer.average_duration() << ".\n";
 }
 }
 
