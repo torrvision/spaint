@@ -10,8 +10,10 @@ using namespace tvgutil;
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+#include <itmx/persistence/ImagePersister.h>
+using namespace itmx;
+
 #include "segmentation/SegmentationUtil.h"
-#include "util/ImagePersister.h"
 
 #if WITH_ARRAYFIRE && WITH_OPENCV
 #include "segmentation/BackgroundSubtractingObjectSegmenter.h"

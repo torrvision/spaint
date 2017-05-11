@@ -9,7 +9,7 @@
 using namespace ITMLib;
 using namespace ORUtils;
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using itmx::MemoryBlockFactory;
 
 #include <tvgutil/containers/MapUtil.h>

@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include <itmx/ITMObjectPtrTypes.h>
+#include <itmx/base/ITMObjectPtrTypes.h>
 
 #include "FiducialMeasurement.h"
 
