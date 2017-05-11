@@ -8,7 +8,6 @@
 #include "ITMLib/Trackers/ITMTrackerFactory.h"
 #include "ITMLib/Utils/ITMProjectionUtils.h"
 
-#include <itmx/PosePersister.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
 #include <itmx/relocalisation/RelocaliserFactory.h>
