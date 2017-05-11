@@ -87,7 +87,6 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
 #ifdef WITH_VICON
     fallibleTracker = new RobustViconTracker(trackerParams, "kinect", rgbImageSize, depthImageSize, settings, lowLevelEngine, voxelScene);
     tracker = fallibleTracker;
-    break;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
     trackerType = "infinitam";
@@ -99,7 +98,6 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
 #ifdef WITH_VICON
     fallibleTracker = new ViconTracker(trackerParams, "kinect");
     tracker = fallibleTracker;
-    break;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
     trackerType = "infinitam";
