@@ -5,7 +5,7 @@
 
 #include "ExampleReservoirs_CPU.h"
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 #include "../shared/ExampleReservoirs_Shared.h"

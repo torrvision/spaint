@@ -10,7 +10,7 @@
 
 #include <ITMLib/ITMLibDefines.h>
 
-#include <itmx/ITMImagePtrTypes.h>
+#include <itmx/base/ITMImagePtrTypes.h>
 
 namespace spaint {
 

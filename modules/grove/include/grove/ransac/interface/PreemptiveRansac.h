@@ -10,8 +10,8 @@
 
 #include <boost/optional.hpp>
 
-#include <itmx/ITMImagePtrTypes.h>
-#include <itmx/ITMMemoryBlockPtrTypes.h>
+#include <itmx/base/ITMImagePtrTypes.h>
+#include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
 #include <tvgutil/timing/AverageTimer.h>
 

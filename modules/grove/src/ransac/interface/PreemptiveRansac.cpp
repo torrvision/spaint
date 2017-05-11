@@ -17,7 +17,7 @@
 
 #include <ORUtils/SE3Pose.h>
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 // To enable more detailed timing prints (VERY VERBOSE)

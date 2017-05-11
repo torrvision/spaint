@@ -1,21 +1,21 @@
 /**
- * spaint: ImagePersister.h
+ * itmx: ImagePersister.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#ifndef H_SPAINT_IMAGEPERSISTER
-#define H_SPAINT_IMAGEPERSISTER
+#ifndef H_ITMX_IMAGEPERSISTER
+#define H_ITMX_IMAGEPERSISTER
 
 #include <vector>
 
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 
-#include <itmx/ITMImagePtrTypes.h>
-
 #include <tvgutil/misc/ThreadPool.h>
 
-namespace spaint {
+#include "../base/ITMImagePtrTypes.h"
+
+namespace itmx {
 
 /**
  * \brief This class contains utility functions for loading and saving images.

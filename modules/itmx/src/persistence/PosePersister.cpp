@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include "PosePersister.h"
+#include "persistence/PosePersister.h"
 
 #include <fstream>
 #include <stdexcept>

@@ -24,7 +24,7 @@
 #include <tvgutil/misc/GlobalParameters.h>
 #include <tvgutil/timing/TimeUtil.h>
 
-#include "../PosePersister.h"
+#include "../persistence/PosePersister.h"
 
 namespace fs = boost::filesystem;
 using namespace ITMLib;

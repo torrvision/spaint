@@ -7,7 +7,7 @@
 
 #include <Eigen/Dense>
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 
 #include "ransac/shared/PreemptiveRansac_Shared.h"
 

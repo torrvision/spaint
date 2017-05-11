@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 namespace grove {

@@ -13,7 +13,7 @@
 #include <Learner.hpp>
 #endif
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using itmx::MemoryBlockFactory;
 
 #include <tvgutil/numbers/RandomNumberGenerator.h>

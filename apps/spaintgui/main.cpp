@@ -34,7 +34,7 @@
 #include <spaint/fiducials/ArUcoFiducialDetector.h>
 #endif
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 

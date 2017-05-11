@@ -11,8 +11,8 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/MemoryBlock.h>
 
-#include <itmx/ITMImagePtrTypes.h>
-#include <itmx/ITMMemoryBlockPtrTypes.h>
+#include <itmx/base/ITMImagePtrTypes.h>
+#include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
 #include "../base/ClusterContainer.h"
 

@@ -9,16 +9,15 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using itmx::MemoryBlockFactory;
 
 #include "clustering/ExampleClustererFactory.h"
 #include "features/FeatureCalculatorFactory.h"
 #include "forests/DecisionForestFactory.h"
 #include "ransac/RansacFactory.h"
-#include "reservoirs/ExampleReservoirsFactory.h"
-
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
+#include "reservoirs/ExampleReservoirsFactory.h"
 
 namespace grove {
 

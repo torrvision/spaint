@@ -9,7 +9,7 @@
 #include <ITMLib/Utils/ITMLibSettings.h>
 using namespace ITMLib;
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
 #include "clustering/ExampleClustererFactory.h"

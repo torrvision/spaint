@@ -15,10 +15,35 @@ SET(targetname itmx)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 
 #############################
 # Specify the project files #
 #############################
+
+##
+SET(base_sources
+src/base/MemoryBlockFactory.cpp
+)
+
+SET(base_headers
+include/itmx/base/ITMImagePtrTypes.h
+include/itmx/base/ITMMemoryBlockPtrTypes.h
+include/itmx/base/ITMObjectPtrTypes.h
+include/itmx/base/MemoryBlockFactory.h
+)
+
+##
+SET(persistence_sources
+src/persistence/ImagePersister.cpp
+src/persistence/PosePersister.cpp
+)
+
+SET(persistence_headers
+include/itmx/persistence/ImagePersister.h
+include/itmx/persistence/PosePersister.h
+)
 
 ##
 SET(relocalisation_sources
@@ -40,32 +65,20 @@ SET(relocalisation_templates
 include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
 
-##
-SET(toplevel_sources
-src/MemoryBlockFactory.cpp
-src/PosePersister.cpp
-)
-
-SET(toplevel_headers
-include/itmx/ITMImagePtrTypes.h
-include/itmx/ITMMemoryBlockPtrTypes.h
-include/itmx/ITMObjectPtrTypes.h
-include/itmx/MemoryBlockFactory.h
-include/itmx/PosePersister.h
-)
-
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
 
 SET(sources
+${base_sources}
+${persistence_sources}
 ${relocalisation_sources}
-${toplevel_sources}
 )
 
 SET(headers
+${base_headers}
+${persistence_headers}
 ${relocalisation_headers}
-${toplevel_headers}
 )
 
 SET(templates
@@ -76,8 +89,9 @@ ${relocalisation_templates}
 # Specify the source groups #
 #############################
 
-SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
-SOURCE_GROUP("relocalisation" FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
+SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
+SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
 
 ##########################################
 # Specify additional include directories #

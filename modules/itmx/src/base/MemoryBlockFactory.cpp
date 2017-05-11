@@ -3,7 +3,7 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2015. All rights reserved.
  */
 
-#include "MemoryBlockFactory.h"
+#include "base/MemoryBlockFactory.h"
 using namespace ITMLib;
 
 namespace itmx {

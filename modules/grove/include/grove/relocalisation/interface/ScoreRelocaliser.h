@@ -15,7 +15,7 @@
 #include <ORUtils/Image.h>
 #include <ORUtils/SE3Pose.h>
 
-#include <itmx/ITMObjectPtrTypes.h>
+#include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
 #include "../../clustering/interface/ExampleClusterer.h"

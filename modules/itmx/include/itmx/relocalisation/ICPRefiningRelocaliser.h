@@ -17,7 +17,7 @@
 #include <tvgutil/filesystem/SequentialPathGenerator.h>
 #include <tvgutil/timing/AverageTimer.h>
 
-#include "../ITMObjectPtrTypes.h"
+#include "../base/ITMObjectPtrTypes.h"
 
 namespace itmx {
 

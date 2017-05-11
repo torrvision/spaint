@@ -21,14 +21,14 @@ namespace bf = boost::filesystem;
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 using namespace ITMLib;
 
-#include <itmx/PosePersister.h>
+#include <itmx/persistence/ImagePersister.h>
+#include <itmx/persistence/PosePersister.h>
 using namespace itmx;
 
 #include <rigging/MoveableCamera.h>
 using namespace rigging;
 
 #include <spaint/ogl/WrappedGL.h>
-#include <spaint/util/ImagePersister.h>
 using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>

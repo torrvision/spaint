@@ -8,7 +8,7 @@
 
 #include <ORUtils/PlatformIndependence.h>
 
-#include <itmx/ITMImagePtrTypes.h>
+#include <itmx/base/ITMImagePtrTypes.h>
 
 #include "../clustering/base/ClusterContainer.h"
 #include "Mode3DColour.h"

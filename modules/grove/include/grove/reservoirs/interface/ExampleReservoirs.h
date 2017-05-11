@@ -8,8 +8,8 @@
 
 #include <ITMLib/Utils/ITMMath.h>
 
-#include <itmx/ITMImagePtrTypes.h>
-#include <itmx/ITMMemoryBlockPtrTypes.h>
+#include <itmx/base/ITMImagePtrTypes.h>
+#include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
 namespace grove {
 

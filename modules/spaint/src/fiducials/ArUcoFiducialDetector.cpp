@@ -17,7 +17,7 @@
 #include <ITMLib/Utils/ITMProjectionUtils.h>
 using namespace ITMLib;
 
-#include <itmx/MemoryBlockFactory.h>
+#include <itmx/base/MemoryBlockFactory.h>
 using itmx::MemoryBlockFactory;
 
 #include "ocv/OpenCVUtil.h"
