@@ -22,8 +22,6 @@ using namespace ORUtils;
 #include <grove/relocalisation/ScoreRelocaliserFactory.h>
 using namespace grove;
 
-#include <itmx/relocalisation/ICPRefiningRelocaliser.h>
-#include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
 #include <itmx/relocalisation/RelocaliserFactory.h>
 using namespace itmx;
 
@@ -32,6 +30,7 @@ using namespace tvgutil;
 
 #include "segmentation/SegmentationUtil.h"
 #include "trackers/TrackerFactory.h"
+#include "util/SpaintRefiningRelocaliser.h"
 
 namespace spaint {
 
@@ -423,13 +422,13 @@ void SLAMComponent::setup_relocaliser()
                                                                                    "framesToSkip=20,framesToWeight=50,failureDec=20.0");
 
   // Set up the refining relocaliser.
-  m_refiningRelocaliser.reset(new ICPRefiningRelocaliser<SpaintVoxel, ITMVoxelIndex>(nestedRelocaliser,
-                                                                                     m_imageSourceEngine->getCalib(),
-                                                                                     rgbImageSize,
-                                                                                     depthImageSize,
-                                                                                     voxelScene,
-                                                                                     settings,
-                                                                                     m_relocaliserRefinementTrackerParams));
+  m_refiningRelocaliser.reset(new SpaintRefiningRelocaliser(nestedRelocaliser,
+                                                            m_imageSourceEngine->getCalib(),
+                                                            rgbImageSize,
+                                                            depthImageSize,
+                                                            voxelScene,
+                                                            settings,
+                                                            m_relocaliserRefinementTrackerParams));
 }
 
 void SLAMComponent::setup_tracker()
