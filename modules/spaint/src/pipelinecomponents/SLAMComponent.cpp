@@ -315,6 +315,7 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
+  const RefiningRelocaliser_Ptr relocaliser = m_context->get_relocaliser(m_sceneID);
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
@@ -322,18 +323,18 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
   // If tracking was good, then integrate the RGB-D images into the relocaliser.
   if(trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
-    m_refiningRelocaliser->integrate_rgbd_pose_pair(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all, *trackingState->pose_d);
+    relocaliser->integrate_rgbd_pose_pair(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all, *trackingState->pose_d);
   }
   else
   {
     // Always give the relocaliser a chance to perform bookkeeping.
-    m_refiningRelocaliser->update();
+    relocaliser->update();
   }
 
   // Only if the tracking failed, try to relocalise the camera.
   if(trackerResult == ITMTrackingState::TRACKING_FAILED)
   {
-    boost::optional<ORUtils::SE3Pose> relocalisedPose = m_refiningRelocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
+    boost::optional<ORUtils::SE3Pose> relocalisedPose = relocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
 
     // If we succeeded try to refine with ICP.
     if(relocalisedPose)
@@ -422,13 +423,13 @@ void SLAMComponent::setup_relocaliser()
                                                                                    "framesToSkip=20,framesToWeight=50,failureDec=20.0");
 
   // Set up the refining relocaliser.
-  m_refiningRelocaliser.reset(new SpaintRefiningRelocaliser(nestedRelocaliser,
-                                                            m_imageSourceEngine->getCalib(),
-                                                            rgbImageSize,
-                                                            depthImageSize,
-                                                            voxelScene,
-                                                            settings,
-                                                            m_relocaliserRefinementTrackerParams));
+  m_context->get_relocaliser(m_sceneID).reset(new SpaintRefiningRelocaliser(nestedRelocaliser,
+                                                                            m_imageSourceEngine->getCalib(),
+                                                                            rgbImageSize,
+                                                                            depthImageSize,
+                                                                            voxelScene,
+                                                                            settings,
+                                                                            m_relocaliserRefinementTrackerParams));
 }
 
 void SLAMComponent::setup_tracker()

@@ -13,7 +13,6 @@
 #include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
 #include <itmx/relocalisation/RelocaliserFactory.h>
 
-
 #include "tvgutil/filesystem/PathFinder.h"
 #include "tvgutil/misc/GlobalParameters.h"
 #include "tvgutil/timing/TimeUtil.h"
@@ -57,7 +56,7 @@ namespace spaint {
 SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr &context,
                                                            const std::string &sceneID,
                                                            const ImageSourceEngine_Ptr &imageSourceEngine,
-                                                           const std::string& trackerConfig,
+                                                           const std::string &trackerConfig,
                                                            MappingMode mappingMode,
                                                            TrackingMode trackingMode)
   : SLAMComponent(context, sceneID, imageSourceEngine, trackerConfig, mappingMode, trackingMode)
@@ -65,9 +64,7 @@ SLAMComponentWithScoreForest::SLAMComponentWithScoreForest(const SLAMContext_Ptr
 }
 
 //#################### DESTRUCTOR ####################
-SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest()
-{
-}
+SLAMComponentWithScoreForest::~SLAMComponentWithScoreForest() {}
 
 //#################### PROTECTED MEMBER FUNCTIONS ####################
 
@@ -76,6 +73,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const bool performRelocalization = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_FAILED;
   const bool performLearning = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_GOOD;
 
+  const RefiningRelocaliser_Ptr &relocaliser = m_context->get_relocaliser(m_sceneID);
   const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
   const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
   const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
@@ -92,7 +90,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #ifdef ENABLE_VERBOSE_TIMERS
     boost::timer::auto_cpu_timer t(6, "relocaliser update, overall: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
-    m_refiningRelocaliser->update();
+    relocaliser->update();
   }
 
   if (performRelocalization)
@@ -105,7 +103,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     {
       // Need to go through the ScoreRelocaliser interface.
       ScoreRelocaliser_Ptr scoreRelocaliser =
-          boost::dynamic_pointer_cast<ScoreRelocaliser>(m_refiningRelocaliser->get_inner_relocaliser());
+          boost::dynamic_pointer_cast<ScoreRelocaliser>(relocaliser->get_inner_relocaliser());
       // Leaf indices selected randomly during the forest conversion step
       std::vector<uint32_t> predictionIndices{5198, 447, 5438, 7355, 1649};
 
@@ -140,11 +138,23 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 
     RefiningRelocaliser::RefinementDetails relocalisationDetails;
     boost::optional<ORUtils::SE3Pose> relocalisedPose =
-        m_refiningRelocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics, relocalisationDetails);
+        relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics, relocalisationDetails);
 
     if (relocalisedPose)
     {
       trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
+
+      if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_GOOD)
+      {
+        static int count = 0;
+        std::cout << "Refinement result: GOOD - " << ++count << '\n';
+      }
+      else if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_FAILED)
+      {
+        static int count = 0;
+        std::cout << "Refinement result: FAIL - " << ++count << '\n';
+      }
+
       trackingResult = relocalisationDetails.refinementResult;
 
 #ifdef SHOW_RANSAC_CORRESPONDENCES
@@ -155,7 +165,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       {
         // Need to go through the ScoreRelocaliser interface.
         ScoreRelocaliser_Ptr scoreRelocaliser =
-            boost::dynamic_pointer_cast<ScoreRelocaliser>(m_refiningRelocaliser->get_inner_relocaliser());
+            boost::dynamic_pointer_cast<ScoreRelocaliser>(relocaliser->get_inner_relocaliser());
 
         // Need to have the scene and renderState available.
         VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();
@@ -320,7 +330,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     boost::timer::auto_cpu_timer t(6, "relocaliser, integration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
 
-    m_refiningRelocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
+    relocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
   }
 
   if (m_relocaliseEveryFrame)

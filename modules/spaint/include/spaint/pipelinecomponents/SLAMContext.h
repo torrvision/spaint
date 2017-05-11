@@ -11,6 +11,8 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
+#include <itmx/relocalisation/RefiningRelocaliser.h>
+
 #include "../slamstate/SLAMState.h"
 #include "../visualisation/VisualisationGenerator.h"
 
@@ -28,6 +30,9 @@ private:
 
   //#################### PRIVATE VARIABLES ####################
 private:
+  /** The relocalisers used to estimate the camera pose in the various scenes. */
+  std::map<std::string,itmx::RefiningRelocaliser_Ptr> m_relocalisers;
+
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
 
@@ -48,6 +53,22 @@ public:
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
+  /**
+   * \brief Gets the relocaliser for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The relocaliser for the specified scene.
+   */
+  virtual itmx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID);
+
+  /**
+   * \brief Gets the relocaliser for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The relocaliser for the specified scene.
+   */
+  virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+
   /**
    * \brief Gets the SLAM state for the specified scene.
    *

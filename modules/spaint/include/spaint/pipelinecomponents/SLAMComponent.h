@@ -76,9 +76,6 @@ protected:
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
-  /** The relocaliser. */
-  itmx::RefiningRelocaliser_Ptr m_refiningRelocaliser;
-
   /** Whether or not to perform relocalisation after processing every frame, for evaluation. */
   bool m_relocaliseEveryFrame;
 
