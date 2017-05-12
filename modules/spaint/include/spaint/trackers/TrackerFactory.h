@@ -45,17 +45,16 @@ public:
    * \param depthImageSize        The size of the depth input images.
    * \param lowLevelEngine        The engine used to perform low-level image processing operations.
    * \param imuCalibrator         The IMU calibrator.
-   * \param sceneParams           The parameters of the voxel scene.
+   * \param settings              The InfiniTAM settings.
    * \param fallibleTracker       A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
-   * \param deviceType            The type of device on which the tracker should operate.
    * \param nestingFlag           A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                      The tracker.
    */
   static Tracker_Ptr make_tracker_from_file(const std::string& trackerConfigFilename, bool trackSurfels,
                                             const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                             const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                            const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                            ITMLib::ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag = UNNESTED);
+                                            const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                            NestingFlag nestingFlag = UNNESTED);
 
   /**
    * \brief Makes a tracker based on the configuration specified in an XML string.
@@ -66,17 +65,16 @@ public:
    * \param depthImageSize  The size of the depth input images.
    * \param lowLevelEngine  The engine used to perform low-level image processing operations.
    * \param imuCalibrator   The IMU calibrator.
-   * \param sceneParams     The parameters of the voxel scene.
+   * \param settings        The InfiniTAM settings.
    * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
-   * \param deviceType      The type of device on which the tracker should operate.
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
   static Tracker_Ptr make_tracker_from_string(const std::string& trackerConfig, bool trackSurfels,
                                               const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                               const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                              const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                              ITMLib::ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag = UNNESTED);
+                                              const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                              NestingFlag nestingFlag = UNNESTED);
 
   //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
 private:
@@ -91,17 +89,16 @@ private:
    * \param depthImageSize  The size of the depth input images.
    * \param lowLevelEngine  The engine used to perform low-level image processing operations.
    * \param imuCalibrator   The IMU calibrator.
-   * \param sceneParams     The parameters of the voxel scene.
+   * \param settings        The InfiniTAM settings.
    * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
-   * \param deviceType      The type of device on which the tracker should operate.
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
   static Tracker_Ptr make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                          const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                         const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                         ITMLib::ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag);
+                                         const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                         NestingFlag nestingFlag);
 
   /**
    * \brief Makes a tracker based on the configuration specified in a property tree.
@@ -112,17 +109,16 @@ private:
    * \param depthImageSize  The size of the depth input images.
    * \param lowLevelEngine  The engine used to perform low-level image processing operations.
    * \param imuCalibrator   The IMU calibrator.
-   * \param sceneParams     The parameters of the voxel scene.
+   * \param settings        The InfiniTAM settings.
    * \param fallibleTracker A location into which to store a typed pointer to the (unique) nested tracker (if any) that can detect tracking failures.
-   * \param deviceType      The type of device on which the tracker should operate.
    * \param nestingFlag     A flag indicating whether or not the tracker will ultimately be nested within a composite.
    * \return                The tracker.
    */
   static Tracker_Ptr make_tracker(const Tree& trackerTree, bool trackSurfels,
                                   const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                   const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                  const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                  ITMLib::ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag = UNNESTED);
+                                  const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                  NestingFlag nestingFlag = UNNESTED);
 };
 
 }
