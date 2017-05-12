@@ -53,7 +53,7 @@ public:
   /**
    * \brief Destroys a relocaliser.
    */
-  virtual ~Relocaliser();
+  virtual ~Relocaliser() {}
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:

@@ -32,13 +32,6 @@ public:
     ITMLib::ITMTrackingState::TrackingResult refinementResult;
   };
 
-  //#################### CONSTRUCTORS ####################
-protected:
-  /**
-   * \brief Constructs a RefiningRelocaliser.
-   */
-  RefiningRelocaliser();
-
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
