@@ -13,7 +13,6 @@
 #include <rigging/SimpleCamera.h>
 
 #include "ViconTracker.h"
-#include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
 
@@ -50,10 +49,9 @@ public:
    * \param depthImageSize    The depth image size.
    * \param settings          The settings to use for InfiniTAM.
    * \param lowLevelEngine    The engine used to perform low-level image processing operations.
-   * \param scene             The scene.
    */
   RobustViconTracker(const std::string& host, const std::string& subjectName, const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine, const SpaintVoxelScene_Ptr& scene);
+                     const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

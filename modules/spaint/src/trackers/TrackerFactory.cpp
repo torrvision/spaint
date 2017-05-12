@@ -32,23 +32,23 @@ namespace spaint {
 Tracker_Ptr TrackerFactory::make_tracker_from_file(const std::string& trackerConfigFilename, bool trackSurfels,
                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                    const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                                   const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                                   ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag)
+                                                   const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                                   NestingFlag nestingFlag)
 {
   Tree tree = PropertyUtil::load_properties_from_xml_file(trackerConfigFilename);
   Tree trackerTree = tree.get_child("tracker");
-  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker, deviceType, nestingFlag);
+  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag);
 }
 
 Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerConfig, bool trackSurfels,
                                                      const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                      const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                                     const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                                     ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag)
+                                                     const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                                     NestingFlag nestingFlag)
 {
   Tree tree = PropertyUtil::load_properties_from_xml_string(trackerConfig);
   Tree trackerTree = tree.get_child("tracker");
-  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker, deviceType, nestingFlag);
+  return make_tracker(trackerTree, trackSurfels, rgbImageSize, depthImageSize, lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag);
 }
 
 //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
@@ -56,8 +56,8 @@ Tracker_Ptr TrackerFactory::make_tracker_from_string(const std::string& trackerC
 Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::string trackerParams, bool trackSurfels,
                                                 const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                 const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                                const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                                ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag)
+                                                const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                                NestingFlag nestingFlag)
 {
   ITMTracker *tracker = NULL;
 
@@ -85,7 +85,7 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
   else if(trackerType == "robustvicon")
   {
 #ifdef WITH_VICON
-    fallibleTracker = new RobustViconTracker(trackerParams, "kinect", rgbImageSize, depthImageSize, settings, lowLevelEngine, voxelScene);
+    fallibleTracker = new RobustViconTracker(trackerParams, "kinect", rgbImageSize, depthImageSize, settings, lowLevelEngine);
     tracker = fallibleTracker;
 #else
     // If we haven't built with Vicon support, make sure that we're not trying to use the Vicon tracker.
@@ -119,8 +119,8 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
 
     // We use the InfiniTAM tracker factory to actually construct the tracker.
     tracker = ITMTrackerFactory::Instance().Make(
-      deviceType, trackerParams.c_str(), rgbImageSize, depthImageSize,
-      lowLevelEngine.get(), imuCalibrator.get(), sceneParams
+      settings->deviceType, trackerParams.c_str(), rgbImageSize, depthImageSize,
+      lowLevelEngine.get(), imuCalibrator.get(), &settings->sceneParams
     );
   }
 
@@ -131,8 +131,8 @@ Tracker_Ptr TrackerFactory::make_simple_tracker(std::string trackerType, std::st
 Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurfels,
                                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                          const LowLevelEngine_CPtr& lowLevelEngine, const IMUCalibrator_Ptr& imuCalibrator,
-                                         const ITMLib::ITMSceneParams *sceneParams, FallibleTracker*& fallibleTracker,
-                                         ITMLibSettings::DeviceType deviceType, NestingFlag nestingFlag)
+                                         const Settings_CPtr& settings, FallibleTracker*& fallibleTracker,
+                                         NestingFlag nestingFlag)
 {
   std::string trackerType, trackerParams;
   PropertyUtil::get_required_property(trackerTree, "<xmlattr>.type", trackerType);
@@ -156,8 +156,7 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
 
       Tracker_Ptr nestedTracker = make_tracker(
         it->second, trackSurfels, rgbImageSize, depthImageSize,
-        lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker,
-        deviceType, NESTED
+        lowLevelEngine, imuCalibrator, settings, fallibleTracker, NESTED
       );
 
       compositeTracker->AddTracker(nestedTracker.get());
@@ -189,16 +188,14 @@ Tracker_Ptr TrackerFactory::make_tracker(const Tree& trackerTree, bool trackSurf
     // Import the tracker configuration from the specified file.
     return make_tracker_from_file(
       trackerConfigFilename, trackSurfels, rgbImageSize, depthImageSize,
-      lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker,
-      deviceType, nestingFlag
+      lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag
     );
   }
   else
   {
     return make_simple_tracker(
       trackerType, trackerParams, trackSurfels, rgbImageSize, depthImageSize,
-      lowLevelEngine, imuCalibrator, sceneParams, fallibleTracker,
-      deviceType, nestingFlag
+      lowLevelEngine, imuCalibrator, settings, fallibleTracker, nestingFlag
     );
   }
 }
