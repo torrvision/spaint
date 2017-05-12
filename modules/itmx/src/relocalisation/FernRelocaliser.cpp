@@ -81,7 +81,7 @@ void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy *
 
 boost::optional<Relocaliser::RelocalisationResult> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage,
                                                                                const ITMFloatImage *depthImage,
-                                                                               const Vector4f &depthIntrinsics)
+                                                                               const Vector4f &depthIntrinsics) const
 {
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();

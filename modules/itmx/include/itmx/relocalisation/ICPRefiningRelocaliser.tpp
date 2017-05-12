@@ -150,7 +150,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::integrate_rgbd_pose_pair(cons
 
 template <typename VoxelType, typename IndexType>
 boost::optional<Relocaliser::RelocalisationResult> ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(
-    const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics)
+    const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
 {
   boost::optional<ORUtils::SE3Pose> initialPose;
   return relocalise(colourImage, depthImage, depthIntrinsics, initialPose);
@@ -161,7 +161,7 @@ boost::optional<Relocaliser::RelocalisationResult>
     ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage,
                                                              const ITMFloatImage *depthImage,
                                                              const Vector4f &depthIntrinsics,
-                                                             boost::optional<ORUtils::SE3Pose> &initialPose)
+                                                             boost::optional<ORUtils::SE3Pose> &initialPose) const
 {
   start_timer(m_timerRelocalisation);
 
@@ -257,7 +257,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::update()
 
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::save_poses(const Matrix4f &relocalisedPose,
-                                                              const Matrix4f &refinedPose)
+                                                              const Matrix4f &refinedPose) const
 {
   // Early out if we don't have to save the poses.
   if (!m_saveRelocalisationPoses) return;
@@ -272,7 +272,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::save_poses(const Matrix4f &re
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType, IndexType>::start_timer(AverageTimer &timer)
+void ICPRefiningRelocaliser<VoxelType, IndexType>::start_timer(AverageTimer &timer) const
 {
   if (!m_timersEnabled) return;
 
@@ -284,7 +284,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::start_timer(AverageTimer &tim
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType, IndexType>::stop_timer(AverageTimer &timer)
+void ICPRefiningRelocaliser<VoxelType, IndexType>::stop_timer(AverageTimer &timer) const
 {
   if (!m_timersEnabled) return;
 

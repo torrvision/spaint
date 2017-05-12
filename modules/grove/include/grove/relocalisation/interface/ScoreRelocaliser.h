@@ -143,7 +143,7 @@ public:
    */
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics);
+                                                           const Vector4f &depthIntrinsics) const;
 
   /**
    * \brief Reset the relocaliser, allowing the relocalisation in a new environment.
@@ -237,10 +237,10 @@ protected:
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** An image storing the indices of the forest leaves associated to the keypoint/descriptor pairs. */
-  LeafIndicesImage_Ptr m_leafIndicesImage;
+  mutable LeafIndicesImage_Ptr m_leafIndicesImage;
 
   /** An image storing the predictions associated to the keypoint/descriptor pairs. */
-  ScorePredictionsImage_Ptr m_predictionsImage;
+  mutable ScorePredictionsImage_Ptr m_predictionsImage;
 
   /** An image that will store the descriptors extracted from an RGB-D image pair. */
   RGBDPatchDescriptorImage_Ptr m_rgbdPatchDescriptorImage;

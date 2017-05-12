@@ -72,7 +72,7 @@ public:
    */
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics) = 0;
+                                                           const Vector4f &depthIntrinsics) const = 0;
 
   /**
    * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
@@ -88,7 +88,7 @@ public:
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
                                                            const Vector4f &depthIntrinsics,
-                                                           boost::optional<ORUtils::SE3Pose> &initialPose) = 0;
+                                                           boost::optional<ORUtils::SE3Pose> &initialPose) const = 0;
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.

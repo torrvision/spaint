@@ -101,7 +101,7 @@ void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImag
 
 boost::optional<Relocaliser::RelocalisationResult> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
                                                                                 const ITMFloatImage *depthImage,
-                                                                                const Vector4f &depthIntrinsics)
+                                                                                const Vector4f &depthIntrinsics) const
 {
   // Try to estimate a pose only if we have enough valid depth values.
   if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())

@@ -81,7 +81,7 @@ public:
    */
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
-                                                           const Vector4f& depthIntrinsics) = 0;
+                                                           const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Resets the relocaliser, allowing the integration of information for a new area.

@@ -108,7 +108,7 @@ public:
    */
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics);
+                                                           const Vector4f &depthIntrinsics) const;
 
   /**
    * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
@@ -124,7 +124,7 @@ public:
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
                                                            const Vector4f &depthIntrinsics,
-                                                           boost::optional<ORUtils::SE3Pose> &initialPose);
+                                                           boost::optional<ORUtils::SE3Pose> &initialPose) const;
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.
@@ -147,21 +147,21 @@ private:
    * \param relocalisedPose     The relocalised pose.
    * \param refinedPose         The pose after refinement.
    */
-  void save_poses(const Matrix4f &relocalisedPose, const Matrix4f &refinedPose);
+  void save_poses(const Matrix4f &relocalisedPose, const Matrix4f &refinedPose) const;
 
   /**
    * \brief Starts a timer (waiting for all CUDA operations to terminate first, if necessary).
    *
    * \param timer The timer.
    */
-  void start_timer(AverageTimer &timer);
+  void start_timer(AverageTimer &timer) const;
 
   /**
    * \brief Stops a timer (waiting for all CUDA operations to terminate first, if necessary).
    *
    * \param timer The timer.
    */
-  void stop_timer(AverageTimer &timer);
+  void stop_timer(AverageTimer &timer) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -172,7 +172,7 @@ private:
   LowLevelEngine_Ptr m_lowLevelEngine;
 
   /** The path generator used when saving the relocalised poses. */
-  boost::optional<tvgutil::SequentialPathGenerator> m_relocalisationPosesPathGenerator;
+  mutable boost::optional<tvgutil::SequentialPathGenerator> m_relocalisationPosesPathGenerator;
 
   /** The wrapped relocaliser. */
   Relocaliser_Ptr m_relocaliser;
@@ -190,7 +190,7 @@ private:
   AverageTimer m_timerIntegration;
 
   /** The timer used to profile the relocalisation calls. */
-  AverageTimer m_timerRelocalisation;
+  mutable AverageTimer m_timerRelocalisation;
 
   /** The timer used to profile the update calls. */
   AverageTimer m_timerUpdate;
@@ -214,7 +214,7 @@ private:
   View_Ptr m_view;
 
   /** A renderState used to hold the raycasting results. */
-  VoxelRenderState_Ptr m_voxelRenderState;
+  mutable VoxelRenderState_Ptr m_voxelRenderState;
 };
 
 } // namespace itmx

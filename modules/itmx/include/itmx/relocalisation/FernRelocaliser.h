@@ -104,7 +104,7 @@ public:
    */
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics);
+                                                           const Vector4f &depthIntrinsics) const;
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.
@@ -140,7 +140,7 @@ private:
   KeyframeAddPolicy m_keyframeAddPolicy;
 
   /** The delay before trying to add another keyframe to the Fern conservatory. */
-  uint32_t m_keyframeDelay;
+  mutable uint32_t m_keyframeDelay;
 
   /** The number of ferns to use for relocalisation. */
   int m_numFerns;
