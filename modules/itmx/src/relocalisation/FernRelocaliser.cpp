@@ -106,7 +106,7 @@ boost::optional<Relocaliser::RelocalisationResult> FernRelocaliser::relocalise(c
     // Retrieve the pose and set the quality to GOOD.
     RelocalisationResult result;
     result.pose = m_relocaliser->RetrievePose(nearestNeighbour).pose;
-    result.quality = RelocalisationResult::RELOCALISATION_GOOD;
+    result.quality = RELOCALISATION_GOOD;
 
     return result;
   }

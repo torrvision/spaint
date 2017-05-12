@@ -227,8 +227,7 @@ boost::optional<Relocaliser::RelocalisationResult>
   // results to POOR anyway. This is because we don't want to perform fusion whilst evaluating the testing sequence.
   refinementResult.quality =
       (!m_saveRelocalisationPoses && m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
-          ? RelocalisationResult::RELOCALISATION_GOOD
-          : RelocalisationResult::RELOCALISATION_POOR;
+          ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
 
   // Save the poses.
   save_poses(initialPose->GetInvM(), refinementResult.pose.GetInvM());

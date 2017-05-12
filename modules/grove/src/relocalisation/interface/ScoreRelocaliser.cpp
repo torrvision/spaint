@@ -125,7 +125,7 @@ boost::optional<Relocaliser::RelocalisationResult> ScoreRelocaliser::relocalise(
     {
       RelocalisationResult result;
       result.pose.SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
-      result.quality = RelocalisationResult::RELOCALISATION_GOOD;
+      result.quality = RELOCALISATION_GOOD;
 
       return result;
     }

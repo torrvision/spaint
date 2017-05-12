@@ -340,7 +340,7 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
     if (relocalisationResult)
     {
       trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
-      trackerResult = relocalisationResult->quality == Relocaliser::RelocalisationResult::RELOCALISATION_GOOD
+      trackerResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
                            ? ITMTrackingState::TRACKING_GOOD
                            : ITMTrackingState::TRACKING_POOR;
     }

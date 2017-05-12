@@ -7,12 +7,8 @@
 
 namespace itmx {
 
-//#################### CONSTRUCTORS ####################
-
-Relocaliser::Relocaliser() {}
-
 //#################### DESTRUCTOR ####################
 
 Relocaliser::~Relocaliser() {}
 
-} // namespace itmx
+}

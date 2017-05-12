@@ -10,45 +10,48 @@
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Utils/ITMImageTypes.h>
+
 #include <ORUtils/SE3Pose.h>
 
 namespace itmx {
 
 /**
- * \brief An instance of this class allows performing camera relocalisation from RGB-D image pairs.
+ * \brief An instance of a class deriving from this one can be used to relocalise a camera in a 3D scene
+ *        based on the current RGB-D input image.
  */
 class Relocaliser
 {
+  //#################### ENUMERATIONS ####################
+public:
+  /**
+   * \brief The values of this enumeration can be used to indicate the quality of a relocalised pose.
+   */
+  enum RelocalisationQuality
+  {
+    RELOCALISATION_GOOD,
+    RELOCALISATION_POOR
+  };
+
   //#################### NESTED TYPES ####################
 public:
   /**
-   * \brief An instance of this struct will contain the results of a relocalisation call.
+   * \brief An instance of this struct represents the results of a relocalisation call.
    */
   struct RelocalisationResult
   {
-    //#################### ENUMS ####################
-    /** An instance of this enum allows to specify whether the relocalisation gave good or poor results. */
-    enum RelocalisationQuality { RELOCALISATION_GOOD, RELOCALISATION_POOR };
+    //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
-    //#################### MEMBER VARIABLES ####################
     /** The pose estimated by the relocaliser. */
     ORUtils::SE3Pose pose;
 
-    /** Quality of the relocalisation. */
+    /** The quality of the relocalisation. */
     RelocalisationQuality quality;
   };
-
-  //#################### CONSTRUCTORS ####################
-protected:
-  /**
-   * \brief Constructs a Relocaliser.
-   */
-  Relocaliser();
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destructs a Relocaliser.
+   * \brief Destroys a relocaliser.
    */
   virtual ~Relocaliser();
 
@@ -64,30 +67,31 @@ public:
    */
   virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
                                         const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose) = 0;
+                                        const Vector4f& depthIntrinsics,
+                                        const ORUtils::SE3Pose& cameraPose) = 0;
 
   /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
+   * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
+   *        thereby relocalising the camera with respect to the 3D scene.
    *
    * \param colourImage     The colour image.
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
+   * \return                The result of the relocalisation, if successful, or boost::none otherwise.
    */
   virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
                                                            const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics) = 0;
+                                                           const Vector4f& depthIntrinsics) = 0;
 
   /**
-   * \brief Resets the relocaliser allowing the integration of informations on a new area.
+   * \brief Resets the relocaliser, allowing the integration of information for a new area.
    */
   virtual void reset() = 0;
 
   /**
-   * \brief Updates the contents of the relocaliser when spare processing time is available. Can perform bookkeeping
-   *        operations.
+   * \brief Updates the contents of the relocaliser when spare processing time is available.
+   *
+   * This can be useful for performing bookkeeping operations.
    */
   virtual void update() = 0;
 };
@@ -97,6 +101,6 @@ public:
 typedef boost::shared_ptr<Relocaliser> Relocaliser_Ptr;
 typedef boost::shared_ptr<const Relocaliser> Relocaliser_CPtr;
 
-} // namespace itmx
+}
 
-#endif // H_ITMX_RELOCALISER
+#endif
