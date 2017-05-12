@@ -8,10 +8,11 @@
 
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
 
+#include <itmx/base/ITMObjectPtrTypes.h>
+
 #include <rigging/SimpleCamera.h>
 
 #include "ViconTracker.h"
-#include "../util/ITMObjectPtrTypes.h"
 #include "../util/SpaintVoxelScene.h"
 
 namespace spaint {
