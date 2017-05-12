@@ -70,7 +70,7 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
   const bool performRelocalization = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_FAILED;
   const bool performLearning = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_GOOD;
 
-  const RefiningRelocaliser_Ptr &relocaliser = m_context->get_relocaliser(m_sceneID);
+  const Relocaliser_Ptr &relocaliser = m_context->get_relocaliser(m_sceneID);
   const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
   const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
   const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
@@ -99,8 +99,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
 #ifdef SAVE_LEAF_MODES
     {
       // Need to go through the ScoreRelocaliser interface.
-      ScoreRelocaliser_Ptr scoreRelocaliser =
-          boost::dynamic_pointer_cast<ScoreRelocaliser>(relocaliser->get_inner_relocaliser());
+      ScoreRelocaliser_Ptr scoreRelocaliser = boost::dynamic_pointer_cast<ScoreRelocaliser>(
+          boost::dynamic_pointer_cast<RefiningRelocaliser>(relocaliser)->get_inner_relocaliser());
       // Leaf indices selected randomly during the forest conversion step
       std::vector<uint32_t> predictionIndices{5198, 447, 5438, 7355, 1649};
 
@@ -139,18 +139,6 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     if (relocalisationResult)
     {
       trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
-
-      //      if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_GOOD)
-      //      {
-      //        static int count = 0;
-      //        std::cout << "Refinement result: GOOD - " << ++count << '\n';
-      //      }
-      //      else if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_FAILED)
-      //      {
-      //        static int count = 0;
-      //        std::cout << "Refinement result: FAIL - " << ++count << '\n';
-      //      }
-
       trackingResult = relocalisationResult->quality == Relocaliser::RelocalisationResult::RELOCALISATION_GOOD
                            ? ITMTrackingState::TRACKING_GOOD
                            : ITMTrackingState::TRACKING_POOR;
@@ -162,8 +150,8 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
       if (relocalisationCount++ == 451)
       {
         // Need to go through the ScoreRelocaliser interface.
-        ScoreRelocaliser_Ptr scoreRelocaliser =
-            boost::dynamic_pointer_cast<ScoreRelocaliser>(relocaliser->get_inner_relocaliser());
+        ScoreRelocaliser_Ptr scoreRelocaliser = boost::dynamic_pointer_cast<ScoreRelocaliser>(
+            boost::dynamic_pointer_cast<RefiningRelocaliser>(relocaliser)->get_inner_relocaliser());
 
         // Need to have the scene and renderState available.
         VoxelRenderState_Ptr liveVoxelRenderState = slamState->get_live_voxel_render_state();

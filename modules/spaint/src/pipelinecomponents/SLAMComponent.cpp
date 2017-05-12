@@ -314,7 +314,7 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 {
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
-  const RefiningRelocaliser_Ptr relocaliser = m_context->get_relocaliser(m_sceneID);
+  const Relocaliser_Ptr relocaliser = m_context->get_relocaliser(m_sceneID);
   const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
   const View_Ptr& view = slamState->get_view();
   const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
