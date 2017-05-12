@@ -104,27 +104,27 @@ public:
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    *
-   * \return The camera pose if successful, an empty optional otherwise.
+   * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<ORUtils::SE3Pose>
-      relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
+  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
+                                                           const ITMFloatImage *depthImage,
+                                                           const Vector4f &depthIntrinsics);
 
   /**
    * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
    *        Provides more details on the relcalisation phase.
    *
-   * \param colourImage       The colour image.
-   * \param depthImage        The depth image.
-   * \param depthIntrinsics   The intrinsic parameters of the depth sensor.
-   * \param refinementDetails A details structure that will be filled with informations captured during the
-   *                          relocalisation.
+   * \param colourImage     The colour image.
+   * \param depthImage      The depth image.
+   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
+   * \param initialPose     The camera pose estimated by the inner relocaliser if it succeeded, boost::none otherwise.
    *
-   * \return The camera pose if successful, an empty optional otherwise.
+   * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<ORUtils::SE3Pose> relocalise(const ITMUChar4Image *colourImage,
-                                                       const ITMFloatImage *depthImage,
-                                                       const Vector4f &depthIntrinsics,
-                                                       RefinementDetails &refinementDetails);
+  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
+                                                           const ITMFloatImage *depthImage,
+                                                           const Vector4f &depthIntrinsics,
+                                                           boost::optional<ORUtils::SE3Pose> &initialPose);
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.

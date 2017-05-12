@@ -9,7 +9,6 @@
 #include "ITMLib/Utils/ITMProjectionUtils.h"
 
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
-#include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
 #include <itmx/relocalisation/RelocaliserFactory.h>
 
 #include "tvgutil/filesystem/PathFinder.h"
@@ -44,7 +43,6 @@ using namespace InputSource;
 using namespace ITMLib;
 using namespace itmx;
 using namespace ORUtils;
-using namespace FernRelocLib;
 using namespace grove;
 using namespace tvgutil;
 
@@ -135,26 +133,27 @@ SLAMComponent::TrackingResult SLAMComponentWithScoreForest::process_relocalisati
     }
 #endif
 
-    RefiningRelocaliser::RefinementDetails relocalisationDetails;
-    boost::optional<ORUtils::SE3Pose> relocalisedPose =
-        relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics, relocalisationDetails);
+    boost::optional<Relocaliser::RelocalisationResult> relocalisationResult =
+        relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics);
 
-    if (relocalisedPose)
+    if (relocalisationResult)
     {
-      trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
+      trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
 
-      if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_GOOD)
-      {
-        static int count = 0;
-        std::cout << "Refinement result: GOOD - " << ++count << '\n';
-      }
-      else if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_FAILED)
-      {
-        static int count = 0;
-        std::cout << "Refinement result: FAIL - " << ++count << '\n';
-      }
+      //      if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_GOOD)
+      //      {
+      //        static int count = 0;
+      //        std::cout << "Refinement result: GOOD - " << ++count << '\n';
+      //      }
+      //      else if (relocalisationDetails.refinementResult == TrackingResult::TRACKING_FAILED)
+      //      {
+      //        static int count = 0;
+      //        std::cout << "Refinement result: FAIL - " << ++count << '\n';
+      //      }
 
-      trackingResult = relocalisationDetails.refinementResult;
+      trackingResult = relocalisationResult->quality == Relocaliser::RelocalisationResult::RELOCALISATION_GOOD
+                           ? ITMTrackingState::TRACKING_GOOD
+                           : ITMTrackingState::TRACKING_POOR;
 
 #ifdef SHOW_RANSAC_CORRESPONDENCES
       static int relocalisationCount = 0;

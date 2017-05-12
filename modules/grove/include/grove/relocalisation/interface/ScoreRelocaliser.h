@@ -133,16 +133,17 @@ public:
                                         const ORUtils::SE3Pose &cameraPose);
 
   /**
-   * \brief Try to estimate the pose of the camera used to acquire an input RGB-D image pair.
+   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
    *
-   * \param colourImage     A colour image acquired by the camera.
-   * \param depthImage      A depth image acquired by the camera.
+   * \param colourImage     The colour image.
+   * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    *
-   * \return The estimate camera pose if successful, an empty optional value otherwise.
+   * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<ORUtils::SE3Pose>
-      relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
+  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
+                                                           const ITMFloatImage *depthImage,
+                                                           const Vector4f &depthIntrinsics);
 
   /**
    * \brief Reset the relocaliser, allowing the relocalisation in a new environment.

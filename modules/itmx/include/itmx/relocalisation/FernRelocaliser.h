@@ -100,10 +100,11 @@ public:
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    *
-   * \return The camera pose if successful, an empty optional otherwise.
+   * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<ORUtils::SE3Pose>
-      relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics);
+  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
+                                                           const ITMFloatImage *depthImage,
+                                                           const Vector4f &depthIntrinsics);
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.

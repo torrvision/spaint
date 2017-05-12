@@ -14,7 +14,6 @@ namespace bf = boost::filesystem;
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
-using namespace FernRelocLib;
 using namespace InputSource;
 using namespace ITMLib;
 using namespace ORUtils;
@@ -334,20 +333,16 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
   // Only if the tracking failed, try to relocalise the camera.
   if(trackerResult == ITMTrackingState::TRACKING_FAILED)
   {
-    boost::optional<ORUtils::SE3Pose> relocalisedPose = relocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
+    boost::optional<itmx::Relocaliser::RelocalisationResult> relocalisationResult =
+        relocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
 
-    // If we succeeded try to refine with ICP.
-    if(relocalisedPose)
+    // If relocalisation succeeded copy its results.
+    if (relocalisationResult)
     {
-      trackingState->pose_d->SetFrom(relocalisedPose.get_ptr());
-
-      const bool resetVisibleList = true;
-      m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get(), resetVisibleList);
-      prepare_for_tracking(TRACK_VOXELS);
-      m_trackingController->Track(trackingState.get(), view.get());
-
-      // Copy the new tracker result.
-      trackerResult = trackingState->trackerResult;
+      trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
+      trackerResult = relocalisationResult->quality == Relocaliser::RelocalisationResult::RELOCALISATION_GOOD
+                           ? ITMTrackingState::TRACKING_GOOD
+                           : ITMTrackingState::TRACKING_POOR;
     }
   }
 

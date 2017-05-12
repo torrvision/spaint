@@ -581,7 +581,6 @@ SET(util_sources
 src/util/CameraPoseConverter.cpp
 src/util/LabelManager.cpp
 src/util/RGBDUtil.cpp
-src/util/SpaintRefiningRelocaliser.cpp
 )
 
 SET(util_headers

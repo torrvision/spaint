@@ -19,6 +19,25 @@ namespace itmx {
  */
 class Relocaliser
 {
+  //#################### NESTED TYPES ####################
+public:
+  /**
+   * \brief An instance of this struct will contain the results of a relocalisation call.
+   */
+  struct RelocalisationResult
+  {
+    //#################### ENUMS ####################
+    /** An instance of this enum allows to specify whether the relocalisation gave good or poor results. */
+    enum RelocalisationQuality { RELOCALISATION_GOOD, RELOCALISATION_POOR };
+
+    //#################### MEMBER VARIABLES ####################
+    /** The pose estimated by the relocaliser. */
+    ORUtils::SE3Pose pose;
+
+    /** Quality of the relocalisation. */
+    RelocalisationQuality quality;
+  };
+
   //#################### CONSTRUCTORS ####################
 protected:
   /**
@@ -55,11 +74,11 @@ public:
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    *
-   * \return The camera pose if successful, an empty optional otherwise.
+   * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<ORUtils::SE3Pose> relocalise(const ITMUChar4Image *colourImage,
-                                                       const ITMFloatImage *depthImage,
-                                                       const Vector4f &depthIntrinsics) = 0;
+  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
+                                                           const ITMFloatImage *depthImage,
+                                                           const Vector4f &depthIntrinsics) = 0;
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.

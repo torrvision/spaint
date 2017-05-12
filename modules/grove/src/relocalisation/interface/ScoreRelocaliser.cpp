@@ -99,12 +99,10 @@ void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImag
   update_reservoir_start_idx();
 }
 
-boost::optional<ORUtils::SE3Pose> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                               const ITMFloatImage *depthImage,
-                                                               const Vector4f &depthIntrinsics)
+boost::optional<Relocaliser::RelocalisationResult> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                                                const ITMFloatImage *depthImage,
+                                                                                const Vector4f &depthIntrinsics)
 {
-  boost::optional<ORUtils::SE3Pose> result;
-
   // Try to estimate a pose only if we have enough valid depth values.
   if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
   {
@@ -122,15 +120,18 @@ boost::optional<ORUtils::SE3Pose> ScoreRelocaliser::relocalise(const ITMUChar4Im
     boost::optional<PoseCandidate> poseCandidate =
         m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
 
-    // If we succeeded grab the transformation matrix and fill the SE3Pose.
+    // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
     if (poseCandidate)
     {
-      result = ORUtils::SE3Pose();
-      result->SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
+      RelocalisationResult result;
+      result.pose.SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
+      result.quality = RelocalisationResult::RELOCALISATION_GOOD;
+
+      return result;
     }
   }
 
-  return result;
+  return boost::none;
 }
 
 void ScoreRelocaliser::reset()

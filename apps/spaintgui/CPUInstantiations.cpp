@@ -8,6 +8,10 @@
 #include <ITMLib/Engines/Reconstruction/CPU/ITMSceneReconstructionEngine_CPU.tpp>
 #include <ITMLib/Engines/Swapping/CPU/ITMSwappingEngine_CPU.tpp>
 #include <ITMLib/Engines/Visualisation/CPU/ITMVisualisationEngine_CPU.tpp>
+
+#include <itmx/relocalisation/ICPRefiningRelocaliser.tpp>
+using namespace itmx;
+
 #include <spaint/util/SpaintVoxel.h>
 using namespace spaint;
 
@@ -16,3 +20,4 @@ template class ITMMeshingEngine_CPU<SpaintVoxel,ITMVoxelIndex>;
 template class ITMSceneReconstructionEngine_CPU<SpaintVoxel,ITMVoxelIndex>;
 template class ITMSwappingEngine_CPU<SpaintVoxel,ITMVoxelIndex>;
 template class ITMVisualisationEngine_CPU<SpaintVoxel,ITMVoxelIndex>;
+template class ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>;

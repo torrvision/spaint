@@ -79,9 +79,9 @@ void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy *
       depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
 }
 
-boost::optional<ORUtils::SE3Pose> FernRelocaliser::relocalise(const ITMUChar4Image * /* dummy */,
-                                                              const ITMFloatImage *depthImage,
-                                                              const Vector4f &depthIntrinsics)
+boost::optional<Relocaliser::RelocalisationResult> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                                               const ITMFloatImage *depthImage,
+                                                                               const Vector4f &depthIntrinsics)
 {
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();
@@ -96,21 +96,22 @@ boost::optional<ORUtils::SE3Pose> FernRelocaliser::relocalise(const ITMUChar4Ima
   // that is currently in the database.
   m_relocaliser->ProcessFrame(depthImage, NULL, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
 
-  boost::optional<ORUtils::SE3Pose> result;
-
-  // If a nearest keyframe was found by the relocaliser, reset
-  // the pose to that of the keyframe and rerun the tracker for this frame.
+  // If a nearest keyframe was found by the relocaliser, return it.
   if (nearestNeighbour != -1)
   {
     // Set the number of frames for which the  integrate function has to be called before the relocaliser can consider
     // adding a new keyframe (no need to check the policy here).
     m_keyframeDelay = 10;
 
-    // Retrieve the pose to return.
-    result = m_relocaliser->RetrievePose(nearestNeighbour).pose;
+    // Retrieve the pose and set the quality to GOOD.
+    RelocalisationResult result;
+    result.pose = m_relocaliser->RetrievePose(nearestNeighbour).pose;
+    result.quality = RelocalisationResult::RELOCALISATION_GOOD;
+
+    return result;
   }
 
-  return result;
+  return boost::none;
 }
 
 void FernRelocaliser::reset()
