@@ -24,6 +24,7 @@
 #include "../../ransac/interface/PreemptiveRansac.h"
 #include "../../reservoirs/interface/ExampleReservoirs.h"
 #include "../../scoreforests/Mode3DColour.h"
+#include "../../scoreforests/ScorePrediction.h"
 
 namespace grove {
 
@@ -46,8 +47,9 @@ public:
   typedef Keypoint3DColour ExampleType;
   typedef Mode3DColour ClusterType;
   typedef RGBDPatchDescriptor DescriptorType;
+  typedef ScorePrediction PredictionType;
 
-  typedef ExampleClusterer<ExampleType, ClusterType> Clusterer;
+  typedef ExampleClusterer<ExampleType, ClusterType, PredictionType::MAX_CLUSTERS> Clusterer;
   typedef boost::shared_ptr<Clusterer> Clusterer_Ptr;
 
   typedef ORUtils::VectorX<int, FOREST_TREE_COUNT> LeafIndices;

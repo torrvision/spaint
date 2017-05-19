@@ -62,7 +62,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename) 
       ITMLibSettings::DEVICE_CUDA, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
 
   // Clustering.
-  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(
+  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::MAX_CLUSTERS>::make_clusterer(
       ITMLibSettings::DEVICE_CUDA, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
 
   // P-RANSAC.

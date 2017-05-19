@@ -13,6 +13,7 @@
 
 #include "scoreforests/Keypoint3DColourClusteringUtils.h"
 #include "scoreforests/Mode3DColour.h"
+#include "scoreforests/ScorePrediction.h"
 
 namespace grove {
 
@@ -22,7 +23,7 @@ namespace {
 
 //#################### EXPLICIT INSTANTIATIONS ####################
 
-template class ExampleClusterer_CUDA<Keypoint3DColour, Mode3DColour>;
+template class ExampleClusterer_CUDA<Keypoint3DColour, Mode3DColour, ScorePrediction::MAX_CLUSTERS>;
 
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint2D,RGBDPatchDescriptor>;
 template class RGBDPatchFeatureCalculator_CUDA<Keypoint3DColour,RGBDPatchDescriptor>;

@@ -47,7 +47,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string &forestFilename) : 
       ITMLibSettings::DEVICE_CPU, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
 
   // Clustering.
-  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType>::make_clusterer(
+  m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::MAX_CLUSTERS>::make_clusterer(
       ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
 
   // P-RANSAC.

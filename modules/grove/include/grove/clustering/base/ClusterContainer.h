@@ -15,7 +15,7 @@ namespace grove {
  * \param T    The type of the contained clusters.
  * \param SIZE The maximum number of clusters contained in a ClusterContainer.
  */
-template <typename T, int SIZE = 10>
+template <typename T, int SIZE>
 struct ClusterContainer
 {
   //#################### TYPEDEFS ####################

@@ -36,7 +36,7 @@ namespace grove {
  * \param MAX_CLUSTERS The maximum number of clusters to generate for each set of examples. Can be overridden with a
  *                     lesser or equal value in the make_clusterer function.
  */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS = 10>
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 class ExampleClustererFactory
 {
   //#################### TYPEDEFS ####################

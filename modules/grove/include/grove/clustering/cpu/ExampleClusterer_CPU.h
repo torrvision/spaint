@@ -32,7 +32,7 @@ namespace grove {
  * \param ClusterType  The type of clusters being generated.
  * \param MAX_CLUSTERS The maximum number of clusters being generated for each set of examples.
  */
-template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS = 10>
+template <typename ExampleType, typename ClusterType, int MAX_CLUSTERS>
 class ExampleClusterer_CPU : public ExampleClusterer<ExampleType, ClusterType, MAX_CLUSTERS>
 {
   //#################### USINGS ####################
