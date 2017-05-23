@@ -17,7 +17,7 @@ namespace grove {
 
 //#################### TYPEDEFS ####################
 
-typedef ClusterContainer<Mode3DColour, 10> ScorePrediction;
+typedef ClusterContainer<Mode3DColour, 50> ScorePrediction;
 
 typedef ORUtils::MemoryBlock<ScorePrediction> ScorePredictionsBlock;
 typedef boost::shared_ptr<ScorePredictionsBlock> ScorePredictionsBlock_Ptr;

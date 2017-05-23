@@ -46,6 +46,11 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
   m_maxClusterCount = parameters.get_first_value<uint32_t>(parametersNamespace + "m_maxClusterCount", ScorePrediction::MAX_CLUSTERS);
   m_minClusterSize = parameters.get_first_value<uint32_t>(parametersNamespace + "m_minClusterSize", 20);
 
+  if(m_maxClusterCount > ScorePrediction::MAX_CLUSTERS)
+  {
+    throw std::invalid_argument(parametersNamespace + "m_maxClusterCount > ScorePrediction::MAX_CLUSTERS");
+  }
+
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
   // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
