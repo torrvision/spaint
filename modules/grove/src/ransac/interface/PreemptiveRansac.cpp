@@ -181,9 +181,8 @@ PreemptiveRansac::PreemptiveRansac()
   // This should probably be removed.
   m_nbPointsForKabschBoostrap = 3;
 
-  // this should be computed from the other parameters (m_batchSizeRansac and m_trimKinitAfterFirstEnergyComputation)
-  m_nbMaxInliers = 3000; // 500 per ransac iteration, starting from 64, not 1024. Could probably be computed from the
-                         // other parameters.
+  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
+  m_nbMaxInliers = m_batchSizeRansac * static_cast<size_t>(std::ceil(std::log2(m_trimKinitAfterFirstEnergyComputation)));
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -193,9 +192,8 @@ PreemptiveRansac::PreemptiveRansac()
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_nbMaxPoseCandidates);
 
 #ifdef ENABLE_TIMERS
+  // Force the average timers to on as well if we want verbose printing.
   m_printTimers = true;
-#else
-  m_printTimers = false;
 #endif
 
   // Setup the remaining timers.
