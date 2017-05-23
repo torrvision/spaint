@@ -48,6 +48,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 # Specify the libraries to link #
 #################################
 
+TARGET_LINK_LIBRARIES(${targetname} evaluation tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
 #############################

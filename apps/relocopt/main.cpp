@@ -6,7 +6,9 @@
 #include <fstream>
 #include <limits>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
+using boost::assign::list_of;
 
 #include <evaluation/util/CoordinateDescentParameterOptimiser.h>
 using namespace evaluation;
@@ -33,9 +35,9 @@ float grove_cost_fn(const std::string& scriptSpecifier, const std::string& iniSp
   }
 
   // Run the specified script.
-  const bf::path outputPath = dir / (scriptSpecifier + ".txt");
+  const bf::path outputPath = dir / (outputSpecifier + ".txt");
   const bf::path scriptPath = dir / (scriptSpecifier + ".sh");
-  const std::string command = scriptPath.string() + " " + iniPath.string() + " " + outputPath.string();
+  const std::string command = "\"\"" + scriptPath.string() + "\" \"" + iniPath.string() + "\" \"" + outputPath.string() + "\"\"";
   system(command.c_str());
 
   // Read the cost back in from the output file.
@@ -64,7 +66,8 @@ int main()
   const size_t epochCount = 10;
   const unsigned seed = 12345;
   CoordinateDescentParameterOptimiser optimiser(boost::bind(grove_cost_fn, scriptSpecifier, iniSpecifier, outputSpecifier, _1), epochCount, seed);
-  // TODO
+  optimiser.add_param("modeCount", list_of<int>(5)(10)(20)(30)(40)(50))
+           .add_param("verifiedCandidateCount", list_of<int>(1)(2)(4)(8));
 
   // Use the optimiser to choose a set of parameters.
   float cost;
