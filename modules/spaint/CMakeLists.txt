@@ -280,7 +280,6 @@ src/pipelinecomponents/ObjectSegmentationContext.cpp
 src/pipelinecomponents/PropagationComponent.cpp
 src/pipelinecomponents/SemanticSegmentationComponent.cpp
 src/pipelinecomponents/SLAMComponent.cpp
-src/pipelinecomponents/SLAMComponentWithScoreForest.cpp
 src/pipelinecomponents/SLAMContext.cpp
 src/pipelinecomponents/SmoothingComponent.cpp
 )
@@ -293,7 +292,6 @@ include/spaint/pipelinecomponents/PropagationContext.h
 include/spaint/pipelinecomponents/SemanticSegmentationComponent.h
 include/spaint/pipelinecomponents/SemanticSegmentationContext.h
 include/spaint/pipelinecomponents/SLAMComponent.h
-include/spaint/pipelinecomponents/SLAMComponentWithScoreForest.h
 include/spaint/pipelinecomponents/SLAMContext.h
 include/spaint/pipelinecomponents/SmoothingComponent.h
 include/spaint/pipelinecomponents/SmoothingContext.h

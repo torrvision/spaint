@@ -10,7 +10,7 @@ using namespace spaint;
 #include <spaint/ocv/OpenCVUtil.h>
 #endif
 
-#include <spaint/pipelinecomponents/SLAMComponentWithScoreForest.h>
+#include <spaint/pipelinecomponents/SLAMComponent.h>
 
 //#################### CONSTRUCTORS ####################
 
@@ -27,7 +27,7 @@ SLAMPipeline::SLAMPipeline(const Settings_Ptr& settings,
 // using 1 -> Application.cpp#715 needs at least 2 valid labels
 {
   const std::string sceneID = Model::get_world_scene_id();
-  m_slamComponents[sceneID].reset(new SLAMComponentWithScoreForest(
+  m_slamComponents[sceneID].reset(new SLAMComponent(
       m_model,
       sceneID,
       imageSourceEngine,
