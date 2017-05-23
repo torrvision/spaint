@@ -103,7 +103,7 @@ Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q)
   // Call the other function.
   Kabsch(P, Q, resRot, resTrans);
 
-  // Cecompose R + t in Rt.
+  // Decompose R + t in Rt.
   Eigen::Matrix4f res;
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
