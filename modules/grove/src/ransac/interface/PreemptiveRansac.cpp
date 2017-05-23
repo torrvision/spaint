@@ -20,6 +20,9 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
+#include <tvgutil/misc/GlobalParameters.h>
+using namespace tvgutil;
+
 // To enable more detailed timing prints (VERY VERBOSE)
 //#define ENABLE_TIMERS
 
@@ -129,24 +132,58 @@ PreemptiveRansac::PreemptiveRansac()
   , m_timerFirstTrim("First Trim")
   , m_timerTotal("P-RANSAC Total")
 {
-  // Set parameters as in scoreforests. TODO: use the app parameters to allow configurability.
-  m_batchSizeRansac = 500;
-  m_checkMinDistanceBetweenSampledModes = true;
-  //  m_checkRigidTransformationConstraint = false; // Speeds up a lot, at the expense of quality.
-  m_checkRigidTransformationConstraint = true;
-  m_minSquaredDistanceBetweenSampledModes = 0.3f * 0.3f;
+  const std::string parametersNamespace = "PreemptiveRansac.";
+  const GlobalParameters &parameters = GlobalParameters::instance();
+
+  // By default, we set all parameters as in scoreforests.
+  m_batchSizeRansac = parameters.get_first_value<size_t>(parametersNamespace + "m_batchSizeRansac", 500);
+
+  m_checkMinDistanceBetweenSampledModes =
+      parameters.get_first_value<bool>(parametersNamespace + "m_checkMinDistanceBetweenSampledModes", true);
+
+  // Setting it to false speeds up a lot, at the expense of quality.
+  m_checkRigidTransformationConstraint =
+      parameters.get_first_value<bool>(parametersNamespace + "m_checkRigidTransformationConstraint", true);
+
+  // In m.
+  m_minSquaredDistanceBetweenSampledModes =
+      parameters.get_first_value<float>(parametersNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+
+  // Number of initial pose candidates.
+  m_nbMaxPoseCandidates = parameters.get_first_value<size_t>(parametersNamespace + "m_nbMaxPoseCandidates", 1024);
+
+  // In m.
+  m_poseOptimizationInlierThreshold =
+      parameters.get_first_value<float>(parametersNamespace + "m_poseOptimizationInlierThreshold", 0.2f);
+
+  // Whether or not to optimise the poses with LM.
+  m_poseUpdate = parameters.get_first_value<bool>(parametersNamespace + "m_poseUpdate", true);
+
+  // Whether or not to print the timers for each phase.
+  m_printTimers = parameters.get_first_value<bool>(parametersNamespace + "m_printTimers", false);
+
+  // In m.
+  m_translationErrorMaxForCorrectPose =
+      parameters.get_first_value<float>(parametersNamespace + "m_translationErrorMaxForCorrectPose", 0.05f);
+
+  // Aggressively cull hypotheses to this number.
+  m_trimKinitAfterFirstEnergyComputation =
+      parameters.get_first_value<size_t>(parametersNamespace + "m_trimKinitAfterFirstEnergyComputation", 64);
+
+  // If false use the first mode only (representing the largest cluster).
+  m_useAllModesPerLeafInPoseHypothesisGeneration =
+      parameters.get_first_value<bool>(parametersNamespace + "m_useAllModesPerLeafInPoseHypothesisGeneration", true);
+
+  // If false use L2.
+  m_usePredictionCovarianceForPoseOptimization =
+      parameters.get_first_value<bool>(parametersNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
+
+  // This should probably be removed.
+  m_nbPointsForKabschBoostrap = 3;
+
+  // this should be computed from the other parameters (m_batchSizeRansac and m_trimKinitAfterFirstEnergyComputation)
   m_nbMaxInliers = 3000; // 500 per ransac iteration, starting from 64, not 1024. Could probably be computed from the
                          // other parameters.
-  m_nbMaxPoseCandidates = 1024;
-  m_nbPointsForKabschBoostrap = 3;
-  m_poseOptimizationInlierThreshold = 0.2f;
-  m_poseUpdate = true;
-  m_translationErrorMaxForCorrectPose = 0.05f;
-  //  m_trimKinitAfterFirstEnergyComputation = 1024; // Do not cull hypotheses.
-  m_trimKinitAfterFirstEnergyComputation = 64;
-  m_useAllModesPerLeafInPoseHypothesisGeneration = true;
-  m_usePredictionCovarianceForPoseOptimization = true;
-  //  m_usePredictionCovarianceForPoseOptimization = false; //Use L2 mode instead.
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -160,9 +197,6 @@ PreemptiveRansac::PreemptiveRansac()
 #else
   m_printTimers = false;
 #endif
-
-  m_printTimers =
-      true; // This could probably become an AppParameter and we could leave the define for the verbose prints.
 
   // Setup the remaining timers.
   for (int i = 1; i <= 6; ++i)
