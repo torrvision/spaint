@@ -12,6 +12,7 @@
 #endif
 
 #include <boost/asio.hpp>
+#include <boost/function.hpp>
 
 #ifdef _MSC_VER
   // Re-enable the VC++ warnings for the rest of the code.
@@ -42,12 +43,16 @@
  */
 class Application
 {
-  //#################### TYPEDEFS ####################
+  //#################### PRIVATE TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMMesh> Mesh_Ptr;
   typedef ITMLib::ITMMeshingEngine<spaint::SpaintVoxel,ITMVoxelIndex> MeshingEngine;
   typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
+
+  //#################### PUBLIC TYPEDEFS ####################
+public:
+  typedef boost::function<void(const Model_Ptr&)> ModelHookFunction;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -59,6 +64,9 @@ private:
 
   /** The fractional position of the mouse within the window's viewport. */
   Vector2f m_fracWindowPos;
+
+  /** The debugging function called after each frame has been processed. */
+  ModelHookFunction m_frameDebuggingHook;
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
@@ -127,6 +135,13 @@ public:
    * \param enabled Whether to run in batch mode or not.
    */
   void set_batch_mode(bool enabled);
+
+  /**
+   * \brief Sets a function that will be called after each frame has been processed.
+   *
+   * \param debuggingHook The function that will be called after processing each frame.
+   */
+  void set_frame_debugging_hook(const ModelHookFunction &debuggingHook);
 
   /**
    * \brief Set whether to save the reconstructed mesh on exit.

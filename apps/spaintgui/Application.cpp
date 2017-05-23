@@ -92,10 +92,19 @@ bool Application::run()
         break;
       }
 
-      // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
-      if(frameWasProcessed && m_sequencePathGenerator)
+      if(frameWasProcessed)
       {
-        save_sequence_frame();
+        // If we have a debugging hook and the frame was processed, then call the function.
+        if(m_frameDebuggingHook)
+        {
+          m_frameDebuggingHook(m_pipeline->get_model());
+        }
+
+        // If we're currently recording the sequence, save the frame to disk.
+        if(m_sequencePathGenerator)
+        {
+          save_sequence_frame();
+        }
       }
     }
 
@@ -124,7 +133,12 @@ void Application::set_batch_mode(bool enabled)
 {
 	m_runInBatch = enabled;
 	m_paused = !enabled;
-	m_pauseBetweenFrames = m_paused;
+  m_pauseBetweenFrames = m_paused;
+}
+
+void Application::set_frame_debugging_hook(const Application::ModelHookFunction &debuggingHook)
+{
+  m_frameDebuggingHook = debuggingHook;
 }
 
 void Application::set_save_mesh_on_exit(bool saveMesh)
