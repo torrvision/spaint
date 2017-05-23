@@ -44,7 +44,7 @@ public:
 
   //#################### TYPEDEFS ####################
 private:
-  typedef tvgutil::AverageTimer<boost::chrono::milliseconds> AverageTimer;
+  typedef tvgutil::AverageTimer<boost::chrono::microseconds> AverageTimer;
 
   //#################### CONSTRUCTORS ####################
 public:
