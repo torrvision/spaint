@@ -91,7 +91,8 @@ void ScoreRelocaliser_CPU::get_predictions_for_leaves(const LeafIndicesImage_CPt
   {
     for (int x = 0; x < imgSize.x; ++x)
     {
-      get_prediction_for_leaf_shared(leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, x, y);
+      get_prediction_for_leaf_shared(
+          leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount, x, y);
     }
   }
 }

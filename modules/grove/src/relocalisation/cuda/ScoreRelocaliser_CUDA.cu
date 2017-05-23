@@ -27,14 +27,15 @@ template <int TREE_COUNT>
 __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leafPredictions,
                                                      const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
                                                      ScorePrediction *outPredictions,
-                                                     Vector2i imgSize)
+                                                     Vector2i imgSize,
+                                                     int nbMaxPredictions)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
 
   if (x >= imgSize.x || y >= imgSize.y) return;
 
-  get_prediction_for_leaf_shared(leafPredictions, leafIndices, outPredictions, imgSize, x, y);
+  get_prediction_for_leaf_shared(leafPredictions, leafIndices, outPredictions, imgSize, nbMaxPredictions, x, y);
 }
 
 //#################### CONSTRUCTORS ####################
@@ -104,7 +105,7 @@ void ScoreRelocaliser_CUDA::get_predictions_for_leaves(const LeafIndicesImage_CP
   const dim3 gridSize((imgSize.x + blockSize.x - 1) / blockSize.x, (imgSize.y + blockSize.y - 1) / blockSize.y);
 
   ck_score_relocaliser_get_predictions<<<gridSize, blockSize>>>(
-      leafPredictionsData, leafIndicesData, outPredictionsData, imgSize);
+      leafPredictionsData, leafIndicesData, outPredictionsData, imgSize, m_maxClusterCount);
   ORcudaKernelCheck;
 }
 

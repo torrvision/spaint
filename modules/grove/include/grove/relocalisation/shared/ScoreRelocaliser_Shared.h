@@ -21,12 +21,13 @@ namespace grove {
  * \note  Merging is performed taking the largest clusters from each leaf. The assumption is that modal cluters in each
  *        leaf are already sorted by descending size.
  *
- * \param leafPredictions A pointer to the sotrage area holding all the ScorePredictions associated to forest leaves.
- * \param leafIndices     A pointer to the storage area where the leaf indices for the current example are stored.
- * \param outPredictions  A pointer to the storage area that will hold the final merged prediction.
- * \param imgSize         The dimensions of the leafIndices and outPredictions arrays. Row major.
- * \param x               The x coordinate of the leaves to process.
- * \param y               The y coordinate of the leaves to process.
+ * \param leafPredictions  A pointer to the sotrage area holding all the ScorePredictions associated to forest leaves.
+ * \param leafIndices      A pointer to the storage area where the leaf indices for the current example are stored.
+ * \param outPredictions   A pointer to the storage area that will hold the final merged prediction.
+ * \param imgSize          The dimensions of the leafIndices and outPredictions arrays.
+ * \param nbMaxPredictions The maximum number of predictions to merge for each output prediction.
+ * \param x                The x coordinate of the leaves to process.
+ * \param y                The y coordinate of the leaves to process.
  */
 template <int TREE_COUNT>
 _CPU_AND_GPU_CODE_TEMPLATE_ inline void
@@ -34,6 +35,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
                                    const ORUtils::VectorX<int, TREE_COUNT> *leafIndices,
                                    ScorePrediction *outPredictions,
                                    Vector2i imgSize,
+                                   int nbMaxPredictions,
                                    int x,
                                    int y)
 {
@@ -64,9 +66,9 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline void
   ScorePrediction finalPrediction;
   finalPrediction.nbClusters = 0;
 
-  // Merge the first MAX_CLUSTERS from the selected cluster arrays.
+  // Merge the first nbMaxPredictions from the selected cluster arrays.
   // The assumption is that the modal clusters in leafPredictions are already sorted by descending number of inliers.
-  while (finalPrediction.nbClusters < ScorePrediction::MAX_CLUSTERS)
+  while (finalPrediction.nbClusters < nbMaxPredictions)
   {
     int bestTreeIdx = 0;
     int bestTreeNbInliers = 0;
