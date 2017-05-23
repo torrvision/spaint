@@ -178,9 +178,6 @@ PreemptiveRansac::PreemptiveRansac()
   m_usePredictionCovarianceForPoseOptimization =
       parameters.get_first_value<bool>(parametersNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
 
-  // This should probably be removed.
-  m_nbPointsForKabschBoostrap = 3;
-
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
   m_nbMaxInliers = m_batchSizeRansac * static_cast<size_t>(std::ceil(std::log2(m_trimKinitAfterFirstEnergyComputation)));
 
@@ -365,7 +362,8 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates
 
 int PreemptiveRansac::get_min_nb_required_points() const
 {
-  return std::max(m_nbPointsForKabschBoostrap, m_batchSizeRansac);
+  // At least the number of inliers required for a RANSAC iteration.
+  return m_batchSizeRansac;
 }
 
 //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################

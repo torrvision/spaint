@@ -124,9 +124,6 @@ protected:
   /** The initial number of pose hypotheses to generate */
   size_t m_nbMaxPoseCandidates;
 
-  /** The number of points required to hypothesise a pose using the Kabsch algorithm. */
-  size_t m_nbPointsForKabschBoostrap;
-
   /** A memory block storing the pose hypotheses. */
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
 
