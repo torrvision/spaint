@@ -73,6 +73,15 @@ core/SLAMPipeline.h
 )
 
 ##
+SET(debugging_sources
+debugging/RelocaliserFiguresGenerator.cpp
+)
+
+SET(debugging_headers
+debugging/RelocaliserFiguresGenerator.h
+)
+
+##
 SET(renderers_sources
 renderers/Renderer.cpp
 renderers/WindowedRenderer.cpp
@@ -121,6 +130,7 @@ ENDIF()
 SET(sources
 ${commands_sources}
 ${core_sources}
+${debugging_sources}
 ${renderers_sources}
 ${subwindows_sources}
 ${toplevel_sources}
@@ -129,6 +139,7 @@ ${toplevel_sources}
 SET(headers
 ${commands_headers}
 ${core_headers}
+${debugging_headers}
 ${renderers_headers}
 ${subwindows_headers}
 ${toplevel_headers}
@@ -141,6 +152,7 @@ ${toplevel_headers}
 SOURCE_GROUP("" FILES ${toplevel_sources} ${toplevel_headers})
 SOURCE_GROUP(commands FILES ${commands_sources} ${commands_headers})
 SOURCE_GROUP(core FILES ${core_sources} ${core_headers})
+SOURCE_GROUP(debugging FILES ${debugging_sources} ${debugging_headers})
 SOURCE_GROUP(renderers FILES ${renderers_sources} ${renderers_headers})
 SOURCE_GROUP(subwindows FILES ${subwindows_sources} ${subwindows_headers})
 
