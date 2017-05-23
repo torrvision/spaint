@@ -46,10 +46,6 @@ public:
    * \brief Destroys a SLAM component.
    */
   virtual ~SLAMComponentWithScoreForest();
-
-  //#################### PROTECTED MEMBER FUNCTIONS ####################
-protected:
-  virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
 };
 
 //#################### TYPEDEFS ####################

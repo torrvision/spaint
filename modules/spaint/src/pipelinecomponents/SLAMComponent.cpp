@@ -310,43 +310,60 @@ void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
   }
 }
 
-SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResult trackerResult)
+SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResult trackingResult)
 {
-  const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
-  const VoxelRenderState_Ptr& liveVoxelRenderState = slamState->get_live_voxel_render_state();
-  const Relocaliser_Ptr relocaliser = m_context->get_relocaliser(m_sceneID);
-  const TrackingState_Ptr& trackingState = slamState->get_tracking_state();
-  const View_Ptr& view = slamState->get_view();
-  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
+  const bool performRelocalization = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_FAILED;
+  const bool performLearning = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_GOOD;
 
-  // If tracking was good, then integrate the RGB-D images into the relocaliser.
-  if(trackerResult == ITMTrackingState::TRACKING_GOOD)
+  const Relocaliser_Ptr &relocaliser = m_context->get_relocaliser(m_sceneID);
+  const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
+  const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
+  const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
+
+  const TrackingState_Ptr &trackingState = slamState->get_tracking_state();
+  const SE3Pose trackedPose(*trackingState->pose_d);
+
+  const View_Ptr &view = slamState->get_view();
+
+  const Vector4f depthIntrinsics = view->calib.intrinsics_d.projectionParamsSimple.all;
+
+  if (m_relocaliserUpdateEveryFrame && !performLearning)
   {
-    relocaliser->integrate_rgbd_pose_pair(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all, *trackingState->pose_d);
-  }
-  else
-  {
-    // Always give the relocaliser a chance to perform bookkeeping.
     relocaliser->update();
   }
 
-  // Only if the tracking failed, try to relocalise the camera.
-  if(trackerResult == ITMTrackingState::TRACKING_FAILED)
+  if (performRelocalization)
   {
-    boost::optional<itmx::Relocaliser::RelocalisationResult> relocalisationResult =
-        relocaliser->relocalise(view->rgb, view->depth, view->calib.intrinsics_d.projectionParamsSimple.all);
+    boost::optional<Relocaliser::RelocalisationResult> relocalisationResult =
+        relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics);
 
-    // If relocalisation succeeded copy its results.
     if (relocalisationResult)
     {
       trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
-      trackerResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
+      trackingResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
                            ? ITMTrackingState::TRACKING_GOOD
                            : ITMTrackingState::TRACKING_POOR;
     }
+    else
+    {
+      std::cout << "Relocalisation failed." << std::endl;
+    }
   }
 
-  return trackerResult;
+  if (performLearning)
+  {
+    relocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
+  }
+
+  if (m_relocaliseEveryFrame)
+  {
+    // Restore tracked pose.
+    trackingState->pose_d->SetFrom(&trackedPose);
+    // The assumption is that we are using the ground truth trajectory so the tracker always succeeds.
+    trackingResult = ITMTrackingState::TRACKING_GOOD;
+  }
+
+  return trackingResult;
 }
 
 //#################### PRIVATE MEMBER FUNCTIONS ####################
