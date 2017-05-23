@@ -8,12 +8,18 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
+#include <tvgutil/misc/GlobalParameters.h>
+using namespace tvgutil;
+
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
 ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
 {
+  const std::string parametersNamespace = "ScoreRelocaliser.";
+  const GlobalParameters &parameters = GlobalParameters::instance();
+
   // In this constructor we are just setting the variables, instantiation of the sub-algorithms is left to the sub class
   // in order to instantiate the appropriate version.
 
@@ -23,23 +29,25 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
   m_forestFilename = forestFilename;
 
   //
-  // Reservoirs
+  // Reservoirs parameters
   //
-  m_maxReservoirsToUpdate = 256; // Update the modes associated to 256 reservoirs each integration/update call.
+
+  // Update the modes associated to this number of reservoirs for each integration/update call.
+  m_maxReservoirsToUpdate = parameters.get_first_value<uint32_t>(parametersNamespace + "m_maxReservoirsToUpdate", 256);
   // m_reservoirsCount is not set since that number depends on the forest that will be instantiated in the subclass.
-  m_reservoirsCapacity = 1024;
-  m_rngSeed = 42;
+  m_reservoirsCapacity = parameters.get_first_value<uint32_t>(parametersNamespace + "m_reservoirsCapacity", 1024);
+  m_rngSeed = parameters.get_first_value<uint32_t>(parametersNamespace + "m_rngSeed", 42);
 
   //
-  // Clustering
+  // Clustering parameters (defaults are tentative values that seem to work)
   //
-  // Tentative values that seem to work.
-  m_clustererSigma = 0.1f;
-  m_clustererTau = 0.05f;
-  m_maxClusterCount = ScorePrediction::MAX_CLUSTERS;
-  m_minClusterSize = 20;
+  m_clustererSigma = parameters.get_first_value<float>(parametersNamespace + "m_clustererSigma", 0.1f);
+  m_clustererTau = parameters.get_first_value<float>(parametersNamespace + "m_clustererTau", 0.05f);
+  m_maxClusterCount = parameters.get_first_value<uint32_t>(parametersNamespace + "m_maxClusterCount", ScorePrediction::MAX_CLUSTERS);
+  m_minClusterSize = parameters.get_first_value<uint32_t>(parametersNamespace + "m_minClusterSize", 20);
 
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
+
   // Setup memory blocks/images (except m_predictionsBlock since its size depends on the forest)
   m_leafIndicesImage = mbf.make_image<LeafIndices>();
   m_predictionsImage = mbf.make_image<ScorePrediction>();
