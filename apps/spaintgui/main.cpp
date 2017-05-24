@@ -266,6 +266,52 @@ bool postprocess_arguments(CommandLineArguments& args)
 }
 
 /**
+ * \brief Sets the scene parameters from GlobalParameters, allowing the user to specify ad hoc values for voxel size, truncation distance, etc...
+ *
+ * \param sceneParams The scene parameters to modify.
+ */
+void set_scene_params_from_global_options(ITMSceneParams &sceneParams)
+{
+  const std::string parametersNamespace = "SceneParams.";
+  const GlobalParameters& params = GlobalParameters::instance();
+
+  // Use the default values form InfiniTAM.
+  sceneParams.maxW = params.get_first_value<int>(parametersNamespace + "maxW", 100);
+  sceneParams.mu = params.get_first_value<float>(parametersNamespace + "mu", 0.02f);
+  sceneParams.stopIntegratingAtMaxW = params.get_first_value<bool>(parametersNamespace + "stopIntegratingAtMaxW", false);
+  sceneParams.viewFrustum_max = params.get_first_value<float>(parametersNamespace + "viewFrustum_max", 3.0f);
+  sceneParams.viewFrustum_min = params.get_first_value<float>(parametersNamespace + "viewFrustum_min", 0.2f);
+  sceneParams.voxelSize = params.get_first_value<float>(parametersNamespace + "voxelSize", 0.005f);
+}
+
+/**
+ * \brief Sets the surfel scene parameters from GlobalParameters, allowing the user to specify ad hoc values for surfel radius, etc...
+ *
+ * \param surfelSceneParams The surfel scene parameters to modify.
+ */
+void set_surfel_scene_params_from_global_options(ITMSurfelSceneParams &surfelSceneParams)
+{
+  const std::string parametersNamespace = "SurfelSceneParams.";
+  const GlobalParameters& params = GlobalParameters::instance();
+
+  // Use the default values form InfiniTAM.
+  surfelSceneParams.deltaRadius = params.get_first_value<float>(parametersNamespace + "deltaRadius", 0.5f);
+  surfelSceneParams.gaussianConfidenceSigma = params.get_first_value<float>(parametersNamespace + "gaussianConfidenceSigma", 0.6f);
+  surfelSceneParams.maxMergeAngle = params.get_first_value<float>(parametersNamespace + "maxMergeAngle", static_cast<float>(20 * M_PI / 180));
+  surfelSceneParams.maxMergeDist = params.get_first_value<float>(parametersNamespace + "maxMergeDist", 0.01f);
+  surfelSceneParams.maxSurfelRadius = params.get_first_value<float>(parametersNamespace + "maxSurfelRadius", 0.004f);
+  surfelSceneParams.minRadiusOverlapFactor = params.get_first_value<float>(parametersNamespace + "minRadiusOverlapFactor", 3.5f);
+  surfelSceneParams.stableSurfelConfidence = params.get_first_value<float>(parametersNamespace + "stableSurfelConfidence", 25.0f);
+  surfelSceneParams.supersamplingFactor = params.get_first_value<int>(parametersNamespace + "supersamplingFactor", 4);
+  surfelSceneParams.trackingSurfelMaxDepth = params.get_first_value<float>(parametersNamespace + "trackingSurfelMaxDepth", 1.0f);
+  surfelSceneParams.trackingSurfelMinConfidence = params.get_first_value<float>(parametersNamespace + "trackingSurfelMinConfidence", 5.0f);
+  surfelSceneParams.unstableSurfelPeriod = params.get_first_value<int>(parametersNamespace + "unstableSurfelPeriod", 20);
+  surfelSceneParams.unstableSurfelZOffset = params.get_first_value<int>(parametersNamespace + "unstableSurfelZOffset", 10000000);
+  surfelSceneParams.useGaussianSampleConfidence = params.get_first_value<bool>(parametersNamespace + "useGaussianSampleConfidence", true);
+  surfelSceneParams.useSurfelMerging = params.get_first_value<bool>(parametersNamespace + "useSurfelMerging", true);
+}
+
+/**
  * \brief Stores the parsed options in the GlobalParameters instance.
  *
  * \param parsedOptions The options to store in GlobalParameters.
@@ -421,10 +467,9 @@ try
   boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
   settings->trackerConfig = NULL;
 
-  // 7scenes GT
-  settings->sceneParams.mu = 0.04f;
-  settings->sceneParams.voxelSize = 0.01f;
-  settings->sceneParams.viewFrustum_max = 5.0f;
+  // Set scene parameters from configuration.
+  set_scene_params_from_global_options(settings->sceneParams);
+  set_surfel_scene_params_from_global_options(settings->surfelSceneParams);
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 
