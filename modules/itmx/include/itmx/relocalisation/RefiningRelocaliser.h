@@ -8,40 +8,52 @@
 
 #include "Relocaliser.h"
 
-//#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
-
 namespace itmx {
 
 /**
- * \brief An instance of this class allows performing camera relocalisation from RGB-D image pairs followed by a
- *        refinement step.
+ * \brief An instance of a relocaliser class deriving from this one can be used to refine the results of another relocaliser.
  */
 class RefiningRelocaliser : public Relocaliser
 {
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** The relocaliser whose results are being refined. */
+  Relocaliser_Ptr m_innerRelocaliser;
+
+  //#################### CONSTRUCTORS ####################
+public:
+  /**
+   * \brief Constructs a refining relocaliser.
+   *
+   * \param innerRelocaliser  The relocaliser whose results are being refined.
+   */
+  explicit RefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser);
+
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets a pointer to the refined relocaliser.
-   *
-   * \return A pointer to the inner relocaliser.
-   */
-  virtual Relocaliser_Ptr get_inner_relocaliser() const = 0;
-
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *        Provides more details on the relcalisation phase.
+   * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
+   *        thereby relocalising the camera with respect to the 3D scene.
    *
    * \param colourImage     The colour image.
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param initialPose     The camera pose estimated by the inner relocaliser if it succeeded, boost::none otherwise.
+   * \param initialPose     A location in which to store the camera pose estimated by the inner relocaliser (if it succeeded),
+   *                        or boost::none otherwise.
    *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
+   * \return  The result of the relocalisation, if successful, or boost::none otherwise.
    */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
-                                             const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics,
-                                             boost::optional<ORUtils::SE3Pose>& initialPose) const = 0;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                             const Vector4f& depthIntrinsics, boost::optional<ORUtils::SE3Pose>& initialPose) const = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
+   * \brief Gets the relocaliser whose results are being refined.
+   *
+   * \return  The relocaliser whose results are being refined.
+   */
+  Relocaliser_CPtr get_inner_relocaliser() const;
 };
 
 //#################### TYPEDEFS ####################

@@ -77,13 +77,6 @@ public:
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Gets a pointer to the refined relocaliser.
-   *
-   * \return A pointer to the inner relocaliser.
-   */
-  virtual Relocaliser_Ptr get_inner_relocaliser() const;
-
   /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
@@ -141,9 +134,6 @@ private:
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_relocalisationPosesPathGenerator;
-
-  /** The wrapped relocaliser. */
-  Relocaliser_Ptr m_relocaliser;
 
   /** Whether or not to save the relocalised poses. */
   bool m_saveRelocalisationPoses;

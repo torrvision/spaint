@@ -42,7 +42,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
                                                                      const Scene_Ptr &scene,
                                                                      const Settings_CPtr &settings,
                                                                      const std::string &trackerConfig)
-  : m_relocaliser(relocaliser)
+  : RefiningRelocaliser(relocaliser)
   , m_scene(scene)
   , m_settings(settings)
   , m_timerIntegration("Integration")
@@ -132,12 +132,6 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::~ICPRefiningRelocaliser()
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
 template <typename VoxelType, typename IndexType>
-Relocaliser_Ptr ICPRefiningRelocaliser<VoxelType, IndexType>::get_inner_relocaliser() const
-{
-  return m_relocaliser;
-}
-
-template <typename VoxelType, typename IndexType>
 boost::optional<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
 {
@@ -159,7 +153,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 
   // Run the wrapped relocaliser.
   boost::optional<Result> relocalisationResult =
-      m_relocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
+      m_innerRelocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
 
   // If the first step of relocalisation failed, then early out.
   if (!relocalisationResult)
@@ -228,7 +222,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::reset()
 {
-  m_relocaliser->reset();
+  m_innerRelocaliser->reset();
 }
 
 template <typename VoxelType, typename IndexType>
@@ -236,7 +230,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::train(const ITMUChar4Image *c
                                                          const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
   start_timer(m_timerIntegration);
-  m_relocaliser->train(colourImage, depthImage, depthIntrinsics, cameraPose);
+  m_innerRelocaliser->train(colourImage, depthImage, depthIntrinsics, cameraPose);
   stop_timer(m_timerIntegration);
 }
 
@@ -244,7 +238,7 @@ template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::update()
 {
   start_timer(m_timerUpdate);
-  m_relocaliser->update();
+  m_innerRelocaliser->update();
   stop_timer(m_timerUpdate);
 }
 
