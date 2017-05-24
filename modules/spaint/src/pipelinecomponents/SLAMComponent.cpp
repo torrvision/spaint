@@ -103,9 +103,6 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   reset_scene();
 }
 
-//#################### DESTRUCTOR ####################
-SLAMComponent::~SLAMComponent() {}
-
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 bool SLAMComponent::get_fusion_enabled() const

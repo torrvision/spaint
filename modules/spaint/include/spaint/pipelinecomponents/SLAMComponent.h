@@ -29,11 +29,9 @@ namespace spaint {
 class SLAMComponent
 {
   //#################### TYPEDEFS ####################
-protected:
-  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
+private:
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
   typedef ITMLib::ITMTrackingState::TrackingResult TrackingResult;
 
   //#################### ENUMERATIONS ####################
@@ -163,13 +161,6 @@ public:
   SLAMComponent(const SLAMContext_Ptr& context, const std::string& sceneID, const ImageSourceEngine_Ptr& imageSourceEngine,
                 const std::string& trackerConfig, MappingMode mappingMode = MAP_VOXELS_ONLY, TrackingMode trackingMode = TRACK_VOXELS,
                 const FiducialDetector_CPtr& fiducialDetector = FiducialDetector_CPtr(), bool detectFiducials = false);
-
-  //#################### DESTRUCTOR ####################
-public:
-  /**
-   * \brief Destroys a SLAM component.
-   */
-  virtual ~SLAMComponent();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
