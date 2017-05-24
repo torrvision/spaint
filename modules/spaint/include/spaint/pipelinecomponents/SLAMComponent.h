@@ -62,42 +62,16 @@ public:
     TRACK_VOXELS
   };
 
-  //#################### PROTECTED VARIABLES ####################
-protected:
+  //#################### PRIVATE VARIABLES ####################
+private:
   /** The shared context needed for SLAM. */
   SLAMContext_Ptr m_context;
 
-  /** The dense voxel mapper. */
-  DenseMapper_Ptr m_denseVoxelMapper;
-
-  /** The engine used to perform low-level image processing operations. */
-  LowLevelEngine_Ptr m_lowLevelEngine;
-
-  /** Whether or not to perform relocalisation after processing every frame, for evaluation. */
-  bool m_relocaliseEveryFrame;
-
-  /** The path to the relocalisation forest. */
-  std::string m_relocaliserForestPath;
-
-  /** The type of relocaliser. */
-  std::string m_relocaliserType;
-
-  /** The tracker params used to instantiate the refining relocaliser. */
-  std::string m_relocaliserRefinementTrackerParams;
-
-  /** Whether or not to update the relocaliser after processing every frame. */
-  bool m_relocaliserUpdateEveryFrame;
-
-  /** The ID of the scene to reconstruct. */
-  std::string m_sceneID;
-
-  /** The tracking controller. */
-  TrackingController_Ptr m_trackingController;
-
-  //#################### PRIVATE VARIABLES ####################
-protected:
   /** The dense surfel mapper. */
   DenseSurfelMapper_Ptr m_denseSurfelMapper;
+
+  /** The dense voxel mapper. */
+  DenseMapper_Ptr m_denseVoxelMapper;
 
   /** Whether or not the user wants fiducials to be detected. */
   bool m_detectFiducials;
@@ -130,17 +104,41 @@ protected:
    */
   size_t m_initialFramesToFuse;
 
+  /** The engine used to perform low-level image processing operations. */
+  LowLevelEngine_Ptr m_lowLevelEngine;
+
   /** The mapping mode to use. */
   MappingMode m_mappingMode;
 
   /** The ID of the scene (if any) whose pose is to be mirrored. */
   std::string m_mirrorSceneID;
 
+  /** Whether or not to perform relocalisation after processing every frame, for evaluation. */
+  bool m_relocaliseEveryFrame;
+
+  /** The path to the relocalisation forest. */
+  std::string m_relocaliserForestPath;
+
+  /** The tracker params used to instantiate the refining relocaliser. */
+  std::string m_relocaliserRefinementTrackerParams;
+
+  /** The type of relocaliser. */
+  std::string m_relocaliserType;
+
+  /** Whether or not to update the relocaliser after processing every frame. */
+  bool m_relocaliserUpdateEveryFrame;
+
+  /** The ID of the scene to reconstruct. */
+  std::string m_sceneID;
+
   /** The tracker. */
   Tracker_Ptr m_tracker;
 
   /** The tracker configuration to use (in XML format). */
   std::string m_trackerConfig;
+
+  /** The tracking controller. */
+  TrackingController_Ptr m_trackingController;
 
   /** The tracking mode to use. */
   TrackingMode m_trackingMode;
@@ -218,8 +216,8 @@ public:
    */
   void set_fusion_enabled(bool fusionEnabled);
 
-  //#################### PROTECTED MEMBER FUNCTIONS ####################
-protected:
+  //#################### PRIVATE MEMBER FUNCTIONS ####################
+private:
   /**
    * \brief Render from the live camera position to prepare for tracking.
    *
@@ -227,10 +225,11 @@ protected:
    */
   void prepare_for_tracking(TrackingMode trackingMode);
 
-  virtual TrackingResult process_relocalisation(TrackingResult trackingResult);
+  /**
+   * \brief TODO
+   */
+  TrackingResult process_relocalisation(TrackingResult trackingResult);
 
-  //#################### PRIVATE MEMBER FUNCTIONS ####################
-private:
   /**
    * \brief Sets up the relocaliser.
    */

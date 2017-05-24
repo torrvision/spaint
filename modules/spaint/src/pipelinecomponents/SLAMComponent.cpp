@@ -282,7 +282,7 @@ void SLAMComponent::set_fusion_enabled(bool fusionEnabled)
   m_fusionEnabled = fusionEnabled;
 }
 
-//#################### PROTECTED MEMBER FUNCTIONS ####################
+//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
 {
@@ -365,8 +365,6 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
   return trackingResult;
 }
-
-//#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void SLAMComponent::setup_relocaliser()
 {
