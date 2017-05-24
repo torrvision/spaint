@@ -9,13 +9,15 @@
 #include <ostream>
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include "../containers/MapUtil.h"
 #include "ConversionUtil.h"
 
 namespace tvgutil {
 
 /**
- * \brief This class can be used to access the global parameters used to configure an application.
+ * \brief This class can be used to access a set of non-typed parameters used to configure an application.
  *
  * The parameters are represented as a key -> [value] map, i.e. there can be multiple values for the same named parameter.
  */
@@ -26,13 +28,14 @@ private:
   /** The key -> [value] map storing the values for the parameters. */
   std::map<std::string,std::vector<std::string> > m_params;
 
-  //#################### SINGLETON IMPLEMENTATION ####################
-private:
+  //#################### CONSTRUCTOR ####################
+public:
   /**
-   * \brief Constructs the singleton instance.
+   * \brief Constructs an instance of SettingsContainer.
    */
   SettingsContainer();
 
+  //#################### SINGLETON IMPLEMENTATION ####################
 public:
   /**
    * \brief Gets the singleton instance.
@@ -97,6 +100,10 @@ public:
    */
   friend std::ostream& operator<<(std::ostream& os, const SettingsContainer& rhs);
 };
+
+//#################### TYPEDEFS ####################
+typedef boost::shared_ptr<SettingsContainer> SettingsContainer_Ptr;
+typedef boost::shared_ptr<const SettingsContainer> SettingsContainer_CPtr;
 
 }
 
