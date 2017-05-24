@@ -1,32 +1,32 @@
 /**
- * tvgutil: GlobalParameters.cpp
+ * tvgutil: SettingsContainer.cpp
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#include "misc/GlobalParameters.h"
+#include "misc/SettingsContainer.h"
 
 namespace tvgutil {
 
 //#################### SINGLETON IMPLEMENTATION ####################
 
-GlobalParameters::GlobalParameters() {}
+SettingsContainer::SettingsContainer() {}
 
-GlobalParameters& GlobalParameters::instance()
+SettingsContainer& SettingsContainer::instance()
 {
-  static GlobalParameters s_instance;
+  static SettingsContainer s_instance;
   return s_instance;
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void GlobalParameters::add_value(const std::string& key, const std::string& value)
+void SettingsContainer::add_value(const std::string& key, const std::string& value)
 {
   m_params[key].push_back(value);
 }
 
 //#################### STREAM OPERATORS ####################
 
-std::ostream& operator<<(std::ostream& os, const GlobalParameters& rhs)
+std::ostream& operator<<(std::ostream& os, const SettingsContainer& rhs)
 {
   for(std::map<std::string,std::vector<std::string> >::const_iterator it = rhs.m_params.begin(), iend = rhs.m_params.end(); it != iend; ++it)
   {

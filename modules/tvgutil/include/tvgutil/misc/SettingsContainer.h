@@ -1,10 +1,10 @@
 /**
- * tvgutil: GlobalParameters.h
+ * tvgutil: SettingsContainer.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_GLOBALPARAMETERS
-#define H_TVGUTIL_GLOBALPARAMETERS
+#ifndef H_TVGUTIL_SETTINGSCONTAINER
+#define H_TVGUTIL_SETTINGSCONTAINER
 
 #include <ostream>
 #include <vector>
@@ -19,7 +19,7 @@ namespace tvgutil {
  *
  * The parameters are represented as a key -> [value] map, i.e. there can be multiple values for the same named parameter.
  */
-class GlobalParameters
+class SettingsContainer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -31,7 +31,7 @@ private:
   /**
    * \brief Constructs the singleton instance.
    */
-  GlobalParameters();
+  SettingsContainer();
 
 public:
   /**
@@ -39,7 +39,7 @@ public:
    *
    * \return The singleton instance.
    */
-  static GlobalParameters& instance();
+  static SettingsContainer& instance();
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -95,7 +95,7 @@ public:
    * \param rhs The global parameters to output.
    * \return    The stream.
    */
-  friend std::ostream& operator<<(std::ostream& os, const GlobalParameters& rhs);
+  friend std::ostream& operator<<(std::ostream& os, const SettingsContainer& rhs);
 };
 
 }

@@ -24,7 +24,7 @@ using namespace grove;
 #include <itmx/relocalisation/RelocaliserFactory.h>
 using namespace itmx;
 
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 #include "segmentation/SegmentationUtil.h"
@@ -365,16 +365,17 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
 void SLAMComponent::setup_relocaliser()
 {
-  const static std::string parametersNamespace = "SLAMComponent.";
-  const GlobalParameters &globalParams = GlobalParameters::instance();
+  // FIXME: This global settings variable will be merged with settings later.
+  const static std::string settingsNamespace = "SLAMComponent.";
+  const SettingsContainer &globalSettings = SettingsContainer::instance();
 
-  m_relocaliseEveryFrame = globalParams.get_first_value<bool>(parametersNamespace +
+  m_relocaliseEveryFrame = globalSettings.get_first_value<bool>(settingsNamespace +
                                                               "m_relocaliseEveryFrame", false);
 
-  m_relocaliserType = globalParams.get_first_value<std::string>(parametersNamespace +
+  m_relocaliserType = globalSettings.get_first_value<std::string>(settingsNamespace +
                                                                 "m_relocaliserType", "forest");
 
-  m_relocaliserUpdateEveryFrame = globalParams.get_first_value<bool>(parametersNamespace +
+  m_relocaliserUpdateEveryFrame = globalSettings.get_first_value<bool>(settingsNamespace +
                                                                      "m_updateRelocaliserEveryFrame", true);
 
   // Useful variables.
@@ -390,7 +391,7 @@ void SLAMComponent::setup_relocaliser()
     const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) /
                                                          "DefaultRelocalizationForest.rf").string();
 
-    m_relocaliserForestPath = globalParams.get_first_value<std::string>(parametersNamespace +
+    m_relocaliserForestPath = globalSettings.get_first_value<std::string>(settingsNamespace +
                                                                            "m_relocalisationForestPath", defaultRelocalisationForestPath);
     std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
 
@@ -423,7 +424,7 @@ void SLAMComponent::setup_relocaliser()
   }
 
   // Refinement ICP tracker
-  m_relocaliserRefinementTrackerParams = globalParams.get_first_value<std::string>(parametersNamespace + "m_refinementTrackerParams",
+  m_relocaliserRefinementTrackerParams = globalSettings.get_first_value<std::string>(settingsNamespace + "m_refinementTrackerParams",
                                                                                    "type=extended,levels=rrbb,minstep=1e-4,"
                                                                                    "outlierSpaceC=0.1,outlierSpaceF=0.004,"
                                                                                    "numiterC=20,numiterF=20,tukeyCutOff=8,"

@@ -20,7 +20,7 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 // To enable more detailed timing prints (VERY VERBOSE)
@@ -132,54 +132,56 @@ PreemptiveRansac::PreemptiveRansac()
   , m_timerFirstTrim("First Trim")
   , m_timerTotal("P-RANSAC Total")
 {
-  const std::string parametersNamespace = "PreemptiveRansac.";
-  const GlobalParameters &parameters = GlobalParameters::instance();
+  const std::string settingsNamespace = "PreemptiveRansac.";
+  const SettingsContainer &settings = SettingsContainer::instance();
 
   // By default, we set all parameters as in scoreforests.
-  m_batchSizeRansac = parameters.get_first_value<size_t>(parametersNamespace + "m_batchSizeRansac", 500);
+  m_batchSizeRansac = settings.get_first_value<size_t>(settingsNamespace + "m_batchSizeRansac", 500);
 
   m_checkMinDistanceBetweenSampledModes =
-      parameters.get_first_value<bool>(parametersNamespace + "m_checkMinDistanceBetweenSampledModes", true);
+      settings.get_first_value<bool>(settingsNamespace + "m_checkMinDistanceBetweenSampledModes", true);
 
   // Setting it to false speeds up a lot, at the expense of quality.
   m_checkRigidTransformationConstraint =
-      parameters.get_first_value<bool>(parametersNamespace + "m_checkRigidTransformationConstraint", true);
+      settings.get_first_value<bool>(settingsNamespace + "m_checkRigidTransformationConstraint", true);
 
   // In m.
   m_minSquaredDistanceBetweenSampledModes =
-      parameters.get_first_value<float>(parametersNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+      settings.get_first_value<float>(settingsNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
   // Number of initial pose candidates.
-  m_nbMaxPoseCandidates = parameters.get_first_value<size_t>(parametersNamespace + "m_nbMaxPoseCandidates", 1024);
+  m_nbMaxPoseCandidates = settings.get_first_value<size_t>(settingsNamespace + "m_nbMaxPoseCandidates", 1024);
 
   // In m.
   m_poseOptimizationInlierThreshold =
-      parameters.get_first_value<float>(parametersNamespace + "m_poseOptimizationInlierThreshold", 0.2f);
+      settings.get_first_value<float>(settingsNamespace + "m_poseOptimizationInlierThreshold", 0.2f);
 
   // Whether or not to optimise the poses with LM.
-  m_poseUpdate = parameters.get_first_value<bool>(parametersNamespace + "m_poseUpdate", true);
+  m_poseUpdate = settings.get_first_value<bool>(settingsNamespace + "m_poseUpdate", true);
 
   // Whether or not to print the timers for each phase.
-  m_printTimers = parameters.get_first_value<bool>(parametersNamespace + "m_printTimers", false);
+  m_printTimers = settings.get_first_value<bool>(settingsNamespace + "m_printTimers", false);
 
   // In m.
   m_translationErrorMaxForCorrectPose =
-      parameters.get_first_value<float>(parametersNamespace + "m_translationErrorMaxForCorrectPose", 0.05f);
+      settings.get_first_value<float>(settingsNamespace + "m_translationErrorMaxForCorrectPose", 0.05f);
 
   // Aggressively cull hypotheses to this number.
   m_trimKinitAfterFirstEnergyComputation =
-      parameters.get_first_value<size_t>(parametersNamespace + "m_trimKinitAfterFirstEnergyComputation", 64);
+      settings.get_first_value<size_t>(settingsNamespace + "m_trimKinitAfterFirstEnergyComputation", 64);
 
   // If false use the first mode only (representing the largest cluster).
   m_useAllModesPerLeafInPoseHypothesisGeneration =
-      parameters.get_first_value<bool>(parametersNamespace + "m_useAllModesPerLeafInPoseHypothesisGeneration", true);
+      settings.get_first_value<bool>(settingsNamespace + "m_useAllModesPerLeafInPoseHypothesisGeneration", true);
 
   // If false use L2.
   m_usePredictionCovarianceForPoseOptimization =
-      parameters.get_first_value<bool>(parametersNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
+      settings.get_first_value<bool>(settingsNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
 
-  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space for all.
-  m_nbMaxInliers = m_batchSizeRansac * static_cast<size_t>(std::ceil(std::log2(m_trimKinitAfterFirstEnergyComputation)));
+  // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
+  // for all.
+  m_nbMaxInliers =
+      m_batchSizeRansac * static_cast<size_t>(std::ceil(std::log2(m_trimKinitAfterFirstEnergyComputation)));
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 

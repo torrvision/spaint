@@ -33,7 +33,7 @@ using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
@@ -744,7 +744,8 @@ void Application::save_mesh() const
 {
   if(m_meshingEngine)
   {
-    const GlobalParameters& globalParams = GlobalParameters::instance();
+    // FIXME: The two settings variables will be the same after the refactoring.
+    const SettingsContainer& globalSettings = SettingsContainer::instance();
     const Settings_CPtr settings = m_pipeline->get_model()->get_settings();
     const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
     const std::string& sceneID = mainSubwindow.get_scene_id();
@@ -762,7 +763,7 @@ void Application::save_mesh() const
     bf::create_directories(meshesSubdir);
 
     // Use the experimentTag as a filename, or the current timestamp if the tag has not been specified.
-    const std::string meshFilename = globalParams.get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
+    const std::string meshFilename = globalSettings.get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
                                      + ".stl";
 
     // Compute the full path.
