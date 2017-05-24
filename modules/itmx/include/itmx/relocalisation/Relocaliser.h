@@ -66,8 +66,7 @@ public:
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    * \return                The result of the relocalisation, if successful, or boost::none otherwise.
    */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics) const = 0;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Resets the relocaliser, allowing the integration of information for a new area.

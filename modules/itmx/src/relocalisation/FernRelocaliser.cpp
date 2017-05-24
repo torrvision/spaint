@@ -9,51 +9,23 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-FernRelocaliser::FernRelocaliser(Vector2i depthImageSize,
-                                 float viewFrustumMin,
-                                 float viewFrustumMax,
-                                 float harvestingThreshold,
-                                 int numFerns,
-                                 int decisionsPerFern,
+FernRelocaliser::FernRelocaliser(Vector2i depthImageSize, float viewFrustumMin, float viewFrustumMax,
+                                 float harvestingThreshold, int numFerns, int decisionsPerFern,
                                  KeyframeAddPolicy keyframeAddPolicy)
+: m_decisionsPerFern(decisionsPerFern),
+  m_depthImageSize(depthImageSize),
+  m_harvestingThreshold(harvestingThreshold),
+  m_keyframeAddPolicy(keyframeAddPolicy),
+  m_numFerns(numFerns),
+  m_rangeParameters(viewFrustumMin, viewFrustumMax)
 {
-  m_decisionsPerFern = decisionsPerFern;
-  m_depthImageSize = depthImageSize;
-  m_harvestingThreshold = harvestingThreshold;
-  m_keyframeAddPolicy = keyframeAddPolicy;
-  m_numFerns = numFerns;
-  m_rangeParameters = Vector2f(viewFrustumMin, viewFrustumMax);
-
   reset();
-}
-
-//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
-
-float FernRelocaliser::get_default_harvesting_threshold()
-{
-  return 0.2f; // From InfiniTAM.
-}
-
-FernRelocaliser::KeyframeAddPolicy FernRelocaliser::get_default_keyframe_add_policy()
-{
-  return DELAY_AFTER_RELOCALISATION; // Standard behaviour.
-}
-
-int FernRelocaliser::get_default_num_decisions_per_fern()
-{
-  return 4; // From InfiniTAM.
-}
-
-int FernRelocaliser::get_default_num_ferns()
-{
-  return 500; // From InfiniTAM.
 }
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
-boost::optional<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                                 const ITMFloatImage *depthImage,
-                                                                 const Vector4f &depthIntrinsics) const
+boost::optional<Relocaliser::Result>
+FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
 {
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();
@@ -117,6 +89,28 @@ void FernRelocaliser::train(const ITMUChar4Image * /* dummy */, const ITMFloatIm
   int nearestNeighbour = -1;
   m_relocaliser->ProcessFrame(
       depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
+}
+
+//#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
+
+float FernRelocaliser::get_default_harvesting_threshold()
+{
+  return 0.2f; // from InfiniTAM
+}
+
+FernRelocaliser::KeyframeAddPolicy FernRelocaliser::get_default_keyframe_add_policy()
+{
+  return DELAY_AFTER_RELOCALISATION; // standard behaviour
+}
+
+int FernRelocaliser::get_default_num_decisions_per_fern()
+{
+  return 4; // from InfiniTAM
+}
+
+int FernRelocaliser::get_default_num_ferns()
+{
+  return 500; // from InfiniTAM
 }
 
 }
