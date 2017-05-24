@@ -33,16 +33,14 @@ public:
   /**
    * \brief Constructs an instance of SettingsContainer.
    */
-  SettingsContainer();
+  SettingsContainer() {}
 
-  //#################### SINGLETON IMPLEMENTATION ####################
+  //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Gets the singleton instance.
-   *
-   * \return The singleton instance.
+   * \brief Destroys an instance of SettingsContainer.
    */
-  static SettingsContainer& instance();
+  virtual ~SettingsContainer() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

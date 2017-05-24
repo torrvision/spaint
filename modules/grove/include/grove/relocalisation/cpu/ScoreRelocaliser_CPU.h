@@ -29,7 +29,7 @@ public:
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser_CPU(const std::string &forestFilename);
+  ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:

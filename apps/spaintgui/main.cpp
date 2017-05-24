@@ -270,18 +270,17 @@ bool postprocess_arguments(CommandLineArguments& args)
  *
  * \param sceneParams The scene parameters to modify.
  */
-void set_scene_params_from_global_options(ITMSceneParams &sceneParams)
+void set_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSceneParams &sceneParams)
 {
   const std::string parametersNamespace = "SceneParams.";
-  const SettingsContainer& settings = SettingsContainer::instance();
 
   // Use the default values from InfiniTAM.
-  sceneParams.maxW = settings.get_first_value<int>(parametersNamespace + "maxW", 100);
-  sceneParams.mu = settings.get_first_value<float>(parametersNamespace + "mu", 0.02f);
-  sceneParams.stopIntegratingAtMaxW = settings.get_first_value<bool>(parametersNamespace + "stopIntegratingAtMaxW", false);
-  sceneParams.viewFrustum_max = settings.get_first_value<float>(parametersNamespace + "viewFrustum_max", 3.0f);
-  sceneParams.viewFrustum_min = settings.get_first_value<float>(parametersNamespace + "viewFrustum_min", 0.2f);
-  sceneParams.voxelSize = settings.get_first_value<float>(parametersNamespace + "voxelSize", 0.005f);
+  sceneParams.maxW = settings->get_first_value<int>(parametersNamespace + "maxW", 100);
+  sceneParams.mu = settings->get_first_value<float>(parametersNamespace + "mu", 0.02f);
+  sceneParams.stopIntegratingAtMaxW = settings->get_first_value<bool>(parametersNamespace + "stopIntegratingAtMaxW", false);
+  sceneParams.viewFrustum_max = settings->get_first_value<float>(parametersNamespace + "viewFrustum_max", 3.0f);
+  sceneParams.viewFrustum_min = settings->get_first_value<float>(parametersNamespace + "viewFrustum_min", 0.2f);
+  sceneParams.voxelSize = settings->get_first_value<float>(parametersNamespace + "voxelSize", 0.005f);
 }
 
 /**
@@ -289,26 +288,25 @@ void set_scene_params_from_global_options(ITMSceneParams &sceneParams)
  *
  * \param surfelSceneParams The surfel scene parameters to modify.
  */
-void set_surfel_scene_params_from_global_options(ITMSurfelSceneParams &surfelSceneParams)
+void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
 {
   const std::string parametersNamespace = "SurfelSceneParams.";
-  const SettingsContainer& settings = SettingsContainer::instance();
 
   // Use the default values from InfiniTAM.
-  surfelSceneParams.deltaRadius = settings.get_first_value<float>(parametersNamespace + "deltaRadius", 0.5f);
-  surfelSceneParams.gaussianConfidenceSigma = settings.get_first_value<float>(parametersNamespace + "gaussianConfidenceSigma", 0.6f);
-  surfelSceneParams.maxMergeAngle = settings.get_first_value<float>(parametersNamespace + "maxMergeAngle", static_cast<float>(20 * M_PI / 180));
-  surfelSceneParams.maxMergeDist = settings.get_first_value<float>(parametersNamespace + "maxMergeDist", 0.01f);
-  surfelSceneParams.maxSurfelRadius = settings.get_first_value<float>(parametersNamespace + "maxSurfelRadius", 0.004f);
-  surfelSceneParams.minRadiusOverlapFactor = settings.get_first_value<float>(parametersNamespace + "minRadiusOverlapFactor", 3.5f);
-  surfelSceneParams.stableSurfelConfidence = settings.get_first_value<float>(parametersNamespace + "stableSurfelConfidence", 25.0f);
-  surfelSceneParams.supersamplingFactor = settings.get_first_value<int>(parametersNamespace + "supersamplingFactor", 4);
-  surfelSceneParams.trackingSurfelMaxDepth = settings.get_first_value<float>(parametersNamespace + "trackingSurfelMaxDepth", 1.0f);
-  surfelSceneParams.trackingSurfelMinConfidence = settings.get_first_value<float>(parametersNamespace + "trackingSurfelMinConfidence", 5.0f);
-  surfelSceneParams.unstableSurfelPeriod = settings.get_first_value<int>(parametersNamespace + "unstableSurfelPeriod", 20);
-  surfelSceneParams.unstableSurfelZOffset = settings.get_first_value<int>(parametersNamespace + "unstableSurfelZOffset", 10000000);
-  surfelSceneParams.useGaussianSampleConfidence = settings.get_first_value<bool>(parametersNamespace + "useGaussianSampleConfidence", true);
-  surfelSceneParams.useSurfelMerging = settings.get_first_value<bool>(parametersNamespace + "useSurfelMerging", true);
+  surfelSceneParams.deltaRadius = settings->get_first_value<float>(parametersNamespace + "deltaRadius", 0.5f);
+  surfelSceneParams.gaussianConfidenceSigma = settings->get_first_value<float>(parametersNamespace + "gaussianConfidenceSigma", 0.6f);
+  surfelSceneParams.maxMergeAngle = settings->get_first_value<float>(parametersNamespace + "maxMergeAngle", static_cast<float>(20 * M_PI / 180));
+  surfelSceneParams.maxMergeDist = settings->get_first_value<float>(parametersNamespace + "maxMergeDist", 0.01f);
+  surfelSceneParams.maxSurfelRadius = settings->get_first_value<float>(parametersNamespace + "maxSurfelRadius", 0.004f);
+  surfelSceneParams.minRadiusOverlapFactor = settings->get_first_value<float>(parametersNamespace + "minRadiusOverlapFactor", 3.5f);
+  surfelSceneParams.stableSurfelConfidence = settings->get_first_value<float>(parametersNamespace + "stableSurfelConfidence", 25.0f);
+  surfelSceneParams.supersamplingFactor = settings->get_first_value<int>(parametersNamespace + "supersamplingFactor", 4);
+  surfelSceneParams.trackingSurfelMaxDepth = settings->get_first_value<float>(parametersNamespace + "trackingSurfelMaxDepth", 1.0f);
+  surfelSceneParams.trackingSurfelMinConfidence = settings->get_first_value<float>(parametersNamespace + "trackingSurfelMinConfidence", 5.0f);
+  surfelSceneParams.unstableSurfelPeriod = settings->get_first_value<int>(parametersNamespace + "unstableSurfelPeriod", 20);
+  surfelSceneParams.unstableSurfelZOffset = settings->get_first_value<int>(parametersNamespace + "unstableSurfelZOffset", 10000000);
+  surfelSceneParams.useGaussianSampleConfidence = settings->get_first_value<bool>(parametersNamespace + "useGaussianSampleConfidence", true);
+  surfelSceneParams.useSurfelMerging = settings->get_first_value<bool>(parametersNamespace + "useSurfelMerging", true);
 }
 
 /**
@@ -316,10 +314,8 @@ void set_surfel_scene_params_from_global_options(ITMSurfelSceneParams &surfelSce
  *
  * \param parsedOptions The options to store in GlobalParameters.
  */
-void store_parsed_options_into_global_parameters(const po::parsed_options& parsedOptions)
+void store_parsed_options_into_global_settings(const po::parsed_options& parsedOptions, const SettingsContainer_Ptr &settings)
 {
-  SettingsContainer& settings = SettingsContainer::instance();
-
   for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
   {
     const po::basic_option<char> &option = parsedOptions.options[optionIdx];
@@ -327,7 +323,7 @@ void store_parsed_options_into_global_parameters(const po::parsed_options& parse
     // Add all values in the correct order.
     for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
     {
-      settings.add_value(option.string_key, option.value[valueIdx]);
+      settings->add_value(option.string_key, option.value[valueIdx]);
     }
   }
 }
@@ -340,7 +336,7 @@ void store_parsed_options_into_global_parameters(const po::parsed_options& parse
  * \param args  The parsed command-line arguments.
  * \return      true, if the program should continue after parsing the command-line arguments, or false otherwise.
  */
-bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
+bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const SettingsContainer_Ptr &settings)
 {
   // Specify the possible options.
   po::options_description genericOptions("Generic options");
@@ -395,7 +391,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   // Store the parsed options in both the variables map and GlobalParameters.
   po::store(parsedCommandLineOptions, vm);
-  store_parsed_options_into_global_parameters(parsedCommandLineOptions);
+  store_parsed_options_into_global_settings(parsedCommandLineOptions, settings);
 
   // Parse options from configuration file, if necessary.
   if(vm.count("configFile"))
@@ -407,12 +403,12 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     po::store(parsedConfigFileOptions, vm);
 
     // Store all options (including unregistered ones) into the GlobalParameters.
-    store_parsed_options_into_global_parameters(parsedConfigFileOptions);
+    store_parsed_options_into_global_settings(parsedConfigFileOptions, settings);
   }
 
   po::notify(vm);
 
-  std::cout << "Global settings:\n" << SettingsContainer::instance() << '\n';
+  std::cout << "Global settings:\n" << *settings << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
@@ -440,9 +436,14 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
+  // Setup the settings.
+  Settings_Ptr settings(new Settings);
+  settings->trackerConfig = NULL;
+
+
   // Parse and post-process the command-line arguments.
   CommandLineArguments args;
-  if(!parse_command_line(argc, argv, args) || !postprocess_arguments(args))
+  if(!parse_command_line(argc, argv, args, settings) || !postprocess_arguments(args))
   {
     return 0;
   }
@@ -463,13 +464,9 @@ try
   ovr_Initialize();
 #endif
 
-  // Specify the settings.
-  Settings_Ptr settings(new Settings);
-  settings->trackerConfig = NULL;
-
   // Set scene parameters from configuration.
-  set_scene_params_from_global_options(settings->sceneParams);
-  set_surfel_scene_params_from_global_options(settings->surfelSceneParams);
+  set_scene_params_from_global_options(settings, settings->sceneParams);
+  set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 

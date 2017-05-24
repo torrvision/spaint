@@ -19,6 +19,8 @@ using itmx::MemoryBlockFactory;
 #include "relocalisation/shared/ScoreRelocaliser_Shared.h"
 #include "reservoirs/ExampleReservoirsFactory.h"
 
+using namespace tvgutil;
+
 namespace grove {
 
 //#################### CUDA KERNELS ####################
@@ -40,7 +42,8 @@ __global__ void ck_score_relocaliser_get_predictions(const ScorePrediction *leaf
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename) : ScoreRelocaliser(forestFilename)
+ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
+  : ScoreRelocaliser(settings, forestFilename)
 {
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
@@ -67,7 +70,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const std::string &forestFilename) 
       ITMLibSettings::DEVICE_CUDA, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CUDA, m_settings);
 
   // Clear internal state.
   reset();

@@ -25,11 +25,12 @@ public:
   /**
    * \brief Constructs an instance of ScoreRelocaliser_CUDA, loading a pretrained forest from a file.
    *
+   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
    * \param forestFilename The path to the pretrained forest file.
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser_CUDA(const std::string &forestFilename);
+  ScoreRelocaliser_CUDA(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:

@@ -16,14 +16,14 @@ namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
-PreemptiveRansac_Ptr RansacFactory::make_preemptive_ransac(ITMLibSettings::DeviceType deviceType)
+PreemptiveRansac_Ptr RansacFactory::make_preemptive_ransac(ITMLibSettings::DeviceType deviceType, const tvgutil::SettingsContainer_CPtr &settings)
 {
   PreemptiveRansac_Ptr ransac;
 
   if (deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    ransac.reset(new PreemptiveRansac_CUDA);
+    ransac.reset(new PreemptiveRansac_CUDA(settings));
 #else
     throw std::runtime_error(
         "Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -31,7 +31,7 @@ PreemptiveRansac_Ptr RansacFactory::make_preemptive_ransac(ITMLibSettings::Devic
   }
   else
   {
-    ransac.reset(new PreemptiveRansac_CPU);
+    ransac.reset(new PreemptiveRansac_CPU(settings));
   }
 
   return ransac;

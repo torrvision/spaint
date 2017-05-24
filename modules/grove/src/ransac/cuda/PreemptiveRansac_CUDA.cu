@@ -148,7 +148,7 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() : PreemptiveRansac()
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 

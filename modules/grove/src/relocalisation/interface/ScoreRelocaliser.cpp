@@ -15,10 +15,10 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
+ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
+  : m_settings(settings)
 {
   const std::string settingsNamespace = "ScoreRelocaliser.";
-  const SettingsContainer &settings = SettingsContainer::instance();
 
   // In this constructor we are just setting the variables, instantiation of the sub-algorithms is left to the sub class
   // in order to instantiate the appropriate version.
@@ -33,18 +33,18 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
   //
 
   // Update the modes associated to this number of reservoirs for each integration/update call.
-  m_maxReservoirsToUpdate = settings.get_first_value<uint32_t>(settingsNamespace + "m_maxReservoirsToUpdate", 256);
+  m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_maxReservoirsToUpdate", 256);
   // m_reservoirsCount is not set since that number depends on the forest that will be instantiated in the subclass.
-  m_reservoirsCapacity = settings.get_first_value<uint32_t>(settingsNamespace + "m_reservoirsCapacity", 1024);
-  m_rngSeed = settings.get_first_value<uint32_t>(settingsNamespace + "m_rngSeed", 42);
+  m_reservoirsCapacity = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_reservoirsCapacity", 1024);
+  m_rngSeed = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_rngSeed", 42);
 
   //
   // Clustering parameters (defaults are tentative values that seem to work)
   //
-  m_clustererSigma = settings.get_first_value<float>(settingsNamespace + "m_clustererSigma", 0.1f);
-  m_clustererTau = settings.get_first_value<float>(settingsNamespace + "m_clustererTau", 0.05f);
-  m_maxClusterCount = settings.get_first_value<uint32_t>(settingsNamespace + "m_maxClusterCount", ScorePrediction::MAX_CLUSTERS);
-  m_minClusterSize = settings.get_first_value<uint32_t>(settingsNamespace + "m_minClusterSize", 20);
+  m_clustererSigma = m_settings->get_first_value<float>(settingsNamespace + "m_clustererSigma", 0.1f);
+  m_clustererTau = m_settings->get_first_value<float>(settingsNamespace + "m_clustererTau", 0.05f);
+  m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_maxClusterCount", ScorePrediction::MAX_CLUSTERS);
+  m_minClusterSize = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_minClusterSize", 20);
 
   if(m_maxClusterCount > ScorePrediction::MAX_CLUSTERS)
   {

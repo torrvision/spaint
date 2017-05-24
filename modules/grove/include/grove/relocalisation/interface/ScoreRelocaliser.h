@@ -18,6 +18,8 @@
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
+
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"
@@ -68,11 +70,12 @@ protected:
   /**
    * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
    *
+   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
    * \param forestFilename The path to the pretrained forest file.
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser(const std::string &forestFilename);
+  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -198,6 +201,9 @@ protected:
 
   /** The relocalisaton forest. */
   ScoreForest_Ptr m_scoreForest;
+
+  /** The relocalisation settings. */
+  tvgutil::SettingsContainer_CPtr m_settings;
 
   // Update-related data
   /** The index of the reservoir that had been updated when the integration function has been called. */

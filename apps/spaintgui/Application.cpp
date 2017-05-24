@@ -744,11 +744,9 @@ void Application::save_mesh() const
 {
   if(m_meshingEngine)
   {
-    // FIXME: The two settings variables will be the same after the refactoring.
-    const SettingsContainer& globalSettings = SettingsContainer::instance();
-    const Settings_CPtr settings = m_pipeline->get_model()->get_settings();
     const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
     const std::string& sceneID = mainSubwindow.get_scene_id();
+    const Settings_CPtr settings = m_pipeline->get_model()->get_settings_for_scene(sceneID);
     const Model_CPtr& model = m_pipeline->get_model();
     const SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
@@ -763,7 +761,7 @@ void Application::save_mesh() const
     bf::create_directories(meshesSubdir);
 
     // Use the experimentTag as a filename, or the current timestamp if the tag has not been specified.
-    const std::string meshFilename = globalSettings.get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
+    const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
                                      + ".stl";
 
     // Compute the full path.

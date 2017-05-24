@@ -365,23 +365,21 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
 void SLAMComponent::setup_relocaliser()
 {
-  // FIXME: This global settings variable will be merged with settings later.
+  const Settings_CPtr settings = m_context->get_settings_for_scene(m_sceneID);
   const static std::string settingsNamespace = "SLAMComponent.";
-  const SettingsContainer &globalSettings = SettingsContainer::instance();
 
-  m_relocaliseEveryFrame = globalSettings.get_first_value<bool>(settingsNamespace +
-                                                              "m_relocaliseEveryFrame", false);
+  m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace +
+                                                          "m_relocaliseEveryFrame", false);
 
-  m_relocaliserType = globalSettings.get_first_value<std::string>(settingsNamespace +
-                                                                "m_relocaliserType", "forest");
+  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace +
+                                                            "m_relocaliserType", "forest");
 
-  m_relocaliserUpdateEveryFrame = globalSettings.get_first_value<bool>(settingsNamespace +
-                                                                     "m_updateRelocaliserEveryFrame", true);
+  m_relocaliserUpdateEveryFrame = settings->get_first_value<bool>(settingsNamespace +
+                                                                 "m_updateRelocaliserEveryFrame", true);
 
   // Useful variables.
   const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
   const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
-  const Settings_CPtr &settings = m_context->get_settings();
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
   // A pointer to the actual relocaliser that will be nested in the refining relocaliser.
@@ -391,11 +389,11 @@ void SLAMComponent::setup_relocaliser()
     const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) /
                                                          "DefaultRelocalizationForest.rf").string();
 
-    m_relocaliserForestPath = globalSettings.get_first_value<std::string>(settingsNamespace +
-                                                                           "m_relocalisationForestPath", defaultRelocalisationForestPath);
+    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace +
+                                                                     "m_relocalisationForestPath", defaultRelocalisationForestPath);
     std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
 
-    nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocaliserForestPath);
+    nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
     //  nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
   }
   else if (m_relocaliserType == "ferns")
@@ -424,11 +422,11 @@ void SLAMComponent::setup_relocaliser()
   }
 
   // Refinement ICP tracker
-  m_relocaliserRefinementTrackerParams = globalSettings.get_first_value<std::string>(settingsNamespace + "m_refinementTrackerParams",
-                                                                                   "type=extended,levels=rrbb,minstep=1e-4,"
-                                                                                   "outlierSpaceC=0.1,outlierSpaceF=0.004,"
-                                                                                   "numiterC=20,numiterF=20,tukeyCutOff=8,"
-                                                                                   "framesToSkip=20,framesToWeight=50,failureDec=20.0");
+  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(settingsNamespace + "m_refinementTrackerParams",
+                                                                                "type=extended,levels=rrbb,minstep=1e-4,"
+                                                                                "outlierSpaceC=0.1,outlierSpaceF=0.004,"
+                                                                                "numiterC=20,numiterF=20,tukeyCutOff=8,"
+                                                                                "framesToSkip=20,framesToWeight=50,failureDec=20.0");
 
   // Set up the refining relocaliser.
   m_context->get_relocaliser(m_sceneID).reset(new SpaintRefiningRelocaliser(nestedRelocaliser,

@@ -87,19 +87,17 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
   //      m_scene->sceneParams,
   //      m_itmLibSettings->GetMemoryType()));
 
-  // FIXME: This global settings variable will be merged with m_settings later.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
-  const SettingsContainer &globalSettings = SettingsContainer::instance();
 
   // Setup evaluation variables.
   m_saveRelocalisationPoses =
-      globalSettings.get_first_value<bool>(settingsNamespace + "m_saveRelocalisationPoses", false);
+      m_settings->get_first_value<bool>(settingsNamespace + "m_saveRelocalisationPoses", false);
 
   if (m_saveRelocalisationPoses)
   {
     // No "namespace" for the experiment tag.
     const std::string posesFolder =
-        globalSettings.get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
+        m_settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
 
     m_relocalisationPosesPathGenerator.reset(
         SequentialPathGenerator(find_subdir_from_executable("reloc_poses") / posesFolder));
@@ -111,7 +109,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
   }
 
   // Decide whether or not to enable the timers.
-  m_timersEnabled = globalSettings.get_first_value<bool>(settingsNamespace + "m_timersEnabled", false);
+  m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "m_timersEnabled", false);
 }
 
 template <typename VoxelType, typename IndexType>

@@ -7,16 +7,6 @@
 
 namespace tvgutil {
 
-//#################### SINGLETON IMPLEMENTATION ####################
-
-SettingsContainer::SettingsContainer() {}
-
-SettingsContainer& SettingsContainer::instance()
-{
-  static SettingsContainer s_instance;
-  return s_instance;
-}
-
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
 void SettingsContainer::add_value(const std::string& key, const std::string& value)

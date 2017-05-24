@@ -20,7 +20,6 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
-#include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 // To enable more detailed timing prints (VERY VERBOSE)
@@ -126,57 +125,57 @@ void printTimer(const PreemptiveRansac::AverageTimer &timer)
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac::PreemptiveRansac()
-  : m_timerCandidateGeneration("Candidate Generation")
+PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
+  : m_settings(settings)
+  , m_timerCandidateGeneration("Candidate Generation")
   , m_timerFirstComputeEnergy("First Energy Computation")
   , m_timerFirstTrim("First Trim")
   , m_timerTotal("P-RANSAC Total")
 {
   const std::string settingsNamespace = "PreemptiveRansac.";
-  const SettingsContainer &settings = SettingsContainer::instance();
 
   // By default, we set all parameters as in scoreforests.
-  m_batchSizeRansac = settings.get_first_value<size_t>(settingsNamespace + "m_batchSizeRansac", 500);
+  m_batchSizeRansac = m_settings->get_first_value<size_t>(settingsNamespace + "m_batchSizeRansac", 500);
 
   m_checkMinDistanceBetweenSampledModes =
-      settings.get_first_value<bool>(settingsNamespace + "m_checkMinDistanceBetweenSampledModes", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "m_checkMinDistanceBetweenSampledModes", true);
 
   // Setting it to false speeds up a lot, at the expense of quality.
   m_checkRigidTransformationConstraint =
-      settings.get_first_value<bool>(settingsNamespace + "m_checkRigidTransformationConstraint", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "m_checkRigidTransformationConstraint", true);
 
   // In m.
   m_minSquaredDistanceBetweenSampledModes =
-      settings.get_first_value<float>(settingsNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+      m_settings->get_first_value<float>(settingsNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
   // Number of initial pose candidates.
-  m_nbMaxPoseCandidates = settings.get_first_value<size_t>(settingsNamespace + "m_nbMaxPoseCandidates", 1024);
+  m_nbMaxPoseCandidates = m_settings->get_first_value<size_t>(settingsNamespace + "m_nbMaxPoseCandidates", 1024);
 
   // In m.
   m_poseOptimizationInlierThreshold =
-      settings.get_first_value<float>(settingsNamespace + "m_poseOptimizationInlierThreshold", 0.2f);
+      m_settings->get_first_value<float>(settingsNamespace + "m_poseOptimizationInlierThreshold", 0.2f);
 
   // Whether or not to optimise the poses with LM.
-  m_poseUpdate = settings.get_first_value<bool>(settingsNamespace + "m_poseUpdate", true);
+  m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "m_poseUpdate", true);
 
   // Whether or not to print the timers for each phase.
-  m_printTimers = settings.get_first_value<bool>(settingsNamespace + "m_printTimers", false);
+  m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "m_printTimers", false);
 
   // In m.
   m_translationErrorMaxForCorrectPose =
-      settings.get_first_value<float>(settingsNamespace + "m_translationErrorMaxForCorrectPose", 0.05f);
+      m_settings->get_first_value<float>(settingsNamespace + "m_translationErrorMaxForCorrectPose", 0.05f);
 
   // Aggressively cull hypotheses to this number.
   m_trimKinitAfterFirstEnergyComputation =
-      settings.get_first_value<size_t>(settingsNamespace + "m_trimKinitAfterFirstEnergyComputation", 64);
+      m_settings->get_first_value<size_t>(settingsNamespace + "m_trimKinitAfterFirstEnergyComputation", 64);
 
   // If false use the first mode only (representing the largest cluster).
   m_useAllModesPerLeafInPoseHypothesisGeneration =
-      settings.get_first_value<bool>(settingsNamespace + "m_useAllModesPerLeafInPoseHypothesisGeneration", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "m_useAllModesPerLeafInPoseHypothesisGeneration", true);
 
   // If false use L2.
   m_usePredictionCovarianceForPoseOptimization =
-      settings.get_first_value<bool>(settingsNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
 
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
   // for all.
