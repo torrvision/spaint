@@ -149,19 +149,19 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::integrate_rgbd_pose_pair(cons
 }
 
 template <typename VoxelType, typename IndexType>
-boost::optional<Relocaliser::RelocalisationResult> ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(
-    const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
+boost::optional<Relocaliser::Result>
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
 {
   boost::optional<ORUtils::SE3Pose> initialPose;
   return relocalise(colourImage, depthImage, depthIntrinsics, initialPose);
 }
 
 template <typename VoxelType, typename IndexType>
-boost::optional<Relocaliser::RelocalisationResult>
-    ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage,
-                                                             const ITMFloatImage *depthImage,
-                                                             const Vector4f &depthIntrinsics,
-                                                             boost::optional<ORUtils::SE3Pose> &initialPose) const
+boost::optional<Relocaliser::Result>
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage,
+                                                         const ITMFloatImage *depthImage,
+                                                         const Vector4f &depthIntrinsics,
+                                                         boost::optional<ORUtils::SE3Pose> &initialPose) const
 {
   start_timer(m_timerRelocalisation);
 
@@ -172,7 +172,7 @@ boost::optional<Relocaliser::RelocalisationResult>
   //  refinementDetails.refinementResult = ITMTrackingState::TRACKING_FAILED;
 
   // Run the wrapped relocaliser.
-  boost::optional<RelocalisationResult> relocalisationResult =
+  boost::optional<Result> relocalisationResult =
       m_relocaliser->relocalise(colourImage, depthImage, depthIntrinsics);
 
   // If the first step of relocalisation failed, then early out.
@@ -220,7 +220,7 @@ boost::optional<Relocaliser::RelocalisationResult>
   m_trackingController->Track(m_trackingState.get(), m_view.get());
 
   // Now setup the result (if the tracking failed we are gonna return an empty optional later).
-  RelocalisationResult refinementResult;
+  Result refinementResult;
   refinementResult.pose.SetFrom(m_trackingState->pose_d);
 
   // Now, if we are in evaluation mode (we are saving the poses) and the refinement gave GOOD results, force the

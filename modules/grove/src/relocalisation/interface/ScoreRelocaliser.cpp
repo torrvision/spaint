@@ -112,9 +112,9 @@ void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImag
   update_reservoir_start_idx();
 }
 
-boost::optional<Relocaliser::RelocalisationResult> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                                                const ITMFloatImage *depthImage,
-                                                                                const Vector4f &depthIntrinsics) const
+boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                                  const ITMFloatImage *depthImage,
+                                                                  const Vector4f &depthIntrinsics) const
 {
   // Try to estimate a pose only if we have enough valid depth values.
   if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
@@ -136,7 +136,7 @@ boost::optional<Relocaliser::RelocalisationResult> ScoreRelocaliser::relocalise(
     // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
     if (poseCandidate)
     {
-      RelocalisationResult result;
+      Result result;
       result.pose.SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
       result.quality = RELOCALISATION_GOOD;
 

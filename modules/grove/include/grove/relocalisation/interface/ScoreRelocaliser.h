@@ -143,9 +143,9 @@ public:
    *
    * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics) const;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
+                                             const ITMFloatImage *depthImage,
+                                             const Vector4f &depthIntrinsics) const;
 
   /**
    * \brief Reset the relocaliser, allowing the relocalisation in a new environment.

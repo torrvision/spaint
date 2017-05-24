@@ -79,9 +79,9 @@ void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy *
       depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
 }
 
-boost::optional<Relocaliser::RelocalisationResult> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                                               const ITMFloatImage *depthImage,
-                                                                               const Vector4f &depthIntrinsics) const
+boost::optional<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                                 const ITMFloatImage *depthImage,
+                                                                 const Vector4f &depthIntrinsics) const
 {
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();
@@ -104,7 +104,7 @@ boost::optional<Relocaliser::RelocalisationResult> FernRelocaliser::relocalise(c
     m_keyframeDelay = 10;
 
     // Retrieve the pose and set the quality to GOOD.
-    RelocalisationResult result;
+    Result result;
     result.pose = m_relocaliser->RetrievePose(nearestNeighbour).pose;
     result.quality = RELOCALISATION_GOOD;
 

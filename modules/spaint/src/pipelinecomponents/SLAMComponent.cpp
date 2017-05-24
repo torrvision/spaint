@@ -331,7 +331,7 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
   if (performRelocalization)
   {
-    boost::optional<Relocaliser::RelocalisationResult> relocalisationResult =
+    boost::optional<Relocaliser::Result> relocalisationResult =
         relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics);
 
     if (relocalisationResult)

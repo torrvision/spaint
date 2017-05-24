@@ -26,7 +26,7 @@ public:
   /**
    * \brief The values of this enumeration can be used to indicate the quality of a relocalised pose.
    */
-  enum RelocalisationQuality
+  enum Quality
   {
     RELOCALISATION_GOOD,
     RELOCALISATION_POOR
@@ -37,7 +37,7 @@ public:
   /**
    * \brief An instance of this struct represents the results of a relocalisation call.
    */
-  struct RelocalisationResult
+  struct Result
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
@@ -45,7 +45,7 @@ public:
     ORUtils::SE3Pose pose;
 
     /** The quality of the relocalisation. */
-    RelocalisationQuality quality;
+    Quality quality;
   };
 
   //#################### DESTRUCTOR ####################
@@ -79,9 +79,9 @@ public:
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    * \return                The result of the relocalisation, if successful, or boost::none otherwise.
    */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f& depthIntrinsics) const = 0;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
+                                             const ITMFloatImage *depthImage,
+                                             const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Resets the relocaliser, allowing the integration of information for a new area.

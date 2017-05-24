@@ -102,9 +102,9 @@ public:
    *
    * \return The result of the relocalisation if successful, an empty optional otherwise.
    */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics) const;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
+                                             const ITMFloatImage *depthImage,
+                                             const Vector4f &depthIntrinsics) const;
 
   /**
    * \brief Resets the relocaliser allowing the integration of informations on a new area.
