@@ -11,6 +11,7 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
+#include <itmx/base/Settings.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
 #include "../slamstate/SLAMState.h"
@@ -32,6 +33,9 @@ private:
 private:
   /** The relocalisers used to estimate the camera pose in the various scenes. */
   std::map<std::string,itmx::Relocaliser_Ptr> m_relocalisers;
+
+  /** FIXME: this will need to replace m_settings as well. */
+  std::map<std::string,itmx::Settings_Ptr> m_settingsForScene;
 
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
@@ -68,6 +72,22 @@ public:
    * \return        The relocaliser for the specified scene.
    */
   virtual itmx::Relocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+
+  /**
+   * \brief Gets the settings for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The settings for the specified scene.
+   */
+  virtual itmx::Settings_Ptr& get_settings_for_scene(const std::string& sceneID);
+
+  /**
+   * \brief Gets the settings for the specified scene.
+   *
+   * \param sceneID The scene ID.
+   * \return        The settings for the specified scene.
+   */
+  virtual itmx::Settings_CPtr get_settings_for_scene(const std::string& sceneID) const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.
