@@ -92,9 +92,6 @@ public:
   virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                      const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
 
-  /** Override */
-  virtual void update();
-
   //#################### PRIVATE TYPEDEFS ####################
 private:
   typedef FernRelocLib::Relocaliser<float> WrappedRelocaliser;
@@ -130,6 +127,6 @@ private:
   WrappedRelocaliser_Ptr m_relocaliser;
 };
 
-} // namespace itmx
+}
 
-#endif // H_ITMX_FERNRELOCALISER
+#endif

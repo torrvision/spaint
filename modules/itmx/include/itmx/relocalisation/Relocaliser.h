@@ -53,7 +53,7 @@ public:
   /**
    * \brief Destroys a relocaliser.
    */
-  virtual ~Relocaliser() {}
+  virtual ~Relocaliser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
@@ -86,12 +86,14 @@ public:
   virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                      const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose) = 0;
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.
    *
-   * This can be useful for performing bookkeeping operations.
+   * This is intended to be overridden by derived relocalisers that need to perform bookkeeping operations.
    */
-  virtual void update() = 0;
+  virtual void update();
 };
 
 //#################### TYPEDEFS ####################

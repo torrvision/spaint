@@ -8,7 +8,7 @@
 
 #include "Relocaliser.h"
 
-#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
+//#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
 
 namespace itmx {
 
@@ -18,20 +18,6 @@ namespace itmx {
  */
 class RefiningRelocaliser : public Relocaliser
 {
-  //#################### NESTED TYPES ####################
-public:
-  /**
-   * \brief An instance of this struct will contain details on the intermediate relocalisation and refinement steps.
-   */
-  struct RefinementDetails
-  {
-    /** The initial pose estimated by the relocaliser. */
-    boost::optional<ORUtils::SE3Pose> initialPose;
-
-    /** Quality of the refinement tracking operation. */
-    ITMLib::ITMTrackingState::TrackingResult refinementResult;
-  };
-
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
@@ -40,15 +26,6 @@ public:
    * \return A pointer to the inner relocaliser.
    */
   virtual Relocaliser_Ptr get_inner_relocaliser() const = 0;
-
-  /** Override */
-  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
-                     const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose) = 0;
-
-  /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
-                                             const ITMFloatImage *depthImage,
-                                             const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
@@ -65,12 +42,6 @@ public:
                                              const ITMFloatImage *depthImage,
                                              const Vector4f& depthIntrinsics,
                                              boost::optional<ORUtils::SE3Pose>& initialPose) const = 0;
-
-  /** Override */
-  virtual void reset() = 0;
-
-  /** Override */
-  virtual void update() = 0;
 };
 
 //#################### TYPEDEFS ####################

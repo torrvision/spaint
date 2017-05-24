@@ -119,9 +119,4 @@ void FernRelocaliser::train(const ITMUChar4Image * /* dummy */, const ITMFloatIm
       depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
 }
 
-void FernRelocaliser::update()
-{
-  // Nothing to do for this relocaliser.
-}
-
 }

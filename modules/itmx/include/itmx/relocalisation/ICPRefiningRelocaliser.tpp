@@ -157,9 +157,6 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
   // Reset the initial pose.
   initialPose.reset();
 
-  // Initialise the tracking result.
-  //  refinementDetails.refinementResult = ITMTrackingState::TRACKING_FAILED;
-
   // Run the wrapped relocaliser.
   boost::optional<Result> relocalisationResult =
       m_relocaliser->relocalise(colourImage, depthImage, depthIntrinsics);

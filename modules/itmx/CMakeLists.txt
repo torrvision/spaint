@@ -48,6 +48,7 @@ include/itmx/persistence/PosePersister.h
 ##
 SET(relocalisation_sources
 src/relocalisation/FernRelocaliser.cpp
+src/relocalisation/Relocaliser.cpp
 src/relocalisation/RelocaliserFactory.cpp
 )
 
