@@ -14,9 +14,6 @@
 #include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
 #include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 
-#include <itmx/relocalisation/Relocaliser.h>
-#include <itmx/relocalisation/RefiningRelocaliser.h>
-
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
 #include "../trackers/FallibleTracker.h"
