@@ -138,17 +138,6 @@ Relocaliser_Ptr ICPRefiningRelocaliser<VoxelType, IndexType>::get_inner_relocali
 }
 
 template <typename VoxelType, typename IndexType>
-void ICPRefiningRelocaliser<VoxelType, IndexType>::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                                                            const ITMFloatImage *depthImage,
-                                                                            const Vector4f &depthIntrinsics,
-                                                                            const ORUtils::SE3Pose &cameraPose)
-{
-  start_timer(m_timerIntegration);
-  m_relocaliser->integrate_rgbd_pose_pair(colourImage, depthImage, depthIntrinsics, cameraPose);
-  stop_timer(m_timerIntegration);
-}
-
-template <typename VoxelType, typename IndexType>
 boost::optional<Relocaliser::Result>
 ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
 {
@@ -243,6 +232,15 @@ template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::reset()
 {
   m_relocaliser->reset();
+}
+
+template <typename VoxelType, typename IndexType>
+void ICPRefiningRelocaliser<VoxelType, IndexType>::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                                         const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
+{
+  start_timer(m_timerIntegration);
+  m_relocaliser->train(colourImage, depthImage, depthIntrinsics, cameraPose);
+  stop_timer(m_timerIntegration);
 }
 
 template <typename VoxelType, typename IndexType>

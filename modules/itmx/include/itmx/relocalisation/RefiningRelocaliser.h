@@ -41,31 +41,14 @@ public:
    */
   virtual Relocaliser_Ptr get_inner_relocaliser() const = 0;
 
-  /**
-   * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The position of the camera in the world.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose) = 0;
+  /** Override */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose) = 0;
 
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
-   */
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
-                                             const Vector4f &depthIntrinsics) const = 0;
+                                             const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
@@ -80,18 +63,13 @@ public:
    */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
-                                             const Vector4f &depthIntrinsics,
-                                             boost::optional<ORUtils::SE3Pose> &initialPose) const = 0;
+                                             const Vector4f& depthIntrinsics,
+                                             boost::optional<ORUtils::SE3Pose>& initialPose) const = 0;
 
-  /**
-   * \brief Resets the relocaliser allowing the integration of informations on a new area.
-   */
+  /** Override */
   virtual void reset() = 0;
 
-  /**
-   * \brief Updates the contents of the relocaliser when spare processing time is available. Can perform bookkeeping
-   *        operations.
-   */
+  /** Override */
   virtual void update() = 0;
 };
 
@@ -100,6 +78,6 @@ public:
 typedef boost::shared_ptr<RefiningRelocaliser> RefiningRelocaliser_Ptr;
 typedef boost::shared_ptr<const RefiningRelocaliser> RefiningRelocaliser_CPtr;
 
-} // namespace itmx
+}
 
-#endif // H_ITMX_REFININGRELOCALISER
+#endif

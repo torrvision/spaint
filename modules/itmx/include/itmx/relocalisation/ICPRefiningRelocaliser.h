@@ -84,57 +84,25 @@ public:
    */
   virtual Relocaliser_Ptr get_inner_relocaliser() const;
 
-  /**
-   * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The position of the camera in the world.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose);
-
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
-   */
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
                                              const Vector4f &depthIntrinsics) const;
 
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *        Provides more details on the relcalisation phase.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param initialPose     The camera pose estimated by the inner relocaliser if it succeeded, boost::none otherwise.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
-   */
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
                                              const Vector4f &depthIntrinsics,
                                              boost::optional<ORUtils::SE3Pose> &initialPose) const;
 
-  /**
-   * \brief Resets the relocaliser allowing the integration of informations on a new area.
-   */
+  /** Override */
   virtual void reset();
 
-  /**
-   * \brief Updates the contents of the relocaliser when spare processing time is available. Can perform bookkeeping
-   *        operations.
-   */
+  /** Override */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+
+  /** Override */
   virtual void update();
 
   //#################### PRIVATE MEMBER FUNCTIONS ####################

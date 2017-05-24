@@ -80,41 +80,19 @@ public:
 
   //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The position of the camera in the world.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose);
-
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
-   */
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
                                              const Vector4f &depthIntrinsics) const;
 
-  /**
-   * \brief Resets the relocaliser allowing the integration of informations on a new area.
-   */
+  /** Override */
   virtual void reset();
 
-  /**
-   * \brief Updates the contents of the relocaliser when spare processing time is available. Can perform bookkeeping
-   *        operations. Does nothing in this impementation.
-   */
+  /** Override */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+
+  /** Override */
   virtual void update();
 
   //#################### PRIVATE TYPEDEFS ####################
@@ -134,7 +112,7 @@ private:
   float m_harvestingThreshold;
 
   /**
-   * The policy deciding whether a frame for which the integrate_rgbd_pose_pair function is called can be actually
+   * The policy deciding whether a frame for which the train function is called can be actually
    * integrated in the Fern conservatory.
    */
   KeyframeAddPolicy m_keyframeAddPolicy;

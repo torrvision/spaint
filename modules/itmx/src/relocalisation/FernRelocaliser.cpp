@@ -51,34 +51,6 @@ int FernRelocaliser::get_default_num_ferns()
 
 //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
 
-void FernRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image * /* dummy */,
-                                               const ITMFloatImage *depthImage,
-                                               const Vector4f & /* dummy */,
-                                               const ORUtils::SE3Pose &cameraPose)
-{
-  // If this function is being called the assumption is that tracking succeeded, so we always consider this frame to be
-  // a keyframe unless we just relocalised and the policy specifies that we have to wait, in that case early out.
-  if (m_keyframeDelay > 0 && m_keyframeAddPolicy == DELAY_AFTER_RELOCALISATION)
-  {
-    --m_keyframeDelay;
-    return;
-  }
-
-  // Copy the current depth input across to the CPU for use by the relocaliser.
-  depthImage->UpdateHostFromDevice();
-
-  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-  // that is currently in the database, and may add the current frame as a new keyframe if the current frame differs
-  // sufficiently from the existing keyframes.
-
-  const bool considerKeyframe = true;
-  const int sceneId = 0;
-  const int requestedNnCount = 1;
-  int nearestNeighbour = -1;
-  m_relocaliser->ProcessFrame(
-      depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
-}
-
 boost::optional<Relocaliser::Result> FernRelocaliser::relocalise(const ITMUChar4Image *colourImage,
                                                                  const ITMFloatImage *depthImage,
                                                                  const Vector4f &depthIntrinsics) const
@@ -121,9 +93,35 @@ void FernRelocaliser::reset()
       m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern));
 }
 
+void FernRelocaliser::train(const ITMUChar4Image * /* dummy */, const ITMFloatImage *depthImage,
+                            const Vector4f& /* dummy */, const ORUtils::SE3Pose& cameraPose)
+{
+  // If this function is being called the assumption is that tracking succeeded, so we always consider this frame to be
+  // a keyframe unless we just relocalised and the policy specifies that we have to wait, in that case early out.
+  if (m_keyframeDelay > 0 && m_keyframeAddPolicy == DELAY_AFTER_RELOCALISATION)
+  {
+    --m_keyframeDelay;
+    return;
+  }
+
+  // Copy the current depth input across to the CPU for use by the relocaliser.
+  depthImage->UpdateHostFromDevice();
+
+  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
+  // that is currently in the database, and may add the current frame as a new keyframe if the current frame differs
+  // sufficiently from the existing keyframes.
+
+  const bool considerKeyframe = true;
+  const int sceneId = 0;
+  const int requestedNnCount = 1;
+  int nearestNeighbour = -1;
+  m_relocaliser->ProcessFrame(
+      depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
+}
+
 void FernRelocaliser::update()
 {
   // Nothing to do for this relocaliser.
 }
 
-} // namespace itmx
+}

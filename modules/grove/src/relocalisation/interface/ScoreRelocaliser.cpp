@@ -76,42 +76,6 @@ Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const { retur
 
 ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const { return m_predictionsImage; }
 
-void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                                const ITMFloatImage *depthImage,
-                                                const Vector4f &depthIntrinsics,
-                                                const ORUtils::SE3Pose &cameraPose)
-{
-  // First: select keypoints and compute descriptors.
-  const Matrix4f invCameraPose = cameraPose.GetInvM();
-  m_featureCalculator->compute_keypoints_and_features(colourImage,
-                                                      depthImage,
-                                                      invCameraPose,
-                                                      depthIntrinsics,
-                                                      m_rgbdPatchKeypointsImage.get(),
-                                                      m_rgbdPatchDescriptorImage.get());
-
-  // Second: find the leaves associated to the keypoints.
-  m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
-
-  // Third: add keypoints to the correct reservoirs.
-  m_exampleReservoirs->add_examples(m_rgbdPatchKeypointsImage, m_leafIndicesImage);
-
-  // Fourth: cluster some of the reservoirs.
-  const uint32_t updateCount = compute_nb_reservoirs_to_update();
-  m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
-                                 m_exampleReservoirs->get_reservoirs_size(),
-                                 m_predictionsBlock,
-                                 m_reservoirUpdateStartIdx,
-                                 updateCount);
-
-  // Fifth: save the current index to indicate that reservoirs up to such index have to be clustered to represent the
-  // examples that have just been added.
-  m_lastFeaturesAddedStartIdx = m_reservoirUpdateStartIdx;
-
-  // Finally: update starting index for the next invocation of either this function or idle_update().
-  update_reservoir_start_idx();
-}
-
 boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
                                                                   const ITMFloatImage *depthImage,
                                                                   const Vector4f &depthIntrinsics) const
@@ -154,6 +118,40 @@ void ScoreRelocaliser::reset()
 
   m_lastFeaturesAddedStartIdx = 0;
   m_reservoirUpdateStartIdx = 0;
+}
+
+void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                             const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
+{
+  // First: select keypoints and compute descriptors.
+  const Matrix4f invCameraPose = cameraPose.GetInvM();
+  m_featureCalculator->compute_keypoints_and_features(colourImage,
+                                                      depthImage,
+                                                      invCameraPose,
+                                                      depthIntrinsics,
+                                                      m_rgbdPatchKeypointsImage.get(),
+                                                      m_rgbdPatchDescriptorImage.get());
+
+  // Second: find the leaves associated to the keypoints.
+  m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+
+  // Third: add keypoints to the correct reservoirs.
+  m_exampleReservoirs->add_examples(m_rgbdPatchKeypointsImage, m_leafIndicesImage);
+
+  // Fourth: cluster some of the reservoirs.
+  const uint32_t updateCount = compute_nb_reservoirs_to_update();
+  m_exampleClusterer->find_modes(m_exampleReservoirs->get_reservoirs(),
+                                 m_exampleReservoirs->get_reservoirs_size(),
+                                 m_predictionsBlock,
+                                 m_reservoirUpdateStartIdx,
+                                 updateCount);
+
+  // Fifth: save the current index to indicate that reservoirs up to such index have to be clustered to represent the
+  // examples that have just been added.
+  m_lastFeaturesAddedStartIdx = m_reservoirUpdateStartIdx;
+
+  // Finally: update starting index for the next invocation of either this function or idle_update().
+  update_reservoir_start_idx();
 }
 
 void ScoreRelocaliser::update()

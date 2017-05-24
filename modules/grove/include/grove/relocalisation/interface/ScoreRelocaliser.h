@@ -121,43 +121,19 @@ public:
    */
   virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
 
-  /**
-   * \brief Integrates the informations provided by a new RGB-D image pair into the relocalisation forest.
-   *
-   * \param colourImage     A colour image acquired by the camera.
-   * \param depthImage      A depth image acquired by the camera.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The pose of the camera that acquired the RGB-D image pair in a world coordinate frame.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose);
-
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
-   */
+  /** Override */
   virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
                                              const ITMFloatImage *depthImage,
-                                             const Vector4f &depthIntrinsics) const;
+                                             const Vector4f& depthIntrinsics) const;
 
-  /**
-   * \brief Reset the relocaliser, allowing the relocalisation in a new environment.
-   */
+  /** Override */
   virtual void reset();
 
-  /**
-   * \brief Perform an update step of the relocaliser, learning more on the scene being explored.
-   *
-   * \note  This function may be called instead of integrate_measurements when there are no new measurements to
-   *        integrate in the relocaliser but there is spare processing time to update the adapted forest.
-   */
+  /** Override */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+
+  /** Override */
   virtual void update();
 
   //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################

@@ -58,19 +58,6 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The position of the camera in the world.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f& depthIntrinsics,
-                                        const ORUtils::SE3Pose& cameraPose) = 0;
-
-  /**
    * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
    *        thereby relocalising the camera with respect to the 3D scene.
    *
@@ -87,6 +74,17 @@ public:
    * \brief Resets the relocaliser, allowing the integration of information for a new area.
    */
   virtual void reset() = 0;
+
+  /**
+   * \brief Trains the relocaliser using information from an RGB-D image pair captured from a known pose in the world.
+   *
+   * \param colourImage     The colour image.
+   * \param depthImage      The depth image.
+   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
+   * \param cameraPose      The position of the camera in the world.
+   */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose) = 0;
 
   /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.

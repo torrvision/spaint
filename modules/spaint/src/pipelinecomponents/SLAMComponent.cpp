@@ -349,7 +349,7 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
   if (performLearning)
   {
-    relocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
+    relocaliser->train(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
   }
 
   if (m_relocaliseEveryFrame)
