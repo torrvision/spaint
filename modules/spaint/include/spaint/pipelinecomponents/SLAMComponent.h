@@ -9,14 +9,8 @@
 #include <FernRelocLib/PoseDatabase.h>
 #include <FernRelocLib/Relocaliser.h>
 
-#include <InputSource/CompositeImageSourceEngine.h>
-
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
-#include <ITMLib/Core/ITMTrackingController.h>
-#include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>
-#include <ITMLib/Engines/ViewBuilding/Interface/ITMViewBuilder.h>
-#include <ITMLib/Objects/Misc/ITMIMUCalibrator.h>
 
 #include "SLAMContext.h"
 #include "../fiducials/FiducialDetector.h"
@@ -31,16 +25,10 @@ class SLAMComponent
 {
   //#################### TYPEDEFS ####################
 private:
-  typedef boost::shared_ptr<InputSource::CompositeImageSourceEngine> CompositeImageSourceEngine_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMIMUCalibrator> IMUCalibrator_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMLowLevelEngine> LowLevelEngine_Ptr;
   typedef boost::shared_ptr<FernRelocLib::PoseDatabase> PoseDatabase_Ptr;
   typedef boost::shared_ptr<FernRelocLib::Relocaliser<float> > Relocaliser_Ptr;
-  typedef boost::shared_ptr<ITMLib::ITMTrackingController> TrackingController_Ptr;
-  typedef boost::shared_ptr<const ITMLib::ITMTrackingController> TrackingController_CPtr;
-  typedef boost::shared_ptr<ITMLib::ITMViewBuilder> ViewBuilder_Ptr;
 
   //#################### ENUMERATIONS ####################
 public:
