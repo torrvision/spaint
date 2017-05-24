@@ -30,8 +30,8 @@ MultiScenePipeline::MultiScenePipeline(const std::string& type, const Settings_P
   // Set up the spaint model.
   m_model.reset(new Model(settings, resourcesDir, maxLabelCount));
 
-  // FIXME: the global settings are just a pointer to the only settings variable for now.
-  m_model->get_settings_for_scene(Model::get_world_scene_id()) = settings;
+  // FIXME: the global settings are just a pointer to the only settings variable, for now.
+  m_model->get_settings(Model::get_world_scene_id()) = settings;
 }
 
 //#################### DESTRUCTOR ####################

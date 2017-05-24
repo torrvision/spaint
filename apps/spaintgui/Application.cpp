@@ -746,7 +746,7 @@ void Application::save_mesh() const
   {
     const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
     const std::string& sceneID = mainSubwindow.get_scene_id();
-    const Settings_CPtr settings = m_pipeline->get_model()->get_settings_for_scene(sceneID);
+    const Settings_CPtr settings = m_pipeline->get_model()->get_settings(sceneID);
     const Model_CPtr& model = m_pipeline->get_model();
     const SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 

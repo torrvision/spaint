@@ -14,14 +14,20 @@
 
 namespace itmx {
 
+/**
+ * \brief An instance of this class is used to configure the application, by adhering to the ITMLibSettings interface
+ *        and additionally providing a map of non-typed parameters that can be accessed as in
+ *        tvgutil::SettingsContainer.
+ */
 class Settings : public ITMLib::ITMLibSettings, public tvgutil::SettingsContainer
 {
-
+  // Nothing to add, just use whatever has been defined in the base classes.
 };
+
+//#################### TYPEDEFS ####################
 
 typedef boost::shared_ptr<Settings> Settings_Ptr;
 typedef boost::shared_ptr<const Settings> Settings_CPtr;
-
 }
 
 #endif

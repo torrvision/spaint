@@ -231,6 +231,8 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
+  virtual itmx::Settings_Ptr& get_settings(const std::string& sceneID);
+  virtual itmx::Settings_CPtr get_settings(const std::string& sceneID) const;
   virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
   virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
 };

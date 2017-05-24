@@ -4,6 +4,7 @@
  */
 
 #include "Model.h"
+using namespace itmx;
 using namespace ORUtils;
 using namespace tvginput;
 
@@ -171,6 +172,16 @@ std::string Model::get_world_scene_id()
 }
 
 //#################### DISAMBIGUATORS ####################
+
+Settings_Ptr& Model::get_settings(const std::string& sceneID)
+{
+  return SLAMContext::get_settings(sceneID);
+}
+
+Settings_CPtr Model::get_settings(const std::string& sceneID) const
+{
+  return SLAMContext::get_settings(sceneID);
+}
 
 const SLAMState_Ptr& Model::get_slam_state(const std::string& sceneID)
 {

@@ -365,7 +365,7 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
 void SLAMComponent::setup_relocaliser()
 {
-  const Settings_CPtr settings = m_context->get_settings_for_scene(m_sceneID);
+  const Settings_CPtr settings = m_context->get_settings(m_sceneID);
   const static std::string settingsNamespace = "SLAMComponent.";
 
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace +

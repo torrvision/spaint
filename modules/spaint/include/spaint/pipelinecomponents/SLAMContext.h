@@ -79,7 +79,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The settings for the specified scene.
    */
-  virtual itmx::Settings_Ptr& get_settings_for_scene(const std::string& sceneID);
+  virtual itmx::Settings_Ptr& get_settings(const std::string& sceneID);
 
   /**
    * \brief Gets the settings for the specified scene.
@@ -87,7 +87,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The settings for the specified scene.
    */
-  virtual itmx::Settings_CPtr get_settings_for_scene(const std::string& sceneID) const;
+  virtual itmx::Settings_CPtr get_settings(const std::string& sceneID) const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.
