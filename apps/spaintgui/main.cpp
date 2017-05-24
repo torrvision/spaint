@@ -275,7 +275,7 @@ void set_scene_params_from_global_options(ITMSceneParams &sceneParams)
   const std::string parametersNamespace = "SceneParams.";
   const GlobalParameters& params = GlobalParameters::instance();
 
-  // Use the default values form InfiniTAM.
+  // Use the default values from InfiniTAM.
   sceneParams.maxW = params.get_first_value<int>(parametersNamespace + "maxW", 100);
   sceneParams.mu = params.get_first_value<float>(parametersNamespace + "mu", 0.02f);
   sceneParams.stopIntegratingAtMaxW = params.get_first_value<bool>(parametersNamespace + "stopIntegratingAtMaxW", false);
@@ -294,7 +294,7 @@ void set_surfel_scene_params_from_global_options(ITMSurfelSceneParams &surfelSce
   const std::string parametersNamespace = "SurfelSceneParams.";
   const GlobalParameters& params = GlobalParameters::instance();
 
-  // Use the default values form InfiniTAM.
+  // Use the default values from InfiniTAM.
   surfelSceneParams.deltaRadius = params.get_first_value<float>(parametersNamespace + "deltaRadius", 0.5f);
   surfelSceneParams.gaussianConfidenceSigma = params.get_first_value<float>(parametersNamespace + "gaussianConfidenceSigma", 0.6f);
   surfelSceneParams.maxMergeAngle = params.get_first_value<float>(parametersNamespace + "maxMergeAngle", static_cast<float>(20 * M_PI / 180));
