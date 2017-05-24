@@ -61,16 +61,22 @@ FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatIma
 void FernRelocaliser::reset()
 {
   m_keyframeDelay = 0;
+
   m_relocaliser.reset(new WrappedRelocaliser(
-      m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern));
+    m_depthImageSize, m_rangeParameters, m_harvestingThreshold, m_numFerns, m_decisionsPerFern
+  ));
 }
 
-void FernRelocaliser::train(const ITMUChar4Image * /* dummy */, const ITMFloatImage *depthImage,
-                            const Vector4f& /* dummy */, const ORUtils::SE3Pose& cameraPose)
+void FernRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                            const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
-  // If this function is being called the assumption is that tracking succeeded, so we always consider this frame to be
-  // a keyframe unless we just relocalised and the policy specifies that we have to wait, in that case early out.
-  if (m_keyframeDelay > 0 && m_keyframeAddPolicy == DELAY_AFTER_RELOCALISATION)
+  // If this function is being called, the assumption is that tracking succeeded and that we could
+  // in principle add this frame as a keyframe. We will actually add it in practice if either
+  // (a) our policy is to always add keyframes, or (b) our policy is to add keyframes once a
+  // suitable delay has elapsed since the most recent relocalisation, and that delay actually
+  // has elapsed. Conversely, if the delay has not yet elapsed, we decrease the delay counter
+  // and early out.
+  if(m_keyframeAddPolicy == DELAY_AFTER_RELOCALISATION && m_keyframeDelay > 0)
   {
     --m_keyframeDelay;
     return;
@@ -79,16 +85,15 @@ void FernRelocaliser::train(const ITMUChar4Image * /* dummy */, const ITMFloatIm
   // Copy the current depth input across to the CPU for use by the relocaliser.
   depthImage->UpdateHostFromDevice();
 
-  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-  // that is currently in the database, and may add the current frame as a new keyframe if the current frame differs
-  // sufficiently from the existing keyframes.
-
+  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe
+  // (if any) that is currently in the database, and may add the current frame as a new keyframe if the
+  // current frame differs sufficiently from the existing keyframes.
   const bool considerKeyframe = true;
   const int sceneId = 0;
-  const int requestedNnCount = 1;
+  const int requestedNearestNeighbourCount = 1;
   int nearestNeighbour = -1;
-  m_relocaliser->ProcessFrame(
-      depthImage, &cameraPose, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
+
+  m_relocaliser->ProcessFrame(depthImage, &cameraPose, sceneId, requestedNearestNeighbourCount, &nearestNeighbour, NULL, considerKeyframe);
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
