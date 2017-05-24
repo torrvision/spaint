@@ -464,7 +464,7 @@ try
 #endif
 
   // Specify the settings.
-  boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  Settings_Ptr settings(new Settings);
   settings->trackerConfig = NULL;
 
   // Set scene parameters from configuration.
