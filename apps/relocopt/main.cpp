@@ -57,7 +57,7 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
     }
   }
 
-  // Attempt to run the specified script. If it doesn't exist, throw.
+  // Run the specified script.
   const bf::path outputPath = args.dir / (args.outputSpecifier + ".txt");
   const std::string command = "\"\"" + args.scriptPath.string() + "\" \"" + iniPath.string() + "\" \"" + outputPath.string() + "\" \"" + bf::path(args.datasetDir).string() + "\"\"";
   system(command.c_str());
