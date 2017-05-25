@@ -33,11 +33,13 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
   m_resourcesDir(resourcesDir),
   m_selector(new NullSelector(settings)),
   m_semanticLabel(0),
-  m_settings(settings),
   m_surfelVisualisationEngine(ITMSurfelVisualisationEngineFactory<SpaintSurfel>::make_surfel_visualisation_engine(settings->deviceType)),
   m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType)),
   m_voxelVisualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType))
 {
+  // Set up the global settings
+  SLAMContext::get_settings(Model::get_world_scene_id()) = settings;
+
   // Set up the selection transformer.
   const int initialSelectionRadius = 2;
   m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, settings->deviceType);
@@ -90,11 +92,6 @@ SpaintVoxel::Label Model::get_semantic_label() const
   return m_semanticLabel;
 }
 
-const Settings_CPtr& Model::get_settings() const
-{
-  return m_settings;
-}
-
 Model::SurfelVisualisationEngine_CPtr Model::get_surfel_visualisation_engine() const
 {
   return m_surfelVisualisationEngine;
@@ -133,11 +130,13 @@ void Model::set_semantic_label(SpaintVoxel::Label semanticLabel)
 
 void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& slamState, const VoxelRenderState_CPtr& renderState, bool renderingInMono)
 {
+  Settings_CPtr worldSettings = get_settings(Model::get_world_scene_id());
+
   // Allow the user to switch between different selectors.
   if(inputState.key_down(KEYCODE_i))
   {
-    if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(m_settings));
-    else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(m_settings));
+    if(inputState.key_down(KEYCODE_1)) m_selector.reset(new NullSelector(worldSettings));
+    else if(inputState.key_down(KEYCODE_2)) m_selector.reset(new PickingSelector(worldSettings));
 #ifdef WITH_LEAP
     else if(inputState.key_down(KEYCODE_3))
     {
@@ -149,10 +148,10 @@ void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& 
     {
       const TouchSettings_Ptr touchSettings(new TouchSettings(m_resourcesDir + "/TouchSettings.xml"));
       const size_t maxKeptTouchPoints = 50;
-      m_selector.reset(new TouchSelector(m_settings, touchSettings, get_slam_state(Model::get_world_scene_id())->get_depth_image_size(), maxKeptTouchPoints));
+      m_selector.reset(new TouchSelector(worldSettings, touchSettings, get_slam_state(Model::get_world_scene_id())->get_depth_image_size(), maxKeptTouchPoints));
 
       const int initialSelectionRadius = 1;
-      m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, m_settings->deviceType);
+      m_selectionTransformer = SelectionTransformerFactory::make_voxel_to_cube(initialSelectionRadius, worldSettings->deviceType);
     }
 #endif
   }
@@ -173,7 +172,7 @@ std::string Model::get_world_scene_id()
 
 //#################### DISAMBIGUATORS ####################
 
-Settings_Ptr& Model::get_settings(const std::string& sceneID)
+Settings_CPtr& Model::get_settings(const std::string& sceneID)
 {
   return SLAMContext::get_settings(sceneID);
 }

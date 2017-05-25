@@ -853,7 +853,7 @@ void Application::setup_labels()
 
 void Application::setup_meshing()
 {
-  Settings_CPtr settings = m_pipeline->get_model()->get_settings();
+  Settings_CPtr settings = m_pipeline->get_model()->get_settings(Model::get_world_scene_id());
 
   if(settings->createMeshingEngine)
   {

@@ -109,7 +109,8 @@ public:
     boost::optional<Eigen::Vector3f> pickPoint = selector.get_position();
     if(!pickPoint) return;
 
-    render_orb(*pickPoint, m_selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
+    // CHECKME: are we using a specific scene or is the world scene ID ok in this context?
+    render_orb(*pickPoint, m_selectionRadius * m_base->m_model->get_settings(Model::get_world_scene_id())->sceneParams.voxelSize);
   }
 
 #ifdef WITH_ARRAYFIRE
@@ -125,7 +126,7 @@ public:
 
     for(size_t i = 0, size = touchPoints.size(); i < size; ++i)
     {
-      render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings()->sceneParams.voxelSize);
+      render_orb(touchPoints[i], selectionRadius * m_base->m_model->get_settings(Model::get_world_scene_id())->sceneParams.voxelSize);
     }
 
     // Render a rotating, coloured orb at the top-right of the viewport to indicate the current semantic label.
@@ -438,11 +439,11 @@ void Renderer::render_reconstructed_scene(const std::string& sceneID, const SE3P
   {
     postprocessor.reset();
   }
-  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings()->deviceType == ITMLibSettings::DEVICE_CUDA)
+  else if(m_medianFilteringEnabled && !postprocessor && m_model->get_settings(sceneID)->deviceType == ITMLibSettings::DEVICE_CUDA)
   {
 #if defined(WITH_ARRAYFIRE) && !defined(USE_LOW_POWER_MODE)
     const unsigned int kernelWidth = 3;
-    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings()->deviceType);
+    postprocessor = MedianFilterer(kernelWidth, m_model->get_settings(sceneID)->deviceType);
 #endif
   }
 

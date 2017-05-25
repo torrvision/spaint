@@ -25,7 +25,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   virtual SpaintVoxel::Label get_semantic_label() const = 0;
-  virtual const Settings_CPtr& get_settings() const = 0;
+  virtual Settings_CPtr get_settings(const std::string& sceneID) const = 0;
   virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID) = 0;
 };
 

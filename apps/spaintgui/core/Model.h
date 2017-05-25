@@ -61,9 +61,6 @@ private:
   /** The semantic label to use for manually labelling the scene. */
   spaint::SpaintVoxel::Label m_semanticLabel;
 
-  /** The settings to use for InfiniTAM. */
-  Settings_CPtr m_settings;
-
   /** The InfiniTAM engine used for rendering a surfel scene. */
   SurfelVisualisationEngine_CPtr m_surfelVisualisationEngine;
 
@@ -147,13 +144,6 @@ public:
   virtual spaint::SpaintVoxel::Label get_semantic_label() const;
 
   /**
-   * \brief Gets the settings to use for InfiniTAM.
-   *
-   * \return  The settings to use for InfiniTAM.
-   */
-  virtual const Settings_CPtr& get_settings() const;
-
-  /**
    * \brief Gets the InfiniTAM engine used for rendering a surfel scene.
    *
    * \return  The InfiniTAM engine used for rendering a surfel scene.
@@ -231,7 +221,7 @@ public:
 
   //#################### DISAMBIGUATORS ####################
 public:
-  virtual Settings_Ptr& get_settings(const std::string& sceneID);
+  virtual Settings_CPtr& get_settings(const std::string& sceneID);
   virtual Settings_CPtr get_settings(const std::string& sceneID) const;
   virtual const spaint::SLAMState_Ptr& get_slam_state(const std::string& sceneID);
   virtual spaint::SLAMState_CPtr get_slam_state(const std::string& sceneID) const;
