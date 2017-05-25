@@ -35,18 +35,14 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 template <typename VoxelType, typename IndexType>
-ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& relocaliser, const ITMRGBDCalib& calib,
+ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const ITMRGBDCalib& calib,
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                                     const Scene_Ptr& scene, const Settings_CPtr& settings,
                                                                     const std::string& trackerConfig)
-: RefiningRelocaliser(relocaliser),
-  m_scene(scene),
-  m_settings(settings),
-  m_timerIntegration("Integration"),
-  m_timerRelocalisation("Relocalisation"),
-  m_timerUpdate("Update")
+: RefiningRelocaliser(innerRelocaliser), m_scene(scene), m_settings(settings),
+  m_timerRelocalisation("Relocalisation"), m_timerTraining("Training"), m_timerUpdate("Update")
 {
-  m_denseMapper.reset(new DenseMapper(m_settings.get()));
+  m_denseVoxelMapper.reset(new DenseMapper(m_settings.get()));
 
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
@@ -86,22 +82,22 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
 
   // Setup evaluation variables.
-  m_saveRelocalisationPoses =
+  m_savePoses =
       m_settings->get_first_value<bool>(settingsNamespace + "m_saveRelocalisationPoses", false);
 
-  if (m_saveRelocalisationPoses)
+  if(m_savePoses)
   {
     // No "namespace" for the experiment tag.
     const std::string posesFolder =
         m_settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
 
-    m_relocalisationPosesPathGenerator.reset(
+    m_posePathGenerator.reset(
         SequentialPathGenerator(find_subdir_from_executable("reloc_poses") / posesFolder));
 
-    std::cout << "Saving relocalization poses in: " << m_relocalisationPosesPathGenerator->get_base_dir() << '\n';
+    std::cout << "Saving relocalization poses in: " << m_posePathGenerator->get_base_dir() << '\n';
 
     // Create required folders.
-    fs::create_directories(m_relocalisationPosesPathGenerator->get_base_dir());
+    fs::create_directories(m_posePathGenerator->get_base_dir());
   }
 
   // Decide whether or not to enable the timers.
@@ -113,8 +109,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::~ICPRefiningRelocaliser()
 {
   if (m_timersEnabled)
   {
-    std::cout << "Integration calls: " << m_timerIntegration.count()
-              << ", average duration: " << m_timerIntegration.average_duration() << '\n';
+    std::cout << "Training calls: " << m_timerTraining.count()
+              << ", average duration: " << m_timerTraining.average_duration() << '\n';
 
     std::cout << "Relocalisation calls: " << m_timerRelocalisation.count()
               << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
@@ -184,7 +180,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 
   // We need to update the list of visible blocks.
   const bool resetVisibleList = true;
-  m_denseMapper->UpdateVisibleList(
+  m_denseVoxelMapper->UpdateVisibleList(
       m_view.get(), m_trackingState.get(), m_scene.get(), m_voxelRenderState.get(), resetVisibleList);
 
   // Then perform the raycast.
@@ -201,7 +197,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
   // Now, if we are in evaluation mode (we are saving the poses) and the refinement gave GOOD results, force the
   // results to POOR anyway. This is because we don't want to perform fusion whilst evaluating the testing sequence.
   refinementResult.quality =
-      (!m_saveRelocalisationPoses && m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
+      (!m_savePoses && m_trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
           ? RELOCALISATION_GOOD : RELOCALISATION_POOR;
 
   // Save the poses.
@@ -224,9 +220,9 @@ template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                                          const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose)
 {
-  start_timer(m_timerIntegration);
+  start_timer(m_timerTraining);
   m_innerRelocaliser->train(colourImage, depthImage, depthIntrinsics, cameraPose);
-  stop_timer(m_timerIntegration);
+  stop_timer(m_timerTraining);
 }
 
 template <typename VoxelType, typename IndexType>
@@ -244,15 +240,15 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::save_poses(const Matrix4f &re
                                                               const Matrix4f &refinedPose) const
 {
   // Early out if we don't have to save the poses.
-  if (!m_saveRelocalisationPoses) return;
+  if(!m_savePoses) return;
 
   // Save poses
   PosePersister::save_pose_on_thread(relocalisedPose,
-                                     m_relocalisationPosesPathGenerator->make_path("pose-%06i.reloc.txt"));
-  PosePersister::save_pose_on_thread(refinedPose, m_relocalisationPosesPathGenerator->make_path("pose-%06i.icp.txt"));
+                                     m_posePathGenerator->make_path("pose-%06i.reloc.txt"));
+  PosePersister::save_pose_on_thread(refinedPose, m_posePathGenerator->make_path("pose-%06i.icp.txt"));
 
   // Increment counter.
-  m_relocalisationPosesPathGenerator->increment_index();
+  m_posePathGenerator->increment_index();
 }
 
 template <typename VoxelType, typename IndexType>
