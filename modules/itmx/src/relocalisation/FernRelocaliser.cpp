@@ -33,18 +33,18 @@ FernRelocaliser::relocalise(const ITMUChar4Image *colourImage, const ITMFloatIma
   // Since we are relocalising, we don't want to add this as a keyframe.
   bool considerKeyframe = false;
   const int sceneId = 0;
-  const int requestedNnCount = 1;
+  const int requestedNearestNeighbourCount = 1;
   int nearestNeighbour = -1;
 
-  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe (if any)
-  // that is currently in the database.
-  m_relocaliser->ProcessFrame(depthImage, NULL, sceneId, requestedNnCount, &nearestNeighbour, NULL, considerKeyframe);
+  // Process the current depth image using the relocaliser. This attempts to find the nearest keyframe
+  // (if any) that is currently in the database.
+  m_relocaliser->ProcessFrame(depthImage, NULL, sceneId, requestedNearestNeighbourCount, &nearestNeighbour, NULL, considerKeyframe);
 
   // If a nearest keyframe was found by the relocaliser, return it.
-  if (nearestNeighbour != -1)
+  if(nearestNeighbour != -1)
   {
-    // Set the number of frames for which the  integrate function has to be called before the relocaliser can consider
-    // adding a new keyframe (no need to check the policy here).
+    // Set the number of frames for which the train function has to be called before the relocaliser can
+    // consider adding a new keyframe (no need to check the policy here).
     m_keyframeDelay = 10;
 
     // Retrieve the pose and set the quality to GOOD.
