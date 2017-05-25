@@ -35,7 +35,7 @@ private:
   std::map<std::string,itmx::Relocaliser_Ptr> m_relocalisers;
 
   /** FIXME: this will need to replace m_settings as well. */
-  std::map<std::string,itmx::Settings_Ptr> m_settingsForScene;
+  std::map<std::string,Settings_Ptr> m_settingsForScene;
 
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
@@ -79,7 +79,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The settings for the specified scene.
    */
-  virtual itmx::Settings_Ptr& get_settings(const std::string& sceneID);
+  virtual Settings_Ptr& get_settings(const std::string& sceneID);
 
   /**
    * \brief Gets the settings for the specified scene.
@@ -87,7 +87,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The settings for the specified scene.
    */
-  virtual itmx::Settings_CPtr get_settings(const std::string& sceneID) const;
+  virtual Settings_CPtr get_settings(const std::string& sceneID) const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.

@@ -22,12 +22,12 @@ itmx::Relocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) 
   return MapUtil::lookup(m_relocalisers, sceneID);
 }
 
-itmx::Settings_Ptr& SLAMContext::get_settings(const std::string& sceneID)
+Settings_Ptr& SLAMContext::get_settings(const std::string& sceneID)
 {
   return m_settingsForScene[sceneID];
 }
 
-itmx::Settings_CPtr SLAMContext::get_settings(const std::string& sceneID) const
+Settings_CPtr SLAMContext::get_settings(const std::string& sceneID) const
 {
   return MapUtil::lookup(m_settingsForScene, sceneID);
 }

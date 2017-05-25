@@ -15,7 +15,6 @@
 #include <ITMLib/Objects/Tracking/ITMTrackingState.h>
 #include <ITMLib/Objects/Views/ITMView.h>
 #include <ITMLib/Trackers/Interface/ITMTracker.h>
-//#include <ITMLib/Utils/ITMLibSettings.h>
 
 #include "Settings.h"
 

@@ -24,10 +24,6 @@ class Settings : public ITMLib::ITMLibSettings, public tvgutil::SettingsContaine
   // Nothing to add, just use whatever has been defined in the base classes.
 };
 
-//#################### TYPEDEFS ####################
-
-typedef boost::shared_ptr<Settings> Settings_Ptr;
-typedef boost::shared_ptr<const Settings> Settings_CPtr;
 }
 
 #endif
