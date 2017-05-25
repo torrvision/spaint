@@ -442,7 +442,6 @@ void SLAMComponent::setup_tracker()
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
-  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
   m_tracker = TrackerFactory::make_tracker_from_string(m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker);
