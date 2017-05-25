@@ -37,7 +37,7 @@ Model::Model(const Settings_CPtr& settings, const std::string& resourcesDir, siz
   m_voxelMarker(VoxelMarkerFactory::make_voxel_marker(settings->deviceType)),
   m_voxelVisualisationEngine(ITMVisualisationEngineFactory::MakeVisualisationEngine<SpaintVoxel,ITMVoxelIndex>(settings->deviceType))
 {
-  // Set up the global settings
+  // Set up the global settings.
   SLAMContext::get_settings(Model::get_world_scene_id()) = settings;
 
   // Set up the selection transformer.

@@ -215,7 +215,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     else save_screenshot();
   }
 
-  // If we are running in batch mode ignore other keypresses.
+  // If we are running in batch mode, ignore other keypresses.
   if(m_runInBatch) return;
 
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
