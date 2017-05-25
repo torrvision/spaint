@@ -6,8 +6,6 @@
 #ifndef H_ITMX_ICPREFININGRELOCALISER
 #define H_ITMX_ICPREFININGRELOCALISER
 
-#include "RefiningRelocaliser.h"
-
 #include <boost/shared_ptr.hpp>
 
 #include <ITMLib/Core/ITMDenseMapper.h>
@@ -18,28 +16,28 @@
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../base/ITMObjectPtrTypes.h"
+#include "RefiningRelocaliser.h"
 
 namespace itmx {
 
 /**
- * \brief An instance of this class allows performing camera relocalisation from RGB-D image pairs followed by an
- *        ICP refinement step.
+ * \brief An instance of this class can be used to refine the results of another relocaliser using ICP.
  *
- * \param VoxelType The type if voxels used to recontruct the scene that will be used during the raycasting step.
- * \param IndexType The type of indexing used to access the reconstructed scene.
+ * \tparam VoxelType  The type of voxel used to recontruct the scene that will be used during the raycasting step.
+ * \tparam IndexType  The type of indexing used to access the reconstructed scene.
  */
 template <typename VoxelType, typename IndexType>
 class ICPRefiningRelocaliser : public RefiningRelocaliser
 {
   //#################### TYPEDEFS ####################
 public:
-  typedef ITMLib::ITMDenseMapper<VoxelType, IndexType> DenseMapper;
+  typedef ITMLib::ITMDenseMapper<VoxelType,IndexType> DenseMapper;
   typedef boost::shared_ptr<DenseMapper> DenseMapper_Ptr;
 
-  typedef ITMLib::ITMScene<VoxelType, IndexType> Scene;
+  typedef ITMLib::ITMScene<VoxelType,IndexType> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
 
-  typedef ITMLib::ITMVisualisationEngine<VoxelType, IndexType> VisualisationEngine;
+  typedef ITMLib::ITMVisualisationEngine<VoxelType,IndexType> VisualisationEngine;
   typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
 
   //#################### TYPEDEFS ####################
@@ -49,44 +47,42 @@ private:
   //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief Constructs an ICPRefiningRelocaliser.
+   * \brief Constructs an ICP-based refining relocaliser.
    *
-   * \param relocaliser   A relocaliser whose results will be refined via ICP.
-   * \param calibration   The calibration params of tha used to acquire the images to be relocalised.
-   * \param imgSize_rgb   The size of the colour images that will be used during the relocalisation.
-   * \param imgSize_depth The size of the depth images that will be used during the relocalisation.
-   * \param scene         A pointer to the scene that will be reconstructed. Used to raycast the images that will be
-   *                      used during ICP.
-   * \param settings      A pointer to the InfiniTAM settings used to reconstruct the scene.
-   * \param trackerConfig A string specifying the parameters to used to instantiate an ICP tracker used for refinement.
+   * \param relocaliser     The relocaliser whose results will be refined using ICP.
+   * \param calib           The calibration parameters of the camera whose pose is to be estimated.
+   * \param rgbImageSize    The size of the colour images produced by the camera.
+   * \param depthImageSize  The size of the depth images produced by the camera.
+   * \param scene           The scene being viewed from the camera.
+   * \param settings        The settings to use for InfiniTAM.
+   * \param trackerConfig   A configuration string used to specify the parameters of the ICP tracker.
    */
-  ICPRefiningRelocaliser(const Relocaliser_Ptr &relocaliser,
-                         const ITMLib::ITMRGBDCalib &calibration,
-                         const Vector2i imgSize_rgb,
-                         const Vector2i imgsize_d,
-                         const Scene_Ptr &scene,
-                         const Settings_CPtr &settings,
-                         const std::string &trackerConfig);
+  ICPRefiningRelocaliser(const Relocaliser_Ptr& relocaliser, const ITMLib::ITMRGBDCalib& calib,
+                         const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const Scene_Ptr& scene,
+                         const Settings_CPtr& settings, const std::string& trackerConfig);
 
   //#################### DESTRUCTOR ####################
 public:
   /**
-   * \brief Destroys an ICPRefiningRelocaliser.
+   * \brief Destroys the relocaliser.
    */
   ~ICPRefiningRelocaliser();
 
-  //#################### PUBLIC VIRTUAL MEMBER FUNCTIONS ####################
+  //#################### COPY CONSTRUCTOR & ASSIGNMENT OPERATOR ####################
+private:
+  // Deliberately private and unimplemented.
+  ICPRefiningRelocaliser(const ICPRefiningRelocaliser&);
+  ICPRefiningRelocaliser& operator=(const ICPRefiningRelocaliser&);
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
-                                             const ITMFloatImage *depthImage,
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
                                              const Vector4f &depthIntrinsics) const;
 
   /** Override */
-  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
-                                             const ITMFloatImage *depthImage,
-                                             const Vector4f &depthIntrinsics,
-                                             boost::optional<ORUtils::SE3Pose> &initialPose) const;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                             const Vector4f &depthIntrinsics, boost::optional<ORUtils::SE3Pose> &initialPose) const;
 
   /** Override */
   virtual void reset();
@@ -175,6 +171,6 @@ private:
   mutable VoxelRenderState_Ptr m_voxelRenderState;
 };
 
-} // namespace itmx
+}
 
-#endif // H_ITMX_ICPREFININGRELOCALISER
+#endif

@@ -17,37 +17,34 @@
 #include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
+using namespace ITMLib;
 
 #include <ORUtils/PlatformIndependence.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
+using namespace tvgutil;
 
 #include "../persistence/PosePersister.h"
 
 namespace fs = boost::filesystem;
-using namespace ITMLib;
-using namespace tvgutil;
 
 namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
 template <typename VoxelType, typename IndexType>
-ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr &relocaliser,
-                                                                     const ITMLib::ITMRGBDCalib &calibration,
-                                                                     const Vector2i imgSize_rgb,
-                                                                     const Vector2i imgsize_d,
-                                                                     const Scene_Ptr &scene,
-                                                                     const Settings_CPtr &settings,
-                                                                     const std::string &trackerConfig)
-  : RefiningRelocaliser(relocaliser)
-  , m_scene(scene)
-  , m_settings(settings)
-  , m_timerIntegration("Integration")
-  , m_timerRelocalisation("Relocalisation")
-  , m_timerUpdate("Update")
+ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& relocaliser, const ITMRGBDCalib& calib,
+                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                                                                    const Scene_Ptr& scene, const Settings_CPtr& settings,
+                                                                    const std::string& trackerConfig)
+: RefiningRelocaliser(relocaliser),
+  m_scene(scene),
+  m_settings(settings),
+  m_timerIntegration("Integration"),
+  m_timerRelocalisation("Relocalisation"),
+  m_timerUpdate("Update")
 {
   m_denseMapper.reset(new DenseMapper(m_settings.get()));
 
@@ -55,20 +52,19 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
 
   m_tracker.reset(ITMTrackerFactory::Instance().Make(m_settings->deviceType,
                                                      trackerConfig.c_str(),
-                                                     imgSize_rgb,
-                                                     imgsize_d,
+                                                     rgbImageSize,
+                                                     depthImageSize,
                                                      m_lowLevelEngine.get(),
                                                      NULL,
                                                      m_scene->sceneParams));
 
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_settings.get()));
 
-  m_trackingState.reset(new ITMTrackingState(imgsize_d, m_settings->GetMemoryType()));
+  m_trackingState.reset(new ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
 
-  m_visualisationEngine.reset(
-      ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType, IndexType>(m_settings->deviceType));
+  m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType,IndexType>(m_settings->deviceType));
 
-  m_view.reset(new ITMView(calibration, imgSize_rgb, imgsize_d, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA));
+  m_view.reset(new ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA));
   m_view->depth->Clear();
 
   // If we initialise a m_voxelRenderState with a new variable, there is a crash after a while, probably due to never
@@ -83,7 +79,7 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::ICPRefiningRelocaliser(const Reloc
 
   //  m_voxelRenderState = voxelRenderState;
   //  m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
-  //      m_trackingController->GetTrackedImageSize(imgSize_rgb, imgsize_d),
+  //      m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize),
   //      m_scene->sceneParams,
   //      m_itmLibSettings->GetMemoryType()));
 
