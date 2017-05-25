@@ -394,20 +394,20 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   po::variables_map vm;
   po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
 
-  // Store the parsed options in both the variables map and GlobalParameters.
+  // Store the parsed options in both the variables map and the SettingsContainer.
   po::store(parsedCommandLineOptions, vm);
   store_parsed_options_into_settings(parsedCommandLineOptions, settings);
 
   // Parse options from configuration file, if necessary.
   if(vm.count("configFile"))
   {
-    // Allow unregistered options: those are added to the global parameters, to be used by other classes.
+    // Allow unregistered options: those are added to the settings container, to be used by other classes.
     po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
 
     // Store registered options in the variable map
     po::store(parsedConfigFileOptions, vm);
 
-    // Store all options (including unregistered ones) into the GlobalParameters.
+    // Store all options (including unregistered ones) into the SettingsContainer.
     store_parsed_options_into_settings(parsedConfigFileOptions, settings);
   }
 
@@ -443,7 +443,7 @@ try
 {
   // Setup the settings.
   Settings_Ptr settings(new Settings);
-  settings->trackerConfig = NULL;
+  settings->trackerConfig = NULL; // The tracker is handled by the tracker factory.
 
 
   // Parse and post-process the command-line arguments.
