@@ -75,6 +75,7 @@ struct CommandLineArguments
   bool noTracker;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
@@ -190,8 +191,14 @@ std::string make_tracker_config(CommandLineArguments& args)
       }
       else if(chunks[i] == "Disk")
       {
-        const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
-        result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
+        if(args.poseFileMasks.size() < i)
+        {
+          // If this happens it's because at least one mask was specified with the -p flag,
+          // otherwise postprocess_arguments would have taken care of supplying the default masks.
+          throw std::invalid_argument("Not enough pose file masks have been specified wth the -p flag.");
+        }
+
+        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
       }
       else
       {
@@ -217,10 +224,10 @@ std::string make_tracker_config(CommandLineArguments& args)
  */
 bool postprocess_arguments(CommandLineArguments& args)
 {
-  // If the user specifies both sequence and explicit depth / RGB image mask flags, print an error message.
-  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.rgbImageMasks.empty()))
+  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
     return false;
   }
 
@@ -239,6 +246,7 @@ bool postprocess_arguments(CommandLineArguments& args)
 
     // Set the depth / RGB image masks.
     args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
     args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
   }
 
@@ -373,6 +381,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
