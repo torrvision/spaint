@@ -195,7 +195,7 @@ std::string make_tracker_config(CommandLineArguments& args)
         {
           // If this happens it's because at least one mask was specified with the -p flag,
           // otherwise postprocess_arguments would have taken care of supplying the default masks.
-          throw std::invalid_argument("Not enough pose file masks have been specified wth the -p flag.");
+          throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
         }
 
         result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
