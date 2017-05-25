@@ -168,20 +168,20 @@ bool SLAMComponent::process_frame()
   if(maskedDepthImage) view->depth->Swap(*maskedDepthImage);
 
   // Determine the tracking quality, taking into account the failure mode being used.
-  ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
   switch(m_context->get_settings(m_sceneID)->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
       // Allow the relocaliser to either improve the pose or store a new keyframe, update its model, etc...
-      trackerResult = process_relocalisation(trackerResult);
+      process_relocalisation();
       break;
     }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
     {
       // Since we're not using relocalisation, treat tracking failures like poor tracking,
       // on the basis that it's better to try to keep going than to fail completely.
-      if(trackerResult == ITMTrackingState::TRACKING_FAILED) trackerResult = ITMTrackingState::TRACKING_POOR;
+      if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED)
+        trackingState->trackerResult = ITMTrackingState::TRACKING_POOR;
 
       break;
     }
@@ -189,15 +189,15 @@ bool SLAMComponent::process_frame()
     default:
     {
       // If we're completely ignoring poor or failed tracking, treat the tracking quality as good.
-      trackerResult = ITMTrackingState::TRACKING_GOOD;
+      trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
       break;
     }
   }
 
   // Decide whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-  if(trackerResult == ITMTrackingState::TRACKING_FAILED ||
-     (trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount >= m_initialFramesToFuse) ||
+  if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED ||
+     (trackingState->trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount >= m_initialFramesToFuse) ||
      (m_fallibleTracker && m_fallibleTracker->lost_tracking()))
   {
     runFusion = false;
@@ -214,7 +214,7 @@ bool SLAMComponent::process_frame()
 
     ++m_fusedFramesCount;
   }
-  else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
+  else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
     m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
@@ -240,7 +240,7 @@ bool SLAMComponent::process_frame()
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
-  if(m_fiducialDetector && m_detectFiducials && trackerResult == ITMTrackingState::TRACKING_GOOD)
+  if(m_fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
     slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
   }
@@ -262,7 +262,7 @@ void SLAMComponent::reset_scene()
   slamState->get_tracking_state()->Reset();
 
   // Reset the relocaliser.
-//  m_refiningRelocaliser->reset();
+  m_context->get_relocaliser(m_sceneID)->reset();
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
@@ -307,22 +307,22 @@ void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
   }
 }
 
-SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResult trackingResult)
+void SLAMComponent::process_relocalisation()
 {
-  const bool performRelocalization = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_FAILED;
-  const bool performLearning = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_GOOD;
-
   const Relocaliser_Ptr &relocaliser = m_context->get_relocaliser(m_sceneID);
   const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
-  const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
-  const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
-
   const TrackingState_Ptr &trackingState = slamState->get_tracking_state();
-  const SE3Pose trackedPose(*trackingState->pose_d);
-
   const View_Ptr &view = slamState->get_view();
 
   const Vector4f depthIntrinsics = view->calib.intrinsics_d.projectionParamsSimple.all;
+  const ITMFloatImage *inputDepthImage = view->depth;
+  const ITMUChar4Image *inputRGBImage = view->rgb;
+
+  const bool performRelocalization = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED;
+  const bool performLearning = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD;
+
+  // Save the tracked pose just in case we need to set it at the end (if m_relocaliseEveryFrame is true).
+  const SE3Pose trackedPose(*trackingState->pose_d);
 
   if (m_relocaliserUpdateEveryFrame && !performLearning)
   {
@@ -337,9 +337,9 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
     if (relocalisationResult)
     {
       trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
-      trackingResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
-                           ? ITMTrackingState::TRACKING_GOOD
-                           : ITMTrackingState::TRACKING_POOR;
+      trackingState->trackerResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
+                                     ? ITMTrackingState::TRACKING_GOOD
+                                     : ITMTrackingState::TRACKING_POOR;
     }
     else
     {
@@ -356,11 +356,9 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
   {
     // Restore tracked pose.
     trackingState->pose_d->SetFrom(&trackedPose);
-    // The assumption is that we are using the ground truth trajectory so the tracker always succeeds.
-    trackingResult = ITMTrackingState::TRACKING_GOOD;
+    // The assumption is that we are using the ground truth trajectory, so the tracker always succeeds.
+    trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
   }
-
-  return trackingResult;
 }
 
 void SLAMComponent::setup_relocaliser()

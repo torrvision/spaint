@@ -209,9 +209,9 @@ private:
   void prepare_for_tracking(TrackingMode trackingMode);
 
   /**
-   * \brief TODO
+   * \brief Perform relocalisation-specific operations (i.e. train a relocaliser if tracking succeeded or relocalise otherwise).
    */
-  TrackingResult process_relocalisation(TrackingResult trackingResult);
+  void process_relocalisation();
 
   /**
    * \brief Sets up the relocaliser.
