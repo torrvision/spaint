@@ -26,7 +26,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   virtual const LabelManager_Ptr& get_label_manager() = 0;
-  virtual Settings_CPtr get_settings(const std::string& sceneID) const = 0;
+  virtual const Settings_CPtr& get_settings() const = 0;
   virtual const SLAMState_Ptr& get_slam_state(const std::string& sceneID) = 0;
 };
 

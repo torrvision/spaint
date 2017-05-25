@@ -110,7 +110,7 @@ const Segmenter_Ptr& ObjectSegmentationComponent::get_segmenter() const
   if(!m_context->get_segmenter())
   {
     const TouchSettings_Ptr touchSettings(new TouchSettings(m_context->get_resources_dir() + "/TouchSettings.xml"));
-    m_context->set_segmenter(Segmenter_Ptr(new BackgroundSubtractingObjectSegmenter(m_context->get_slam_state(m_sceneID)->get_view(), m_context->get_settings(m_sceneID), touchSettings)));
+    m_context->set_segmenter(Segmenter_Ptr(new BackgroundSubtractingObjectSegmenter(m_context->get_slam_state(m_sceneID)->get_view(), m_context->get_settings(), touchSettings)));
   }
 #endif
 

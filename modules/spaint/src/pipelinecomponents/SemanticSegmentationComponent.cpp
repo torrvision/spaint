@@ -43,7 +43,7 @@ SemanticSegmentationComponent::SemanticSegmentationComponent(const SemanticSegme
   // Set up the voxel samplers.
   const Vector2i& depthImageSize = context->get_slam_state(sceneID)->get_depth_image_size();
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  const Settings_CPtr& settings = context->get_settings(sceneID);
+  const Settings_CPtr& settings = context->get_settings();
   m_predictionSampler = VoxelSamplerFactory::make_uniform_sampler(raycastResultSize, seed, settings->deviceType);
   m_trainingSampler = VoxelSamplerFactory::make_per_label_sampler(maxLabelCount, m_maxTrainingVoxelsPerLabel, raycastResultSize, seed, settings->deviceType);
 

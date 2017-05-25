@@ -22,16 +22,6 @@ itmx::Relocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) 
   return MapUtil::lookup(m_relocalisers, sceneID);
 }
 
-Settings_CPtr& SLAMContext::get_settings(const std::string& sceneID)
-{
-  return m_settings[sceneID];
-}
-
-Settings_CPtr SLAMContext::get_settings(const std::string& sceneID) const
-{
-  return MapUtil::lookup(m_settings, sceneID);
-}
-
 const SLAMState_Ptr& SLAMContext::get_slam_state(const std::string& sceneID)
 {
   SLAMState_Ptr& result = m_slamStates[sceneID];

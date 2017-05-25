@@ -16,7 +16,7 @@ PropagationComponent::PropagationComponent(const PropagationContext_Ptr& context
 {
   const Vector2i& depthImageSize = context->get_slam_state(sceneID)->get_depth_image_size();
   const int raycastResultSize = depthImageSize.width * depthImageSize.height;
-  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, context->get_settings(sceneID)->deviceType);
+  m_labelPropagator = LabelPropagatorFactory::make_label_propagator(raycastResultSize, context->get_settings()->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################

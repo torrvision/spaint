@@ -60,7 +60,7 @@ SLAMComponent::SLAMComponent(const SLAMContext_Ptr& context, const std::string& 
   slamState->set_input_raw_depth_image(ITMShortImage_Ptr(new ITMShortImage(depthImageSize, true, true)));
 
   // Set up the low-level engine.
-  const Settings_CPtr& settings = context->get_settings(sceneID);
+  const Settings_CPtr& settings = context->get_settings();
   m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
   // Set up the view builder.
@@ -168,7 +168,7 @@ bool SLAMComponent::process_frame()
   if(maskedDepthImage) view->depth->Swap(*maskedDepthImage);
 
   // Determine the tracking quality, taking into account the failure mode being used.
-  switch(m_context->get_settings(m_sceneID)->behaviourOnFailure)
+  switch(m_context->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
@@ -363,7 +363,7 @@ void SLAMComponent::process_relocalisation()
 
 void SLAMComponent::setup_relocaliser()
 {
-  const Settings_CPtr settings = m_context->get_settings(m_sceneID);
+  const Settings_CPtr& settings = m_context->get_settings();
   const static std::string settingsNamespace = "SLAMComponent.";
 
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace +
@@ -438,7 +438,7 @@ void SLAMComponent::setup_relocaliser()
 
 void SLAMComponent::setup_tracker()
 {
-  const Settings_CPtr& settings = m_context->get_settings(m_sceneID);
+  const Settings_CPtr& settings = m_context->get_settings();
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();

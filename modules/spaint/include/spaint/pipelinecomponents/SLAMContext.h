@@ -11,7 +11,6 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
-#include <itmx/base/Settings.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
 #include "../slamstate/SLAMState.h"
@@ -34,9 +33,6 @@ private:
   /** The relocalisers used to estimate the camera pose in the various scenes. */
   std::map<std::string,itmx::Relocaliser_Ptr> m_relocalisers;
 
-  /** The settings used in the various scenes. */
-  std::map<std::string,Settings_CPtr> m_settings;
-
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
 
@@ -50,6 +46,7 @@ public:
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   virtual const std::string& get_resources_dir() const = 0;
+  virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
   virtual VisualisationGenerator_CPtr get_visualisation_generator() const = 0;
   virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const = 0;
@@ -71,22 +68,6 @@ public:
    * \return        The relocaliser for the specified scene.
    */
   virtual itmx::Relocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
-
-  /**
-   * \brief Gets the settings for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The settings for the specified scene.
-   */
-  virtual Settings_CPtr& get_settings(const std::string& sceneID);
-
-  /**
-   * \brief Gets the settings for the specified scene.
-   *
-   * \param sceneID The scene ID.
-   * \return        The settings for the specified scene.
-   */
-  virtual Settings_CPtr get_settings(const std::string& sceneID) const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.

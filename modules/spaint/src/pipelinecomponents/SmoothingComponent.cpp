@@ -15,7 +15,7 @@ SmoothingComponent::SmoothingComponent(const SmoothingContext_Ptr& context, cons
 : m_context(context), m_sceneID(sceneID)
 {
   size_t maxLabelCount = context->get_label_manager()->get_max_label_count();
-  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, context->get_settings(sceneID)->deviceType);
+  m_labelSmoother = LabelSmootherFactory::make_label_smoother(maxLabelCount, context->get_settings()->deviceType);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
