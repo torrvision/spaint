@@ -140,7 +140,7 @@ void Model::update_selector(const InputState& inputState, const SLAMState_CPtr& 
 #ifdef WITH_LEAP
     else if(inputState.key_down(KEYCODE_3))
     {
-      m_selector.reset(new LeapSelector(m_settings, m_voxelVisualisationEngine, LeapSelector::MODE_POINT, m_leapFiducialID));
+      m_selector.reset(new LeapSelector(worldSettings, m_voxelVisualisationEngine, LeapSelector::MODE_POINT, m_leapFiducialID));
     }
 #endif
 #ifdef WITH_ARRAYFIRE
