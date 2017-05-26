@@ -22,8 +22,8 @@ std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
   for(fs::directory_iterator it(dataset_path), end; it != end; ++it)
   {
     fs::path p = it->path();
-    fs::path train_path = p / "Train";
-    fs::path test_path = p / "Test";
+    fs::path train_path = p / "train";
+    fs::path test_path = p / "test";
 
     if(fs::is_directory(train_path) && fs::is_directory(test_path))
     {
@@ -145,8 +145,7 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
 
   while (true)
   {
-    const fs::path gtPath = generate_path(gtFolder, "posem%06i.txt",
-        res.poseCount);
+    const fs::path gtPath = generate_path(gtFolder, "frame-%06i.pose.txt", res.poseCount);
     const fs::path relocPath = generate_path(relocFolder, "pose-%06i.reloc.txt",
         res.poseCount);
     const fs::path icpPath = generate_path(relocFolder, "pose-%06i.icp.txt",
@@ -216,7 +215,7 @@ int main(int argc, char *argv[])
 
   for (auto sequence : sequenceNames)
   {
-    const fs::path gtPath = gtFolder / sequence / "Test" / "merged";
+    const fs::path gtPath = gtFolder / sequence / "test";
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
     std::cerr << "Processing sequence " << sequence << " in: " << gtPath
