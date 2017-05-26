@@ -79,7 +79,8 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
  *
  * \param xyIn              The pixel in the RGBD image for which to compute colour features.
  * \param xyOut             The position in the descriptors image into which to write the computed features.
- * \param inSize            The size of the RGBD image.
+ * \param inDepthSize       The size of the depth image.
+ * \param inRgbSize         The size of the colour image.
  * \param outSize           The size of the keypoints/descriptors images.
  * \param rgb               A pointer to the colour image.
  * \param depths            A pointer to the depth image.
@@ -93,10 +94,10 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
  */
 template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                                    const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
-                                    const KeypointType *keypoints, const uint32_t rgbFeatureCount, const uint32_t rgbFeatureOffset,
-                                    const bool normalise, DescriptorType *descriptors)
+inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inDepthSize, const Vector2i& inRgbSize,
+                                    const Vector2i& outSize, const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets,
+                                    const uchar *rgbChannels, const KeypointType *keypoints, const uint32_t rgbFeatureCount,
+                                    const uint32_t rgbFeatureOffset, const bool normalise, DescriptorType *descriptors)
 {
   // Look up the keypoint corresponding to the specified pixel, and early out if it's not valid.
   const int rasterIdxOut = xyOut.y * outSize.width + xyOut.x;
@@ -105,19 +106,28 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 
   // If we're normalising the RGB offsets based on depth, and depth information is available,
   // look up the depth for the input pixel; otherwise, default to 1.
-  const int rasterIdxIn = xyIn.y * inSize.width + xyIn.x;
+  const int rasterIdxIn = xyIn.y * inDepthSize.width + xyIn.x;
   const float depth = (normalise && depths) ? depths[rasterIdxIn] : 1.0f;
+
+  // Compute the colour to depth ratio, used to scale the offset and sample the pixels.
+  const Vector2f rgbDepthRatio(static_cast<float>(inRgbSize.x) / inDepthSize.x, static_cast<float>(inRgbSize.y) / inDepthSize.y);
 
   // Compute the features and fill in the descriptor.
   DescriptorType& descriptor = descriptors[rasterIdxOut];
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
-    const Vector4i offsets = rgbOffsets[featIdx];
+    Vector4i offsets = rgbOffsets[featIdx];
+
+    // Now rescale the offsets depending on the depth-to-rgb ratio.
+    offsets[0] *= rgbDepthRatio.x;
+    offsets[1] *= rgbDepthRatio.y;
+    offsets[2] *= rgbDepthRatio.x;
+    offsets[3] *= rgbDepthRatio.y;
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points<DifferenceType>(xyIn, offsets, inSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points<DifferenceType>(xyIn, offsets, inRgbSize, normalise, depth, raster1, raster2);
 
     // Compute the feature and write it into the descriptor.
     if(DifferenceType == PAIRWISE_DIFFERENCE)
@@ -199,7 +209,8 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
  *
  * \param xyIn        The coordinates of the pixel in the RGBD image for which to compute the keypoint.
  * \param xyOut       The coordinates of the pixel in the keypoints image into which to store the computed keypoint.
- * \param inSize      The size of the RGBD image.
+ * \param inDepthSize The size of the depth image.
+ * \param inRgbSize   The size of the colour image.
  * \param outSize     The size of the keypoints image.
  * \param rgb         A pointer to the colour image.
  * \param depths      A pointer to the depth image.
@@ -211,9 +222,9 @@ inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, 
  */
 template <typename KeypointType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                             KeypointType *keypoints);
+inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inDepthSize, const Vector2i& inRgbSize,
+                             const Vector2i& outSize, const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose,
+                             const Vector4f& intrinsics, KeypointType *keypoints);
 
 /**
  * \brief Computes a 2D keypoint for the specified pixel in the RGBD image.
@@ -222,9 +233,9 @@ inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const 
  */
 template <>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                             Keypoint2D *keypoints)
+inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inDepthSize, const Vector2i& inRgbSize,
+                             const Vector2i& outSize, const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose,
+                             const Vector4f& intrinsics, Keypoint2D *keypoints)
 {
   // Look up the keypoint corresponding to the specified pixel.
   const int linearIdxOut = xyOut.y * outSize.width + xyOut.x;
@@ -243,17 +254,17 @@ inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const 
  */
 template <>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
-                             const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose, const Vector4f& intrinsics,
-                             Keypoint3DColour *keypoints)
+inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inDepthSize, const Vector2i& inRgbSize,
+                             const Vector2i& outSize, const Vector4u *rgb, const float *depths, const Matrix4f& cameraPose,
+                             const Vector4f& intrinsics, Keypoint3DColour *keypoints)
 {
   // Look up the keypoint corresponding to the specified pixel.
   const int linearIdxOut = xyOut.y * outSize.x + xyOut.x;
   Keypoint3DColour& outKeypoint = keypoints[linearIdxOut];
 
   // Check whether depth is available for the specified pixel. If not, mark the keypoint as invalid and early out.
-  const int linearIdxIn = xyIn.y * inSize.x + xyIn.x;
-  const float depth = depths[linearIdxIn];
+  const int linearIdxInDepth = xyIn.y * inDepthSize.x + xyIn.x;
+  const float depth = depths[linearIdxInDepth];
   if(depth <= 0.0f)
   {
     outKeypoint.valid = false;
@@ -266,8 +277,18 @@ inline void compute_keypoint(const Vector2i& xyIn, const Vector2i& xyOut, const 
   // Determine the keypoint's position in "descriptor" coordinates.
   outKeypoint.position = cameraPose * position;
 
+  // Compute the ratio between depth and colour sizes.
+  const Vector2f rgbDepthRatio(static_cast<float>(inRgbSize.x) / inDepthSize.x, static_cast<float>(inRgbSize.y) / inDepthSize.y);
+
+  // Compute the position in the colour image, according to the ratio.
+  Vector2i xyInColour(static_cast<int>(roundf(xyIn.x * rgbDepthRatio.x)), static_cast<int>(roundf(xyIn.y * rgbDepthRatio.y)));
+  xyInColour.x = clamp(xyInColour.x, 0, inRgbSize.x - 1);
+  xyInColour.y = clamp(xyInColour.y, 0, inRgbSize.y - 1);
+
+  const int linearIdxInColour = xyInColour.y * inRgbSize.x + xyInColour.x;
+
   // Record the pixel's colour in the keypoint for future reference. Default to black if no colour image is available.
-  outKeypoint.colour = rgb ? rgb[linearIdxIn].toVector3() : Vector3u(0, 0, 0);
+  outKeypoint.colour = rgb ? rgb[linearIdxInColour].toVector3() : Vector3u(0, 0, 0);
 
   // Mark the keypoint as valid.
   outKeypoint.valid = true;

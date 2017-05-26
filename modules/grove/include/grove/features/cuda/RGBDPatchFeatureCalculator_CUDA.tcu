@@ -14,10 +14,10 @@ namespace {
 //#################### CUDA KERNELS ####################
 
 template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
-__global__ void ck_compute_colour_features(Vector2i inSize, Vector2i outSize, const Vector4u *rgb, const float *depths,
-                                           const Vector4i *rgbOffsets, const uchar *rgbChannels, const KeypointType *keypoints,
-                                           uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t featureStep,
-                                           bool normalise, DescriptorType *descriptors)
+__global__ void ck_compute_colour_features(Vector2i inDepthSize, Vector2i inRgbSize, Vector2i outSize, const Vector4u *rgb,
+                                           const float *depths, const Vector4i *rgbOffsets, const uchar *rgbChannels,
+                                           const KeypointType *keypoints, uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset,
+                                           uint32_t featureStep, bool normalise, DescriptorType *descriptors)
 {
   // Determine the coordinates of the pixel in the descriptors image into which we will write the colour feature.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x, threadIdx.y + blockIdx.y * blockDim.y);
@@ -28,7 +28,7 @@ __global__ void ck_compute_colour_features(Vector2i inSize, Vector2i outSize, co
     const Vector2i xyIn = xyOut * featureStep;
 
     // Compute the colour feature for the specified RGBD pixel and write it into the correct place in the pixel's descriptor.
-    compute_colour_features<DifferenceType>(xyIn, xyOut, inSize, outSize, rgb, depths, rgbOffsets, rgbChannels, keypoints, rgbFeatureCount, rgbFeatureOffset, normalise, descriptors);
+    compute_colour_features<DifferenceType>(xyIn, xyOut, inDepthSize, inRgbSize, outSize, rgb, depths, rgbOffsets, rgbChannels, keypoints, rgbFeatureCount, rgbFeatureOffset, normalise, descriptors);
   }
 }
 
@@ -51,9 +51,9 @@ __global__ void ck_compute_depth_features(Vector2i inSize, Vector2i outSize, con
 }
 
 template <typename KeypointType>
-__global__ void ck_compute_keypoints(const Vector2i inSize, const Vector2i outSize, const Vector4u *rgb, const float *depths,
-                                     const Matrix4f cameraPose, const Vector4f intrinsics, const uint32_t featureStep,
-                                     KeypointType *keypoints)
+__global__ void ck_compute_keypoints(const Vector2i inDepthSize, const Vector2i inRgbSize, const Vector2i outSize,
+                                     const Vector4u *rgb, const float *depths, const Matrix4f cameraPose,
+                                     const Vector4f intrinsics, const uint32_t featureStep, KeypointType *keypoints)
 {
   // Determine the coordinates of the pixel in the keypoints image into which we will write the keypoint.
   const Vector2i xyOut(threadIdx.x + blockIdx.x * blockDim.x, threadIdx.y + blockIdx.y * blockDim.y);
@@ -64,7 +64,7 @@ __global__ void ck_compute_keypoints(const Vector2i inSize, const Vector2i outSi
     const Vector2i xyIn = xyOut * featureStep;
 
     // Compute the keypoint for the specified RGBD pixel and write it into the keypoints image.
-    compute_keypoint(xyIn, xyOut, inSize, outSize, rgb, depths, cameraPose, intrinsics, keypoints);
+    compute_keypoint(xyIn, xyOut, inDepthSize, inRgbSize, outSize, rgb, depths, cameraPose, intrinsics, keypoints);
   }
 }
 
@@ -100,6 +100,9 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
                                                                                                   const Matrix4f& cameraPose, const Vector4f& intrinsics,
                                                                                                   KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
+  // The size of the colour image is used if we have to compute both colour-based features and depth-based features.
+  const Vector2i inRgbSize = rgbImage->noDims;
+
   // Check that the input images are valid and compute the output dimensions.
   Vector2i inSize;
   const Vector2i outSize = this->compute_output_dims(rgbImage, depthImage, inSize);
@@ -121,7 +124,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
   dim3 gridSize((outSize.x + blockSize.x - 1) / blockSize.x, (outSize.y + blockSize.y - 1) / blockSize.y);
 
   // Compute the keypoint for each pixel in the RGBD image.
-  ck_compute_keypoints<<<gridSize,blockSize>>>(inSize, outSize, rgb, depths, cameraPose, intrinsics, this->m_featureStep, keypoints);
+  ck_compute_keypoints<<<gridSize,blockSize>>>(inSize, inRgbSize, outSize, rgb, depths, cameraPose, intrinsics, this->m_featureStep, keypoints);
   ORcudaKernelCheck;
 
   // If there is a depth image available and any depth features need to be computed, compute them for each keypoint.
@@ -152,7 +155,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
     if(this->m_rgbDifferenceType == PAIRWISE_DIFFERENCE)
     {
       ck_compute_colour_features<PAIRWISE_DIFFERENCE><<<gridSize,blockSize>>>(
-        inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+        inSize, inRgbSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
         keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
         this->m_featureStep, this->m_normaliseRgb, descriptors
       );
@@ -160,7 +163,7 @@ void RGBDPatchFeatureCalculator_CUDA<KeypointType,DescriptorType>::compute_keypo
     else
     {
       ck_compute_colour_features<CENTRAL_DIFFERENCE><<<gridSize,blockSize>>>(
-        inSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+        inSize, inRgbSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
         keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
         this->m_featureStep, this->m_normaliseRgb, descriptors
       );
