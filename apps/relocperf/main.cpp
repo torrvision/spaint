@@ -4,6 +4,7 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include <Eigen/Geometry>
 #include <map>
 #include <fstream>
@@ -12,6 +13,7 @@
 #include <sstream>
 
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 
 static const std::string trainFolderName = "train";
 static const std::string validationFolderName = "validation";
@@ -196,30 +198,57 @@ SequenceResults evaluate_sequence(const fs::path &gtFolder,
 template<typename T>
 void printWidth(const T &item, int width, bool leftAlign = false)
 {
-  std::cout << (leftAlign ? std::left : std::right) << std::setw(width)
+  std::cerr << (leftAlign ? std::left : std::right) << std::setw(width)
       << std::fixed << std::setprecision(2) << item;
 }
 
 int main(int argc, char *argv[])
 {
-  if (argc < 4)
+  fs::path datasetFolder;
+  fs::path relocBaseFolder;
+  std::string relocTag;
+  bool useValidation = false;
+  bool onlineEvaluation = false;
+
+  po::options_description options("Relocperf Options");
+  options.add_options()
+      ("datasetFolder,d", po::value(&datasetFolder)->required(), "The path to the dataset.")
+      ("relocBaseFolder,r", po::value(&relocBaseFolder)->required(), "The path to the folder where the relocalised poses are stored.")
+      ("relocTag,t", po::value(&relocTag)->required(), "The tag assigned to the experimento to evaluate.")
+      ("useValidation,v", po::bool_switch(&useValidation), "Whether to use the validation sequence to evaluate the relocaliser.")
+      ("onlineEvaluation,o", po::bool_switch(&onlineEvaluation), "Whether to save the CSV for the evaluation of online relocalisation.")
+      ("help,h", "Print this help message.")
+      ;
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, options), vm);
+
+  if(vm.count("help"))
   {
-    std::cerr << "Usage: " << argv[0]
-        << " \"GT base folder\" \"reloc base output folder\" \"reloc tag\" [online results filename]"
-        << std::endl;
-    return 1;
+    std::cerr << "Usage: " << options << '\n';
+    exit(0);
   }
 
-  const fs::path gtFolder = argv[1];
-  const fs::path relocBaseFolder = argv[2];
-  const std::string relocTag = argv[3];
-  const std::vector<std::string> sequenceNames = find_sequence_names(gtFolder);
+  try
+  {
+    po::notify(vm);
+  }
+  catch (const po::error &e)
+  {
+    std::cerr << "Error parsing the options: " << e.what() << '\n';
+    std::cerr << options << '\n';
+    exit(1);
+  }
+
+  const std::vector<std::string> sequenceNames = find_sequence_names(datasetFolder);
 
   std::map<std::string, SequenceResults> results;
 
   for (auto sequence : sequenceNames)
   {
-    const fs::path gtPath = gtFolder / sequence / testFolderName;
+//    const fs::path gtPath = gtFolder / sequence / testFolderName;
+//    const fs::path gtPath = datasetFolder / sequence / validationFolderName;
+    const fs::path gtPath = datasetFolder / sequence / (useValidation ? validationFolderName : testFolderName);
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
     std::cerr << "Processing sequence " << sequence << " in: " << gtPath
@@ -227,7 +256,8 @@ int main(int argc, char *argv[])
     try
     {
       results[sequence] = evaluate_sequence(gtPath, relocFolder);
-    } catch (std::runtime_error&)
+    }
+    catch (std::runtime_error&)
     {
       std::cerr << "\tSequence has not been evaluated.\n";
     }
@@ -239,7 +269,7 @@ int main(int argc, char *argv[])
   printWidth("Reloc", 8);
   printWidth("ICP", 8);
   printWidth("Final", 8);
-  std::cout << '\n';
+  std::cerr << '\n';
 
   for (const auto &sequence : sequenceNames)
   {
@@ -257,7 +287,7 @@ int main(int argc, char *argv[])
     printWidth(relocPct, 8);
     printWidth(icpPct, 8);
     printWidth(finalPct, 8);
-    std::cout << '\n';
+    std::cerr << '\n';
   }
 
   // Compute average performance
@@ -301,24 +331,30 @@ int main(int argc, char *argv[])
   const float finalWeightedAvg = finalRawSum / poseCount * 100.f;
 
   // Print averages
-  std::cout << '\n';
+  std::cerr << '\n';
   printWidth("Average", 15, true);
   printWidth(sequenceNames.size(), 8);
   printWidth(relocAvg, 8);
   printWidth(icpAvg, 8);
   printWidth(finalAvg, 8);
-  std::cout << '\n';
+  std::cerr << '\n';
   printWidth("Average (W)", 15, true);
   printWidth(poseCount, 8);
   printWidth(relocWeightedAvg, 8);
   printWidth(icpWeightedAvg, 8);
   printWidth(finalWeightedAvg, 8);
-  std::cout << '\n';
+  std::cerr << '\n';
+
+  // Print the weighted average for the parameter search algorithm.
+  if(useValidation)
+  {
+    std::cout << icpWeightedAvg << '\n';
+  }
 
   // Save results of online training-relocalization
-  if (argc > 4)
+  if (onlineEvaluation)
   {
-    std::string onlineResultsFilenameStem = argv[4];
+    std::string onlineResultsFilenameStem = relocTag;
 
     // Process every sequence
     for (auto sequence : sequenceNames)
