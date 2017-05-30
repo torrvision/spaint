@@ -13,6 +13,10 @@
 
 namespace fs = boost::filesystem;
 
+static const std::string trainFolderName = "train";
+static const std::string validationFolderName = "validation";
+static const std::string testFolderName = "test";
+
 //#################### FUNCTIONS ####################
 
 std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
@@ -22,8 +26,8 @@ std::vector<std::string> find_sequence_names(const fs::path &dataset_path)
   for(fs::directory_iterator it(dataset_path), end; it != end; ++it)
   {
     fs::path p = it->path();
-    fs::path train_path = p / "train";
-    fs::path test_path = p / "test";
+    fs::path train_path = p / trainFolderName;
+    fs::path test_path = p / testFolderName;
 
     if(fs::is_directory(train_path) && fs::is_directory(test_path))
     {
@@ -215,7 +219,7 @@ int main(int argc, char *argv[])
 
   for (auto sequence : sequenceNames)
   {
-    const fs::path gtPath = gtFolder / sequence / "test";
+    const fs::path gtPath = gtFolder / sequence / testFolderName;
     const fs::path relocFolder = relocBaseFolder / (relocTag + '_' + sequence);
 
     std::cerr << "Processing sequence " << sequence << " in: " << gtPath
