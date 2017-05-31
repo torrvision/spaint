@@ -367,13 +367,13 @@ void SLAMComponent::setup_relocaliser()
   const static std::string settingsNamespace = "SLAMComponent.";
 
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace +
-                                                          "m_relocaliseEveryFrame", false);
+                                                          "relocaliseEveryFrame", false);
 
   m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace +
-                                                            "m_relocaliserType", "forest");
+                                                            "relocaliserType", "forest");
 
   m_relocaliserUpdateEveryFrame = settings->get_first_value<bool>(settingsNamespace +
-                                                                 "m_updateRelocaliserEveryFrame", true);
+                                                                 "updateRelocaliserEveryFrame", true);
 
   // Useful variables.
   const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
@@ -388,7 +388,7 @@ void SLAMComponent::setup_relocaliser()
                                                          "DefaultRelocalizationForest.rf").string();
 
     m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace +
-                                                                     "m_relocalisationForestPath", defaultRelocalisationForestPath);
+                                                                     "relocalisationForestPath", defaultRelocalisationForestPath);
     std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
 
     nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
@@ -420,7 +420,7 @@ void SLAMComponent::setup_relocaliser()
   }
 
   // Refinement ICP tracker
-  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(settingsNamespace + "m_refinementTrackerParams",
+  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(settingsNamespace + "refinementTrackerParams",
                                                                                 "type=extended,levels=rrbb,minstep=1e-4,"
                                                                                 "outlierSpaceC=0.1,outlierSpaceF=0.004,"
                                                                                 "numiterC=20,numiterF=20,tukeyCutOff=8,"

@@ -135,51 +135,51 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   const std::string settingsNamespace = "PreemptiveRansac.";
 
   // By default, we set all parameters as in scoreforests.
-  m_batchSizeRansac = m_settings->get_first_value<size_t>(settingsNamespace + "m_batchSizeRansac", 500);
+  m_batchSizeRansac = m_settings->get_first_value<size_t>(settingsNamespace + "batchSizeRansac", 500);
 
   m_checkMinDistanceBetweenSampledModes =
-      m_settings->get_first_value<bool>(settingsNamespace + "m_checkMinDistanceBetweenSampledModes", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
 
   // Setting it to false speeds up a lot, at the expense of quality.
   m_checkRigidTransformationConstraint =
-      m_settings->get_first_value<bool>(settingsNamespace + "m_checkRigidTransformationConstraint", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "checkRigidTransformationConstraint", true);
 
   // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
   m_maxCandidateGenerationIterations =
-      m_settings->get_first_value<uint32_t>(settingsNamespace + "m_maxCandidateGenerationIterations", 6000);
+      m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
 
   // In m.
   m_minSquaredDistanceBetweenSampledModes =
-      m_settings->get_first_value<float>(settingsNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
+      m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
   // Number of initial pose candidates.
-  m_nbMaxPoseCandidates = m_settings->get_first_value<size_t>(settingsNamespace + "m_nbMaxPoseCandidates", 1024);
+  m_nbMaxPoseCandidates = m_settings->get_first_value<size_t>(settingsNamespace + "nbMaxPoseCandidates", 1024);
 
   // In m.
   m_poseOptimizationInlierThreshold =
-      m_settings->get_first_value<float>(settingsNamespace + "m_poseOptimizationInlierThreshold", 0.2f);
+      m_settings->get_first_value<float>(settingsNamespace + "poseOptimizationInlierThreshold", 0.2f);
 
   // Whether or not to optimise the poses with LM.
-  m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "m_poseUpdate", true);
+  m_poseUpdate = m_settings->get_first_value<bool>(settingsNamespace + "poseUpdate", true);
 
   // Whether or not to print the timers for each phase.
-  m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "m_printTimers", false);
+  m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);
 
   // In m.
   m_translationErrorMaxForCorrectPose =
-      m_settings->get_first_value<float>(settingsNamespace + "m_translationErrorMaxForCorrectPose", 0.05f);
+      m_settings->get_first_value<float>(settingsNamespace + "translationErrorMaxForCorrectPose", 0.05f);
 
   // Aggressively cull hypotheses to this number.
   m_trimKinitAfterFirstEnergyComputation =
-      m_settings->get_first_value<size_t>(settingsNamespace + "m_trimKinitAfterFirstEnergyComputation", 64);
+      m_settings->get_first_value<size_t>(settingsNamespace + "trimKinitAfterFirstEnergyComputation", 64);
 
   // If false use the first mode only (representing the largest cluster).
   m_useAllModesPerLeafInPoseHypothesisGeneration =
-      m_settings->get_first_value<bool>(settingsNamespace + "m_useAllModesPerLeafInPoseHypothesisGeneration", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
 
   // If false use L2.
   m_usePredictionCovarianceForPoseOptimization =
-      m_settings->get_first_value<bool>(settingsNamespace + "m_usePredictionCovarianceForPoseOptimization", true);
+      m_settings->get_first_value<bool>(settingsNamespace + "usePredictionCovarianceForPoseOptimization", true);
 
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
   // for all.

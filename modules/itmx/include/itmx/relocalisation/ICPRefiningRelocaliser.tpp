@@ -83,7 +83,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
 
   // Setup evaluation variables.
   m_savePoses =
-      m_settings->get_first_value<bool>(settingsNamespace + "m_saveRelocalisationPoses", false);
+      m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
 
   if(m_savePoses)
   {
@@ -101,7 +101,7 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   }
 
   // Decide whether or not to enable the timers.
-  m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "m_timersEnabled", false);
+  m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 }
 
 template <typename VoxelType, typename IndexType>
