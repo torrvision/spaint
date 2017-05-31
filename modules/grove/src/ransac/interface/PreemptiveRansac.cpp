@@ -152,6 +152,9 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   // Number of initial pose candidates.
   m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);
 
+  // Aggressively cull hypotheses to this number.
+  m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
+
   // In m.
   m_minSquaredDistanceBetweenSampledModes =
       m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
@@ -170,10 +173,6 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_translationErrorMaxForCorrectPose =
       m_settings->get_first_value<float>(settingsNamespace + "translationErrorMaxForCorrectPose", 0.05f);
 
-  // Aggressively cull hypotheses to this number.
-  m_trimKinitAfterFirstEnergyComputation =
-      m_settings->get_first_value<size_t>(settingsNamespace + "trimKinitAfterFirstEnergyComputation", 64);
-
   // If false use the first mode only (representing the largest cluster).
   m_useAllModesPerLeafInPoseHypothesisGeneration =
       m_settings->get_first_value<bool>(settingsNamespace + "useAllModesPerLeafInPoseHypothesisGeneration", true);
@@ -184,8 +183,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
 
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
   // for all.
-  m_nbMaxInliers =
-      m_batchSizeRansac * static_cast<size_t>(std::ceil(std::log2(m_trimKinitAfterFirstEnergyComputation)));
+  m_nbMaxInliers = m_batchSizeRansac * static_cast<uint32_t>(std::ceil(std::log2(m_maxPoseCandidatesAfterCull)));
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -260,7 +258,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   m_inliersIndicesBlock->dataSize = 0;
 
   // 2. If we have to aggressively cull the initial hypotheses to a small number.
-  if (m_trimKinitAfterFirstEnergyComputation < m_poseCandidates->dataSize)
+  if (m_maxPoseCandidatesAfterCull < m_poseCandidates->dataSize)
   {
     m_timerFirstTrim.start();
 #ifdef ENABLE_TIMERS
@@ -286,7 +284,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     }
 
     // 2c. Keep only the best ones.
-    m_poseCandidates->dataSize = m_trimKinitAfterFirstEnergyComputation;
+    m_poseCandidates->dataSize = m_maxPoseCandidatesAfterCull;
 
     m_timerFirstTrim.stop();
   }
@@ -354,13 +352,13 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates
 
   // Setup output container.
   poseCandidates.clear();
-  poseCandidates.reserve(m_trimKinitAfterFirstEnergyComputation);
+  poseCandidates.reserve(m_maxPoseCandidatesAfterCull);
 
   // Copy the all the poses that survived after the initial cull. They are "ordered in blocks":
   // the first one is the one returned by estimate_pose, the second is the one removed after the last ransac iteration,
   // the third and fourth are removed in the iteration before (whilst they are not in a specific order, they are worse
   // than those in position 0 and 1), and so on...
-  for (size_t poseIdx = 0; poseIdx < m_trimKinitAfterFirstEnergyComputation; ++poseIdx)
+  for (uint32_t poseIdx = 0; poseIdx < m_maxPoseCandidatesAfterCull; ++poseIdx)
   {
     poseCandidates.push_back(candidates[poseIdx]);
   }

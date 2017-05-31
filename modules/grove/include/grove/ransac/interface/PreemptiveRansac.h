@@ -118,6 +118,9 @@ protected:
   /** The initial number of pose hypotheses to generate */
   uint32_t m_maxPoseCandidates;
 
+  /** Aggressively cull the initial number of pose hypotheses to this amount, keeping only the best ones. */
+  uint32_t m_maxPoseCandidatesAfterCull;
+
   /**
    * The minimum distance (squared) between sampled modal clusters when m_checkMinDistanceBetweenSampledModes is
    * enabled.
@@ -154,9 +157,6 @@ protected:
    * if m_checkRigidTransformationConstraint is enabled.
    */
   float m_translationErrorMaxForCorrectPose;
-
-  /** Aggressively cull the initial number of pose hypotheses to this amount, keeping only the best ones. */
-  size_t m_trimKinitAfterFirstEnergyComputation;
 
   /** Whether or not to use every modal cluster in the leaves when generating pose hypotheses. */
   bool m_useAllModesPerLeafInPoseHypothesisGeneration;
