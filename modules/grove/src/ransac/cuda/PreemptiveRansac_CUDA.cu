@@ -237,7 +237,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
                                                                          m_checkMinDistanceBetweenSampledModes,
                                                                          m_minSquaredDistanceBetweenSampledModes,
                                                                          m_checkRigidTransformationConstraint,
-                                                                         m_translationErrorMaxForCorrectPose);
+                                                                         m_maxTranslationErrorForCorrectPose);
   ORcudaKernelCheck;
 
   // Need to make the data available to the host (for Kabsch).

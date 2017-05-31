@@ -77,7 +77,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
                                                       m_checkMinDistanceBetweenSampledModes,
                                                       m_minSquaredDistanceBetweenSampledModes,
                                                       m_checkRigidTransformationConstraint,
-                                                      m_translationErrorMaxForCorrectPose);
+                                                      m_maxTranslationErrorForCorrectPose);
 
     // If we succeeded store it in the array, grabbing first a unique index.
     if (valid)

@@ -155,6 +155,10 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
 
   // In m.
+  m_maxTranslationErrorForCorrectPose =
+      m_settings->get_first_value<float>(settingsNamespace + "maxTranslationErrorForCorrectPose", 0.05f);
+
+  // In m.
   m_minSquaredDistanceBetweenSampledModes =
       m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
 
@@ -170,10 +174,6 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
 
   // The number of inliers sampled in each P-RANSAC iteration.
   m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
-
-  // In m.
-  m_translationErrorMaxForCorrectPose =
-      m_settings->get_first_value<float>(settingsNamespace + "translationErrorMaxForCorrectPose", 0.05f);
 
   // If false use the first mode only (representing the largest cluster).
   m_useAllModesPerLeafInPoseHypothesisGeneration =

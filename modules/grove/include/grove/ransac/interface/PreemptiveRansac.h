@@ -119,6 +119,12 @@ protected:
   uint32_t m_maxPoseCandidatesAfterCull;
 
   /**
+   * The maximum allowed difference between distances in camera frame and world frame when generating pose hypotheses
+   * if m_checkRigidTransformationConstraint is enabled.
+   */
+  float m_maxTranslationErrorForCorrectPose;
+
+  /**
    * The minimum distance (squared) between sampled modal clusters when m_checkMinDistanceBetweenSampledModes is
    * enabled.
    */
@@ -151,12 +157,6 @@ protected:
 
   /** The settings. */
   tvgutil::SettingsContainer_CPtr m_settings;
-
-  /**
-   * The maximum allowed difference between distances in camera frame and world frame when generating pose hypotheses
-   * if m_checkRigidTransformationConstraint is enabled.
-   */
-  float m_translationErrorMaxForCorrectPose;
 
   /** Whether or not to use every modal cluster in the leaves when generating pose hypotheses. */
   bool m_useAllModesPerLeafInPoseHypothesisGeneration;

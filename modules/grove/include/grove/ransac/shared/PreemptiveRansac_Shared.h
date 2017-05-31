@@ -112,7 +112,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
  *                                                     parameter is true.
  * \param checkRigidTransformationConstraint           Whether or not to check that the selected modes define a
  *                                                     quasi-rigid transformation.
- * \param translationErrorMaxForCorrectPose            The maximum difference between the distances of pair of points in
+ * \param maxTranslationErrorForCorrectPose            The maximum difference between the distances of pair of points in
  *                                                     camera frame and pair of modes in world coordinates if the
  *                                                     previous check is enabled.
  *
@@ -130,7 +130,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
                                          bool checkMinDistanceBetweenSampledModes,
                                          float minSqDistanceBetweenSampledModes,
                                          bool checkRigidTransformationConstraint,
-                                         float translationErrorMaxForCorrectPose)
+                                         float maxTranslationErrorForCorrectPose)
 {
   int selectedPixelCount = 0;
   int selectedPixelLinearIdx[PoseCandidate::KABSCH_POINTS];
@@ -233,7 +233,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
         const float distWorld = length(diffWorld);
         const float distCamera = sqrtf(distCameraSq);
-        if (fabsf(distCamera - distWorld) > 0.5f * translationErrorMaxForCorrectPose)
+        if (fabsf(distCamera - distWorld) > 0.5f * maxTranslationErrorForCorrectPose)
         {
           violatesConditions = true;
         }
