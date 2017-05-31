@@ -115,6 +115,9 @@ protected:
   /** The maximum number of attempts for the generation of a pose candidate. */
   uint32_t m_maxCandidateGenerationIterations;
 
+  /** The initial number of pose hypotheses to generate */
+  uint32_t m_maxPoseCandidates;
+
   /**
    * The minimum distance (squared) between sampled modal clusters when m_checkMinDistanceBetweenSampledModes is
    * enabled.
@@ -126,9 +129,6 @@ protected:
    * The actual number starts from m_batchSizeRansac and increases by m_batchSizeRansac each P-RANSAC iteration.
    */
   size_t m_nbMaxInliers;
-
-  /** The initial number of pose hypotheses to generate */
-  size_t m_nbMaxPoseCandidates;
 
   /** A memory block storing the pose hypotheses. */
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;

@@ -137,6 +137,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   // By default, we set all parameters as in scoreforests.
   m_batchSizeRansac = m_settings->get_first_value<size_t>(settingsNamespace + "batchSizeRansac", 500);
 
+  // Whether or not to force sampled modes to have a minimum distance between them.
   m_checkMinDistanceBetweenSampledModes =
       m_settings->get_first_value<bool>(settingsNamespace + "checkMinDistanceBetweenSampledModes", true);
 
@@ -148,12 +149,12 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_maxCandidateGenerationIterations =
       m_settings->get_first_value<uint32_t>(settingsNamespace + "maxCandidateGenerationIterations", 6000);
 
+  // Number of initial pose candidates.
+  m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);
+
   // In m.
   m_minSquaredDistanceBetweenSampledModes =
       m_settings->get_first_value<float>(settingsNamespace + "minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
-
-  // Number of initial pose candidates.
-  m_nbMaxPoseCandidates = m_settings->get_first_value<size_t>(settingsNamespace + "nbMaxPoseCandidates", 1024);
 
   // In m.
   m_poseOptimizationInlierThreshold =
@@ -191,7 +192,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   // Allocate memory.
   m_inliersIndicesBlock = mbf.make_block<int>(m_nbMaxInliers);
   m_inliersMaskImage = mbf.make_image<int>();
-  m_poseCandidates = mbf.make_block<PoseCandidate>(m_nbMaxPoseCandidates);
+  m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
 
 #ifdef ENABLE_TIMERS
   // Force the average timers to on as well if we want verbose printing.

@@ -65,8 +65,8 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
                                                               RNG *randomGenerators,
                                                               PoseCandidate *poseCandidates,
                                                               int *nbPoseCandidates,
-                                                              int maxNbPoseCandidates,
                                                               uint32_t maxCandidateGenerationIterations,
+                                                              uint32_t maxPoseCandidates,
                                                               bool useAllModesPerLeafInPoseHypothesisGeneration,
                                                               bool checkMinDistanceBetweenSampledModes,
                                                               float minDistanceBetweenSampledModes,
@@ -75,7 +75,7 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (candidateIdx >= maxNbPoseCandidates) return;
+  if (candidateIdx >= maxPoseCandidates) return;
 
   // Try to generate a candidate in a local variable.
   PoseCandidate candidate;
@@ -158,7 +158,7 @@ PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &setti
   m_nbPoseCandidates_device =
       mbf.make_block<int>(1); // Size 1, just to store a value that can be accessed from the GPU.
   m_nbSampledInliers_device = mbf.make_block<int>(1); // As above.
-  m_randomGenerators = mbf.make_block<CUDARNG>(m_nbMaxPoseCandidates);
+  m_randomGenerators = mbf.make_block<CUDARNG>(m_maxPoseCandidates);
 
   // Default random seed.
   m_rngSeed = 42;
@@ -220,7 +220,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
   int *nbPoseCandidates_device = m_nbPoseCandidates_device->GetData(MEMORYDEVICE_CUDA);
 
   dim3 blockSize(32);
-  dim3 gridSize((m_nbMaxPoseCandidates + blockSize.x - 1) / blockSize.x);
+  dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
   // Reset number of candidates (device only, the host number will be updated later, when we are done generating).
   ORcudaSafeCall(cudaMemsetAsync(nbPoseCandidates_device, 0, sizeof(int)));
@@ -231,8 +231,8 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
                                                                          randomGenerators,
                                                                          poseCandidates,
                                                                          nbPoseCandidates_device,
-                                                                         m_nbMaxPoseCandidates,
                                                                          m_maxCandidateGenerationIterations,
+                                                                         m_maxPoseCandidates,
                                                                          m_useAllModesPerLeafInPoseHypothesisGeneration,
                                                                          m_checkMinDistanceBetweenSampledModes,
                                                                          m_minSquaredDistanceBetweenSampledModes,
@@ -321,10 +321,10 @@ void PreemptiveRansac_CUDA::init_random()
 
   // Initialize random states
   dim3 blockSize(256);
-  dim3 gridSize((m_nbMaxPoseCandidates + blockSize.x - 1) / blockSize.x);
+  dim3 gridSize((m_maxPoseCandidates + blockSize.x - 1) / blockSize.x);
 
   ck_preemptive_ransac_init_random_generators<<<gridSize, blockSize>>>(
-      randomGenerators, m_nbMaxPoseCandidates, m_rngSeed);
+      randomGenerators, m_maxPoseCandidates, m_rngSeed);
 }
 
 } // namespace grove
