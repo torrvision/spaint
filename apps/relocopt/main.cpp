@@ -94,7 +94,7 @@ bool parse_command_line(int argc, char *argv[], Arguments& args)
   options.add_options()
     ("help", "produce help message")
     ("datasetDir,d", po::value<std::string>(&args.datasetDir)->default_value(""), "the dataset directory")
-    ("logSpecifier,l", po::value<std::string>(&args.logSpecifier)->default_value(std::string(argv[0]) + ".log"), "the log specifier")
+    ("logSpecifier,l", po::value<std::string>(&args.logSpecifier)->default_value("relocopt.log"), "the log specifier")
     ("scriptSpecifier,s", po::value<std::string>(&args.scriptSpecifier)->default_value(""), "the script specifier")
   ;
 
