@@ -15,7 +15,7 @@
 namespace grove {
 
 /** Useful constants. */
-enum { MAX_CANDIDATE_GENERATION_ITERATIONS = 6000, MAX_COLOUR_DELTA = 30, SAMPLE_INLIER_ITERATIONS = 50 };
+enum { MAX_COLOUR_DELTA = 30, SAMPLE_INLIER_ITERATIONS = 50 };
 
 /**
  * \brief Compute the energy associated to a candidate pose. The energy represents how well the selected inliers agree
@@ -103,6 +103,7 @@ inline float preemptive_ransac_compute_candidate_energy(const Matrix4f &candidat
  * \param imgSize         The size of the input keypoint and predictions images.
  * \param randomGenerator Either a CPURNG or a CUDARNG according to the current device type.
  * \param poseCandidate   The variable where the generated pose candidate will be stored.
+ * \param maxCandidateGenerationIterations             The maximum number of iterations in the candidate generation step.
  * \param useAllModesPerLeafInPoseHypothesisGeneration Whether to use all modes in the predictions when generating the
  *                                                     pose hypothesis or just the first one.
  * \param checkMinDistanceBetweenSampledModes          Whether or not to check that sampled modes have a minimum
@@ -124,6 +125,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
                                          const Vector2i &imgSize,
                                          RNG &randomGenerator,
                                          PoseCandidate &poseCandidate,
+                                         uint32_t maxCandidateGenerationIterations,
                                          bool useAllModesPerLeafInPoseHypothesisGeneration,
                                          bool checkMinDistanceBetweenSampledModes,
                                          float minSqDistanceBetweenSampledModes,
@@ -136,8 +138,8 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
   // Try to generate a candidate (sample KABSCH_POINTS point pairs) for a certain number of times and return false if we
   // fail.
-  for (int iterationIdx = 0;
-       selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < MAX_CANDIDATE_GENERATION_ITERATIONS;
+  for (uint32_t iterationIdx = 0;
+       selectedPixelCount != PoseCandidate::KABSCH_POINTS && iterationIdx < maxCandidateGenerationIterations;
        ++iterationIdx)
   {
     // Sample a pixel in the input image.

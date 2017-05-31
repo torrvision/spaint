@@ -72,6 +72,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
                                                       imgSize,
                                                       randomGenerators[candidateIdx],
                                                       candidate,
+                                                      m_maxCandidateGenerationIterations,
                                                       m_useAllModesPerLeafInPoseHypothesisGeneration,
                                                       m_checkMinDistanceBetweenSampledModes,
                                                       m_minSquaredDistanceBetweenSampledModes,

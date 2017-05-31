@@ -112,6 +112,9 @@ protected:
    */
   Keypoint3DColourImage_CPtr m_keypointsImage;
 
+  /** The maximum number of attempts for the generation of a pose candidate. */
+  uint32_t m_maxCandidateGenerationIterations;
+
   /**
    * The minimum distance (squared) between sampled modal clusters when m_checkMinDistanceBetweenSampledModes is
    * enabled.

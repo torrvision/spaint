@@ -144,6 +144,10 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_checkRigidTransformationConstraint =
       m_settings->get_first_value<bool>(settingsNamespace + "m_checkRigidTransformationConstraint", true);
 
+  // The maximum number of times we sample three pixel-mode pairs in the attempt to generate a pose candidate.
+  m_maxCandidateGenerationIterations =
+      m_settings->get_first_value<uint32_t>(settingsNamespace + "m_maxCandidateGenerationIterations", 6000);
+
   // In m.
   m_minSquaredDistanceBetweenSampledModes =
       m_settings->get_first_value<float>(settingsNamespace + "m_minSquaredDistanceBetweenSampledModes", 0.3f * 0.3f);
