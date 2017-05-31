@@ -35,7 +35,7 @@ ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const
   // Update the modes associated to this number of reservoirs for each integration/update call.
   m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxReservoirsToUpdate", 256);
   // m_reservoirsCount is not set since that number depends on the forest that will be instantiated in the subclass.
-  m_reservoirsCapacity = m_settings->get_first_value<uint32_t>(settingsNamespace + "reservoirsCapacity", 1024);
+  m_reservoirCapacity = m_settings->get_first_value<uint32_t>(settingsNamespace + "reservoirCapacity", 1024);
   m_rngSeed = m_settings->get_first_value<uint32_t>(settingsNamespace + "rngSeed", 42);
 
   //

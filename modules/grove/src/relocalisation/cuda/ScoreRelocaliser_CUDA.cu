@@ -63,7 +63,7 @@ ScoreRelocaliser_CUDA::ScoreRelocaliser_CUDA(const SettingsContainer_CPtr& setti
 
   // Reservoirs.
   m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(
-      ITMLibSettings::DEVICE_CUDA, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
+      ITMLibSettings::DEVICE_CUDA, m_reservoirCapacity, m_reservoirsCount, m_rngSeed);
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::MAX_CLUSTERS>::make_clusterer(

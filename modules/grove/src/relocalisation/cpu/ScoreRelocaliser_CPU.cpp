@@ -45,7 +45,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr
 
   // Reservoirs.
   m_exampleReservoirs = ExampleReservoirsFactory<ExampleType>::make_reservoirs(
-      ITMLibSettings::DEVICE_CPU, m_reservoirsCapacity, m_reservoirsCount, m_rngSeed);
+      ITMLibSettings::DEVICE_CPU, m_reservoirCapacity, m_reservoirsCount, m_rngSeed);
 
   // Clustering.
   m_exampleClusterer = ExampleClustererFactory<ExampleType, ClusterType, PredictionType::MAX_CLUSTERS>::make_clusterer(
