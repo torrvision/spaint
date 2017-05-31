@@ -194,7 +194,7 @@ protected:
   PreemptiveRansac_Ptr m_preemptiveRansac;
 
   /** The maximum capacity of the reservoir associated to each leaf in the forest. */
-  uint32_t m_reservoirsCapacity;
+  uint32_t m_reservoirCapacity;
 
   /** The seed for a random number generator. */
   uint32_t m_rngSeed;

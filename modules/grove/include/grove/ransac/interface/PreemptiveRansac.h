@@ -90,9 +90,6 @@ public:
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
-  /** The number of points to add to the inlier set after each P-RANSAC iteration. */
-  size_t m_batchSizeRansac;
-
   /**
    * Whether or not to force the sampling of modes having a minimum distance between each other during the pose
    * hyphotesis generation phase.
@@ -115,6 +112,18 @@ protected:
   /** The maximum number of attempts for the generation of a pose candidate. */
   uint32_t m_maxCandidateGenerationIterations;
 
+  /** The initial number of pose hypotheses to generate */
+  uint32_t m_maxPoseCandidates;
+
+  /** Aggressively cull the initial number of pose hypotheses to this amount, keeping only the best ones. */
+  uint32_t m_maxPoseCandidatesAfterCull;
+
+  /**
+   * The maximum allowed difference between distances in camera frame and world frame when generating pose hypotheses
+   * if m_checkRigidTransformationConstraint is enabled.
+   */
+  float m_maxTranslationErrorForCorrectPose;
+
   /**
    * The minimum distance (squared) between sampled modal clusters when m_checkMinDistanceBetweenSampledModes is
    * enabled.
@@ -126,9 +135,6 @@ protected:
    * The actual number starts from m_batchSizeRansac and increases by m_batchSizeRansac each P-RANSAC iteration.
    */
   size_t m_nbMaxInliers;
-
-  /** The initial number of pose hypotheses to generate */
-  size_t m_nbMaxPoseCandidates;
 
   /** A memory block storing the pose hypotheses. */
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
@@ -146,17 +152,11 @@ protected:
    */
   ScorePredictionsImage_CPtr m_predictionsImage;
 
+  /** The number of points to add to the inlier set after each P-RANSAC iteration. */
+  uint32_t m_ransacInliersPerIteration;
+
   /** The settings. */
   tvgutil::SettingsContainer_CPtr m_settings;
-
-  /**
-   * The maximum allowed difference between distances in camera frame and world frame when generating pose hypotheses
-   * if m_checkRigidTransformationConstraint is enabled.
-   */
-  float m_translationErrorMaxForCorrectPose;
-
-  /** Aggressively cull the initial number of pose hypotheses to this amount, keeping only the best ones. */
-  size_t m_trimKinitAfterFirstEnergyComputation;
 
   /** Whether or not to use every modal cluster in the leaves when generating pose hypotheses. */
   bool m_useAllModesPerLeafInPoseHypothesisGeneration;

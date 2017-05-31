@@ -21,7 +21,7 @@ namespace grove {
 PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
-  m_randomGenerators = mbf.make_block<CPURNG>(m_nbMaxPoseCandidates);
+  m_randomGenerators = mbf.make_block<CPURNG>(m_maxPoseCandidates);
   m_rngSeed = 42;
 
   init_random();
@@ -62,7 +62,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
 #ifdef WITH_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (size_t candidateIdx = 0; candidateIdx < m_nbMaxPoseCandidates; ++candidateIdx)
+  for (uint32_t candidateIdx = 0; candidateIdx < m_maxPoseCandidates; ++candidateIdx)
   {
     PoseCandidate candidate;
 
@@ -77,7 +77,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
                                                       m_checkMinDistanceBetweenSampledModes,
                                                       m_minSquaredDistanceBetweenSampledModes,
                                                       m_checkRigidTransformationConstraint,
-                                                      m_translationErrorMaxForCorrectPose);
+                                                      m_maxTranslationErrorForCorrectPose);
 
     // If we succeeded store it in the array, grabbing first a unique index.
     if (valid)
@@ -110,7 +110,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (size_t sampleIdx = 0; sampleIdx < m_batchSizeRansac; ++sampleIdx)
+  for (uint32_t sampleIdx = 0; sampleIdx < m_ransacInliersPerIteration; ++sampleIdx)
   {
     int sampledLinearIdx = -1;
 
@@ -169,7 +169,7 @@ void PreemptiveRansac_CPU::init_random()
   CPURNG *randomGenerators = m_randomGenerators->GetData(MEMORYDEVICE_CPU);
 
   // Initialize random states
-  for (size_t i = 0; i < m_nbMaxPoseCandidates; ++i)
+  for (uint32_t i = 0; i < m_maxPoseCandidates; ++i)
   {
     randomGenerators[i].reset(m_rngSeed + i);
   }
