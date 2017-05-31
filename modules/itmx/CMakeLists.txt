@@ -32,6 +32,7 @@ include/itmx/base/ITMImagePtrTypes.h
 include/itmx/base/ITMMemoryBlockPtrTypes.h
 include/itmx/base/ITMObjectPtrTypes.h
 include/itmx/base/MemoryBlockFactory.h
+include/itmx/base/Settings.h
 )
 
 ##
@@ -48,6 +49,8 @@ include/itmx/persistence/PosePersister.h
 ##
 SET(relocalisation_sources
 src/relocalisation/FernRelocaliser.cpp
+src/relocalisation/RefiningRelocaliser.cpp
+src/relocalisation/Relocaliser.cpp
 src/relocalisation/RelocaliserFactory.cpp
 )
 

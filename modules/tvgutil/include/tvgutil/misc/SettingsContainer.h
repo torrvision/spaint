@@ -1,13 +1,15 @@
 /**
- * tvgutil: GlobalParameters.h
+ * tvgutil: SettingsContainer.h
  * Copyright (c) Torr Vision Group, University of Oxford, 2017. All rights reserved.
  */
 
-#ifndef H_TVGUTIL_GLOBALPARAMETERS
-#define H_TVGUTIL_GLOBALPARAMETERS
+#ifndef H_TVGUTIL_SETTINGSCONTAINER
+#define H_TVGUTIL_SETTINGSCONTAINER
 
 #include <ostream>
 #include <vector>
+
+#include <boost/shared_ptr.hpp>
 
 #include "../containers/MapUtil.h"
 #include "ConversionUtil.h"
@@ -15,31 +17,30 @@
 namespace tvgutil {
 
 /**
- * \brief This class can be used to access the global parameters used to configure an application.
+ * \brief This class can be used to access a set of non-typed parameters used to configure an application.
  *
  * The parameters are represented as a key -> [value] map, i.e. there can be multiple values for the same named parameter.
  */
-class GlobalParameters
+class SettingsContainer
 {
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The key -> [value] map storing the values for the parameters. */
   std::map<std::string,std::vector<std::string> > m_params;
 
-  //#################### SINGLETON IMPLEMENTATION ####################
-private:
-  /**
-   * \brief Constructs the singleton instance.
-   */
-  GlobalParameters();
-
+  //#################### CONSTRUCTOR ####################
 public:
   /**
-   * \brief Gets the singleton instance.
-   *
-   * \return The singleton instance.
+   * \brief Constructs an instance of SettingsContainer.
    */
-  static GlobalParameters& instance();
+  SettingsContainer() {}
+
+  //#################### DESTRUCTOR ####################
+public:
+  /**
+   * \brief Destroys an instance of SettingsContainer.
+   */
+  virtual ~SettingsContainer() {}
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
@@ -95,8 +96,12 @@ public:
    * \param rhs The global parameters to output.
    * \return    The stream.
    */
-  friend std::ostream& operator<<(std::ostream& os, const GlobalParameters& rhs);
+  friend std::ostream& operator<<(std::ostream& os, const SettingsContainer& rhs);
 };
+
+//#################### TYPEDEFS ####################
+typedef boost::shared_ptr<SettingsContainer> SettingsContainer_Ptr;
+typedef boost::shared_ptr<const SettingsContainer> SettingsContainer_CPtr;
 
 }
 

@@ -8,6 +8,8 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
+
 #include "interface/ScoreRelocaliser.h"
 
 namespace grove {
@@ -23,6 +25,7 @@ public:
    * \brief Create a ScoreRelocaliser of the appropriate type.
    *
    * \param deviceType     The device type.
+   * \param settings       A pointer to the settings used to configure the relocaliser.
    * \param forestFilename The path to a file containing the structure of a pretrained relocalisation forest.
    *
    * \return An instance of a ScoreRelocaliser.
@@ -30,6 +33,7 @@ public:
    * \throws std::runtime_error If the relocaliser cannot be created.
    */
   static ScoreRelocaliser_Ptr make_score_relocaliser(ITMLib::ITMLibSettings::DeviceType deviceType,
+                                                     const tvgutil::SettingsContainer_CPtr& settings,
                                                      const std::string &forestFilename);
 };
 

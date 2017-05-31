@@ -39,7 +39,7 @@
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
@@ -75,6 +75,7 @@ struct CommandLineArguments
   bool noTracker;
   std::string openNIDeviceURI;
   std::string pipelineType;
+  std::vector<std::string> poseFileMasks;
   size_t prefetchBufferCapacity;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
@@ -190,8 +191,14 @@ std::string make_tracker_config(CommandLineArguments& args)
       }
       else if(chunks[i] == "Disk")
       {
-        const std::string poseFileMask = (args.sequenceDirs[i] / "posem%06i.txt").string();
-        result += "<tracker type='infinitam'><params>type=file,mask=" + poseFileMask + "</params></tracker>";
+        if(args.poseFileMasks.size() < i)
+        {
+          // If this happens it's because at least one mask was specified with the -p flag,
+          // otherwise postprocess_arguments would have taken care of supplying the default masks.
+          throw std::invalid_argument("Not enough pose file masks have been specified with the -p flag.");
+        }
+
+        result += "<tracker type='infinitam'><params>type=file,mask=" + args.poseFileMasks[i] + "</params></tracker>";
       }
       else
       {
@@ -217,10 +224,10 @@ std::string make_tracker_config(CommandLineArguments& args)
  */
 bool postprocess_arguments(CommandLineArguments& args)
 {
-  // If the user specifies both sequence and explicit depth / RGB image mask flags, print an error message.
-  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.rgbImageMasks.empty()))
+  // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
+  if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
   {
-    std::cout << "Error: Either sequence flags or explicit depth / RGB image mask flags may be specified, but not both.\n";
+    std::cout << "Error: Either sequence flags or explicit depth / RGB image / pose mask flags may be specified, but not both.\n";
     return false;
   }
 
@@ -239,6 +246,7 @@ bool postprocess_arguments(CommandLineArguments& args)
 
     // Set the depth / RGB image masks.
     args.depthImageMasks.push_back((dir / "depthm%06i.pgm").string());
+    args.poseFileMasks.push_back((dir / "posem%06i.txt").string());
     args.rgbImageMasks.push_back((dir / "rgbm%06i.ppm").string());
   }
 
@@ -266,14 +274,61 @@ bool postprocess_arguments(CommandLineArguments& args)
 }
 
 /**
- * \brief Stores the parsed options in the GlobalParameters instance.
+ * \brief Sets the scene parameters from GlobalParameters, allowing the user to specify ad hoc values for voxel size, truncation distance, etc...
  *
- * \param parsedOptions The options to store in GlobalParameters.
+ * \param sceneParams The scene parameters to modify.
  */
-void store_parsed_options_into_global_parameters(const po::parsed_options& parsedOptions)
+void set_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSceneParams &sceneParams)
 {
-  GlobalParameters& globalParams = GlobalParameters::instance();
+#define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
 
+  // Use the default values from InfiniTAM.
+  GET_PARAM(int, maxW, 100);
+  GET_PARAM(float, mu, 0.02f);
+  GET_PARAM(bool, stopIntegratingAtMaxW, false);
+  GET_PARAM(float, viewFrustum_max, 3.0f);
+  GET_PARAM(float, viewFrustum_min, 0.2f);
+  GET_PARAM(float, voxelSize, 0.005f);
+
+#undef GET_PARAM
+}
+
+/**
+ * \brief Sets the surfel scene parameters from GlobalParameters, allowing the user to specify ad hoc values for surfel radius, etc...
+ *
+ * \param surfelSceneParams The surfel scene parameters to modify.
+ */
+void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
+{
+#define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
+
+  // Use the default values from InfiniTAM.
+  GET_PARAM(float, deltaRadius, 0.5f);
+  GET_PARAM(float, gaussianConfidenceSigma, 0.6f);
+  GET_PARAM(float, maxMergeAngle, static_cast<float>(20 * M_PI / 180));
+  GET_PARAM(float, maxMergeDist, 0.01f);
+  GET_PARAM(float, maxSurfelRadius, 0.004f);
+  GET_PARAM(float, minRadiusOverlapFactor, 3.5f);
+  GET_PARAM(float, stableSurfelConfidence, 25.0f);
+  GET_PARAM(int, supersamplingFactor, 4);
+  GET_PARAM(float, trackingSurfelMaxDepth, 1.0f);
+  GET_PARAM(float, trackingSurfelMinConfidence, 5.0f);
+  GET_PARAM(int, unstableSurfelPeriod, 20);
+  GET_PARAM(int, unstableSurfelZOffset, 10000000);
+  GET_PARAM(bool, useGaussianSampleConfidence, true);
+  GET_PARAM(bool, useSurfelMerging, true);
+
+#undef GET_PARAM
+}
+
+/**
+ * \brief Stores the parsed options in a SettingsContainer instance.
+ *
+ * \param parsedOptions The options to store in the SettingsContainer.
+ * \param settings      The settings container.
+ */
+void store_parsed_options_into_settings(const po::parsed_options& parsedOptions, const SettingsContainer_Ptr &settings)
+{
   for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
   {
     const po::basic_option<char> &option = parsedOptions.options[optionIdx];
@@ -281,7 +336,7 @@ void store_parsed_options_into_global_parameters(const po::parsed_options& parse
     // Add all values in the correct order.
     for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
     {
-      globalParams.add_value(option.string_key, option.value[valueIdx]);
+      settings->add_value(option.string_key, option.value[valueIdx]);
     }
   }
 }
@@ -294,7 +349,7 @@ void store_parsed_options_into_global_parameters(const po::parsed_options& parse
  * \param args  The parsed command-line arguments.
  * \return      true, if the program should continue after parsing the command-line arguments, or false otherwise.
  */
-bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
+bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const SettingsContainer_Ptr &settings)
 {
   // Specify the possible options.
   po::options_description genericOptions("Generic options");
@@ -326,6 +381,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   diskSequenceOptions.add_options()
     ("depthMask,d", po::value<std::vector<std::string> >(&args.depthImageMasks)->multitoken(), "depth image mask")
     ("initialFrame,n", po::value<int>(&args.initialFrameNumber)->default_value(0), "initial frame number")
+    ("poseMask,p", po::value<std::vector<std::string> >(&args.poseFileMasks)->multitoken(), "pose file mask")
     ("prefetchBufferCapacity,b", po::value<size_t>(&args.prefetchBufferCapacity)->default_value(60), "capacity of the prefetch buffer")
     ("rgbMask,r", po::value<std::vector<std::string> >(&args.rgbImageMasks)->multitoken(), "RGB image mask")
     ("sequenceSpecifier,s", po::value<std::vector<std::string> >(&args.sequenceSpecifiers)->multitoken(), "sequence specifier")
@@ -347,26 +403,26 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   po::variables_map vm;
   po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
 
-  // Store the parsed options in both the variables map and GlobalParameters.
+  // Store the parsed options in both the variables map and the SettingsContainer.
   po::store(parsedCommandLineOptions, vm);
-  store_parsed_options_into_global_parameters(parsedCommandLineOptions);
+  store_parsed_options_into_settings(parsedCommandLineOptions, settings);
 
   // Parse options from configuration file, if necessary.
   if(vm.count("configFile"))
   {
-    // Allow unregistered options: those are added to the global parameters, to be used by other classes.
+    // Allow unregistered options: those are added to the settings container, to be used by other classes.
     po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
 
     // Store registered options in the variable map
     po::store(parsedConfigFileOptions, vm);
 
-    // Store all options (including unregistered ones) into the GlobalParameters.
-    store_parsed_options_into_global_parameters(parsedConfigFileOptions);
+    // Store all options (including unregistered ones) into the SettingsContainer.
+    store_parsed_options_into_settings(parsedConfigFileOptions, settings);
   }
 
   po::notify(vm);
 
-  std::cout << "Global params:\n" << GlobalParameters::instance() << '\n';
+  std::cout << "Global settings:\n" << *settings << '\n';
 
   // If the user specifies the --help flag, print a help message.
   if(vm.count("help"))
@@ -394,9 +450,14 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
+  // Setup the settings.
+  Settings_Ptr settings(new Settings);
+  settings->trackerConfig = NULL; // The tracker is handled by the tracker factory.
+
+
   // Parse and post-process the command-line arguments.
   CommandLineArguments args;
-  if(!parse_command_line(argc, argv, args) || !postprocess_arguments(args))
+  if(!parse_command_line(argc, argv, args, settings) || !postprocess_arguments(args))
   {
     return 0;
   }
@@ -417,14 +478,9 @@ try
   ovr_Initialize();
 #endif
 
-  // Specify the settings.
-  boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
-  settings->trackerConfig = NULL;
-
-  // 7scenes GT
-  settings->sceneParams.mu = 0.04f;
-  settings->sceneParams.voxelSize = 0.01f;
-  settings->sceneParams.viewFrustum_max = 5.0f;
+  // Set scene parameters from configuration.
+  set_scene_params_from_global_options(settings, settings->sceneParams);
+  set_surfel_scene_params_from_global_options(settings, settings->surfelSceneParams);
 
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 

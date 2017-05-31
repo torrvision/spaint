@@ -8,6 +8,8 @@
 
 #include <ITMLib/Utils/ITMLibSettings.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
+
 #include "interface/PreemptiveRansac.h"
 
 namespace grove {
@@ -26,7 +28,7 @@ public:
    *
    * \return An instance of PreemptiveRansac.
    */
-  static PreemptiveRansac_Ptr make_preemptive_ransac(ITMLib::ITMLibSettings::DeviceType deviceType);
+  static PreemptiveRansac_Ptr make_preemptive_ransac(ITMLib::ITMLibSettings::DeviceType deviceType, const tvgutil::SettingsContainer_CPtr& settings);
 };
 }
 

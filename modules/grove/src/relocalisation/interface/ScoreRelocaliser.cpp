@@ -8,17 +8,17 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
+ScoreRelocaliser::ScoreRelocaliser(const SettingsContainer_CPtr& settings, const std::string& forestFilename)
+  : m_settings(settings)
 {
-  const std::string parametersNamespace = "ScoreRelocaliser.";
-  const GlobalParameters &parameters = GlobalParameters::instance();
+  const std::string settingsNamespace = "ScoreRelocaliser.";
 
   // In this constructor we are just setting the variables, instantiation of the sub-algorithms is left to the sub class
   // in order to instantiate the appropriate version.
@@ -33,22 +33,22 @@ ScoreRelocaliser::ScoreRelocaliser(const std::string &forestFilename)
   //
 
   // Update the modes associated to this number of reservoirs for each integration/update call.
-  m_maxReservoirsToUpdate = parameters.get_first_value<uint32_t>(parametersNamespace + "m_maxReservoirsToUpdate", 256);
+  m_maxReservoirsToUpdate = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_maxReservoirsToUpdate", 256);
   // m_reservoirsCount is not set since that number depends on the forest that will be instantiated in the subclass.
-  m_reservoirsCapacity = parameters.get_first_value<uint32_t>(parametersNamespace + "m_reservoirsCapacity", 1024);
-  m_rngSeed = parameters.get_first_value<uint32_t>(parametersNamespace + "m_rngSeed", 42);
+  m_reservoirsCapacity = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_reservoirsCapacity", 1024);
+  m_rngSeed = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_rngSeed", 42);
 
   //
   // Clustering parameters (defaults are tentative values that seem to work)
   //
-  m_clustererSigma = parameters.get_first_value<float>(parametersNamespace + "m_clustererSigma", 0.1f);
-  m_clustererTau = parameters.get_first_value<float>(parametersNamespace + "m_clustererTau", 0.05f);
-  m_maxClusterCount = parameters.get_first_value<uint32_t>(parametersNamespace + "m_maxClusterCount", ScorePrediction::MAX_CLUSTERS);
-  m_minClusterSize = parameters.get_first_value<uint32_t>(parametersNamespace + "m_minClusterSize", 20);
+  m_clustererSigma = m_settings->get_first_value<float>(settingsNamespace + "m_clustererSigma", 0.1f);
+  m_clustererTau = m_settings->get_first_value<float>(settingsNamespace + "m_clustererTau", 0.05f);
+  m_maxClusterCount = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_maxClusterCount", ScorePrediction::MAX_CLUSTERS);
+  m_minClusterSize = m_settings->get_first_value<uint32_t>(settingsNamespace + "m_minClusterSize", 20);
 
   if(m_maxClusterCount > ScorePrediction::MAX_CLUSTERS)
   {
-    throw std::invalid_argument(parametersNamespace + "m_maxClusterCount > ScorePrediction::MAX_CLUSTERS");
+    throw std::invalid_argument(settingsNamespace + "m_maxClusterCount > ScorePrediction::MAX_CLUSTERS");
   }
 
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
@@ -76,10 +76,52 @@ Keypoint3DColourImage_CPtr ScoreRelocaliser::get_keypoints_image() const { retur
 
 ScorePredictionsImage_CPtr ScoreRelocaliser::get_predictions_image() const { return m_predictionsImage; }
 
-void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                                const ITMFloatImage *depthImage,
-                                                const Vector4f &depthIntrinsics,
-                                                const ORUtils::SE3Pose &cameraPose)
+boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
+                                                                  const ITMFloatImage *depthImage,
+                                                                  const Vector4f &depthIntrinsics) const
+{
+  // Try to estimate a pose only if we have enough valid depth values.
+  if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
+  {
+    // First: select keypoints and compute descriptors.
+    m_featureCalculator->compute_keypoints_and_features(
+        colourImage, depthImage, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
+
+    // Second: find all the leaves associated to the keypoints.
+    m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
+
+    // Third: merge the predictions associated to those leaves.
+    get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
+
+    // Finally: perform RANSAC.
+    boost::optional<PoseCandidate> poseCandidate =
+        m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
+
+    // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
+    if (poseCandidate)
+    {
+      Result result;
+      result.pose.SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
+      result.quality = RELOCALISATION_GOOD;
+
+      return result;
+    }
+  }
+
+  return boost::none;
+}
+
+void ScoreRelocaliser::reset()
+{
+  m_exampleReservoirs->clear();
+  m_predictionsBlock->Clear();
+
+  m_lastFeaturesAddedStartIdx = 0;
+  m_reservoirUpdateStartIdx = 0;
+}
+
+void ScoreRelocaliser::train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                             const Vector4f &depthIntrinsics, const ORUtils::SE3Pose &cameraPose)
 {
   // First: select keypoints and compute descriptors.
   const Matrix4f invCameraPose = cameraPose.GetInvM();
@@ -110,50 +152,6 @@ void ScoreRelocaliser::integrate_rgbd_pose_pair(const ITMUChar4Image *colourImag
 
   // Finally: update starting index for the next invocation of either this function or idle_update().
   update_reservoir_start_idx();
-}
-
-boost::optional<Relocaliser::RelocalisationResult> ScoreRelocaliser::relocalise(const ITMUChar4Image *colourImage,
-                                                                                const ITMFloatImage *depthImage,
-                                                                                const Vector4f &depthIntrinsics) const
-{
-  // Try to estimate a pose only if we have enough valid depth values.
-  if (m_lowLevelEngine->CountValidDepths(depthImage) > m_preemptiveRansac->get_min_nb_required_points())
-  {
-    // First: select keypoints and compute descriptors.
-    m_featureCalculator->compute_keypoints_and_features(
-        colourImage, depthImage, depthIntrinsics, m_rgbdPatchKeypointsImage.get(), m_rgbdPatchDescriptorImage.get());
-
-    // Second: find all the leaves associated to the keypoints.
-    m_scoreForest->find_leaves(m_rgbdPatchDescriptorImage, m_leafIndicesImage);
-
-    // Third: merge the predictions associated to those leaves.
-    get_predictions_for_leaves(m_leafIndicesImage, m_predictionsBlock, m_predictionsImage);
-
-    // Finally: perform RANSAC.
-    boost::optional<PoseCandidate> poseCandidate =
-        m_preemptiveRansac->estimate_pose(m_rgbdPatchKeypointsImage, m_predictionsImage);
-
-    // If we succeeded, grab the transformation matrix, fill the SE3Pose and return a GOOD relocalisation result.
-    if (poseCandidate)
-    {
-      RelocalisationResult result;
-      result.pose.SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
-      result.quality = RELOCALISATION_GOOD;
-
-      return result;
-    }
-  }
-
-  return boost::none;
-}
-
-void ScoreRelocaliser::reset()
-{
-  m_exampleReservoirs->clear();
-  m_predictionsBlock->Clear();
-
-  m_lastFeaturesAddedStartIdx = 0;
-  m_reservoirUpdateStartIdx = 0;
 }
 
 void ScoreRelocaliser::update()

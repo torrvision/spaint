@@ -28,8 +28,10 @@ class PreemptiveRansac_CPU : public PreemptiveRansac
 public:
   /**
    * \brief Constructs an instance of PreemptiveRansac_CUDA.
+   *
+   * \param settings A pointer to the settings used to configure the algorithm.
    */
-  PreemptiveRansac_CPU();
+  PreemptiveRansac_CPU(const tvgutil::SettingsContainer_CPtr& settings);
 
   //#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
 protected:

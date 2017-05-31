@@ -24,7 +24,7 @@ using namespace grove;
 #include <itmx/relocalisation/RelocaliserFactory.h>
 using namespace itmx;
 
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 using namespace tvgutil;
 
 #include "segmentation/SegmentationUtil.h"
@@ -168,20 +168,20 @@ bool SLAMComponent::process_frame()
   if(maskedDepthImage) view->depth->Swap(*maskedDepthImage);
 
   // Determine the tracking quality, taking into account the failure mode being used.
-  ITMTrackingState::TrackingResult trackerResult = trackingState->trackerResult;
   switch(m_context->get_settings()->behaviourOnFailure)
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
       // Allow the relocaliser to either improve the pose or store a new keyframe, update its model, etc...
-      trackerResult = process_relocalisation(trackerResult);
+      process_relocalisation();
       break;
     }
     case ITMLibSettings::FAILUREMODE_STOP_INTEGRATION:
     {
       // Since we're not using relocalisation, treat tracking failures like poor tracking,
       // on the basis that it's better to try to keep going than to fail completely.
-      if(trackerResult == ITMTrackingState::TRACKING_FAILED) trackerResult = ITMTrackingState::TRACKING_POOR;
+      if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED)
+        trackingState->trackerResult = ITMTrackingState::TRACKING_POOR;
 
       break;
     }
@@ -189,15 +189,15 @@ bool SLAMComponent::process_frame()
     default:
     {
       // If we're completely ignoring poor or failed tracking, treat the tracking quality as good.
-      trackerResult = ITMTrackingState::TRACKING_GOOD;
+      trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
       break;
     }
   }
 
   // Decide whether or not fusion should be run.
   bool runFusion = m_fusionEnabled;
-  if(trackerResult == ITMTrackingState::TRACKING_FAILED ||
-     (trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount >= m_initialFramesToFuse) ||
+  if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED ||
+     (trackingState->trackerResult == ITMTrackingState::TRACKING_POOR && m_fusedFramesCount >= m_initialFramesToFuse) ||
      (m_fallibleTracker && m_fallibleTracker->lost_tracking()))
   {
     runFusion = false;
@@ -214,7 +214,7 @@ bool SLAMComponent::process_frame()
 
     ++m_fusedFramesCount;
   }
-  else if(trackerResult != ITMTrackingState::TRACKING_FAILED)
+  else if(trackingState->trackerResult != ITMTrackingState::TRACKING_FAILED)
   {
     // If we're not fusing, but the tracking has not completely failed, update the list of visible blocks so that things are kept up to date.
     m_denseVoxelMapper->UpdateVisibleList(view.get(), trackingState.get(), voxelScene.get(), liveVoxelRenderState.get());
@@ -240,7 +240,7 @@ bool SLAMComponent::process_frame()
 
   // If we're using a fiducial detector and the user wants to detect fiducials and the tracking is good, try to detect fiducial markers
   // in the current view of the scene and update the current set of fiducials that we're maintaining accordingly.
-  if(m_fiducialDetector && m_detectFiducials && trackerResult == ITMTrackingState::TRACKING_GOOD)
+  if(m_fiducialDetector && m_detectFiducials && trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD)
   {
     slamState->update_fiducials(m_fiducialDetector->detect_fiducials(view, *trackingState->pose_d, liveVoxelRenderState, FiducialDetector::PEM_RAYCAST));
   }
@@ -262,7 +262,7 @@ void SLAMComponent::reset_scene()
   slamState->get_tracking_state()->Reset();
 
   // Reset the relocaliser.
-//  m_refiningRelocaliser->reset();
+  m_context->get_relocaliser(m_sceneID)->reset();
 
   // Reset some variables to their initial values.
   m_fusedFramesCount = 0;
@@ -307,22 +307,22 @@ void SLAMComponent::prepare_for_tracking(TrackingMode trackingMode)
   }
 }
 
-SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResult trackingResult)
+void SLAMComponent::process_relocalisation()
 {
-  const bool performRelocalization = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_FAILED;
-  const bool performLearning = m_relocaliseEveryFrame || trackingResult == ITMTrackingState::TRACKING_GOOD;
-
   const Relocaliser_Ptr &relocaliser = m_context->get_relocaliser(m_sceneID);
   const SLAMState_Ptr &slamState = m_context->get_slam_state(m_sceneID);
-  const ITMFloatImage *inputDepthImage = slamState->get_view()->depth;
-  const ITMUChar4Image *inputRGBImage = slamState->get_view()->rgb;
-
   const TrackingState_Ptr &trackingState = slamState->get_tracking_state();
-  const SE3Pose trackedPose(*trackingState->pose_d);
-
   const View_Ptr &view = slamState->get_view();
 
   const Vector4f depthIntrinsics = view->calib.intrinsics_d.projectionParamsSimple.all;
+  const ITMFloatImage *inputDepthImage = view->depth;
+  const ITMUChar4Image *inputRGBImage = view->rgb;
+
+  const bool performRelocalization = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED;
+  const bool performLearning = m_relocaliseEveryFrame || trackingState->trackerResult == ITMTrackingState::TRACKING_GOOD;
+
+  // Save the tracked pose just in case we need to set it at the end (if m_relocaliseEveryFrame is true).
+  const SE3Pose trackedPose(*trackingState->pose_d);
 
   if (m_relocaliserUpdateEveryFrame && !performLearning)
   {
@@ -331,15 +331,15 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
   if (performRelocalization)
   {
-    boost::optional<Relocaliser::RelocalisationResult> relocalisationResult =
+    boost::optional<Relocaliser::Result> relocalisationResult =
         relocaliser->relocalise(inputRGBImage, inputDepthImage, depthIntrinsics);
 
     if (relocalisationResult)
     {
       trackingState->pose_d->SetFrom(&(relocalisationResult->pose));
-      trackingResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
-                           ? ITMTrackingState::TRACKING_GOOD
-                           : ITMTrackingState::TRACKING_POOR;
+      trackingState->trackerResult = relocalisationResult->quality == Relocaliser::RELOCALISATION_GOOD
+                                     ? ITMTrackingState::TRACKING_GOOD
+                                     : ITMTrackingState::TRACKING_POOR;
     }
     else
     {
@@ -349,38 +349,35 @@ SLAMComponent::TrackingResult SLAMComponent::process_relocalisation(TrackingResu
 
   if (performLearning)
   {
-    relocaliser->integrate_rgbd_pose_pair(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
+    relocaliser->train(inputRGBImage, inputDepthImage, depthIntrinsics, trackedPose);
   }
 
   if (m_relocaliseEveryFrame)
   {
     // Restore tracked pose.
     trackingState->pose_d->SetFrom(&trackedPose);
-    // The assumption is that we are using the ground truth trajectory so the tracker always succeeds.
-    trackingResult = ITMTrackingState::TRACKING_GOOD;
+    // The assumption is that we are using the ground truth trajectory, so the tracker always succeeds.
+    trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
   }
-
-  return trackingResult;
 }
 
 void SLAMComponent::setup_relocaliser()
 {
-  const static std::string parametersNamespace = "SLAMComponent.";
-  const GlobalParameters &globalParams = GlobalParameters::instance();
+  const Settings_CPtr& settings = m_context->get_settings();
+  const static std::string settingsNamespace = "SLAMComponent.";
 
-  m_relocaliseEveryFrame = globalParams.get_first_value<bool>(parametersNamespace +
-                                                              "m_relocaliseEveryFrame", false);
+  m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace +
+                                                          "m_relocaliseEveryFrame", false);
 
-  m_relocaliserType = globalParams.get_first_value<std::string>(parametersNamespace +
-                                                                "m_relocaliserType", "forest");
+  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace +
+                                                            "m_relocaliserType", "forest");
 
-  m_relocaliserUpdateEveryFrame = globalParams.get_first_value<bool>(parametersNamespace +
-                                                                     "m_updateRelocaliserEveryFrame", true);
+  m_relocaliserUpdateEveryFrame = settings->get_first_value<bool>(settingsNamespace +
+                                                                 "m_updateRelocaliserEveryFrame", true);
 
   // Useful variables.
   const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
   const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
-  const Settings_CPtr &settings = m_context->get_settings();
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
   // A pointer to the actual relocaliser that will be nested in the refining relocaliser.
@@ -390,11 +387,11 @@ void SLAMComponent::setup_relocaliser()
     const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) /
                                                          "DefaultRelocalizationForest.rf").string();
 
-    m_relocaliserForestPath = globalParams.get_first_value<std::string>(parametersNamespace +
-                                                                           "m_relocalisationForestPath", defaultRelocalisationForestPath);
+    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace +
+                                                                     "m_relocalisationForestPath", defaultRelocalisationForestPath);
     std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
 
-    nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, m_relocaliserForestPath);
+    nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
     //  nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
   }
   else if (m_relocaliserType == "ferns")
@@ -423,11 +420,11 @@ void SLAMComponent::setup_relocaliser()
   }
 
   // Refinement ICP tracker
-  m_relocaliserRefinementTrackerParams = globalParams.get_first_value<std::string>(parametersNamespace + "m_refinementTrackerParams",
-                                                                                   "type=extended,levels=rrbb,minstep=1e-4,"
-                                                                                   "outlierSpaceC=0.1,outlierSpaceF=0.004,"
-                                                                                   "numiterC=20,numiterF=20,tukeyCutOff=8,"
-                                                                                   "framesToSkip=20,framesToWeight=50,failureDec=20.0");
+  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(settingsNamespace + "m_refinementTrackerParams",
+                                                                                "type=extended,levels=rrbb,minstep=1e-4,"
+                                                                                "outlierSpaceC=0.1,outlierSpaceF=0.004,"
+                                                                                "numiterC=20,numiterF=20,tukeyCutOff=8,"
+                                                                                "framesToSkip=20,framesToWeight=50,failureDec=20.0");
 
   // Set up the refining relocaliser.
   m_context->get_relocaliser(m_sceneID).reset(new SpaintRefiningRelocaliser(nestedRelocaliser,
@@ -445,7 +442,6 @@ void SLAMComponent::setup_tracker()
   const SLAMState_Ptr& slamState = m_context->get_slam_state(m_sceneID);
   const Vector2i& depthImageSize = slamState->get_depth_image_size();
   const Vector2i& rgbImageSize = slamState->get_rgb_image_size();
-  const SpaintVoxelScene_Ptr& voxelScene = slamState->get_voxel_scene();
 
   m_imuCalibrator.reset(new ITMIMUCalibrator_iPad);
   m_tracker = TrackerFactory::make_tracker_from_string(m_trackerConfig, m_trackingMode == TRACK_SURFELS, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, m_fallibleTracker);

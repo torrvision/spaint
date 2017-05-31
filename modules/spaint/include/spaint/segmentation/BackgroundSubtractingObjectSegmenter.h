@@ -22,10 +22,6 @@ namespace spaint {
  */
 class BackgroundSubtractingObjectSegmenter : public Segmenter
 {
-  //#################### TYPEDEFS ####################
-private:
-  typedef boost::shared_ptr<const ITMLib::ITMLibSettings> ITMSettings_CPtr;
-
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The colour appearance model to use to separate the user's hand from any object it's holding. */
@@ -43,7 +39,7 @@ public:
    * \param itmSettings   The settings to use for InfiniTAM.
    * \param touchSettings The settings to use for the touch detector.
    */
-  BackgroundSubtractingObjectSegmenter(const View_CPtr& view, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings);
+  BackgroundSubtractingObjectSegmenter(const View_CPtr& view, const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings);
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:

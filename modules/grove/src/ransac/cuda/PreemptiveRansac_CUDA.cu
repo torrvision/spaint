@@ -66,6 +66,7 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
                                                               PoseCandidate *poseCandidates,
                                                               int *nbPoseCandidates,
                                                               int maxNbPoseCandidates,
+                                                              uint32_t maxCandidateGenerationIterations,
                                                               bool useAllModesPerLeafInPoseHypothesisGeneration,
                                                               bool checkMinDistanceBetweenSampledModes,
                                                               float minDistanceBetweenSampledModes,
@@ -84,6 +85,7 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
                                                     imgSize,
                                                     randomGenerators[candidateIdx],
                                                     candidate,
+                                                    maxCandidateGenerationIterations,
                                                     useAllModesPerLeafInPoseHypothesisGeneration,
                                                     checkMinDistanceBetweenSampledModes,
                                                     minDistanceBetweenSampledModes,
@@ -148,7 +150,7 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CUDA::PreemptiveRansac_CUDA() : PreemptiveRansac()
+PreemptiveRansac_CUDA::PreemptiveRansac_CUDA(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -230,6 +232,7 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
                                                                          poseCandidates,
                                                                          nbPoseCandidates_device,
                                                                          m_nbMaxPoseCandidates,
+                                                                         m_maxCandidateGenerationIterations,
                                                                          m_useAllModesPerLeafInPoseHypothesisGeneration,
                                                                          m_checkMinDistanceBetweenSampledModes,
                                                                          m_minSquaredDistanceBetweenSampledModes,

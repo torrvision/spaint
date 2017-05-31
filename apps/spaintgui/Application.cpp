@@ -33,7 +33,7 @@ using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/GlobalParameters.h>
+#include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
@@ -131,8 +131,8 @@ bool Application::run()
 
 void Application::set_batch_mode(bool enabled)
 {
-	m_runInBatch = enabled;
-	m_paused = !enabled;
+  m_runInBatch = enabled;
+  m_paused = !enabled;
   m_pauseBetweenFrames = m_paused;
 }
 
@@ -215,7 +215,7 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     else save_screenshot();
   }
 
-  // If we are running in batch mode ignore other keypresses.
+  // If we are running in batch mode, ignore other keypresses.
   if(m_runInBatch) return;
 
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
@@ -744,10 +744,9 @@ void Application::save_mesh() const
 {
   if(m_meshingEngine)
   {
-    const GlobalParameters& globalParams = GlobalParameters::instance();
-    const Settings_CPtr settings = m_pipeline->get_model()->get_settings();
     const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
     const std::string& sceneID = mainSubwindow.get_scene_id();
+    const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
     const Model_CPtr& model = m_pipeline->get_model();
     const SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
@@ -762,7 +761,7 @@ void Application::save_mesh() const
     bf::create_directories(meshesSubdir);
 
     // Use the experimentTag as a filename, or the current timestamp if the tag has not been specified.
-    const std::string meshFilename = globalParams.get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
+    const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
                                      + ".stl";
 
     // Compute the full path.
@@ -854,7 +853,7 @@ void Application::setup_labels()
 
 void Application::setup_meshing()
 {
-  Settings_CPtr settings = m_pipeline->get_model()->get_settings();
+  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
 
   if(settings->createMeshingEngine)
   {

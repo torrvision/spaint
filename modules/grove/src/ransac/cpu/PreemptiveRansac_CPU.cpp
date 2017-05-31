@@ -18,7 +18,7 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-PreemptiveRansac_CPU::PreemptiveRansac_CPU() : PreemptiveRansac()
+PreemptiveRansac_CPU::PreemptiveRansac_CPU(const SettingsContainer_CPtr &settings) : PreemptiveRansac(settings)
 {
   MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
   m_randomGenerators = mbf.make_block<CPURNG>(m_nbMaxPoseCandidates);
@@ -72,6 +72,7 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
                                                       imgSize,
                                                       randomGenerators[candidateIdx],
                                                       candidate,
+                                                      m_maxCandidateGenerationIterations,
                                                       m_useAllModesPerLeafInPoseHypothesisGeneration,
                                                       m_checkMinDistanceBetweenSampledModes,
                                                       m_minSquaredDistanceBetweenSampledModes,

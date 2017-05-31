@@ -18,7 +18,7 @@ namespace spaint {
 
 //#################### CONSTRUCTORS ####################
 
-BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const View_CPtr& view, const ITMSettings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
+BackgroundSubtractingObjectSegmenter::BackgroundSubtractingObjectSegmenter(const View_CPtr& view, const Settings_CPtr& itmSettings, const TouchSettings_Ptr& touchSettings)
 : Segmenter(view), m_touchDetector(new TouchDetector(view->depth->noDims, itmSettings, touchSettings))
 {}
 

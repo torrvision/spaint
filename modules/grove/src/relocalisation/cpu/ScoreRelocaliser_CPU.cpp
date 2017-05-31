@@ -24,7 +24,8 @@ namespace grove {
 
 //#################### CONSTRUCTORS ####################
 
-ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string &forestFilename) : ScoreRelocaliser(forestFilename)
+ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename)
+  : ScoreRelocaliser(settings, forestFilename)
 {
   // Instantiate the sub-algorithms knowing that we are running on the GPU.
 
@@ -51,7 +52,7 @@ ScoreRelocaliser_CPU::ScoreRelocaliser_CPU(const std::string &forestFilename) : 
       ITMLibSettings::DEVICE_CPU, m_clustererSigma, m_clustererTau, m_maxClusterCount, m_minClusterSize);
 
   // P-RANSAC.
-  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU);
+  m_preemptiveRansac = RansacFactory::make_preemptive_ransac(ITMLibSettings::DEVICE_CPU, m_settings);
 
   // Clear internal state.
   reset();

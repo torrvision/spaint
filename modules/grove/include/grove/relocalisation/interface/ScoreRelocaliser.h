@@ -18,6 +18,8 @@
 #include <itmx/base/ITMObjectPtrTypes.h>
 #include <itmx/relocalisation/Relocaliser.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
+
 #include "../../clustering/interface/ExampleClusterer.h"
 #include "../../features/interface/RGBDPatchFeatureCalculator.h"
 #include "../../forests/interface/DecisionForest.h"
@@ -68,11 +70,12 @@ protected:
   /**
    * \brief Constructs an instance of a ScoreRelocaliser, loading a pretrained forest from a file.
    *
+   * \param settings       Pointer to an instance of SettingsContainer used to configure the relocaliser.
    * \param forestFilename The path to the pretrained forest file.
    *
    * \throws std::runtime_error if the forest cannot be loaded.
    */
-  ScoreRelocaliser(const std::string &forestFilename);
+  ScoreRelocaliser(const tvgutil::SettingsContainer_CPtr& settings, const std::string& forestFilename);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -121,43 +124,19 @@ public:
    */
   virtual ScorePrediction get_raw_prediction(uint32_t treeIdx, uint32_t leafIdx) const = 0;
 
-  /**
-   * \brief Integrates the informations provided by a new RGB-D image pair into the relocalisation forest.
-   *
-   * \param colourImage     A colour image acquired by the camera.
-   * \param depthImage      A depth image acquired by the camera.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The pose of the camera that acquired the RGB-D image pair in a world coordinate frame.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose);
+  /** Override */
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage,
+                                             const ITMFloatImage *depthImage,
+                                             const Vector4f& depthIntrinsics) const;
 
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
-   */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics) const;
-
-  /**
-   * \brief Reset the relocaliser, allowing the relocalisation in a new environment.
-   */
+  /** Override */
   virtual void reset();
 
-  /**
-   * \brief Perform an update step of the relocaliser, learning more on the scene being explored.
-   *
-   * \note  This function may be called instead of integrate_measurements when there are no new measurements to
-   *        integrate in the relocaliser but there is spare processing time to update the adapted forest.
-   */
+  /** Override */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose);
+
+  /** Override */
   virtual void update();
 
   //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
@@ -222,6 +201,9 @@ protected:
 
   /** The relocalisaton forest. */
   ScoreForest_Ptr m_scoreForest;
+
+  /** The relocalisation settings. */
+  tvgutil::SettingsContainer_CPtr m_settings;
 
   // Update-related data
   /** The index of the reservoir that had been updated when the integration function has been called. */

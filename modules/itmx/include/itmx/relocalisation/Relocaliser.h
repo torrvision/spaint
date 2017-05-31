@@ -26,7 +26,7 @@ public:
   /**
    * \brief The values of this enumeration can be used to indicate the quality of a relocalised pose.
    */
-  enum RelocalisationQuality
+  enum Quality
   {
     RELOCALISATION_GOOD,
     RELOCALISATION_POOR
@@ -37,7 +37,7 @@ public:
   /**
    * \brief An instance of this struct represents the results of a relocalisation call.
    */
-  struct RelocalisationResult
+  struct Result
   {
     //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER VARIABLES ~~~~~~~~~~~~~~~~~~~~
 
@@ -45,7 +45,7 @@ public:
     ORUtils::SE3Pose pose;
 
     /** The quality of the relocalisation. */
-    RelocalisationQuality quality;
+    Quality quality;
   };
 
   //#################### DESTRUCTOR ####################
@@ -53,23 +53,10 @@ public:
   /**
    * \brief Destroys a relocaliser.
    */
-  virtual ~Relocaliser() {}
+  virtual ~Relocaliser();
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
-  /**
-   * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
-   *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The position of the camera in the world.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f& depthIntrinsics,
-                                        const ORUtils::SE3Pose& cameraPose) = 0;
-
   /**
    * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
    *        thereby relocalising the camera with respect to the 3D scene.
@@ -79,9 +66,7 @@ public:
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
    * \return                The result of the relocalisation, if successful, or boost::none otherwise.
    */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f& depthIntrinsics) const = 0;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f& depthIntrinsics) const = 0;
 
   /**
    * \brief Resets the relocaliser, allowing the integration of information for a new area.
@@ -89,11 +74,24 @@ public:
   virtual void reset() = 0;
 
   /**
+   * \brief Trains the relocaliser using information from an RGB-D image pair captured from a known pose in the world.
+   *
+   * \param colourImage     The colour image.
+   * \param depthImage      The depth image.
+   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
+   * \param cameraPose      The position of the camera in the world.
+   */
+  virtual void train(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                     const Vector4f& depthIntrinsics, const ORUtils::SE3Pose& cameraPose) = 0;
+
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
+  /**
    * \brief Updates the contents of the relocaliser when spare processing time is available.
    *
-   * This can be useful for performing bookkeeping operations.
+   * This is intended to be overridden by derived relocalisers that need to perform bookkeeping operations.
    */
-  virtual void update() = 0;
+  virtual void update();
 };
 
 //#################### TYPEDEFS ####################

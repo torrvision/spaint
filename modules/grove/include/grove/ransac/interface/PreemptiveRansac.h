@@ -13,6 +13,7 @@
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
+#include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/AverageTimer.h>
 
 #include "../../keypoints/Keypoint3DColour.h"
@@ -41,8 +42,10 @@ public:
 protected:
   /**
    * \brief Constructs an instance of PreemptiveRansac.
+   *
+   * \param settings A pointer to the settings used to configure the algorithm.
    */
-  PreemptiveRansac();
+  PreemptiveRansac(const tvgutil::SettingsContainer_CPtr& settings);
 
   //#################### DESTRUCTOR ####################
 public:
@@ -109,6 +112,9 @@ protected:
    */
   Keypoint3DColourImage_CPtr m_keypointsImage;
 
+  /** The maximum number of attempts for the generation of a pose candidate. */
+  uint32_t m_maxCandidateGenerationIterations;
+
   /**
    * The minimum distance (squared) between sampled modal clusters when m_checkMinDistanceBetweenSampledModes is
    * enabled.
@@ -139,6 +145,9 @@ protected:
   /** An image storing the forest predictions associated to the keypoints in m_keypointsImage. Not owned by this class.
    */
   ScorePredictionsImage_CPtr m_predictionsImage;
+
+  /** The settings. */
+  tvgutil::SettingsContainer_CPtr m_settings;
 
   /**
    * The maximum allowed difference between distances in camera frame and world frame when generating pose hypotheses

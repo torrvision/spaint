@@ -11,12 +11,14 @@
 #endif
 
 using namespace ITMLib;
+using namespace tvgutil;
 
 namespace grove {
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 
 ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DeviceType deviceType,
+                                                                     const SettingsContainer_CPtr& settings,
                                                                      const std::string &forestFilename)
 {
   ScoreRelocaliser_Ptr relocaliser;
@@ -24,7 +26,7 @@ ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSetti
   if (deviceType == ITMLib::ITMLibSettings::DEVICE_CUDA)
   {
 #ifdef WITH_CUDA
-    relocaliser.reset(new ScoreRelocaliser_CUDA(forestFilename));
+    relocaliser.reset(new ScoreRelocaliser_CUDA(settings, forestFilename));
 #else
     throw std::runtime_error(
         "Error: CUDA support not currently available. Reconfigure in CMake with the WITH_CUDA option set to on.");
@@ -32,7 +34,7 @@ ScoreRelocaliser_Ptr ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSetti
   }
   else
   {
-    relocaliser.reset(new ScoreRelocaliser_CPU(forestFilename));
+    relocaliser.reset(new ScoreRelocaliser_CPU(settings, forestFilename));
   }
 
   return relocaliser;

@@ -8,91 +8,52 @@
 
 #include "Relocaliser.h"
 
-#include <ITMLib/Objects/Tracking/ITMTrackingState.h>
-
 namespace itmx {
 
 /**
- * \brief An instance of this class allows performing camera relocalisation from RGB-D image pairs followed by a
- *        refinement step.
+ * \brief An instance of a relocaliser class deriving from this one can be used to refine the results of another relocaliser.
  */
 class RefiningRelocaliser : public Relocaliser
 {
-  //#################### NESTED TYPES ####################
+  //#################### PROTECTED VARIABLES ####################
+protected:
+  /** The relocaliser whose results are being refined. */
+  Relocaliser_Ptr m_innerRelocaliser;
+
+  //#################### CONSTRUCTORS ####################
 public:
   /**
-   * \brief An instance of this struct will contain details on the intermediate relocalisation and refinement steps.
+   * \brief Constructs a refining relocaliser.
+   *
+   * \param innerRelocaliser  The relocaliser whose results are being refined.
    */
-  struct RefinementDetails
-  {
-    /** The initial pose estimated by the relocaliser. */
-    boost::optional<ORUtils::SE3Pose> initialPose;
-
-    /** Quality of the refinement tracking operation. */
-    ITMLib::ITMTrackingState::TrackingResult refinementResult;
-  };
+  explicit RefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser);
 
   //#################### PUBLIC ABSTRACT MEMBER FUNCTIONS ####################
 public:
   /**
-   * \brief Gets a pointer to the refined relocaliser.
-   *
-   * \return A pointer to the inner relocaliser.
-   */
-  virtual Relocaliser_Ptr get_inner_relocaliser() const = 0;
-
-  /**
-   * \brief Integrates a newly acquired RGB-D image pair into the relocalisation system at a certain pose in the world.
+   * \brief Attempts to determine the location from which an RGB-D image pair was acquired,
+   *        thereby relocalising the camera with respect to the 3D scene.
    *
    * \param colourImage     The colour image.
    * \param depthImage      The depth image.
    * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param cameraPose      The position of the camera in the world.
-   */
-  virtual void integrate_rgbd_pose_pair(const ITMUChar4Image *colourImage,
-                                        const ITMFloatImage *depthImage,
-                                        const Vector4f &depthIntrinsics,
-                                        const ORUtils::SE3Pose &cameraPose) = 0;
-
-  /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
+   * \param initialPose     A location in which to store the camera pose estimated by the inner relocaliser (if it succeeded),
+   *                        or boost::none otherwise.
    *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
+   * \return  The result of the relocalisation, if successful, or boost::none otherwise.
    */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics) const = 0;
+  virtual boost::optional<Result> relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                             const Vector4f& depthIntrinsics, boost::optional<ORUtils::SE3Pose>& initialPose) const = 0;
 
+  //#################### PUBLIC MEMBER FUNCTIONS ####################
+public:
   /**
-   * \brief Attempt to relocalise the location from which an RGB-D image pair is acquired.
-   *        Provides more details on the relcalisation phase.
+   * \brief Gets the relocaliser whose results are being refined.
    *
-   * \param colourImage     The colour image.
-   * \param depthImage      The depth image.
-   * \param depthIntrinsics The intrinsic parameters of the depth sensor.
-   * \param initialPose     The camera pose estimated by the inner relocaliser if it succeeded, boost::none otherwise.
-   *
-   * \return The result of the relocalisation if successful, an empty optional otherwise.
+   * \return  The relocaliser whose results are being refined.
    */
-  virtual boost::optional<RelocalisationResult> relocalise(const ITMUChar4Image *colourImage,
-                                                           const ITMFloatImage *depthImage,
-                                                           const Vector4f &depthIntrinsics,
-                                                           boost::optional<ORUtils::SE3Pose> &initialPose) const = 0;
-
-  /**
-   * \brief Resets the relocaliser allowing the integration of informations on a new area.
-   */
-  virtual void reset() = 0;
-
-  /**
-   * \brief Updates the contents of the relocaliser when spare processing time is available. Can perform bookkeeping
-   *        operations.
-   */
-  virtual void update() = 0;
+  Relocaliser_CPtr get_inner_relocaliser() const;
 };
 
 //#################### TYPEDEFS ####################
@@ -100,6 +61,6 @@ public:
 typedef boost::shared_ptr<RefiningRelocaliser> RefiningRelocaliser_Ptr;
 typedef boost::shared_ptr<const RefiningRelocaliser> RefiningRelocaliser_CPtr;
 
-} // namespace itmx
+}
 
-#endif // H_ITMX_REFININGRELOCALISER
+#endif
