@@ -31,12 +31,14 @@ struct Arguments
   std::string datasetDir;
   bf::path dir;
   std::string iniSpecifier;
+  bf::path logPath;
+  std::string logSpecifier;
   std::string outputSpecifier;
   bf::path scriptPath;
   std::string scriptSpecifier;
 
   Arguments()
-  : dir(find_executable().parent_path()),
+  : dir(find_subdir_from_executable("resources")),
     iniSpecifier("temp"),
     outputSpecifier("temp")
   {}
@@ -59,8 +61,13 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
 
   // Run the specified script.
   const bf::path outputPath = args.dir / (args.outputSpecifier + ".txt");
-  const std::string command = "\"\"" + args.scriptPath.string() + "\" \"" + iniPath.string() + "\" \"" + outputPath.string() + "\" \"" + bf::path(args.datasetDir).string() + "\"\"";
-  system(command.c_str());
+  const std::string command = "\"" + args.scriptPath.string() + "\" \"" + iniPath.string() + "\" \"" + outputPath.string() + "\" \"" + bf::path(args.datasetDir).string() + "\"";
+  int exitCode = system(command.c_str());
+
+  if(exitCode)
+  {
+    throw std::runtime_error("System call failed. Terminating evaluation.");
+  }
 
   // Read the cost back in from the output file.
   float cost = std::numeric_limits<float>::max();
@@ -74,6 +81,9 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
   bf::remove(iniPath);
   bf::remove(outputPath);
 
+  std::ofstream logStream(args.logPath.c_str(), std::ios::app);
+  logStream << cost << ";" << ParamSetUtil::param_set_to_string(params) << '\n';
+
   return cost;
 }
 
@@ -84,6 +94,7 @@ bool parse_command_line(int argc, char *argv[], Arguments& args)
   options.add_options()
     ("help", "produce help message")
     ("datasetDir,d", po::value<std::string>(&args.datasetDir)->default_value(""), "the dataset directory")
+    ("logSpecifier,l", po::value<std::string>(&args.logSpecifier)->default_value(std::string(argv[0]) + ".log"), "the log specifier")
     ("scriptSpecifier,s", po::value<std::string>(&args.scriptSpecifier)->default_value(""), "the script specifier")
   ;
 
@@ -98,6 +109,9 @@ bool parse_command_line(int argc, char *argv[], Arguments& args)
     std::cout << options << '\n';
     return false;
   }
+
+  // Prepare the log path.
+  args.logPath = args.dir / args.logSpecifier;
 
   // Attempt to find the specified script file.
 #if _MSC_VER
@@ -128,6 +142,11 @@ try
   if(!parse_command_line(argc, argv, args))
   {
     return EXIT_FAILURE;
+  }
+
+  // Set up the log file.
+  {
+    std::ofstream(args.logPath.c_str(), std::ios::trunc);
   }
 
   // Set up the optimiser.

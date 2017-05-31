@@ -49,8 +49,19 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/SetAppTarget.cmake)
 TARGET_LINK_LIBRARIES(${targetname} evaluation tvgutil)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/LinkBoost.cmake)
 
+#########################################
+# Copy resource files to the build tree #
+#########################################
+
+ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/relocopt/resources" "$<TARGET_FILE_DIR:${targetname}>/resources")
+
+IF(MSVC_IDE)
+  ADD_CUSTOM_COMMAND(TARGET ${targetname} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/apps/relocopt/resources" "${PROJECT_BINARY_DIR}/apps/relocopt/resources")
+ENDIF()
+
 #############################
 # Specify things to install #
 #############################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/relocopt/resources" DESTINATION "bin/apps/relocopt")
