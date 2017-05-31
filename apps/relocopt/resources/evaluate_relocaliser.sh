@@ -6,8 +6,10 @@
 set -e
 
 tag='Relocopt_Batch'
-#sequences='chess fire heads office pumpkin redkitchen stairs'
-sequences='stairs'
+# We skip chess heads and office since they are already over 99%
+sequences='fire pumpkin redkitchen stairs'
+# sequences='chess fire heads office pumpkin redkitchen stairs'
+# sequences='stairs'
 
 parameters_file=$1
 output_file=$2
