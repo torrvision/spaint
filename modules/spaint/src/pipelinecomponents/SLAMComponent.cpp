@@ -341,10 +341,6 @@ void SLAMComponent::process_relocalisation()
                                      ? ITMTrackingState::TRACKING_GOOD
                                      : ITMTrackingState::TRACKING_POOR;
     }
-    else
-    {
-      std::cout << "Relocalisation failed." << std::endl;
-    }
   }
 
   if (performLearning)
