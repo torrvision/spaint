@@ -90,9 +90,6 @@ public:
 
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
-  /** The number of points to add to the inlier set after each P-RANSAC iteration. */
-  size_t m_batchSizeRansac;
-
   /**
    * Whether or not to force the sampling of modes having a minimum distance between each other during the pose
    * hyphotesis generation phase.
@@ -148,6 +145,9 @@ protected:
   /** An image storing the forest predictions associated to the keypoints in m_keypointsImage. Not owned by this class.
    */
   ScorePredictionsImage_CPtr m_predictionsImage;
+
+  /** The number of points to add to the inlier set after each P-RANSAC iteration. */
+  uint32_t m_ransacInliersPerIteration;
 
   /** The settings. */
   tvgutil::SettingsContainer_CPtr m_settings;

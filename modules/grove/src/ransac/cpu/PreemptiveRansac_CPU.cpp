@@ -110,7 +110,7 @@ void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (size_t sampleIdx = 0; sampleIdx < m_batchSizeRansac; ++sampleIdx)
+  for (uint32_t sampleIdx = 0; sampleIdx < m_ransacInliersPerIteration; ++sampleIdx)
   {
     int sampledLinearIdx = -1;
 

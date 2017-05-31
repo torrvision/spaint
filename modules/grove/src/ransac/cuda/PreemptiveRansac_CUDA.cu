@@ -128,10 +128,10 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
                                                     RNG *randomGenerators,
                                                     int *inlierIndices,
                                                     int *inlierCount,
-                                                    int nbMaxSamples,
+                                                    uint32_t nbMaxSamples,
                                                     int *inlierMaskData = NULL)
 {
-  const int sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (sampleIdx >= nbMaxSamples) return;
 
@@ -271,7 +271,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   }
 
   dim3 blockSize(128);
-  dim3 gridSize((m_batchSizeRansac + blockSize.x - 1) / blockSize.x);
+  dim3 gridSize((m_ransacInliersPerIteration + blockSize.x - 1) / blockSize.x);
 
   if (useMask)
   {
@@ -281,7 +281,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
                                                                        randomGenerators,
                                                                        inlierIndicesData,
                                                                        nbInlier_device,
-                                                                       m_batchSizeRansac,
+                                                                       m_ransacInliersPerIteration,
                                                                        inlierMaskData);
     ORcudaKernelCheck;
   }
@@ -293,7 +293,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
                                                                         randomGenerators,
                                                                         inlierIndicesData,
                                                                         nbInlier_device,
-                                                                        m_batchSizeRansac);
+                                                                        m_ransacInliersPerIteration);
     ORcudaKernelCheck;
   }
 

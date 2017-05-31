@@ -135,7 +135,6 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   const std::string settingsNamespace = "PreemptiveRansac.";
 
   // By default, we set all parameters as in scoreforests.
-  m_batchSizeRansac = m_settings->get_first_value<size_t>(settingsNamespace + "batchSizeRansac", 500);
 
   // Whether or not to force sampled modes to have a minimum distance between them.
   m_checkMinDistanceBetweenSampledModes =
@@ -169,6 +168,9 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   // Whether or not to print the timers for each phase.
   m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);
 
+  // The number of inliers sampled in each P-RANSAC iteration.
+  m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
+
   // In m.
   m_translationErrorMaxForCorrectPose =
       m_settings->get_first_value<float>(settingsNamespace + "translationErrorMaxForCorrectPose", 0.05f);
@@ -183,7 +185,7 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
 
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
   // for all.
-  m_nbMaxInliers = m_batchSizeRansac * static_cast<uint32_t>(std::ceil(std::log2(m_maxPoseCandidatesAfterCull)));
+  m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(std::log2(m_maxPoseCandidatesAfterCull)));
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -367,7 +369,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates
 int PreemptiveRansac::get_min_nb_required_points() const
 {
   // At least the number of inliers required for a RANSAC iteration.
-  return m_batchSizeRansac;
+  return m_ransacInliersPerIteration;
 }
 
 //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################
