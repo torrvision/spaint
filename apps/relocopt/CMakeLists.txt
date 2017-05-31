@@ -64,4 +64,4 @@ ENDIF()
 #############################
 
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/InstallApp.cmake)
-INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/relocopt/resources" DESTINATION "bin/apps/relocopt")
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/apps/relocopt/resources" DESTINATION "bin/apps/relocopt" USE_SOURCE_PERMISSIONS)
