@@ -355,6 +355,9 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 
   m_timerTotal.stop();
 
+  // Make sure the pose candidates available on the host are up to date.
+  update_host_pose_candidates();
+
   // 5. If we have been able to generate at least one candidate hypothesis, return the best one.
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
   return m_poseCandidates->dataSize > 0 ? candidates[0] : boost::optional<PoseCandidate>();
@@ -384,6 +387,13 @@ int PreemptiveRansac::get_min_nb_required_points() const
 {
   // At least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;
+}
+
+//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+
+void PreemptiveRansac::update_host_pose_candidates() const
+{
+  // NOP by default.
 }
 
 //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################

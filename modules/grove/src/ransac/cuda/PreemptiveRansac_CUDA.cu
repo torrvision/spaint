@@ -318,6 +318,11 @@ void PreemptiveRansac_CUDA::update_candidate_poses()
   m_poseCandidates->UpdateDeviceFromHost();
 }
 
+void PreemptiveRansac_CUDA::update_host_pose_candidates() const
+{
+  m_poseCandidates->UpdateHostFromDevice();
+}
+
 //#################### PRIVATE MEMBER FUNCTIONS ####################
 
 void PreemptiveRansac_CUDA::init_random()

@@ -58,6 +58,9 @@ protected:
    */
   virtual void update_candidate_poses();
 
+  /** Override */
+  virtual void update_host_pose_candidates() const;
+
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** The number of pose candidates currently sampled. Resides on device memory. */
