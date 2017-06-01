@@ -106,7 +106,7 @@ Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q)
   Kabsch(P, Q, resRot, resTrans);
 
   // Decompose R + t in Rt.
-  Eigen::Matrix4f res;
+  Eigen::Matrix4f res = Eigen::Matrix4f::Identity();
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
