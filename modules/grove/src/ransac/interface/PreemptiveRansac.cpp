@@ -339,6 +339,20 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     ++iteration;
   }
 
+  // If we generated a single pose, the update step above wouldn't have been executed (zero iterations). Force its execution.
+  if(m_poseUpdate && iteration == 0 && m_poseCandidates->dataSize == 1)
+  {
+    // Sample some inliers.
+    m_timerInlierSampling[iteration].start();
+    sample_inlier_candidates(true);
+    m_timerInlierSampling[iteration].stop();
+
+    // Run optimisation.
+    m_timerOptimisation[iteration].start();
+    update_candidate_poses();
+    m_timerOptimisation[iteration].stop();
+  }
+
   m_timerTotal.stop();
 
   // 5. If we have been able to generate at least one candidate hypothesis, return the best one.
