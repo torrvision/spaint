@@ -30,7 +30,7 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
   const int threadsPerBlock = blockDim.x;
   const int candidateIdx = blockIdx.x;
 
-  if (candidateIdx >= nbCandidates)
+  if(candidateIdx >= nbCandidates)
   {
     // Candidate has been culled.
     // Since the entire block returns, this does not cause troubles with the following __syncthreads()
@@ -47,15 +47,15 @@ __global__ void ck_preemptive_ransac_compute_energies(const Keypoint3DColour *ke
   // https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler
 
   // Reduce by shuffling down the local energies (localEnergy for thread 0 in the warp contains the sum for the warp).
-  for (int offset = warpSize / 2; offset > 0; offset /= 2) localEnergy += __shfl_down(localEnergy, offset);
+  for(int offset = warpSize / 2; offset > 0; offset /= 2) localEnergy += __shfl_down(localEnergy, offset);
 
   // Thread 0 of each warp atomically updates the final energy.
-  if ((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, localEnergy);
+  if((threadIdx.x & (warpSize - 1)) == 0) atomicAdd(&currentCandidate.energy, localEnergy);
 
   __syncthreads(); // Wait for all threads in the block
 
   // tId 0 computes the final energy
-  if (tId == 0) currentCandidate.energy = currentCandidate.energy / static_cast<float>(nbInliers);
+  if(tId == 0) currentCandidate.energy = currentCandidate.energy / static_cast<float>(nbInliers);
 }
 
 template <typename RNG>
@@ -75,7 +75,7 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (candidateIdx >= maxPoseCandidates) return;
+  if(candidateIdx >= maxPoseCandidates) return;
 
   // Try to generate a candidate in a local variable.
   PoseCandidate candidate;
@@ -93,7 +93,7 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
                                                     translationErrorMaxForCorrectPose);
 
   // If we succeeded, grab an unique index and store the candidate in the array.
-  if (valid)
+  if(valid)
   {
     const int finalCandidateIdx = atomicAdd(nbPoseCandidates, 1);
     poseCandidates[finalCandidateIdx] = candidate;
@@ -102,18 +102,18 @@ __global__ void ck_preemptive_ransac_generate_pose_candidates(const Keypoint3DCo
 
 __global__ void ck_preemptive_ransac_init_random_generators(CUDARNG *randomGenerators, uint32_t nbStates, uint32_t seed)
 {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (idx >= nbStates) return;
+  if(idx >= nbStates) return;
 
   randomGenerators[idx].reset(seed, idx);
 }
 
 __global__ void ck_preemptive_ransac_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
 {
-  const int candidateIdx = threadIdx.x;
+  const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (candidateIdx >= nbPoseCandidates)
+  if(candidateIdx >= nbPoseCandidates)
   {
     return;
   }
@@ -133,7 +133,7 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
 {
   const uint32_t sampleIdx = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (sampleIdx >= nbMaxSamples) return;
+  if(sampleIdx >= nbMaxSamples) return;
 
   // Try to sample the raster index of a valid keypoint which prediction has at least one modal cluster, using the mask
   // if necessary.
@@ -141,7 +141,7 @@ __global__ void ck_preemptive_ransac_sample_inliers(const Keypoint3DColour *keyp
       keypointsData, predictionsData, imgSize, randomGenerators[sampleIdx], inlierMaskData);
 
   // If the sampling succeeded grab a global index and store the keypoint index.
-  if (sampledLinearIdx >= 0)
+  if(sampledLinearIdx >= 0)
   {
     const int outIdx = atomicAdd(inlierCount, 1);
     inlierIndices[outIdx] = sampledLinearIdx;
@@ -183,20 +183,25 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
 
   PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
 
-  // First, reset the already computed energies. 1 block, a thread per candidate. Works up to 1024 candidates with
-  // current GPUs.
-  ck_preemptive_ransac_reset_candidate_energies<<<1, nbPoseCandidates>>>(poseCandidates, nbPoseCandidates);
-  ORcudaKernelCheck;
+  // First, reset the energy values.
+  {
+    dim3 blockSize(256);
+    dim3 gridSize((nbPoseCandidates + blockSize.x - 1) / blockSize.x);
+    ck_preemptive_ransac_reset_candidate_energies<<<gridSize, blockSize>>>(poseCandidates, nbPoseCandidates);
+    ORcudaKernelCheck;
+  }
 
-  dim3 blockSize(128); // Threads to compute the energy for each candidate.
-  dim3 gridSize(
-      nbPoseCandidates); // Launch one block per candidate (in this way many blocks will exit immediately in later
-                         // stages of P-RANSAC).
-  ck_preemptive_ransac_compute_energies<<<gridSize, blockSize>>>(
-      keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates);
-  ORcudaKernelCheck;
+  // Then compute the energies.
+  {
+    // Launch one block per candidate (in this way many blocks will exit immediately in later stages of P-RANSAC).
+    dim3 blockSize(128); // Threads to compute the energy for each candidate.
+    dim3 gridSize(nbPoseCandidates);
+    ck_preemptive_ransac_compute_energies<<<gridSize, blockSize>>>(
+        keypoints, predictions, inlierRasterIndices, nbInliers, poseCandidates, nbPoseCandidates);
+    ORcudaKernelCheck;
+  }
 
-  // Sort candidates by ascending energy using the operator <
+  // Finally, sort candidates by ascending energy using operator <.
   thrust::device_ptr<PoseCandidate> candidatesStart(poseCandidates);
   thrust::device_ptr<PoseCandidate> candidatesEnd(poseCandidates + nbPoseCandidates);
   thrust::sort(candidatesStart, candidatesEnd);
@@ -265,7 +270,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   // Only if the number of inliers (host side) is zero, we reset the device number.
   // The assumption is that the number on device memory will remain in sync with the host
   // since only this method is allowed to modify it.
-  if (m_inliersIndicesBlock->dataSize == 0)
+  if(m_inliersIndicesBlock->dataSize == 0)
   {
     ORcudaSafeCall(cudaMemsetAsync(nbInlier_device, 0, sizeof(int)));
   }
@@ -273,7 +278,7 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
   dim3 blockSize(128);
   dim3 gridSize((m_ransacInliersPerIteration + blockSize.x - 1) / blockSize.x);
 
-  if (useMask)
+  if(useMask)
   {
     ck_preemptive_ransac_sample_inliers<true><<<gridSize, blockSize>>>(keypointsData,
                                                                        predictionsData,
