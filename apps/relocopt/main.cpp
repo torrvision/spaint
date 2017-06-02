@@ -154,7 +154,7 @@ try
   const unsigned seed = 12345;
   CoordinateDescentParameterOptimiser optimiser(boost::bind(grove_cost_fn, args, _1), epochCount, seed);
   optimiser.add_param("PreemptiveRansac.maxCandidateGenerationIterations", list_of<int>(50)(250)(500)(1000)(6000));
-  optimiser.add_param("PreemptiveRansac.maxPoseCandidates", list_of<int>(256)(512)(768)(1024)); // (2048)
+  optimiser.add_param("PreemptiveRansac.maxPoseCandidates", list_of<int>(256)(512)(768)(1024)(2048));
   optimiser.add_param("PreemptiveRansac.maxPoseCandidatesAfterCull", list_of<int>(32)(64)(128)(256));
   optimiser.add_param("PreemptiveRansac.ransacInliersPerIteration", list_of<int>(256)(512)(1024));
   optimiser.add_param("PreemptiveRansac.minSquaredDistanceBetweenSampledModes", list_of<float>(0.15f * 0.15f)(0.3f * 0.3f)(0.6f * 0.6f)(1000.0f * 1000.0f));
@@ -164,7 +164,7 @@ try
   optimiser.add_param("ScoreRelocaliser.clustererTau", list_of<float>(0.05f)(0.1f)(0.2f));
   optimiser.add_param("ScoreRelocaliser.maxClusterCount", list_of<int>(5)(10)(20)(30)(40)(50));
   optimiser.add_param("ScoreRelocaliser.minClusterSize", list_of<int>(5)(20)(50)(100));
-  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)); // (2048)
+  optimiser.add_param("ScoreRelocaliser.reservoirCapacity", list_of<int>(512)(1024)(2048));
 
 
   // Use the optimiser to choose a set of parameters.
