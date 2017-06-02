@@ -106,7 +106,7 @@ Eigen::Matrix4f Kabsch(Eigen::Matrix3f &P, Eigen::Matrix3f &Q)
   Kabsch(P, Q, resRot, resTrans);
 
   // Decompose R + t in Rt.
-  Eigen::Matrix4f res;
+  Eigen::Matrix4f res = Eigen::Matrix4f::Identity();
   res.block<3, 3>(0, 0) = resRot;
   res.block<3, 1>(0, 3) = resTrans;
   return res;
@@ -339,7 +339,24 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     ++iteration;
   }
 
+  // If we generated a single pose, the update step above wouldn't have been executed (zero iterations). Force its execution.
+  if(m_poseUpdate && iteration == 0 && m_poseCandidates->dataSize == 1)
+  {
+    // Sample some inliers.
+    m_timerInlierSampling[iteration].start();
+    sample_inlier_candidates(true);
+    m_timerInlierSampling[iteration].stop();
+
+    // Run optimisation.
+    m_timerOptimisation[iteration].start();
+    update_candidate_poses();
+    m_timerOptimisation[iteration].stop();
+  }
+
   m_timerTotal.stop();
+
+  // Make sure the pose candidates available on the host are up to date.
+  update_host_pose_candidates();
 
   // 5. If we have been able to generate at least one candidate hypothesis, return the best one.
   PoseCandidate *candidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
@@ -370,6 +387,13 @@ int PreemptiveRansac::get_min_nb_required_points() const
 {
   // At least the number of inliers required for a RANSAC iteration.
   return m_ransacInliersPerIteration;
+}
+
+//#################### PROTECTED VIRTUAL MEMBER FUNCTIONS ####################
+
+void PreemptiveRansac::update_host_pose_candidates() const
+{
+  // NOP by default.
 }
 
 //#################### PROTECTED VIRTUAL ABSTRACT MEMBER FUNCTIONS ####################

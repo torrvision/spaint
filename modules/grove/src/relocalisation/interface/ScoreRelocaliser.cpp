@@ -101,7 +101,7 @@ boost::optional<Relocaliser::Result> ScoreRelocaliser::relocalise(const ITMUChar
     if (poseCandidate)
     {
       Result result;
-      result.pose.SetInvM(poseCandidate->cameraPose); // TODO: rename the poseCandidate member
+      result.pose.SetInvM(poseCandidate->cameraPose);
       result.quality = RELOCALISATION_GOOD;
 
       return result;
