@@ -8,27 +8,15 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <boost/filesystem.hpp>
-
-#include <cuda_runtime_api.h>
-
 #include <ITMLib/Core/ITMTrackingController.h>
-#include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
-#include <ITMLib/Engines/Visualisation/ITMVisualisationEngineFactory.h>
 #include <ITMLib/Objects/RenderStates/ITMRenderStateFactory.h>
 #include <ITMLib/Trackers/ITMTrackerFactory.h>
-using namespace ITMLib;
-
-#include <ORUtils/PlatformIndependence.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
 #include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
-using namespace tvgutil;
 
 #include "../persistence/PosePersister.h"
-
-namespace fs = boost::filesystem;
 
 namespace itmx {
 
@@ -36,7 +24,7 @@ namespace itmx {
 
 template <typename VoxelType, typename IndexType>
 ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
-                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib,
+                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMLib::ITMRGBDCalib& calib,
                                                                     const Scene_Ptr& scene, const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
                                                                     const LowLevelEngine_CPtr& lowLevelEngine, const VisualisationEngine_CPtr& visualisationEngine)
 : RefiningRelocaliser(innerRelocaliser),
@@ -49,75 +37,44 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_timerUpdate("Update"),
   m_visualisationEngine(visualisationEngine)
 {
-  m_tracker.reset(ITMTrackerFactory::Instance().Make(m_settings->deviceType,
-                                                     trackerConfig.c_str(),
-                                                     rgbImageSize,
-                                                     depthImageSize,
-                                                     m_lowLevelEngine.get(),
-                                                     NULL,
-                                                     m_scene->sceneParams));
+  // Construct the ICP tracker that we will use to refine the relocalised poses.
+  m_tracker.reset(ITMTrackerFactory::Instance().Make(
+    m_settings->deviceType, trackerConfig.c_str(), rgbImageSize, depthImageSize,
+    m_lowLevelEngine.get(), NULL, m_scene->sceneParams
+  ));
 
+  // Construct the tracking controller, tracking state and view.
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_settings.get()));
-
   m_trackingState.reset(new ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
-
   m_view.reset(new ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA));
-  m_view->depth->Clear();
 
-  // If we initialise a m_voxelRenderState with a new variable, there is a crash after a while, probably due to never
-  // using it to integrate frames in the scene.
-  // Reasons are unclear.
-  // Two workarounds:
-  // 1. pass a renderstate from outside, and use that renderstate in spaintgui so it gets used and the variables inside
-  //    are continuously set to values that prevent the crash.
-  // 2. Recreate a new renderstate for each relocalisation frame. More costly (but not that much) but at least it's
-  //    cleaner.
-  // I chose n. 2
-
-  //  m_voxelRenderState = voxelRenderState;
-  //  m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
-  //      m_trackingController->GetTrackedImageSize(rgbImageSize, depthImageSize),
-  //      m_scene->sceneParams,
-  //      m_itmLibSettings->GetMemoryType()));
-
+  // Configure the relocaliser based on the settings that have been passed in.
   const static std::string settingsNamespace = "ICPRefiningRelocaliser.";
-
-  // Setup evaluation variables.
-  m_savePoses =
-      m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
+  m_savePoses = m_settings->get_first_value<bool>(settingsNamespace + "saveRelocalisationPoses", false);
+  m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 
   if(m_savePoses)
   {
-    // No "namespace" for the experiment tag.
-    const std::string posesFolder =
-        m_settings->get_first_value<std::string>("experimentTag", TimeUtil::get_iso_timestamp());
+    // Get the (global) experiment tag.
+    const std::string experimentTag = m_settings->get_first_value<std::string>("experimentTag", tvgutil::TimeUtil::get_iso_timestamp());
 
-    m_posePathGenerator.reset(
-        SequentialPathGenerator(find_subdir_from_executable("reloc_poses") / posesFolder));
+    // Determine the directory to which to save the poses and make sure that it exists.
+    m_posePathGenerator.reset(tvgutil::SequentialPathGenerator(tvgutil::find_subdir_from_executable("reloc_poses") / experimentTag));
+    boost::filesystem::create_directories(m_posePathGenerator->get_base_dir());
 
-    std::cout << "Saving relocalization poses in: " << m_posePathGenerator->get_base_dir() << '\n';
-
-    // Create required folders.
-    fs::create_directories(m_posePathGenerator->get_base_dir());
+    // Output the directory we're using (for debugging purposes).
+    std::cout << "Saving relocalisation poses in: " << m_posePathGenerator->get_base_dir() << '\n';
   }
-
-  // Decide whether or not to enable the timers.
-  m_timersEnabled = m_settings->get_first_value<bool>(settingsNamespace + "timersEnabled", false);
 }
 
 template <typename VoxelType, typename IndexType>
 ICPRefiningRelocaliser<VoxelType, IndexType>::~ICPRefiningRelocaliser()
 {
-  if (m_timersEnabled)
+  if(m_timersEnabled)
   {
-    std::cout << "Training calls: " << m_timerTraining.count()
-              << ", average duration: " << m_timerTraining.average_duration() << '\n';
-
-    std::cout << "Relocalisation calls: " << m_timerRelocalisation.count()
-              << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
-
-    std::cout << "Update calls: " << m_timerUpdate.count() << ", average duration: " << m_timerUpdate.average_duration()
-              << '\n';
+    std::cout << "Training calls: " << m_timerTraining.count() << ", average duration: " << m_timerTraining.average_duration() << '\n';
+    std::cout << "Relocalisation calls: " << m_timerRelocalisation.count() << ", average duration: " << m_timerRelocalisation.average_duration() << '\n';
+    std::cout << "Update calls: " << m_timerUpdate.count() << ", average duration: " << m_timerUpdate.average_duration() << '\n';
   }
 }
 
@@ -125,7 +82,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::~ICPRefiningRelocaliser()
 
 template <typename VoxelType, typename IndexType>
 boost::optional<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage, const Vector4f &depthIntrinsics) const
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                                         const Vector4f& depthIntrinsics) const
 {
   boost::optional<ORUtils::SE3Pose> initialPose;
   return relocalise(colourImage, depthImage, depthIntrinsics, initialPose);
@@ -133,10 +91,8 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
 
 template <typename VoxelType, typename IndexType>
 boost::optional<Relocaliser::Result>
-ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage,
-                                                         const ITMFloatImage *depthImage,
-                                                         const Vector4f &depthIntrinsics,
-                                                         boost::optional<ORUtils::SE3Pose> &initialPose) const
+ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *colourImage, const ITMFloatImage *depthImage,
+                                                         const Vector4f &depthIntrinsics, boost::optional<ORUtils::SE3Pose> &initialPose) const
 {
   start_timer(m_timerRelocalisation);
 
@@ -174,6 +130,15 @@ ICPRefiningRelocaliser<VoxelType, IndexType>::relocalise(const ITMUChar4Image *c
   m_trackingState->pose_d->SetFrom(initialPose.get_ptr());
 
   // Create a fresh renderState, to prevent a random crash after a while.
+  // If we initialise a m_voxelRenderState with a new variable, there is a crash after a while, probably due to never
+  // using it to integrate frames in the scene.
+  // Reasons are unclear.
+  // Two workarounds:
+  // 1. pass a renderstate from outside, and use that renderstate in spaintgui so it gets used and the variables inside
+  //    are continuously set to values that prevent the crash.
+  // 2. Recreate a new renderstate for each relocalisation frame. More costly (but not that much) but at least it's
+  //    cleaner.
+  // I chose n. 2
   m_voxelRenderState.reset(ITMRenderStateFactory<IndexType>::CreateRenderState(
       m_trackingController->GetTrackedImageSize(colourImage->noDims, depthImage->noDims),
       m_scene->sceneParams,
@@ -255,7 +220,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::save_poses(const Matrix4f &re
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::start_timer(AverageTimer &timer) const
 {
-  if (!m_timersEnabled) return;
+  if(!m_timersEnabled) return;
 
 #ifdef WITH_CUDA
   ORcudaSafeCall(cudaDeviceSynchronize());
@@ -267,7 +232,7 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::start_timer(AverageTimer &tim
 template <typename VoxelType, typename IndexType>
 void ICPRefiningRelocaliser<VoxelType, IndexType>::stop_timer(AverageTimer &timer) const
 {
-  if (!m_timersEnabled) return;
+  if(!m_timersEnabled) return;
 
 #ifdef WITH_CUDA
   ORcudaSafeCall(cudaDeviceSynchronize());
@@ -276,4 +241,4 @@ void ICPRefiningRelocaliser<VoxelType, IndexType>::stop_timer(AverageTimer &time
   timer.stop();
 }
 
-} // namespace itmx
+}
