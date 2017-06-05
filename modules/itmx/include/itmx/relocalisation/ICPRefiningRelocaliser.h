@@ -28,19 +28,14 @@ template <typename VoxelType, typename IndexType>
 class ICPRefiningRelocaliser : public RefiningRelocaliser
 {
   //#################### TYPEDEFS ####################
-public:
-  typedef ITMLib::ITMDenseMapper<VoxelType,IndexType> DenseMapper;
-  typedef boost::shared_ptr<DenseMapper> DenseMapper_Ptr;
-
-  typedef ITMLib::ITMScene<VoxelType,IndexType> Scene;
-  typedef boost::shared_ptr<Scene> Scene_Ptr;
-
-  typedef ITMLib::ITMVisualisationEngine<VoxelType,IndexType> VisualisationEngine;
-  typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
-
-  //#################### TYPEDEFS ####################
 private:
   typedef tvgutil::AverageTimer<boost::chrono::microseconds> AverageTimer;
+  typedef ITMLib::ITMDenseMapper<VoxelType,IndexType> DenseMapper;
+  typedef boost::shared_ptr<DenseMapper> DenseMapper_Ptr;
+  typedef ITMLib::ITMScene<VoxelType,IndexType> Scene;
+  typedef boost::shared_ptr<Scene> Scene_Ptr;
+  typedef ITMLib::ITMVisualisationEngine<VoxelType,IndexType> VisualisationEngine;
+  typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -77,13 +72,13 @@ private:
   /** The ICP tracker used to refine the relocalised poses. */
   Tracker_Ptr m_tracker;
 
-  /** The tracking controller used to setup and perform the actual refinement. */
+  /** The tracking controller used to set up and perform the actual refinement. */
   TrackingController_Ptr m_trackingController;
 
   /** The tracking state used to hold the refinement results. */
   TrackingState_Ptr m_trackingState;
 
-  /** The visualization engine used to perform the raycasting. */
+  /** The visualisation engine used to perform the raycasting. */
   VisualisationEngine_Ptr m_visualisationEngine;
 
   /** The current view of the scene. */

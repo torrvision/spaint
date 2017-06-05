@@ -39,8 +39,12 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                                                                     const Scene_Ptr& scene, const Settings_CPtr& settings,
                                                                     const std::string& trackerConfig)
-: RefiningRelocaliser(innerRelocaliser), m_scene(scene), m_settings(settings),
-  m_timerRelocalisation("Relocalisation"), m_timerTraining("Training"), m_timerUpdate("Update")
+: RefiningRelocaliser(innerRelocaliser),
+  m_scene(scene),
+  m_settings(settings),
+  m_timerRelocalisation("Relocalisation"),
+  m_timerTraining("Training"),
+  m_timerUpdate("Update")
 {
   m_denseVoxelMapper.reset(new DenseMapper(m_settings.get()));
 
