@@ -139,6 +139,12 @@ protected:
   /** A memory block storing the pose hypotheses. */
   PoseCandidateMemoryBlock_Ptr m_poseCandidates;
 
+  /** The camera points used for the pose optimisation step. Each row represents the points for a pose candidate. */
+  ITMFloat4MemoryBlock_Ptr m_poseOptimisationCameraPoints;
+
+  /** The modes used for the pose optimisation step. Each row represents the modes for a pose candidate. */
+  Mode3DColourMemoryBlock_Ptr m_poseOptimisationPredictedModes;
+
   /**
    * The maximum distance between the estimated world coordinates of a point and its predicted mode to be considered as
    * inlier during the pose optimisation step.
@@ -187,6 +193,11 @@ protected:
   virtual void generate_pose_candidates() = 0;
 
   /**
+   * \brief Compute the inlier positions in camera space and their associated modes to use during the pose optimisation step.
+   */
+  virtual void prepare_inliers_for_optimisation() = 0;
+
+  /**
    * \brief Sample a certain number of keypoints from the input image. Those keypoints will be used for the subsequent
    *        energy computation.
    *
@@ -216,11 +227,11 @@ protected:
    * \note  Will probably go away as soon as we implement the optimisation as shared code that can run on both CPU and
    *        GPU.
    *
-   * \param poseCandidate The pose candidate to optimise.
+   * \param candidateIdx The index of the pose candidate to optimise.
    *
    * \return Whether the optimisation succeeded or not.
    */
-  bool update_candidate_pose(PoseCandidate &poseCandidate) const;
+  bool update_candidate_pose(int candidateIdx) const;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
@@ -244,6 +255,9 @@ private:
 
   /** The timers for the optimisation phase. One per each RANSAC iteration. */
   std::vector<AverageTimer> m_timerOptimisation;
+
+  /** The timers for the optimisation preparation phase. One per each RANSAC iteration. */
+  std::vector<AverageTimer> m_timerPrepareOptimisation;
 
   /** The timer for the entire P-RANSAC process. */
   AverageTimer m_timerTotal;
