@@ -45,6 +45,17 @@ include/itmx/persistence/ImagePersister.h
 include/itmx/persistence/PosePersister.h
 )
 
+##
+SET(relocalisation_sources
+src/relocalisation/RefiningRelocaliser.cpp
+src/relocalisation/Relocaliser.cpp
+)
+
+SET(relocalisation_headers
+include/itmx/relocalisation/RefiningRelocaliser.h
+include/itmx/relocalisation/Relocaliser.h
+)
+
 #################################################################
 # Collect the project files into sources, headers and templates #
 #################################################################
@@ -52,11 +63,13 @@ include/itmx/persistence/PosePersister.h
 SET(sources
 ${base_sources}
 ${persistence_sources}
+${relocalisation_sources}
 )
 
 SET(headers
 ${base_headers}
 ${persistence_headers}
+${relocalisation_headers}
 )
 
 #############################
@@ -65,6 +78,7 @@ ${persistence_headers}
 
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers})
 
 ##########################################
 # Specify additional include directories #
