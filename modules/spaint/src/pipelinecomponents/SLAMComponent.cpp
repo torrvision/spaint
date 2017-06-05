@@ -21,8 +21,8 @@ using namespace ORUtils;
 #include <grove/relocalisation/ScoreRelocaliserFactory.h>
 using namespace grove;
 
+#include <itmx/relocalisation/FernRelocaliser.h>
 #include <itmx/relocalisation/ICPRefiningRelocaliser.h>
-#include <itmx/relocalisation/RelocaliserFactory.h>
 using namespace itmx;
 
 #include <tvgutil/misc/SettingsContainer.h>
@@ -392,23 +392,15 @@ void SLAMComponent::setup_relocaliser()
   }
   else if (m_relocaliserType == "ferns")
   {
-    if (m_relocaliseEveryFrame)
-    {
-      // Need to force the policy allowing the learning of new keyframes after relocalisation.
-      nestedRelocaliser = RelocaliserFactory::make_custom_fern_relocaliser(depthImageSize,
-                                                                           settings->sceneParams.viewFrustum_min,
-                                                                           settings->sceneParams.viewFrustum_max,
-                                                                           FernRelocaliser::get_default_harvesting_threshold(),
-                                                                           FernRelocaliser::get_default_num_ferns(),
-                                                                           FernRelocaliser::get_default_num_decisions_per_fern(),
-                                                                           FernRelocaliser::ALWAYS_TRY_ADD);
-    }
-    else
-    {
-      nestedRelocaliser = RelocaliserFactory::make_default_fern_relocaliser(depthImageSize,
-                                                                            settings->sceneParams.viewFrustum_min,
-                                                                            settings->sceneParams.viewFrustum_max);
-    }
+    nestedRelocaliser.reset(new FernRelocaliser(
+      depthImageSize,
+      settings->sceneParams.viewFrustum_min,
+      settings->sceneParams.viewFrustum_max,
+      FernRelocaliser::get_default_harvesting_threshold(),
+      FernRelocaliser::get_default_num_ferns(),
+      FernRelocaliser::get_default_num_decisions_per_fern(),
+      m_relocaliseEveryFrame ? FernRelocaliser::ALWAYS_TRY_ADD : FernRelocaliser::DELAY_AFTER_RELOCALISATION
+    ));
   }
   else
   {
