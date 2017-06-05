@@ -12,12 +12,12 @@ namespace spaint {
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-itmx::Relocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
+itmx::RefiningRelocaliser_Ptr& SLAMContext::get_relocaliser(const std::string& sceneID)
 {
   return m_relocalisers[sceneID];
 }
 
-itmx::Relocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
+itmx::RefiningRelocaliser_CPtr SLAMContext::get_relocaliser(const std::string& sceneID) const
 {
   return MapUtil::lookup(m_relocalisers, sceneID);
 }

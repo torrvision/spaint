@@ -587,7 +587,6 @@ include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/LabelManager.h
 include/spaint/util/RGBDUtil.h
-include/spaint/util/SpaintRefiningRelocaliser.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
