@@ -35,15 +35,15 @@ private:
   typedef ITMLib::ITMScene<VoxelType,IndexType> Scene;
   typedef boost::shared_ptr<Scene> Scene_Ptr;
   typedef ITMLib::ITMVisualisationEngine<VoxelType,IndexType> VisualisationEngine;
-  typedef boost::shared_ptr<VisualisationEngine> VisualisationEngine_Ptr;
+  typedef boost::shared_ptr<const VisualisationEngine> VisualisationEngine_CPtr;
 
   //#################### PRIVATE MEMBER VARIABLES ####################
 private:
   /** The dense mapper used to find visible blocks in the voxel scene. */
   DenseMapper_Ptr m_denseVoxelMapper;
 
-  /** The low level engine used by the tracker. */
-  LowLevelEngine_Ptr m_lowLevelEngine;
+  /** The low-level engine used by the tracker. */
+  LowLevelEngine_CPtr m_lowLevelEngine;
 
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
@@ -79,7 +79,7 @@ private:
   TrackingState_Ptr m_trackingState;
 
   /** The visualisation engine used to perform the raycasting. */
-  VisualisationEngine_Ptr m_visualisationEngine;
+  VisualisationEngine_CPtr m_visualisationEngine;
 
   /** The current view of the scene. */
   View_Ptr m_view;
@@ -92,17 +92,21 @@ public:
   /**
    * \brief Constructs an ICP-based refining relocaliser.
    *
-   * \param innerRelocaliser  The relocaliser whose results are being refined using ICP.
-   * \param calib             The calibration parameters of the camera whose pose is to be estimated.
-   * \param rgbImageSize      The size of the colour images produced by the camera.
-   * \param depthImageSize    The size of the depth images produced by the camera.
-   * \param scene             The scene being viewed from the camera.
-   * \param settings          The settings to use for InfiniTAM.
-   * \param trackerConfig     A configuration string used to specify the parameters of the ICP tracker.
+   * \param innerRelocaliser    The relocaliser whose results are being refined using ICP.
+   * \param trackerConfig       A configuration string used to specify the parameters of the ICP tracker.
+   * \param rgbImageSize        The size of the colour images produced by the camera.
+   * \param depthImageSize      The size of the depth images produced by the camera.
+   * \param calib               The calibration parameters of the camera whose pose is to be estimated.
+   * \param scene               The scene being viewed from the camera.
+   * \param settings            The settings to use for InfiniTAM.
+   * \param lowLevelEngine      The low-level engine used by the tracker.
+   * \param visualisationEngine The visualisation engine used to perform the raycasting.
    */
-  ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const ITMLib::ITMRGBDCalib& calib,
-                         const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const Scene_Ptr& scene,
-                         const Settings_CPtr& settings, const std::string& trackerConfig);
+  ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
+                         const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                         const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
+                         const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine,
+                         const VisualisationEngine_CPtr& visualisationEngine);
 
   //#################### DESTRUCTOR ####################
 public:

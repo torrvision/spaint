@@ -35,20 +35,20 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 template <typename VoxelType, typename IndexType>
-ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const ITMRGBDCalib& calib,
-                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
-                                                                    const Scene_Ptr& scene, const Settings_CPtr& settings,
-                                                                    const std::string& trackerConfig)
+ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
+                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib,
+                                                                    const Scene_Ptr& scene, const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine,
+                                                                    const VisualisationEngine_CPtr& visualisationEngine)
 : RefiningRelocaliser(innerRelocaliser),
+  m_lowLevelEngine(lowLevelEngine),
   m_scene(scene),
   m_settings(settings),
   m_timerRelocalisation("Relocalisation"),
   m_timerTraining("Training"),
-  m_timerUpdate("Update")
+  m_timerUpdate("Update"),
+  m_visualisationEngine(visualisationEngine)
 {
   m_denseVoxelMapper.reset(new DenseMapper(m_settings.get()));
-
-  m_lowLevelEngine.reset(ITMLowLevelEngineFactory::MakeLowLevelEngine(settings->deviceType));
 
   m_tracker.reset(ITMTrackerFactory::Instance().Make(m_settings->deviceType,
                                                      trackerConfig.c_str(),
@@ -61,8 +61,6 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_settings.get()));
 
   m_trackingState.reset(new ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));
-
-  m_visualisationEngine.reset(ITMVisualisationEngineFactory::MakeVisualisationEngine<VoxelType,IndexType>(m_settings->deviceType));
 
   m_view.reset(new ITMView(calib, rgbImageSize, depthImageSize, m_settings->deviceType == ITMLibSettings::DEVICE_CUDA));
   m_view->depth->Clear();

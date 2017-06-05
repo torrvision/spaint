@@ -416,8 +416,10 @@ void SLAMComponent::setup_relocaliser()
 
   // Set up the refining relocaliser.
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    nestedRelocaliser, m_imageSourceEngine->getCalib(), rgbImageSize, depthImageSize,
-    voxelScene, settings, m_relocaliserRefinementTrackerParams
+    nestedRelocaliser, m_relocaliserRefinementTrackerParams,
+    rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
+    voxelScene, settings, m_lowLevelEngine,
+    m_context->get_voxel_visualisation_engine()
   ));
 }
 
