@@ -98,6 +98,7 @@ public:
    * \param depthImageSize      The size of the depth images produced by the camera.
    * \param calib               The calibration parameters of the camera whose pose is to be estimated.
    * \param scene               The scene being viewed from the camera.
+   * \param denseVoxelMapper    The dense mapper used to find visible blocks in the voxel scene.
    * \param settings            The settings to use for InfiniTAM.
    * \param lowLevelEngine      The low-level engine used by the tracker.
    * \param visualisationEngine The visualisation engine used to perform the raycasting.
@@ -105,8 +106,8 @@ public:
   ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
-                         const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine,
-                         const VisualisationEngine_CPtr& visualisationEngine);
+                         const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
+                         const LowLevelEngine_CPtr& lowLevelEngine, const VisualisationEngine_CPtr& visualisationEngine);
 
   //#################### DESTRUCTOR ####################
 public:

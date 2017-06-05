@@ -37,9 +37,10 @@ namespace itmx {
 template <typename VoxelType, typename IndexType>
 ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMRGBDCalib& calib,
-                                                                    const Scene_Ptr& scene, const Settings_CPtr& settings, const LowLevelEngine_CPtr& lowLevelEngine,
-                                                                    const VisualisationEngine_CPtr& visualisationEngine)
+                                                                    const Scene_Ptr& scene, const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
+                                                                    const LowLevelEngine_CPtr& lowLevelEngine, const VisualisationEngine_CPtr& visualisationEngine)
 : RefiningRelocaliser(innerRelocaliser),
+  m_denseVoxelMapper(denseVoxelMapper),
   m_lowLevelEngine(lowLevelEngine),
   m_scene(scene),
   m_settings(settings),
@@ -48,8 +49,6 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_timerUpdate("Update"),
   m_visualisationEngine(visualisationEngine)
 {
-  m_denseVoxelMapper.reset(new DenseMapper(m_settings.get()));
-
   m_tracker.reset(ITMTrackerFactory::Instance().Make(m_settings->deviceType,
                                                      trackerConfig.c_str(),
                                                      rgbImageSize,
