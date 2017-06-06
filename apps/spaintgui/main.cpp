@@ -523,7 +523,20 @@ try
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
 
   MultiScenePipeline_Ptr pipeline;
-  if(args.pipelineType == "semantic")
+  if(args.pipelineType == "slam")
+  {
+    pipeline.reset(new SLAMPipeline(
+      settings,
+      Application::resources_dir().string(),
+      imageSourceEngine,
+      make_tracker_config(args),
+      mappingMode,
+      trackingMode,
+      fiducialDetector,
+      args.detectFiducials
+    ));
+  }
+  else if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
     pipeline.reset(new SemanticPipeline(
@@ -553,15 +566,6 @@ try
       args.detectFiducials,
       !args.trackObject
     ));
-  }
-  else if(args.pipelineType == "slam")
-  {
-    pipeline.reset(new SLAMPipeline(settings,
-                                    Application::resources_dir().string(),
-                                    imageSourceEngine,
-                                    make_tracker_config(args),
-                                    mappingMode,
-                                    trackingMode));
   }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
