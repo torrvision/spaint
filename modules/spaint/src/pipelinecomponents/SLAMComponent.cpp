@@ -6,10 +6,10 @@
 #include "pipelinecomponents/SLAMComponent.h"
 
 #include <boost/filesystem.hpp>
-namespace bf = boost::filesystem;
 #include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/singleton.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/LowLevel/ITMLowLevelEngineFactory.h>
 #include <ITMLib/Engines/ViewBuilding/ITMViewBuilderFactory.h>
@@ -150,17 +150,17 @@ bool SLAMComponent::process_frame()
   // Make a note of the current pose in case tracking fails.
   SE3Pose oldPose(*trackingState->pose_d);
 
-  // If we're mirroring the pose of another scene, copy the pose from that scene's tracking state. If not, use our own tracker
-  // to estimate the pose (we can only do this once we've started reconstruction because we need something to track against).
+  // If we're mirroring the pose of another scene, copy the pose from that scene's tracking state.
+  // If not, use our own tracker to estimate the pose.
   if(m_mirrorSceneID != "")
   {
     *trackingState->pose_d = m_context->get_slam_state(m_mirrorSceneID)->get_pose();
     trackingState->trackerResult = ITMTrackingState::TRACKING_GOOD;
   }
-  else // if(m_fusedFramesCount > 0)
+  else
   {
-    // The tracking controller knows how to handle the case where we don't have any fused frame
-    // (i.e. when we use a file-based tracker).
+    // Note: When using a normal tracker, it's safe to call this even before we've started fusion (it will be a no-op).
+    //       When using a file-based tracker, we *must* call it in order to correctly set the pose for the first frame.
     m_trackingController->Track(trackingState.get(), view.get());
   }
 
@@ -172,7 +172,7 @@ bool SLAMComponent::process_frame()
   {
     case ITMLibSettings::FAILUREMODE_RELOCALISE:
     {
-      // Allow the relocaliser to either improve the pose or store a new keyframe, update its model, etc...
+      // Allow the relocaliser to either improve the pose, store a new keyframe or update its model.
       process_relocalisation();
       break;
     }
@@ -181,8 +181,9 @@ bool SLAMComponent::process_frame()
       // Since we're not using relocalisation, treat tracking failures like poor tracking,
       // on the basis that it's better to try to keep going than to fail completely.
       if(trackingState->trackerResult == ITMTrackingState::TRACKING_FAILED)
+      {
         trackingState->trackerResult = ITMTrackingState::TRACKING_POOR;
-
+      }
       break;
     }
     case ITMLibSettings::FAILUREMODE_IGNORE:
