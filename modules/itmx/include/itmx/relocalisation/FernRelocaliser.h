@@ -74,7 +74,7 @@ public:
    * \param decisionsPerFern    The number of decisions to perform in each fern.
    * \param keyframeAddPolicy   The policy used to decide whether to store keyframes right after tracking failures.
    */
-  FernRelocaliser(Vector2i depthImageSize, float viewFrustumMin, float viewFrustumMax,
+  FernRelocaliser(const Vector2i& depthImageSize, float viewFrustumMin, float viewFrustumMax,
                   float harvestingThreshold, int numFerns, int decisionsPerFern,
                   KeyframeAddPolicy keyframeAddPolicy = DELAY_AFTER_RELOCALISATION);
 
