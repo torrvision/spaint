@@ -367,7 +367,7 @@ try
 #endif
 
   // Specify the settings.
-  boost::shared_ptr<ITMLibSettings> settings(new ITMLibSettings);
+  Settings_Ptr settings(new Settings);
   settings->trackerConfig = NULL;
   if(args.cameraAfterDisk || !args.noRelocaliser) settings->behaviourOnFailure = ITMLibSettings::FAILUREMODE_RELOCALISE;
 

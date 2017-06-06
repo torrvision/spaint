@@ -32,6 +32,7 @@ include/itmx/base/ITMImagePtrTypes.h
 include/itmx/base/ITMMemoryBlockPtrTypes.h
 include/itmx/base/ITMObjectPtrTypes.h
 include/itmx/base/MemoryBlockFactory.h
+include/itmx/base/Settings.h
 )
 
 ##
