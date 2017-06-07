@@ -454,7 +454,6 @@ try
   Settings_Ptr settings(new Settings);
   settings->trackerConfig = NULL; // The tracker is handled by the tracker factory.
 
-
   // Parse and post-process the command-line arguments.
   CommandLineArguments args;
   if(!parse_command_line(argc, argv, args, settings) || !postprocess_arguments(args))
