@@ -847,6 +847,8 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 ##########################################
 
 INCLUDE_DIRECTORIES(include/spaint)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/grove/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)

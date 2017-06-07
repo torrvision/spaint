@@ -6,6 +6,12 @@ cmake_minimum_required(VERSION 2.8)
 
 PROJECT(spaint)
 
+#############################
+# Enable C++11 if requested #
+#############################
+
+INCLUDE(cmake/OfferC++11Support.cmake)
+
 #################################
 # Add additional compiler flags #
 #################################
@@ -36,6 +42,7 @@ ADD_SUBDIRECTORY(modules)
 OPTION(BUILD_APPS "Build the applications?" ON)
 OPTION(BUILD_AUXILIARY_APPS "Build the auxiliary applications?" ON)
 OPTION(BUILD_EVALUATION_MODULES "Build the evaluation modules?" ON)
+OPTION(BUILD_GROVE "Build grove?" ON)
 OPTION(BUILD_INFERMOUS "Build infermous?" OFF)
 OPTION(BUILD_SPAINT "Build spaint?" ON)
 OPTION(BUILD_TESTS "Build the tests?" ON)
