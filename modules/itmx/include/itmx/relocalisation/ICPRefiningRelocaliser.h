@@ -57,14 +57,14 @@ private:
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
 
+  /** Whether or not timers are enabled and stats are printed on destruction. */
+  bool m_timersEnabled;
+
   /** The timer used to profile the training calls. */
   AverageTimer m_timerTraining;
 
   /** The timer used to profile the update calls. */
   AverageTimer m_timerUpdate;
-
-  /** Whether or not timers are enabled and stats are printed on destruction. */
-  bool m_timersEnabled;
 
   /** The ICP tracker used to refine the relocalised poses. */
   Tracker_Ptr m_tracker;
