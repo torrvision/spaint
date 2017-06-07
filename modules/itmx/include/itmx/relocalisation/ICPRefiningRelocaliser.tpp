@@ -23,7 +23,7 @@ namespace itmx {
 //#################### CONSTRUCTORS ####################
 
 template <typename VoxelType, typename IndexType>
-ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
+ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                                                                     const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMLib::ITMRGBDCalib& calib,
                                                                     const Scene_Ptr& scene, const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
                                                                     const LowLevelEngine_CPtr& lowLevelEngine, const VisualisationEngine_CPtr& visualisationEngine)
@@ -35,14 +35,9 @@ ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Reloca
   m_timerRelocalisation("Relocalisation"),
   m_timerTraining("Training"),
   m_timerUpdate("Update"),
+  m_tracker(tracker),
   m_visualisationEngine(visualisationEngine)
 {
-  // Construct the ICP tracker that we will use to refine the relocalised poses.
-  m_tracker.reset(ITMTrackerFactory::Instance().Make(
-    m_settings->deviceType, trackerConfig.c_str(), rgbImageSize, depthImageSize,
-    m_lowLevelEngine.get(), NULL, m_scene->sceneParams
-  ));
-
   // Construct the tracking controller, tracking state and view.
   m_trackingController.reset(new ITMTrackingController(m_tracker.get(), m_settings.get()));
   m_trackingState.reset(new ITMTrackingState(depthImageSize, m_settings->GetMemoryType()));

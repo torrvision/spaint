@@ -93,7 +93,7 @@ public:
    * \brief Constructs an ICP-based refining relocaliser.
    *
    * \param innerRelocaliser    The relocaliser whose results are being refined using ICP.
-   * \param trackerConfig       A configuration string used to specify the parameters of the ICP tracker.
+   * \param tracker             The ICP tracker.
    * \param rgbImageSize        The size of the colour images produced by the camera.
    * \param depthImageSize      The size of the depth images produced by the camera.
    * \param calib               The calibration parameters of the camera whose pose is to be estimated.
@@ -103,7 +103,7 @@ public:
    * \param lowLevelEngine      The low-level engine used by the tracker.
    * \param visualisationEngine The visualisation engine used to perform the raycasting.
    */
-  ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const std::string& trackerConfig,
+  ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
                          const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,

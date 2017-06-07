@@ -346,10 +346,9 @@ void SLAMComponent::process_relocalisation()
     relocaliser->train(view->rgb, view->depth, depthIntrinsics, oldPose);
   }
 
-  // If we're training and relocalising every frame for evaluation purposes, restore the original pose.
-  // The assumption is that if we're doing this, it's because we're using a ground truth trajectory
-  // from disk, and so we're only interested in whether the relocaliser would have succeeded, not in
-  // keeping the poses it produces.
+  // If we're training and relocalising every frame for evaluation purposes, restore the original pose. The assumption
+  // is that if we're doing this, it's because we're using a ground truth trajectory from disk, and so we're only
+  // interested in whether the relocaliser would have succeeded, not in keeping the poses it produces.
   if(m_relocaliseEveryFrame)
   {
     trackingState->pose_d->SetFrom(&oldPose);
@@ -395,14 +394,17 @@ void SLAMComponent::setup_relocaliser()
   }
   else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
-  // Now decorate this relocaliser with one that uses ICP to refine the results.
-  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(
-    settingsNamespace + "refinementTrackerParams",
-    "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0"
-  );
+  // Now decorate this relocaliser with one that uses an ICP tracker to refine the results.
+  std::string trackerConfig = "<tracker type='infinitam'>";
+  std::string trackerParams = settings->get_first_value<std::string>(settingsNamespace + "refinementTrackerParams", "");
+  if(trackerParams != "") trackerConfig += "<params>" + trackerParams + "</params>";
+  trackerConfig += "</tracker>";
+
+  FallibleTracker *dummy;
+  Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, false, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    innerRelocaliser, m_relocaliserRefinementTrackerParams,
+    innerRelocaliser, tracker,
     rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
     voxelScene, m_denseVoxelMapper, settings,
     m_lowLevelEngine, m_context->get_voxel_visualisation_engine()

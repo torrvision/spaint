@@ -109,9 +109,6 @@ private:
   /** The path to the relocalisation forest. */
   std::string m_relocaliserForestPath;
 
-  /** The tracker params used to instantiate the refining relocaliser. */
-  std::string m_relocaliserRefinementTrackerParams;
-
   /** The type of relocaliser. */
   std::string m_relocaliserType;
 
