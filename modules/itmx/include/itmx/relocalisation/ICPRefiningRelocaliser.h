@@ -21,7 +21,7 @@ namespace itmx {
 /**
  * \brief An instance of this class can be used to refine the results of another relocaliser using ICP.
  *
- * \tparam VoxelType  The type of voxel used to recontruct the scene that will be used during the raycasting step.
+ * \tparam VoxelType  The type of voxel used to reconstruct the scene that will be used during the raycasting step.
  * \tparam IndexType  The type of indexing used to access the reconstructed scene.
  */
 template <typename VoxelType, typename IndexType>
@@ -57,14 +57,14 @@ private:
   /** The timer used to profile the relocalisation calls. */
   mutable AverageTimer m_timerRelocalisation;
 
+  /** Whether or not timers are enabled and stats are printed on destruction. */
+  bool m_timersEnabled;
+
   /** The timer used to profile the training calls. */
   AverageTimer m_timerTraining;
 
   /** The timer used to profile the update calls. */
   AverageTimer m_timerUpdate;
-
-  /** Whether or not timers are enabled and stats are printed on destruction. */
-  bool m_timersEnabled;
 
   /** The ICP tracker used to refine the relocalised poses. */
   Tracker_Ptr m_tracker;
