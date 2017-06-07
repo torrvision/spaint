@@ -42,9 +42,6 @@ private:
   /** The dense mapper used to find visible blocks in the voxel scene. */
   DenseMapper_Ptr m_denseVoxelMapper;
 
-  /** The low-level engine used by the tracker. */
-  LowLevelEngine_CPtr m_lowLevelEngine;
-
   /** The path generator used when saving the relocalised poses. */
   mutable boost::optional<tvgutil::SequentialPathGenerator> m_posePathGenerator;
 
@@ -100,14 +97,13 @@ public:
    * \param scene               The scene being viewed from the camera.
    * \param denseVoxelMapper    The dense mapper used to find visible blocks in the voxel scene.
    * \param settings            The settings to use for InfiniTAM.
-   * \param lowLevelEngine      The low-level engine used by the tracker.
    * \param visualisationEngine The visualisation engine used to perform the raycasting.
    */
   ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
                          const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
                          const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
                          const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
-                         const LowLevelEngine_CPtr& lowLevelEngine, const VisualisationEngine_CPtr& visualisationEngine);
+                         const VisualisationEngine_CPtr& visualisationEngine);
 
   //#################### DESTRUCTOR ####################
 public:

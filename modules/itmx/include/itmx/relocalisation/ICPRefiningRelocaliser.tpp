@@ -24,12 +24,12 @@ namespace itmx {
 
 template <typename VoxelType, typename IndexType>
 ICPRefiningRelocaliser<VoxelType,IndexType>::ICPRefiningRelocaliser(const Relocaliser_Ptr& innerRelocaliser, const Tracker_Ptr& tracker,
-                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize, const ITMLib::ITMRGBDCalib& calib,
-                                                                    const Scene_Ptr& scene, const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
-                                                                    const LowLevelEngine_CPtr& lowLevelEngine, const VisualisationEngine_CPtr& visualisationEngine)
+                                                                    const Vector2i& rgbImageSize, const Vector2i& depthImageSize,
+                                                                    const ITMLib::ITMRGBDCalib& calib, const Scene_Ptr& scene,
+                                                                    const DenseMapper_Ptr& denseVoxelMapper, const Settings_CPtr& settings,
+                                                                    const VisualisationEngine_CPtr& visualisationEngine)
 : RefiningRelocaliser(innerRelocaliser),
   m_denseVoxelMapper(denseVoxelMapper),
-  m_lowLevelEngine(lowLevelEngine),
   m_scene(scene),
   m_settings(settings),
   m_timerRelocalisation("Relocalisation"),

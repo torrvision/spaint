@@ -400,14 +400,13 @@ void SLAMComponent::setup_relocaliser()
   if(trackerParams != "") trackerConfig += "<params>" + trackerParams + "</params>";
   trackerConfig += "</tracker>";
 
+  const bool trackSurfels = false;
   FallibleTracker *dummy;
-  Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, false, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
+  Tracker_Ptr tracker = TrackerFactory::make_tracker_from_string(trackerConfig, trackSurfels, rgbImageSize, depthImageSize, m_lowLevelEngine, m_imuCalibrator, settings, dummy);
 
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    innerRelocaliser, tracker,
-    rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
-    voxelScene, m_denseVoxelMapper, settings,
-    m_lowLevelEngine, m_context->get_voxel_visualisation_engine()
+    innerRelocaliser, tracker, rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
+    voxelScene, m_denseVoxelMapper, settings, m_context->get_voxel_visualisation_engine()
   ));
 }
 
