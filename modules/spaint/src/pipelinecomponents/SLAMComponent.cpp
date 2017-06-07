@@ -359,37 +359,31 @@ void SLAMComponent::process_relocalisation()
 
 void SLAMComponent::setup_relocaliser()
 {
-  const Settings_CPtr& settings = m_context->get_settings();
-  const static std::string settingsNamespace = "SLAMComponent.";
-
-  m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace +
-                                                          "relocaliseEveryFrame", false);
-
-  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace +
-                                                            "relocaliserType", "forest");
-
-  // Useful variables.
   const Vector2i depthImageSize = m_imageSourceEngine->getDepthImageSize();
   const Vector2i rgbImageSize = m_imageSourceEngine->getRGBImageSize();
+  const Settings_CPtr& settings = m_context->get_settings();
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
-  // A pointer to the actual relocaliser that will be nested in the refining relocaliser.
-  Relocaliser_Ptr nestedRelocaliser;
-  if (m_relocaliserType == "forest")
-  {
-    const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) /
-                                                         "DefaultRelocalizationForest.rf").string();
+  // Look up the non-relocaliser-specific settings, such as the type of relocaliser to create.
+  static const std::string settingsNamespace = "SLAMComponent.";
+  m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
+  m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "forest");
 
-    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace +
-                                                                     "relocalisationForestPath", defaultRelocalisationForestPath);
+  // Construct a relocaliser of the specified type.
+  Relocaliser_Ptr innerRelocaliser;
+  if(m_relocaliserType == "forest")
+  {
+    // If we're trying to set up a forest-based relocaliser, determine the path to the file containing the forest.
+    const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf").string();
+    m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocalisationForestPath);
     std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
 
-    nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
-    //  nestedRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(ITMLibSettings::DEVICE_CPU, m_relocalisationForestPath);
+    // Load the relocaliser from the specified file.
+    innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
   }
-  else if (m_relocaliserType == "ferns")
+  else if(m_relocaliserType == "ferns")
   {
-    nestedRelocaliser.reset(new FernRelocaliser(
+    innerRelocaliser.reset(new FernRelocaliser(
       depthImageSize,
       settings->sceneParams.viewFrustum_min,
       settings->sceneParams.viewFrustum_max,
@@ -399,21 +393,16 @@ void SLAMComponent::setup_relocaliser()
       m_relocaliseEveryFrame ? FernRelocaliser::ALWAYS_TRY_ADD : FernRelocaliser::DELAY_AFTER_RELOCALISATION
     ));
   }
-  else
-  {
-    throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
-  }
+  else throw std::invalid_argument("Invalid relocaliser type: " + m_relocaliserType);
 
-  // Refinement ICP tracker
-  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(settingsNamespace + "refinementTrackerParams",
-                                                                                "type=extended,levels=rrbb,minstep=1e-4,"
-                                                                                "outlierSpaceC=0.1,outlierSpaceF=0.004,"
-                                                                                "numiterC=20,numiterF=20,tukeyCutOff=8,"
-                                                                                "framesToSkip=20,framesToWeight=50,failureDec=20.0");
+  // Now decorate this relocaliser with one that uses ICP to refine the results.
+  m_relocaliserRefinementTrackerParams = settings->get_first_value<std::string>(
+    settingsNamespace + "refinementTrackerParams",
+    "type=extended,levels=rrbb,minstep=1e-4,outlierSpaceC=0.1,outlierSpaceF=0.004,numiterC=20,numiterF=20,tukeyCutOff=8,framesToSkip=20,framesToWeight=50,failureDec=20.0"
+  );
 
-  // Set up the refining relocaliser.
   m_context->get_relocaliser(m_sceneID).reset(new ICPRefiningRelocaliser<SpaintVoxel,ITMVoxelIndex>(
-    nestedRelocaliser, m_relocaliserRefinementTrackerParams,
+    innerRelocaliser, m_relocaliserRefinementTrackerParams,
     rgbImageSize, depthImageSize, m_imageSourceEngine->getCalib(),
     voxelScene, m_denseVoxelMapper, settings,
     m_lowLevelEngine, m_context->get_voxel_visualisation_engine()
