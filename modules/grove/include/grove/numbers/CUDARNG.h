@@ -50,9 +50,9 @@ public:
   }
 
   /**
-   * \brief Generates a random integer from a uniform distribution over the specified (open) range.
+   * \brief Generates a random integer from a uniform distribution over the specified (closed) range.
    *
-   * For example, generate_int_from_uniform(3,5) returns an integer in the range [3,5[.
+   * For example, generate_int_from_uniform(3,5) returns an integer in the range [3,5].
    *
    * \param lower The lower bound of the range.
    * \param upper The upper bound of the range.
@@ -63,8 +63,8 @@ public:
   {
     // curand_uniform generates a number in ]0,1]
     const float generated = curand_uniform(&m_state);
-    // __float2int_ru rounds the generated values in ]lower, upper], subtracting 1 gives the intended range
-    const int result = __float2int_ru(generated * (upper - lower)) + lower - 1;
+    // __float2int_ru rounds the generated values into [1, upper+1-lower], and then adding lower-1 gives the intended range
+    const int result = __float2int_ru(generated * (upper + 1 - lower)) + lower - 1;
     return result;
   }
 

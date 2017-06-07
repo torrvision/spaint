@@ -1,6 +1,6 @@
-#####################################
+####################################
 # CMakeLists.txt for modules/grove #
-#####################################
+####################################
 
 ###########################
 # Specify the target name #
@@ -95,6 +95,10 @@ include/grove/keypoints/Keypoint3DColour.h
 )
 
 ##
+SET(numbers_sources
+src/numbers/CPURNG.cpp
+)
+
 SET(numbers_headers
 include/grove/numbers/CPURNG.h
 include/grove/numbers/CUDARNG.h
@@ -181,6 +185,7 @@ ENDIF()
 
 SET(sources
 ${features_sources}
+${numbers_sources}
 ${ransac_sources}
 ${ransac_cpu_sources}
 ${ransac_interface_sources}
@@ -288,7 +293,7 @@ SOURCE_GROUP(forests\\cuda FILES ${forests_cuda_headers} ${forests_cuda_template
 SOURCE_GROUP(forests\\interface FILES ${forests_interface_headers} ${forests_interface_templates})
 SOURCE_GROUP(forests\\shared FILES ${forests_shared_headers})
 SOURCE_GROUP(keypoints FILES ${keypoints_headers})
-SOURCE_GROUP(numbers FILES ${numbers_headers})
+SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 SOURCE_GROUP(ransac FILES ${ransac_headers} ${ransac_sources})
 SOURCE_GROUP(ransac\\base FILES ${ransac_base_headers})
 SOURCE_GROUP(ransac\\cpu FILES ${ransac_cpu_headers} ${ransac_cpu_sources})

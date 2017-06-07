@@ -143,8 +143,8 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
        ++iterationIdx)
   {
     // Sample a pixel in the input image.
-    const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width);
-    const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height);
+    const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width - 1);
+    const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height - 1);
     const int linearFeatureIdx = y * imgSize.width + x;
 
     // Grab its associated keypoint and continue only if it's valid.
@@ -159,7 +159,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
     // Either use the first mode or select one randomly, depending on the parameters.
     const int selectedModeIdx = useAllModesPerLeafInPoseHypothesisGeneration
-                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.nbClusters)
+                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.nbClusters - 1)
                                     : 0;
 
     // Cache camera and world points, used for the following checks.
@@ -351,7 +351,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Key
   for (int iterationIdx = 0; inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS; ++iterationIdx)
   {
     // Sample a keypoint index.
-    const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height);
+    const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
 
     // Check that we have a valid keypoint.
     if (!keypointsData[linearIdx].valid) continue;
