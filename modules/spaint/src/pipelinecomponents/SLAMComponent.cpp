@@ -346,7 +346,7 @@ void SLAMComponent::process_relocalisation()
     relocaliser->train(view->rgb, view->depth, depthIntrinsics, oldPose);
   }
 
-  // If we're training and relocalising every frame for evaluation purposes, restore the original pose. The assumption
+  // If we're relocalising and training every frame for evaluation purposes, restore the original pose. The assumption
   // is that if we're doing this, it's because we're using a ground truth trajectory from disk, and so we're only
   // interested in whether the relocaliser would have succeeded, not in keeping the poses it produces.
   if(m_relocaliseEveryFrame)
@@ -363,7 +363,7 @@ void SLAMComponent::setup_relocaliser()
   const Settings_CPtr& settings = m_context->get_settings();
   const SpaintVoxelScene_Ptr& voxelScene = m_context->get_slam_state(m_sceneID)->get_voxel_scene();
 
-  // Look up the non-relocaliser-specific settings, such as the type of relocaliser to create.
+  // Look up the non-relocaliser-specific settings, such as the type of relocaliser to construct.
   static const std::string settingsNamespace = "SLAMComponent.";
   m_relocaliseEveryFrame = settings->get_first_value<bool>(settingsNamespace + "relocaliseEveryFrame", false);
   m_relocaliserType = settings->get_first_value<std::string>(settingsNamespace + "relocaliserType", "forest");

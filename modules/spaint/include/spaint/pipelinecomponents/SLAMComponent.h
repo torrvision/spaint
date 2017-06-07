@@ -103,7 +103,7 @@ private:
   /** The ID of the scene (if any) whose pose is to be mirrored. */
   std::string m_mirrorSceneID;
 
-  /** Whether or not to train and relocalise after processing every frame, for evaluation purposes. */
+  /** Whether or not to relocalise and train after processing every frame, for evaluation purposes. */
   bool m_relocaliseEveryFrame;
 
   /** The path to the relocalisation forest. */
