@@ -373,9 +373,9 @@ void SLAMComponent::setup_relocaliser()
   if(m_relocaliserType == "forest")
   {
     // If we're trying to set up a forest-based relocaliser, determine the path to the file containing the forest.
-    const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalizationForest.rf").string();
+    const std::string defaultRelocalisationForestPath = (bf::path(m_context->get_resources_dir()) / "DefaultRelocalisationForest.rf").string();
     m_relocaliserForestPath = settings->get_first_value<std::string>(settingsNamespace + "relocalisationForestPath", defaultRelocalisationForestPath);
-    std::cout << "Loading relocalization forest from: " << m_relocaliserForestPath << '\n';
+    std::cout << "Loading relocalisation forest from: " << m_relocaliserForestPath << '\n';
 
     // Load the relocaliser from the specified file.
     innerRelocaliser = ScoreRelocaliserFactory::make_score_relocaliser(settings->deviceType, settings, m_relocaliserForestPath);
