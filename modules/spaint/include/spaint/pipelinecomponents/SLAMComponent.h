@@ -6,9 +6,6 @@
 #ifndef H_SPAINT_SLAMCOMPONENT
 #define H_SPAINT_SLAMCOMPONENT
 
-#include <FernRelocLib/PoseDatabase.h>
-#include <FernRelocLib/Relocaliser.h>
-
 #include <ITMLib/Core/ITMDenseMapper.h>
 #include <ITMLib/Core/ITMDenseSurfelMapper.h>
 
@@ -27,8 +24,7 @@ class SLAMComponent
 private:
   typedef boost::shared_ptr<ITMLib::ITMDenseMapper<SpaintVoxel,ITMVoxelIndex> > DenseMapper_Ptr;
   typedef boost::shared_ptr<ITMLib::ITMDenseSurfelMapper<SpaintSurfel> > DenseSurfelMapper_Ptr;
-  typedef boost::shared_ptr<FernRelocLib::PoseDatabase> PoseDatabase_Ptr;
-  typedef boost::shared_ptr<FernRelocLib::Relocaliser<float> > Relocaliser_Ptr;
+  typedef ITMLib::ITMTrackingState::TrackingResult TrackingResult;
 
   //#################### ENUMERATIONS ####################
 public:
@@ -98,9 +94,6 @@ private:
    */
   size_t m_initialFramesToFuse;
 
-  /** The remaining number of frames for which we need to achieve good tracking before we can add another keyframe. */
-  size_t m_keyframeDelay;
-
   /** The engine used to perform low-level image processing operations. */
   LowLevelEngine_Ptr m_lowLevelEngine;
 
@@ -110,11 +103,14 @@ private:
   /** The ID of the scene (if any) whose pose is to be mirrored. */
   std::string m_mirrorSceneID;
 
-  /** The database of previous poses for relocalisation. */
-  PoseDatabase_Ptr m_poseDatabase;
+  /** Whether or not to relocalise and train after processing every frame, for evaluation purposes. */
+  bool m_relocaliseEveryFrame;
 
-  /** The relocaliser. */
-  Relocaliser_Ptr m_relocaliser;
+  /** The path to the relocalisation forest. */
+  std::string m_relocaliserForestPath;
+
+  /** The type of relocaliser. */
+  std::string m_relocaliserType;
 
   /** The ID of the scene to reconstruct. */
   std::string m_sceneID;
@@ -205,6 +201,16 @@ private:
    * \param trackingMode  The tracking mode to use.
    */
   void prepare_for_tracking(TrackingMode trackingMode);
+
+  /**
+   * \brief Perform relocalisation-specific operations (i.e. train a relocaliser if tracking succeeded or relocalise otherwise).
+   */
+  void process_relocalisation();
+
+  /**
+   * \brief Sets up the relocaliser.
+   */
+  void setup_relocaliser();
 
   /**
    * \brief Sets up the tracker.

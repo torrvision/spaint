@@ -55,8 +55,13 @@ src/relocalisation/Relocaliser.cpp
 
 SET(relocalisation_headers
 include/itmx/relocalisation/FernRelocaliser.h
+include/itmx/relocalisation/ICPRefiningRelocaliser.h
 include/itmx/relocalisation/RefiningRelocaliser.h
 include/itmx/relocalisation/Relocaliser.h
+)
+
+SET(relocalisation_templates
+include/itmx/relocalisation/ICPRefiningRelocaliser.tpp
 )
 
 #################################################################
@@ -75,13 +80,17 @@ ${persistence_headers}
 ${relocalisation_headers}
 )
 
+SET(templates
+${relocalisation_templates}
+)
+
 #############################
 # Specify the source groups #
 #############################
 
 SOURCE_GROUP(base FILES ${base_sources} ${base_headers})
 SOURCE_GROUP(persistence FILES ${persistence_sources} ${persistence_headers})
-SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers})
+SOURCE_GROUP(relocalisation FILES ${relocalisation_sources} ${relocalisation_headers} ${relocalisation_templates})
 
 ##########################################
 # Specify additional include directories #
