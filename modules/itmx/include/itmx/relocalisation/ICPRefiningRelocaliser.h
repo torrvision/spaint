@@ -21,7 +21,7 @@ namespace itmx {
 /**
  * \brief An instance of this class can be used to refine the results of another relocaliser using ICP.
  *
- * \tparam VoxelType  The type of voxel used to recontruct the scene that will be used during the raycasting step.
+ * \tparam VoxelType  The type of voxel used to reconstruct the scene that will be used during the raycasting step.
  * \tparam IndexType  The type of indexing used to access the reconstructed scene.
  */
 template <typename VoxelType, typename IndexType>
