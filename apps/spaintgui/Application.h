@@ -43,14 +43,13 @@
  */
 class Application
 {
-  //#################### PRIVATE TYPEDEFS ####################
+  //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMMesh> Mesh_Ptr;
   typedef ITMLib::ITMMeshingEngine<spaint::SpaintVoxel,ITMVoxelIndex> MeshingEngine;
   typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
-  //#################### PUBLIC TYPEDEFS ####################
 public:
   typedef boost::function<void(const Model_Ptr&)> ModelHookFunction;
 
