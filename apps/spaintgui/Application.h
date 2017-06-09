@@ -12,6 +12,7 @@
 #endif
 
 #include <boost/asio.hpp>
+#include <boost/function.hpp>
 
 #ifdef _MSC_VER
   // Re-enable the VC++ warnings for the rest of the code.
@@ -49,6 +50,9 @@ private:
   typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
+public:
+  typedef boost::function<void(const Model_Ptr&)> FrameDebugHook;
+
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The index of the sub-window with which the user is interacting. */
@@ -59,6 +63,9 @@ private:
 
   /** The fractional position of the mouse within the window's viewport. */
   Vector2f m_fracWindowPos;
+
+  /** The debug hook function (if any) to call after processing each frame. */
+  FrameDebugHook m_frameDebugHook;
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
@@ -117,6 +124,13 @@ public:
    * \return  true, if the application terminated successfully, or false otherwise.
    */
   bool run();
+
+  /**
+   * \brief Sets the debug hook function (if any) to call after processing each frame.
+   *
+   * \param frameDebugHook  The debug hook function (if any) to call after processing each frame.
+   */
+  void set_frame_debug_hook(const FrameDebugHook& frameDebugHook);
 
   /**
    * \brief Sets whether or not to save a mesh of the scene on exiting the application.

@@ -75,10 +75,14 @@ bool Application::run()
       // Run the main section of the pipeline.
       bool frameWasProcessed = m_pipeline->run_main_section();
 
-      // If a new frame was processed and we're currently recording the sequence, save the frame to disk.
-      if(frameWasProcessed && m_sequencePathGenerator)
+      // If a new frame was processed:
+      if(frameWasProcessed)
       {
-        save_sequence_frame();
+        // If a frame debug hook is active, call it.
+        if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
+
+        // If we're currently recording the sequence, save the frame to disk.
+        if(m_sequencePathGenerator) save_sequence_frame();
       }
     }
 
@@ -99,6 +103,11 @@ bool Application::run()
   if(m_saveMeshOnExit) save_mesh();
 
   return true;
+}
+
+void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
+{
+  m_frameDebugHook = frameDebugHook;
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
