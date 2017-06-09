@@ -91,7 +91,7 @@ private:
   /** Whether or not to terminate the application as soon as the last frame has been processeed. */
   bool m_runInBatch;
 
-  /** Whether to save the reconstructed mesh on exit. */
+  /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
 
   /** The path generator for the current sequence recording (if any). */
@@ -143,11 +143,11 @@ public:
   void set_frame_debugging_hook(const ModelHookFunction &debuggingHook);
 
   /**
-   * \brief Set whether to save the reconstructed mesh on exit.
+   * \brief Sets whether or not to save a mesh of the scene on exiting the application.
    *
-   * \param saveMesh True if the reconstructed mesh should be saved on exit.
+   * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
    */
-  void set_save_mesh_on_exit(bool saveMesh);
+  void set_save_mesh_on_exit(bool saveMeshOnExit);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -274,7 +274,7 @@ private:
   void process_voice_input();
 
   /**
-   * \brief Saves the reconstruction to disk as a mesh.
+   * \brief Saves a mesh of the scene to disk.
    */
   void save_mesh() const;
 

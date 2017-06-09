@@ -367,7 +367,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("noTracker", po::bool_switch(&args.noTracker), "don't use any tracker")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
-    ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save reconstructed mesh on exit")
+    ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;

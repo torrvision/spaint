@@ -121,10 +121,8 @@ bool Application::run()
     if(m_pauseBetweenFrames) m_paused = true;
   }
 
-  if(m_saveMeshOnExit)
-  {
-    save_mesh();
-  }
+  // If desired, save a mesh of the scene before the application terminates.
+  if(m_saveMeshOnExit) save_mesh();
 
   return true;
 }
@@ -141,9 +139,9 @@ void Application::set_frame_debugging_hook(const Application::ModelHookFunction 
   m_frameDebuggingHook = debuggingHook;
 }
 
-void Application::set_save_mesh_on_exit(bool saveMesh)
+void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
 {
-  m_saveMeshOnExit = saveMesh;
+  m_saveMeshOnExit = saveMeshOnExit;
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -742,38 +740,30 @@ void Application::process_voice_input()
 
 void Application::save_mesh() const
 {
-  if(m_meshingEngine)
-  {
-    const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
-    const std::string& sceneID = mainSubwindow.get_scene_id();
-    const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-    const Model_CPtr& model = m_pipeline->get_model();
-    const SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
+  if(!m_meshingEngine) return;
 
-    Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  Model_CPtr model = m_pipeline->get_model();
+  const Settings_CPtr& settings = model->get_settings();
 
-    m_meshingEngine->MeshScene(mesh.get(), scene.get());
+  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
+  const std::string& sceneID = mainSubwindow.get_scene_id();
+  SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-    // Find the location where we are going to save the mesh.
-    const bf::path meshesSubdir = find_subdir_from_executable("meshes");
+  // Construct the mesh.
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    // Make sure the folder exists.
-    bf::create_directories(meshesSubdir);
+  // Find the meshes directory and make sure that it exists.
+  bf::path meshesSubdir = find_subdir_from_executable("meshes");
+  bf::create_directories(meshesSubdir);
 
-    // Use the experimentTag as a filename, or the current timestamp if the tag has not been specified.
-    const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
-                                     + ".stl";
+  // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".stl";
+  const bf::path meshPath = meshesSubdir / meshFilename;
 
-    // Compute the full path.
-    const bf::path meshFullPath = meshesSubdir / meshFilename;
-
-    std::cout << "Saving current reconstruction in: " << meshFullPath << '\n';
-    mesh->WriteSTL(meshFullPath.string().c_str());
-  }
-  else
-  {
-    std::cout << "Meshing engine disabled in the settings.\n";
-  }
+  // Save the mesh to disk.
+  std::cout << "Saving mesh to: " << meshPath << '\n';
+  mesh->WriteSTL(meshPath.string().c_str());
 }
 
 void Application::save_screenshot() const
@@ -854,7 +844,7 @@ void Application::setup_labels()
 void Application::setup_meshing()
 {
   const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-  if(settings->createMeshingEngine)
+  if(settings->createMeshingEngine || m_saveMeshOnExit)
   {
     m_meshingEngine.reset(ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel,ITMVoxelBlockHash>(settings->deviceType));
   }
