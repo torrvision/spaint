@@ -58,11 +58,11 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
 
-void Application::run()
+bool Application::run()
 {
   for(;;)
   {
-    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE)) return;
+    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE)) break;
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -92,6 +92,8 @@ void Application::run()
     // If desired, pause at the end of each frame for debugging purposes.
     if(m_pauseBetweenFrames) m_paused = true;
   }
+
+  return true;
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################

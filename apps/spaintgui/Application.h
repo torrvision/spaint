@@ -102,8 +102,10 @@ public:
 public:
   /**
    * \brief Runs the application.
+   *
+   * \return  true, if the application terminated successfully, or false otherwise.
    */
-  void run();
+  bool run();
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:

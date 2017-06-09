@@ -463,7 +463,7 @@ try
 
   // Run the application.
   Application app(pipeline, args.renderFiducials);
-  app.run();
+  bool runSucceeded = app.run();
 
 #ifdef WITH_OVR
   // If we built with Rift support, shut down the Rift SDK.
@@ -473,7 +473,7 @@ try
   // Shut down SDL.
   SDL_Quit();
 
-  return 0;
+  return runSucceeded ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch(std::exception& e)
 {
