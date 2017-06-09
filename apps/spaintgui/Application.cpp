@@ -15,7 +15,6 @@ using namespace tvginput;
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
-namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/Meshing/ITMMeshingEngineFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
@@ -754,12 +753,12 @@ void Application::save_mesh() const
   m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
   // Find the meshes directory and make sure that it exists.
-  bf::path meshesSubdir = find_subdir_from_executable("meshes");
-  bf::create_directories(meshesSubdir);
+  boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
+  boost::filesystem::create_directories(meshesSubdir);
 
   // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
   const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".stl";
-  const bf::path meshPath = meshesSubdir / meshFilename;
+  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
 
   // Save the mesh to disk.
   std::cout << "Saving mesh to: " << meshPath << '\n';
