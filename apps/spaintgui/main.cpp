@@ -39,7 +39,6 @@
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/SettingsContainer.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
