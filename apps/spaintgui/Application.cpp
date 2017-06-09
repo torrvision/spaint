@@ -15,6 +15,7 @@ using namespace tvginput;
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
 
+#include <ITMLib/Engines/Meshing/ITMMeshingEngineFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
 using namespace ITMLib;
 
@@ -53,6 +54,7 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
+  setup_meshing();
   switch_to_windowed_renderer(1);
 }
 
@@ -754,6 +756,15 @@ void Application::setup_labels()
 
   // Set the initial semantic label to use for painting.
   m_pipeline->get_model()->set_semantic_label(1);
+}
+
+void Application::setup_meshing()
+{
+  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
+  if(settings->createMeshingEngine)
+  {
+    m_meshingEngine.reset(ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel,ITMVoxelBlockHash>(settings->deviceType));
+  }
 }
 
 #ifdef WITH_OVR

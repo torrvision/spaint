@@ -23,6 +23,8 @@
 
 #include <SDL.h>
 
+#include <ITMLib/Engines/Meshing/Interface/ITMMeshingEngine.h>
+
 #include <tvginput/InputState.h>
 
 #include <tvgutil/commands/CommandManager.h>
@@ -42,6 +44,9 @@ class Application
 {
   //#################### TYPEDEFS ####################
 private:
+  typedef boost::shared_ptr<ITMLib::ITMMesh> Mesh_Ptr;
+  typedef ITMLib::ITMMeshingEngine<spaint::SpaintVoxel,ITMVoxelIndex> MeshingEngine;
+  typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
   //#################### PRIVATE VARIABLES ####################
@@ -57,6 +62,9 @@ private:
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
+
+  /** The meshing engine. */
+  MeshingEngine_Ptr m_meshingEngine;
 
   /** Whether or not to pause between frames (for debugging purposes). */
   bool m_pauseBetweenFrames;
@@ -250,6 +258,11 @@ private:
    * \brief Sets up the semantic labels with which the user can label the scene.
    */
   void setup_labels();
+
+  /**
+   * \brief Sets up the meshing engine if required.
+   */
+  void setup_meshing();
 
 #ifdef WITH_OVR
   /**
