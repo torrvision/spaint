@@ -74,6 +74,7 @@ struct CommandLineArguments
   size_t prefetchBufferCapacity;
   bool renderFiducials;
   std::vector<std::string> rgbImageMasks;
+  bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
   std::vector<std::string> trackerSpecifiers;
@@ -282,6 +283,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
+    ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
@@ -461,8 +463,9 @@ try
   pipeline->get_model()->set_leap_fiducial_id(args.leapFiducialID);
 #endif
 
-  // Run the application.
+  // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
+  app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR

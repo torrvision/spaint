@@ -95,7 +95,15 @@ bool Application::run()
     if(m_pauseBetweenFrames) m_paused = true;
   }
 
+  // If desired, save a mesh of the scene before the application terminates.
+  if(m_saveMeshOnExit) save_mesh();
+
   return true;
+}
+
+void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
+{
+  m_saveMeshOnExit = saveMeshOnExit;
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -683,6 +691,34 @@ void Application::process_voice_input()
   }
 }
 
+void Application::save_mesh() const
+{
+  if(!m_meshingEngine) return;
+
+  Model_CPtr model = m_pipeline->get_model();
+  const Settings_CPtr& settings = model->get_settings();
+
+  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
+  const std::string& sceneID = mainSubwindow.get_scene_id();
+  SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
+
+  // Construct the mesh.
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  m_meshingEngine->MeshScene(mesh.get(), scene.get());
+
+  // Find the meshes directory and make sure that it exists.
+  boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
+  boost::filesystem::create_directories(meshesSubdir);
+
+  // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".stl";
+  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
+
+  // Save the mesh to disk.
+  std::cout << "Saving mesh to: " << meshPath << '\n';
+  mesh->WriteSTL(meshPath.string().c_str());
+}
+
 void Application::save_screenshot() const
 {
   boost::filesystem::path p = find_subdir_from_executable("screenshots") / ("spaint-" + TimeUtil::get_iso_timestamp() + ".png");
@@ -761,7 +797,7 @@ void Application::setup_labels()
 void Application::setup_meshing()
 {
   const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-  if(settings->createMeshingEngine)
+  if(settings->createMeshingEngine || m_saveMeshOnExit)
   {
     m_meshingEngine.reset(ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel,ITMVoxelBlockHash>(settings->deviceType));
   }

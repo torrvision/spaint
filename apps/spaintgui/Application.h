@@ -81,6 +81,9 @@ private:
   /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
   bool m_renderFiducials;
 
+  /** Whether or not to save a mesh of the scene on exiting the application. */
+  bool m_saveMeshOnExit;
+
   /** The path generator for the current sequence recording (if any). */
   boost::optional<tvgutil::SequentialPathGenerator> m_sequencePathGenerator;
 
@@ -114,6 +117,13 @@ public:
    * \return  true, if the application terminated successfully, or false otherwise.
    */
   bool run();
+
+  /**
+   * \brief Sets whether or not to save a mesh of the scene on exiting the application.
+   *
+   * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
+   */
+  void set_save_mesh_on_exit(bool saveMeshOnExit);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -238,6 +248,11 @@ private:
    * \brief Processes voice input from the user.
    */
   void process_voice_input();
+
+  /**
+   * \brief Saves a mesh of the scene to disk.
+   */
+  void save_mesh() const;
 
   /**
    * \brief Saves a screenshot to disk.
