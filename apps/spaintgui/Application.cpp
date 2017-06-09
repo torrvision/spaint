@@ -31,7 +31,6 @@ using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
@@ -66,14 +65,12 @@ bool Application::run()
 {
   for(;;)
   {
-    // Returns false iff the user pressed Ctrl-C or closed the window.
-    if(!process_events())
-      return false;
-
-    if(m_inputState.key_down(KEYCODE_ESCAPE) && !m_runInBatch)
-    {
-      break;
-    }
+    // Check to see if the user wants to quit the application, and quit if necessary. Note that if we
+    // are running in batch mode, we quit directly, rather than saving a mesh of the scene on exit.
+    bool eventQuit = !process_events();
+    bool escQuit = m_inputState.key_down(KEYCODE_ESCAPE);
+    if(m_runInBatch) { if(eventQuit) return false; }
+    else             { if(eventQuit || escQuit) break; }
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -84,13 +81,6 @@ bool Application::run()
       // Run the main section of the pipeline.
       bool frameWasProcessed = m_pipeline->run_main_section();
 
-      // Return if we processed the last frame and are running in batch mode.
-      if(m_runInBatch && !frameWasProcessed)
-      {
-        break;
-      }
-
-      // If a new frame was processed:
       if(frameWasProcessed)
       {
         // If a frame debug hook is active, call it.
@@ -98,6 +88,11 @@ bool Application::run()
 
         // If we're currently recording the sequence, save the frame to disk.
         if(m_sequencePathGenerator) save_sequence_frame();
+      }
+      else if(m_runInBatch)
+      {
+        // If we're running in batch mode and we reach the end of the sequence, quit.
+        break;
       }
     }
 
