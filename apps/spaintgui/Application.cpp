@@ -90,9 +90,10 @@ bool Application::run()
         break;
       }
 
+      // If the frame was processed:
       if(frameWasProcessed)
       {
-        // If we have a frame debug hook and the frame was processed, then call the function.
+        // If a frame debug hook is active, call it.
         if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
 
         // If we're currently recording the sequence, save the frame to disk.
