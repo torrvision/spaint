@@ -573,12 +573,10 @@ try
   pipeline->get_model()->set_leap_fiducial_id(args.leapFiducialID);
 #endif
 
-  // Configure the application
+  // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
-  app.set_save_mesh_on_exit(args.saveMeshOnExit);
   app.set_batch_mode(args.batch);
-
-  // Run the application.
+  app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR

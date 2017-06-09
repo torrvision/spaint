@@ -125,7 +125,7 @@ public:
   /**
    * \brief Runs the application.
    *
-   * \return True whether the main loop terminated successfully.
+   * \return  true, if the application terminated successfully, or false otherwise.
    */
   bool run();
 
