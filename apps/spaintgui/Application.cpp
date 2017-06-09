@@ -92,17 +92,11 @@ bool Application::run()
 
       if(frameWasProcessed)
       {
-        // If we have a debugging hook and the frame was processed, then call the function.
-        if(m_frameDebuggingHook)
-        {
-          m_frameDebuggingHook(m_pipeline->get_model());
-        }
+        // If we have a frame debug hook and the frame was processed, then call the function.
+        if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
 
         // If we're currently recording the sequence, save the frame to disk.
-        if(m_sequencePathGenerator)
-        {
-          save_sequence_frame();
-        }
+        if(m_sequencePathGenerator) save_sequence_frame();
       }
     }
 
@@ -132,9 +126,9 @@ void Application::set_batch_mode(bool enabled)
   m_pauseBetweenFrames = m_paused;
 }
 
-void Application::set_frame_debugging_hook(const Application::ModelHookFunction &debuggingHook)
+void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
-  m_frameDebuggingHook = debuggingHook;
+  m_frameDebugHook = frameDebugHook;
 }
 
 void Application::set_save_mesh_on_exit(bool saveMeshOnExit)

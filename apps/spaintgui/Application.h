@@ -51,7 +51,7 @@ private:
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
 public:
-  typedef boost::function<void(const Model_Ptr&)> ModelHookFunction;
+  typedef boost::function<void(const Model_Ptr&)> FrameDebugHook;
 
   //#################### PRIVATE VARIABLES ####################
 private:
@@ -64,8 +64,8 @@ private:
   /** The fractional position of the mouse within the window's viewport. */
   Vector2f m_fracWindowPos;
 
-  /** The debugging function called after each frame has been processed. */
-  ModelHookFunction m_frameDebuggingHook;
+  /** The debug hook function (if any) to call after processing each frame. */
+  FrameDebugHook m_frameDebugHook;
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
@@ -136,11 +136,11 @@ public:
   void set_batch_mode(bool enabled);
 
   /**
-   * \brief Sets a function that will be called after each frame has been processed.
+   * \brief Sets the debug hook function (if any) to call after processing each frame.
    *
-   * \param debuggingHook The function that will be called after processing each frame.
+   * \param frameDebugHook  The debug hook function (if any) to call after processing each frame.
    */
-  void set_frame_debugging_hook(const ModelHookFunction &debuggingHook);
+  void set_frame_debug_hook(const FrameDebugHook& frameDebugHook);
 
   /**
    * \brief Sets whether or not to save a mesh of the scene on exiting the application.
