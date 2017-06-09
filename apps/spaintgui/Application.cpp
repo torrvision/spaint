@@ -90,7 +90,7 @@ bool Application::run()
         break;
       }
 
-      // If the frame was processed:
+      // If a new frame was processed:
       if(frameWasProcessed)
       {
         // If a frame debug hook is active, call it.
