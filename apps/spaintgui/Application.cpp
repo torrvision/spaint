@@ -854,13 +854,9 @@ void Application::setup_labels()
 void Application::setup_meshing()
 {
   const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-
   if(settings->createMeshingEngine)
   {
-    m_meshingEngine.reset(
-        ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel, ITMVoxelBlockHash>(
-            settings->deviceType
-    ));
+    m_meshingEngine.reset(ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel,ITMVoxelBlockHash>(settings->deviceType));
   }
 }
 
