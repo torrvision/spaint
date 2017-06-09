@@ -58,6 +58,9 @@ private:
   /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
 
+  /** Whether or not batch mode is enabled. */
+  bool m_batchModeEnabled;
+
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
@@ -87,9 +90,6 @@ private:
 
   /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
   bool m_renderFiducials;
-
-  /** Whether or not to terminate the application as soon as the last frame has been processeed. */
-  bool m_runInBatch;
 
   /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
@@ -129,11 +129,11 @@ public:
   bool run();
 
   /**
-   * \brief Sets whether to run in batch mode or not.
+   * \brief Sets whether or not batch mode is enabled.
    *
-   * \param enabled Whether to run in batch mode or not.
+   * \param batchModeEnabled  Whether or not batch mode is enabled.
    */
-  void set_batch_mode(bool enabled);
+  void set_batch_mode_enabled(bool batchModeEnabled);
 
   /**
    * \brief Sets the debug hook function (if any) to call after processing each frame.
