@@ -61,6 +61,7 @@ namespace po = boost::program_options;
 struct CommandLineArguments
 {
   // User-specifiable arguments
+  bool batch;
   std::string calibrationFilename;
   bool cameraAfterDisk;
   std::vector<std::string> depthImageMasks;
@@ -275,6 +276,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
   po::options_description genericOptions("Generic options");
   genericOptions.add_options()
     ("help", "produce help message")
+    ("batch", po::bool_switch(&args.batch), "enable batch mode")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("detectFiducials", po::bool_switch(&args.detectFiducials), "enable fiducial detection")
@@ -465,6 +467,7 @@ try
 
   // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
+  app.set_batch_mode_enabled(args.batch);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
   bool runSucceeded = app.run();
 

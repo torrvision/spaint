@@ -45,6 +45,7 @@ using namespace tvgutil;
 
 Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials)
 : m_activeSubwindowIndex(0),
+  m_batchModeEnabled(false),
   m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
@@ -64,7 +65,12 @@ bool Application::run()
 {
   for(;;)
   {
-    if(!process_events() || m_inputState.key_down(KEYCODE_ESCAPE)) break;
+    // Check to see if the user wants to quit the application, and quit if necessary. Note that if we
+    // are running in batch mode, we quit directly, rather than saving a mesh of the scene on exit.
+    bool eventQuit = !process_events();
+    bool escQuit = m_inputState.key_down(KEYCODE_ESCAPE);
+    if(m_batchModeEnabled) { if(eventQuit) return false; }
+    else                   { if(eventQuit || escQuit) break; }
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -75,7 +81,6 @@ bool Application::run()
       // Run the main section of the pipeline.
       bool frameWasProcessed = m_pipeline->run_main_section();
 
-      // If a new frame was processed:
       if(frameWasProcessed)
       {
         // If a frame debug hook is active, call it.
@@ -83,6 +88,11 @@ bool Application::run()
 
         // If we're currently recording the sequence, save the frame to disk.
         if(m_sequencePathGenerator) save_sequence_frame();
+      }
+      else if(m_batchModeEnabled)
+      {
+        // If we're running in batch mode and we reach the end of the sequence, quit.
+        break;
       }
     }
 
@@ -103,6 +113,12 @@ bool Application::run()
   if(m_saveMeshOnExit) save_mesh();
 
   return true;
+}
+
+void Application::set_batch_mode_enabled(bool batchModeEnabled)
+{
+  m_batchModeEnabled = batchModeEnabled;
+  m_paused = m_pauseBetweenFrames = !batchModeEnabled;
 }
 
 void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
@@ -175,6 +191,30 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
+  // If the P key is pressed, toggle pose mirroring.
+  if(keysym.sym == KEYCODE_p)
+  {
+    m_usePoseMirroring = !m_usePoseMirroring;
+  }
+
+  // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
+  if(keysym.sym == KEYCODE_SEMICOLON)
+  {
+    m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
+  }
+
+  // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
+  // If right shift + / is pressed, toggle video recording.
+  if(keysym.sym == SDLK_SLASH)
+  {
+    if(m_inputState.key_down(KEYCODE_LSHIFT)) toggle_recording("sequence", m_sequencePathGenerator);
+    else if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
+    else save_screenshot();
+  }
+
+  // If we're running in batch mode, ignore all other keypresses.
+  if(m_batchModeEnabled) return;
+
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
   if(keysym.sym == KEYCODE_b)
   {
@@ -187,12 +227,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   {
     const std::string& sceneID = get_active_scene_id();
     m_pipeline->set_fusion_enabled(sceneID, !m_pipeline->get_fusion_enabled(sceneID));
-  }
-
-  // If the P key is pressed, toggle pose mirroring.
-  if(keysym.sym == KEYCODE_p)
-  {
-    m_usePoseMirroring = !m_usePoseMirroring;
   }
 
   // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
@@ -241,21 +275,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
       // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
       model->clear_labels(sceneID, ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
     }
-  }
-
-  // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
-  if(keysym.sym == KEYCODE_SEMICOLON)
-  {
-    m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
-  }
-
-  // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
-  // If right shift + / is pressed, toggle video recording.
-  if(keysym.sym == SDLK_SLASH)
-  {
-    if(m_inputState.key_down(KEYCODE_LSHIFT)) toggle_recording("sequence", m_sequencePathGenerator);
-    else if(m_inputState.key_down(KEYCODE_RSHIFT)) toggle_recording("video", m_videoPathGenerator);
-    else save_screenshot();
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
@@ -505,11 +524,15 @@ void Application::process_fiducial_input()
 void Application::process_input()
 {
   process_camera_input();
+  process_renderer_input();
+
+  // If we are running in batch mode, suppress all non-essential input.
+  if(m_batchModeEnabled) return;
+
   process_command_input();
   process_fiducial_input();
   process_labelling_input();
   process_mode_input();
-  process_renderer_input();
   process_voice_input();
 }
 

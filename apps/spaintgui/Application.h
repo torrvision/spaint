@@ -58,6 +58,9 @@ private:
   /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
 
+  /** Whether or not batch mode is enabled. */
+  bool m_batchModeEnabled;
+
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
 
@@ -124,6 +127,13 @@ public:
    * \return  true, if the application terminated successfully, or false otherwise.
    */
   bool run();
+
+  /**
+   * \brief Sets whether or not batch mode is enabled.
+   *
+   * \param batchModeEnabled  Whether or not batch mode is enabled.
+   */
+  void set_batch_mode_enabled(bool batchModeEnabled);
 
   /**
    * \brief Sets the debug hook function (if any) to call after processing each frame.
