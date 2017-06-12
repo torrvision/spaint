@@ -92,12 +92,12 @@ struct CommandLineArguments
 //#################### FUNCTIONS ####################
 
 /**
- * \brief Adds a set of parsed options to a settings container.
+ * \brief Adds a set of parsed options to a settings object.
  *
  * \param parsedOptions The set of parsed options.
- * \param settings      The settings container.
+ * \param settings      The settings object.
  */
-void add_parsed_options_to_settings(const po::parsed_options& parsedOptions, const SettingsContainer_Ptr& settings)
+void add_parsed_options_to_settings(const po::parsed_options& parsedOptions, const Settings_Ptr& settings)
 {
   for(size_t i = 0, optionCount = parsedOptions.options.size(); i < optionCount; ++i)
   {
@@ -297,7 +297,7 @@ bool postprocess_arguments(CommandLineArguments& args)
  *
  * \param sceneParams The scene parameters to modify.
  */
-void set_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSceneParams &sceneParams)
+void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMSceneParams &sceneParams)
 {
 #define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
 
@@ -317,7 +317,7 @@ void set_scene_params_from_global_options(const SettingsContainer_CPtr &settings
  *
  * \param surfelSceneParams The surfel scene parameters to modify.
  */
-void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
+void set_surfel_scene_params_from_global_options(const Settings_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
 {
 #define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
 
@@ -349,7 +349,7 @@ void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &s
  * \param settings  The settings object for the application.
  * \return          true, if the program should continue after parsing the command-line arguments, or false otherwise.
  */
-bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const SettingsContainer_Ptr& settings)
+bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const Settings_Ptr& settings)
 {
   // Specify the possible options.
   po::options_description genericOptions("Generic options");
