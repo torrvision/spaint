@@ -92,6 +92,26 @@ struct CommandLineArguments
 //#################### FUNCTIONS ####################
 
 /**
+ * \brief Adds a set of parsed options to a settings container.
+ *
+ * \param parsedOptions The set of parsed options.
+ * \param settings      The settings container.
+ */
+void add_parsed_options_to_settings(const po::parsed_options& parsedOptions, const SettingsContainer_Ptr& settings)
+{
+  for(size_t i = 0, optionCount = parsedOptions.options.size(); i < optionCount; ++i)
+  {
+    const po::basic_option<char>& option = parsedOptions.options[i];
+
+    // Add all the specified values for the option in the correct order.
+    for(size_t j = 0, valueCount = option.value.size(); j < valueCount; ++j)
+    {
+      settings->add_value(option.string_key, option.value[j]);
+    }
+  }
+}
+
+/**
  * \brief Checks whether or not the specified camera subengine is able to provide depth images.
  *
  * \note If the check fails, the camera subengine will be deallocated.
@@ -321,26 +341,6 @@ void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &s
 }
 
 /**
- * \brief Stores the parsed options in a SettingsContainer instance.
- *
- * \param parsedOptions The options to store in the SettingsContainer.
- * \param settings      The settings container.
- */
-void store_parsed_options_into_settings(const po::parsed_options& parsedOptions, const SettingsContainer_Ptr &settings)
-{
-  for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
-  {
-    const po::basic_option<char> &option = parsedOptions.options[optionIdx];
-
-    // Add all values in the correct order.
-    for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
-    {
-      settings->add_value(option.string_key, option.value[valueIdx]);
-    }
-  }
-}
-
-/**
  * \brief Parse any command-line arguments passed in by the user.
  *
  * \param argc  The command-line argument count.
@@ -402,9 +402,9 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   po::variables_map vm;
   po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
 
-  // Store the parsed options in both the variables map and the SettingsContainer.
+  // Store the parsed options in both the variables map and the settings.
   po::store(parsedCommandLineOptions, vm);
-  store_parsed_options_into_settings(parsedCommandLineOptions, settings);
+  add_parsed_options_to_settings(parsedCommandLineOptions, settings);
 
   // Parse options from configuration file, if necessary.
   if(vm.count("configFile"))
@@ -415,8 +415,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     // Store registered options in the variable map
     po::store(parsedConfigFileOptions, vm);
 
-    // Store all options (including unregistered ones) into the SettingsContainer.
-    store_parsed_options_into_settings(parsedConfigFileOptions, settings);
+    // Add all options (including unregistered ones) to the settings.
+    add_parsed_options_to_settings(parsedConfigFileOptions, settings);
   }
 
   po::notify(vm);
