@@ -343,12 +343,13 @@ void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &s
 /**
  * \brief Parse any command-line arguments passed in by the user.
  *
- * \param argc  The command-line argument count.
- * \param argv  The raw command-line arguments.
- * \param args  The parsed command-line arguments.
- * \return      true, if the program should continue after parsing the command-line arguments, or false otherwise.
+ * \param argc      The command-line argument count.
+ * \param argv      The raw command-line arguments.
+ * \param args      The parsed command-line arguments.
+ * \param settings  The settings object for the application.
+ * \return          true, if the program should continue after parsing the command-line arguments, or false otherwise.
  */
-bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const SettingsContainer_Ptr &settings)
+bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const SettingsContainer_Ptr& settings)
 {
   // Specify the possible options.
   po::options_description genericOptions("Generic options");
@@ -402,7 +403,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   po::variables_map vm;
   po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
 
-  // Store the parsed options in both the variables map and the settings.
+  // Store the parsed options into both the variables map and the settings.
   po::store(parsedCommandLineOptions, vm);
   add_parsed_options_to_settings(parsedCommandLineOptions, settings);
 
@@ -449,9 +450,11 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
-  // Setup the settings.
+  // Construct the settings object for the application. This is used to store both the
+  // settings for InfiniTAM and our own extended settings. Note that we do not use the
+  // tracker configuration string in the InfiniTAM settings, and so we set it to NULL.
   Settings_Ptr settings(new Settings);
-  settings->trackerConfig = NULL; // The tracker is handled by the tracker factory.
+  settings->trackerConfig = NULL;
 
   // Parse and post-process the command-line arguments.
   CommandLineArguments args;
