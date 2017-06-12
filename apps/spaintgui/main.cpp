@@ -73,7 +73,6 @@ struct CommandLineArguments
   std::string leapFiducialID;
   bool mapSurfels;
   bool noRelocaliser;
-  bool noTracker;
   std::string openNIDeviceURI;
   std::string pipelineType;
   std::vector<std::string> poseFileMasks;
@@ -110,7 +109,6 @@ struct CommandLineArguments
       ADD_SETTING(leapFiducialID);
       ADD_SETTING(mapSurfels);
       ADD_SETTING(noRelocaliser);
-      ADD_SETTING(noTracker);
       ADD_SETTING(openNIDeviceURI);
       ADD_SETTING(pipelineType);
       ADD_SETTINGS(poseFileMasks);
@@ -409,7 +407,6 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
-    ("noTracker", po::bool_switch(&args.noTracker), "don't use any tracker")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
