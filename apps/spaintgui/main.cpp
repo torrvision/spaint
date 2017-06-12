@@ -82,6 +82,7 @@ struct CommandLineArguments
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
+  std::string subwindowConfigurationIndex;
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
@@ -118,6 +119,7 @@ struct CommandLineArguments
       ADD_SETTING(saveMeshOnExit);
       ADD_SETTINGS(sequenceSpecifiers);
       ADD_SETTINGS(sequenceTypes);
+      ADD_SETTING(subwindowConfigurationIndex);
       ADD_SETTINGS(trackerSpecifiers);
       ADD_SETTING(trackObject);
       ADD_SETTING(trackSurfels);
@@ -410,6 +412,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
     ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
+    ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
