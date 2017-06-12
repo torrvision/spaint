@@ -7,18 +7,18 @@
 #define H_GROVE_CUDARNG
 
 #include <boost/shared_ptr.hpp>
+
 #include <curand_kernel.h>
 #include <math_constants.h>
 
 #include "ORUtils/MemoryBlock.h"
-#include "ORUtils/PlatformIndependence.h"
 
 namespace grove {
 
 /**
- * \brief An instance of this class represents a CUDA random number generator.
- *        Note: similar to the RandomNumberGenerator class but simpler and lightweight,
- *        meant to be used as templated RNG in shared code.
+ * \brief An instance of this class can be used to generate random numbers using CUDA.
+ *
+ * This is a lightweight class for use in shared code.
  */
 class CUDARNG
 {
@@ -27,21 +27,15 @@ private:
   /** The random state. */
   curandState_t m_state;
 
-#ifdef __CUDACC__ // Needed to hide CUDART_MIN_DENORM_F and __float2int_rz
   //#################### PUBLIC MEMBER FUNCTIONS ####################
 public:
-  __device__
-  inline void reset(unsigned int seed, unsigned int sequenceId)
-  {
-    curand_init(seed, sequenceId, 0, &m_state);
-  }
-
+#ifdef __CUDACC__ // needed to hide __float2int_ru
   /**
    * \brief Generates a random number from a 1D Gaussian distribution with the specified parameters.
    *
    * \param mean  The mean of the Gaussian distribution.
    * \param sigma The standard deviation of the Gaussian distribution.
-   * \return      The generated float.
+   * \return      The generated number.
    */
   __device__
   inline float generate_from_gaussian(float mean, float sigma)
@@ -61,10 +55,13 @@ public:
   __device__
   inline int generate_int_from_uniform(int lower, int upper)
   {
-    // curand_uniform generates a number in ]0,1]
+    // The curand_uniform function generates a number in ]0,1].
     const float generated = curand_uniform(&m_state);
-    // __float2int_ru rounds the generated values into [1, upper+1-lower], and then adding lower-1 gives the intended range
+
+    // The __float2int_ru function rounds the generated values into [1, upper+1-lower],
+    // and then adding lower-1 gives the intended range.
     const int result = __float2int_ru(generated * (upper + 1 - lower)) + lower - 1;
+
     return result;
   }
 
@@ -80,8 +77,22 @@ public:
   {
     return curand_uniform(&m_state) * (upper - lower) + lower;
   }
+
+  /**
+   * \brief Reinitialises curand with a new seed and sequence number.
+   *
+   * \param seed        The seed with which to reinitialise curand.
+   * \param sequenceID  The sequence number with which to reinitialise curand.
+   */
+  __device__
+  inline void reset(unsigned int seed, unsigned int sequenceID)
+  {
+    curand_init(seed, sequenceID, 0, &m_state);
+  }
 #endif
 };
+
+//#################### TYPEDEFS ####################
 
 typedef ORUtils::MemoryBlock<CUDARNG> CUDARNGMemoryBlock;
 typedef boost::shared_ptr<CUDARNGMemoryBlock> CUDARNGMemoryBlock_Ptr;
