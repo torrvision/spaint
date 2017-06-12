@@ -22,6 +22,9 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 #############################
 
 ##
+SET(features_base_headers include/grove/features/base/Descriptor.h)
+
+##
 SET(numbers_sources
 src/numbers/CPURNG.cpp
 )
@@ -39,6 +42,7 @@ ${numbers_sources}
 )
 
 SET(headers
+${features_base_headers}
 ${numbers_headers}
 )
 
@@ -46,6 +50,7 @@ ${numbers_headers}
 # Specify the source groups #
 #############################
 
+SOURCE_GROUP(features\\base FILES ${features_base_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 
 ##########################################
