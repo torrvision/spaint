@@ -9,9 +9,9 @@
 namespace grove {
 
 /**
- * \brief An instance of an instantiation of this struct template represents a fixed-length, floating point feature descriptor.
+ * \brief An instance of an instantiation of this struct template represents a fixed-length, floating-point feature descriptor.
  *
- * \param N The length of the descriptor.
+ * \tparam N The length of the descriptor.
  */
 template <int N>
 struct Descriptor
