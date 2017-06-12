@@ -318,7 +318,8 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args)
 
   // Actually parse the command line.
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, options), vm);
+  po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
+  po::store(parsedCommandLineOptions, vm);
   po::notify(vm);
 
   // If the user specifies the --help flag, print a help message.
