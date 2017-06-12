@@ -56,7 +56,10 @@ Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFidu
 {
   setup_labels();
   setup_meshing();
-  switch_to_windowed_renderer(1);
+
+  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
+  int subwindowConfigurationIndex = settings->get_first_value<int>("subwindowConfigurationIndex");
+  switch_to_windowed_renderer(subwindowConfigurationIndex);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
