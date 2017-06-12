@@ -10,7 +10,9 @@
 
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
+#include <boost/chrono.hpp>
 #include <boost/program_options.hpp>
+#include <boost/timer/timer.hpp>
 using boost::assign::list_of;
 
 #include <evaluation/util/CoordinateDescentParameterOptimiser.h>
@@ -19,9 +21,13 @@ using namespace evaluation;
 #include <tvgutil/filesystem/PathFinder.h>
 using namespace tvgutil;
 
+#define COST_IS_TIME 1
+
 //#################### NAMESPACE ALIASES ####################
 
+namespace bc = boost::chrono;
 namespace bf = boost::filesystem;
+namespace bt = boost::timer;
 namespace po = boost::program_options;
 
 //#################### TYPES ####################
@@ -62,7 +68,13 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
   // Run the specified script.
   const bf::path outputPath = args.dir / (args.outputSpecifier + ".txt");
   const std::string command = "\"" + args.scriptPath.string() + "\" \"" + iniPath.string() + "\" \"" + outputPath.string() + "\" \"" + bf::path(args.datasetDir).string() + "\"";
+
+  // Wrap the system call with a timer.
+  bt::cpu_timer timer;
   int exitCode = system(command.c_str());
+  timer.stop();
+
+  float elapsedSeconds = bc::duration_cast<bc::seconds>(bc::nanoseconds(timer.elapsed().system + timer.elapsed().user)).count();
 
   if(exitCode)
   {
@@ -82,9 +94,13 @@ float grove_cost_fn(const Arguments& args, const ParamSet& params)
   bf::remove(outputPath);
 
   std::ofstream logStream(args.logPath.c_str(), std::ios::app);
-  logStream << cost << ";" << ParamSetUtil::param_set_to_string(params) << '\n';
+  logStream << cost << ';' << elapsedSeconds << ';' << ParamSetUtil::param_set_to_string(params) << '\n';
 
+#ifdef COST_IS_TIME
+  return elapsedSeconds;
+#else
   return cost;
+#endif
 }
 
 bool parse_command_line(int argc, char *argv[], Arguments& args)
