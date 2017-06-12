@@ -66,7 +66,7 @@ void Kabsch(Eigen::Matrix3f &P,
   const Eigen::Matrix3f W = svd.matrixV();
   Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
 
-  if ((V * W.transpose()).determinant() < 0)
+  if((V * W.transpose()).determinant() < 0)
   {
     I(D - 1, D - 1) = -1;
   }
@@ -152,7 +152,8 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_maxPoseCandidates = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidates", 1024);
 
   // Aggressively cull hypotheses to this number.
-  m_maxPoseCandidatesAfterCull = m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
+  m_maxPoseCandidatesAfterCull =
+      m_settings->get_first_value<uint32_t>(settingsNamespace + "maxPoseCandidatesAfterCull", 64);
 
   // In m.
   m_maxTranslationErrorForCorrectPose =
@@ -173,7 +174,8 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_printTimers = m_settings->get_first_value<bool>(settingsNamespace + "printTimers", false);
 
   // The number of inliers sampled in each P-RANSAC iteration.
-  m_ransacInliersPerIteration = m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
+  m_ransacInliersPerIteration =
+      m_settings->get_first_value<uint32_t>(settingsNamespace + "ransacInliersPerIteration", 500);
 
   // If false use the first mode only (representing the largest cluster).
   m_useAllModesPerLeafInPoseHypothesisGeneration =
@@ -185,7 +187,8 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
 
   // Each ransac iteration after the initial cull adds m_batchSizeRansac inliers to the set, so we allocate enough space
   // for all.
-  m_nbMaxInliers = m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(std::log2(m_maxPoseCandidatesAfterCull)));
+  m_nbMaxInliers =
+      m_ransacInliersPerIteration * static_cast<uint32_t>(std::ceil(std::log2(m_maxPoseCandidatesAfterCull)));
 
   const MemoryBlockFactory &mbf = MemoryBlockFactory::instance();
 
@@ -194,15 +197,20 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
   m_inliersMaskImage = mbf.make_image<int>();
   m_poseCandidates = mbf.make_block<PoseCandidate>(m_maxPoseCandidates);
 
+  const uint32_t poseOptimisationBufferSize = m_nbMaxInliers * m_maxPoseCandidates;
+  m_poseOptimisationCameraPoints = mbf.make_block<Vector4f>(poseOptimisationBufferSize);
+  m_poseOptimisationPredictedModes = mbf.make_block<Mode3DColour>(poseOptimisationBufferSize);
+
 #ifdef ENABLE_TIMERS
   // Force the average timers to on as well if we want verbose printing.
   m_printTimers = true;
 #endif
 
   // Setup the remaining timers.
-  for (int i = 1; i <= 6; ++i)
+  for(int i = 1; i <= 6; ++i)
   {
     m_timerInlierSampling.push_back(AverageTimer("Inlier Sampling " + boost::lexical_cast<std::string>(i)));
+    m_timerPrepareOptimisation.push_back(AverageTimer("Prepare Optimisation " + boost::lexical_cast<std::string>(i)));
     m_timerOptimisation.push_back(AverageTimer("Optimisation " + boost::lexical_cast<std::string>(i)));
     m_timerComputeEnergy.push_back(AverageTimer("Energy Computation " + boost::lexical_cast<std::string>(i)));
   }
@@ -212,17 +220,18 @@ PreemptiveRansac::PreemptiveRansac(const SettingsContainer_CPtr &settings)
 
 PreemptiveRansac::~PreemptiveRansac()
 {
-  if (m_printTimers)
+  if(m_printTimers)
   {
     printTimer(m_timerTotal);
     printTimer(m_timerCandidateGeneration);
     printTimer(m_timerFirstTrim);
     printTimer(m_timerFirstComputeEnergy);
 
-    for (size_t i = 0; i < m_timerInlierSampling.size(); ++i)
+    for(size_t i = 0; i < m_timerInlierSampling.size(); ++i)
     {
       printTimer(m_timerInlierSampling[i]);
       printTimer(m_timerComputeEnergy[i]);
+      printTimer(m_timerPrepareOptimisation[i]);
       printTimer(m_timerOptimisation[i]);
     }
   }
@@ -260,7 +269,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   m_inliersIndicesBlock->dataSize = 0;
 
   // 2. If we have to aggressively cull the initial hypotheses to a small number.
-  if (m_maxPoseCandidatesAfterCull < m_poseCandidates->dataSize)
+  if(m_maxPoseCandidatesAfterCull < m_poseCandidates->dataSize)
   {
     m_timerFirstTrim.start();
 #ifdef ENABLE_TIMERS
@@ -303,7 +312,7 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
   int iteration = 0;
 
   // 4. Main P-RANSAC loop, continue until only a single hypothesis remains.
-  while (m_poseCandidates->dataSize > 1)
+  while(m_poseCandidates->dataSize > 1)
   {
 #ifdef ENABLE_TIMERS
     boost::timer::auto_cpu_timer t(6, "ransac iteration: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
@@ -318,8 +327,13 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
 
     // 4b. If the poseUpdate is enabled, optimise all the remaining hypotheses keeping into account the newly selected
     // inliers.
-    if (m_poseUpdate)
+    if(m_poseUpdate)
     {
+      ORcudaSafeCall(cudaDeviceSynchronize());
+      m_timerPrepareOptimisation[iteration].start();
+      prepare_inliers_for_optimisation();
+      m_timerPrepareOptimisation[iteration].stop();
+
 #ifdef ENABLE_TIMERS
       boost::timer::auto_cpu_timer t(6, "continuous optimization: %ws wall, %us user + %ss system = %ts CPU (%p%)\n");
 #endif
@@ -339,7 +353,8 @@ boost::optional<PoseCandidate> PreemptiveRansac::estimate_pose(const Keypoint3DC
     ++iteration;
   }
 
-  // If we generated a single pose, the update step above wouldn't have been executed (zero iterations). Force its execution.
+  // If we generated a single pose, the update step above wouldn't have been executed (zero iterations). Force its
+  // execution.
   if(m_poseUpdate && iteration == 0 && m_poseCandidates->dataSize == 1)
   {
     // Sample some inliers.
@@ -377,7 +392,7 @@ void PreemptiveRansac::get_best_poses(std::vector<PoseCandidate> &poseCandidates
   // the first one is the one returned by estimate_pose, the second is the one removed after the last ransac iteration,
   // the third and fourth are removed in the iteration before (whilst they are not in a specific order, they are worse
   // than those in position 0 and 1), and so on...
-  for (uint32_t poseIdx = 0; poseIdx < m_maxPoseCandidatesAfterCull; ++poseIdx)
+  for(uint32_t poseIdx = 0; poseIdx < m_maxPoseCandidatesAfterCull; ++poseIdx)
   {
     poseCandidates.push_back(candidates[poseIdx]);
   }
@@ -403,17 +418,13 @@ void PreemptiveRansac::update_candidate_poses()
 {
   const size_t nbPoseCandidates = m_poseCandidates->dataSize;
 
-  // Assumption is that they have been already copied onto the CPU memory, the CUDA subclass should make sure of that.
-  // In the long term we will move the whole optimisation step on the GPU (as proper shared code).
-  PoseCandidate *poseCandidates = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
-
 // Update every pose in parallel
 #ifdef WITH_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (size_t i = 0; i < nbPoseCandidates; ++i)
+  for(size_t i = 0; i < nbPoseCandidates; ++i)
   {
-    update_candidate_pose(poseCandidates[i]);
+    update_candidate_pose(i);
   }
 }
 
@@ -432,7 +443,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 #ifdef WITH_OPENMP
 #pragma omp parallel for
 #endif
-  for (size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
+  for(size_t candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
   {
     PoseCandidate &candidate = poseCandidates[candidateIdx];
 
@@ -440,7 +451,7 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
     Eigen::Matrix3f localPoints;
     Eigen::Matrix3f worldPoints;
 
-    for (int s = 0; s < PoseCandidate::KABSCH_POINTS; ++s)
+    for(int s = 0; s < PoseCandidate::KABSCH_POINTS; ++s)
     {
       localPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsCamera[s].v);
       worldPoints.col(s) = Eigen::Map<const Eigen::Vector3f>(candidate.pointsWorld[s].v);
@@ -454,17 +465,14 @@ void PreemptiveRansac::compute_candidate_poses_kabsch()
 namespace {
 
 /**
- * \brief This struct is used to compute the residual energy.
+ * \brief This struct is used to hold pointers to the data used when computing the residual energy.
  */
-struct PointForLM
+struct PointsForLM
 {
-  Vector3f point;
-  Mode3DColour mode;
-
-  PointForLM(const Vector3f &pt, const Mode3DColour &md) : point(pt), mode(md) {}
+  uint32_t nbPoints; // Comes first to avoid padding.
+  const Vector4f *cameraPoints;
+  const Mode3DColour *predictedModes;
 };
-
-typedef std::vector<PointForLM> PointsForLM;
 
 /**
  * \brief Compute the energy using the Mahalanobis distance.
@@ -474,12 +482,13 @@ static double EnergyForContinuous3DOptimizationUsingFullCovariance(const PointsF
 {
   double res = 0.0;
 
-  for (size_t i = 0; i < pts.size(); ++i)
+  for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
-    const PointForLM &pt = pts[i];
-    const Vector3f transformedPt = candidateCameraPose.GetM() * pt.point;
-    const Vector3f diff = transformedPt - pt.mode.position;
-    const double err = dot(diff, pt.mode.positionInvCovariance * diff); // Mahalanobis sqr distance
+    if(pts.cameraPoints[i].w == 0.f) continue;
+
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
+    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
+    const double err = dot(diff, pts.predictedModes[i].positionInvCovariance * diff); // Mahalanobis sqr distance
     res += err;
   }
 
@@ -512,11 +521,12 @@ static double EnergyForContinuous3DOptimizationUsingL2(const PointsForLM &pts,
 {
   double res = 0.0;
 
-  for (size_t i = 0; i < pts.size(); ++i)
+  for(uint32_t i = 0; i < pts.nbPoints; ++i)
   {
-    const PointForLM &pt = pts[i];
-    const Vector3f transformedPt = candidateCameraPose.GetM() * pt.point;
-    const Vector3f diff = transformedPt - pt.mode.position;
+    if(pts.cameraPoints[i].w == 0.f) continue;
+
+    const Vector3f transformedPt = candidateCameraPose.GetM() * pts.cameraPoints[i].toVector3();
+    const Vector3f diff = transformedPt - pts.predictedModes[i].position;
     const double err = length(diff); // sqr distance
     res += err;
   }
@@ -542,107 +552,89 @@ static void call_after_each_step(const alglib::real_1d_array &x, double func, vo
 
 } // anonymous namespace
 
-bool PreemptiveRansac::update_candidate_pose(PoseCandidate &poseCandidate) const
+bool PreemptiveRansac::update_candidate_pose(int candidateIdx) const
 {
-  // The assumption is that all data is available and up to date on the CPU. The CUDA subclass must make sure of it.
-  // In the long term the optimisation will become shared code.
-  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
-  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+  // The current number of inlier points.
+  const uint32_t nbInliers = m_inliersIndicesBlock->dataSize;
 
-  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
-  const int *inliersData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+  // The linearised offset in the pose optimisation buffers.
+  const uint32_t candidateOffset = nbInliers * candidateIdx;
+
+  const Vector4f *cameraPointsData = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU) + candidateOffset;
+  const Mode3DColour *predictedModesData =
+      m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU) + candidateOffset;
+
+  // Fill the struct that will be passed to the optimiser.
+  PointsForLM ptsForLM;
+  ptsForLM.nbPoints = nbInliers;
+  ptsForLM.cameraPoints = cameraPointsData;
+  ptsForLM.predictedModes = predictedModesData;
+
+  // Assumption is that they have been already copied onto the CPU memory, the CUDA subclass should make sure of that.
+  // In the long term we will move the whole optimisation step on the GPU (as proper shared code).
+  PoseCandidate &poseCandidate = m_poseCandidates->GetData(MEMORYDEVICE_CPU)[candidateIdx];
 
   // Construct an SE3 pose to optimise from the raw matrix.
   ORUtils::SE3Pose candidateCameraPose(poseCandidate.cameraPose);
 
-  // Fill the inliers array with the point-mode pairs that will be used to compute the energy.
-  PointsForLM ptsForLM;
-  for (size_t inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
+  // Convert the 6 parameters to a format that alglib likes.
+  const float *ksiF = candidateCameraPose.GetParams();
+  double ksiD[6];
+
+  // Cast to double
+  for(int i = 0; i < 6; ++i) ksiD[i] = static_cast<double>(ksiF[i]);
+
+  alglib::real_1d_array ksi_;
+  ksi_.setcontent(6, ksiD);
+
+  // Parameters harcoded as in Valentin's paper.
+  double differentiationStep = 0.0001;
+  double epsf = 0;
+  double epsg = 0.000001;
+  double epsx = 0;
+  alglib::ae_int_t maxits = 100;
+
+  // Set up the optimiser.
+  alglib::minlmstate state;
+  alglib::minlmreport rep;
+  alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
+  alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
+
+  // Compute the energy and run the optimiser.
+  double energyBefore, energyAfter;
+  if(m_usePredictionCovarianceForPoseOptimization)
   {
-    const int inlierLinearIdx = inliersData[inlierIdx];
-    const Vector3f inlierCameraPosition = keypointsData[inlierLinearIdx].position;
-    const Vector3f inlierWorldPosition = candidateCameraPose.GetM() * inlierCameraPosition;
-    const ScorePrediction &prediction = predictionsData[inlierLinearIdx];
-
-    // Find the best mode, do not rely on the one stored in the inlier because for the randomly sampled inliers it will
-    // not be set.
-    const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
-    if (bestModeIdx < 0 || bestModeIdx >= prediction.nbClusters)
-      throw std::runtime_error("best mode idx invalid."); // This point should not have been selected as inlier.
-
-    // We also assume that the inlier is valid (we checked that before, when we selected it).
-    PointForLM ptLM(inlierCameraPosition, prediction.clusters[bestModeIdx]);
-
-    // We add this pair to the vector of pairs to be evaluated iff the predicted mode and the world position estimated
-    // by the current camera pose agree.
-    if (length(ptLM.mode.position - inlierWorldPosition) < m_poseOptimizationInlierThreshold)
-    {
-      ptsForLM.push_back(ptLM);
-    }
+    energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(ptsForLM, candidateCameraPose);
+    alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, call_after_each_step, &ptsForLM);
+  }
+  else
+  {
+    energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM, candidateCameraPose);
+    alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, call_after_each_step, &ptsForLM);
   }
 
-  // Perform continuous optimization if we have enough points. See the paper for details.
-  if (ptsForLM.size() > 3)
+  // Extract the results and update the SE3Pose accordingly.
+  alglib::minlmresults(state, ksi_, rep);
+  candidateCameraPose.SetFrom(ksi_[0], ksi_[1], ksi_[2], ksi_[3], ksi_[4], ksi_[5]);
+
+  // Compute the final energy.
+  if(m_usePredictionCovarianceForPoseOptimization)
   {
-    // Convert the 6 parameters to a format that alglib likes.
-    const float *ksiF = candidateCameraPose.GetParams();
-    double ksiD[6];
-
-    // Cast to double
-    for (int i = 0; i < 6; ++i) ksiD[i] = static_cast<double>(ksiF[i]);
-
-    alglib::real_1d_array ksi_;
-    ksi_.setcontent(6, ksiD);
-
-    // Parameters harcoded as in Valentin's paper.
-    double differentiationStep = 0.0001;
-    double epsf = 0;
-    double epsg = 0.000001;
-    double epsx = 0;
-    alglib::ae_int_t maxits = 100;
-
-    // Set up the optimiser.
-    alglib::minlmstate state;
-    alglib::minlmreport rep;
-    alglib::minlmcreatev(6, 1, ksi_, differentiationStep, state);
-    alglib::minlmsetcond(state, epsg, epsf, epsx, maxits);
-
-    // Compute the energy and run the optimiser.
-    double energyBefore, energyAfter;
-    if (m_usePredictionCovarianceForPoseOptimization)
-    {
-      energyBefore = EnergyForContinuous3DOptimizationUsingFullCovariance(ptsForLM, candidateCameraPose);
-      alglib::minlmoptimize(state, Continuous3DOptimizationUsingFullCovariance, call_after_each_step, &ptsForLM);
-    }
-    else
-    {
-      energyBefore = EnergyForContinuous3DOptimizationUsingL2(ptsForLM, candidateCameraPose);
-      alglib::minlmoptimize(state, Continuous3DOptimizationUsingL2, call_after_each_step, &ptsForLM);
-    }
-
-    // Extract the results and update the SE3Pose accordingly.
-    alglib::minlmresults(state, ksi_, rep);
-    candidateCameraPose.SetFrom(ksi_[0], ksi_[1], ksi_[2], ksi_[3], ksi_[4], ksi_[5]);
-
-    // Compute the final energy.
-    if (m_usePredictionCovarianceForPoseOptimization)
-    {
-      energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(ptsForLM, candidateCameraPose);
-    }
-    else
-    {
-      energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM, candidateCameraPose);
-    }
-
-    // Store the updated pose iff the final energy is better than the initial one.
-    if (energyAfter < energyBefore)
-    {
-      poseCandidate.cameraPose = candidateCameraPose.GetM();
-      return true;
-    }
+    energyAfter = EnergyForContinuous3DOptimizationUsingFullCovariance(ptsForLM, candidateCameraPose);
+  }
+  else
+  {
+    energyAfter = EnergyForContinuous3DOptimizationUsingL2(ptsForLM, candidateCameraPose);
   }
 
-  // No optimisation ran or we got a worse energy at the end.
+  // Store the updated pose iff the final energy is better than the initial one.
+  if(energyAfter < energyBefore)
+  {
+    poseCandidate.cameraPose = candidateCameraPose.GetM();
+    return true;
+  }
+
+  // Got a worse energy at the end.
   return false;
 }
 

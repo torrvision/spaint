@@ -39,7 +39,6 @@
 #include <spaint/imagesources/AsyncImageSourceEngine.h>
 
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/SettingsContainer.h>
 
 #include "core/ObjectivePipeline.h"
 #include "core/SemanticPipeline.h"
@@ -61,6 +60,8 @@ namespace po = boost::program_options;
 
 struct CommandLineArguments
 {
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC VARIABLES ~~~~~~~~~~~~~~~~~~~~
+
   // User-specifiable arguments
   bool batch;
   std::string calibrationFilename;
@@ -72,7 +73,6 @@ struct CommandLineArguments
   std::string leapFiducialID;
   bool mapSurfels;
   bool noRelocaliser;
-  bool noTracker;
   std::string openNIDeviceURI;
   std::string pipelineType;
   std::vector<std::string> poseFileMasks;
@@ -82,15 +82,75 @@ struct CommandLineArguments
   bool saveMeshOnExit;
   std::vector<std::string> sequenceSpecifiers;
   std::vector<std::string> sequenceTypes;
+  std::string subwindowConfigurationIndex;
   std::vector<std::string> trackerSpecifiers;
   bool trackObject;
   bool trackSurfels;
 
   // Derived arguments
   std::vector<bf::path> sequenceDirs;
+
+  //~~~~~~~~~~~~~~~~~~~~ PUBLIC MEMBER FUNCTIONS ~~~~~~~~~~~~~~~~~~~~
+
+  /**
+   * \brief Adds the command-line arguments to a settings object.
+   *
+   * \param settings  The settings object.
+   */
+  void add_to_settings(const Settings_Ptr& settings)
+  {
+    #define ADD_SETTING(arg) settings->add_value(#arg, boost::lexical_cast<std::string>(arg))
+    #define ADD_SETTINGS(arg) for(size_t i = 0; i < arg.size(); ++i) { settings->add_value(#arg, boost::lexical_cast<std::string>(arg[i])); }
+      ADD_SETTING(batch);
+      ADD_SETTING(calibrationFilename);
+      ADD_SETTINGS(depthImageMasks);
+      ADD_SETTING(detectFiducials);
+      ADD_SETTING(experimentTag);
+      ADD_SETTING(initialFrameNumber);
+      ADD_SETTING(leapFiducialID);
+      ADD_SETTING(mapSurfels);
+      ADD_SETTING(noRelocaliser);
+      ADD_SETTING(openNIDeviceURI);
+      ADD_SETTING(pipelineType);
+      ADD_SETTINGS(poseFileMasks);
+      ADD_SETTING(prefetchBufferCapacity);
+      ADD_SETTING(renderFiducials);
+      ADD_SETTINGS(rgbImageMasks);
+      ADD_SETTING(saveMeshOnExit);
+      ADD_SETTINGS(sequenceSpecifiers);
+      ADD_SETTINGS(sequenceTypes);
+      ADD_SETTING(subwindowConfigurationIndex);
+      ADD_SETTINGS(trackerSpecifiers);
+      ADD_SETTING(trackObject);
+      ADD_SETTING(trackSurfels);
+    #undef ADD_SETTINGS
+    #undef ADD_SETTING
+  }
 };
 
 //#################### FUNCTIONS ####################
+
+/**
+ * \brief Adds any unregistered options in a set of parsed options to a settings object.
+ *
+ * \param parsedOptions The set of parsed options.
+ * \param settings      The settings object.
+ */
+void add_unregistered_options_to_settings(const po::parsed_options& parsedOptions, const Settings_Ptr& settings)
+{
+  for(size_t i = 0, optionCount = parsedOptions.options.size(); i < optionCount; ++i)
+  {
+    const po::basic_option<char>& option = parsedOptions.options[i];
+    if(option.unregistered)
+    {
+      // Add all the specified values for the option in the correct order.
+      for(size_t j = 0, valueCount = option.value.size(); j < valueCount; ++j)
+      {
+        settings->add_value(option.string_key, option.value[j]);
+      }
+    }
+  }
+}
 
 /**
  * \brief Checks whether or not the specified camera subengine is able to provide depth images.
@@ -217,12 +277,13 @@ std::string make_tracker_config(CommandLineArguments& args)
 }
 
 /**
- * \brief Post-process the program's command-line arguments.
+ * \brief Post-process the program's command-line arguments and add them to the application settings.
  *
- * \param args  The program's command-line arguments.
- * \return      true, if the program should continue after post-processing its arguments, or false otherwise.
+ * \param args      The program's command-line arguments.
+ * \param settings  The application settings.
+ * \return          true, if the program should continue after post-processing its arguments, or false otherwise.
  */
-bool postprocess_arguments(CommandLineArguments& args)
+bool postprocess_arguments(CommandLineArguments& args, const Settings_Ptr& settings)
 {
   // If the user specifies both sequence and explicit depth / RGB image / pose mask flags, print an error message.
   if(!args.sequenceSpecifiers.empty() && (!args.depthImageMasks.empty() || !args.poseFileMasks.empty() || !args.rgbImageMasks.empty()))
@@ -270,6 +331,9 @@ bool postprocess_arguments(CommandLineArguments& args)
     args.detectFiducials = true;
   }
 
+  // Add the post-processed arguments to the application settings.
+  args.add_to_settings(settings);
+
   return true;
 }
 
@@ -278,7 +342,7 @@ bool postprocess_arguments(CommandLineArguments& args)
  *
  * \param sceneParams The scene parameters to modify.
  */
-void set_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSceneParams &sceneParams)
+void set_scene_params_from_global_options(const Settings_CPtr &settings, ITMSceneParams &sceneParams)
 {
 #define GET_PARAM(type, name, defaultValue) sceneParams.name = settings->get_first_value<type>("SceneParams."#name, defaultValue)
 
@@ -298,7 +362,7 @@ void set_scene_params_from_global_options(const SettingsContainer_CPtr &settings
  *
  * \param surfelSceneParams The surfel scene parameters to modify.
  */
-void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
+void set_surfel_scene_params_from_global_options(const Settings_CPtr &settings, ITMSurfelSceneParams &surfelSceneParams)
 {
 #define GET_PARAM(type, name, defaultValue) surfelSceneParams.name = settings->get_first_value<type>("SurfelSceneParams."#name, defaultValue)
 
@@ -322,40 +386,21 @@ void set_surfel_scene_params_from_global_options(const SettingsContainer_CPtr &s
 }
 
 /**
- * \brief Stores the parsed options in a SettingsContainer instance.
+ * \brief Parses any command-line arguments passed in by the user and adds them to the application settings.
  *
- * \param parsedOptions The options to store in the SettingsContainer.
- * \param settings      The settings container.
+ * \param argc      The command-line argument count.
+ * \param argv      The raw command-line arguments.
+ * \param args      The parsed command-line arguments.
+ * \param settings  The application settings.
+ * \return          true, if the program should continue after parsing the command-line arguments, or false otherwise.
  */
-void store_parsed_options_into_settings(const po::parsed_options& parsedOptions, const SettingsContainer_Ptr &settings)
-{
-  for(size_t optionIdx = 0; optionIdx < parsedOptions.options.size(); ++optionIdx)
-  {
-    const po::basic_option<char> &option = parsedOptions.options[optionIdx];
-
-    // Add all values in the correct order.
-    for(size_t valueIdx = 0; valueIdx < option.value.size(); ++valueIdx)
-    {
-      settings->add_value(option.string_key, option.value[valueIdx]);
-    }
-  }
-}
-
-/**
- * \brief Parse any command-line arguments passed in by the user.
- *
- * \param argc  The command-line argument count.
- * \param argv  The raw command-line arguments.
- * \param args  The parsed command-line arguments.
- * \return      true, if the program should continue after parsing the command-line arguments, or false otherwise.
- */
-bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const SettingsContainer_Ptr &settings)
+bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, const Settings_Ptr& settings)
 {
   // Specify the possible options.
   po::options_description genericOptions("Generic options");
   genericOptions.add_options()
     ("help", "produce help message")
-    ("batch", po::bool_switch(&args.batch), "don't wait for user input before starting the reconstruction and terminate immediately")
+    ("batch", po::bool_switch(&args.batch), "enable batch mode")
     ("calib,c", po::value<std::string>(&args.calibrationFilename)->default_value(""), "calibration filename")
     ("cameraAfterDisk", po::bool_switch(&args.cameraAfterDisk), "switch to the camera after a disk sequence")
     ("configFile,f", po::value<std::string>(), "additional parameters filename")
@@ -364,10 +409,10 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     ("leapFiducialID", po::value<std::string>(&args.leapFiducialID)->default_value(""), "the ID of the fiducial to use for the Leap Motion")
     ("mapSurfels", po::bool_switch(&args.mapSurfels), "enable surfel mapping")
     ("noRelocaliser", po::bool_switch(&args.noRelocaliser), "don't use the relocaliser")
-    ("noTracker", po::bool_switch(&args.noTracker), "don't use any tracker")
     ("pipelineType", po::value<std::string>(&args.pipelineType)->default_value("semantic"), "pipeline type")
     ("renderFiducials", po::bool_switch(&args.renderFiducials), "enable fiducial rendering")
-    ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save reconstructed mesh on exit")
+    ("saveMeshOnExit", po::bool_switch(&args.saveMeshOnExit), "save a mesh of the scene on exiting the application")
+    ("subwindowConfigurationIndex", po::value<std::string>(&args.subwindowConfigurationIndex)->default_value("1"), "subwindow configuration index")
     ("trackerSpecifier,t", po::value<std::vector<std::string> >(&args.trackerSpecifiers)->multitoken(), "tracker specifier")
     ("trackSurfels", po::bool_switch(&args.trackSurfels), "enable surfel mapping and tracking")
   ;
@@ -399,28 +444,29 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
   options.add(diskSequenceOptions);
   options.add(objectivePipelineOptions);
 
-  // Actually parse the command line.
+  // Parse the command line.
   po::variables_map vm;
-  po::parsed_options parsedCommandLineOptions = po::parse_command_line(argc, argv, options);
+  po::store(po::parse_command_line(argc, argv, options), vm);
 
-  // Store the parsed options in both the variables map and the SettingsContainer.
-  po::store(parsedCommandLineOptions, vm);
-  store_parsed_options_into_settings(parsedCommandLineOptions, settings);
-
-  // Parse options from configuration file, if necessary.
+  // If a configuration file was specified:
   if(vm.count("configFile"))
   {
-    // Allow unregistered options: those are added to the settings container, to be used by other classes.
+    // Parse additional options from the configuration file and add any registered options to the variables map.
+    // These will be post-processed (if necessary) and added to the settings later. Unregistered options are
+    // also allowed: we add these directly to the settings without post-processing.
     po::parsed_options parsedConfigFileOptions = po::parse_config_file<char>(vm["configFile"].as<std::string>().c_str(), options, true);
 
-    // Store registered options in the variable map
+    // Store registered options in the variables map.
     po::store(parsedConfigFileOptions, vm);
 
-    // Store all options (including unregistered ones) into the SettingsContainer.
-    store_parsed_options_into_settings(parsedConfigFileOptions, settings);
+    // Add any unregistered options directly to the settings.
+    add_unregistered_options_to_settings(parsedConfigFileOptions, settings);
   }
 
   po::notify(vm);
+
+  // Post-process any registered options and add them to the settings.
+  if(!postprocess_arguments(args, settings)) return false;
 
   std::cout << "Global settings:\n" << *settings << '\n';
 
@@ -450,14 +496,15 @@ void quit(const std::string& message, int code = EXIT_FAILURE)
 int main(int argc, char *argv[])
 try
 {
-  // Setup the settings.
+  // Construct the settings object for the application. This is used to store both the
+  // settings for InfiniTAM and our own extended settings. Note that we do not use the
+  // tracker configuration string in the InfiniTAM settings, and so we set it to NULL.
   Settings_Ptr settings(new Settings);
-  settings->trackerConfig = NULL; // The tracker is handled by the tracker factory.
+  settings->trackerConfig = NULL;
 
-
-  // Parse and post-process the command-line arguments.
+  // Parse the command-line arguments.
   CommandLineArguments args;
-  if(!parse_command_line(argc, argv, args, settings) || !postprocess_arguments(args))
+  if(!parse_command_line(argc, argv, args, settings))
   {
     return 0;
   }
@@ -523,7 +570,20 @@ try
   SLAMComponent::TrackingMode trackingMode = args.trackSurfels ? SLAMComponent::TRACK_SURFELS : SLAMComponent::TRACK_VOXELS;
 
   MultiScenePipeline_Ptr pipeline;
-  if(args.pipelineType == "semantic")
+  if(args.pipelineType == "slam")
+  {
+    pipeline.reset(new SLAMPipeline(
+      settings,
+      Application::resources_dir().string(),
+      imageSourceEngine,
+      make_tracker_config(args),
+      mappingMode,
+      trackingMode,
+      fiducialDetector,
+      args.detectFiducials
+    ));
+  }
+  else if(args.pipelineType == "semantic")
   {
     const unsigned int seed = 12345;
     pipeline.reset(new SemanticPipeline(
@@ -554,15 +614,6 @@ try
       !args.trackObject
     ));
   }
-  else if(args.pipelineType == "slam")
-  {
-    pipeline.reset(new SLAMPipeline(settings,
-                                    Application::resources_dir().string(),
-                                    imageSourceEngine,
-                                    make_tracker_config(args),
-                                    mappingMode,
-                                    trackingMode));
-  }
   else throw std::runtime_error("Unknown pipeline type: " + args.pipelineType);
 
 #ifdef WITH_LEAP
@@ -570,12 +621,10 @@ try
   pipeline->get_model()->set_leap_fiducial_id(args.leapFiducialID);
 #endif
 
-  // Configure the application
+  // Configure and run the application.
   Application app(pipeline, args.renderFiducials);
+  app.set_batch_mode_enabled(args.batch);
   app.set_save_mesh_on_exit(args.saveMeshOnExit);
-  app.set_batch_mode(args.batch);
-
-  // Run the application.
   bool runSucceeded = app.run();
 
 #ifdef WITH_OVR

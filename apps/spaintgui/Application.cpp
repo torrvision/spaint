@@ -9,13 +9,11 @@ using namespace tvginput;
 #include <fstream>
 #include <stdexcept>
 
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assign/list_of.hpp>
 using boost::assign::map_list_of;
-namespace bf = boost::filesystem;
 
 #include <ITMLib/Engines/Meshing/ITMMeshingEngineFactory.h>
 #include <ITMLib/Objects/Camera/ITMCalibIO.h>
@@ -33,7 +31,6 @@ using namespace spaint;
 
 #include <tvgutil/commands/NoOpCommand.h>
 #include <tvgutil/filesystem/PathFinder.h>
-#include <tvgutil/misc/SettingsContainer.h>
 #include <tvgutil/timing/TimeUtil.h>
 using namespace tvgutil;
 
@@ -48,18 +45,21 @@ using namespace tvgutil;
 
 Application::Application(const MultiScenePipeline_Ptr& pipeline, bool renderFiducials)
 : m_activeSubwindowIndex(0),
+  m_batchModeEnabled(false),
   m_commandManager(10),
   m_pauseBetweenFrames(true),
   m_paused(true),
   m_pipeline(pipeline),
   m_renderFiducials(renderFiducials),
-  m_runInBatch(false),
   m_usePoseMirroring(true),
   m_voiceCommandStream("localhost", "23984")
 {
   setup_labels();
   setup_meshing();
-  switch_to_windowed_renderer(3);
+
+  const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
+  int subwindowConfigurationIndex = settings->get_first_value<int>("subwindowConfigurationIndex");
+  switch_to_windowed_renderer(subwindowConfigurationIndex);
 }
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -68,14 +68,12 @@ bool Application::run()
 {
   for(;;)
   {
-    // Returns false iff the user pressed Ctrl-C or closed the window.
-    if(!process_events())
-      return false;
-
-    if(m_inputState.key_down(KEYCODE_ESCAPE) && !m_runInBatch)
-    {
-      break;
-    }
+    // Check to see if the user wants to quit the application, and quit if necessary. Note that if we
+    // are running in batch mode, we quit directly, rather than saving a mesh of the scene on exit.
+    bool eventQuit = !process_events();
+    bool escQuit = m_inputState.key_down(KEYCODE_ESCAPE);
+    if(m_batchModeEnabled) { if(eventQuit) return false; }
+    else                   { if(eventQuit || escQuit) break; }
 
     // Take action as relevant based on the current input state.
     process_input();
@@ -86,25 +84,18 @@ bool Application::run()
       // Run the main section of the pipeline.
       bool frameWasProcessed = m_pipeline->run_main_section();
 
-      // Return if we processed the last frame and are running in batch mode.
-      if(m_runInBatch && !frameWasProcessed)
-      {
-        break;
-      }
-
       if(frameWasProcessed)
       {
-        // If we have a debugging hook and the frame was processed, then call the function.
-        if(m_frameDebuggingHook)
-        {
-          m_frameDebuggingHook(m_pipeline->get_model());
-        }
+        // If a frame debug hook is active, call it.
+        if(m_frameDebugHook) m_frameDebugHook(m_pipeline->get_model());
 
         // If we're currently recording the sequence, save the frame to disk.
-        if(m_sequencePathGenerator)
-        {
-          save_sequence_frame();
-        }
+        if(m_sequencePathGenerator) save_sequence_frame();
+      }
+      else if(m_batchModeEnabled)
+      {
+        // If we're running in batch mode and we reach the end of the sequence, quit.
+        break;
       }
     }
 
@@ -121,29 +112,26 @@ bool Application::run()
     if(m_pauseBetweenFrames) m_paused = true;
   }
 
-  if(m_saveMeshOnExit)
-  {
-    save_mesh();
-  }
+  // If desired, save a mesh of the scene before the application terminates.
+  if(m_saveMeshOnExit) save_mesh();
 
   return true;
 }
 
-void Application::set_batch_mode(bool enabled)
+void Application::set_batch_mode_enabled(bool batchModeEnabled)
 {
-  m_runInBatch = enabled;
-  m_paused = !enabled;
-  m_pauseBetweenFrames = m_paused;
+  m_batchModeEnabled = batchModeEnabled;
+  m_paused = m_pauseBetweenFrames = !batchModeEnabled;
 }
 
-void Application::set_frame_debugging_hook(const Application::ModelHookFunction &debuggingHook)
+void Application::set_frame_debug_hook(const FrameDebugHook& frameDebugHook)
 {
-  m_frameDebuggingHook = debuggingHook;
+  m_frameDebugHook = frameDebugHook;
 }
 
-void Application::set_save_mesh_on_exit(bool saveMesh)
+void Application::set_save_mesh_on_exit(bool saveMeshOnExit)
 {
-  m_saveMeshOnExit = saveMesh;
+  m_saveMeshOnExit = saveMeshOnExit;
 }
 
 //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
@@ -206,6 +194,18 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
 {
   m_inputState.press_key(static_cast<Keycode>(keysym.sym));
 
+  // If the P key is pressed, toggle pose mirroring.
+  if(keysym.sym == KEYCODE_p)
+  {
+    m_usePoseMirroring = !m_usePoseMirroring;
+  }
+
+  // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
+  if(keysym.sym == KEYCODE_SEMICOLON)
+  {
+    m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
+  }
+
   // If / is pressed on its own, save a screenshot. If left shift + / is pressed, toggle sequence recording.
   // If right shift + / is pressed, toggle video recording.
   if(keysym.sym == SDLK_SLASH)
@@ -215,8 +215,8 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
     else save_screenshot();
   }
 
-  // If we are running in batch mode, ignore other keypresses.
-  if(m_runInBatch) return;
+  // If we're running in batch mode, ignore all other keypresses.
+  if(m_batchModeEnabled) return;
 
   // If the B key is pressed, arrange for all subsequent frames to be processed without pausing.
   if(keysym.sym == KEYCODE_b)
@@ -230,12 +230,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
   {
     const std::string& sceneID = get_active_scene_id();
     m_pipeline->set_fusion_enabled(sceneID, !m_pipeline->get_fusion_enabled(sceneID));
-  }
-
-  // If the P key is pressed, toggle pose mirroring.
-  if(keysym.sym == KEYCODE_p)
-  {
-    m_usePoseMirroring = !m_usePoseMirroring;
   }
 
   // If the N key is pressed, arrange for just the next frame to be processed and enable pausing between frames.
@@ -284,12 +278,6 @@ void Application::handle_key_down(const SDL_Keysym& keysym)
       // If backspace is pressed on its own, clear the labels of all voxels with the current semantic label that were not labelled by the user.
       model->clear_labels(sceneID, ClearingSettings(CLEAR_EQ_LABEL_NEQ_GROUP, SpaintVoxel::LG_USER, model->get_semantic_label()));
     }
-  }
-
-  // If the semi-colon key is pressed, toggle whether or not median filtering is used when rendering the scene raycast.
-  if(keysym.sym == KEYCODE_SEMICOLON)
-  {
-    m_renderer->set_median_filtering_enabled(!m_renderer->get_median_filtering_enabled());
   }
 
   // If the H key is pressed, print out a list of keyboard controls.
@@ -538,19 +526,17 @@ void Application::process_fiducial_input()
 
 void Application::process_input()
 {
-  // Camera and renderer actions are always available.
   process_camera_input();
   process_renderer_input();
 
-  // If we are not running in batch mode perform the appropriate actions.
-  if(!m_runInBatch)
-  {
-    process_command_input();
-    process_fiducial_input();
-    process_labelling_input();
-    process_mode_input();
-    process_voice_input();
-  }
+  // If we are running in batch mode, suppress all non-essential input.
+  if(m_batchModeEnabled) return;
+
+  process_command_input();
+  process_fiducial_input();
+  process_labelling_input();
+  process_mode_input();
+  process_voice_input();
 }
 
 void Application::process_labelling_input()
@@ -742,38 +728,30 @@ void Application::process_voice_input()
 
 void Application::save_mesh() const
 {
-  if(m_meshingEngine)
-  {
-    const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
-    const std::string& sceneID = mainSubwindow.get_scene_id();
-    const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-    const Model_CPtr& model = m_pipeline->get_model();
-    const SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
+  if(!m_meshingEngine) return;
 
-    Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  Model_CPtr model = m_pipeline->get_model();
+  const Settings_CPtr& settings = model->get_settings();
 
-    m_meshingEngine->MeshScene(mesh.get(), scene.get());
+  const Subwindow& mainSubwindow = m_renderer->get_subwindow_configuration()->subwindow(0);
+  const std::string& sceneID = mainSubwindow.get_scene_id();
+  SpaintVoxelScene_CPtr scene = model->get_slam_state(sceneID)->get_voxel_scene();
 
-    // Find the location where we are going to save the mesh.
-    const bf::path meshesSubdir = find_subdir_from_executable("meshes");
+  // Construct the mesh.
+  Mesh_Ptr mesh(new ITMMesh(settings->GetMemoryType()));
+  m_meshingEngine->MeshScene(mesh.get(), scene.get());
 
-    // Make sure the folder exists.
-    bf::create_directories(meshesSubdir);
+  // Find the meshes directory and make sure that it exists.
+  boost::filesystem::path meshesSubdir = find_subdir_from_executable("meshes");
+  boost::filesystem::create_directories(meshesSubdir);
 
-    // Use the experimentTag as a filename, or the current timestamp if the tag has not been specified.
-    const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp())
-                                     + ".stl";
+  // Determine the filename to use for the mesh, based on either the experiment tag (if specified) or the current timestamp (otherwise).
+  const std::string meshFilename = settings->get_first_value<std::string>("experimentTag", "spaint-" + TimeUtil::get_iso_timestamp()) + ".stl";
+  const boost::filesystem::path meshPath = meshesSubdir / meshFilename;
 
-    // Compute the full path.
-    const bf::path meshFullPath = meshesSubdir / meshFilename;
-
-    std::cout << "Saving current reconstruction in: " << meshFullPath << '\n';
-    mesh->WriteSTL(meshFullPath.string().c_str());
-  }
-  else
-  {
-    std::cout << "Meshing engine disabled in the settings.\n";
-  }
+  // Save the mesh to disk.
+  std::cout << "Saving mesh to: " << meshPath << '\n';
+  mesh->WriteSTL(meshPath.string().c_str());
 }
 
 void Application::save_screenshot() const
@@ -854,13 +832,9 @@ void Application::setup_labels()
 void Application::setup_meshing()
 {
   const Settings_CPtr& settings = m_pipeline->get_model()->get_settings();
-
-  if(settings->createMeshingEngine)
+  if(settings->createMeshingEngine || m_saveMeshOnExit)
   {
-    m_meshingEngine.reset(
-        ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel, ITMVoxelBlockHash>(
-            settings->deviceType
-    ));
+    m_meshingEngine.reset(ITMMeshingEngineFactory::MakeMeshingEngine<SpaintVoxel,ITMVoxelBlockHash>(settings->deviceType));
   }
 }
 

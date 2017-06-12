@@ -45,6 +45,9 @@ protected:
    */
   virtual void generate_pose_candidates();
 
+  /** Override. */
+  virtual void prepare_inliers_for_optimisation();
+
   /**
    * \brief Sample a certain number of keypoints from the input image. Those keypoints will be used for the subsequent
    *        energy computation.

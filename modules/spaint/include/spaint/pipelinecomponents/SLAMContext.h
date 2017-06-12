@@ -11,10 +11,9 @@
 #include <ITMLib/Engines/Visualisation/Interface/ITMSurfelVisualisationEngine.h>
 #include <ITMLib/Engines/Visualisation/Interface/ITMVisualisationEngine.h>
 
-#include <itmx/relocalisation/Relocaliser.h>
+#include <itmx/relocalisation/RefiningRelocaliser.h>
 
 #include "../slamstate/SLAMState.h"
-#include "../visualisation/VisualisationGenerator.h"
 
 namespace spaint {
 
@@ -31,7 +30,7 @@ private:
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The relocalisers used to estimate the camera pose in the various scenes. */
-  std::map<std::string,itmx::Relocaliser_Ptr> m_relocalisers;
+  std::map<std::string,itmx::RefiningRelocaliser_Ptr> m_relocalisers;
 
   /** The states of the SLAM reconstructions for the various scenes. */
   std::map<std::string,SLAMState_Ptr> m_slamStates;
@@ -48,7 +47,6 @@ public:
   virtual const std::string& get_resources_dir() const = 0;
   virtual const Settings_CPtr& get_settings() const = 0;
   virtual SurfelVisualisationEngine_CPtr get_surfel_visualisation_engine() const = 0;
-  virtual VisualisationGenerator_CPtr get_visualisation_generator() const = 0;
   virtual VoxelVisualisationEngine_CPtr get_voxel_visualisation_engine() const = 0;
 
   //#################### PUBLIC MEMBER FUNCTIONS ####################
@@ -59,7 +57,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual itmx::Relocaliser_Ptr& get_relocaliser(const std::string& sceneID);
+  virtual itmx::RefiningRelocaliser_Ptr& get_relocaliser(const std::string& sceneID);
 
   /**
    * \brief Gets the relocaliser for the specified scene.
@@ -67,7 +65,7 @@ public:
    * \param sceneID The scene ID.
    * \return        The relocaliser for the specified scene.
    */
-  virtual itmx::Relocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
+  virtual itmx::RefiningRelocaliser_CPtr get_relocaliser(const std::string& sceneID) const;
 
   /**
    * \brief Gets the SLAM state for the specified scene.

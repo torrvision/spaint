@@ -82,11 +82,11 @@ inline void example_reservoirs_add_example(const ExampleType &example,
 #if ALWAYS_ADD_EXAMPLES
       // The code below always evicts a sample from the reservoir.
       const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
-          reservoirCapacity);
+          reservoirCapacity - 1);
 #else
       // Generate a random number between 0 and addCallsCount.
       const uint32_t randomIdx = randomGenerator.generate_int_from_uniform(0,
-          addCallsCount);
+          addCallsCount - 1);
 #endif
 
       // Check if we have to evict an example.

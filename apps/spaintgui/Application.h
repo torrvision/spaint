@@ -43,21 +43,23 @@
  */
 class Application
 {
-  //#################### PRIVATE TYPEDEFS ####################
+  //#################### TYPEDEFS ####################
 private:
   typedef boost::shared_ptr<ITMLib::ITMMesh> Mesh_Ptr;
   typedef ITMLib::ITMMeshingEngine<spaint::SpaintVoxel,ITMVoxelIndex> MeshingEngine;
   typedef boost::shared_ptr<MeshingEngine> MeshingEngine_Ptr;
   typedef boost::shared_ptr<Renderer> Renderer_Ptr;
 
-  //#################### PUBLIC TYPEDEFS ####################
 public:
-  typedef boost::function<void(const Model_Ptr&)> ModelHookFunction;
+  typedef boost::function<void(const Model_Ptr&)> FrameDebugHook;
 
   //#################### PRIVATE VARIABLES ####################
 private:
   /** The index of the sub-window with which the user is interacting. */
   size_t m_activeSubwindowIndex;
+
+  /** Whether or not batch mode is enabled. */
+  bool m_batchModeEnabled;
 
   /** The command manager. */
   tvgutil::CommandManager m_commandManager;
@@ -65,8 +67,8 @@ private:
   /** The fractional position of the mouse within the window's viewport. */
   Vector2f m_fracWindowPos;
 
-  /** The debugging function called after each frame has been processed. */
-  ModelHookFunction m_frameDebuggingHook;
+  /** The debug hook function (if any) to call after processing each frame. */
+  FrameDebugHook m_frameDebugHook;
 
   /** The current state of the keyboard and mouse. */
   tvginput::InputState m_inputState;
@@ -89,10 +91,7 @@ private:
   /** Whether or not to render the fiducials (if any) that have been detected in the 3D scene. */
   bool m_renderFiducials;
 
-  /** Whether or not to terminate the application as soon as the last frame has been processeed. */
-  bool m_runInBatch;
-
-  /** Whether to save the reconstructed mesh on exit. */
+  /** Whether or not to save a mesh of the scene on exiting the application. */
   bool m_saveMeshOnExit;
 
   /** The path generator for the current sequence recording (if any). */
@@ -125,30 +124,30 @@ public:
   /**
    * \brief Runs the application.
    *
-   * \return True whether the main loop terminated successfully.
+   * \return  true, if the application terminated successfully, or false otherwise.
    */
   bool run();
 
   /**
-   * \brief Sets whether to run in batch mode or not.
+   * \brief Sets whether or not batch mode is enabled.
    *
-   * \param enabled Whether to run in batch mode or not.
+   * \param batchModeEnabled  Whether or not batch mode is enabled.
    */
-  void set_batch_mode(bool enabled);
+  void set_batch_mode_enabled(bool batchModeEnabled);
 
   /**
-   * \brief Sets a function that will be called after each frame has been processed.
+   * \brief Sets the debug hook function (if any) to call after processing each frame.
    *
-   * \param debuggingHook The function that will be called after processing each frame.
+   * \param frameDebugHook  The debug hook function (if any) to call after processing each frame.
    */
-  void set_frame_debugging_hook(const ModelHookFunction &debuggingHook);
+  void set_frame_debug_hook(const FrameDebugHook& frameDebugHook);
 
   /**
-   * \brief Set whether to save the reconstructed mesh on exit.
+   * \brief Sets whether or not to save a mesh of the scene on exiting the application.
    *
-   * \param saveMesh True if the reconstructed mesh should be saved on exit.
+   * \param saveMeshOnExit  Whether or not to save a mesh of the scene on exiting the application.
    */
-  void set_save_mesh_on_exit(bool saveMesh);
+  void set_save_mesh_on_exit(bool saveMeshOnExit);
 
   //#################### PUBLIC STATIC MEMBER FUNCTIONS ####################
 public:
@@ -275,7 +274,7 @@ private:
   void process_voice_input();
 
   /**
-   * \brief Saves the reconstruction to disk as a mesh.
+   * \brief Saves a mesh of the scene to disk.
    */
   void save_mesh() const;
 

@@ -109,6 +109,33 @@ __global__ void ck_preemptive_ransac_init_random_generators(CUDARNG *randomGener
   randomGenerators[idx].reset(seed, idx);
 }
 
+__global__ void ck_preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints,
+                                                                      const ScorePrediction *predictions,
+                                                                      const int *inlierIndices,
+                                                                      int nbInliers,
+                                                                      const PoseCandidate *poseCandidates,
+                                                                      int nbPoseCandidates,
+                                                                      Vector4f *inlierCameraPoints,
+                                                                      Mode3DColour *inlierModes,
+                                                                      float inlierThreshold)
+{
+  const int candidateIdx = blockIdx.y;
+  const int inlierIdx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if(candidateIdx >= nbPoseCandidates || inlierIdx >= nbInliers) return;
+
+  preemptive_ransac_prepare_inliers_for_optimisation(keypoints,
+                                                     predictions,
+                                                     inlierIndices,
+                                                     nbInliers,
+                                                     poseCandidates,
+                                                     inlierCameraPoints,
+                                                     inlierModes,
+                                                     inlierThreshold,
+                                                     candidateIdx,
+                                                     inlierIdx);
+}
+
 __global__ void ck_preemptive_ransac_reset_candidate_energies(PoseCandidate *poseCandidates, int nbPoseCandidates)
 {
   const int candidateIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -209,13 +236,6 @@ void PreemptiveRansac_CUDA::compute_and_sort_energies()
 
 void PreemptiveRansac_CUDA::generate_pose_candidates()
 {
-  // The pose update phase needs keypoint and predictions on the host,
-  // Performing the update call here since this function is called once per frame, while the update function is called
-  // many times per
-  // frame and keypoint and predictions do not change.
-  m_keypointsImage->UpdateHostFromDevice();
-  m_predictionsImage->UpdateHostFromDevice();
-
   const Vector2i imgSize = m_keypointsImage->noDims;
   const Keypoint3DColour *keypoints = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
   const ScorePrediction *predictions = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
@@ -254,6 +274,45 @@ void PreemptiveRansac_CUDA::generate_pose_candidates()
 
   // Make the computed poses available to device.
   m_poseCandidates->UpdateDeviceFromHost();
+}
+
+void PreemptiveRansac_CUDA::prepare_inliers_for_optimisation()
+{
+  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CUDA);
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CUDA);
+
+  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const int *inlierLinearisedIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CUDA);
+
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CUDA);
+
+  // Grap pointers to the output storage.
+  Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CUDA);
+  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CUDA);
+
+  dim3 blockSize(256);
+  dim3 gridSize((nbInliers + blockSize.x - 1) / blockSize.x, nbPoseCandidates);
+
+  ck_preemptive_ransac_prepare_inliers_for_optimisation<<<gridSize, blockSize>>>(keypointsData,
+                                                                                 predictionsData,
+                                                                                 inlierLinearisedIndicesData,
+                                                                                 nbInliers,
+                                                                                 poseCandidatesData,
+                                                                                 nbPoseCandidates,
+                                                                                 candidateCameraPoints,
+                                                                                 candidateModes,
+                                                                                 m_poseOptimizationInlierThreshold);
+  ORcudaKernelCheck;
+
+  // Compute the actual size of the buffers to avoid unnecessary copies.
+  const uint32_t poseOptimisationBufferSize = nbInliers * nbPoseCandidates;
+  m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
+  m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
+
+  // Make the inlier data available to the optimiser which is running on the CPU.
+  m_poseOptimisationCameraPoints->UpdateHostFromDevice();
+  m_poseOptimisationPredictedModes->UpdateHostFromDevice();
 }
 
 void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
@@ -309,7 +368,6 @@ void PreemptiveRansac_CUDA::sample_inlier_candidates(bool useMask)
 void PreemptiveRansac_CUDA::update_candidate_poses()
 {
   // The pose update is currently implemented by the base class, need to copy the relevant data to host memory.
-  m_inliersIndicesBlock->UpdateHostFromDevice();
   m_poseCandidates->UpdateHostFromDevice();
 
   PreemptiveRansac::update_candidate_poses();

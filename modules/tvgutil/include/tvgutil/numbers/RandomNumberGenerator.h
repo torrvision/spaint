@@ -54,7 +54,7 @@ public:
    *
    * \param mean  The mean of the Gaussian distribution.
    * \param sigma The standard deviation of the Gaussian distribution.
-   * \return      The generated float.
+   * \return      The generated number.
    */
   template <typename T = float>
   T generate_from_gaussian(T mean, T sigma)

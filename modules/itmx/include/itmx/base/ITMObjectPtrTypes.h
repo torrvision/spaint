@@ -3,8 +3,6 @@
  * Copyright (c) Torr Vision Group, University of Oxford, 2016. All rights reserved.
  */
 
-#include <boost/shared_ptr.hpp>
-
 #include <InputSource/CompositeImageSourceEngine.h>
 #include <ITMLib/Core/ITMTrackingController.h>
 #include <ITMLib/Engines/LowLevel/Interface/ITMLowLevelEngine.h>

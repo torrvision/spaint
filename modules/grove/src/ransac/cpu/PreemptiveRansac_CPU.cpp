@@ -97,6 +97,47 @@ void PreemptiveRansac_CPU::generate_pose_candidates()
   compute_candidate_poses_kabsch();
 }
 
+void PreemptiveRansac_CPU::prepare_inliers_for_optimisation()
+{
+  const Keypoint3DColour *keypointsData = m_keypointsImage->GetData(MEMORYDEVICE_CPU);
+  const ScorePrediction *predictionsData = m_predictionsImage->GetData(MEMORYDEVICE_CPU);
+
+  const size_t nbInliers = m_inliersIndicesBlock->dataSize;
+  const int *inlierLinearisedIndicesData = m_inliersIndicesBlock->GetData(MEMORYDEVICE_CPU);
+
+  const size_t nbPoseCandidates = m_poseCandidates->dataSize;
+  const PoseCandidate *poseCandidatesData = m_poseCandidates->GetData(MEMORYDEVICE_CPU);
+
+  // Grap pointers to the output storage.
+  Vector4f *candidateCameraPoints = m_poseOptimisationCameraPoints->GetData(MEMORYDEVICE_CPU);
+  Mode3DColour *candidateModes = m_poseOptimisationPredictedModes->GetData(MEMORYDEVICE_CPU);
+
+#ifdef WITH_OPENMP
+#pragma omp parallel for
+#endif
+  for(int candidateIdx = 0; candidateIdx < nbPoseCandidates; ++candidateIdx)
+  {
+    for(int inlierIdx = 0; inlierIdx < nbInliers; ++inlierIdx)
+    {
+      preemptive_ransac_prepare_inliers_for_optimisation(keypointsData,
+                                                         predictionsData,
+                                                         inlierLinearisedIndicesData,
+                                                         nbInliers,
+                                                         poseCandidatesData,
+                                                         candidateCameraPoints,
+                                                         candidateModes,
+                                                         m_poseOptimizationInlierThreshold,
+                                                         candidateIdx,
+                                                         inlierIdx);
+    }
+  }
+
+  // Compute and set the actual size of the buffers.
+  const uint32_t poseOptimisationBufferSize = nbInliers * nbPoseCandidates;
+  m_poseOptimisationCameraPoints->dataSize = poseOptimisationBufferSize;
+  m_poseOptimisationPredictedModes->dataSize = poseOptimisationBufferSize;
+}
+
 void PreemptiveRansac_CPU::sample_inlier_candidates(bool useMask)
 {
   const Vector2i imgSize = m_keypointsImage->noDims;

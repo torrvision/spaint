@@ -143,8 +143,8 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
        ++iterationIdx)
   {
     // Sample a pixel in the input image.
-    const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width);
-    const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height);
+    const int x = randomGenerator.generate_int_from_uniform(0, imgSize.width - 1);
+    const int y = randomGenerator.generate_int_from_uniform(0, imgSize.height - 1);
     const int linearFeatureIdx = y * imgSize.width + x;
 
     // Grab its associated keypoint and continue only if it's valid.
@@ -159,7 +159,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
 
     // Either use the first mode or select one randomly, depending on the parameters.
     const int selectedModeIdx = useAllModesPerLeafInPoseHypothesisGeneration
-                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.nbClusters)
+                                    ? randomGenerator.generate_int_from_uniform(0, selectedPrediction.nbClusters - 1)
                                     : 0;
 
     // Cache camera and world points, used for the following checks.
@@ -275,6 +275,56 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline bool
   return true;
 }
 
+_CPU_AND_GPU_CODE_
+inline void preemptive_ransac_prepare_inliers_for_optimisation(const Keypoint3DColour *keypoints,
+                                                        const ScorePrediction *predictions,
+                                                        const int *inlierIndices,
+                                                        uint32_t nbInliers,
+                                                        const PoseCandidate *poseCandidates,
+                                                        Vector4f *inlierCameraPoints,
+                                                        Mode3DColour *inlierModes,
+                                                        float inlierThreshold,
+                                                        uint32_t candidateIdx,
+                                                        uint32_t inlierIdx)
+{
+  const int inlierLinearIdx = inlierIndices[inlierIdx];
+  const PoseCandidate &poseCandidate = poseCandidates[candidateIdx];
+  const Vector3f inlierCameraPosition = keypoints[inlierLinearIdx].position;
+  const Vector3f inlierWorldPosition = poseCandidate.cameraPose * inlierCameraPosition;
+  const ScorePrediction &prediction = predictions[inlierLinearIdx];
+
+  // Find the best mode, do not rely on the one stored in the inlier because for the randomly sampled inliers it will
+  // not be set.
+  // We also assume that the inlier is valid (we checked that before, when we selected it).
+  const int bestModeIdx = score_prediction_get_best_mode(prediction, inlierWorldPosition);
+  if (bestModeIdx < 0 || bestModeIdx >= prediction.nbClusters)
+  {
+    // This point should not have been selected as inlier.
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__)
+      printf("best mode idx invalid\n");
+      asm("trap;");
+#else
+      throw std::runtime_error("best mode idx invalid");
+#endif
+  }
+
+  const Mode3DColour &bestMode = prediction.clusters[bestModeIdx];
+
+  uint32_t outputIdx = candidateIdx * nbInliers + inlierIdx; // The index in the row associated to the current candidate.
+
+  // We add this pair to the vector of pairs to be evaluated iff the predicted mode and the world position estimated
+  // by the current camera pose agree.
+  if (length(bestMode.position - inlierWorldPosition) >= inlierThreshold)
+  {
+    inlierCameraPoints[outputIdx] = Vector4f(0.f);
+    return;
+  }
+
+  // Store the inlier camera pose and the corresponding mode.
+  inlierCameraPoints[outputIdx] = Vector4f(inlierCameraPosition, 1.f);
+  inlierModes[outputIdx] = bestMode;
+}
+
 /**
  * \brief Try to sample the index of a keypoint which is valid and has at least one modal cluster associated.
  *
@@ -301,7 +351,7 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Key
   for (int iterationIdx = 0; inlierLinearIdx < 0 && iterationIdx < SAMPLE_INLIER_ITERATIONS; ++iterationIdx)
   {
     // Sample a keypoint index.
-    const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height);
+    const int linearIdx = randomGenerator.generate_int_from_uniform(0, imgSize.width * imgSize.height - 1);
 
     // Check that we have a valid keypoint.
     if (!keypointsData[linearIdx].valid) continue;
@@ -326,7 +376,6 @@ _CPU_AND_GPU_CODE_TEMPLATE_ inline int preemptive_ransac_sample_inlier(const Key
 #pragma omp atomic capture
 #endif
       maskValue = (*maskPtr)++;
-
 #endif
 
       // If the value was zero we can keep this keypoint.

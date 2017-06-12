@@ -9,7 +9,7 @@ namespace itmx {
 
 //#################### CONSTRUCTORS ####################
 
-FernRelocaliser::FernRelocaliser(Vector2i depthImageSize, float viewFrustumMin, float viewFrustumMax,
+FernRelocaliser::FernRelocaliser(const Vector2i& depthImageSize, float viewFrustumMin, float viewFrustumMax,
                                  float harvestingThreshold, int numFerns, int decisionsPerFern,
                                  KeyframeAddPolicy keyframeAddPolicy)
 : m_decisionsPerFern(decisionsPerFern),

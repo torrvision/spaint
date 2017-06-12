@@ -23,6 +23,7 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseBoost.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseCUDA.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseEigen.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGLEW.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseGrove.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseInfiniTAM.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLeap.cmake)
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseLodePNG.cmake)
@@ -587,7 +588,6 @@ include/spaint/util/CameraPoseConverter.h
 include/spaint/util/ColourConversion_Shared.h
 include/spaint/util/LabelManager.h
 include/spaint/util/RGBDUtil.h
-include/spaint/util/SpaintRefiningRelocaliser.h
 include/spaint/util/SpaintSurfel.h
 include/spaint/util/SpaintSurfelScene.h
 include/spaint/util/SpaintVoxel.h
@@ -849,7 +849,6 @@ SOURCE_GROUP(visualisation\\shared FILES ${visualisation_shared_headers})
 
 INCLUDE_DIRECTORIES(include/spaint)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/helpers)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/grove/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/itmx/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rafl/include)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/modules/rigging/include)
