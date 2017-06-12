@@ -459,7 +459,7 @@ bool parse_command_line(int argc, char *argv[], CommandLineArguments& args, cons
     // Store registered options in the variables map.
     po::store(parsedConfigFileOptions, vm);
 
-    // Add any unregistered options dierctly to the settings.
+    // Add any unregistered options directly to the settings.
     add_unregistered_options_to_settings(parsedConfigFileOptions, settings);
   }
 
