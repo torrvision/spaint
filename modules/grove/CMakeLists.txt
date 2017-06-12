@@ -31,6 +31,7 @@ src/numbers/CPURNG.cpp
 
 SET(numbers_headers
 include/grove/numbers/CPURNG.h
+include/grove/numbers/CUDARNG.h
 )
 
 #################################################################
