@@ -37,6 +37,8 @@ IF(WITH_CUDA)
     IF(${CMAKE_VERSION} VERSION_LESS 3.5)
       SET(CUDA_NVCC_FLAGS -std=c++11; ${CUDA_NVCC_FLAGS})
     ENDIF()
+
+    SET(CUDA_NVCC_FLAGS -Xcompiler -std=c++11; -Xlinker -std=c++11; ${CUDA_NVCC_FLAGS})
   ENDIF()
 
   # Disable some annoying nvcc warnings.

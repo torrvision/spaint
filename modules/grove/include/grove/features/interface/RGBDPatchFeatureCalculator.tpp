@@ -122,7 +122,7 @@ template <typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_colour_features()
 {
   // Initialise a random number generator with the default seed found in both the std and boost headers.
-  RandomNumberGenerator rng(5489u);
+  tvgutil::RandomNumberGenerator rng(5489u);
 
   const int channelMin = 0;
   const int channelMax = 2;
@@ -155,7 +155,7 @@ template <typename KeypointType, typename DescriptorType>
 void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_depth_features()
 {
   // Initialise a random number generator with the default seed found in both the std and boost headers.
-  RandomNumberGenerator rng(5489u);
+  tvgutil::RandomNumberGenerator rng(5489u);
 
   Vector4i *offsets = m_depthOffsets->GetData(MEMORYDEVICE_CPU);
 
