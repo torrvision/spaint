@@ -25,6 +25,12 @@ INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
 SET(features_base_headers include/grove/features/base/Descriptor.h)
 
 ##
+SET(keypoints_headers
+include/grove/keypoints/Keypoint2D.h
+include/grove/keypoints/Keypoint3DColour.h
+)
+
+##
 SET(numbers_sources
 src/numbers/CPURNG.cpp
 )
@@ -44,6 +50,7 @@ ${numbers_sources}
 
 SET(headers
 ${features_base_headers}
+${keypoints_headers}
 ${numbers_headers}
 )
 
@@ -52,6 +59,7 @@ ${numbers_headers}
 #############################
 
 SOURCE_GROUP(features\\base FILES ${features_base_headers})
+SOURCE_GROUP(keypoints FILES ${keypoints_headers})
 SOURCE_GROUP(numbers FILES ${numbers_sources} ${numbers_headers})
 
 ##########################################
