@@ -109,11 +109,11 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
   const int rasterIdxIn = xyIn.y * inDepthSize.width + xyIn.x;
   const float depth = (normalise && depths) ? depths[rasterIdxIn] : 1.0f;
 
-  // Compute the depth to colour ratio, used to scale the offset and sample the pixels.
-  const Vector2f rgbDepthRatio(
-    inDepthSize.x != 0 ? static_cast<float>(inRgbSize.x) / inDepthSize.x : 1.0f,
-    inDepthSize.y != 0 ? static_cast<float>(inRgbSize.y) / inDepthSize.y : 1.0f
-  );
+  // Compute the ratio between the size of colour image we're currently using and the size of colour
+  // image used to train the forest. We use this to scale the offsets before sampling pixels.
+  // FIXME: The RGB training image size should be passed in, not hard-coded.
+  const Vector2f trainRgbSize(640.0f, 480.0f);
+  const Vector2f offsetRatio(inRgbSize.x / trainRgbSize.x, inRgbSize.y / trainRgbSize.y);
 
   // Compute the features and fill in the descriptor.
   DescriptorType& descriptor = descriptors[rasterIdxOut];
@@ -122,11 +122,11 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     const int channel = rgbChannels[featIdx];
     Vector4i offsets = rgbOffsets[featIdx];
 
-    // Now rescale the offsets using the depth to colour ratio.
-    offsets[0] = static_cast<int>(offsets[0] * rgbDepthRatio.x);
-    offsets[1] = static_cast<int>(offsets[1] * rgbDepthRatio.y);
-    offsets[2] = static_cast<int>(offsets[2] * rgbDepthRatio.x);
-    offsets[3] = static_cast<int>(offsets[3] * rgbDepthRatio.y);
+    // Now rescale the offsets using the offset ratio.
+    offsets[0] = static_cast<int>(offsets[0] * offsetRatio.x);
+    offsets[1] = static_cast<int>(offsets[1] * offsetRatio.y);
+    offsets[2] = static_cast<int>(offsets[2] * offsetRatio.x);
+    offsets[3] = static_cast<int>(offsets[3] * offsetRatio.y);
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
