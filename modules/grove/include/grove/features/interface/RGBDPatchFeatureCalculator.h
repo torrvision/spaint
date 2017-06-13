@@ -214,8 +214,7 @@ protected:
    * \param rgbImage    The colour image.
    * \param depthImage  The depth image.
    * \param inputDims   Will be filled with the dimensions of either the colour or depth image, depending on the configuration.
-   *
-   * \return The size of feature image to generate.
+   * \return            The size of feature image to generate.
    *
    * \throws std::invalid_argument If the features cannot be computed.
    */

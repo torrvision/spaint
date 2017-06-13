@@ -8,7 +8,6 @@
 #include <iostream>
 
 #include <itmx/base/MemoryBlockFactory.h>
-using namespace itmx;
 
 namespace grove {
 
@@ -31,7 +30,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalcula
   m_depthFeatureOffset(depthFeatureOffset),
   m_depthMaxRadius(depthMaxRadius),
   m_depthMinRadius(depthMinRadius),
-  m_featureStep(4), // as per Julien's code (can be overridden with the setter on each invocation)
+  m_featureStep(4), // as per Julien's code (can be overridden with the setter)
   m_normaliseDepth(depthAdaptive),
   m_normaliseRgb(depthAdaptive),
   m_rgbDifferenceType(rgbDifferenceType),
@@ -49,7 +48,7 @@ RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::RGBDPatchFeatureCalcula
     throw std::invalid_argument("rgbFeatureOffset + rgbFeatureCount > DescriptorType::FEATURE_COUNT");
 
   // Set up the memory blocks used to specify the features.
-  const MemoryBlockFactory& mbf = MemoryBlockFactory::instance();
+  const itmx::MemoryBlockFactory& mbf = itmx::MemoryBlockFactory::instance();
   m_depthOffsets = mbf.make_block<Vector4i>(m_depthFeatureCount);
   m_rgbChannels = mbf.make_block<uchar>(m_rgbFeatureCount);
   m_rgbOffsets = mbf.make_block<Vector4i>(m_rgbFeatureCount);
@@ -108,20 +107,17 @@ Vector2i RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::compute_output
     throw std::invalid_argument("Error: A valid depth image is required to compute the features.");
   }
 
-  if(requireColour && !validColour)
+  // Note: Since the Structure Sensor does not provide colour information, we only throw
+  //       if the colour image is NULL and we are not computing depth features.
+  if(requireColour && !validColour && !requireDepth)
   {
-    // Note: Since the Structure Sensor does not provide colour information,
-    // we do not throw if the colour image is null AND we are also computing depth features.
-    if(!requireDepth)
-    {
-      throw std::invalid_argument("Error: A valid colour image is required to compute the features.");
-    }
+    throw std::invalid_argument("Error: A valid colour image is required to compute the features.");
   }
 
   // Use the depth image size as base, unless we want colour features only.
   inputDims = (requireDepth && validDepth) ? depthImage->noDims : rgbImage->noDims;
 
-  // Compute output dimensions.
+  // Compute the output dimensions.
   return inputDims / m_featureStep;
 }
 
