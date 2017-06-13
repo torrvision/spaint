@@ -39,8 +39,10 @@ IF(WITH_CUDA)
     ENDIF()
   ENDIF()
 
-  # If not on Windows, disable some annoying nvcc warnings.
-  IF(NOT MSVC_IDE)
+  # Disable some annoying nvcc warnings.
+  IF(MSVC_IDE)
+    SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=bad_friend_decl" ; -Xcudafe "--diag_suppress=overloaded_function_linkage" ; ${CUDA_NVCC_FLAGS})
+  ELSE()
     SET(CUDA_NVCC_FLAGS -Xcudafe "--diag_suppress=cc_clobber_ignored" ; -Xcudafe "--diag_suppress=set_but_not_used" ; ${CUDA_NVCC_FLAGS})
   ENDIF()
 

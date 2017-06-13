@@ -9,7 +9,6 @@
 #include <boost/random.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
-
 #include <boost/serialization/split_member.hpp>
 
 namespace tvgutil {
