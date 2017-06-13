@@ -48,12 +48,12 @@ private:
    * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets cause out-of-bounds access.
    */
   RGBDPatchFeatureCalculator_CUDA(bool depthAdaptive,
-                                  RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+                                  RGBDPatchFeatureDifferenceType depthDifferenceType,
                                   uint32_t depthFeatureCount,
                                   uint32_t depthFeatureOffset,
                                   uint32_t depthMinRadius,
                                   uint32_t depthMaxRadius,
-                                  RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+                                  RGBDPatchFeatureDifferenceType rgbDifferenceType,
                                   uint32_t rgbFeatureCount,
                                   uint32_t rgbFeatureOffset,
                                   uint32_t rgbMinRadius,

@@ -20,7 +20,7 @@ namespace grove {
 DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
   bool depthAdaptive = true;
-  RGBDPatchFeatureCalculatorDifferenceType differenceType = CENTRAL_DIFFERENCE;
+  RGBDPatchFeatureDifferenceType differenceType = CENTRAL_DIFFERENCE;
   const uint32_t depthMinRadius = 1;       // as per Julien's code (was 2 / 2)
   const uint32_t depthMaxRadius = 130 / 2; // as per Julien's code
   const uint32_t depthFeatureCount = 128;
@@ -39,7 +39,7 @@ DA_RGBDPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_da_rgbd_patch_f
 RGBPatchFeatureCalculator_Ptr FeatureCalculatorFactory::make_rgb_patch_feature_calculator(ITMLibSettings::DeviceType deviceType)
 {
   bool depthAdaptive = false;
-  RGBDPatchFeatureCalculatorDifferenceType differenceType = CENTRAL_DIFFERENCE;
+  RGBDPatchFeatureDifferenceType differenceType = CENTRAL_DIFFERENCE;
   const uint32_t depthMinRadius = 0;       // Unused
   const uint32_t depthMaxRadius = 0;       // Unused
   const uint32_t depthFeatureCount = 0;

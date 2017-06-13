@@ -52,7 +52,10 @@ SET(features_templates include/grove/features/FeatureCalculatorFactory.tpp)
 SET(features_sources src/features/FeatureCalculatorFactory.cpp)
 
 ##
-SET(features_base_headers include/grove/features/base/Descriptor.h)
+SET(features_base_headers
+include/grove/features/base/Descriptor.h
+include/grove/features/base/RGBDPatchFeatureDifferenceType.h
+)
 
 ##
 SET(features_cpu_headers include/grove/features/cpu/RGBDPatchFeatureCalculator_CPU.h)

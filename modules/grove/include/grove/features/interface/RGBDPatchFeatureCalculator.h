@@ -12,24 +12,11 @@
 #include <tvgutil/numbers/RandomNumberGenerator.h>
 
 #include "../base/Descriptor.h"
+#include "../base/RGBDPatchFeatureDifferenceType.h"
 #include "../../keypoints/Keypoint2D.h"
 #include "../../keypoints/Keypoint3DColour.h"
 
 namespace grove {
-
-/**
- * \brief The values of this enumeration can be used to specify the type of difference features to use.
- *
- * See Section 3.1 in "Exploiting Uncertainty in Regression Forests for Accurate Camera Relocalization".
- */
-enum RGBDPatchFeatureCalculatorDifferenceType
-{
-  /** With a central difference scheme, each difference is computed between the central pixel and a pixel at a random offset. */
-  CENTRAL_DIFFERENCE,
-
-  /** With a pairwise difference scheme, each difference is computed between two pixels at random offsets from the central pixel. */
-  PAIRWISE_DIFFERENCE
-};
 
 /**
  * \brief An instance of a class deriving from this one can be used to compute features based on depth and colour differences in RGBD images.
@@ -50,7 +37,7 @@ public:
   //#################### PROTECTED MEMBER VARIABLES ####################
 protected:
   /** The type of difference to use to compute depth features. */
-  RGBDPatchFeatureCalculatorDifferenceType m_depthDifferenceType;
+  RGBDPatchFeatureDifferenceType m_depthDifferenceType;
 
   /** The number of features to compute from the depth image. */
   uint32_t m_depthFeatureCount;
@@ -83,7 +70,7 @@ protected:
   ITMUCharMemoryBlock_Ptr m_rgbChannels;
 
   /** The type of difference to use to compute RGB features. */
-  RGBDPatchFeatureCalculatorDifferenceType m_rgbDifferenceType;
+  RGBDPatchFeatureDifferenceType m_rgbDifferenceType;
 
   /** The number of features to compute from the RGB image. */
   uint32_t m_rgbFeatureCount;
@@ -124,9 +111,9 @@ protected:
    *
    * \throws std::invalid_argument If depthFeatureCount + rgbFeatureCount > DescriptorType::FEATURE_COUNT, or if the offsets would cause out-of-bounds access.
    */
-  RGBDPatchFeatureCalculator(bool depthAdaptive, RGBDPatchFeatureCalculatorDifferenceType depthDifferenceType,
+  RGBDPatchFeatureCalculator(bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
                              uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius,
-                             uint32_t depthMaxRadius, RGBDPatchFeatureCalculatorDifferenceType rgbDifferenceType,
+                             uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
                              uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius);
 
   //#################### DESTRUCTOR ####################

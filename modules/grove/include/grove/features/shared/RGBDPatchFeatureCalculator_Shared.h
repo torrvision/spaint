@@ -6,7 +6,7 @@
 #ifndef H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 #define H_GROVE_RGBDPATCHFEATURECALCULATOR_SHARED
 
-#include "../interface/RGBDPatchFeatureCalculator.h"
+#include "../base/RGBDPatchFeatureDifferenceType.h"
 
 #include <helper_math.h>
 
@@ -27,7 +27,7 @@ namespace grove {
  * \param raster1   An int into which to write the raster position of the first secondary point.
  * \param raster2   An int into which to write the raster position of the second secondary point (if needed).
  */
-template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType>
+template <RGBDPatchFeatureDifferenceType DifferenceType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& offset, const Vector2i& inSize, const bool normalise, const float depth, int& raster1, int& raster2)
 {
@@ -92,7 +92,7 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
  * \param normalise         Whether or not to normalise the RGB offsets by the RGBD pixel's depth value.
  * \param descriptors       A pointer to the descriptors image.
  */
-template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
+template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inDepthSize, const Vector2i& inRgbSize,
                                     const Vector2i& outSize, const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets,
@@ -158,7 +158,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
  * \param normalise           Whether or not to normalise the depth offsets by the RGBD pixel's depth value.
  * \param descriptors         A pointer to the descriptors image.
  */
-template <RGBDPatchFeatureCalculatorDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
+template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
 inline void compute_depth_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inSize, const Vector2i& outSize,
                                    const float *depths, const Vector4i *depthOffsets, const KeypointType *keypoints,
