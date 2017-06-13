@@ -77,13 +77,13 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
 /**
  * \brief Computes colour features for a pixel in the RGBD image and writes them into the relevant descriptor.
  *
- * \param xyIn              The pixel in the RGBD image for which to compute colour features.
+ * \param xyRgb             The position in the RGB image of the pixel for which to compute colour features.
  * \param xyOut             The position in the descriptors image into which to write the computed features.
- * \param inDepthSize       The size of the depth image.
- * \param inRgbSize         The size of the colour image.
+ * \param depthSize         The size of the depth image.
+ * \param rgbSize           The size of the colour image.
  * \param outSize           The size of the keypoints/descriptors images.
- * \param rgb               A pointer to the colour image.
  * \param depths            A pointer to the depth image.
+ * \param rgb               A pointer to the colour image.
  * \param rgbOffsets        A pointer to the vector of offsets needed to specify the colour features to be computed.
  * \param rgbChannels       A pointer to the vector of colour channels needed to specify the colour features to be computed.
  * \param keypoints         A pointer to the keypoints image.
@@ -94,8 +94,8 @@ inline void calculate_secondary_points(const Vector2i& xyIn, const Vector4i& off
  */
 template <RGBDPatchFeatureDifferenceType DifferenceType, typename KeypointType, typename DescriptorType>
 _CPU_AND_GPU_CODE_TEMPLATE_
-inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut, const Vector2i& inDepthSize, const Vector2i& inRgbSize,
-                                    const Vector2i& outSize, const Vector4u *rgb, const float *depths, const Vector4i *rgbOffsets,
+inline void compute_colour_features(const Vector2i& xyRgb, const Vector2i& xyOut, const Vector2i& depthSize, const Vector2i& rgbSize,
+                                    const Vector2i& outSize, const float *depths, const Vector4u *rgb, const Vector4i *rgbOffsets,
                                     const uchar *rgbChannels, const KeypointType *keypoints, const uint32_t rgbFeatureCount,
                                     const uint32_t rgbFeatureOffset, const bool normalise, DescriptorType *descriptors)
 {
@@ -106,17 +106,23 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 
   // If we're normalising the RGB offsets based on depth, and depth information is available,
   // look up the depth for the input pixel; otherwise, default to 1.
-  const int rasterIdxIn = xyIn.y * inDepthSize.width + xyIn.x;
-  const float depth = (normalise && depths) ? depths[rasterIdxIn] : 1.0f;
+  float depth = 1.0f;
+  if(normalise && depths)
+  {
+    int x = (int)CLAMP(ROUND(xyRgb.x * (depthSize.x - 1) / (float)(rgbSize.x - 1)), 0, depthSize.x - 1);
+    int y = (int)CLAMP(ROUND(xyRgb.y * (depthSize.y - 1) / (float)(rgbSize.y - 1)), 0, depthSize.y - 1);
+    depth = depths[y * depthSize.width + x];
+  }
 
   // Compute the ratio between the size of colour image we're currently using and the size of colour
   // image used to train the forest. We use this to scale the offsets before sampling pixels.
   // FIXME: The RGB training image size should be passed in, not hard-coded.
   const Vector2f trainRgbSize(640.0f, 480.0f);
-  const Vector2f offsetRatio(inRgbSize.x / trainRgbSize.x, inRgbSize.y / trainRgbSize.y);
+  const Vector2f offsetRatio(rgbSize.x / trainRgbSize.x, rgbSize.y / trainRgbSize.y);
 
   // Compute the features and fill in the descriptor.
   DescriptorType& descriptor = descriptors[rasterIdxOut];
+  const int rasterIdxRgb = xyRgb.y * rgbSize.width + xyRgb.x;
   for(uint32_t featIdx = 0; featIdx < rgbFeatureCount; ++featIdx)
   {
     const int channel = rgbChannels[featIdx];
@@ -130,7 +136,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
-    calculate_secondary_points<DifferenceType>(xyIn, offsets, inRgbSize, normalise, depth, raster1, raster2);
+    calculate_secondary_points<DifferenceType>(xyRgb, offsets, rgbSize, normalise, depth, raster1, raster2);
 
     // Compute the feature and write it into the descriptor.
     if(DifferenceType == PAIRWISE_DIFFERENCE)
@@ -141,7 +147,7 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     else
     {
       // This is the definition used in the SCoRe Forests code.
-      descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[rasterIdxIn][channel]);
+      descriptor.data[rgbFeatureOffset + featIdx] = static_cast<float>(rgb[raster1][channel] - rgb[rasterIdxRgb][channel]);
     }
   }
 }

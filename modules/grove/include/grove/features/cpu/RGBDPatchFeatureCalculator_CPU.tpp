@@ -30,8 +30,8 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
                                                                                                  KeypointsImage *keypointsImage, DescriptorsImage *descriptorsImage) const
 {
   // The size of the colour image is used if we have to compute both colour-based features and depth-based features.
-  const Vector2i inDepthSize = depthImage->noDims;
-  const Vector2i inRgbSize = rgbImage->noDims;
+  const Vector2i depthSize = depthImage->noDims;
+  const Vector2i rgbSize = rgbImage->noDims;
 
   // Check that the input images are valid and compute the output dimensions.
   const Vector2i outSize = this->compute_output_dims(rgbImage, depthImage);
@@ -62,7 +62,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
       const Vector2i xyIn = xyOut * this->m_featureStep;
 
       // Compute the keypoint for the pixel.
-      compute_keypoint(xyIn, xyOut, inDepthSize, inRgbSize, outSize, rgb, depths, cameraPose, intrinsics, keypoints);
+      compute_keypoint(xyIn, xyOut, depthSize, rgbSize, outSize, rgb, depths, cameraPose, intrinsics, keypoints);
 
       // If there is a depth image available and any depth features need to be computed for the keypoint, compute them.
       if(depths && this->m_depthFeatureCount > 0)
@@ -70,7 +70,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
         if(this->m_depthDifferenceType == PAIRWISE_DIFFERENCE)
         {
           compute_depth_features<PAIRWISE_DIFFERENCE>(
-            xyIn, xyOut, inDepthSize, outSize, depths, depthOffsets, keypoints,
+            xyIn, xyOut, depthSize, outSize, depths, depthOffsets, keypoints,
             this->m_depthFeatureCount, this->m_depthFeatureOffset,
             this->m_normaliseDepth, descriptors
           );
@@ -78,7 +78,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
         else
         {
           compute_depth_features<CENTRAL_DIFFERENCE>(
-            xyIn, xyOut, inDepthSize, outSize, depths, depthOffsets, keypoints,
+            xyIn, xyOut, depthSize, outSize, depths, depthOffsets, keypoints,
             this->m_depthFeatureCount, this->m_depthFeatureOffset,
             this->m_normaliseDepth, descriptors
           );
@@ -91,7 +91,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
         if(this->m_rgbDifferenceType == PAIRWISE_DIFFERENCE)
         {
           compute_colour_features<PAIRWISE_DIFFERENCE>(
-            xyIn, xyOut, inDepthSize, inRgbSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+            xyIn, xyOut, depthSize, rgbSize, outSize, depths, rgb, rgbOffsets, rgbChannels,
             keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
             this->m_normaliseRgb, descriptors
           );
@@ -99,7 +99,7 @@ void RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::compute_keypoi
         else
         {
           compute_colour_features<CENTRAL_DIFFERENCE>(
-            xyIn, xyOut, inDepthSize, inRgbSize, outSize, rgb, depths, rgbOffsets, rgbChannels,
+            xyIn, xyOut, depthSize, rgbSize, outSize, depths, rgb, rgbOffsets, rgbChannels,
             keypoints, this->m_rgbFeatureCount, this->m_rgbFeatureOffset,
             this->m_normaliseRgb, descriptors
           );
