@@ -9,6 +9,8 @@
 #include <itmx/base/ITMImagePtrTypes.h>
 #include <itmx/base/ITMMemoryBlockPtrTypes.h>
 
+#include <tvgutil/numbers/RandomNumberGenerator.h>
+
 #include "../base/Descriptor.h"
 #include "../../keypoints/Keypoint2D.h"
 #include "../../keypoints/Keypoint3DColour.h"
@@ -230,6 +232,19 @@ private:
    * \brief Sets up the depth features.
    */
   void setup_depth_features();
+
+  //#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+private:
+  /**
+   * \brief Generates a random integer offset in the intervals [-max, -min] and [min, max]
+   *        using the specified random number generator.
+   *
+   * \param rng The random number generator to use.
+   * \param min The minimum value of the positive interval.
+   * \param max The maximum value of the positive interval.
+   * \return    A random integer in [-max, -min] U [min, max].
+   */
+  static int generate_offset(tvgutil::RandomNumberGenerator& rng, int min, int max);
 };
 
 //#################### TYPEDEFS ####################

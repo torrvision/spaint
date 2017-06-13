@@ -10,32 +10,6 @@
 #include <itmx/base/MemoryBlockFactory.h>
 using namespace itmx;
 
-#include <tvgutil/numbers/RandomNumberGenerator.h>
-using namespace tvgutil;
-
-
-//#################### HELPER FUNCTIONS ####################
-
-namespace {
-
-/**
- * \brief Generates a random integer offset in the intervals [-max, -min] and [min, max]
- *        using the specified random number generator.
- *
- * \param rng The random number generator to use.
- * \param min The minimum value of the positive interval.
- * \param max The maximum value of the positive interval.
- * \return    A random integer in [-max, -min] U [min, max].
- */
-int generate_offset(RandomNumberGenerator& rng, int min, int max)
-{
-  static const int signMin = 0;
-  static const int signMax = 1;
-  return rng.generate_int_from_uniform(std::abs(min), std::abs(max)) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
-}
-
-}
-
 namespace grove {
 
 //#################### CONSTRUCTORS ####################
@@ -209,6 +183,16 @@ void RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::setup_depth_featur
     std::cout << i << " Depth Offset " << offsets[i] << '\n';
   }
 #endif
+}
+
+//#################### PRIVATE STATIC MEMBER FUNCTIONS ####################
+
+template <typename KeypointType, typename DescriptorType>
+int RGBDPatchFeatureCalculator<KeypointType,DescriptorType>::generate_offset(tvgutil::RandomNumberGenerator& rng, int min, int max)
+{
+  static const int signMin = 0;
+  static const int signMax = 1;
+  return rng.generate_int_from_uniform(std::abs(min), std::abs(max)) * (rng.generate_int_from_uniform(signMin, signMax) * 2 - 1);
 }
 
 }
