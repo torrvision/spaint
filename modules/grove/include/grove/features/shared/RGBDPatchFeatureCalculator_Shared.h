@@ -118,10 +118,10 @@ inline void compute_colour_features(const Vector2i& xyIn, const Vector2i& xyOut,
     Vector4i offsets = rgbOffsets[featIdx];
 
     // Now rescale the offsets using the colour to depth ratio.
-    offsets[0] *= rgbDepthRatio.x;
-    offsets[1] *= rgbDepthRatio.y;
-    offsets[2] *= rgbDepthRatio.x;
-    offsets[3] *= rgbDepthRatio.y;
+    offsets[0] = static_cast<int>(offsets[0] * rgbDepthRatio.x);
+    offsets[1] = static_cast<int>(offsets[1] * rgbDepthRatio.y);
+    offsets[2] = static_cast<int>(offsets[2] * rgbDepthRatio.x);
+    offsets[3] = static_cast<int>(offsets[3] * rgbDepthRatio.y);
 
     // Calculate the raster position(s) of the secondary point(s) to use when computing the feature.
     int raster1, raster2;
