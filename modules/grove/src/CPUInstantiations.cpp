@@ -70,7 +70,7 @@ template class RGBDPatchFeatureCalculator_CPU<Keypoint3DColour,RGBDPatchDescript
 
 template class DecisionForest<RGBDPatchDescriptor, FOREST_TREES>;
 template class DecisionForest_CPU<RGBDPatchDescriptor, FOREST_TREES>;
-template class DecisionForestFactory<RGBDPatchDescriptor, FOREST_TREES>;
+template struct DecisionForestFactory<RGBDPatchDescriptor, FOREST_TREES>;
 
 template class ExampleReservoirs<Keypoint3DColour>;
 template void ExampleReservoirs<Keypoint3DColour>::add_examples(const ExampleImage_CPtr&,
