@@ -12,19 +12,14 @@ namespace grove {
 //#################### CONSTRUCTORS ####################
 
 template <typename KeypointType, typename DescriptorType>
-RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CPU(bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType, uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius, uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
-                                                                                            uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius)
-: RGBDPatchFeatureCalculator<KeypointType,DescriptorType>(depthAdaptive,
-                                                          depthDifferenceType,
-                                                          depthFeatureCount,
-                                                          depthFeatureOffset,
-                                                          depthMinRadius,
-                                                          depthMaxRadius,
-                                                          rgbDifferenceType,
-                                                          rgbFeatureCount,
-                                                          rgbFeatureOffset,
-                                                          rgbMinRadius,
-                                                          rgbMaxRadius)
+RGBDPatchFeatureCalculator_CPU<KeypointType,DescriptorType>::RGBDPatchFeatureCalculator_CPU(
+  bool depthAdaptive, RGBDPatchFeatureDifferenceType depthDifferenceType,
+  uint32_t depthFeatureCount, uint32_t depthFeatureOffset, uint32_t depthMinRadius,
+  uint32_t depthMaxRadius, RGBDPatchFeatureDifferenceType rgbDifferenceType,
+  uint32_t rgbFeatureCount, uint32_t rgbFeatureOffset, uint32_t rgbMinRadius, uint32_t rgbMaxRadius
+)
+: Base(depthAdaptive, depthDifferenceType, depthFeatureCount, depthFeatureOffset, depthMinRadius,
+       depthMaxRadius, rgbDifferenceType, rgbFeatureCount, rgbFeatureOffset, rgbMinRadius, rgbMaxRadius)
 {}
 
 //#################### PUBLIC MEMBER FUNCTIONS ####################
